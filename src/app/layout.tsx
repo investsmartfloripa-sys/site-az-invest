@@ -14,16 +14,22 @@ const bodyFont = Raleway({
   weight: ["400", "500", "600", "700"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://site-az-invest.vercel.app";
+const SITE_DESCRIPTION =
+  "Conteudos sobre economia, educacao financeira e investimentos para te ajudar a investir melhor.";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://investimentosdeaz.com.br"),
-  title: "Investimentos de A a Z",
-  description:
-    "Conteudos sobre economia, educacao financeira e investimentos para te ajudar a investir melhor.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Investimentos de A a Z",
+    template: "%s | AZ Invest",
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: "AZ Invest",
   openGraph: {
     title: "Investimentos de A a Z",
-    description:
-      "Conteudos sobre economia, educacao financeira e investimentos para te ajudar a investir melhor.",
-    url: "https://investimentosdeaz.com.br",
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
     siteName: "Investimentos de A a Z",
     locale: "pt_BR",
     type: "website",
@@ -31,8 +37,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Investimentos de A a Z",
-    description:
-      "Conteudos sobre economia, educacao financeira e investimentos para te ajudar a investir melhor.",
+    description: SITE_DESCRIPTION,
   },
 };
 

@@ -10,6 +10,19 @@ export type YoutubeVideo = {
   duration?: string;
 };
 
+export type PlaylistInfo = {
+  slug: string;
+  label: string;
+  playlistId: string;
+};
+
+export const KNOWN_PLAYLISTS: PlaylistInfo[] = [
+  { slug: "fala-borba", label: "Fala Borba", playlistId: "PLqqJv6H5mqgoTCbMXIaqXsrSjOhFK0eP-" },
+  { slug: "lives", label: "Lives", playlistId: "PLqqJv6H5mqgrbxOAHFW2XYkQ22Wr0PL8A" },
+  { slug: "az-cast", label: "AZ Cast", playlistId: "PLqqJv6H5mqgqJfd7r4ZLJXvDGPwS0X0rF" },
+  { slug: "economista-reage", label: "Economista Reage", playlistId: "PLqqJv6H5mqgpkcMTf_ZWtU5ldTv14VE4T" },
+];
+
 type SearchItem = {
   id: { kind: string; videoId?: string };
   snippet: {
@@ -181,4 +194,115 @@ export async function fetchChannelVideos(maxResults = 12): Promise<{
       error: err instanceof Error ? err.message : "Erro desconhecido",
     };
   }
+}
+
+type PlaylistItemSnippet = {
+  publishedAt: string;
+  title: string;
+  description: string;
+  thumbnails: SearchItem["snippet"]["thumbnails"];
+  resourceId?: { kind: string; videoId?: string };
+};
+
+type PlaylistItem = {
+  snippet: PlaylistItemSnippet;
+};
+
+type PlaylistItemsResponse = {
+  items?: PlaylistItem[];
+  error?: { message?: string };
+};
+
+function pickThumbFromMap(t: SearchItem["snippet"]["thumbnails"]): string {
+  return (
+    t.maxres?.url ?? t.standard?.url ?? t.high?.url ?? t.medium?.url ?? t.default?.url ?? ""
+  );
+}
+
+export async function fetchPlaylistVideos(
+  playlistId: string,
+  maxResults = 12,
+): Promise<{ videos: YoutubeVideo[]; source: "youtube" | "fallback"; error?: string }> {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey || !playlistId) {
+    return {
+      videos: toFallback(),
+      source: "fallback",
+      error: "API key ou playlist nao configurada",
+    };
+  }
+
+  try {
+    const url = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+    url.searchParams.set("key", apiKey);
+    url.searchParams.set("playlistId", playlistId);
+    url.searchParams.set("part", "snippet");
+    url.searchParams.set("maxResults", String(Math.min(maxResults, 50)));
+
+    const res = await fetch(url.toString(), { next: { revalidate: REVALIDATE_SECONDS } });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => ({}))) as PlaylistItemsResponse;
+      return {
+        videos: toFallback(),
+        source: "fallback",
+        error: body.error?.message ?? `playlistItems retornou ${res.status}`,
+      };
+    }
+
+    const data = (await res.json()) as PlaylistItemsResponse;
+    const items = (data.items ?? [])
+      .filter((i): i is PlaylistItem & { snippet: PlaylistItemSnippet & { resourceId: { videoId: string } } } => {
+        return i.snippet.resourceId?.kind === "youtube#video" && Boolean(i.snippet.resourceId?.videoId);
+      });
+
+    if (items.length === 0) {
+      return { videos: [], source: "youtube" };
+    }
+
+    let durationsById = new Map<string, string | undefined>();
+    try {
+      const ids = items.map((i) => i.snippet.resourceId.videoId).join(",");
+      const videosUrl = new URL(VIDEOS_ENDPOINT);
+      videosUrl.searchParams.set("key", apiKey);
+      videosUrl.searchParams.set("part", "contentDetails");
+      videosUrl.searchParams.set("id", ids);
+      const videosRes = await fetch(videosUrl.toString(), {
+        next: { revalidate: REVALIDATE_SECONDS },
+      });
+      if (videosRes.ok) {
+        const v = (await videosRes.json()) as VideosResponse;
+        durationsById = new Map(
+          (v.items ?? []).map((it) => [
+            it.id,
+            formatIsoDuration(it.contentDetails?.duration),
+          ]),
+        );
+      }
+    } catch {
+      // duracao opcional
+    }
+
+    const videos: YoutubeVideo[] = items.map((it) => ({
+      id: it.snippet.resourceId.videoId,
+      youtubeId: it.snippet.resourceId.videoId,
+      title: decode(it.snippet.title),
+      description: decode(it.snippet.description),
+      thumbnail: pickThumbFromMap(it.snippet.thumbnails),
+      publishedAt: it.snippet.publishedAt,
+      duration: durationsById.get(it.snippet.resourceId.videoId),
+    }));
+
+    return { videos, source: "youtube" };
+  } catch (err) {
+    return {
+      videos: toFallback(),
+      source: "fallback",
+      error: err instanceof Error ? err.message : "Erro desconhecido",
+    };
+  }
+}
+
+export function findPlaylistBySlug(slug: string | undefined): PlaylistInfo | undefined {
+  if (!slug) return undefined;
+  return KNOWN_PLAYLISTS.find((p) => p.slug === slug);
 }

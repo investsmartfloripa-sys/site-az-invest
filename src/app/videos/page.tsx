@@ -4,7 +4,12 @@ import Link from "next/link";
 import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { NewsletterForm } from "@/components/home/NewsletterForm";
-import { fetchChannelVideos } from "@/lib/youtube";
+import {
+  fetchChannelVideos,
+  fetchPlaylistVideos,
+  findPlaylistBySlug,
+  KNOWN_PLAYLISTS,
+} from "@/lib/youtube";
 
 export const metadata = {
   title: "Videos | AZ Invest",
@@ -16,8 +21,19 @@ export const revalidate = 3600;
 
 const CHANNEL_URL = "https://www.youtube.com/@azinvestoficial";
 
-export default async function VideosPage() {
-  const { videos, source, error } = await fetchChannelVideos(12);
+type VideosPageProps = {
+  searchParams: Promise<{ p?: string }>;
+};
+
+export default async function VideosPage({ searchParams }: VideosPageProps) {
+  const { p: playlistSlug } = await searchParams;
+  const activePlaylist = findPlaylistBySlug(playlistSlug);
+
+  const result = activePlaylist
+    ? await fetchPlaylistVideos(activePlaylist.playlistId, 24)
+    : await fetchChannelVideos(24);
+
+  const { videos, source, error } = result;
 
   return (
     <div className="min-h-screen text-[#132960]">
@@ -44,78 +60,115 @@ export default async function VideosPage() {
           </Link>
         </header>
 
+        <nav className="flex flex-wrap gap-2 border-b border-[#132960]/10 pb-2">
+          <PlaylistTab href="/videos" label="Recentes" active={!activePlaylist} />
+          {KNOWN_PLAYLISTS.map((p) => (
+            <PlaylistTab
+              key={p.slug}
+              href={`/videos?p=${p.slug}`}
+              label={p.label}
+              active={activePlaylist?.slug === p.slug}
+            />
+          ))}
+        </nav>
+
         {source === "fallback" && error ? (
           <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900">
-            <strong>Modo offline:</strong> exibindo videos de exemplo. Configure{" "}
-            <code>YOUTUBE_API_KEY</code> e <code>YOUTUBE_CHANNEL_ID</code> nas
-            variaveis de ambiente para puxar do canal automaticamente.
-            <span className="ml-1 opacity-70">({error})</span>
+            <strong>Modo offline:</strong> exibindo videos de exemplo. ({error})
           </div>
         ) : null}
 
-        <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {videos.map((video) => (
-            <article
-              key={video.id}
-              className="group overflow-hidden rounded-2xl border border-[#132960]/15 bg-white transition hover:border-[#027DFC]/60 hover:shadow-md"
-            >
-              <Link
-                href={`https://www.youtube.com/watch?v=${video.youtubeId}`}
-                target="_blank"
-                rel="noreferrer"
-                className="relative block aspect-video w-full overflow-hidden bg-zinc-100"
+        {videos.length === 0 ? (
+          <p className="text-sm text-zinc-500">Nenhum video encontrado nesta playlist.</p>
+        ) : (
+          <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {videos.map((video) => (
+              <article
+                key={video.id}
+                className="group overflow-hidden rounded-2xl border border-[#132960]/15 bg-white transition hover:border-[#027DFC]/60 hover:shadow-md"
               >
-                {video.thumbnail ? (
-                  <Image
-                    src={video.thumbnail}
-                    alt={video.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover transition group-hover:scale-105"
-                  />
-                ) : null}
-                <span className="absolute inset-0 flex items-center justify-center">
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#FF0000] text-white shadow-lg transition group-hover:scale-110">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="h-6 w-6 translate-x-0.5"
-                      aria-hidden
-                    >
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
+                <Link
+                  href={`https://www.youtube.com/watch?v=${video.youtubeId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="relative block aspect-video w-full overflow-hidden bg-zinc-100"
+                >
+                  {video.thumbnail ? (
+                    <Image
+                      src={video.thumbnail}
+                      alt={video.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover transition group-hover:scale-105"
+                    />
+                  ) : null}
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#FF0000] text-white shadow-lg transition group-hover:scale-110">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="h-6 w-6 translate-x-0.5"
+                        aria-hidden
+                      >
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </span>
                   </span>
-                </span>
-                {video.duration ? (
-                  <span className="absolute bottom-2 right-2 rounded bg-black/80 px-2 py-0.5 text-[11px] font-semibold text-white">
-                    {video.duration}
-                  </span>
-                ) : null}
-              </Link>
-              <div className="space-y-2 p-4">
-                <h3 className="line-clamp-2 text-base font-semibold text-[#132960]">
-                  {video.title}
-                </h3>
-                {video.description ? (
-                  <p className="line-clamp-2 text-sm text-zinc-600">
-                    {video.description}
-                  </p>
-                ) : null}
-                <div className="text-xs text-zinc-500">
-                  {new Date(video.publishedAt).toLocaleDateString("pt-BR", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  })}
+                  {video.duration ? (
+                    <span className="absolute bottom-2 right-2 rounded bg-black/80 px-2 py-0.5 text-[11px] font-semibold text-white">
+                      {video.duration}
+                    </span>
+                  ) : null}
+                </Link>
+                <div className="space-y-2 p-4">
+                  <h3 className="line-clamp-2 text-base font-semibold text-[#132960]">
+                    {video.title}
+                  </h3>
+                  {video.description ? (
+                    <p className="line-clamp-2 text-sm text-zinc-600">
+                      {video.description}
+                    </p>
+                  ) : null}
+                  <div className="text-xs text-zinc-500">
+                    {new Date(video.publishedAt).toLocaleDateString("pt-BR", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
-        </section>
+              </article>
+            ))}
+          </section>
+        )}
 
         <NewsletterForm />
       </main>
       <Footer />
     </div>
+  );
+}
+
+function PlaylistTab({
+  href,
+  label,
+  active,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={
+        "rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition " +
+        (active
+          ? "bg-[#132960] text-white"
+          : "border border-[#132960]/20 text-[#132960] hover:border-[#027DFC] hover:text-[#027DFC]")
+      }
+    >
+      {label}
+    </Link>
   );
 }
