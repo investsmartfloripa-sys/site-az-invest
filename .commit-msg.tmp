@@ -1,0 +1,12 @@
+feat(autores): perfil rico do time (cargo, experiencias, formacao)
+
+- Schema: adiciona headline, experiencesJson e educationJson em Author
+  (migration 20260427215445_author_extras aplicada no Neon)
+- Admin: nova tela de edicao em /area-restrita/autores/[id] com listas
+  dinamicas de experiencias profissionais e formacao academica, alem
+  do cargo profissional longo (headline)
+- Listagem admin ganha botao "Editar" e dica para preenchimento completo
+- Pagina publica /nosso-time/[slug] passa a mostrar headline, secoes
+  de experiencias profissionais e formacao academica, mantendo a
+  estetica AZ (cards arredondados, paleta azul + accent laranja)
+- Card em /nosso-time prefere headline a bio quando disponivel

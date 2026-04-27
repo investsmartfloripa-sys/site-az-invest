@@ -22,17 +22,20 @@ model User {
 }
 
 model Author {
-  id        Int      @id @default(autoincrement())
-  slug      String   @unique
-  name      String
-  role      String
-  bio       String?
-  photo     String?
-  email     String?
-  linkedin  String?
-  posts     Post[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  slug            String   @unique
+  name            String
+  role            String
+  headline        String?
+  bio             String?
+  photo           String?
+  email           String?
+  linkedin        String?
+  experiencesJson String?
+  educationJson   String?
+  posts           Post[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Post {

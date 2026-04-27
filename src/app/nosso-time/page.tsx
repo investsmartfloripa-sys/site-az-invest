@@ -87,7 +87,11 @@ export default async function NossoTimePage() {
                       <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
                         {author.role}
                       </p>
-                      {author.bio ? (
+                      {author.headline ? (
+                        <p className="line-clamp-2 text-sm text-zinc-700">
+                          {author.headline}
+                        </p>
+                      ) : author.bio ? (
                         <p className="line-clamp-3 text-sm text-zinc-600">{author.bio}</p>
                       ) : null}
                       <p className="mt-auto text-[11px] text-zinc-500">

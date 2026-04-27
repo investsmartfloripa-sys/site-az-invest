@@ -87,6 +87,10 @@ export default async function AutoresPage() {
 
       <section className="rounded-xl border border-[#132960]/20 bg-white p-5">
         <h2 className="text-xl text-[#132960]">Novo autor</h2>
+        <p className="mt-1 text-xs text-zinc-500">
+          Apos cadastrar, clique em <strong>Editar</strong> para preencher cargo
+          profissional, experiencias e formacao.
+        </p>
         <form action={createAuthorAction} className="mt-4 grid gap-3 md:grid-cols-2">
           <input
             name="name"
@@ -166,7 +170,13 @@ export default async function AutoresPage() {
                 <p className="text-xs text-zinc-500">
                   /nosso-time/{author.slug} | {author._count.posts} posts
                 </p>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link
+                    href={`/area-restrita/autores/${author.id}`}
+                    className="rounded-md border border-[#132960]/30 px-2 py-0.5 text-xs font-semibold text-[#132960] hover:bg-[#132960]/5"
+                  >
+                    Editar
+                  </Link>
                   <Link
                     href={`/nosso-time/${author.slug}`}
                     className="text-xs text-[#027DFC] hover:underline"
@@ -178,7 +188,7 @@ export default async function AutoresPage() {
                     <input type="hidden" name="id" value={author.id} />
                     <button
                       type="submit"
-                      className="rounded-md border border-red-200 px-2 py-0.5 text-xs text-red-600"
+                      className="rounded-md border border-red-200 px-2 py-0.5 text-xs text-red-600 hover:bg-red-50"
                     >
                       Excluir
                     </button>
