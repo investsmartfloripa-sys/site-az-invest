@@ -41,6 +41,7 @@ export default function OpenGraphImage() {
           </div>
           <div
             style={{
+              display: "flex",
               fontSize: 28,
               color: "#9FB6EA",
               letterSpacing: 4,
@@ -54,6 +55,8 @@ export default function OpenGraphImage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div
             style={{
+              display: "flex",
+              flexDirection: "column",
               fontSize: 88,
               fontWeight: 800,
               lineHeight: 1.05,
@@ -61,12 +64,12 @@ export default function OpenGraphImage() {
               color: "#FFFFFF",
             }}
           >
-            Investimentos
-            <br />
-            de A a Z
+            <div style={{ display: "flex" }}>Investimentos</div>
+            <div style={{ display: "flex" }}>de A a Z</div>
           </div>
           <div
             style={{
+              display: "flex",
               fontSize: 32,
               color: "#9FB6EA",
               maxWidth: 900,
@@ -88,10 +91,10 @@ export default function OpenGraphImage() {
             fontSize: 22,
           }}
         >
-          <span>investimentosdeaz.com.br</span>
-          <span style={{ color: "#FF5713", fontWeight: 700 }}>
+          <div style={{ display: "flex" }}>investimentosdeaz.com.br</div>
+          <div style={{ display: "flex", color: "#FF5713", fontWeight: 700 }}>
             @azinvestoficial
-          </span>
+          </div>
         </div>
       </div>
     ),
