@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Site Investimentos de A a Z
 
-## Getting Started
+Site institucional + blog dinamico, construido em Next.js 16 (App Router), Prisma e Postgres.
 
-First, run the development server:
+## Stack
+
+- **Framework**: Next.js 16 (App Router, Turbopack)
+- **UI**: React 19, Tailwind CSS v4, lucide-react, recharts
+- **Banco**: Postgres (Neon em producao, Vercel Postgres tambem suportado)
+- **ORM**: Prisma
+- **Auth**: cookies HMAC + bcrypt, com 2 niveis (MASTER e EDITOR)
+
+## Rodando local
+
+1. Copie `.env.example` para `.env` e preencha as variaveis.
+2. Instale dependencias e rode as migrations:
 
 ```bash
+npm install
+npx prisma migrate dev
+npm run db:seed-master
+npm run db:seed-authors
+npm run db:seed-posts
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Abra `http://localhost:3000`. Login Master padrao: `Borbarox` / `041291` em `/area-restrita/login`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy na Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Crie um banco Postgres no [Neon](https://neon.tech) (free tier).
+2. Conecte o repo na Vercel e configure as variaveis de ambiente:
+   - `DATABASE_URL`: connection string do Neon (com `?sslmode=require`)
+   - `AUTH_SECRET`: 32+ caracteres aleatorios
+3. A Vercel roda automaticamente `prisma generate && prisma migrate deploy && next build` (script `vercel-build`).
+4. Apos o primeiro deploy, rode os seeds **uma vez** apontando o `.env` local para o `DATABASE_URL` de producao:
 
-## Learn More
+```bash
+npm run db:seed-master
+npm run db:seed-authors
+npm run db:seed-posts
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Estrutura
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app/` - App Router (paginas e layouts)
+- `src/app/area-restrita/` - login, painel e gerenciamento (autores, usuarios)
+- `src/app/simuladores/` - simuladores financeiros (consorcio, juros compostos, etc)
+- `src/app/blog/[slug]` - posts individuais
+- `src/app/nosso-time/[slug]` - paginas individuais dos autores
+- `prisma/schema.prisma` - modelos User, Author, Post
+- `scripts/` - seeds (master, autores, posts)

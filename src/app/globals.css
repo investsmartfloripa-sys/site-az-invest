@@ -1,26 +1,52 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4f4f4;
+  --foreground: #1a1a1a;
+  --azure: #027dfc;
+  --delft-blue: #132960;
+  --jet: #333333;
+  --platinum: #e8e7e5;
+  --giants: #ff5713;
+  --rust: #a85b2f;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), Arial, Helvetica, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading), Arial, Helvetica, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.az-shell {
+  background: #f4f4f4;
+}
+
+.az-card {
+  border: 1px solid rgba(19, 41, 96, 0.25);
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.az-divider {
+  border-color: rgba(19, 41, 96, 0.15);
 }
