@@ -8,7 +8,22 @@ export type YoutubeVideo = {
   thumbnail: string;
   publishedAt: string;
   duration?: string;
+  durationSeconds?: number;
 };
+
+// Limite oficial atual de duracao de YouTube Shorts (3 min, vigente desde 2024).
+// Heuristica: a Data API nao retorna se um video e Short, entao usamos a duracao
+// como proxy. Pode haver falso-positivo (video tradicional curto), mas captura 100%
+// dos Shorts reais.
+export const SHORT_MAX_SECONDS = 180;
+
+export function isShort(video: YoutubeVideo): boolean {
+  return typeof video.durationSeconds === "number" && video.durationSeconds <= SHORT_MAX_SECONDS;
+}
+
+export function isLong(video: YoutubeVideo): boolean {
+  return typeof video.durationSeconds === "number" && video.durationSeconds > SHORT_MAX_SECONDS;
+}
 
 export type PlaylistInfo = {
   slug: string;
@@ -76,6 +91,16 @@ function formatIsoDuration(iso?: string): string | undefined {
   const pad = (n: number) => String(n).padStart(2, "0");
   if (h > 0) return `${h}:${pad(m)}:${pad(s)}`;
   return `${m}:${pad(s)}`;
+}
+
+function parseIsoDurationSeconds(iso?: string): number | undefined {
+  if (!iso) return undefined;
+  const match = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso);
+  if (!match) return undefined;
+  const h = Number(match[1] ?? 0);
+  const m = Number(match[2] ?? 0);
+  const s = Number(match[3] ?? 0);
+  return h * 3600 + m * 60 + s;
 }
 
 function pickThumb(item: SearchItem): string {
@@ -151,7 +176,8 @@ export async function fetchChannelVideos(maxResults = 12): Promise<{
       };
     }
 
-    let durationsById = new Map<string, string | undefined>();
+    type DurationEntry = { formatted?: string; seconds?: number };
+    let durationsById = new Map<string, DurationEntry>();
     try {
       const ids = items.map((i) => i.id.videoId).join(",");
       const videosUrl = new URL(VIDEOS_ENDPOINT);
@@ -168,7 +194,10 @@ export async function fetchChannelVideos(maxResults = 12): Promise<{
         durationsById = new Map(
           (v.items ?? []).map((it) => [
             it.id,
-            formatIsoDuration(it.contentDetails?.duration),
+            {
+              formatted: formatIsoDuration(it.contentDetails?.duration),
+              seconds: parseIsoDurationSeconds(it.contentDetails?.duration),
+            },
           ]),
         );
       }
@@ -176,15 +205,19 @@ export async function fetchChannelVideos(maxResults = 12): Promise<{
       // duracao e opcional, segue sem
     }
 
-    const videos: YoutubeVideo[] = items.map((item) => ({
-      id: item.id.videoId,
-      youtubeId: item.id.videoId,
-      title: decode(item.snippet.title),
-      description: decode(item.snippet.description),
-      thumbnail: pickThumb(item),
-      publishedAt: item.snippet.publishedAt,
-      duration: durationsById.get(item.id.videoId),
-    }));
+    const videos: YoutubeVideo[] = items.map((item) => {
+      const d = durationsById.get(item.id.videoId);
+      return {
+        id: item.id.videoId,
+        youtubeId: item.id.videoId,
+        title: decode(item.snippet.title),
+        description: decode(item.snippet.description),
+        thumbnail: pickThumb(item),
+        publishedAt: item.snippet.publishedAt,
+        duration: d?.formatted,
+        durationSeconds: d?.seconds,
+      };
+    });
 
     return { videos, source: "youtube" };
   } catch (err) {
@@ -259,7 +292,8 @@ export async function fetchPlaylistVideos(
       return { videos: [], source: "youtube" };
     }
 
-    let durationsById = new Map<string, string | undefined>();
+    type DurationEntry = { formatted?: string; seconds?: number };
+    let durationsById = new Map<string, DurationEntry>();
     try {
       const ids = items.map((i) => i.snippet.resourceId.videoId).join(",");
       const videosUrl = new URL(VIDEOS_ENDPOINT);
@@ -274,7 +308,10 @@ export async function fetchPlaylistVideos(
         durationsById = new Map(
           (v.items ?? []).map((it) => [
             it.id,
-            formatIsoDuration(it.contentDetails?.duration),
+            {
+              formatted: formatIsoDuration(it.contentDetails?.duration),
+              seconds: parseIsoDurationSeconds(it.contentDetails?.duration),
+            },
           ]),
         );
       }
@@ -282,15 +319,19 @@ export async function fetchPlaylistVideos(
       // duracao opcional
     }
 
-    const videos: YoutubeVideo[] = items.map((it) => ({
-      id: it.snippet.resourceId.videoId,
-      youtubeId: it.snippet.resourceId.videoId,
-      title: decode(it.snippet.title),
-      description: decode(it.snippet.description),
-      thumbnail: pickThumbFromMap(it.snippet.thumbnails),
-      publishedAt: it.snippet.publishedAt,
-      duration: durationsById.get(it.snippet.resourceId.videoId),
-    }));
+    const videos: YoutubeVideo[] = items.map((it) => {
+      const d = durationsById.get(it.snippet.resourceId.videoId);
+      return {
+        id: it.snippet.resourceId.videoId,
+        youtubeId: it.snippet.resourceId.videoId,
+        title: decode(it.snippet.title),
+        description: decode(it.snippet.description),
+        thumbnail: pickThumbFromMap(it.snippet.thumbnails),
+        publishedAt: it.snippet.publishedAt,
+        duration: d?.formatted,
+        durationSeconds: d?.seconds,
+      };
+    });
 
     return { videos, source: "youtube" };
   } catch (err) {
