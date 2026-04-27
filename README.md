@@ -30,16 +30,34 @@ npm run dev
 
 1. Crie um banco Postgres no [Neon](https://neon.tech) (free tier).
 2. Conecte o repo na Vercel e configure as variaveis de ambiente:
-   - `DATABASE_URL`: connection string do Neon (com `?sslmode=require`)
+   - `DATABASE_URL`: connection string do Neon **com pooler** (host com `-pooler`)
+   - `DIRECT_URL`: mesma connection string **sem pooler** (use isso pra rodar migrations)
    - `AUTH_SECRET`: 32+ caracteres aleatorios
-3. A Vercel roda automaticamente `prisma generate && prisma migrate deploy && next build` (script `vercel-build`).
-4. Apos o primeiro deploy, rode os seeds **uma vez** apontando o `.env` local para o `DATABASE_URL` de producao:
+   - `YOUTUBE_API_KEY` e `YOUTUBE_CHANNEL_ID` (opcionais, para a aba `/videos`)
+3. A Vercel roda automaticamente `prisma generate && next build` (script `vercel-build`).
+4. Apos o primeiro deploy, rode os seeds **uma vez** apontando o `.env` local para o banco de producao:
 
 ```bash
 npm run db:seed-master
 npm run db:seed-authors
 npm run db:seed-posts
 ```
+
+## Migrations futuras
+
+Migrations **NAO** rodam no build do Vercel (o pooler do Neon nao suporta o
+advisory lock que o `prisma migrate deploy` usa, e o auto-suspend do Neon
+free tier deixa o lock instavel). Quando criar novas migrations:
+
+```bash
+# 1. Cria a migration localmente, apontando .env para o Neon
+npx prisma migrate dev --name minha_migration
+
+# 2. Commit e push (a migration vai junto pro git)
+git add prisma/migrations && git commit -m "Adicionar migration X" && git push
+```
+
+Como `migrate dev` ja aplica direto no banco, nao precisa rodar `migrate deploy` em lugar nenhum.
 
 ## Estrutura
 
