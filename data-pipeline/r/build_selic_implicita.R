@@ -61,6 +61,95 @@ round_step_up <- function(x, step = 0.0025, eps = 1e-12) {
   ceiling((x - eps) / step) * step
 }
 
+parse_t1apr_from_taswap <- function(lines) {
+  raw <- tibble::tibble(line = lines) |>
+    filter(nchar(line) >= 72) |>
+    transmute(
+      refdate_chr = substr(line, 12, 19),
+      curve_code = substr(line, 20, 24),
+      curve_desc = trimws(substr(line, 27, 40)),
+      cur_days = suppressWarnings(as.integer(substr(line, 42, 46))),
+      biz_days = suppressWarnings(as.integer(substr(line, 47, 51))),
+      sign_chr = substr(line, 52, 52),
+      value_raw = suppressWarnings(as.numeric(substr(line, 53, 66)))
+    ) |>
+    mutate(
+      refdate = suppressWarnings(as.Date(refdate_chr, format = "%Y%m%d")),
+      sign = if_else(sign_chr == "-", -1, 1),
+      # B3 TaxaSwap keeps rates with 9 implied decimal places.
+      r_252 = sign * value_raw / 1e9,
+      forward_date = refdate + days(cur_days)
+    ) |>
+    filter(
+      curve_code == "T1APR",
+      !is.na(refdate),
+      !is.na(cur_days),
+      !is.na(biz_days),
+      !is.na(r_252)
+    ) |>
+    select(refdate, forward_date, biz_days, r_252) |>
+    arrange(biz_days) |>
+    distinct(biz_days, .keep_all = TRUE)
+
+  if (!nrow(raw)) {
+    stop("TaxaSwap sem linhas T1APR validas")
+  }
+
+  raw
+}
+
+get_pre_curve_from_taswap <- function(ref_date) {
+  ymd_token <- format(as.Date(ref_date), "%y%m%d")
+  endpoint <- sprintf(
+    "https://www.b3.com.br/pesquisapregao/download?filelist=TS%s.ex_",
+    ymd_token
+  )
+
+  tmp_zip <- tempfile(pattern = "pesquisa_pregao_", fileext = ".zip")
+  tmp_dir <- tempfile(pattern = "pesquisa_pregao_dir_")
+  dir.create(tmp_dir, recursive = TRUE, showWarnings = FALSE)
+
+  on.exit(unlink(c(tmp_zip, tmp_dir), recursive = TRUE, force = TRUE), add = TRUE)
+
+  ok_download <- tryCatch({
+    suppressWarnings(utils::download.file(endpoint, tmp_zip, mode = "wb", quiet = TRUE))
+    file.exists(tmp_zip) && file.info(tmp_zip)$size > 0
+  }, error = function(e) FALSE)
+  if (!ok_download) {
+    stop(sprintf("Falha download TaxaSwap (%s)", endpoint))
+  }
+
+  outer_entries <- suppressWarnings(tryCatch({
+    utils::unzip(tmp_zip, list = TRUE)
+  }, error = function(e) NULL))
+  if (is.null(outer_entries) || !nrow(outer_entries)) {
+    stop("ZIP da pesquisa por pregao veio vazio/invalido")
+  }
+  ts_name <- outer_entries$Name[grepl("^TS[0-9]{6}\\.ex_$", basename(outer_entries$Name), ignore.case = TRUE)][1]
+  if (!length(ts_name) || is.na(ts_name)) {
+    stop("Arquivo TS*.ex_ nao encontrado no ZIP da pesquisa por pregao")
+  }
+  suppressWarnings(utils::unzip(tmp_zip, files = ts_name, exdir = tmp_dir, overwrite = TRUE))
+  exe_path <- file.path(tmp_dir, basename(ts_name))
+
+  entries <- suppressWarnings(tryCatch({
+    utils::unzip(exe_path[1], list = TRUE)
+  }, error = function(e) NULL))
+  if (is.null(entries) || !"TaxaSwap.txt" %in% entries$Name) {
+    stop("TaxaSwap.txt nao encontrado dentro do TS*.ex_")
+  }
+
+  utils::unzip(exe_path[1], files = "TaxaSwap.txt", exdir = tmp_dir, overwrite = TRUE)
+  txt_path <- file.path(tmp_dir, "TaxaSwap.txt")
+  if (!file.exists(txt_path)) {
+    stop("Falha ao extrair TaxaSwap.txt")
+  }
+
+  lines <- readLines(txt_path, warn = FALSE, encoding = "latin1")
+  parsed <- parse_t1apr_from_taswap(lines)
+  parsed |> filter(refdate == as.Date(ref_date))
+}
+
 get_pre_curve <- function(ref_date) {
   rb3_bootstrap()
   fetch_marketdata(
@@ -96,6 +185,23 @@ resolve_pre_curve <- function(target_date, max_lookback_days = 10) {
         ))
       }
       return(list(used_refdate = candidate_date, data = yc_try))
+    }
+
+    # Fallback resiliente: usa arquivo oficial da "Pesquisa por pregao" (TaxaSwap).
+    yc_taswap_try <- tryCatch(
+      get_pre_curve_from_taswap(candidate_date),
+      error = function(e) {
+        message(sprintf("Sem TaxaSwap PRE para %s (%s)", format(candidate_date), conditionMessage(e)))
+        NULL
+      }
+    )
+    if (!is.null(yc_taswap_try) && nrow(yc_taswap_try) > 0) {
+      message(sprintf(
+        "Curva PRE via TaxaSwap em %s%s",
+        format(candidate_date),
+        if (i > 0) sprintf(" (fallback de %s)", format(target_date)) else ""
+      ))
+      return(list(used_refdate = candidate_date, data = yc_taswap_try))
     }
   }
   stop(sprintf(
