@@ -9,6 +9,7 @@ suppressPackageStartupMessages({
   library(svglite)
   library(scales)
   library(tibble)
+  library(jsonlite)
 })
 
 args_trailing <- commandArgs(trailingOnly = FALSE)
@@ -55,12 +56,12 @@ get_fred_api <- function(series_id, api_key) {
     req_url_query(api_key = api_key, series_id = series_id, file_type = "json") |>
     req_timeout(60) |>
     req_perform()
-  payload <- resp_body_json(req)
+  payload <- fromJSON(resp_body_string(req))
   obs <- payload$observations
   if (is.null(obs) || !length(obs)) {
     return(tibble(date = as.Date(character()), value = numeric(), series = character()))
   }
-  df <- tibble::as_tibble(obs)
+  df <- as.data.frame(obs, stringsAsFactors = FALSE)
   tibble(
     date = as.Date(df$date),
     value = suppressWarnings(as.numeric(df$value)),
@@ -77,11 +78,12 @@ get_fred_csv <- function(series_id) {
   con <- textConnection(payload)
   on.exit(close(con), add = TRUE)
   df <- read.csv(con, stringsAsFactors = FALSE)
-  if (!all(c("DATE", series_id) %in% names(df))) {
+  date_col <- if ("observation_date" %in% names(df)) "observation_date" else if ("DATE" %in% names(df)) "DATE" else NA_character_
+  if (is.na(date_col) || !(series_id %in% names(df))) {
     return(tibble(date = as.Date(character()), value = numeric(), series = character()))
   }
   tibble(
-    date = as.Date(df$DATE),
+    date = as.Date(df[[date_col]]),
     value = suppressWarnings(as.numeric(df[[series_id]])),
     series = series_id
   ) %>% filter(!is.na(date), !is.na(value))

@@ -57,6 +57,7 @@ jobs:
             any::scales
             any::tibble
             any::rlang
+            any::rb3
 
       - name: R yield curves SVG
         run: Rscript data-pipeline/r/build_yield_curves_svg.R
