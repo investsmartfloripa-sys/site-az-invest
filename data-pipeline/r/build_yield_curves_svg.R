@@ -78,8 +78,8 @@ ref_dates <- function(dates) {
   )
 }
 
-snapshots_long <- function(td, tipo_regex, cores) {
-  sub <- td %>% filter(grepl(tipo_regex, tipo_titulo, ignore.case = TRUE))
+snapshots_long <- function(td, tipo_predicate) {
+  sub <- td %>% filter(tipo_predicate(tipo_titulo))
   if (!nrow(sub)) return(NULL)
   refs <- ref_dates(sub$data_base)
   rows <- list()
@@ -102,10 +102,17 @@ snapshots_long <- function(td, tipo_regex, cores) {
 stamp <- format(Sys.time(), "%d/%m/%Y %H:%M", tz = "America/Sao_Paulo")
 
 plot_curves <- function(long_df, title, pal) {
-  ggplot(long_df, aes(x = vencimento, y = taxa_venda, color = snapshot_label)) +
+  label_map <- long_df %>%
+    distinct(curve_key, snapshot_label) %>%
+    arrange(match(curve_key, names(pal)))
+  ggplot(long_df, aes(x = vencimento, y = taxa_venda, color = curve_key, group = snapshot_label)) +
     geom_line(linewidth = 0.9) +
     geom_point(size = 1.8) +
-    scale_color_manual(values = pal) +
+    scale_color_manual(
+      values = pal,
+      breaks = label_map$curve_key,
+      labels = as.character(label_map$snapshot_label)
+    ) +
     scale_x_date(date_labels = "%Y") +
     scale_y_continuous(labels = comma_format(decimal.mark = ",", big.mark = ".")) +
     labs(x = "Vencimento", y = "Taxa (%)", title = title, color = NULL) +
@@ -125,7 +132,17 @@ message("Linhas: ", nrow(td))
 cores_pre <- c(`D-90` = "#000000", `D-30` = "#00008B", Hoje = "#56B4E9")
 cores_ipca <- c(`D-90` = "#000000", `D-30` = "#8B0000", Hoje = "#F8766D")
 
-long_pre <- snapshots_long(td, "Prefixado", cores_pre)
+# Use only principal bond families to avoid duplicate maturities
+# (e.g., with/without semiannual coupons) creating zigzag lines.
+is_prefixado_principal <- function(tt) {
+  trimws(tt) == "Tesouro Prefixado"
+}
+
+is_ipca_principal <- function(tt) {
+  trimws(tt) == "Tesouro IPCA+"
+}
+
+long_pre <- snapshots_long(td, is_prefixado_principal)
 if (!is.null(long_pre)) {
   p <- plot_curves(long_pre, "Curva Prefixado", cores_pre)
   svglite(file.path(static_dir, "juros_prefixado.svg"), width = 10, height = 5.5)
@@ -136,7 +153,7 @@ if (!is.null(long_pre)) {
   message("AVISO: sem dados Prefixado")
 }
 
-long_ipca <- snapshots_long(td, "IPCA", cores_ipca)
+long_ipca <- snapshots_long(td, is_ipca_principal)
 if (!is.null(long_ipca)) {
   p2 <- plot_curves(long_ipca, "Curva IPCA+", cores_ipca)
   svglite(file.path(static_dir, "juros_ipca.svg"), width = 10, height = 5.5)
