@@ -8,8 +8,17 @@ Gera artefatos consumidos pelo Next.js na raiz deste repositorio (`src/app/paine
 ## Estrutura
 
 - `r/` — scripts R (instalar pacotes com `Rscript r/install_packages.R`).
+- `r/chart_theme.R` — **tema visual padrao** para todos os SVGs gerados via ggplot2.
 - `python/` — scripts Python (`pip install -r python/requirements.txt`).
 - `out/` — saida local (gitignored); CI tambem usa esta pasta antes do upload.
+
+## Padrao visual dos graficos (fonte unica)
+
+Para manter consistencia entre todos os graficos atuais e futuros:
+
+- Reutilize `az_chart_theme()` para tema/base do plot.
+- Reutilize `az_chart_stamp()` para carimbo de atualizacao no `caption`.
+- Evite declarar temas locais duplicados nos scripts; prefira sobrescrever apenas cores/paleta e escalas especificas do grafico.
 
 ## Variaveis de ambiente
 

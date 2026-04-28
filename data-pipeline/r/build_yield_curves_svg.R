@@ -22,6 +22,7 @@ data_pipeline_root <- normalizePath(file.path(script_dir, ".."), winslash = "/",
 out_dir <- Sys.getenv("DATA_PIPELINE_OUT", unset = file.path(data_pipeline_root, "out"))
 static_dir <- file.path(out_dir, "charts", "static")
 dir.create(static_dir, recursive = TRUE, showWarnings = FALSE)
+source(file.path(script_dir, "chart_theme.R"))
 
 TD_URL <- paste0(
   "https://www.tesourotransparente.gov.br/ckan/dataset/",
@@ -99,7 +100,7 @@ snapshots_long <- function(td, tipo_predicate) {
     )
 }
 
-stamp <- format(Sys.time(), "%d/%m/%Y %H:%M", tz = "America/Sao_Paulo")
+stamp <- az_chart_stamp()
 
 plot_curves <- function(long_df, title, pal) {
   label_map <- long_df %>%
@@ -115,14 +116,15 @@ plot_curves <- function(long_df, title, pal) {
     ) +
     scale_x_date(date_labels = "%Y") +
     scale_y_continuous(labels = comma_format(decimal.mark = ",", big.mark = ".")) +
-    labs(x = "Vencimento", y = "Taxa (%)", title = title, color = NULL) +
-    theme_minimal(base_size = 12) +
-    theme(
-      legend.position = "bottom",
-      plot.title = element_text(face = "bold", color = "#132960"),
-      panel.grid.minor = element_blank()
+    labs(
+      x = "Vencimento",
+      y = "Taxa (%)",
+      title = title,
+      subtitle = "Curvas historicas (D-90, D-30 e Hoje)",
+      color = NULL,
+      caption = paste("Atualizado:", stamp)
     ) +
-    labs(caption = paste("Atualizado:", stamp))
+    az_chart_theme(legend_position = "bottom")
 }
 
 message("Baixando Tesouro Direto...")

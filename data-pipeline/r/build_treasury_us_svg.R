@@ -23,6 +23,7 @@ data_pipeline_root <- normalizePath(file.path(script_dir, ".."), winslash = "/",
 out_dir <- Sys.getenv("DATA_PIPELINE_OUT", unset = file.path(data_pipeline_root, "out"))
 static_dir <- file.path(out_dir, "charts", "static")
 dir.create(static_dir, recursive = TRUE, showWarnings = FALSE)
+source(file.path(script_dir, "chart_theme.R"))
 
 write_treasury_placeholder <- function(reason) {
   p <- ggplot(data.frame(x = 1, y = 1), aes(x = x, y = y)) +
@@ -36,7 +37,8 @@ write_treasury_placeholder <- function(reason) {
     ) +
     theme_void(base_size = 12) +
     theme(
-      plot.title = element_text(face = "bold", color = "#132960", hjust = 0)
+      plot.title = element_text(face = "bold", color = "#027DFC", hjust = 0),
+      plot.background = element_rect(fill = "white", colour = NA)
     )
   svglite(file.path(static_dir, "juros_treasury_us.svg"), width = 10, height = 5.5)
   print(p)
@@ -173,7 +175,7 @@ curves$snapshot <- factor(curves$snapshot, levels = snap_order)
 greens <- colorRampPalette(c("#8BE28F", "#2BBF5E", "#0B6B2E", "#000000"))(length(snap_order))
 names(greens) <- snap_order
 
-stamp <- format(Sys.time(), "%d/%m/%Y %H:%M", tz = "America/Sao_Paulo")
+stamp <- az_chart_stamp()
 
 p <- ggplot(curves, aes(x = tenor, y = yield, color = snapshot, group = snapshot)) +
   geom_line(linewidth = 0.9) +
@@ -184,14 +186,11 @@ p <- ggplot(curves, aes(x = tenor, y = yield, color = snapshot, group = snapshot
     x = "Maturidade (anos)",
     y = "Yield (%)",
     title = "Curva Treasury EUA",
+    subtitle = "Comparativo historico (D-365, D-90, D-30 e Hoje)",
     color = NULL,
     caption = paste("Atualizado:", stamp)
   ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    legend.position = "bottom",
-    plot.title = element_text(face = "bold", color = "#132960")
-  )
+  az_chart_theme(legend_position = "bottom")
 
 svglite(file.path(static_dir, "juros_treasury_us.svg"), width = 10, height = 5.5)
 print(p)

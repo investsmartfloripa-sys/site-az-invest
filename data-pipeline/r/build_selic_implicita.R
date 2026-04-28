@@ -23,6 +23,7 @@ out_dir <- Sys.getenv("DATA_PIPELINE_OUT", unset = file.path(data_pipeline_root,
 static_dir <- file.path(out_dir, "charts", "static")
 dir.create(static_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+source(file.path(script_dir, "chart_theme.R"))
 
 write_placeholder <- function(reason) {
   p <- ggplot(data.frame(x = 1, y = 1), aes(x = x, y = y)) +
@@ -36,7 +37,8 @@ write_placeholder <- function(reason) {
     ) +
     theme_void(base_size = 12) +
     theme(
-      plot.title = element_text(face = "bold", color = "#132960", hjust = 0)
+      plot.title = element_text(face = "bold", color = "#027DFC", hjust = 0),
+      plot.background = element_rect(fill = "white", colour = NA)
     )
   svg_path <- file.path(static_dir, "selic_implicita.svg")
   svglite(svg_path, width = 10, height = 5.5)
@@ -382,21 +384,9 @@ p <- ggplot(df_plot, aes(x = grid_date, y = fwd, color = curve, linewidth = curv
     title = "Selic implicita (Forward)",
     subtitle = "Meeting-to-Meeting (25bps step)",
     color = NULL,
-    caption = sprintf("Atualizado: %s", format(Sys.time(), "%d/%m/%Y %H:%M"))
+    caption = sprintf("Atualizado: %s", az_chart_stamp())
   ) +
-  theme_classic(base_size = 12) +
-  theme(
-    panel.background = element_rect(fill = "#f5f5f4", colour = NA),
-    plot.background = element_rect(fill = "white", colour = NA),
-    panel.grid.major.y = element_line(color = "grey85", linewidth = 0.4),
-    panel.grid.minor.y = element_line(color = "grey92", linewidth = 0.25),
-    panel.grid.major.x = element_line(color = "grey85", linewidth = 0.4),
-    panel.grid.minor.x = element_line(color = "grey92", linewidth = 0.25),
-    legend.position = "top",
-    legend.justification = "center",
-    plot.title = element_text(face = "bold", color = "#027DFC"),
-    plot.caption = element_text(size = 10, color = "#6b7280", hjust = 1)
-  )
+  az_chart_theme(legend_position = "top")
 
 svg_path <- file.path(static_dir, "selic_implicita.svg")
 svglite(svg_path, width = 10, height = 5.5)
