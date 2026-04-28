@@ -9,9 +9,24 @@ type Props = {
   title: string;
   badge?: string;
   cacheBuster?: string;
+  tableData?: StaticChartTablePayload | null;
 };
 
-export function StaticChartCard({ slug, title, badge, cacheBuster }: Props) {
+type StaticChartTableColumn = {
+  key: string;
+  label: string;
+};
+
+type StaticChartTableRow = Record<string, string | number | null>;
+
+export type StaticChartTablePayload = {
+  status?: string;
+  generated_at?: string;
+  columns?: StaticChartTableColumn[];
+  rows?: StaticChartTableRow[];
+};
+
+export function StaticChartCard({ slug, title, badge, cacheBuster, tableData }: Props) {
   const baseUrl = painelBlobUrl(`charts/static/${slug}.svg`);
   const url = baseUrl ? `${baseUrl}?v=${encodeURIComponent(cacheBuster ?? "1")}` : "";
 
@@ -47,6 +62,32 @@ export function StaticChartCard({ slug, title, badge, cacheBuster }: Props) {
           sizes="(max-width: 768px) 100vw, 896px"
         />
       </div>
+      {tableData?.status === "ok" && (tableData.rows?.length ?? 0) > 0 && (tableData.columns?.length ?? 0) > 0 ? (
+        <div className="mt-4 overflow-x-auto rounded-xl border border-zinc-200">
+          <table className="min-w-full divide-y divide-zinc-200 text-xs">
+            <thead className="bg-zinc-50">
+              <tr>
+                {tableData.columns?.map((col) => (
+                  <th key={col.key} className="px-3 py-2 text-left font-semibold text-zinc-700">
+                    {col.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 bg-white">
+              {tableData.rows?.map((row, idx) => (
+                <tr key={`${slug}-row-${idx}`}>
+                  {tableData.columns?.map((col) => (
+                    <td key={`${slug}-${idx}-${col.key}`} className="whitespace-nowrap px-3 py-2 text-zinc-700">
+                      {row[col.key] == null ? "—" : String(row[col.key])}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -22,7 +22,9 @@ script_dir <- if (length(file_arg) && nzchar(file_arg[1])) {
 data_pipeline_root <- normalizePath(file.path(script_dir, ".."), winslash = "/", mustWork = TRUE)
 out_dir <- Sys.getenv("DATA_PIPELINE_OUT", unset = file.path(data_pipeline_root, "out"))
 static_dir <- file.path(out_dir, "charts", "static")
+tables_dir <- file.path(out_dir, "charts", "tables")
 dir.create(static_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
 source(file.path(script_dir, "chart_theme.R"))
 
 write_treasury_placeholder <- function(reason) {
@@ -195,4 +197,33 @@ p <- ggplot(curves, aes(x = tenor, y = yield, color = snapshot, group = snapshot
 svglite(file.path(static_dir, "juros_treasury_us.svg"), width = 10, height = 5.5)
 print(p)
 dev.off()
+
+treasury_wide <- curves %>%
+  mutate(snapshot = as.character(snapshot)) %>%
+  tidyr::pivot_wider(names_from = snapshot, values_from = yield) %>%
+  arrange(tenor)
+curve_cols <- setdiff(names(treasury_wide), "tenor")
+table_payload <- list(
+  status = "ok",
+  generated_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
+  columns = c(
+    list(list(key = "tenor", label = "Maturidade (anos)")),
+    lapply(curve_cols, function(k) list(key = k, label = k))
+  ),
+  rows = lapply(seq_len(nrow(treasury_wide)), function(i) {
+    row <- treasury_wide[i, , drop = FALSE]
+    out <- list(tenor = as.character(row$tenor[[1]]))
+    for (k in curve_cols) {
+      v <- row[[k]][[1]]
+      out[[k]] <- if (is.na(v)) NULL else sprintf("%.2f%%", as.numeric(v))
+    }
+    out
+  })
+)
+write_json(
+  table_payload,
+  file.path(tables_dir, "juros_treasury_us.json"),
+  auto_unbox = TRUE,
+  pretty = TRUE
+)
 message("SVG: juros_treasury_us.svg")

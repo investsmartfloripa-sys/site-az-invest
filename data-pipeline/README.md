@@ -3,6 +3,7 @@
 Gera artefatos consumidos pelo Next.js na raiz deste repositorio (`src/app/painel-economico`, etc.):
 
 - **SVG** (R + ggplot2 + svglite): curvas de juros BR, Selic implicita, Treasury EUA → upload para `charts/static/` no Vercel Blob.
+- **JSON de tabela** (R): dados tabulares que acompanham os graficos de juros → upload para `charts/tables/` no Vercel Blob.
 - **JSON** (Python + pandas + yfinance): retornos, moedas, setores, commodities → upload para `data/` no Vercel Blob.
 
 ## Estrutura

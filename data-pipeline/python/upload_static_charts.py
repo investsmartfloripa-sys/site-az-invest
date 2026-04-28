@@ -11,11 +11,12 @@ ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from shared.blob_upload import maybe_upload_svg
+from shared.blob_upload import maybe_upload_json, maybe_upload_svg
 
 DATA_PIPELINE_ROOT = ROOT.parent
 OUT = Path(os.environ.get("DATA_PIPELINE_OUT", str(DATA_PIPELINE_ROOT / "out"))).resolve()
 static = OUT / "charts" / "static"
+tables = OUT / "charts" / "tables"
 
 
 def main() -> int:
@@ -27,6 +28,12 @@ def main() -> int:
             maybe_upload_svg(f, f"charts/static/{f.name}")
         except Exception as e:
             print(f"[WARN] {f.name}: {e}", file=sys.stderr)
+    if tables.is_dir():
+        for f in sorted(tables.glob("*.json")):
+            try:
+                maybe_upload_json(f, f"charts/tables/{f.name}")
+            except Exception as e:
+                print(f"[WARN] {f.name}: {e}", file=sys.stderr)
     return 0
 
 

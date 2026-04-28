@@ -21,7 +21,9 @@ script_dir <- if (length(file_arg) && nzchar(file_arg[1])) {
 data_pipeline_root <- normalizePath(file.path(script_dir, ".."), winslash = "/", mustWork = TRUE)
 out_dir <- Sys.getenv("DATA_PIPELINE_OUT", unset = file.path(data_pipeline_root, "out"))
 static_dir <- file.path(out_dir, "charts", "static")
+tables_dir <- file.path(out_dir, "charts", "tables")
 dir.create(static_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 source(file.path(script_dir, "chart_theme.R"))
 
@@ -412,3 +414,33 @@ output <- list(
 json_path <- file.path(out_dir, "selic_implicita.json")
 write_json(output, json_path, auto_unbox = TRUE, pretty = TRUE)
 message("JSON: ", normalizePath(json_path, winslash = "/", mustWork = FALSE))
+
+table_wide <- df_plot |>
+  select(grid_date, curve, fwd) |>
+  mutate(curve = as.character(curve)) |>
+  tidyr::pivot_wider(names_from = curve, values_from = fwd) |>
+  arrange(grid_date)
+curve_cols <- setdiff(names(table_wide), "grid_date")
+table_payload <- list(
+  status = "ok",
+  generated_at = output$generated_at,
+  columns = c(
+    list(list(key = "grid_date", label = "Data")),
+    lapply(curve_cols, function(k) list(key = k, label = k))
+  ),
+  rows = lapply(seq_len(nrow(table_wide)), function(i) {
+    row <- table_wide[i, , drop = FALSE]
+    out <- list(grid_date = format(as.Date(row$grid_date[[1]]), "%d/%m/%Y"))
+    for (k in curve_cols) {
+      v <- row[[k]][[1]]
+      out[[k]] <- if (is.na(v)) NULL else sprintf("%.2f%%", as.numeric(v) * 100)
+    }
+    out
+  })
+)
+write_json(
+  table_payload,
+  file.path(tables_dir, "selic_implicita.json"),
+  auto_unbox = TRUE,
+  pretty = TRUE
+)

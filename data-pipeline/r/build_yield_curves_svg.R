@@ -5,6 +5,8 @@ suppressPackageStartupMessages({
   library(httr2)
   library(readr)
   library(dplyr)
+  library(tidyr)
+  library(jsonlite)
   library(ggplot2)
   library(svglite)
   library(lubridate)
@@ -21,7 +23,9 @@ script_dir <- if (length(file_arg) && nzchar(file_arg[1])) {
 data_pipeline_root <- normalizePath(file.path(script_dir, ".."), winslash = "/", mustWork = TRUE)
 out_dir <- Sys.getenv("DATA_PIPELINE_OUT", unset = file.path(data_pipeline_root, "out"))
 static_dir <- file.path(out_dir, "charts", "static")
+tables_dir <- file.path(out_dir, "charts", "tables")
 dir.create(static_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
 source(file.path(script_dir, "chart_theme.R"))
 
 TD_URL <- paste0(
@@ -127,6 +131,45 @@ plot_curves <- function(long_df, title, pal) {
     az_chart_theme(legend_position = "bottom")
 }
 
+write_curve_table_json <- function(long_df, slug, generated_at) {
+  if (!nrow(long_df)) return(invisible(NULL))
+  wide <- long_df |>
+    mutate(vencimento = format(vencimento, "%d/%m/%Y")) |>
+    select(vencimento, snapshot_label, taxa_venda) |>
+    mutate(snapshot_label = as.character(snapshot_label)) |>
+    tidyr::pivot_wider(names_from = snapshot_label, values_from = taxa_venda) |>
+    arrange(as.Date(vencimento, format = "%d/%m/%Y"))
+
+  curve_cols <- setdiff(names(wide), "vencimento")
+  columns <- c(
+    list(list(key = "vencimento", label = "Vencimento")),
+    lapply(curve_cols, function(k) list(key = k, label = k))
+  )
+
+  rows <- lapply(seq_len(nrow(wide)), function(i) {
+    row <- wide[i, , drop = FALSE]
+    out <- list(vencimento = row$vencimento[[1]])
+    for (k in curve_cols) {
+      v <- row[[k]][[1]]
+      out[[k]] <- if (is.na(v)) NULL else sprintf("%.2f%%", as.numeric(v))
+    }
+    out
+  })
+
+  payload <- list(
+    status = "ok",
+    generated_at = generated_at,
+    columns = columns,
+    rows = rows
+  )
+  write_json(
+    payload,
+    file.path(tables_dir, paste0(slug, ".json")),
+    auto_unbox = TRUE,
+    pretty = TRUE
+  )
+}
+
 message("Baixando Tesouro Direto...")
 td <- fetch_tesouro()
 message("Linhas: ", nrow(td))
@@ -150,6 +193,7 @@ if (!is.null(long_pre)) {
   svglite(file.path(static_dir, "juros_prefixado.svg"), width = 10, height = 5.5)
   print(p)
   dev.off()
+  write_curve_table_json(long_pre, "juros_prefixado", format(Sys.time(), "%Y-%m-%dT%H:%M:%S"))
   message("SVG: juros_prefixado.svg")
 } else {
   message("AVISO: sem dados Prefixado")
@@ -161,6 +205,7 @@ if (!is.null(long_ipca)) {
   svglite(file.path(static_dir, "juros_ipca.svg"), width = 10, height = 5.5)
   print(p2)
   dev.off()
+  write_curve_table_json(long_ipca, "juros_ipca", format(Sys.time(), "%Y-%m-%dT%H:%M:%S"))
   message("SVG: juros_ipca.svg")
 } else {
   message("AVISO: sem dados IPCA+")
