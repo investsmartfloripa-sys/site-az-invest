@@ -26,9 +26,25 @@ export type StaticChartTablePayload = {
   rows?: StaticChartTableRow[];
 };
 
+function formatGeneratedAt(value?: string): string | null {
+  if (!value) return null;
+  const normalized = value.replace(" ", "T");
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
 export function StaticChartCard({ slug, title, badge, cacheBuster, tableData }: Props) {
   const baseUrl = painelBlobUrl(`charts/static/${slug}.svg`);
   const url = baseUrl ? `${baseUrl}?v=${encodeURIComponent(cacheBuster ?? "1")}` : "";
+  const generatedAt = formatGeneratedAt(tableData?.generated_at);
 
   if (!url) {
     return (
@@ -62,6 +78,9 @@ export function StaticChartCard({ slug, title, badge, cacheBuster, tableData }: 
           sizes="(max-width: 768px) 100vw, 896px"
         />
       </div>
+      {generatedAt ? (
+        <p className="mt-2 text-xs italic text-zinc-700">Panorama - atualizado em {generatedAt}</p>
+      ) : null}
       {tableData?.status === "ok" && (tableData.rows?.length ?? 0) > 0 && (tableData.columns?.length ?? 0) > 0 ? (
         <div className="mt-4 overflow-x-auto rounded-xl border border-zinc-200">
           <table className="min-w-full divide-y divide-zinc-200 text-xs">

@@ -6,7 +6,6 @@ import type { ByPeriodBlock } from "@/components/painel/DynamicReturnsBar";
 import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection";
 import type { SectorBrPayload } from "@/components/painel/DynamicSectorBr";
 import type { SectorGlobalPayload } from "@/components/painel/DynamicSectorGlobal";
-import { FloatingSectionsMenu } from "@/components/painel/FloatingSectionsMenu";
 import { StaticChartCard, type StaticChartTablePayload } from "@/components/painel/StaticChartCard";
 import { NewsletterForm } from "@/components/home/NewsletterForm";
 import { painelBlobBase, painelBlobUrl } from "@/lib/painel-blob";
@@ -57,18 +56,6 @@ export default async function PainelEconomicoPage() {
   return (
     <div className="min-h-screen text-[#132960]">
       <Header />
-      <FloatingSectionsMenu
-        title="Areas do painel"
-        activeId="area-panorama"
-        items={[
-          { id: "area-panorama", href: "/painel-economico", label: "Panorama" },
-          { id: "area-renda-fixa", href: "/painel-economico?area=renda-fixa", label: "Renda fixa", disabled: true },
-          { id: "area-internacional", href: "/painel-economico?area=internacional", label: "Internacional", disabled: true },
-          { id: "area-macro", href: "/painel-economico?area=macro", label: "Macro", disabled: true },
-          { id: "area-setores", href: "/painel-economico?area=setores", label: "Setores", disabled: true },
-          { id: "area-comodities", href: "/painel-economico?area=commodities", label: "Commodities", disabled: true },
-        ]}
-      />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-8 md:px-8">
         <header className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">Economia</p>

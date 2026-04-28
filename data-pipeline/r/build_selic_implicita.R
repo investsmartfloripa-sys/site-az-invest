@@ -384,7 +384,7 @@ p <- ggplot(df_plot, aes(x = grid_date, y = fwd, color = curve, linewidth = curv
     color = NULL,
     caption = sprintf("Atualizado: %s", az_chart_stamp())
   ) +
-  az_chart_theme(legend_position = "top")
+  az_chart_theme(legend_position = "bottom")
 
 svg_path <- file.path(static_dir, "selic_implicita.svg")
 svglite(svg_path, width = 10, height = 5.5)
