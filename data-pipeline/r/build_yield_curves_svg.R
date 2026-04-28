@@ -48,7 +48,10 @@ fetch_tesouro <- function() {
       tipo_titulo = .data[["Tipo Titulo"]],
       vencimento = dmy(.data[["Data Vencimento"]]),
       data_base = dmy(.data[["Data Base"]]),
-      taxa_venda = parse_number(.data[["Taxa Venda Manha"]], locale = locale(decimal_mark = ",", grouping_mark = "."))
+      taxa_venda = parse_number(
+        as.character(.data[["Taxa Venda Manha"]]),
+        locale = locale(decimal_mark = ",", grouping_mark = ".")
+      )
     ) |>
     filter(!is.na(vencimento), !is.na(data_base), !is.na(taxa_venda))
 }
