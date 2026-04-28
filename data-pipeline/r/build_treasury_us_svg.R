@@ -23,6 +23,26 @@ out_dir <- Sys.getenv("DATA_PIPELINE_OUT", unset = file.path(data_pipeline_root,
 static_dir <- file.path(out_dir, "charts", "static")
 dir.create(static_dir, recursive = TRUE, showWarnings = FALSE)
 
+write_treasury_placeholder <- function(reason) {
+  p <- ggplot(data.frame(x = 1, y = 1), aes(x = x, y = y)) +
+    geom_text(label = reason, size = 5, color = "#6b7280") +
+    xlim(0, 2) +
+    ylim(0, 2) +
+    labs(
+      x = NULL,
+      y = NULL,
+      title = "Curva Treasury EUA"
+    ) +
+    theme_void(base_size = 12) +
+    theme(
+      plot.title = element_text(face = "bold", color = "#132960", hjust = 0)
+    )
+  svglite(file.path(static_dir, "juros_treasury_us.svg"), width = 10, height = 5.5)
+  print(p)
+  dev.off()
+  message("SVG placeholder: juros_treasury_us.svg")
+}
+
 fred_key <- Sys.getenv("FRED_API_KEY", "")
 
 series_cols <- c("DGS1", "DGS2", "DGS3", "DGS5", "DGS7", "DGS10", "DGS20", "DGS30")
@@ -93,7 +113,10 @@ dfs <- lapply(series_cols, function(s) {
   fetch_series(s, fred_key)
 })
 df <- bind_rows(dfs)
-if (!nrow(df)) stop("Nenhum dado FRED")
+if (!nrow(df)) {
+  write_treasury_placeholder("Dados Treasury indisponiveis agora")
+  quit(save = "no", status = 0)
+}
 
 df_wide <- df %>%
   pivot_wider(names_from = series, values_from = value) %>%
@@ -138,7 +161,10 @@ curves <- bind_rows(
   curve_to_long(row_today, snap_label("Hoje", row_today))
 )
 
-if (!nrow(curves)) stop("Curva Treasury vazia")
+if (!nrow(curves)) {
+  write_treasury_placeholder("Curva Treasury indisponivel agora")
+  quit(save = "no", status = 0)
+}
 
 snap_order <- unique(curves$snapshot)
 curves$snapshot <- factor(curves$snapshot, levels = snap_order)
