@@ -43,7 +43,20 @@ jobs:
           use-public-rspm: true
 
       - name: R packages
-        run: Rscript data-pipeline/r/install_packages.R
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::httr2
+            any::readr
+            any::dplyr
+            any::tidyr
+            any::lubridate
+            any::ggplot2
+            any::svglite
+            any::jsonlite
+            any::scales
+            any::tibble
+            any::rlang
 
       - name: R yield curves SVG
         run: Rscript data-pipeline/r/build_yield_curves_svg.R
