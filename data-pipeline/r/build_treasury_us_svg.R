@@ -24,18 +24,15 @@ static_dir <- file.path(out_dir, "charts", "static")
 dir.create(static_dir, recursive = TRUE, showWarnings = FALSE)
 
 fred_key <- Sys.getenv("FRED_API_KEY", "")
-if (!nzchar(fred_key)) {
-  message("SKIP build_treasury_us_svg (sem FRED_API_KEY)")
-  quit(save = "no", status = 0)
-}
 
 series_cols <- c("DGS1", "DGS2", "DGS3", "DGS5", "DGS7", "DGS10", "DGS20", "DGS30")
 tenor_years <- c(1, 2, 3, 5, 7, 10, 20, 30)
 base_url <- "https://api.stlouisfed.org/fred/series/observations"
+fallback_csv_url <- "https://fred.stlouisfed.org/graph/fredgraph.csv"
 
-get_fred <- function(series_id) {
+get_fred_api <- function(series_id, api_key) {
   req <- request(base_url) |>
-    req_url_query(api_key = fred_key, series_id = series_id, file_type = "json") |>
+    req_url_query(api_key = api_key, series_id = series_id, file_type = "json") |>
     req_timeout(60) |>
     req_perform()
   payload <- resp_body_json(req)
@@ -51,14 +48,49 @@ get_fred <- function(series_id) {
   ) %>% filter(!is.na(date), !is.na(value))
 }
 
-dfs <- lapply(series_cols, function(s) {
+get_fred_csv <- function(series_id) {
+  req <- request(fallback_csv_url) |>
+    req_url_query(id = series_id) |>
+    req_timeout(60) |>
+    req_perform()
+  payload <- resp_body_string(req)
+  con <- textConnection(payload)
+  on.exit(close(con), add = TRUE)
+  df <- read.csv(con, stringsAsFactors = FALSE)
+  if (!all(c("DATE", series_id) %in% names(df))) {
+    return(tibble(date = as.Date(character()), value = numeric(), series = character()))
+  }
+  tibble(
+    date = as.Date(df$DATE),
+    value = suppressWarnings(as.numeric(df[[series_id]])),
+    series = series_id
+  ) %>% filter(!is.na(date), !is.na(value))
+}
+
+fetch_series <- function(series_id, api_key) {
+  via_api <- if (nzchar(api_key)) {
+    tryCatch(
+      get_fred_api(series_id, api_key),
+      error = function(e) {
+        message("WARN FRED API ", series_id, ": ", conditionMessage(e))
+        tibble(date = as.Date(character()), value = numeric(), series = character())
+      }
+    )
+  } else {
+    tibble(date = as.Date(character()), value = numeric(), series = character())
+  }
+  if (nrow(via_api) > 0) return(via_api)
   tryCatch(
-    get_fred(s),
+    get_fred_csv(series_id),
     error = function(e) {
-      message("WARN FRED ", s, ": ", conditionMessage(e))
+      message("WARN FRED CSV ", series_id, ": ", conditionMessage(e))
       tibble(date = as.Date(character()), value = numeric(), series = character())
     }
   )
+}
+
+dfs <- lapply(series_cols, function(s) {
+  fetch_series(s, fred_key)
 })
 df <- bind_rows(dfs)
 if (!nrow(df)) stop("Nenhum dado FRED")

@@ -31,6 +31,15 @@ TD_URL <- paste0(
 
 ua <- "Mozilla/5.0 (compatible; AZInvestDataBot/1.0)"
 
+parse_taxa_percent <- function(x) {
+  if (is.numeric(x)) return(as.numeric(x))
+  chr <- trimws(as.character(x))
+  has_comma <- grepl(",", chr, fixed = TRUE)
+  chr[has_comma] <- gsub("\\.", "", chr[has_comma])
+  chr[has_comma] <- sub(",", ".", chr[has_comma], fixed = TRUE)
+  suppressWarnings(as.numeric(chr))
+}
+
 fetch_tesouro <- function() {
   resp <- request(TD_URL) |>
     req_headers("User-Agent" = ua) |>
@@ -48,10 +57,7 @@ fetch_tesouro <- function() {
       tipo_titulo = .data[["Tipo Titulo"]],
       vencimento = dmy(.data[["Data Vencimento"]]),
       data_base = dmy(.data[["Data Base"]]),
-      taxa_venda = parse_number(
-        as.character(.data[["Taxa Venda Manha"]]),
-        locale = locale(decimal_mark = ",", grouping_mark = ".")
-      )
+      taxa_venda = parse_taxa_percent(.data[["Taxa Venda Manha"]])
     ) |>
     filter(!is.na(vencimento), !is.na(data_base), !is.na(taxa_venda))
 }

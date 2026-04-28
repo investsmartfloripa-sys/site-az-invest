@@ -11,11 +11,6 @@ suppressPackageStartupMessages({
   library(svglite)
 })
 
-if (!requireNamespace("rb3", quietly = TRUE)) {
-  stop("Pacote rb3 nao instalado. Rode: Rscript r/install_packages.R")
-}
-library(rb3)
-
 args_trailing <- commandArgs(trailingOnly = FALSE)
 file_arg <- sub("^--file=", "", args_trailing[grepl("^--file=", args_trailing)])
 script_dir <- if (length(file_arg) && nzchar(file_arg[1])) {
@@ -28,6 +23,39 @@ out_dir <- Sys.getenv("DATA_PIPELINE_OUT", unset = file.path(data_pipeline_root,
 static_dir <- file.path(out_dir, "charts", "static")
 dir.create(static_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+write_placeholder <- function(reason) {
+  p <- ggplot(data.frame(x = 1, y = 1), aes(x = x, y = y)) +
+    geom_text(label = reason, size = 5, color = "#6b7280") +
+    xlim(0, 2) +
+    ylim(0, 2) +
+    labs(
+      x = NULL,
+      y = NULL,
+      title = "Selic implicita (forward)"
+    ) +
+    theme_void(base_size = 12) +
+    theme(
+      plot.title = element_text(face = "bold", color = "#132960", hjust = 0)
+    )
+  svg_path <- file.path(static_dir, "selic_implicita.svg")
+  svglite(svg_path, width = 10, height = 5.5)
+  print(p)
+  dev.off()
+  write_json(
+    list(status = "skipped", reason = reason, generated_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S")),
+    file.path(out_dir, "selic_implicita.json"),
+    auto_unbox = TRUE,
+    pretty = TRUE
+  )
+  message("SVG placeholder: ", normalizePath(svg_path, winslash = "/", mustWork = FALSE))
+}
+
+if (!requireNamespace("rb3", quietly = TRUE)) {
+  write_placeholder("Curva PRE indisponivel no ambiente CI")
+  quit(save = "no", status = 0)
+}
+library(rb3)
 
 round_step_up <- function(x, step = 0.0025, eps = 1e-12) {
   ceiling((x - eps) / step) * step
@@ -123,7 +151,16 @@ copom_decision_dates_2026 <- as.Date(c(
   "2026-08-05", "2026-09-16", "2026-11-04", "2026-12-09"
 ))
 
-resolved_curve <- resolve_pre_curve(requested_refdate, max_lookback_days = 10)
+resolved_curve <- tryCatch(
+  resolve_pre_curve(requested_refdate, max_lookback_days = 10),
+  error = function(e) {
+    write_placeholder("Curva PRE indisponivel para gerar Selic implicita")
+    NULL
+  }
+)
+if (is.null(resolved_curve)) {
+  quit(save = "no", status = 0)
+}
 refdate <- resolved_curve$used_refdate
 yc_data <- resolved_curve$data
 
