@@ -45,6 +45,8 @@ resp <- request(url) |>
   req_headers(
     Authorization = paste("Bearer", token),
     `x-api-version` = "7",
+    `x-add-random-suffix` = "0",
+    `x-allow-overwrite` = "1",
     `Content-Type` = ct
   ) |>
   req_body_raw(body) |>

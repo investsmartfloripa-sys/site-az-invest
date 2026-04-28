@@ -31,6 +31,8 @@ def upload_file(local_path: Path, blob_path: str, content_type: str) -> None:
         headers={
             "Authorization": f"Bearer {token}",
             "x-api-version": "7",
+            "x-add-random-suffix": "0",
+            "x-allow-overwrite": "1",
             "Content-Type": content_type,
         },
         timeout=120,
