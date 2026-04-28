@@ -44,6 +44,8 @@ export default async function PainelEconomicoPage() {
   ]);
 
   const blobConfigured = Boolean(painelBlobBase());
+  // Rotaciona o query param por janela de revalidacao para evitar cache antigo dos SVGs.
+  const chartCacheBuster = String(Math.floor(Date.now() / (REVALIDATE * 1000)));
 
   return (
     <div className="min-h-screen text-[#132960]">
@@ -77,10 +79,25 @@ export default async function PainelEconomicoPage() {
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold text-[#027DFC]">Juros</h2>
           <div className="grid gap-6 lg:grid-cols-2">
-            <StaticChartCard slug="juros_prefixado" title="Curva prefixado" badge="BCB / Tesouro" />
-            <StaticChartCard slug="juros_ipca" title="Curva IPCA+" badge="Tesouro" />
-            <StaticChartCard slug="selic_implicita" title="Selic implicita (forward)" badge="B3 PRE" />
-            <StaticChartCard slug="juros_treasury_us" title="Curva Treasury EUA" badge="FRED" />
+            <StaticChartCard
+              slug="juros_prefixado"
+              title="Curva prefixado"
+              badge="BCB / Tesouro"
+              cacheBuster={chartCacheBuster}
+            />
+            <StaticChartCard slug="juros_ipca" title="Curva IPCA+" badge="Tesouro" cacheBuster={chartCacheBuster} />
+            <StaticChartCard
+              slug="selic_implicita"
+              title="Selic implicita (forward)"
+              badge="B3 PRE"
+              cacheBuster={chartCacheBuster}
+            />
+            <StaticChartCard
+              slug="juros_treasury_us"
+              title="Curva Treasury EUA"
+              badge="FRED"
+              cacheBuster={chartCacheBuster}
+            />
           </div>
         </section>
 

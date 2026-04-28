@@ -8,10 +8,12 @@ type Props = {
   slug: string;
   title: string;
   badge?: string;
+  cacheBuster?: string;
 };
 
-export function StaticChartCard({ slug, title, badge }: Props) {
-  const url = painelBlobUrl(`charts/static/${slug}.svg`);
+export function StaticChartCard({ slug, title, badge, cacheBuster }: Props) {
+  const baseUrl = painelBlobUrl(`charts/static/${slug}.svg`);
+  const url = baseUrl ? `${baseUrl}?v=${encodeURIComponent(cacheBuster ?? "1")}` : "";
 
   if (!url) {
     return (

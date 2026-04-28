@@ -252,54 +252,109 @@ calc_forward <- function(grid_df) {
 
 requested_refdate <- as.Date(with_tz(Sys.time(), tzone = "America/Sao_Paulo"))
 
-copom_decision_dates_2026 <- as.Date(c(
+copom_decision_dates <- as.Date(c(
   "2026-01-28", "2026-03-18", "2026-04-29", "2026-06-17",
-  "2026-08-05", "2026-09-16", "2026-11-04", "2026-12-09"
+  "2026-08-05", "2026-09-16", "2026-11-04", "2026-12-09",
+  "2027-01-27", "2027-03-17", "2027-04-28", "2027-06-16"
 ))
 
-resolved_curve <- tryCatch(
-  resolve_pre_curve(requested_refdate, max_lookback_days = 10),
+build_curve_series <- function(anchor_date, label_prefix, lookback_days = 10) {
+  resolved <- resolve_pre_curve(anchor_date, max_lookback_days = lookback_days)
+  ref <- as.Date(resolved$used_refdate)
+  yc_win <- make_curve_window(resolved$data, years_ahead = 2)
+  end12 <- ref %m+% years(1)
+
+  copom_in_window <- copom_decision_dates[
+    copom_decision_dates >= ref &
+      copom_decision_dates <= end12
+  ]
+
+  grid_dates <- sort(unique(c(ref, copom_in_window, end12)))
+  grid_c <- grid_on_dates(yc_win, grid_dates)
+  fwd <- calc_forward(grid_c)
+  if (!nrow(fwd)) {
+    stop(sprintf("Sem dados de forward para %s", format(ref)))
+  }
+
+  curve_label <- sprintf("%s (%s)", label_prefix, format(ref, "%d/%m/%Y"))
+  data <- fwd |>
+    mutate(
+      curve = curve_label,
+      fwd_raw = fwd,
+      fwd_025_up = round_step_up(fwd, step = 0.0025),
+      fwd = fwd_025_up
+    ) |>
+    select(grid_date, curve, fwd, fwd_raw, fwd_025_up)
+
+  list(
+    refdate = ref,
+    end_plot = end12,
+    copom_in_window = copom_in_window,
+    data = data
+  )
+}
+
+today_series <- tryCatch(
+  build_curve_series(requested_refdate, "Hoje"),
   error = function(e) {
     write_placeholder("Curva PRE indisponivel para gerar Selic implicita")
     NULL
   }
 )
-if (is.null(resolved_curve)) {
+if (is.null(today_series)) quit(save = "no", status = 0)
+
+series_30 <- tryCatch(
+  build_curve_series(requested_refdate - days(30), "30d atras"),
+  error = function(e) NULL
+)
+series_90 <- tryCatch(
+  build_curve_series(requested_refdate - days(90), "90d atras"),
+  error = function(e) NULL
+)
+
+series_list <- Filter(Negate(is.null), list(today_series, series_30, series_90))
+df_plot <- bind_rows(lapply(series_list, `[[`, "data")) |>
+  mutate(grid_date = as.Date(grid_date))
+
+if (!nrow(df_plot)) {
+  write_placeholder("Sem dados para Selic implicita")
   quit(save = "no", status = 0)
 }
-refdate <- resolved_curve$used_refdate
-yc_data <- resolved_curve$data
 
-yc_win <- make_curve_window(yc_data, years_ahead = 2)
-end12 <- refdate %m+% years(1)
+curve_order <- c(
+  sprintf("Hoje (%s)", format(today_series$refdate, "%d/%m/%Y")),
+  if (!is.null(series_30)) sprintf("30d atras (%s)", format(series_30$refdate, "%d/%m/%Y")) else NULL,
+  if (!is.null(series_90)) sprintf("90d atras (%s)", format(series_90$refdate, "%d/%m/%Y")) else NULL
+)
+df_plot <- df_plot |>
+  mutate(curve = factor(curve, levels = curve_order))
 
-copom_in_window <- copom_decision_dates_2026[
-  copom_decision_dates_2026 >= refdate &
-    copom_decision_dates_2026 <= end12
-]
-
-grid_dates <- sort(unique(c(copom_in_window, end12)))
-grid_c <- grid_on_dates(yc_win, grid_dates)
-
-fwd_c <- calc_forward(grid_c) |>
-  mutate(fwd_025_up = round_step_up(fwd, step = 0.0025))
-
-if (!nrow(fwd_c)) {
-  stop(sprintf("Sem dados de forward para a data de referencia %s.", format(refdate)))
-}
-
-df_plot <- transform(fwd_c, fwd = fwd_025_up)
-df_plot$grid_date <- as.Date(df_plot$grid_date)
-
-vdf <- data.frame(x = as.Date(copom_in_window))
+vlines <- sort(unique(today_series$copom_in_window))
+vdf <- data.frame(x = as.Date(vlines))
 
 y_top <- max(df_plot$fwd, na.rm = TRUE)
 y_rng <- diff(range(df_plot$fwd, na.rm = TRUE))
 if (!is.finite(y_rng) || y_rng <= 0) y_rng <- 0.0025
 y_lab <- y_top + 0.06 * y_rng
 
-p <- ggplot(df_plot, aes(x = grid_date, y = fwd)) +
-  geom_step(linewidth = 0.9, color = "black") +
+pal <- c(
+  "Hoje" = "#000000",
+  "30d" = "#6f6f6f",
+  "90d" = "#0078fd"
+)
+pick_color <- function(curve_name) {
+  nm <- tolower(curve_name)
+  if (grepl("^hoje", nm)) return(pal[["Hoje"]])
+  if (grepl("^30d", nm)) return(pal[["30d"]])
+  if (grepl("^90d", nm)) return(pal[["90d"]])
+  "#000000"
+}
+
+color_values <- setNames(vapply(as.character(curve_order), pick_color, character(1)), as.character(curve_order))
+line_values <- setNames(ifelse(grepl("^Hoje", curve_order), 1.15, 0.95), as.character(curve_order))
+
+p <- ggplot(df_plot, aes(x = grid_date, y = fwd, color = curve, linewidth = curve, group = curve)) +
+  geom_step() +
   geom_vline(
     xintercept = vdf$x,
     linetype = "dashed",
@@ -314,15 +369,20 @@ p <- ggplot(df_plot, aes(x = grid_date, y = fwd)) +
     size = 4.3,
     color = "#0078fd"
   ) +
+  scale_color_manual(values = color_values, breaks = curve_order) +
+  scale_linewidth_manual(values = line_values, breaks = curve_order, guide = "none") +
   scale_y_continuous(
     labels = label_percent(accuracy = 0.1),
     breaks = pretty_breaks(n = 8)
   ) +
   coord_cartesian(ylim = c(NA, y_lab + 0.02 * y_rng)) +
   labs(
-    x = NULL,
-    y = "Forward",
-    title = "Forward entre reunioes do Copom (meeting-to-meeting) — 25 bps"
+    x = "Data",
+    y = "Taxa (%)",
+    title = "Selic implicita (Forward)",
+    subtitle = "Meeting-to-Meeting (25bps step)",
+    color = NULL,
+    caption = sprintf("Atualizado: %s", format(Sys.time(), "%d/%m/%Y %H:%M"))
   ) +
   theme_classic(base_size = 12) +
   theme(
@@ -331,7 +391,11 @@ p <- ggplot(df_plot, aes(x = grid_date, y = fwd)) +
     panel.grid.major.y = element_line(color = "grey85", linewidth = 0.4),
     panel.grid.minor.y = element_line(color = "grey92", linewidth = 0.25),
     panel.grid.major.x = element_line(color = "grey85", linewidth = 0.4),
-    panel.grid.minor.x = element_line(color = "grey92", linewidth = 0.25)
+    panel.grid.minor.x = element_line(color = "grey92", linewidth = 0.25),
+    legend.position = "top",
+    legend.justification = "center",
+    plot.title = element_text(face = "bold", color = "#027DFC"),
+    plot.caption = element_text(size = 10, color = "#6b7280", hjust = 1)
   )
 
 svg_path <- file.path(static_dir, "selic_implicita.svg")
@@ -342,15 +406,17 @@ message("SVG: ", normalizePath(svg_path, winslash = "/", mustWork = FALSE))
 
 df_export <- df_plot |>
   mutate(grid_date = as.character(grid_date)) |>
-  select(grid_date, fwd)
+  select(grid_date, curve, fwd, fwd_raw, fwd_025_up)
 
 output <- list(
   status = "ok",
   generated_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
-  refdate_requested = as.character(requested_refdate),
-  refdate_used = as.character(refdate),
+  ref_today = as.character(today_series$refdate),
+  ref_30d = if (!is.null(series_30)) as.character(series_30$refdate) else NA_character_,
+  ref_90d = if (!is.null(series_90)) as.character(series_90$refdate) else NA_character_,
+  end_plot = as.character(today_series$end_plot),
   data = df_export,
-  vlines = as.character(copom_in_window)
+  vlines = as.character(vlines)
 )
 
 json_path <- file.path(out_dir, "selic_implicita.json")
