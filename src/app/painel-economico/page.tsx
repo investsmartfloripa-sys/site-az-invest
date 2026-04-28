@@ -25,7 +25,7 @@ async function fetchBlobJson<T>(path: string): Promise<T | null> {
   }
 }
 
-type PanoramaByPeriod = { by_period?: ByPeriodBlock };
+type PanoramaByPeriod = { generated_at?: string; by_period?: ByPeriodBlock };
 
 export default async function PainelEconomicoPage() {
   const posts = await findPosts({

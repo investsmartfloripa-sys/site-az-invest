@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { CurrencyToggle } from "./CurrencyToggle";
+import { formatUpdatedAt } from "./formatUpdatedAt";
 import { PeriodSelector } from "./PeriodSelector";
 
 export type Row = Record<string, unknown>;
@@ -17,6 +18,7 @@ type Props = {
   currencyToggle?: boolean;
   positiveColor?: string;
   negativeColor?: string;
+  updatedAt?: string;
   getValue: (row: Row, opts?: { currency: "brl" | "usd" }) => number | null;
   filterRow?: (row: Row) => boolean;
 };
@@ -28,6 +30,7 @@ export function DynamicReturnsBar({
   currencyToggle = false,
   positiveColor = "#2ECC71",
   negativeColor = "#E74C3C",
+  updatedAt,
   getValue,
   filterRow,
 }: Props) {
@@ -47,6 +50,7 @@ export function DynamicReturnsBar({
     }
     return out.sort((a, b) => b.value - a.value);
   }, [byPeriod, period, currency, currencyToggle, nameKey, getValue, filterRow]);
+  const formattedUpdatedAt = formatUpdatedAt(updatedAt);
 
   return (
     <div className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm">
@@ -90,6 +94,9 @@ export function DynamicReturnsBar({
           </ResponsiveContainer>
         )}
       </div>
+      {formattedUpdatedAt ? (
+        <p className="mt-2 text-xs italic text-zinc-700">Panorama - atualizado em {formattedUpdatedAt}</p>
+      ) : null}
     </div>
   );
 }

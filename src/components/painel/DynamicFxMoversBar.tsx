@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
+import { formatUpdatedAt } from "./formatUpdatedAt";
+
 type MoverRow = { ticker: string; change_pct: number };
 
 type FxTop = {
@@ -14,6 +16,7 @@ type FxTop = {
 };
 
 export type FxMoversPayload = {
+  generated_at?: string;
   top?: FxTop;
 };
 
@@ -30,9 +33,10 @@ type FxPeriod = (typeof FX_PERIODS)[number]["id"];
 type Props = {
   title: string;
   data: FxMoversPayload | null;
+  updatedAt?: string;
 };
 
-export function DynamicFxMoversBar({ title, data }: Props) {
+export function DynamicFxMoversBar({ title, data, updatedAt }: Props) {
   const [period, setPeriod] = useState<FxPeriod>("month");
 
   const chartData = useMemo(() => {
@@ -41,6 +45,7 @@ export function DynamicFxMoversBar({ title, data }: Props) {
       .map((r) => ({ name: r.ticker, value: r.change_pct }))
       .sort((a, b) => b.value - a.value);
   }, [data, period]);
+  const formattedUpdatedAt = formatUpdatedAt(updatedAt);
 
   return (
     <div className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm">
@@ -91,6 +96,9 @@ export function DynamicFxMoversBar({ title, data }: Props) {
           </ResponsiveContainer>
         )}
       </div>
+      {formattedUpdatedAt ? (
+        <p className="mt-2 text-xs italic text-zinc-700">Panorama - atualizado em {formattedUpdatedAt}</p>
+      ) : null}
     </div>
   );
 }

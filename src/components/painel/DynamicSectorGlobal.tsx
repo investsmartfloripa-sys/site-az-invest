@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { CurrencyToggle } from "./CurrencyToggle";
+import { formatUpdatedAt } from "./formatUpdatedAt";
 import { PeriodSelector } from "./PeriodSelector";
 
 type BasketRow = {
@@ -13,6 +14,7 @@ type BasketRow = {
 type View = { top10?: BasketRow[]; bottom10?: BasketRow[] };
 
 export type SectorGlobalPayload = {
+  generated_at?: string;
   by_period?: Record<
     string,
     {
@@ -51,9 +53,10 @@ function SectorCol({ title, rows }: { title: string; rows: BasketRow[] }) {
 type Props = {
   title: string;
   data: SectorGlobalPayload | null;
+  updatedAt?: string;
 };
 
-export function DynamicSectorGlobal({ title, data }: Props) {
+export function DynamicSectorGlobal({ title, data, updatedAt }: Props) {
   const [period, setPeriod] = useState("1mo");
   const [currency, setCurrency] = useState<"brl" | "usd">("brl");
 
@@ -61,6 +64,7 @@ export function DynamicSectorGlobal({ title, data }: Props) {
   const view = currency === "brl" ? block?.view_brl : block?.view_usd;
   const top10 = view?.top10 ?? [];
   const bottom10 = view?.bottom10 ?? [];
+  const formattedUpdatedAt = formatUpdatedAt(updatedAt);
 
   return (
     <div className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm">
@@ -79,6 +83,9 @@ export function DynamicSectorGlobal({ title, data }: Props) {
           <SectorCol title="Bottom 10" rows={bottom10} />
         </div>
       )}
+      {formattedUpdatedAt ? (
+        <p className="mt-2 text-xs italic text-zinc-700">Panorama - atualizado em {formattedUpdatedAt}</p>
+      ) : null}
     </div>
   );
 }

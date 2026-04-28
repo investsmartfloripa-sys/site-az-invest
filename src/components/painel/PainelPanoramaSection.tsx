@@ -5,7 +5,7 @@ import { DynamicReturnsBar, type ByPeriodBlock, type Row } from "@/components/pa
 import { DynamicSectorBr, type SectorBrPayload } from "@/components/painel/DynamicSectorBr";
 import { DynamicSectorGlobal, type SectorGlobalPayload } from "@/components/painel/DynamicSectorGlobal";
 
-type PanoramaByPeriod = { by_period?: ByPeriodBlock };
+type PanoramaByPeriod = { generated_at?: string; by_period?: ByPeriodBlock };
 
 type Props = {
   assetPanorama: PanoramaByPeriod | null;
@@ -32,6 +32,7 @@ export function PainelPanoramaSection({
         <DynamicReturnsBar
           title="Retornos dos ativos (%)"
           byPeriod={(assetPanorama?.by_period ?? {}) as ByPeriodBlock}
+          updatedAt={assetPanorama?.generated_at}
           currencyToggle
           filterRow={(r: Row) => String(r.ticker ?? "") !== "BRL=X"}
           getValue={(row, opts) => {
@@ -44,16 +45,22 @@ export function PainelPanoramaSection({
         <DynamicReturnsBar
           title="Retornos indices globais (%)"
           byPeriod={(worldPanorama?.by_period ?? {}) as ByPeriodBlock}
+          updatedAt={worldPanorama?.generated_at}
           getValue={(row) => {
             const v = row.return_pct;
             if (v == null) return null;
             return Number(v);
           }}
         />
-        <DynamicFxMoversBar title="Principais moedas (var. %)" data={fxData} />
+        <DynamicFxMoversBar
+          title="Principais moedas (var. %)"
+          data={fxData}
+          updatedAt={fxData?.generated_at}
+        />
         <DynamicReturnsBar
           title="Indice de commodities (%)"
           byPeriod={(commPanorama?.by_period ?? {}) as ByPeriodBlock}
+          updatedAt={commPanorama?.generated_at}
           currencyToggle
           getValue={(row, opts) => {
             const cur = opts?.currency ?? "brl";
@@ -62,8 +69,16 @@ export function PainelPanoramaSection({
             return Number(v);
           }}
         />
-        <DynamicSectorGlobal title="Setores globais (top / bottom 10)" data={sectorGlobal} />
-        <DynamicSectorBr title="Setores Brasil (top / bottom)" data={sectorBr} />
+        <DynamicSectorGlobal
+          title="Setores globais (top / bottom 10)"
+          data={sectorGlobal}
+          updatedAt={sectorGlobal?.generated_at}
+        />
+        <DynamicSectorBr
+          title="Setores Brasil (top / bottom)"
+          data={sectorBr}
+          updatedAt={sectorBr?.generated_at}
+        />
       </div>
     </section>
   );

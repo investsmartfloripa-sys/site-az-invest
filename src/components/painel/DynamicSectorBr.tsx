@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { formatUpdatedAt } from "./formatUpdatedAt";
 import { PeriodSelector } from "./PeriodSelector";
 
 type BasketRow = {
@@ -10,6 +11,7 @@ type BasketRow = {
 };
 
 export type SectorBrPayload = {
+  generated_at?: string;
   by_period?: Record<
     string,
     {
@@ -47,14 +49,16 @@ function SectorCol({ title, rows }: { title: string; rows: BasketRow[] }) {
 type Props = {
   title: string;
   data: SectorBrPayload | null;
+  updatedAt?: string;
 };
 
-export function DynamicSectorBr({ title, data }: Props) {
+export function DynamicSectorBr({ title, data, updatedAt }: Props) {
   const [period, setPeriod] = useState("1mo");
 
   const inner = data?.by_period?.[period]?.data;
   const top10 = inner?.top10 ?? [];
   const bottom10 = inner?.bottom10 ?? [];
+  const formattedUpdatedAt = formatUpdatedAt(updatedAt);
 
   return (
     <div className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm">
@@ -70,6 +74,9 @@ export function DynamicSectorBr({ title, data }: Props) {
           <SectorCol title="Bottom 10" rows={bottom10} />
         </div>
       )}
+      {formattedUpdatedAt ? (
+        <p className="mt-2 text-xs italic text-zinc-700">Panorama - atualizado em {formattedUpdatedAt}</p>
+      ) : null}
     </div>
   );
 }
