@@ -20,7 +20,11 @@ if (!file.exists(local_path)) {
   stop("Arquivo nao existe: ", local_path)
 }
 
-url <- paste0("https://blob.vercel-storage.com/", blob_path)
+url <- paste0(
+  "https://blob.vercel-storage.com/",
+  blob_path,
+  "?addRandomSuffix=false&allowOverwrite=true"
+)
 body <- readBin(local_path, "raw", file.info(local_path)$size)
 
 ct <- if (grepl("\\.svg$", local_path, ignore.case = TRUE)) {

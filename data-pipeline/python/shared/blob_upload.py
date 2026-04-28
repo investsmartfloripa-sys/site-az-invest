@@ -22,7 +22,8 @@ def upload_file(local_path: Path, blob_path: str, content_type: str) -> None:
         print(f"[blob] SKIP upload (no BLOB_READ_WRITE_TOKEN): {blob_path}")
         return
 
-    url = f"{BLOB_PUT_URL}/{blob_path.lstrip('/')}"
+    # Keep stable filenames (no random suffix) so the frontend can fetch fixed paths.
+    url = f"{BLOB_PUT_URL}/{blob_path.lstrip('/')}?addRandomSuffix=false&allowOverwrite=true"
     data = local_path.read_bytes()
     resp = requests.put(
         url,
