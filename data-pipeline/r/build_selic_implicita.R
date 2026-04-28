@@ -265,37 +265,7 @@ copom_decision_dates <- as.Date(c(
 build_curve_series <- function(anchor_date, label_prefix, lookback_days = 10) {
   resolved <- resolve_pre_curve(anchor_date, max_lookback_days = lookback_days)
   ref <- as.Date(resolved$used_refdate)
-  yc_win <- make_curve_window(resolved$data, years_ahead = 2)
-  end12 <- ref %m+% years(1)
-
-  copom_in_window <- copom_decision_dates[
-    copom_decision_dates >= ref &
-      copom_decision_dates <= end12
-  ]
-
-  grid_dates <- sort(unique(c(ref, copom_in_window, end12)))
-  grid_c <- grid_on_dates(yc_win, grid_dates)
-  fwd <- calc_forward(grid_c)
-  if (!nrow(fwd)) {
-    stop(sprintf("Sem dados de forward para %s", format(ref)))
-  }
-
-  curve_label <- sprintf("%s (%s)", label_prefix, format(ref, "%d/%m/%Y"))
-  data <- fwd |>
-    mutate(
-      curve = curve_label,
-      fwd_raw = fwd,
-      fwd_025_up = round_step_up(fwd, step = 0.0025),
-      fwd = fwd_025_up
-    ) |>
-    select(grid_date, curve, fwd, fwd_raw, fwd_025_up)
-
-  list(
-    refdate = ref,
-    end_plot = end12,
-    copom_in_window = copom_in_window,
-    data = data
-  )
+  list(refdate = ref, yc_data = resolved$data, label_prefix = label_prefix)
 }
 
 today_series <- tryCatch(
@@ -316,8 +286,34 @@ series_90 <- tryCatch(
   error = function(e) NULL
 )
 
+ref_today <- as.Date(today_series$refdate)
+end_plot <- ref_today %m+% years(1)
+copom_in_window <- copom_decision_dates[
+  copom_decision_dates >= ref_today &
+    copom_decision_dates <= end_plot
+]
+grid_dates <- sort(unique(c(ref_today, copom_in_window, end_plot)))
+
+compute_series_data <- function(series_info) {
+  yc_win <- make_curve_window(series_info$yc_data, years_ahead = 2) |>
+    filter(forward_date <= end_plot)
+  grid_c <- grid_on_dates(yc_win, grid_dates)
+  fwd <- calc_forward(grid_c)
+  if (!nrow(fwd)) return(NULL)
+
+  curve_label <- sprintf("%s (%s)", series_info$label_prefix, format(series_info$refdate, "%d/%m/%Y"))
+  fwd |>
+    mutate(
+      curve = curve_label,
+      fwd_raw = fwd,
+      fwd_025_up = round_step_up(fwd, step = 0.0025),
+      fwd = fwd_025_up
+    ) |>
+    select(grid_date, curve, fwd, fwd_raw, fwd_025_up)
+}
+
 series_list <- Filter(Negate(is.null), list(today_series, series_30, series_90))
-df_plot <- bind_rows(lapply(series_list, `[[`, "data")) |>
+df_plot <- bind_rows(lapply(series_list, compute_series_data)) |>
   mutate(grid_date = as.Date(grid_date))
 
 if (!nrow(df_plot)) {
@@ -326,14 +322,14 @@ if (!nrow(df_plot)) {
 }
 
 curve_order <- c(
-  sprintf("Hoje (%s)", format(today_series$refdate, "%d/%m/%Y")),
+  sprintf("Hoje (%s)", format(ref_today, "%d/%m/%Y")),
   if (!is.null(series_30)) sprintf("30d atras (%s)", format(series_30$refdate, "%d/%m/%Y")) else NULL,
   if (!is.null(series_90)) sprintf("90d atras (%s)", format(series_90$refdate, "%d/%m/%Y")) else NULL
 )
 df_plot <- df_plot |>
   mutate(curve = factor(curve, levels = curve_order))
 
-vlines <- sort(unique(today_series$copom_in_window))
+vlines <- sort(unique(copom_in_window))
 vdf <- data.frame(x = as.Date(vlines))
 
 y_top <- max(df_plot$fwd, na.rm = TRUE)
@@ -403,10 +399,10 @@ df_export <- df_plot |>
 output <- list(
   status = "ok",
   generated_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
-  ref_today = as.character(today_series$refdate),
+  ref_today = as.character(ref_today),
   ref_30d = if (!is.null(series_30)) as.character(series_30$refdate) else NA_character_,
   ref_90d = if (!is.null(series_90)) as.character(series_90$refdate) else NA_character_,
-  end_plot = as.character(today_series$end_plot),
+  end_plot = as.character(end_plot),
   data = df_export,
   vlines = as.character(vlines)
 )

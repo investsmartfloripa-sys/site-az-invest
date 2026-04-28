@@ -58,5 +58,5 @@ Sem `BLOB_READ_WRITE_TOKEN`, os arquivos ficam apenas em `out/`.
 2. **Next.js** — Em Environment Variables do projeto: `NEXT_PUBLIC_BLOB_BASE_URL` = essa URL. Localmente: mesmo valor no `.env` (veja `.env.example` na raiz do repo).
 3. **GitHub** — Repo → *Settings* → *Secrets and variables* → *Actions*: `BLOB_READ_WRITE_TOKEN` (token do Blob) e `FRED_API_KEY` (St. Louis Fed).
 4. **Primeira carga** — *Actions* → workflow **Data pipeline (Painel Panorama)** → *Run workflow*. Conferir no Blob os arquivos em `data/*` e `charts/static/*`.
-5. **Site** — Deploy com a env definida; abrir `/painel-economico`. Ate 1h de cache ISR apos novo upload.
+5. **Site** — Deploy com a env definida; abrir `/painel-economico`. Ate 15 min de cache ISR apos novo upload.
 6. **Verificacao local** — Na raiz do repo: `npm run go-live:check` (exige `NEXT_PUBLIC_BLOB_BASE_URL` no `.env`).

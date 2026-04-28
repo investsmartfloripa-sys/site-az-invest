@@ -12,7 +12,7 @@ import { NewsletterForm } from "@/components/home/NewsletterForm";
 import { painelBlobBase, painelBlobUrl } from "@/lib/painel-blob";
 import { findPosts, mapPost } from "@/lib/posts";
 
-const REVALIDATE = 3600;
+const REVALIDATE = 900;
 
 async function fetchBlobJson<T>(path: string): Promise<T | null> {
   const url = painelBlobUrl(path);
@@ -58,11 +58,15 @@ export default async function PainelEconomicoPage() {
     <div className="min-h-screen text-[#132960]">
       <Header />
       <FloatingSectionsMenu
+        title="Areas do painel"
+        activeId="area-panorama"
         items={[
-          { href: "#panorama", label: "Panorama" },
-          { href: "#juros", label: "Juros" },
-          { href: "#analises", label: "Analises" },
-          { href: "#newsletter", label: "Newsletter" },
+          { id: "area-panorama", href: "/painel-economico", label: "Panorama" },
+          { id: "area-renda-fixa", href: "/painel-economico?area=renda-fixa", label: "Renda fixa", disabled: true },
+          { id: "area-internacional", href: "/painel-economico?area=internacional", label: "Internacional", disabled: true },
+          { id: "area-macro", href: "/painel-economico?area=macro", label: "Macro", disabled: true },
+          { id: "area-setores", href: "/painel-economico?area=setores", label: "Setores", disabled: true },
+          { id: "area-comodities", href: "/painel-economico?area=commodities", label: "Commodities", disabled: true },
         ]}
       />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-8 md:px-8">
@@ -71,7 +75,7 @@ export default async function PainelEconomicoPage() {
           <h1 className="text-4xl text-[#027DFC] md:text-5xl">Painel economico</h1>
           <p className="max-w-2xl text-sm text-zinc-600">
             Panorama de retornos, cambio, commodities, setores e curvas de juros. Dados atualizados pelo
-            pipeline diario; graficos estaticos via R e interativos via Recharts.
+            pipeline a cada 15 minutos; graficos estaticos via R e interativos via Recharts.
           </p>
         </header>
 
