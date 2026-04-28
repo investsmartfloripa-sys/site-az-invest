@@ -34,9 +34,6 @@ yarn-error.log*
 .env*
 !.env.example
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -49,6 +46,7 @@ next-env.d.ts
 prisma/*.db
 prisma/*.db-journal
 
+# vercel (link local — nao commitar)
 .vercel
 
 # arquivos temporarios de commit

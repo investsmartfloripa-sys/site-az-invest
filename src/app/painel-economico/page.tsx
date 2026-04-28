@@ -1,54 +1,87 @@
 import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { PostCard } from "@/components/common/PostCard";
+import type { FxMoversPayload } from "@/components/painel/DynamicFxMoversBar";
+import type { ByPeriodBlock } from "@/components/painel/DynamicReturnsBar";
+import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection";
+import type { SectorBrPayload } from "@/components/painel/DynamicSectorBr";
+import type { SectorGlobalPayload } from "@/components/painel/DynamicSectorGlobal";
+import { StaticChartCard } from "@/components/painel/StaticChartCard";
 import { NewsletterForm } from "@/components/home/NewsletterForm";
+import { painelBlobBase, painelBlobUrl } from "@/lib/painel-blob";
 import { findPosts, mapPost } from "@/lib/posts";
 
-export const dynamic = "force-dynamic";
+const REVALIDATE = 3600;
 
-const indicators = [
-  { label: "Selic", value: "10,75%", note: "ao ano" },
-  { label: "IPCA 12m", value: "4,38%", note: "acumulado" },
-  { label: "Dolar", value: "R$ 5,12", note: "fechamento" },
-  { label: "Ibovespa", value: "138.420 pts", note: "ultimo pregao" },
-];
+async function fetchBlobJson<T>(path: string): Promise<T | null> {
+  const url = painelBlobUrl(path);
+  if (!url) return null;
+  try {
+    const res = await fetch(url, { next: { revalidate: REVALIDATE } });
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+type PanoramaByPeriod = { by_period?: ByPeriodBlock };
 
 export default async function PainelEconomicoPage() {
   const posts = await findPosts({
     where: { published: true, category: "Economia" },
     orderBy: { createdAt: "desc" },
   });
-
   const mapped = posts.map(mapPost);
+
+  const [assetPanorama, worldPanorama, fxData, commPanorama, sectorGlobal, sectorBr] = await Promise.all([
+    fetchBlobJson<PanoramaByPeriod>("data/asset_returns_panorama.json"),
+    fetchBlobJson<PanoramaByPeriod>("data/world_indices_returns_panorama.json"),
+    fetchBlobJson<FxMoversPayload>("data/fx_top_movers.json"),
+    fetchBlobJson<PanoramaByPeriod>("data/commodities_returns_panorama.json"),
+    fetchBlobJson<SectorGlobalPayload>("data/sector_baskets_panorama.json"),
+    fetchBlobJson<SectorBrPayload>("data/br_sector_baskets_panorama.json"),
+  ]);
+
+  const blobConfigured = Boolean(painelBlobBase());
 
   return (
     <div className="min-h-screen text-[#132960]">
       <Header />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-8 md:px-8">
         <header className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
-            Economia
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">Economia</p>
           <h1 className="text-4xl text-[#027DFC] md:text-5xl">Painel economico</h1>
           <p className="max-w-2xl text-sm text-zinc-600">
-            Acompanhe os principais indicadores e analises macroeconomicas que impactam diretamente
-            os seus investimentos.
+            Panorama de retornos, cambio, commodities, setores e curvas de juros. Dados atualizados pelo
+            pipeline diario; graficos estaticos via R e interativos via Recharts.
           </p>
         </header>
 
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {indicators.map((indicator) => (
-            <div
-              key={indicator.label}
-              className="rounded-2xl border border-[#132960]/15 bg-white p-4"
-            >
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                {indicator.label}
-              </p>
-              <p className="mt-1 text-3xl font-semibold text-[#132960]">{indicator.value}</p>
-              <p className="text-xs text-zinc-500">{indicator.note}</p>
-            </div>
-          ))}
+        {!blobConfigured ? (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            Configure <code className="rounded bg-white px-1">NEXT_PUBLIC_BLOB_BASE_URL</code> no ambiente
+            (URL publica do Vercel Blob) para carregar JSONs e SVGs do painel.
+          </p>
+        ) : null}
+
+        <PainelPanoramaSection
+          assetPanorama={assetPanorama}
+          worldPanorama={worldPanorama}
+          fxData={fxData}
+          commPanorama={commPanorama}
+          sectorGlobal={sectorGlobal}
+          sectorBr={sectorBr}
+        />
+
+        <section className="space-y-4">
+          <h2 className="text-2xl font-semibold text-[#027DFC]">Juros</h2>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <StaticChartCard slug="juros_prefixado" title="Curva prefixado" badge="BCB / Tesouro" />
+            <StaticChartCard slug="juros_ipca" title="Curva IPCA+" badge="Tesouro" />
+            <StaticChartCard slug="selic_implicita" title="Selic implicita (forward)" badge="B3 PRE" />
+            <StaticChartCard slug="juros_treasury_us" title="Curva Treasury EUA" badge="FRED" />
+          </div>
         </section>
 
         <section className="space-y-4">

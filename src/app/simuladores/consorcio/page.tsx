@@ -50,12 +50,6 @@ const fmtCompact = (n: number) => {
   return `R$ ${n.toFixed(0)}`;
 };
 
-const TAXAS_CORRECAO: Record<string, number> = {
-  igpm: 0.05,
-  incc: 0.07,
-  ipca: 0.045,
-  pre3: 0.03,
-};
 const NOMES_INDICE: Record<string, string> = {
   igpm: "IGPM",
   incc: "INCC",
@@ -229,21 +223,7 @@ export default function SimuladorConsorcio() {
       .catch(() => setSelicStatus("fallback"));
   }, []);
 
-  useEffect(() => {
-    if (tipoBem === "imovel") {
-      setValorBem(400000);
-      setPrazo(180);
-      setAluguelAtual(2500);
-      setAluguelEsperado(2500);
-      setInvMensal(0);
-      setInvMensalRenda(0);
-      setIndiceCorrecao("incc");
-    } else if (tipoBem === "carro") {
-      setValorBem(80000);
-      setPrazo(60);
-      setFaturamentoEsperado(3000);
-      setIndiceCorrecao("ipca");
-    }
+  const applyDefaultsForTipo = (tipo: "imovel" | "carro") => {
     setLanceProprioAtivo(false);
     setValorLance(0);
     setLanceEmbutidoAtivo(false);
@@ -252,12 +232,21 @@ export default function SimuladorConsorcio() {
     setRedutor("nenhum");
     setNumCartas(1);
     setAumentarChances(false);
-  }, [tipoBem]);
-
-  useEffect(() => {
-    if (!aumentarChances) setNumCartas(1);
-    else if (numCartas === 1) setNumCartas(2);
-  }, [aumentarChances, numCartas]);
+    if (tipo === "imovel") {
+      setValorBem(400000);
+      setPrazo(180);
+      setAluguelAtual(2500);
+      setAluguelEsperado(2500);
+      setInvMensal(0);
+      setInvMensalRenda(0);
+      setIndiceCorrecao("incc");
+    } else {
+      setValorBem(80000);
+      setPrazo(60);
+      setFaturamentoEsperado(3000);
+      setIndiceCorrecao("ipca");
+    }
+  };
 
   const taxaAdmDefault = isCarro ? (prazo <= 60 ? 0.2 : 0.23) : 0.23;
   const taxaAdm = taxaAdmCustom !== null ? taxaAdmCustom : taxaAdmDefault;
@@ -568,6 +557,7 @@ export default function SimuladorConsorcio() {
                 <button
                   key={o.tipo}
                   onClick={() => {
+                    applyDefaultsForTipo(o.tipo);
                     setTipoBem(o.tipo);
                     setStep(1);
                   }}
@@ -1180,7 +1170,16 @@ export default function SimuladorConsorcio() {
                 </div>
               </div>
               <button
-                onClick={() => setAumentarChances(!aumentarChances)}
+                type="button"
+                onClick={() => {
+                  if (aumentarChances) {
+                    setAumentarChances(false);
+                    setNumCartas(1);
+                  } else {
+                    setAumentarChances(true);
+                    setNumCartas((n) => (n <= 1 ? 2 : n));
+                  }
+                }}
                 className="relative w-11 h-6 rounded-full shrink-0"
                 style={toggleStyle(aumentarChances)}
               >
