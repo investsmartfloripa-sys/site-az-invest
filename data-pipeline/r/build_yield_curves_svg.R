@@ -104,9 +104,7 @@ snapshots_long <- function(td, tipo_predicate) {
     )
 }
 
-stamp <- az_chart_stamp()
-
-plot_curves <- function(long_df, title, pal) {
+plot_curves <- function(long_df, pal) {
   label_map <- long_df %>%
     distinct(curve_key, snapshot_label) %>%
     arrange(match(curve_key, names(pal)))
@@ -123,10 +121,7 @@ plot_curves <- function(long_df, title, pal) {
     labs(
       x = "Vencimento",
       y = "Taxa (%)",
-      title = title,
-      subtitle = "Curvas historicas (D-90, D-30 e Hoje)",
-      color = NULL,
-      caption = paste("Atualizado:", stamp)
+      color = NULL
     ) +
     az_chart_theme(legend_position = "bottom")
 }
@@ -189,8 +184,8 @@ is_ipca_principal <- function(tt) {
 
 long_pre <- snapshots_long(td, is_prefixado_principal)
 if (!is.null(long_pre)) {
-  p <- plot_curves(long_pre, "Curva Prefixado", cores_pre)
-  svglite(file.path(static_dir, "juros_prefixado.svg"), width = 10, height = 5.5)
+  p <- plot_curves(long_pre, cores_pre)
+  svglite(file.path(static_dir, "juros_prefixado.svg"), width = az_chart_width(), height = az_chart_height())
   print(p)
   dev.off()
   write_curve_table_json(long_pre, "juros_prefixado", format(Sys.time(), "%Y-%m-%dT%H:%M:%S"))
@@ -201,8 +196,8 @@ if (!is.null(long_pre)) {
 
 long_ipca <- snapshots_long(td, is_ipca_principal)
 if (!is.null(long_ipca)) {
-  p2 <- plot_curves(long_ipca, "Curva IPCA+", cores_ipca)
-  svglite(file.path(static_dir, "juros_ipca.svg"), width = 10, height = 5.5)
+  p2 <- plot_curves(long_ipca, cores_ipca)
+  svglite(file.path(static_dir, "juros_ipca.svg"), width = az_chart_width(), height = az_chart_height())
   print(p2)
   dev.off()
   write_curve_table_json(long_ipca, "juros_ipca", format(Sys.time(), "%Y-%m-%dT%H:%M:%S"))

@@ -48,7 +48,7 @@ export function DynamicFxMoversBar({ title, data, updatedAt }: Props) {
   const formattedUpdatedAt = formatUpdatedAt(updatedAt);
 
   return (
-    <div className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm">
+    <div className="w-full min-w-0 rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold text-[#027DFC]">{title}</h2>
         <div className="flex flex-wrap gap-1">

@@ -34,8 +34,7 @@ write_placeholder <- function(reason) {
     ylim(0, 2) +
     labs(
       x = NULL,
-      y = NULL,
-      title = "Selic implicita (forward)"
+      y = NULL
     ) +
     theme_void(base_size = 12) +
     theme(
@@ -43,7 +42,7 @@ write_placeholder <- function(reason) {
       plot.background = element_rect(fill = "white", colour = NA)
     )
   svg_path <- file.path(static_dir, "selic_implicita.svg")
-  svglite(svg_path, width = 10, height = 5.5)
+  svglite(svg_path, width = az_chart_width(), height = az_chart_height())
   print(p)
   dev.off()
   write_json(
@@ -379,15 +378,12 @@ p <- ggplot(df_plot, aes(x = grid_date, y = fwd, color = curve, linewidth = curv
   labs(
     x = "Data",
     y = "Taxa (%)",
-    title = "Selic implicita (Forward)",
-    subtitle = "Meeting-to-Meeting (25bps step)",
-    color = NULL,
-    caption = sprintf("Atualizado: %s", az_chart_stamp())
+    color = NULL
   ) +
   az_chart_theme(legend_position = "bottom")
 
 svg_path <- file.path(static_dir, "selic_implicita.svg")
-svglite(svg_path, width = 10, height = 5.5)
+svglite(svg_path, width = az_chart_width(), height = az_chart_height())
 print(p)
 dev.off()
 message("SVG: ", normalizePath(svg_path, winslash = "/", mustWork = FALSE))

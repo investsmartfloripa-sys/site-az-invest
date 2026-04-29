@@ -49,5 +49,8 @@ prisma/*.db-journal
 # vercel (link local — nao commitar)
 .vercel
 
+# artefatos locais do pipeline
+data-pipeline/out-local/
+
 # arquivos temporarios de commit
 .commit-msg.tmp

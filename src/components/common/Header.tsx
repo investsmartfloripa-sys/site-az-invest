@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { articleCategories, navItems } from "@/data/home";
+import { navItems } from "@/data/home";
 import { getSession } from "@/lib/auth";
 
 export async function Header() {
@@ -53,17 +53,6 @@ export async function Header() {
           ))}
         </div>
       </nav>
-
-      <div className="hidden border-t border-white/10 bg-[#0a1838] md:block">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap gap-x-5 gap-y-2 px-4 py-2 text-[11px] font-medium text-white/60 md:px-8">
-          <span className="text-white/40">Categorias:</span>
-          {articleCategories.map((item) => (
-            <Link key={item.href} href={item.href} className="hover:text-white">
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </div>
 
       <div className="h-1 bg-[#027DFC]" />
     </header>

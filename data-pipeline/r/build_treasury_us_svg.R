@@ -34,15 +34,14 @@ write_treasury_placeholder <- function(reason) {
     ylim(0, 2) +
     labs(
       x = NULL,
-      y = NULL,
-      title = "Curva Treasury EUA"
+      y = NULL
     ) +
     theme_void(base_size = 12) +
     theme(
       plot.title = element_text(face = "bold", color = "#027DFC", hjust = 0),
       plot.background = element_rect(fill = "white", colour = NA)
     )
-  svglite(file.path(static_dir, "juros_treasury_us.svg"), width = 10, height = 5.5)
+  svglite(file.path(static_dir, "juros_treasury_us.svg"), width = az_chart_width(), height = az_chart_height())
   print(p)
   dev.off()
   message("SVG placeholder: juros_treasury_us.svg")
@@ -177,8 +176,6 @@ curves$snapshot <- factor(curves$snapshot, levels = snap_order)
 greens <- colorRampPalette(c("#8BE28F", "#2BBF5E", "#0B6B2E", "#000000"))(length(snap_order))
 names(greens) <- snap_order
 
-stamp <- az_chart_stamp()
-
 p <- ggplot(curves, aes(x = tenor, y = yield, color = snapshot, group = snapshot)) +
   geom_line(linewidth = 0.9) +
   geom_point(size = 2) +
@@ -187,14 +184,11 @@ p <- ggplot(curves, aes(x = tenor, y = yield, color = snapshot, group = snapshot
   labs(
     x = "Maturidade (anos)",
     y = "Yield (%)",
-    title = "Curva Treasury EUA",
-    subtitle = "Comparativo historico (D-365, D-90, D-30 e Hoje)",
-    color = NULL,
-    caption = paste("Atualizado:", stamp)
+    color = NULL
   ) +
   az_chart_theme(legend_position = "bottom")
 
-svglite(file.path(static_dir, "juros_treasury_us.svg"), width = 10, height = 5.5)
+svglite(file.path(static_dir, "juros_treasury_us.svg"), width = az_chart_width(), height = az_chart_height())
 print(p)
 dev.off()
 
