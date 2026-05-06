@@ -1,3 +1,6 @@
 data-pipeline/out-local
 .next
 node_modules
+.env
+.env.*
+!.env.example
