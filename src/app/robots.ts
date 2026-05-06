@@ -10,7 +10,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/area-restrita", "/admin", "/api"],
+        disallow: ["/area-restrita", "/admin", "/api", "/preview"],
       },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,
