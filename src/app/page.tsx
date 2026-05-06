@@ -2,12 +2,26 @@ import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { HeroRecentes } from "@/components/home/HeroRecentes";
 import { MaisLidos } from "@/components/home/MaisLidos";
-import { NewsletterForm } from "@/components/home/NewsletterForm";
+import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { UltimasPublicacoes } from "@/components/home/UltimasPublicacoes";
 import { VideosSection } from "@/components/home/VideosSection";
 import { findPosts, mapPost } from "@/lib/posts";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = {
+  title: "Investimentos de A a Z - Economia, mercado e educacao financeira",
+  description:
+    "Analises de economia e mercado, simuladores financeiros, painel economico e conteudo da equipe AZ Invest para voce investir com mais clareza.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "Investimentos de A a Z",
+    description:
+      "Analises de economia e mercado, simuladores financeiros, painel economico e conteudo da equipe AZ Invest.",
+    url: "/",
+    type: "website",
+  },
+};
 
 export default async function Home() {
   const posts = await findPosts({
@@ -30,7 +44,7 @@ export default async function Home() {
         {maisLidos.length > 0 ? <MaisLidos posts={maisLidos} /> : null}
         <UltimasPublicacoes posts={restantes} />
         <VideosSection />
-        <NewsletterForm />
+        <CommunityCallout />
       </main>
       <Footer />
     </div>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { PostCard } from "@/components/common/PostCard";
-import { NewsletterForm } from "@/components/home/NewsletterForm";
+import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection";
 import { StaticChartCard } from "@/components/painel/StaticChartCard";
 import { getPanoramaData, painelBlobConfigured } from "@/lib/painel-data";
@@ -206,7 +206,7 @@ export async function PainelPanoramaPage() {
       </section>
 
       <section id="newsletter">
-        <NewsletterForm />
+        <CommunityCallout />
       </section>
     </div>
   );

@@ -25,9 +25,18 @@ export function Footer() {
           <p className="mt-4 text-sm text-[#132960]/80">
             <strong>Email:</strong> azinvest.equipe@gmail.com
           </p>
-          <p className="break-words text-sm text-[#132960]/80">Contato: 48 00003-5708</p>
-          <Link href="#" className="mt-3 inline-block text-sm font-medium text-[#132960] hover:underline">
-            Linkedin
+          <p className="break-words text-sm text-[#132960]/80">
+            <strong>Telefone:</strong>{" "}
+            <a href="tel:+5548999386708" className="hover:underline">
+              (48) 99938-6708
+            </a>
+          </p>
+          <Link
+            href="https://wa.me/5548999386708"
+            target="_blank"
+            className="mt-3 inline-block text-sm font-medium text-[#132960] hover:underline"
+          >
+            WhatsApp
           </Link>
         </div>
       </div>

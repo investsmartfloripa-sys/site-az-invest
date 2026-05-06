@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
-import { NewsletterForm } from "@/components/home/NewsletterForm";
+import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { YoutubeVideoCard } from "@/components/videos/YoutubeVideoCard";
 import {
   fetchChannelVideos,
@@ -140,7 +140,7 @@ export default async function VideosPage({ searchParams }: VideosPageProps) {
           </section>
         )}
 
-        <NewsletterForm />
+        <CommunityCallout />
       </main>
       <Footer />
     </div>

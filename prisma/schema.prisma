@@ -30,10 +30,15 @@ model Author {
   bio             String?
   photo           String?
   email           String?
+  whatsapp        String?
   linkedin        String?
+  instagram       String?
   experiencesJson String?
   educationJson   String?
+  specialtiesJson String?
   posts           Post[]
+  leads           AuthorLead[]
+  whatsappClicks  AuthorWhatsappClick[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -52,4 +57,37 @@ model Post {
   published  Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+model AuthorLead {
+  id          Int      @id @default(autoincrement())
+  authorId    Int
+  author      Author   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  name        String
+  email       String
+  phone       String?
+  message     String
+  emailStatus String   @default("SKIPPED")
+  createdAt   DateTime @default(now())
+}
+
+model AuthorWhatsappClick {
+  id        Int      @id @default(autoincrement())
+  authorId  Int
+  author    Author   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+}
+
+model ConsorcioLead {
+  id          Int      @id @default(autoincrement())
+  name        String
+  phone       String
+  tipoBem     String?
+  objetivo    String?
+  valorCarta  Float?
+  prazoMeses  Int?
+  parcela     Float?
+  source      String   @default("SIMULADOR_CONSORCIO")
+  createdAt   DateTime @default(now())
 }

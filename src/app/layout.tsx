@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Michroma, Raleway } from "next/font/google";
 import "./globals.css";
+import { getSiteUrl } from "@/lib/site-url";
 
 const headingFont = Michroma({
   variable: "--font-heading",
@@ -14,7 +15,7 @@ const bodyFont = Raleway({
   weight: ["400", "500", "600", "700"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://site-az-invest.vercel.app";
+const SITE_URL = getSiteUrl();
 const SITE_DESCRIPTION =
   "Conteudos sobre economia, educacao financeira e investimentos para te ajudar a investir melhor.";
 
@@ -26,6 +27,16 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   applicationName: "AZ Invest",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
     title: "Investimentos de A a Z",
     description: SITE_DESCRIPTION,

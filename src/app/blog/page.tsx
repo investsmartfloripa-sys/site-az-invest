@@ -2,11 +2,25 @@ import Link from "next/link";
 import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { PostCard } from "@/components/common/PostCard";
-import { NewsletterForm } from "@/components/home/NewsletterForm";
+import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { prisma } from "@/lib/prisma";
 import { findPosts, mapPost } from "@/lib/posts";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = {
+  title: "Artigos | AZ Invest",
+  description:
+    "Analises, guias e opinioes da equipe AZ Invest sobre economia, mercado financeiro e educacao financeira.",
+  alternates: { canonical: "/blog" },
+  openGraph: {
+    title: "Artigos | AZ Invest",
+    description:
+      "Analises, guias e opinioes da equipe AZ Invest sobre economia, mercado financeiro e educacao financeira.",
+    url: "/blog",
+    type: "website",
+  },
+};
 
 type SearchParams = { categoria?: string };
 
@@ -92,7 +106,7 @@ export default async function BlogIndexPage({
           </ul>
         )}
 
-        <NewsletterForm />
+        <CommunityCallout />
       </main>
       <Footer />
     </div>

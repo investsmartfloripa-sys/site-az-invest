@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+
+import { submitConsorcioLead } from "./actions";
 import {
   Area,
   AreaChart,
@@ -205,6 +207,8 @@ export default function SimuladorConsorcio() {
   const [leadNome, setLeadNome] = useState("");
   const [leadTel, setLeadTel] = useState("");
   const [leadEnviado, setLeadEnviado] = useState(false);
+  const [leadErro, setLeadErro] = useState<string | null>(null);
+  const [leadEnviando, startLeadTransition] = useTransition();
   const [selicAnual, setSelicAnual] = useState(0.1475);
   const [selicStatus, setSelicStatus] = useState<"loading" | "live" | "fallback">("loading");
 
@@ -485,7 +489,23 @@ export default function SimuladorConsorcio() {
   };
 
   const handleLeadSubmit = () => {
-    if (leadNome && leadTel) setLeadEnviado(true);
+    setLeadErro(null);
+    startLeadTransition(async () => {
+      const result = await submitConsorcioLead({
+        name: leadNome,
+        phone: leadTel,
+        tipoBem: tipoBem ?? null,
+        objetivo: objetivo ?? null,
+        valorCarta: valorBem || null,
+        prazoMeses: prazo || null,
+        parcela: parcelaNormal || null,
+      });
+      if (result.ok) {
+        setLeadEnviado(true);
+      } else {
+        setLeadErro(result.error);
+      }
+    });
   };
   const reset = () => {
     setStep(0);
@@ -494,6 +514,7 @@ export default function SimuladorConsorcio() {
     setLeadEnviado(false);
     setLeadNome("");
     setLeadTel("");
+    setLeadErro(null);
   };
 
   const toggleStyle = (active: boolean) => ({
@@ -2143,12 +2164,21 @@ export default function SimuladorConsorcio() {
               </div>
               <button
                 onClick={handleLeadSubmit}
-                disabled={!leadNome || !leadTel}
+                disabled={!leadNome || !leadTel || leadEnviando}
                 style={{ backgroundColor: C.dark, color: "#ffffff" }}
                 className="w-full font-bold py-3.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Receber cotações <ArrowRight className="w-5 h-5" />
+                {leadEnviando ? "Enviando..." : "Receber cotações"}
+                {leadEnviando ? null : <ArrowRight className="w-5 h-5" />}
               </button>
+              {leadErro ? (
+                <p
+                  className="text-xs mt-2 text-center font-semibold"
+                  style={{ color: "#FEE2E2" }}
+                >
+                  {leadErro}
+                </p>
+              ) : null}
               <p
                 className="text-[11px] mt-3 text-center"
                 style={{ color: "rgba(255,255,255,0.85)" }}

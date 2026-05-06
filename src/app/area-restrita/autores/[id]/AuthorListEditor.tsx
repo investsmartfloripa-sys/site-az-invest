@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { AuthorEducation, AuthorExperience } from "@/lib/authors";
+import {
+  MAX_SPECIALTIES,
+  type AuthorEducation,
+  type AuthorExperience,
+  type AuthorSpecialty,
+} from "@/lib/authors";
 
 type ExperienceProps = {
   initial: AuthorExperience[];
@@ -117,7 +122,7 @@ type EducationProps = {
 
 export function EducationEditor({ initial, hiddenName }: EducationProps) {
   const [items, setItems] = useState<AuthorEducation[]>(
-    initial.length ? initial : [{ title: "", institution: "" }],
+    initial.length ? initial : [{ title: "", institution: "", description: "" }],
   );
 
   function update(index: number, field: keyof AuthorEducation, value: string) {
@@ -127,7 +132,7 @@ export function EducationEditor({ initial, hiddenName }: EducationProps) {
   }
 
   function add() {
-    setItems((prev) => [...prev, { title: "", institution: "" }]);
+    setItems((prev) => [...prev, { title: "", institution: "", description: "" }]);
   }
 
   function remove(index: number) {
@@ -149,7 +154,7 @@ export function EducationEditor({ initial, hiddenName }: EducationProps) {
       <input
         type="hidden"
         name={hiddenName}
-        value={JSON.stringify(items.filter((i) => i.title || i.institution))}
+        value={JSON.stringify(items.filter((i) => i.title || i.institution || i.description))}
       />
       {items.map((item, index) => (
         <div
@@ -198,6 +203,12 @@ export function EducationEditor({ initial, hiddenName }: EducationProps) {
             placeholder="Instituicao (ex: UFSC)"
             className="h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm"
           />
+          <textarea
+            value={item.description}
+            onChange={(e) => update(index, "description", e.target.value)}
+            placeholder="Detalhes adicionais (ex: Areas de estudo, foco, certificacoes)"
+            className="min-h-20 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm"
+          />
         </div>
       ))}
       <button
@@ -206,6 +217,112 @@ export function EducationEditor({ initial, hiddenName }: EducationProps) {
         className="rounded-md border border-dashed border-[#132960]/40 px-3 py-2 text-sm font-semibold text-[#132960] hover:bg-[#132960]/5"
       >
         + Adicionar formacao
+      </button>
+    </div>
+  );
+}
+
+type SpecialtyProps = {
+  initial: AuthorSpecialty[];
+  hiddenName: string;
+};
+
+export function SpecialtyEditor({ initial, hiddenName }: SpecialtyProps) {
+  const [items, setItems] = useState<AuthorSpecialty[]>(
+    initial.length ? initial.slice(0, MAX_SPECIALTIES) : [{ title: "", description: "" }],
+  );
+
+  function update(index: number, field: keyof AuthorSpecialty, value: string) {
+    setItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
+    );
+  }
+
+  function add() {
+    setItems((prev) =>
+      prev.length >= MAX_SPECIALTIES ? prev : [...prev, { title: "", description: "" }],
+    );
+  }
+
+  function remove(index: number) {
+    setItems((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function move(index: number, dir: -1 | 1) {
+    setItems((prev) => {
+      const next = [...prev];
+      const target = index + dir;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
+
+  const reachedMax = items.length >= MAX_SPECIALTIES;
+
+  return (
+    <div className="space-y-3">
+      <input
+        type="hidden"
+        name={hiddenName}
+        value={JSON.stringify(items.filter((i) => i.title || i.description))}
+      />
+      {items.map((item, index) => (
+        <div
+          key={index}
+          className="space-y-2 rounded-lg border border-zinc-200 bg-zinc-50/60 p-3"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#132960]/70">
+              Especialidade {index + 1}
+            </span>
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => move(index, -1)}
+                className="rounded border border-zinc-300 px-2 py-0.5 text-xs hover:bg-white"
+                disabled={index === 0}
+              >
+                {"\u2191"}
+              </button>
+              <button
+                type="button"
+                onClick={() => move(index, 1)}
+                className="rounded border border-zinc-300 px-2 py-0.5 text-xs hover:bg-white"
+                disabled={index === items.length - 1}
+              >
+                {"\u2193"}
+              </button>
+              <button
+                type="button"
+                onClick={() => remove(index)}
+                className="rounded border border-red-200 px-2 py-0.5 text-xs text-red-600 hover:bg-red-50"
+              >
+                Remover
+              </button>
+            </div>
+          </div>
+          <input
+            value={item.title}
+            onChange={(e) => update(index, "title", e.target.value)}
+            placeholder="Titulo curto (ex: Financas familiares)"
+            className="h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm"
+          />
+          <textarea
+            value={item.description}
+            onChange={(e) => update(index, "description", e.target.value)}
+            placeholder="Descricao curta (1-2 linhas)"
+            className="min-h-20 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm"
+          />
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={add}
+        disabled={reachedMax}
+        className="rounded-md border border-dashed border-[#132960]/40 px-3 py-2 text-sm font-semibold text-[#132960] hover:bg-[#132960]/5 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        + Adicionar especialidade {reachedMax ? `(maximo ${MAX_SPECIALTIES})` : ""}
       </button>
     </div>
   );

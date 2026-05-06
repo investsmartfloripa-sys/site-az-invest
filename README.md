@@ -34,6 +34,7 @@ npm run dev
    - `DIRECT_URL`: mesma connection string **sem pooler** (use isso pra rodar migrations)
    - `AUTH_SECRET`: 32+ caracteres aleatorios
    - `YOUTUBE_API_KEY` e `YOUTUBE_CHANNEL_ID` (opcionais, para a aba `/videos`)
+   - `RESEND_API_KEY` e `EMAIL_FROM` (usado no formulario de contato dos assessores)
 3. A Vercel roda automaticamente `prisma generate && next build` (script `vercel-build`).
 4. Apos o primeiro deploy, rode os seeds **uma vez** apontando o `.env` local para o banco de producao:
 
@@ -59,6 +60,24 @@ git add prisma/migrations && git commit -m "Adicionar migration X" && git push
 
 Como `migrate dev` ja aplica direto no banco, nao precisa rodar `migrate deploy` em lugar nenhum.
 
+## E-mail dos assessores (Resend)
+
+O formulario "Fale com X" na pagina de cada assessor envia a mensagem para o
+e-mail profissional cadastrado no painel restrito **e** salva o lead no banco.
+
+Configurar uma vez:
+
+1. Criar conta em [resend.com](https://resend.com).
+2. Verificar dominio proprio (recomendado) ou usar `onboarding@resend.dev` para
+   testes rapidos com sandbox.
+3. Gerar API key e setar `RESEND_API_KEY` e `EMAIL_FROM` no `.env`.
+4. No painel restrito (`/area-restrita/autores`), preencher para cada assessor:
+   - **E-mail profissional** (destinatario dos leads).
+   - **WhatsApp** no formato internacional (ex: `+5548999386708`).
+
+Sem `RESEND_API_KEY`/`EMAIL_FROM`, os leads continuam sendo salvos no banco e
+listados no painel com status `SKIPPED`.
+
 ## Estrutura
 
 - `src/app/` - App Router (paginas e layouts)
@@ -66,5 +85,6 @@ Como `migrate dev` ja aplica direto no banco, nao precisa rodar `migrate deploy`
 - `src/app/simuladores/` - simuladores financeiros (consorcio, juros compostos, etc)
 - `src/app/blog/[slug]` - posts individuais
 - `src/app/nosso-time/[slug]` - paginas individuais dos autores
-- `prisma/schema.prisma` - modelos User, Author, Post
+- `prisma/schema.prisma` - modelos User, Author, Post, AuthorLead
+- `src/lib/email.ts` - integracao com Resend para leads dos assessores
 - `scripts/` - seeds (master, autores, posts)

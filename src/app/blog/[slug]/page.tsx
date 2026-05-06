@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
-import { NewsletterForm } from "@/components/home/NewsletterForm";
+import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -115,7 +115,7 @@ export default async function BlogPostPage({
         </article>
 
         <div className="mt-10">
-          <NewsletterForm />
+          <CommunityCallout />
         </div>
       </main>
       <Footer />

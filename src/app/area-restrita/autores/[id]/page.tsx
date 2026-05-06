@@ -6,12 +6,19 @@ import { prisma } from "@/lib/prisma";
 import {
   parseEducation,
   parseExperiences,
+  parseSpecialties,
   serializeEducation,
   serializeExperiences,
+  serializeSpecialties,
   type AuthorEducation,
   type AuthorExperience,
+  type AuthorSpecialty,
 } from "@/lib/authors";
-import { EducationEditor, ExperienceEditor } from "./AuthorListEditor";
+import {
+  EducationEditor,
+  ExperienceEditor,
+  SpecialtyEditor,
+} from "./AuthorListEditor";
 
 async function updateAuthorAction(formData: FormData) {
   "use server";
@@ -28,13 +35,17 @@ async function updateAuthorAction(formData: FormData) {
   const photo = String(formData.get("photo") || "").trim();
   const email = String(formData.get("email") || "").trim();
   const linkedin = String(formData.get("linkedin") || "").trim();
+  const instagram = String(formData.get("instagram") || "").trim();
+  const whatsapp = String(formData.get("whatsapp") || "").trim();
   const experiencesRaw = String(formData.get("experiencesJson") || "[]");
   const educationRaw = String(formData.get("educationJson") || "[]");
+  const specialtiesRaw = String(formData.get("specialtiesJson") || "[]");
 
   if (!name || !role) return;
 
   let experiences: AuthorExperience[] = [];
   let education: AuthorEducation[] = [];
+  let specialties: AuthorSpecialty[] = [];
   try {
     const parsed = JSON.parse(experiencesRaw);
     if (Array.isArray(parsed)) {
@@ -51,6 +62,16 @@ async function updateAuthorAction(formData: FormData) {
       education = parsed.map((item) => ({
         title: String(item?.title ?? ""),
         institution: String(item?.institution ?? ""),
+        description: String(item?.description ?? ""),
+      }));
+    }
+  } catch {}
+  try {
+    const parsed = JSON.parse(specialtiesRaw);
+    if (Array.isArray(parsed)) {
+      specialties = parsed.map((item) => ({
+        title: String(item?.title ?? ""),
+        description: String(item?.description ?? ""),
       }));
     }
   } catch {}
@@ -65,8 +86,11 @@ async function updateAuthorAction(formData: FormData) {
       photo: photo || null,
       email: email || null,
       linkedin: linkedin || null,
+      instagram: instagram || null,
+      whatsapp: whatsapp || null,
       experiencesJson: serializeExperiences(experiences),
       educationJson: serializeEducation(education),
+      specialtiesJson: serializeSpecialties(specialties),
     },
   });
 
@@ -96,6 +120,7 @@ export default async function EditAuthorPage({ params, searchParams }: PageProps
 
   const experiences = parseExperiences(author.experiencesJson);
   const education = parseEducation(author.educationJson);
+  const specialties = parseSpecialties(author.specialtiesJson);
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 md:px-8">
@@ -178,13 +203,29 @@ export default async function EditAuthorPage({ params, searchParams }: PageProps
               />
             </label>
             <label className="space-y-1 text-sm">
-              <span className="font-medium text-[#132960]">Email</span>
+              <span className="font-medium text-[#132960]">Email profissional</span>
               <input
                 name="email"
                 type="email"
                 defaultValue={author.email ?? ""}
+                placeholder="seuemail@empresa.com"
                 className="h-10 w-full rounded-md border border-zinc-300 px-3 text-sm"
               />
+              <span className="block text-[11px] text-zinc-500">
+                E os leads enviados pelo formulario do site chegarao aqui.
+              </span>
+            </label>
+            <label className="space-y-1 text-sm">
+              <span className="font-medium text-[#132960]">WhatsApp</span>
+              <input
+                name="whatsapp"
+                defaultValue={author.whatsapp ?? ""}
+                placeholder="+5548999386708"
+                className="h-10 w-full rounded-md border border-zinc-300 px-3 text-sm"
+              />
+              <span className="block text-[11px] text-zinc-500">
+                Use formato internacional (DDI + DDD + numero), sem espacos.
+              </span>
             </label>
             <label className="space-y-1 text-sm">
               <span className="font-medium text-[#132960]">LinkedIn (URL)</span>
@@ -192,6 +233,15 @@ export default async function EditAuthorPage({ params, searchParams }: PageProps
                 name="linkedin"
                 defaultValue={author.linkedin ?? ""}
                 placeholder="https://www.linkedin.com/in/..."
+                className="h-10 w-full rounded-md border border-zinc-300 px-3 text-sm"
+              />
+            </label>
+            <label className="space-y-1 text-sm">
+              <span className="font-medium text-[#132960]">Instagram (URL)</span>
+              <input
+                name="instagram"
+                defaultValue={author.instagram ?? ""}
+                placeholder="https://www.instagram.com/..."
                 className="h-10 w-full rounded-md border border-zinc-300 px-3 text-sm"
               />
             </label>
@@ -210,6 +260,20 @@ export default async function EditAuthorPage({ params, searchParams }: PageProps
         <section className="space-y-3 rounded-xl border border-[#132960]/20 bg-white p-5">
           <div>
             <h2 className="text-lg font-semibold text-[#132960]">
+              Especialidades (max 3)
+            </h2>
+            <p className="text-xs text-zinc-500">
+              Tres caixinhas de destaque que aparecem no topo da landing publica.
+              Use titulos curtos (ex: Financas familiares) e uma descricao de 1 a 2
+              linhas.
+            </p>
+          </div>
+          <SpecialtyEditor initial={specialties} hiddenName="specialtiesJson" />
+        </section>
+
+        <section className="space-y-3 rounded-xl border border-[#132960]/20 bg-white p-5">
+          <div>
+            <h2 className="text-lg font-semibold text-[#132960]">
               Experiencias profissionais
             </h2>
             <p className="text-xs text-zinc-500">
@@ -223,7 +287,8 @@ export default async function EditAuthorPage({ params, searchParams }: PageProps
           <div>
             <h2 className="text-lg font-semibold text-[#132960]">Formacao</h2>
             <p className="text-xs text-zinc-500">
-              Graduacoes, especializacoes e certificacoes que aparecem no perfil publico.
+              Graduacoes, especializacoes, certificacoes e detalhes que aparecem no perfil
+              publico.
             </p>
           </div>
           <EducationEditor initial={education} hiddenName="educationJson" />

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { NewsletterForm } from "@/components/home/NewsletterForm";
+import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { simuladores } from "@/data/simuladores";
 
 export const metadata = {
@@ -17,8 +17,8 @@ export default function SimuladoresPage() {
           </p>
           <h1 className="text-4xl text-[#027DFC] md:text-5xl">Simuladores</h1>
           <p className="max-w-2xl text-sm text-zinc-600">
-            Ferramentas dummy para voce praticar e visualizar diferentes cenarios financeiros.
-            Clique em um simulador para comecar.
+            Ferramentas para voce visualizar diferentes cenarios financeiros e tomar decisoes
+            com mais clareza. Escolha um simulador para comecar.
           </p>
         </header>
 
@@ -46,7 +46,7 @@ export default function SimuladoresPage() {
           ))}
         </section>
 
-        <NewsletterForm />
+        <CommunityCallout />
       </main>
   );
 }

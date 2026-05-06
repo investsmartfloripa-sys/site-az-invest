@@ -17,6 +17,8 @@ async function createAuthorAction(formData: FormData) {
   const photo = String(formData.get("photo") || "").trim();
   const email = String(formData.get("email") || "").trim();
   const linkedin = String(formData.get("linkedin") || "").trim();
+  const instagram = String(formData.get("instagram") || "").trim();
+  const whatsapp = String(formData.get("whatsapp") || "").trim();
 
   if (!name || !role) return;
 
@@ -37,6 +39,8 @@ async function createAuthorAction(formData: FormData) {
       photo: photo || null,
       email: email || null,
       linkedin: linkedin || null,
+      instagram: instagram || null,
+      whatsapp: whatsapp || null,
     },
   });
 
@@ -112,13 +116,23 @@ export default async function AutoresPage() {
           <input
             name="email"
             type="email"
-            placeholder="Email (opcional)"
+            placeholder="Email profissional (recebe leads do site)"
+            className="h-10 rounded-md border border-zinc-300 px-3 text-sm"
+          />
+          <input
+            name="whatsapp"
+            placeholder="WhatsApp (ex: +5548999386708)"
             className="h-10 rounded-md border border-zinc-300 px-3 text-sm"
           />
           <input
             name="linkedin"
             placeholder="LinkedIn URL (opcional)"
             className="h-10 rounded-md border border-zinc-300 px-3 text-sm"
+          />
+          <input
+            name="instagram"
+            placeholder="Instagram URL (opcional)"
+            className="h-10 rounded-md border border-zinc-300 px-3 text-sm md:col-span-2"
           />
           <textarea
             name="bio"

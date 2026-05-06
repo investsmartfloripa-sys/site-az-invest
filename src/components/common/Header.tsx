@@ -7,6 +7,7 @@ export async function Header() {
   const session = await getSession();
   const loginHref = session ? "/area-restrita/painel" : "/area-restrita/login";
   const loginLabel = session ? "Painel" : "Login";
+  const whatsappHref = "https://wa.me/5548999386708";
 
   return (
     <header className="border-b border-[#132960]/10 bg-[#132960] text-[#E8E7E5]">
@@ -22,22 +23,23 @@ export async function Header() {
           />
         </Link>
 
-        <div className="hidden flex-1 justify-end md:flex">
-          <div className="relative w-full max-w-xs">
-            <input
-              type="text"
-              placeholder="Pesquisar..."
-              className="h-9 w-full rounded-full border border-white/25 bg-white px-4 text-xs text-black placeholder:text-zinc-500"
-            />
-          </div>
+        <div className="flex items-center gap-2">
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Falar no WhatsApp"
+            className="rounded-full border border-[#22c55e]/40 bg-[#22c55e]/15 px-3 py-2 text-xs font-semibold text-[#22c55e] transition hover:bg-[#22c55e]/25"
+          >
+            WhatsApp
+          </a>
+          <Link
+            href={loginHref}
+            className="rounded-full bg-[#FF5713] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#d94a10]"
+          >
+            {loginLabel}
+          </Link>
         </div>
-
-        <Link
-          href={loginHref}
-          className="rounded-full bg-[#FF5713] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#d94a10]"
-        >
-          {loginLabel}
-        </Link>
       </div>
 
       <nav className="border-t border-white/10 bg-[#0e1f49]">

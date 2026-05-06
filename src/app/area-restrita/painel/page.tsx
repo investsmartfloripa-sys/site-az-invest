@@ -76,12 +76,22 @@ export default async function PainelPage() {
   const session = await getSession();
   if (!session) redirect("/area-restrita/login");
 
-  const [posts, authors] = await Promise.all([
+  const [posts, authors, leads, whatsappClicks] = await Promise.all([
     prisma.post.findMany({
       orderBy: { createdAt: "desc" },
       include: { author: true },
     }),
     prisma.author.findMany({ orderBy: { name: "asc" } }),
+    prisma.authorLead.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      include: { author: true },
+    }),
+    prisma.authorWhatsappClick.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 30,
+      include: { author: true },
+    }),
   ]);
 
   return (
@@ -227,6 +237,93 @@ export default async function PainelPage() {
           ))}
           {posts.length === 0 ? (
             <p className="text-sm text-zinc-500">Sem posts ainda.</p>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="mt-8 rounded-xl border border-[#132960]/20 bg-white p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xl text-[#132960]">Cliques no WhatsApp dos assessores</h2>
+          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+            Novo
+          </span>
+        </div>
+        <p className="mt-1 text-xs text-zinc-500">
+          Cada vez que algum visitante clica em &quot;Falar com X no WhatsApp&quot;
+          informa o nome dele e abre a conversa.
+        </p>
+        <div className="mt-4 space-y-3">
+          {whatsappClicks.map((click) => (
+            <article
+              key={click.id}
+              className="rounded-md border border-zinc-200 p-3 text-sm text-zinc-700"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-semibold text-[#132960]">{click.name}</p>
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
+                  WhatsApp
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-zinc-500">
+                Assessor: {click.author.name} |{" "}
+                {new Date(click.createdAt).toLocaleString("pt-BR")}
+              </p>
+            </article>
+          ))}
+          {whatsappClicks.length === 0 ? (
+            <p className="text-sm text-zinc-500">Sem cliques ainda.</p>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="mt-8 rounded-xl border border-[#132960]/20 bg-white p-5">
+        <h2 className="text-xl text-[#132960]">Leads de assessoria (historico)</h2>
+        <p className="mt-1 text-xs text-zinc-500">
+          Mensagens enviadas pelo formulario antigo de contato (mantido para
+          consulta). O fluxo principal hoje e via WhatsApp acima.
+        </p>
+        <div className="mt-4 space-y-3">
+          {leads.map((lead) => {
+            const statusStyle =
+              lead.emailStatus === "SENT"
+                ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                : lead.emailStatus === "FAILED"
+                  ? "bg-red-100 text-red-700 border-red-200"
+                  : "bg-zinc-100 text-zinc-600 border-zinc-200";
+            const statusLabel =
+              lead.emailStatus === "SENT"
+                ? "E-mail enviado"
+                : lead.emailStatus === "FAILED"
+                  ? "Falha no envio"
+                  : "Salvo (sem envio)";
+            return (
+              <article
+                key={lead.id}
+                className="rounded-md border border-zinc-200 p-3 text-sm text-zinc-700"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-semibold text-[#132960]">
+                    {lead.name} - {lead.email}
+                  </p>
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${statusStyle}`}
+                  >
+                    {statusLabel}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-zinc-500">
+                  Assessor: {lead.author.name} |{" "}
+                  {new Date(lead.createdAt).toLocaleString("pt-BR")}
+                </p>
+                {lead.phone ? (
+                  <p className="mt-1 text-xs text-zinc-600">Telefone: {lead.phone}</p>
+                ) : null}
+                <p className="mt-2 text-sm leading-relaxed text-zinc-700">{lead.message}</p>
+              </article>
+            );
+          })}
+          {leads.length === 0 ? (
+            <p className="text-sm text-zinc-500">Sem contatos recebidos ainda.</p>
           ) : null}
         </div>
       </section>
