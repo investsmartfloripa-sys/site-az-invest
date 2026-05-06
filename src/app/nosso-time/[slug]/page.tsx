@@ -1,11 +1,9 @@
-import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AuthorHero } from "@/components/assessor/AuthorHero";
+import { WhatsappContactCta } from "@/components/assessor/WhatsappContactCta";
 import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { PostCard } from "@/components/common/PostCard";
-import { WhatsappContactCta } from "@/components/assessor/WhatsappContactCta";
-import { InstagramIcon, LinkedinIcon } from "@/components/common/SocialIcons";
 import {
   parseEducation,
   parseExperiences,
@@ -17,15 +15,6 @@ export const dynamic = "force-dynamic";
 
 const FALLBACK_IMAGE =
   "https://investimentosdeaz.com.br/wp-content/uploads/2026/03/Seguros-1024x666.png";
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
 
 function normalizeWhatsapp(value: string | null | undefined) {
   if (!value) return null;
@@ -119,84 +108,20 @@ export default async function AuthorPage({
     <div className="min-h-screen text-[#132960]">
       <Header />
 
-      <section className="border-b border-[#132960]/10 bg-white">
-        <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-12">
-          <Link
-            href="/nosso-time"
-            className="mb-6 inline-flex w-fit items-center gap-1 rounded-full border border-[#132960]/15 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#132960]/80 transition hover:border-[#027DFC]/40 hover:text-[#027DFC]"
-          >
-            {"<-"} Nosso time
-          </Link>
-
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:gap-8">
-            <div className="relative h-56 w-44 flex-none overflow-hidden rounded-2xl bg-[#132960] shadow-sm md:h-64 md:w-48">
-              {author.photo ? (
-                <Image
-                  src={author.photo}
-                  alt={author.name}
-                  fill
-                  sizes="(min-width: 768px) 192px, 176px"
-                  className="object-cover"
-                />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center text-3xl font-semibold text-white">
-                  {initials(author.name)}
-                </span>
-              )}
-            </div>
-
-            <div className="flex-1 space-y-3">
-              <h1 className="text-3xl font-semibold leading-tight text-[#132960] md:text-5xl">
-                {author.name}
-              </h1>
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#FF5713] md:text-sm">
-                {author.role}
-              </p>
-              {author.headline ? (
-                <p className="max-w-2xl text-sm leading-relaxed text-zinc-600 md:text-base">
-                  {author.headline}
-                </p>
-              ) : null}
-
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                {whatsappDigits ? (
-                  <WhatsappContactCta
-                    authorId={author.id}
-                    authorName={author.name}
-                    whatsappUrl={fallbackWhatsappUrl}
-                    registerClickAction={registerWhatsappClickAction}
-                    variant="primary"
-                  />
-                ) : null}
-
-                {author.instagram ? (
-                  <a
-                    href={author.instagram}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`Instagram de ${author.name}`}
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-[#132960]/15 text-[#E4405F] transition hover:border-[#E4405F] hover:bg-gradient-to-br hover:from-[#feda75] hover:via-[#d62976] hover:to-[#4f5bd5] hover:text-white"
-                  >
-                    <InstagramIcon className="h-5 w-5" />
-                  </a>
-                ) : null}
-
-                {author.linkedin ? (
-                  <a
-                    href={author.linkedin}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`LinkedIn de ${author.name}`}
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-[#132960]/15 text-[#0A66C2] transition hover:border-[#0A66C2] hover:bg-[#0A66C2] hover:text-white"
-                  >
-                    <LinkedinIcon className="h-5 w-5" />
-                  </a>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <AuthorHero
+        author={{
+          id: author.id,
+          name: author.name,
+          role: author.role,
+          headline: author.headline,
+          photo: author.photo,
+          linkedin: author.linkedin,
+          instagram: author.instagram,
+        }}
+        whatsappDigits={whatsappDigits}
+        fallbackWhatsappUrl={fallbackWhatsappUrl}
+        registerClickAction={registerWhatsappClickAction}
+      />
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-10 md:px-8 md:py-14">
         <section className="grid gap-4 md:grid-cols-2">
