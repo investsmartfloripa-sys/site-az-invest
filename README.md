@@ -44,6 +44,42 @@ npm run db:seed-authors
 npm run db:seed-posts
 ```
 
+## Dominio (producao) e fallback se nao abrir
+
+A URL publica de referencia e `https://investimentosdeaz.com.br`. Se o navegador nao
+abrir ou disser que nao encontrou o servidor, o problema costuma ser **DNS no
+registrador**, nao o Next.js ou a Vercel em si.
+
+**Ate o DNS propagar**, use o host padrao do projeto na Vercel:
+
+`https://site-az-invest.vercel.app`
+
+(Logins e rotas sao as mesmas, por exemplo `/area-restrita/login`.)
+
+Diagnostico local:
+
+```bash
+npm run site:check-access
+```
+
+**Corrigir DNS** (Registro.br ou provedor onde o dominio esta):
+
+1. No projeto na Vercel: **Settings → Domains** → `investimentosdeaz.com.br` e
+   copie **exatamente** os registros que o painel indicar (eles prevalecem sobre
+   qualquer exemplo generico abaixo).
+2. Se o assistente pedir registro **A** no apex (`@`), o valor costuma ser
+   `76.76.21.21`.
+3. Para **www**, em geral **CNAME** com nome `www` e valor `cname.vercel-dns.com`
+   (confira sempre no passo 1).
+4. Confirme que os **servidores DNS (NS)** do dominio apontam para o servico onde
+   voce editou a zona; remova registros antigos da hospedagem WordPress/Elementor
+   que conflitem com o apex/`www`.
+5. Aguarde a propagacao (minutos a varias horas). Valide com
+   `nslookup investimentosdeaz.com.br 8.8.8.8`.
+
+Se o dominio usar **DNSSEC** e a resolucao continuar falhando, revise a
+configuracao conforme a documentacao do registrador.
+
 ## Migrations futuras
 
 Migrations **NAO** rodam no build do Vercel (o pooler do Neon nao suporta o
