@@ -6,6 +6,7 @@ import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { UltimasPublicacoes } from "@/components/home/UltimasPublicacoes";
 import { VideosSection } from "@/components/home/VideosSection";
 import { findPosts, mapPost } from "@/lib/posts";
+import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,9 @@ export default async function Home() {
   return (
     <div className="min-h-screen text-[#132960]">
       <Header />
-      <main className="az-shell mx-auto flex w-full max-w-6xl flex-col gap-12 px-4 py-6 md:px-8 md:py-8">
+      <main
+        className={`az-shell mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} flex-col gap-12 px-4 py-6 md:px-8 md:py-8`}
+      >
         <HeroRecentes posts={hero} />
         {maisLidos.length > 0 ? <MaisLidos posts={maisLidos} /> : null}
         <UltimasPublicacoes posts={restantes} />

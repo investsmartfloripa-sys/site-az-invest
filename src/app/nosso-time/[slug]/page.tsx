@@ -10,6 +10,7 @@ import {
   parseSpecialties,
 } from "@/lib/authors";
 import { prisma } from "@/lib/prisma";
+import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export const dynamic = "force-dynamic";
 
@@ -123,7 +124,9 @@ export default async function AuthorPage({
         registerClickAction={registerWhatsappClickAction}
       />
 
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-10 md:px-8 md:py-14">
+      <main
+        className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} flex-col gap-10 px-4 py-10 md:px-8 md:py-14`}
+      >
         <section className="grid gap-4 md:grid-cols-2">
           <article className="space-y-4 rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm">
             <div className="space-y-1">

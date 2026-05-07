@@ -10,6 +10,7 @@ import {
   whatsappLink,
 } from "@/components/common/SocialIcons";
 import { prisma } from "@/lib/prisma";
+import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,9 @@ export default async function NossoTimePage() {
   return (
     <div className="min-h-screen text-[#132960]">
       <Header />
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-12 px-4 py-10 md:px-8 md:py-14">
+      <main
+        className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} flex-col gap-12 px-4 py-10 md:px-8 md:py-14`}
+      >
         <header className="space-y-4">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#FF5713]">
             Quem somos

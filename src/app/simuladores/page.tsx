@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { simuladores } from "@/data/simuladores";
+import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export const metadata = {
   title: "Simuladores | AZ Invest",
@@ -10,7 +11,9 @@ export const metadata = {
 
 export default function SimuladoresPage() {
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-8 md:px-8">
+    <main
+      className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} flex-col gap-10 px-4 py-8 md:px-8`}
+    >
         <header className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
             Ferramentas praticas

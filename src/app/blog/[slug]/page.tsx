@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
+import { PostMarkdownBody } from "@/components/blog/PostMarkdownBody";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -109,9 +110,7 @@ export default async function BlogPostPage({
             )}
           </div>
 
-          <div className="whitespace-pre-wrap text-[15px] leading-7 text-zinc-800">
-            {post.content}
-          </div>
+          <PostMarkdownBody markdown={post.content} />
         </article>
 
         <div className="mt-10">

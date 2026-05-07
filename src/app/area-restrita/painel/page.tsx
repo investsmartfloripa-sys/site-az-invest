@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { NovaPostagemBlogFields } from "@/components/area-restrita/NovaPostagemBlogFields";
+import { blogPostCategoryLabels } from "@/data/blog-categories";
 import { destroySession, getSession } from "@/lib/auth";
+import { blogImageUploadConfigured } from "@/lib/blog-upload";
 import { prisma } from "@/lib/prisma";
+import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 import { slugify } from "@/lib/slugify";
 
 async function logoutAction() {
@@ -17,7 +21,9 @@ async function createPostAction(formData: FormData) {
   if (!session) redirect("/area-restrita/login");
 
   const title = String(formData.get("title") || "").trim();
-  const category = String(formData.get("category") || "Geral").trim();
+  const categoryRaw = String(formData.get("category") || "").trim();
+  if (!blogPostCategoryLabels.includes(categoryRaw)) return;
+  const category = categoryRaw;
   const authorIdRaw = String(formData.get("authorId") || "").trim();
   const authorIdParsed = authorIdRaw ? Number(authorIdRaw) : null;
   const authorId = authorIdParsed && Number.isInteger(authorIdParsed) ? authorIdParsed : null;
@@ -94,8 +100,10 @@ export default async function PainelPage() {
     }),
   ]);
 
+  const uploadConfigured = blogImageUploadConfigured();
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
+    <main className={`mx-auto w-full ${SITE_MAIN_MAX_WIDTH_CLASS} px-4 py-8 md:px-8`}>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl text-[#132960]">Painel do blog</h1>
@@ -156,12 +164,18 @@ export default async function PainelPage() {
             placeholder="Titulo"
             className="h-10 rounded-md border border-zinc-300 px-3 text-sm"
           />
-          <input
+          <select
             name="category"
             required
-            placeholder="Categoria"
-            className="h-10 rounded-md border border-zinc-300 px-3 text-sm"
-          />
+            defaultValue="Geral"
+            className="h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm"
+          >
+            {blogPostCategoryLabels.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
           <select
             name="authorId"
             required
@@ -177,22 +191,7 @@ export default async function PainelPage() {
               </option>
             ))}
           </select>
-          <input
-            name="coverImage"
-            placeholder="URL da imagem de capa (opcional)"
-            className="h-10 rounded-md border border-zinc-300 px-3 text-sm"
-          />
-          <input
-            name="excerpt"
-            placeholder="Resumo (opcional)"
-            className="h-10 rounded-md border border-zinc-300 px-3 text-sm md:col-span-2"
-          />
-          <textarea
-            name="content"
-            required
-            placeholder="Conteudo do post"
-            className="min-h-40 rounded-md border border-zinc-300 px-3 py-2 text-sm md:col-span-2"
-          />
+          <NovaPostagemBlogFields uploadConfigured={uploadConfigured} />
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <input type="checkbox" name="published" defaultChecked />
             Publicar agora

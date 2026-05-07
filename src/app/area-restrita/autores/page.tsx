@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 import { slugify } from "@/lib/slugify";
 
 async function createAuthorAction(formData: FormData) {
@@ -73,7 +74,7 @@ export default async function AutoresPage() {
   });
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
+    <main className={`mx-auto w-full ${SITE_MAIN_MAX_WIDTH_CLASS} px-4 py-8 md:px-8`}>
       <div className="mb-6 flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl text-[#132960]">Autores</h1>

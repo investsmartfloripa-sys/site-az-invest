@@ -21,13 +21,17 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "@vercel/blob": "^2.3.3",
     "bcryptjs": "^3.0.3",
     "lucide-react": "^1.11.0",
     "next": "16.2.4",
     "prisma": "^6.19.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
     "recharts": "^3.8.1",
+    "remark-breaks": "^4.0.0",
+    "remark-gfm": "^4.0.1",
     "resend": "^6.12.2"
   },
   "devDependencies": {

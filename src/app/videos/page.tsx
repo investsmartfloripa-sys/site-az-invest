@@ -13,6 +13,7 @@ import {
   KNOWN_PLAYLISTS,
   type YoutubeVideo,
 } from "@/lib/youtube";
+import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export const metadata = {
   title: "Videos | AZ Invest",
@@ -64,7 +65,9 @@ export default async function VideosPage({ searchParams }: VideosPageProps) {
   return (
     <div className="min-h-screen text-[#132960]">
       <Header />
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-8 md:px-8">
+      <main
+        className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} flex-col gap-10 px-4 py-8 md:px-8`}
+      >
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">

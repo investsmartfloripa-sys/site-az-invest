@@ -6,6 +6,7 @@ import {
   InstagramIcon,
   LinkedinIcon,
 } from "@/components/common/SocialIcons";
+import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export type AuthorHeroModel = {
   id: number;
@@ -122,7 +123,9 @@ export function AuthorHero({
 }: AuthorHeroProps) {
   return (
     <section className="border-b border-[#132960]/10 bg-white">
-      <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-12">
+      <div
+        className={`mx-auto w-full ${SITE_MAIN_MAX_WIDTH_CLASS} px-4 py-8 md:px-8 md:py-12`}
+      >
         <div className="mb-6">
           <BackLink />
         </div>

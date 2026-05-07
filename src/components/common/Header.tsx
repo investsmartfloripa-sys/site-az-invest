@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { navItems } from "@/data/home";
 import { getSession } from "@/lib/auth";
+import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export async function Header() {
   const session = await getSession();
@@ -11,7 +12,7 @@ export async function Header() {
 
   return (
     <header className="border-b border-[#132960]/10 bg-[#132960] text-[#E8E7E5]">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 md:px-8">
+      <div className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} items-center justify-between gap-4 px-4 py-4 md:px-8`}>
         <Link href="/" className="block">
           <Image
             src="https://investimentosdeaz.com.br/wp-content/uploads/2025/10/Logo-Horizontal-Fundos-azuis-escuro-1024x370.png"
@@ -43,7 +44,7 @@ export async function Header() {
       </div>
 
       <nav className="border-t border-white/10 bg-[#0e1f49]">
-        <div className="mx-auto flex w-full max-w-6xl items-center gap-6 overflow-x-auto px-4 py-3 text-xs font-semibold uppercase tracking-wider md:px-8">
+        <div className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} items-center gap-6 overflow-x-auto px-4 py-3 text-xs font-semibold uppercase tracking-wider md:px-8`}>
           {navItems.map((item) => (
             <Link
               key={item.href}

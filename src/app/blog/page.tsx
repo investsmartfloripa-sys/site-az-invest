@@ -5,6 +5,7 @@ import { PostCard } from "@/components/common/PostCard";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { prisma } from "@/lib/prisma";
 import { findPosts, mapPost } from "@/lib/posts";
+import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,9 @@ export default async function BlogIndexPage({
   return (
     <div className="min-h-screen text-[#132960]">
       <Header />
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 md:px-8">
+      <main
+        className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} flex-col gap-8 px-4 py-8 md:px-8`}
+      >
         <header className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
             Conteudo
