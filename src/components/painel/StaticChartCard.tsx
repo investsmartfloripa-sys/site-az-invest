@@ -127,4 +127,7 @@ export function StaticChartCard({
           </table>
         </div>
       ) : null}
-  
+    </div>
+  );
+}
+
