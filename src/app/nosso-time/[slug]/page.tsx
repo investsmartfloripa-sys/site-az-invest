@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { AuthorHero } from "@/components/assessor/AuthorHero";
-import { WhatsappContactCta } from "@/components/assessor/WhatsappContactCta";
 import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { PostCard } from "@/components/common/PostCard";
@@ -8,6 +7,7 @@ import {
   parseEducation,
   parseExperiences,
   parseSpecialties,
+  formatEducationPeriodLabel,
 } from "@/lib/authors";
 import { prisma } from "@/lib/prisma";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
@@ -24,12 +24,19 @@ function normalizeWhatsapp(value: string | null | undefined) {
   return digits;
 }
 
-async function registerWhatsappClickAction(authorId: number, name: string) {
+async function registerWhatsappClickAction(
+  authorId: number,
+  name: string,
+  visitorPhone?: string,
+) {
   "use server";
 
   if (!Number.isInteger(authorId)) return "";
   const trimmed = name.trim();
   if (!trimmed) return "";
+
+  const normalizedVisitorPhone =
+    normalizeWhatsapp(visitorPhone?.trim() || null) ?? null;
 
   const author = await prisma.author.findUnique({
     where: { id: authorId },
@@ -40,13 +47,20 @@ async function registerWhatsappClickAction(authorId: number, name: string) {
   const digits = normalizeWhatsapp(author.whatsapp);
 
   await prisma.authorWhatsappClick.create({
-    data: { authorId: author.id, name: trimmed },
+    data: {
+      authorId: author.id,
+      name: trimmed,
+      phone: normalizedVisitorPhone,
+    },
   });
 
   if (!digits) return "";
 
+  const visitorLine = normalizedVisitorPhone
+    ? ` Meu telefone: ${normalizedVisitorPhone}.`
+    : "";
   const greeting = encodeURIComponent(
-    `Ola ${author.name.split(" ")[0]}, sou ${trimmed} e vim pelo site Investimentos de A a Z.`,
+    `Ola ${author.name.split(" ")[0]}, sou ${trimmed} e vim pelo site Investimentos de A a Z.${visitorLine}`,
   );
   return `https://wa.me/${digits}?text=${greeting}`;
 }
@@ -125,35 +139,32 @@ export default async function AuthorPage({
       />
 
       <main
-        className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} flex-col gap-10 px-4 py-10 md:px-8 md:py-14`}
+        className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} flex-col gap-6 px-4 py-6 md:gap-7 md:px-6 md:py-8`}
       >
-        <section className="grid gap-4 md:grid-cols-2">
-          <article className="space-y-4 rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF5713]">
+        <section className="grid gap-3 md:grid-cols-3 md:items-stretch md:gap-4">
+          <article className="flex h-full min-w-0 flex-col space-y-3 rounded-xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
+            <div className="space-y-0.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#FF5713] md:text-[11px]">
                 Como posso ajudar
               </p>
-              <h2 className="text-3xl text-[#132960]">Especialidades</h2>
+              <h2 className="text-lg font-medium text-[#132960] md:text-xl">
+                Especialidades
+              </h2>
             </div>
             {specialties.length > 0 ? (
-              <ul className="grid gap-3">
+              <ul className="flex flex-col gap-2">
                 {specialties.map((item, i) => (
                   <li
                     key={i}
-                    className="flex flex-col gap-2 rounded-xl border border-[#132960]/10 bg-[#f8fbff] p-4"
+                    className="flex flex-col gap-1.5 rounded-lg border border-[#132960]/10 bg-[#f8fbff] px-3 py-2.5"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#FF5713]/10 text-xs font-semibold text-[#FF5713]">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      {item.title ? (
-                        <h3 className="text-base font-semibold text-[#132960]">
-                          {item.title}
-                        </h3>
-                      ) : null}
-                    </div>
+                    {item.title ? (
+                      <h3 className="text-sm font-semibold leading-snug text-[#132960]">
+                        {item.title}
+                      </h3>
+                    ) : null}
                     {item.description ? (
-                      <p className="text-sm leading-relaxed text-zinc-700">
+                      <p className="text-xs leading-snug text-zinc-600">
                         {item.description}
                       </p>
                     ) : null}
@@ -161,34 +172,45 @@ export default async function AuthorPage({
                 ))}
               </ul>
             ) : (
-              <p className="rounded-md border border-dashed border-[#132960]/20 bg-[#f8fbff] px-4 py-3 text-sm text-zinc-500">
+              <p className="rounded-lg border border-dashed border-[#132960]/20 bg-[#f8fbff] px-3 py-2 text-xs text-zinc-500">
                 Especialidades em breve.
               </p>
             )}
           </article>
 
-          <article className="space-y-4 rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#027DFC]">
+          <article className="flex h-full min-w-0 flex-col space-y-3 rounded-xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
+            <div className="space-y-0.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#027DFC] md:text-[11px]">
                 Background academico
               </p>
-              <h2 className="text-3xl text-[#132960]">Formacao</h2>
+              <h2 className="text-lg font-medium text-[#132960] md:text-xl">
+                Formacao
+              </h2>
             </div>
             {education.length > 0 ? (
-              <ul className="grid gap-3">
+              <ul className="grid gap-2">
                 {education.map((edu, i) => (
                   <li
                     key={i}
-                    className="rounded-xl border border-[#132960]/10 bg-[#f8fbff] p-4"
+                    className="rounded-lg border border-[#132960]/10 bg-[#f8fbff] px-3 py-2.5"
                   >
                     {edu.title ? (
-                      <p className="font-semibold text-[#132960]">{edu.title}</p>
+                      <p className="text-sm font-semibold leading-snug text-[#132960]">
+                        {edu.title}
+                      </p>
                     ) : null}
                     {edu.institution ? (
-                      <p className="text-sm text-zinc-600">{edu.institution}</p>
+                      <p className="text-xs leading-snug text-zinc-600">
+                        {edu.institution}
+                      </p>
+                    ) : null}
+                    {edu.period ? (
+                      <p className="mt-1.5 inline-flex items-center rounded border border-[#027DFC]/25 bg-[#027DFC]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#027DFC]">
+                        {formatEducationPeriodLabel(edu.period)}
+                      </p>
                     ) : null}
                     {edu.description ? (
-                      <p className="mt-1 text-sm leading-relaxed text-zinc-700">
+                      <p className="mt-1.5 text-xs leading-snug text-zinc-600">
                         {edu.description}
                       </p>
                     ) : null}
@@ -196,90 +218,79 @@ export default async function AuthorPage({
                 ))}
               </ul>
             ) : (
-              <p className="rounded-md border border-dashed border-[#132960]/20 bg-[#f8fbff] px-4 py-3 text-sm text-zinc-500">
+              <p className="rounded-lg border border-dashed border-[#132960]/20 bg-[#f8fbff] px-3 py-2 text-xs text-zinc-500">
                 Formacao academica em breve.
+              </p>
+            )}
+          </article>
+
+          <article className="flex h-full min-w-0 flex-col space-y-3 rounded-xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
+            <div className="space-y-0.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#FF5713] md:text-[11px]">
+                Trajetoria
+              </p>
+              <h2 className="text-lg font-medium leading-tight text-[#132960] md:text-xl">
+                Experiencia profissional
+              </h2>
+            </div>
+            {experiences.length > 0 ? (
+              <ul className="grid gap-2">
+                {experiences.map((exp, i) => (
+                  <li
+                    key={i}
+                    className="rounded-lg border border-[#132960]/10 bg-[#f8fbff] px-3 py-2.5"
+                  >
+                    {exp.title ? (
+                      <p className="text-sm font-semibold leading-snug text-[#132960]">
+                        {exp.title}
+                      </p>
+                    ) : null}
+                    {exp.org ? (
+                      <p className="text-xs leading-snug text-zinc-600">{exp.org}</p>
+                    ) : null}
+                    {exp.description ? (
+                      <p className="mt-1.5 text-xs leading-snug text-zinc-600">
+                        {exp.description}
+                      </p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="rounded-lg border border-dashed border-[#132960]/20 bg-[#f8fbff] px-3 py-2 text-xs text-zinc-500">
+                Experiencia profissional em breve.
               </p>
             )}
           </article>
         </section>
 
         {author.bio ? (
-          <section className="rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#027DFC]">
+          <section className="rounded-xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
+            <div className="space-y-0.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#027DFC] md:text-[11px]">
                 Quem e
               </p>
-              <h2 className="text-3xl text-[#132960]">Sobre {firstName}</h2>
+              <h2 className="text-xl font-medium text-[#132960] md:text-2xl">
+                Sobre {firstName}
+              </h2>
             </div>
-            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zinc-700">
+            <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-zinc-700 md:text-sm">
               {author.bio}
             </p>
           </section>
         ) : null}
 
-        {whatsappDigits ? (
-          <section
-            id="contato"
-            className="flex flex-col items-start justify-between gap-3 rounded-xl border border-[#132960]/15 bg-white px-5 py-3 shadow-sm md:flex-row md:items-center md:gap-6"
-          >
-            <p className="text-sm text-[#132960]/80">
-              Quer falar diretamente com {firstName}?
-            </p>
-            <WhatsappContactCta
-              authorId={author.id}
-              authorName={author.name}
-              whatsappUrl={fallbackWhatsappUrl}
-              registerClickAction={registerWhatsappClickAction}
-              variant="primary"
-              className="!px-4 !py-2 !text-xs"
-            />
-          </section>
-        ) : null}
-
-        {experiences.length > 0 ? (
-          <section className="space-y-4">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF5713]">
-                Trajetoria
-              </p>
-              <h2 className="text-3xl text-[#132960]">Experiencia profissional</h2>
-            </div>
-            <ul className="grid gap-4 md:grid-cols-2">
-              {experiences.map((exp, i) => (
-                <li
-                  key={i}
-                  className="flex flex-col gap-2 rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  {exp.org ? (
-                    <p className="text-xs font-semibold uppercase tracking-wider text-[#FF5713]">
-                      {exp.org}
-                    </p>
-                  ) : null}
-                  {exp.title ? (
-                    <h3 className="text-lg font-semibold text-[#132960]">
-                      {exp.title}
-                    </h3>
-                  ) : null}
-                  {exp.description ? (
-                    <p className="text-sm leading-relaxed text-zinc-700">
-                      {exp.description}
-                    </p>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
-        <section className="space-y-4">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF5713]">
+        <section className="space-y-3">
+          <div className="space-y-0.5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#FF5713] md:text-[11px]">
               Conteudo autoral
             </p>
-            <h2 className="text-3xl text-[#132960]">Artigos desta pessoa</h2>
+            <h2 className="text-xl font-medium text-[#132960] md:text-2xl">
+              Artigos desta pessoa
+            </h2>
           </div>
           {mappedPosts.length === 0 ? (
-            <p className="rounded-xl border border-[#132960]/20 bg-white p-6 text-sm text-zinc-600">
+            <p className="rounded-xl border border-[#132960]/20 bg-white px-4 py-3 text-sm text-zinc-600">
               {firstName} ainda nao publicou nenhum artigo por aqui.
             </p>
           ) : (
@@ -292,7 +303,6 @@ export default async function AuthorPage({
             </ul>
           )}
         </section>
-
       </main>
       <Footer />
     </div>

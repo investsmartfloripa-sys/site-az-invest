@@ -5,7 +5,8 @@ import type { SectorGlobalPayload } from "@/components/painel/DynamicSectorGloba
 import type { StaticChartTablePayload } from "@/components/painel/StaticChartCard";
 import { painelBlobBase, painelBlobUrl } from "@/lib/painel-blob";
 
-export const PAINEL_REVALIDATE_SECONDS = 900;
+/** Cache dos JSON no edge; menor = volta mais rapido se o Blob falhou e foi corrigido. */
+export const PAINEL_REVALIDATE_SECONDS = 300;
 
 export type DataFrequency = "tempo-real" | "diario" | "semanal" | "mensal";
 
@@ -91,7 +92,7 @@ export async function getPanoramaData(): Promise<PanoramaData> {
     ),
     worldPanorama: createWidget(
       "world_indices",
-      "Indices globais",
+      "Índices globais",
       "Yahoo Finance",
       "tempo-real",
       worldPanorama?.generated_at,
@@ -124,7 +125,7 @@ export async function getPanoramaData(): Promise<PanoramaData> {
       tablePrefixado,
     ),
     tableIpca: createWidget("curve_ipca", "Curva IPCA+", "Tesouro", "diario", tableIpca?.generated_at, tableIpca),
-    tableSelic: createWidget("selic_implicita", "Selic implicita", "B3 PRE", "diario", tableSelic?.generated_at, tableSelic),
+    tableSelic: createWidget("selic_implicita", "Selic implícita", "B3 PRE", "diario", tableSelic?.generated_at, tableSelic),
     tableTreasury: createWidget("treasury_us", "Curva Treasury EUA", "FRED", "diario", tableTreasury?.generated_at, tableTreasury),
   };
 }

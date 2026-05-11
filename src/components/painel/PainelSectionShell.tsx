@@ -14,8 +14,8 @@ type NavItem = { href: string; label: string };
 
 const primaryNav: NavItem[] = [
   { href: "/painel-economico/panorama", label: "Panorama" },
-  { href: "/painel-economico/mercado", label: "Ativos de Mercado" },
-  { href: "/painel-economico/economia", label: "Indicadores Macroeconomicos" },
+  { href: "/painel-economico/mercado", label: "Ativos de mercado" },
+  { href: "/painel-economico/economia", label: "Indicadores macroeconômicos" },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -79,11 +79,11 @@ export function PainelSectionShell({ children }: Props) {
     <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-8 px-4 py-8 md:px-8">
       <section className="rounded-2xl border border-[#132960]/15 bg-gradient-to-r from-white to-[#f2f7ff] p-5 md:p-6">
         <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">Painel Economico</p>
-          <h1 className="text-3xl font-semibold text-[#132960] md:text-4xl">Panorama e dados para decisao</h1>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">Painel econômico</p>
+          <h1 className="text-3xl font-semibold text-[#132960] md:text-4xl">Panorama e dados para decisão</h1>
           <p className="max-w-3xl text-sm text-zinc-600">
-            Explore em duas trilhas paralelas: <strong>Ativos de Mercado</strong> e{" "}
-            <strong>Indicadores Macroeconomicos</strong>, com recorte Brasil e Global.
+            Explore em duas trilhas paralelas: <strong>Ativos de mercado</strong> e{" "}
+            <strong>indicadores macroeconômicos</strong>, com recorte Brasil e global.
           </p>
         </div>
       </section>

@@ -11,7 +11,7 @@ export async function VideosSection() {
   return (
     <section className="space-y-4">
       <div className="flex items-end justify-between gap-3">
-        <h2 className="text-4xl text-[#027DFC]">Videos</h2>
+        <h2 className="text-4xl text-[#027DFC]">Vídeos</h2>
         <Link
           href="/videos"
           className="text-xs font-semibold uppercase tracking-wider text-[#132960] underline-offset-4 hover:text-[#027DFC] hover:underline"

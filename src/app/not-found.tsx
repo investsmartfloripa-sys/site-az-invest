@@ -4,8 +4,8 @@ import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 
 export const metadata = {
-  title: "Pagina nao encontrada | AZ Invest",
-  description: "A pagina que voce procura nao existe ou foi movida.",
+  title: "Página não encontrada | AZ Invest",
+  description: "A página que você procura não existe ou foi movida.",
 };
 
 export default function NotFound() {
@@ -17,11 +17,11 @@ export default function NotFound() {
           Erro 404
         </p>
         <h1 className="text-5xl font-semibold leading-tight text-[#027DFC] md:text-6xl">
-          Pagina nao encontrada
+          Página não encontrada
         </h1>
         <p className="max-w-xl text-sm text-zinc-600 md:text-base">
-          O endereco que voce digitou nao existe, foi movido ou esta temporariamente
-          indisponivel. Use os atalhos abaixo para voltar ao conteudo.
+          O endereço que você digitou não existe, foi movido ou está temporariamente
+          indisponível. Use os atalhos abaixo para voltar ao conteúdo.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Link
@@ -40,7 +40,7 @@ export default function NotFound() {
             href="/painel-economico"
             className="rounded-full border border-[#132960]/25 px-5 py-2.5 text-sm font-semibold text-[#132960] transition hover:bg-[#132960]/5"
           >
-            Painel economico
+            Painel econômico
           </Link>
         </div>
       </main>

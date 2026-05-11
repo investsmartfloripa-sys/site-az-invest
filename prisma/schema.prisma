@@ -76,6 +76,7 @@ model AuthorWhatsappClick {
   authorId  Int
   author    Author   @relation(fields: [authorId], references: [id], onDelete: Cascade)
   name      String
+  phone     String?
   createdAt DateTime @default(now())
 }
 

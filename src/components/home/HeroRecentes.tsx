@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { PostCardData } from "@/components/common/PostCard";
+import { formatPostCategoryLabel, getPostCategorySolidPillClasses } from "@/data/blog-categories";
 
 export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
   if (posts.length === 0) {
@@ -8,7 +9,7 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
       <section className="space-y-4">
         <h1 className="text-4xl text-[#027DFC]">Mais recentes</h1>
         <p className="rounded-xl border border-[#132960]/20 bg-white p-4 text-sm text-zinc-600">
-          Nenhuma postagem publicada ainda. Use a area restrita para publicar a primeira.
+          Nenhuma postagem publicada ainda. Use a área restrita para publicar a primeira.
         </p>
       </section>
     );
@@ -23,7 +24,7 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
         <h1 className="text-4xl text-[#027DFC]">Mais recentes</h1>
         <Link
           href="/blog"
-          className="hidden text-xs font-semibold text-[#132960] hover:underline md:block"
+          className="text-xs font-semibold text-[#132960] hover:underline whitespace-nowrap"
         >
           Ver todas
         </Link>
@@ -39,8 +40,10 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-black/10" />
           <div className="absolute bottom-0 left-0 p-4 text-white">
-            <span className="rounded-full bg-[#027DFC] px-2 py-0.5 text-[10px] font-semibold uppercase">
-              {main.category}
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${getPostCategorySolidPillClasses(main.category)}`}
+            >
+              {formatPostCategoryLabel(main.category)}
             </span>
             <h2 className="mt-2 text-3xl">
               <Link href={`/blog/${main.slug}`}>{main.title}</Link>
@@ -69,8 +72,10 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-black/10" />
               <div className="absolute bottom-0 left-0 p-3 text-white">
-                <span className="rounded-full bg-[#027DFC] px-2 py-0.5 text-[10px] font-semibold uppercase">
-                  {post.category}
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${getPostCategorySolidPillClasses(post.category)}`}
+                >
+                  {formatPostCategoryLabel(post.category)}
                 </span>
                 <h3 className="mt-1 text-2xl leading-tight">
                   <Link href={`/blog/${post.slug}`}>{post.title}</Link>

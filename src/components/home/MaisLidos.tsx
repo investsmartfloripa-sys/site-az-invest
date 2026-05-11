@@ -5,7 +5,7 @@ export function MaisLidos({ posts }: { posts: PostCardData[] }) {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-4xl text-[#027DFC]">Mais lidos</h2>
+      <h2 className="text-4xl text-[#027DFC]">Leia também</h2>
       <ul className="grid gap-4 md:grid-cols-3">
         {posts.map((post) => (
           <li key={post.id}>

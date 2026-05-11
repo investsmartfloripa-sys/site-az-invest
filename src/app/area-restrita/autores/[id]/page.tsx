@@ -62,6 +62,7 @@ async function updateAuthorAction(formData: FormData) {
       education = parsed.map((item) => ({
         title: String(item?.title ?? ""),
         institution: String(item?.institution ?? ""),
+        period: String(item?.period ?? ""),
         description: String(item?.description ?? ""),
       }));
     }
@@ -288,7 +289,8 @@ export default async function EditAuthorPage({ params, searchParams }: PageProps
             <h2 className="text-lg font-semibold text-[#132960]">Formacao</h2>
             <p className="text-xs text-zinc-500">
               Graduacoes, especializacoes, certificacoes e detalhes que aparecem no perfil
-              publico.
+              publico. Use a caixa &quot;Data / periodo&quot; para mes/ano de conclusao ou
+              intervalo em texto.
             </p>
           </div>
           <EducationEditor initial={education} hiddenName="educationJson" />

@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
-const blobBase = process.env.NEXT_PUBLIC_BLOB_BASE_URL ?? "";
+/** Mesma ordem que `painelBlobBase()` em `src/lib/painel-blob.ts` (Vercel Build pode nao enxertar NEXT_PUBLIC). */
+const blobBase =
+  process.env.PAINEL_BLOB_PUBLIC_FALLBACK?.trim() ||
+  process.env.NEXT_PUBLIC_BLOB_BASE_URL?.trim() ||
+  "";
 let blobHostname: string | null = null;
 try {
   if (blobBase) {

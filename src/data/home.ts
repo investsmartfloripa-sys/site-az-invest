@@ -2,18 +2,21 @@ export type NavItem = { label: string; href: string };
 
 export const navItems: NavItem[] = [
   { label: "Artigos", href: "/blog" },
-  { label: "Painel economico", href: "/painel-economico" },
-  { label: "Videos", href: "/videos" },
+  { label: "Painel econômico", href: "/painel-economico" },
+  { label: "Vídeos", href: "/videos" },
   { label: "Simuladores", href: "/simuladores" },
   { label: "Nosso time", href: "/nosso-time" },
 ];
 
-export type ArticleCategory = { label: string; href: string };
+/** Entradas da home / atalhos; `value` é o valor salvo em Post.category e em ?categoria=. */
+export type ArticleCategoryEntry =
+  | { kind: "filter"; label: string; value: string }
+  | { kind: "all"; label: string };
 
-export const articleCategories: ArticleCategory[] = [
-  { label: "Economia", href: "/blog?categoria=Economia" },
-  { label: "Educacao Financeira", href: "/blog?categoria=Educacao+Financeira" },
-  { label: "Politica", href: "/blog?categoria=Politica" },
-  { label: "Investimento", href: "/blog?categoria=Investimento" },
-  { label: "Ver tudo", href: "/blog" },
+export const articleCategories: ArticleCategoryEntry[] = [
+  { kind: "filter", label: "Economia", value: "Economia" },
+  { kind: "filter", label: "Educação Financeira", value: "Educacao Financeira" },
+  { kind: "filter", label: "Política", value: "Politica" },
+  { kind: "filter", label: "Investimento", value: "Investimento" },
+  { kind: "all", label: "Ver tudo" },
 ];

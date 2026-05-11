@@ -34,6 +34,7 @@ export function Footer() {
           <Link
             href="https://wa.me/5548999386708"
             target="_blank"
+            rel="noopener noreferrer"
             className="mt-3 inline-block text-sm font-medium text-[#132960] hover:underline"
           >
             WhatsApp
@@ -41,7 +42,7 @@ export function Footer() {
         </div>
       </div>
       <div className="bg-[#027DFC] px-3 py-2 text-center text-[11px] leading-relaxed text-white sm:text-xs">
-        2025 Todos os direitos reservados para INVESTIMENTOS DE A A Z
+        {new Date().getFullYear()} Todos os direitos reservados para INVESTIMENTOS DE A A Z
       </div>
     </footer>
   );

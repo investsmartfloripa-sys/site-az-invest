@@ -122,7 +122,12 @@ type EducationProps = {
 
 export function EducationEditor({ initial, hiddenName }: EducationProps) {
   const [items, setItems] = useState<AuthorEducation[]>(
-    initial.length ? initial : [{ title: "", institution: "", description: "" }],
+    initial.length
+      ? initial.map((row) => ({
+          ...row,
+          period: row.period ?? "",
+        }))
+      : [{ title: "", institution: "", period: "", description: "" }],
   );
 
   function update(index: number, field: keyof AuthorEducation, value: string) {
@@ -132,7 +137,10 @@ export function EducationEditor({ initial, hiddenName }: EducationProps) {
   }
 
   function add() {
-    setItems((prev) => [...prev, { title: "", institution: "", description: "" }]);
+    setItems((prev) => [
+      ...prev,
+      { title: "", institution: "", period: "", description: "" },
+    ]);
   }
 
   function remove(index: number) {
@@ -154,7 +162,11 @@ export function EducationEditor({ initial, hiddenName }: EducationProps) {
       <input
         type="hidden"
         name={hiddenName}
-        value={JSON.stringify(items.filter((i) => i.title || i.institution || i.description))}
+        value={JSON.stringify(
+          items.filter(
+            (i) => i.title || i.institution || i.period || i.description,
+          ),
+        )}
       />
       {items.map((item, index) => (
         <div
@@ -203,6 +215,31 @@ export function EducationEditor({ initial, hiddenName }: EducationProps) {
             placeholder="Instituicao (ex: UFSC)"
             className="h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm"
           />
+          <div className="space-y-2 rounded-md border border-dashed border-[#027DFC]/35 bg-[#f8fbff] px-3 py-3">
+            <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#027DFC]">
+              Data / periodo (opcional)
+            </span>
+            <label className="block text-[11px] text-zinc-500">
+              Mes e ano de conclusao (se aplicavel)
+              <input
+                type="month"
+                lang="pt-BR"
+                value={/^\d{4}-\d{2}$/.test(item.period) ? item.period : ""}
+                onChange={(e) => update(index, "period", e.target.value)}
+                className="mt-1 block h-10 w-full max-w-[14rem] rounded-md border border-zinc-300 bg-white px-3 text-sm"
+              />
+            </label>
+            <label className="block text-[11px] text-zinc-500">
+              Ou texto livre (intervalo, &quot;cursando&quot;, ano so)
+              <input
+                type="text"
+                value={/^\d{4}-\d{2}$/.test(item.period) ? "" : item.period}
+                onChange={(e) => update(index, "period", e.target.value)}
+                placeholder="Ex: 2019-2022, 2024, em andamento"
+                className="mt-1 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm"
+              />
+            </label>
+          </div>
           <textarea
             value={item.description}
             onChange={(e) => update(index, "description", e.target.value)}

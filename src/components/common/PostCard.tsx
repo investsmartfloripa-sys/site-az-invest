@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { formatPostCategoryLabel, getPostCategorySolidPillClasses } from "@/data/blog-categories";
+
 export type PostCardData = {
   id: number;
   title: string;
@@ -35,8 +37,10 @@ export function PostCard({ post }: { post: PostCardData }) {
             sizes="(min-width: 768px) 33vw, 100vw"
             className="object-cover"
           />
-          <span className="absolute right-2 top-2 rounded-full bg-[#027DFC] px-2 py-1 text-[10px] font-semibold uppercase text-white">
-            {post.category}
+          <span
+            className={`absolute right-2 top-2 rounded-full px-2 py-1 text-[10px] font-semibold uppercase ${getPostCategorySolidPillClasses(post.category)}`}
+          >
+            {formatPostCategoryLabel(post.category)}
           </span>
         </div>
       </Link>

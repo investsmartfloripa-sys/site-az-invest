@@ -11,14 +11,14 @@ import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Investimentos de A a Z - Economia, mercado e educacao financeira",
+  title: "Investimentos de A a Z - Economia, mercado e educação financeira",
   description:
-    "Analises de economia e mercado, simuladores financeiros, painel economico e conteudo da equipe AZ Invest para voce investir com mais clareza.",
+    "Análises de economia e mercado, simuladores financeiros, painel econômico e conteúdo da equipe AZ Invest para você investir com mais clareza.",
   alternates: { canonical: "/" },
   openGraph: {
     title: "Investimentos de A a Z",
     description:
-      "Analises de economia e mercado, simuladores financeiros, painel economico e conteudo da equipe AZ Invest.",
+      "Análises de economia e mercado, simuladores financeiros, painel econômico e conteúdo da equipe AZ Invest.",
     url: "/",
     type: "website",
   },
@@ -28,14 +28,15 @@ export default async function Home() {
   const posts = await findPosts({
     where: { published: true },
     orderBy: { createdAt: "desc" },
-    take: 12,
+    take: 21,
   });
 
   const mapped = posts.map(mapPost);
 
   const hero = mapped.slice(0, 3);
+  /** Segunda faixa da home; posts 7+ vão só para UltimasPublicacoes (evita repetir cards). */
   const maisLidos = mapped.slice(3, 6);
-  const restantes = mapped.slice(3);
+  const restantes = mapped.slice(6);
 
   return (
     <div className="min-h-screen text-[#132960]">

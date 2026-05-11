@@ -28,7 +28,7 @@ export async function Header() {
           <a
             href={whatsappHref}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             aria-label="Falar no WhatsApp"
             className="rounded-full border border-[#22c55e]/40 bg-[#22c55e]/15 px-3 py-2 text-xs font-semibold text-[#22c55e] transition hover:bg-[#22c55e]/25"
           >

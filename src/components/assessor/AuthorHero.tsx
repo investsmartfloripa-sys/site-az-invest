@@ -22,7 +22,11 @@ export type AuthorHeroProps = {
   author: AuthorHeroModel;
   whatsappDigits: string | null;
   fallbackWhatsappUrl: string;
-  registerClickAction: (authorId: number, name: string) => Promise<string>;
+  registerClickAction: (
+    authorId: number,
+    name: string,
+    visitorPhone?: string,
+  ) => Promise<string>;
 };
 
 function initials(name: string) {
@@ -124,33 +128,33 @@ export function AuthorHero({
   return (
     <section className="border-b border-[#132960]/10 bg-white">
       <div
-        className={`mx-auto w-full ${SITE_MAIN_MAX_WIDTH_CLASS} px-4 py-8 md:px-8 md:py-12`}
+        className={`mx-auto w-full ${SITE_MAIN_MAX_WIDTH_CLASS} px-4 py-5 md:px-6 md:py-8`}
       >
-        <div className="mb-6">
+        <div className="mb-4">
           <BackLink />
         </div>
 
-        <div className="flex flex-col items-center gap-6 text-center md:flex-row md:items-center md:gap-8 md:text-left">
+        <div className="flex flex-col items-center gap-4 text-center md:flex-row md:items-start md:gap-6 md:text-left">
           <PhotoBlock
             author={author}
-            className="h-56 w-44 rounded-2xl shadow-sm md:h-64 md:w-48"
-            sizes="(min-width: 768px) 192px, 176px"
+            className="h-48 w-40 rounded-xl shadow-sm md:h-52 md:w-44"
+            sizes="(min-width: 768px) 176px, 160px"
           />
 
-          <div className="flex w-full flex-1 flex-col items-center gap-3 md:items-start">
-            <h1 className="text-3xl font-semibold leading-tight text-[#132960] md:text-5xl">
+          <div className="flex w-full flex-1 flex-col items-center gap-2 md:items-start md:gap-2">
+            <h1 className="text-2xl font-semibold leading-tight text-[#132960] md:text-4xl">
               {author.name}
             </h1>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#FF5713] md:text-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#FF5713] md:text-xs">
               {author.role}
             </p>
             {author.headline ? (
-              <p className="max-w-2xl text-sm leading-relaxed text-zinc-600 md:text-base">
+              <p className="max-w-2xl text-xs leading-snug text-zinc-600 md:text-sm md:leading-relaxed">
                 {author.headline}
               </p>
             ) : null}
 
-            <div className="flex w-full flex-col items-center gap-3 pt-2 sm:flex-row sm:flex-wrap md:items-center">
+            <div className="flex w-full flex-col items-center gap-2 pt-1 sm:flex-row sm:flex-wrap md:items-center md:gap-3">
               {whatsappDigits ? (
                 <WhatsappContactCta
                   authorId={author.id}

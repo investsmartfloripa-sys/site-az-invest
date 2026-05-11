@@ -7,6 +7,8 @@ export type AuthorExperience = {
 export type AuthorEducation = {
   title: string;
   institution: string;
+  /** Ano/mes (YYYY-MM), ano, intervalo livre etc. */
+  period: string;
   description: string;
 };
 
@@ -43,9 +45,10 @@ export function parseEducation(json: string | null | undefined): AuthorEducation
       .map((item) => ({
         title: String(item?.title ?? "").trim(),
         institution: String(item?.institution ?? "").trim(),
+        period: String(item?.period ?? "").trim(),
         description: String(item?.description ?? "").trim(),
       }))
-      .filter((item) => item.title || item.institution || item.description);
+      .filter((item) => item.title || item.institution || item.period || item.description);
   } catch {
     return [];
   }
@@ -67,10 +70,29 @@ export function serializeEducation(items: AuthorEducation[]): string | null {
     .map((item) => ({
       title: item.title.trim(),
       institution: item.institution.trim(),
+      period: item.period.trim(),
       description: item.description.trim(),
     }))
-    .filter((item) => item.title || item.institution || item.description);
+    .filter((item) => item.title || item.institution || item.period || item.description);
   return cleaned.length ? JSON.stringify(cleaned) : null;
+}
+
+/** Exibe rotulo legivel para periodo (YYYY-MM -> mes/ano em pt-BR; restante como gravado). */
+export function formatEducationPeriodLabel(raw: string): string {
+  const t = raw.trim();
+  if (!t) return "";
+  const ym = /^(\d{4})-(\d{2})$/.exec(t);
+  if (ym) {
+    const y = Number(ym[1]);
+    const mo = Number(ym[2]) - 1;
+    if (!Number.isNaN(y) && mo >= 0 && mo <= 11) {
+      return new Date(y, mo, 1).toLocaleDateString("pt-BR", {
+        month: "short",
+        year: "numeric",
+      });
+    }
+  }
+  return t;
 }
 
 export function parseSpecialties(json: string | null | undefined): AuthorSpecialty[] {

@@ -16,9 +16,9 @@ import {
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export const metadata = {
-  title: "Videos | AZ Invest",
+  title: "Vídeos | AZ Invest",
   description:
-    "Acompanhe as analises e tutoriais em video da equipe AZ Invest sobre economia, mercado e investimentos.",
+    "Acompanhe as análises e tutoriais em vídeo da equipe AZ Invest sobre economia, mercado e investimentos.",
 };
 
 export const revalidate = 3600;
@@ -59,8 +59,8 @@ export default async function VideosPage({ searchParams }: VideosPageProps) {
   const heading = activeType === "shorts"
     ? "Shorts"
     : activeType === "long"
-      ? "Videos longos"
-      : activePlaylist?.label ?? "Videos";
+      ? "Vídeos longos"
+      : activePlaylist?.label ?? "Vídeos";
 
   return (
     <div className="min-h-screen text-[#132960]">
@@ -71,12 +71,12 @@ export default async function VideosPage({ searchParams }: VideosPageProps) {
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
-              Conteudo em video
+              Conteúdo em vídeo
             </p>
             <h1 className="text-4xl text-[#027DFC] md:text-5xl">{heading}</h1>
             <p className="max-w-2xl text-sm text-zinc-600">
-              Analises, tutoriais e bate-papos com especialistas do nosso time.
-              Conteudo puxado diretamente do nosso canal no YouTube.
+              Análises, tutoriais e bate-papos com especialistas do nosso time.
+              Conteúdo puxado diretamente do nosso canal no YouTube.
             </p>
           </div>
           <Link
@@ -97,7 +97,7 @@ export default async function VideosPage({ searchParams }: VideosPageProps) {
           />
           <PlaylistTab
             href="/videos?t=long"
-            label="Videos longos"
+            label="Vídeos longos"
             active={!activePlaylist && activeType === "long"}
           />
           <PlaylistTab

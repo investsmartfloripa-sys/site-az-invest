@@ -5,6 +5,7 @@ import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { PostMarkdownBody } from "@/components/blog/PostMarkdownBody";
+import { formatPostCategoryLabel, getPostCategorySoftPillClasses } from "@/data/blog-categories";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   const post = await prisma.post.findUnique({ where: { slug } });
-  if (!post) return { title: "Artigo nao encontrado | AZ Invest" };
+  if (!post) return { title: "Artigo não encontrado | AZ Invest" };
   return {
     title: `${post.title} | AZ Invest`,
     description: post.excerpt ?? undefined,
@@ -69,9 +70,11 @@ export default async function BlogPostPage({
         ) : null}
 
         <article className="mt-6 space-y-4">
-          <p className="text-sm font-semibold uppercase tracking-wider text-[#027DFC]">
-            {post.category}
-          </p>
+          <span
+            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${getPostCategorySoftPillClasses(post.category)}`}
+          >
+            {formatPostCategoryLabel(post.category)}
+          </span>
           <h1 className="text-4xl font-semibold text-[#132960] md:text-5xl">{post.title}</h1>
           {post.excerpt ? <p className="text-lg text-zinc-700">{post.excerpt}</p> : null}
 

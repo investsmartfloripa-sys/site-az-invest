@@ -2,7 +2,7 @@ import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { NovaPostagemBlogFields } from "@/components/area-restrita/NovaPostagemBlogFields";
-import { blogPostCategoryLabels } from "@/data/blog-categories";
+import { blogPostCategoryLabels, blogPostCategoryOptions } from "@/data/blog-categories";
 import { destroySession, getSession } from "@/lib/auth";
 import { blogImageUploadConfigured } from "@/lib/blog-upload";
 import { prisma } from "@/lib/prisma";
@@ -95,10 +95,38 @@ export default async function PainelPage() {
     }),
     prisma.authorWhatsappClick.findMany({
       orderBy: { createdAt: "desc" },
-      take: 30,
+      take: 120,
       include: { author: true },
     }),
   ]);
+
+  const whatsappClickGroups = (() => {
+    const map = new Map<
+      number,
+      {
+        author: (typeof whatsappClicks)[0]["author"];
+        clicks: typeof whatsappClicks;
+      }
+    >();
+    for (const c of whatsappClicks) {
+      let group = map.get(c.authorId);
+      if (!group) {
+        group = { author: c.author, clicks: [] };
+        map.set(c.authorId, group);
+      }
+      group.clicks.push(c);
+    }
+    const list = [...map.values()].sort((a, b) =>
+      a.author.name.localeCompare(b.author.name, "pt-BR"),
+    );
+    for (const g of list) {
+      g.clicks.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    }
+    return list;
+  })();
 
   const uploadConfigured = blogImageUploadConfigured();
 
@@ -170,9 +198,9 @@ export default async function PainelPage() {
             defaultValue="Geral"
             className="h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm"
           >
-            {blogPostCategoryLabels.map((c) => (
-              <option key={c} value={c}>
-                {c}
+            {blogPostCategoryOptions.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
               </option>
             ))}
           </select>
@@ -248,26 +276,46 @@ export default async function PainelPage() {
           </span>
         </div>
         <p className="mt-1 text-xs text-zinc-500">
-          Cada vez que algum visitante clica em &quot;Falar com X no WhatsApp&quot;
-          informa o nome dele e abre a conversa.
+          Agrupado por assessor. O visitante informa o nome e pode informar telefone (opcional);
+          abrimos o WhatsApp com uma mensagem inicial.
         </p>
-        <div className="mt-4 space-y-3">
-          {whatsappClicks.map((click) => (
-            <article
-              key={click.id}
-              className="rounded-md border border-zinc-200 p-3 text-sm text-zinc-700"
+        <div className="mt-4 space-y-6">
+          {whatsappClickGroups.map((group) => (
+            <div
+              key={group.author.id}
+              className="rounded-xl border border-[#132960]/15 bg-[#f8fbff]/40 p-4"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold text-[#132960]">{click.name}</p>
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
-                  WhatsApp
+              <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[#132960]/10 pb-2">
+                <h3 className="text-base font-semibold text-[#132960]">
+                  {group.author.name}
+                </h3>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                  {group.clicks.length}{" "}
+                  {group.clicks.length === 1 ? "clique" : "cliques"}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-zinc-500">
-                Assessor: {click.author.name} |{" "}
-                {new Date(click.createdAt).toLocaleString("pt-BR")}
-              </p>
-            </article>
+              <div className="mt-3 space-y-3">
+                {group.clicks.map((click) => (
+                  <article
+                    key={click.id}
+                    className="rounded-md border border-zinc-200 bg-white p-3 text-sm text-zinc-700"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-semibold text-[#132960]">{click.name}</p>
+                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
+                        WhatsApp
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      Telefone informado: {click.phone ?? "—"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-zinc-500">
+                      {new Date(click.createdAt).toLocaleString("pt-BR")}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </div>
           ))}
           {whatsappClicks.length === 0 ? (
             <p className="text-sm text-zinc-500">Sem cliques ainda.</p>

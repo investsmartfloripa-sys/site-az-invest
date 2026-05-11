@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { PostCardData } from "@/components/common/PostCard";
+import { formatPostCategoryLabel, getPostCategorySoftPillClasses } from "@/data/blog-categories";
 
 function initials(name: string) {
   return name
@@ -17,10 +18,10 @@ export function UltimasPublicacoes({ posts }: { posts: PostCardData[] }) {
   return (
     <section className="space-y-4">
       <div className="flex items-end justify-between gap-4">
-        <h2 className="text-4xl text-[#027DFC]">Ultimas publicacoes</h2>
+        <h2 className="text-4xl text-[#027DFC]">Últimas publicações</h2>
         <Link
           href="/blog"
-          className="hidden text-xs font-semibold text-[#132960] hover:underline md:block"
+          className="text-xs font-semibold text-[#132960] hover:underline whitespace-nowrap"
         >
           Ver todas
         </Link>
@@ -44,8 +45,10 @@ export function UltimasPublicacoes({ posts }: { posts: PostCardData[] }) {
               />
             </Link>
             <div className="space-y-2">
-              <span className="inline-block rounded-full bg-[#027DFC]/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-[#027DFC]">
-                {post.category}
+              <span
+                className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${getPostCategorySoftPillClasses(post.category)}`}
+              >
+                {formatPostCategoryLabel(post.category)}
               </span>
               <h3 className="text-xl font-semibold text-[#132960]">
                 <Link href={`/blog/${post.slug}`} className="hover:underline">

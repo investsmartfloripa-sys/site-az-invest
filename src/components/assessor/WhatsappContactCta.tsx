@@ -6,7 +6,11 @@ type Props = {
   authorId: number;
   authorName: string;
   whatsappUrl: string;
-  registerClickAction: (authorId: number, name: string) => Promise<string>;
+  registerClickAction: (
+    authorId: number,
+    name: string,
+    visitorPhone?: string,
+  ) => Promise<string>;
   variant?: "primary" | "secondary";
   className?: string;
 };
@@ -21,6 +25,7 @@ export function WhatsappContactCta({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [visitorPhone, setVisitorPhone] = useState("");
   const [pending, startTransition] = useTransition();
   const firstName = authorName.split(" ")[0];
 
@@ -40,13 +45,18 @@ export function WhatsappContactCta({
 
     startTransition(async () => {
       try {
-        const url = await registerClickAction(authorId, trimmed);
+        const url = await registerClickAction(
+          authorId,
+          trimmed,
+          visitorPhone.trim() || undefined,
+        );
         window.open(url || whatsappUrl, "_blank", "noopener,noreferrer");
       } catch {
         window.open(whatsappUrl, "_blank", "noopener,noreferrer");
       } finally {
         setOpen(false);
         setName("");
+        setVisitorPhone("");
       }
     });
   }
@@ -78,10 +88,12 @@ export function WhatsappContactCta({
             className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
           >
             <h3 className="text-xl font-semibold text-[#132960]">
-              Como voce se chama?
+              Antes de abrir o WhatsApp
             </h3>
             <p className="mt-1 text-sm text-zinc-600">
-              Vamos avisar {firstName} que voce esta entrando em contato.
+              Confirme seu nome. Se quiser, informe seu telefone para {firstName}{" "}
+              localizar seu contato — e opcionalmente enviamos esse numero na
+              primeira mensagem.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-4 space-y-3">
@@ -93,6 +105,16 @@ export function WhatsappContactCta({
                 className="h-11 w-full rounded-md border border-zinc-300 px-3 text-sm outline-none focus:border-[#027DFC] focus:ring-2 focus:ring-[#027DFC]/20"
                 disabled={pending}
                 required
+              />
+              <input
+                value={visitorPhone}
+                onChange={(event) => setVisitorPhone(event.target.value)}
+                placeholder="Telefone / WhatsApp (opcional)"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                className="h-11 w-full rounded-md border border-zinc-300 px-3 text-sm outline-none focus:border-[#027DFC] focus:ring-2 focus:ring-[#027DFC]/20"
+                disabled={pending}
               />
               <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                 <button
