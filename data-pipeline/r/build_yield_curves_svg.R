@@ -1,17 +1,15 @@
-# Curvas Prefixado e IPCA+ (Hoje, D-30, D-90) como SVG.
+# Curvas Prefixado e IPCA+ (Hoje, D-30, D-90) via B3 (rb3) -> SVG + JSON.
 #
-# Fonte primaria: B3 ReferenceRates via rb3 (atualiza diariamente).
+# Fonte unica: B3 ReferenceRates via rb3 (atualiza diariamente).
 #   - Curva PRE  -> serie Prefixado (LTN/NTN-F)
 #   - Curva DIC  -> serie IPCA+ (NTN-B)
-# Fallback: Tesouro Transparente CSV (caso rb3/B3 falhe).
 #
 # A curva da B3 e' continua (em biz_days) e e' interpolada nos vencimentos-padrao
 # dos titulos do Tesouro Direto. O resultado e' visualmente compativel com o
-# grafico anterior (vencimentos fixos no eixo X) mas com dados frescos.
+# grafico anterior (mesmos vencimentos no eixo X) com dados frescos.
+# Tesouro Transparente CSV foi removido por estar desatualizado e ser pesado.
 
 suppressPackageStartupMessages({
-  library(httr2)
-  library(readr)
   library(dplyr)
   library(tidyr)
   library(jsonlite)
@@ -38,23 +36,26 @@ source(file.path(script_dir, "chart_theme.R"))
 
 ## ---------- Vencimentos alvo ----------
 
+# Prefixado (LTN/NTN-F) — vencimentos 01/01 dos anos disponiveis
 TARGET_VENC_PRE <- as.Date(c(
   "2027-01-01", "2028-01-01", "2029-01-01", "2031-01-01", "2032-01-01"
 ))
+# IPCA+ (NTN-B) — vencimentos 15/05 ou 15/08
 TARGET_VENC_IPCA <- as.Date(c(
   "2026-08-15", "2029-05-15", "2032-08-15", "2035-05-15",
   "2040-08-15", "2045-05-15", "2050-08-15"
 ))
 
-## ---------- B3 via rb3 (primario) ----------
+## ---------- rb3 ----------
 
-has_rb3 <- requireNamespace("rb3", quietly = TRUE)
-if (has_rb3) {
-  suppressPackageStartupMessages(library(rb3))
+if (!requireNamespace("rb3", quietly = TRUE)) {
+  stop("rb3 nao disponivel — instale com install.packages('rb3')")
 }
+suppressPackageStartupMessages(library(rb3))
 
+# Pega curva PRE ou DIC para um refdate.
+# Retorna tibble com refdate, forward_date, biz_days, r_252.
 get_b3_curve <- function(ref_date, curve_name) {
-  if (!has_rb3) stop("rb3 nao disponivel")
   rb3_bootstrap()
   fetch_marketdata("b3-reference-rates", refdate = ref_date, curve_name = curve_name)
   raw <- if (curve_name == "PRE") {
@@ -63,7 +64,7 @@ get_b3_curve <- function(ref_date, curve_name) {
     if (exists("yc_ipca_get", mode = "function")) {
       yc_ipca_get()
     } else {
-      stop("rb3 sem accessor para curva DIC nessa versao")
+      stop("rb3 nao tem accessor para curva DIC nessa versao — atualize com install.packages('rb3')")
     }
   } else {
     stop(sprintf("curve_name nao suportado: %s", curve_name))
@@ -76,6 +77,7 @@ get_b3_curve <- function(ref_date, curve_name) {
     distinct(biz_days, .keep_all = TRUE)
 }
 
+# Tenta candidato e os max_lookback_days dias anteriores ate achar curva.
 resolve_b3_curve <- function(target_date, curve_name, max_lookback_days = 10) {
   target_date <- as.Date(target_date)
   for (i in 0:max_lookback_days) {
@@ -94,6 +96,7 @@ resolve_b3_curve <- function(target_date, curve_name, max_lookback_days = 10) {
   NULL
 }
 
+# Interpola taxa anual (% a.a.) nos target_dates via log-linear no DF.
 interp_yield <- function(yc_data, target_dates) {
   yc <- yc_data |>
     arrange(biz_days) |>
@@ -127,125 +130,50 @@ interp_yield <- function(yc_data, target_dates) {
   bind_rows(Filter(Negate(is.null), rows))
 }
 
-## ---------- Tesouro Direto (fallback) ----------
-
-TD_URL <- paste0(
-  "https://www.tesourotransparente.gov.br/ckan/dataset/",
-  "df56aa42-484a-4a59-8184-7676580c81e3/resource/",
-  "796d2059-14e9-44e3-80c9-2d9e30b405c1/download/precotaxatesourodireto.csv"
-)
-ua <- "Mozilla/5.0 (compatible; AZInvestDataBot/1.0)"
-
-parse_taxa_percent <- function(x) {
-  if (is.numeric(x)) return(as.numeric(x))
-  chr <- trimws(as.character(x))
-  has_comma <- grepl(",", chr, fixed = TRUE)
-  chr[has_comma] <- gsub("\\.", "", chr[has_comma])
-  chr[has_comma] <- sub(",", ".", chr[has_comma], fixed = TRUE)
-  suppressWarnings(as.numeric(chr))
-}
-
-fetch_tesouro <- function() {
-  resp <- request(TD_URL) |>
-    req_headers("User-Agent" = ua) |>
-    req_timeout(120) |>
-    req_perform()
-  raw <- resp_body_string(resp, encoding = "latin1")
-  read_delim(
-    I(raw), delim = ";",
-    locale = locale(encoding = "Latin1", decimal_mark = ",", grouping_mark = "."),
-    show_col_types = FALSE, name_repair = "minimal"
-  ) |>
-    transmute(
-      tipo_titulo = .data[["Tipo Titulo"]],
-      vencimento = dmy(.data[["Data Vencimento"]]),
-      data_base = dmy(.data[["Data Base"]]),
-      taxa_venda = parse_taxa_percent(.data[["Taxa Venda Manha"]])
-    ) |>
-    filter(!is.na(vencimento), !is.na(data_base), !is.na(taxa_venda))
-}
-
-resolve_tesouro_snapshot <- function(td, tipo_predicate, target_date) {
-  sub <- td %>% filter(tipo_predicate(tipo_titulo))
-  if (!nrow(sub)) return(NULL)
-  u <- sort(unique(as.Date(sub$data_base)))
-  cand <- u[u <= as.Date(target_date)]
-  if (!length(cand)) return(NULL)
-  ref <- max(cand)
-  snap <- sub %>% filter(data_base == ref) %>% arrange(vencimento)
-  if (!nrow(snap)) return(NULL)
-  list(used_refdate = ref, data = snap %>% select(vencimento, taxa_venda))
-}
-
-is_prefixado_principal <- function(tt) trimws(tt) == "Tesouro Prefixado"
-is_ipca_principal      <- function(tt) trimws(tt) == "Tesouro IPCA+"
-
 ## ---------- Orchestrator ----------
 
-build_snapshot <- function(anchor_date, label_prefix, curve_name, target_vencs,
-                           td_cache, td_predicate) {
-  if (has_rb3) {
-    b3 <- tryCatch(resolve_b3_curve(anchor_date, curve_name), error = function(e) NULL)
-    if (!is.null(b3) && nrow(b3$data) > 0) {
-      interp <- interp_yield(b3$data, target_vencs)
-      if (nrow(interp) > 0) {
-        lab <- sprintf("%s (%s)", label_prefix, format(b3$used_refdate, "%d/%m/%Y"))
-        return(list(
-          source = "b3",
-          refdate = as.Date(b3$used_refdate),
-          rows = interp %>% mutate(curve_key = label_prefix, snapshot_label = lab, data_base = as.Date(b3$used_refdate))
-        ))
-      }
-    }
-  }
-  if (!is.null(td_cache)) {
-    td <- resolve_tesouro_snapshot(td_cache, td_predicate, anchor_date)
-    if (!is.null(td) && nrow(td$data) > 0) {
-      lab <- sprintf("%s (%s)", label_prefix, format(td$used_refdate, "%d/%m/%Y"))
-      rows <- td$data %>% filter(vencimento %in% target_vencs) %>%
-        mutate(curve_key = label_prefix, snapshot_label = lab, data_base = as.Date(td$used_refdate))
-      if (nrow(rows) == 0) {
-        rows <- td$data %>%
-          mutate(curve_key = label_prefix, snapshot_label = lab, data_base = as.Date(td$used_refdate))
-      }
-      return(list(source = "td", refdate = as.Date(td$used_refdate), rows = rows))
-    }
-  }
-  NULL
+build_snapshot <- function(anchor_date, label_prefix, curve_name, target_vencs) {
+  b3 <- resolve_b3_curve(anchor_date, curve_name)
+  if (is.null(b3) || nrow(b3$data) == 0) return(NULL)
+  interp <- interp_yield(b3$data, target_vencs)
+  if (nrow(interp) == 0) return(NULL)
+  lab <- sprintf("%s (%s)", label_prefix, format(b3$used_refdate, "%d/%m/%Y"))
+  list(
+    refdate = as.Date(b3$used_refdate),
+    rows = interp |>
+      mutate(curve_key = label_prefix, snapshot_label = lab,
+             data_base = as.Date(b3$used_refdate))
+  )
 }
 
 requested_refdate <- as.Date(with_tz(Sys.time(), tzone = "America/Sao_Paulo"))
 message("Refdate solicitado: ", format(requested_refdate))
 
-td_cache <- tryCatch({
-  message("Baixando Tesouro Direto (fallback)...")
-  fetch_tesouro()
-}, error = function(e) {
-  message("Falha Tesouro Direto: ", conditionMessage(e))
-  NULL
-})
-
-build_set <- function(curve_name, target_vencs, td_predicate, slug) {
-  today <- build_snapshot(requested_refdate, "Hoje", curve_name, target_vencs, td_cache, td_predicate)
-  d30   <- build_snapshot(requested_refdate - days(30), "D-30", curve_name, target_vencs, td_cache, td_predicate)
-  d90   <- build_snapshot(requested_refdate - days(90), "D-90", curve_name, target_vencs, td_cache, td_predicate)
+build_set <- function(curve_name, target_vencs, slug) {
+  today <- build_snapshot(requested_refdate, "Hoje", curve_name, target_vencs)
+  d30   <- build_snapshot(requested_refdate - days(30), "D-30", curve_name, target_vencs)
+  d90   <- build_snapshot(requested_refdate - days(90), "D-90", curve_name, target_vencs)
   snaps <- Filter(Negate(is.null), list(today, d30, d90))
-  if (!length(snaps)) return(NULL)
-  long_df <- bind_rows(lapply(snaps, `[[`, "rows")) %>%
+  if (!length(snaps)) {
+    message(sprintf("AVISO: sem dados para %s (B3 indisponivel)", slug))
+    return(NULL)
+  }
+  long_df <- bind_rows(lapply(snaps, `[[`, "rows")) |>
     mutate(snapshot_label = factor(snapshot_label, levels = unique(snapshot_label)))
   list(long_df = long_df,
-       ref_today = if (!is.null(today)) today$refdate else NA,
-       today_source = if (!is.null(today)) today$source else NA)
+       ref_today = if (!is.null(today)) today$refdate else NA)
 }
 
 ## ---------- Cores e plot ----------
+## Hoje preto (mais escuro); D-30 medio; D-90 claro (mais distante = mais claro).
+## Consistente com o padrao da Selic implicita.
 
 cores_pre  <- c(`D-90` = "#56B4E9", `D-30` = "#00008B", Hoje = "#000000")
 cores_ipca <- c(`D-90` = "#F8766D", `D-30` = "#8B0000", Hoje = "#000000")
 
 plot_curves <- function(long_df, pal) {
-  label_map <- long_df %>%
-    distinct(curve_key, snapshot_label) %>%
+  label_map <- long_df |>
+    distinct(curve_key, snapshot_label) |>
     arrange(match(curve_key, names(pal)))
   ggplot(long_df, aes(x = vencimento, y = taxa_venda, color = curve_key, group = snapshot_label)) +
     geom_line(linewidth = 0.9) +
@@ -297,14 +225,10 @@ write_curve_table_json <- function(long_df, slug, generated_at, ref_today) {
   write_json(payload, file.path(tables_dir, paste0(slug, ".json")), auto_unbox = TRUE, pretty = TRUE)
 }
 
-run_one <- function(curve_name, target_vencs, td_predicate, slug, palette, title_log) {
-  result <- build_set(curve_name, target_vencs, td_predicate, slug)
-  if (is.null(result)) {
-    message(sprintf("AVISO: sem dados para %s", slug))
-    return(invisible(NULL))
-  }
-  message(sprintf("%s -> fonte 'Hoje': %s, refdate=%s",
-                  title_log, result$today_source, format(result$ref_today)))
+run_one <- function(curve_name, target_vencs, slug, palette, title_log) {
+  result <- build_set(curve_name, target_vencs, slug)
+  if (is.null(result)) return(invisible(NULL))
+  message(sprintf("%s -> refdate=%s", title_log, format(result$ref_today)))
   p <- plot_curves(result$long_df, palette)
   svglite(file.path(static_dir, paste0(slug, ".svg")),
           width = az_chart_width(), height = az_chart_height())
@@ -316,7 +240,7 @@ run_one <- function(curve_name, target_vencs, td_predicate, slug, palette, title
   message(sprintf("SVG: %s.svg", slug))
 }
 
-run_one("PRE",  TARGET_VENC_PRE,  is_prefixado_principal, "juros_prefixado", cores_pre,  "Prefixado")
-run_one("DIC",  TARGET_VENC_IPCA, is_ipca_principal,      "juros_ipca",      cores_ipca, "IPCA+")
+run_one("PRE", TARGET_VENC_PRE,  "juros_prefixado", cores_pre,  "Prefixado")
+run_one("DIC", TARGET_VENC_IPCA, "juros_ipca",      cores_ipca, "IPCA+")
 
 message("build_yield_curves_svg.R OK")
