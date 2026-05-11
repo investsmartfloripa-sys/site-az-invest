@@ -13,24 +13,37 @@ type TableRow = Record<string, string | number | null>;
 function parseNumber(value: string | number | null | undefined): number | null {
   if (value == null) return null;
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
-  const normalized = String(value).replace(/\./g, "").replace(",", ".").replace(/[^\d.-]/g, "");
+  const s = String(value).trim();
+  // Rejeita data tipo "08/05/2026" ou "2026-05-08" (evita que vire 8052026).
+  if (/^\d{1,4}[\/-]\d{1,2}[\/-]\d{1,4}$/.test(s)) return null;
+  // Exige separador decimal (.,) ou símbolo de percentual — descarta ID/tenor tipo "1", "10", "30".
+  if (!/[.,%]/.test(s)) return null;
+  // Se tem vírgula, é formato BR (ponto = milhar). Senão, ponto = decimal (formato US).
+  const hasComma = s.includes(",");
+  const normalized = hasComma
+    ? s.replace(/\./g, "").replace(",", ".").replace(/[^\d.-]/g, "")
+    : s.replace(/[^\d.-]/g, "");
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
 function firstRateValue(row: TableRow | undefined): number | null {
   if (!row) return null;
-  const keyPriority = ["taxa", "rate", "selic", "yield", "retorno"];
+  const entries = Object.entries(row);
 
-  for (const [key, value] of Object.entries(row)) {
-    if (keyPriority.some((token) => key.toLowerCase().includes(token))) {
+  // Procura colunas que sugiram taxa/curva (inclui "Hoje (DD/MM/YYYY)" usado no pipeline atual).
+  const ratePattern = /(taxa|rate|selic|yield|retorno|hoje)/i;
+  for (const [key, value] of entries) {
+    if (ratePattern.test(key)) {
       const parsed = parseNumber(value);
       if (parsed != null) return parsed;
     }
   }
 
-  for (const value of Object.values(row)) {
-    const parsed = parseNumber(value);
+  // Fallback: pega o último valor da linha (curva mais recente por convenção do pipeline).
+  // Nunca o primeiro, que é sempre a coluna de data/vencimento/tenor.
+  for (let i = entries.length - 1; i > 0; i--) {
+    const parsed = parseNumber(entries[i][1]);
     if (parsed != null) return parsed;
   }
 
