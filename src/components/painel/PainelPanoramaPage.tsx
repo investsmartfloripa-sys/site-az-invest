@@ -70,11 +70,17 @@ function firstReturnFromPeriod(
 }
 
 export async function PainelPanoramaPage() {
-  const posts = await findPosts({
-    where: { published: true, category: "Economia" },
-    orderBy: { createdAt: "desc" },
-  });
-  const mapped = posts.map(mapPost);
+  // Tolera DB indisponivel (ex.: preview sem DATABASE_URL): renderiza painel sem "Analises recentes".
+  let mapped: ReturnType<typeof mapPost>[] = [];
+  try {
+    const posts = await findPosts({
+      where: { published: true, category: "Economia" },
+      orderBy: { createdAt: "desc" },
+    });
+    mapped = posts.map(mapPost);
+  } catch (err) {
+    console.error("[PainelPanoramaPage] findPosts falhou; seguindo sem analises", err);
+  }
   const data = await getPanoramaData();
 
   const blobConfigured = painelBlobConfigured();
