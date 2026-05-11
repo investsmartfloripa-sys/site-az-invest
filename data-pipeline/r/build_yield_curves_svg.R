@@ -151,9 +151,23 @@ write_curve_table_json <- function(long_df, slug, generated_at) {
     out
   })
 
+  ## Metadados de defasagem (mesmo padrao da Selic):
+  ## ref_today = data_base da curva "Hoje"; chart_start = ref_today;
+  ## chart_end = ref_today + 12 meses; curve_lag_calendar_days = today - ref_today.
+  ## Permite ao StaticChartCard exibir aviso amarelo quando a fonte (Tesouro) demora a publicar.
+  hoje_row <- long_df %>% filter(curve_key == "Hoje")
+  ref_today <- if (nrow(hoje_row)) as.Date(hoje_row$data_base[[1]]) else NA
+  chart_start <- ref_today
+  chart_end <- if (!is.na(ref_today)) seq.Date(ref_today, by = "12 months", length.out = 2)[2] else NA
+  curve_lag <- if (!is.na(ref_today)) as.integer(Sys.Date() - ref_today) else NA_integer_
+
   payload <- list(
     status = "ok",
     generated_at = generated_at,
+    ref_today = if (!is.na(ref_today)) format(ref_today, "%Y-%m-%d") else NULL,
+    chart_start = if (!is.na(chart_start)) format(chart_start, "%Y-%m-%d") else NULL,
+    chart_end = if (!is.na(chart_end)) format(chart_end, "%Y-%m-%d") else NULL,
+    curve_lag_calendar_days = if (!is.na(curve_lag)) curve_lag else NULL,
     columns = columns,
     rows = rows
   )
@@ -169,41 +183,10 @@ message("Baixando Tesouro Direto...")
 td <- fetch_tesouro()
 message("Linhas: ", nrow(td))
 
-cores_pre <- c(`D-90` = "#000000", `D-30` = "#00008B", Hoje = "#56B4E9")
-cores_ipca <- c(`D-90` = "#000000", `D-30` = "#8B0000", Hoje = "#F8766D")
+## Cores das curvas — Hoje sempre preto, datas mais distantes ficam mais claras
+## (consistente com o padrao do StaticChartCard / Selic implicita).
+cores_pre <- c(`D-90` = "#56B4E9", `D-30` = "#00008B", Hoje = "#000000")
+cores_ipca <- c(`D-90` = "#F8766D", `D-30` = "#8B0000", Hoje = "#000000")
 
 # Use only principal bond families to avoid duplicate maturities
-# (e.g., with/without semiannual coupons) creating zigzag lines.
-is_prefixado_principal <- function(tt) {
-  trimws(tt) == "Tesouro Prefixado"
-}
-
-is_ipca_principal <- function(tt) {
-  trimws(tt) == "Tesouro IPCA+"
-}
-
-long_pre <- snapshots_long(td, is_prefixado_principal)
-if (!is.null(long_pre)) {
-  p <- plot_curves(long_pre, cores_pre)
-  svglite(file.path(static_dir, "juros_prefixado.svg"), width = az_chart_width(), height = az_chart_height())
-  print(p)
-  dev.off()
-  write_curve_table_json(long_pre, "juros_prefixado", format(Sys.time(), "%Y-%m-%dT%H:%M:%S"))
-  message("SVG: juros_prefixado.svg")
-} else {
-  message("AVISO: sem dados Prefixado")
-}
-
-long_ipca <- snapshots_long(td, is_ipca_principal)
-if (!is.null(long_ipca)) {
-  p2 <- plot_curves(long_ipca, cores_ipca)
-  svglite(file.path(static_dir, "juros_ipca.svg"), width = az_chart_width(), height = az_chart_height())
-  print(p2)
-  dev.off()
-  write_curve_table_json(long_ipca, "juros_ipca", format(Sys.time(), "%Y-%m-%dT%H:%M:%S"))
-  message("SVG: juros_ipca.svg")
-} else {
-  message("AVISO: sem dados IPCA+")
-}
-
-message("build_yield_curves_svg.R OK")
+# (e.g., w

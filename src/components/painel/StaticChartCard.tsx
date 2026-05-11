@@ -97,7 +97,7 @@ export function StaticChartCard({
       {showStaleWarning ? (
         <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-900">
           Curva mais recente disponível: {refTodayLabel} ({curveLag} dias atrás). Aguardando publicação da
-          fonte (B3 PRE).
+          fonte{badge ? ` (${badge})` : ""}.
         </p>
       ) : null}
       {updatedAt ? <p className="mt-2 text-xs italic text-zinc-700">Atualizado em {updatedAt}</p> : null}
@@ -127,6 +127,4 @@ export function StaticChartCard({
           </table>
         </div>
       ) : null}
-    </div>
-  );
-}
+  
