@@ -286,16 +286,20 @@ series_90 <- tryCatch(
 )
 
 ref_today <- as.Date(today_series$refdate)
-end_plot <- ref_today %m+% years(1)
+# Janela visual ancorada na data atual (hoje -> hoje+12m), independente do refdate
+# para o qual a curva "Hoje" pode ter recuado por indisponibilidade do PRE.
+chart_start <- requested_refdate
+chart_end <- requested_refdate %m+% years(1)
+end_plot <- chart_end
 copom_in_window <- copom_decision_dates[
-  copom_decision_dates >= ref_today &
-    copom_decision_dates <= end_plot
+  copom_decision_dates >= chart_start &
+    copom_decision_dates <= chart_end
 ]
-grid_dates <- sort(unique(c(ref_today, copom_in_window, end_plot)))
+grid_dates <- sort(unique(c(chart_start, copom_in_window, chart_end)))
 
 compute_series_data <- function(series_info) {
   yc_win <- make_curve_window(series_info$yc_data, years_ahead = 2) |>
-    filter(forward_date <= end_plot)
+    filter(forward_date <= chart_end)
   grid_c <- grid_on_dates(yc_win, grid_dates)
   fwd <- calc_forward(grid_c)
   if (!nrow(fwd)) return(NULL)
@@ -352,7 +356,18 @@ pick_color <- function(curve_name) {
 color_values <- setNames(vapply(as.character(curve_order), pick_color, character(1)), as.character(curve_order))
 line_values <- setNames(ifelse(grepl("^Hoje", curve_order), 1.15, 0.95), as.character(curve_order))
 
-p <- ggplot(df_plot, aes(x = grid_date, y = fwd, color = curve, linewidth = curve, group = curve)) +
+# df_chart estende o ultimo degrau de cada curva ate chart_end (geom_step nao
+# desenha apos o ultimo ponto observado). df_plot, sem o fantasma, alimenta
+# tabela/JSON para nao duplicar a ultima linha.
+df_chart <- df_plot |>
+  group_by(curve) |>
+  group_modify(~ {
+    last_row <- dplyr::slice_tail(.x, n = 1) |> mutate(grid_date = chart_end)
+    bind_rows(.x, last_row)
+  }) |>
+  ungroup()
+
+p <- ggplot(df_chart, aes(x = grid_date, y = fwd, color = curve, linewidth = curve, group = curve)) +
   geom_step() +
   geom_vline(
     xintercept = vdf$x,
@@ -370,11 +385,18 @@ p <- ggplot(df_plot, aes(x = grid_date, y = fwd, color = curve, linewidth = curv
   ) +
   scale_color_manual(values = color_values, breaks = curve_order) +
   scale_linewidth_manual(values = line_values, breaks = curve_order, guide = "none") +
+  scale_x_date(
+    date_labels = "%b/%y",
+    expand = expansion(mult = c(0.01, 0.01))
+  ) +
   scale_y_continuous(
     labels = label_percent(accuracy = 0.1),
     breaks = pretty_breaks(n = 8)
   ) +
-  coord_cartesian(ylim = c(NA, y_lab + 0.02 * y_rng)) +
+  coord_cartesian(
+    xlim = c(chart_start, chart_end),
+    ylim = c(NA, y_lab + 0.02 * y_rng)
+  ) +
   labs(
     x = "Data",
     y = "Taxa (%)",
@@ -398,7 +420,10 @@ output <- list(
   ref_today = as.character(ref_today),
   ref_30d = if (!is.null(series_30)) as.character(series_30$refdate) else NA_character_,
   ref_90d = if (!is.null(series_90)) as.character(series_90$refdate) else NA_character_,
+  chart_start = as.character(chart_start),
+  chart_end = as.character(chart_end),
   end_plot = as.character(end_plot),
+  curve_lag_calendar_days = as.integer(as.Date(chart_start) - as.Date(ref_today)),
   data = df_export,
   vlines = as.character(vlines)
 )
@@ -416,6 +441,10 @@ curve_cols <- setdiff(names(table_wide), "grid_date")
 table_payload <- list(
   status = "ok",
   generated_at = output$generated_at,
+  ref_today = as.character(ref_today),
+  chart_start = as.character(chart_start),
+  chart_end = as.character(chart_end),
+  curve_lag_calendar_days = as.integer(as.Date(chart_start) - as.Date(ref_today)),
   columns = c(
     list(list(key = "grid_date", label = "Data")),
     lapply(curve_cols, function(k) list(key = k, label = k))

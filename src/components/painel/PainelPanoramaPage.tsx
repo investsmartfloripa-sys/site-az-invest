@@ -4,6 +4,7 @@ import { PostCard } from "@/components/common/PostCard";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection";
 import { StaticChartCard } from "@/components/painel/StaticChartCard";
+import { painelBlobUrl } from "@/lib/painel-blob";
 import { getPanoramaData, painelBlobConfigured } from "@/lib/painel-data";
 import { findPosts, mapPost } from "@/lib/posts";
 
@@ -77,6 +78,25 @@ export async function PainelPanoramaPage() {
   const data = await getPanoramaData();
 
   const blobConfigured = painelBlobConfigured();
+
+  /** Quantos dos 10 JSONs do Blob responderam com conteudo (evita alerta falso). */
+  const blobJsonBlocks = [
+    data.assetPanorama.data,
+    data.worldPanorama.data,
+    data.fxData.data,
+    data.commPanorama.data,
+    data.sectorGlobal.data,
+    data.sectorBr.data,
+    data.tablePrefixado.data,
+    data.tableIpca.data,
+    data.tableSelic.data,
+    data.tableTreasury.data,
+  ];
+  const blobJsonLoadedCount = blobJsonBlocks.filter((d) => d != null).length;
+  const blobDataAllMissing = blobConfigured && blobJsonLoadedCount === 0;
+  const blobDataPartial =
+    blobConfigured && blobJsonLoadedCount > 0 && blobJsonLoadedCount < blobJsonBlocks.length;
+
   const chartCacheBuster =
     data.tablePrefixado.meta.generatedAt ??
     data.tableIpca.meta.generatedAt ??
@@ -85,9 +105,9 @@ export async function PainelPanoramaPage() {
     "1";
 
   const metricCards = [
-    { title: "Cambio (dia)", value: formatPct(data.fxData.data?.top?.day?.up?.[0]?.change_pct ?? null) },
+    { title: "Câmbio (dia)", value: formatPct(data.fxData.data?.top?.day?.up?.[0]?.change_pct ?? null) },
     {
-      title: "Selic implicita",
+      title: "Selic implícita",
       value: formatPct(firstRateValue(data.tableSelic.data?.rows?.[0] as TableRow | undefined)),
     },
     {
@@ -103,7 +123,7 @@ export async function PainelPanoramaPage() {
       value: formatPct(firstReturnFromPeriod(data.commPanorama.data?.by_period, "1mo", ["return_pct_brl", "return_pct", "return"])),
     },
     {
-      title: "Indices globais (1M)",
+      title: "Índices globais (1M)",
       value: formatPct(firstReturnFromPeriod(data.worldPanorama.data?.by_period, "1mo", ["return_pct", "return"])),
     },
     {
@@ -120,8 +140,28 @@ export async function PainelPanoramaPage() {
     <div className="space-y-8">
       {!blobConfigured ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          Configure <code className="rounded bg-white px-1">NEXT_PUBLIC_BLOB_BASE_URL</code> no ambiente para carregar
-          JSONs e SVGs do painel.
+          Configure{" "}
+          <code className="rounded bg-white px-1">NEXT_PUBLIC_BLOB_BASE_URL</code> nas variaveis da Vercel e
+          faca novo deploy para o site enxergar a URL publica do Blob. Opcional no servidor:{" "}
+          <code className="rounded bg-white px-1">PAINEL_BLOB_PUBLIC_FALLBACK</code> com a mesma URL se o build
+          tiver ficado sem a variavel NEXT_PUBLIC.
+        </p>
+      ) : null}
+      {blobDataAllMissing ? (
+        <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+          O Blob esta configurado mas nenhum JSON foi carregado. Verifique a URL do store e se o data-pipeline
+          gravou <code className="rounded bg-white px-1">data/*.json</code> e{" "}
+          <code className="rounded bg-white px-1">charts/</code>; confira tambem 403/404 nos logs da Vercel.
+        </p>
+      ) : null}
+      {blobDataPartial ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          Alguns arquivos do Blob nao carregaram ({blobJsonLoadedCount} de {blobJsonBlocks.length} blocos). Os
+          graficos vazios tendem a corresponder a JSON em falta ou pipeline desatualizado — regenere os dados ou
+          confira se cada arquivo existe no store (ex.:{" "}
+          <code className="rounded bg-white px-1">data/asset_returns_panorama.json</code>,{" "}
+          <code className="rounded bg-white px-1">data/fx_top_movers.json</code>, tabelas em{" "}
+          <code className="rounded bg-white px-1">charts/tables/</code>).
         </p>
       ) : null}
 
@@ -149,38 +189,42 @@ export async function PainelPanoramaPage() {
         <div className="flex items-center justify-between">
           <h3 className="text-2xl font-semibold text-[#027DFC]">Juros</h3>
           <Link href="/painel-economico/economia/brasil/politica-monetaria" className="text-sm text-[#027DFC] hover:underline">
-            Abrir trilha de politica monetaria
+            Abrir trilha de política monetária
           </Link>
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
           <StaticChartCard
-            slug="juros_prefixado_v2"
+            slug="juros_prefixado"
+            svgPublicSrc={painelBlobUrl("charts/static/juros_prefixado.svg")}
             title="Curva prefixado"
-            subtitle="Curvas historicas (D-90, D-30 e Hoje)"
+            subtitle="Curvas históricas (D-90, D-30 e Hoje)"
             badge="BCB / Tesouro"
             cacheBuster={chartCacheBuster}
             tableData={data.tablePrefixado.data}
           />
           <StaticChartCard
-            slug="juros_ipca_v2"
+            slug="juros_ipca"
+            svgPublicSrc={painelBlobUrl("charts/static/juros_ipca.svg")}
             title="Curva IPCA+"
-            subtitle="Curvas historicas (D-90, D-30 e Hoje)"
+            subtitle="Curvas históricas (D-90, D-30 e Hoje)"
             badge="Tesouro"
             cacheBuster={chartCacheBuster}
             tableData={data.tableIpca.data}
           />
           <StaticChartCard
-            slug="selic_implicita_v2"
-            title="Selic implicita (forward)"
-            subtitle="Serie projetada de 12 meses (Hoje, 30d e 90d)"
+            slug="selic_implicita"
+            svgPublicSrc={painelBlobUrl("charts/static/selic_implicita.svg")}
+            title="Selic implícita (forward)"
+            subtitle="Série projetada de 12 meses (Hoje, 30d e 90d)"
             badge="B3 PRE"
             cacheBuster={chartCacheBuster}
             tableData={data.tableSelic.data}
           />
           <StaticChartCard
-            slug="juros_treasury_us_v2"
+            slug="juros_treasury_us"
+            svgPublicSrc={painelBlobUrl("charts/static/juros_treasury_us.svg")}
             title="Curva Treasury EUA"
-            subtitle="Curvas historicas (D-365, D-90, D-30 e Hoje)"
+            subtitle="Curvas históricas (D-365, D-90, D-30 e Hoje)"
             badge="FRED"
             cacheBuster={chartCacheBuster}
             tableData={data.tableTreasury.data}
@@ -189,10 +233,10 @@ export async function PainelPanoramaPage() {
       </section>
 
       <section id="analises" className="space-y-4">
-        <h3 className="text-2xl text-[#027DFC]">Analises recentes</h3>
+        <h3 className="text-2xl text-[#027DFC]">Análises recentes</h3>
         {mapped.length === 0 ? (
           <p className="rounded-xl border border-[#132960]/20 bg-white p-6 text-sm text-zinc-600">
-            Nenhuma analise publicada nessa categoria ainda.
+            Nenhuma análise publicada nessa categoria ainda.
           </p>
         ) : (
           <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
