@@ -24,14 +24,8 @@ type StaticChartTableRow = Record<string, string | number | null>;
 export type StaticChartTablePayload = {
   status?: string;
   generated_at?: string;
-  /** Refdate da curva "Hoje" (pode estar atrasado em relação ao dia corrente). */
+  /** Refdate da curva mais recente disponivel. */
   ref_today?: string;
-  /** Data de hoje quando o pipeline rodou — âncora visual do gráfico. */
-  chart_start?: string;
-  /** chart_start + 12 meses. */
-  chart_end?: string;
-  /** Dias corridos entre chart_start e ref_today; > 1 indica curva atrasada. */
-  curve_lag_calendar_days?: number;
   columns?: StaticChartTableColumn[];
   rows?: StaticChartTableRow[];
 };
@@ -48,15 +42,6 @@ export function StaticChartCard({
   const baseUrl = (svgPublicSrc?.trim() || painelBlobUrl(`charts/static/${slug}.svg`)).trim();
   const url = baseUrl ? `${baseUrl}?v=${encodeURIComponent(cacheBuster ?? "1")}` : "";
   const updatedAt = formatUpdatedAt(tableData?.generated_at);
-  const curveLag = tableData?.curve_lag_calendar_days;
-  const refTodayLabel = tableData?.ref_today
-    ? new Date(`${tableData.ref_today}T12:00:00`).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      })
-    : null;
-  const showStaleWarning = typeof curveLag === "number" && curveLag > 1 && refTodayLabel != null;
 
   if (!url) {
     return (
@@ -94,12 +79,6 @@ export function StaticChartCard({
           decoding="async"
         />
       </div>
-      {showStaleWarning ? (
-        <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-900">
-          Curva mais recente disponível: {refTodayLabel} ({curveLag} dias atrás). Aguardando publicação da
-          fonte{badge ? ` (${badge})` : ""}.
-        </p>
-      ) : null}
       {updatedAt ? <p className="mt-2 text-xs italic text-zinc-700">Atualizado em {updatedAt}</p> : null}
       {tableData?.status === "ok" && (tableData.rows?.length ?? 0) > 0 && (tableData.columns?.length ?? 0) > 0 ? (
         <div className="mt-4 overflow-x-auto rounded-xl border border-zinc-200">
@@ -130,4 +109,3 @@ export function StaticChartCard({
     </div>
   );
 }
-

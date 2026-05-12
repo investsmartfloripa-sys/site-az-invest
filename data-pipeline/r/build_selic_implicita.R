@@ -268,7 +268,7 @@ build_curve_series <- function(anchor_date, label_prefix, lookback_days = 10) {
 }
 
 today_series <- tryCatch(
-  build_curve_series(requested_refdate, "Hoje"),
+  build_curve_series(requested_refdate, "Recente"),
   error = function(e) {
     write_placeholder("Curva PRE indisponivel para gerar Selic implicita")
     NULL
@@ -325,7 +325,7 @@ if (!nrow(df_plot)) {
 }
 
 curve_order <- c(
-  sprintf("Hoje (%s)", format(ref_today, "%d/%m/%Y")),
+  sprintf("Recente (%s)", format(ref_today, "%d/%m/%Y")),
   if (!is.null(series_30)) sprintf("30d atras (%s)", format(series_30$refdate, "%d/%m/%Y")) else NULL,
   if (!is.null(series_90)) sprintf("90d atras (%s)", format(series_90$refdate, "%d/%m/%Y")) else NULL
 )
@@ -341,20 +341,20 @@ if (!is.finite(y_rng) || y_rng <= 0) y_rng <- 0.0025
 y_lab <- y_top + 0.06 * y_rng
 
 pal <- c(
-  "Hoje" = "#000000",
+  "Recente" = "#000000",
   "30d" = "#6f6f6f",
   "90d" = "#0078fd"
 )
 pick_color <- function(curve_name) {
   nm <- tolower(curve_name)
-  if (grepl("^hoje", nm)) return(pal[["Hoje"]])
+  if (grepl("^(recente|hoje)", nm)) return(pal[["Recente"]])
   if (grepl("^30d", nm)) return(pal[["30d"]])
   if (grepl("^90d", nm)) return(pal[["90d"]])
   "#000000"
 }
 
 color_values <- setNames(vapply(as.character(curve_order), pick_color, character(1)), as.character(curve_order))
-line_values <- setNames(ifelse(grepl("^Hoje", curve_order), 1.15, 0.95), as.character(curve_order))
+line_values <- setNames(ifelse(grepl("^(Recente|Hoje)", curve_order), 1.15, 0.95), as.character(curve_order))
 
 # df_chart estende o ultimo degrau de cada curva ate chart_end (geom_step nao
 # desenha apos o ultimo ponto observado). df_plot, sem o fantasma, alimenta

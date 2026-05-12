@@ -31,8 +31,8 @@ function firstRateValue(row: TableRow | undefined): number | null {
   if (!row) return null;
   const entries = Object.entries(row);
 
-  // Procura colunas que sugiram taxa/curva (inclui "Hoje (DD/MM/YYYY)" usado no pipeline atual).
-  const ratePattern = /(taxa|rate|selic|yield|retorno|hoje)/i;
+  // Procura colunas que sugiram taxa/curva (inclui "Recente" e "Hoje" do pipeline).
+  const ratePattern = /(taxa|rate|selic|yield|retorno|recente|hoje)/i;
   for (const [key, value] of entries) {
     if (ratePattern.test(key)) {
       const parsed = parseNumber(value);

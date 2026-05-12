@@ -1,16 +1,14 @@
-# Curvas Prefixado e IPCA+ (Hoje, D-30, D-90) como SVG.
+# Curvas Prefixado e IPCA+ (Recente, D-30, D-90) como SVG.
 #
 # Estrategia em camadas:
 #   1. rb3::yc_brl_get / yc_ipca_get (canal padrao do rb3)
-#   2. Fallback TaxaSwap (download direto do TS{YYMMDD}.ex_ da B3) - PRE
-#   3. Fallback Tesouro Transparente CSV - IPCA (B3 nao publica TaxaSwap IPCA direto)
+#   2. Fallback TaxaSwap (download direto do TS{YYMMDD}.ex_ da B3)
+#      - T1APR para curva PRE (Prefixado)
+#      - T1DIC para curva DI x IPCA cupom sujo (IPCA+, taxa real dos NTN-B)
 #
-# Mesmo padrao da build_selic_implicita.R, garante dados frescos quando rb3
-# nao consegue parsear o arquivo da B3 (acontece com Invalid file warnings).
+# Curva e' interpolada nos vencimentos-padrao dos titulos Tesouro Direto.
 
 suppressPackageStartupMessages({
-  library(httr2)
-  library(readr)
   library(dplyr)
   library(tidyr)
   library(jsonlite)
@@ -24,9 +22,7 @@ args_trailing <- commandArgs(trailingOnly = FALSE)
 file_arg <- sub("^--file=", "", args_trailing[grepl("^--file=", args_trailing)])
 script_dir <- if (length(file_arg) && nzchar(file_arg[1])) {
   dirname(normalizePath(file_arg[1], winslash = "/", mustWork = TRUE))
-} else {
-  getwd()
-}
+} else getwd()
 data_pipeline_root <- normalizePath(file.path(script_dir, ".."), winslash = "/", mustWork = TRUE)
 out_dir <- Sys.getenv("DATA_PIPELINE_OUT", unset = file.path(data_pipeline_root, "out"))
 static_dir <- file.path(out_dir, "charts", "static")
@@ -63,9 +59,10 @@ get_b3_curve_rb3 <- function(ref_date, curve_name) {
     arrange(biz_days) |> distinct(biz_days, .keep_all = TRUE)
 }
 
-## ---------- TaxaSwap B3 PRE (camada 2 - fallback) ----------
+## ---------- TaxaSwap B3 (camada 2 - fallback) ----------
+## T1APR = DI x PRE (Prefixado), T1DIC = DI x IPCA cupom sujo (IPCA+ taxa real)
 
-parse_t1apr_from_taswap <- function(lines) {
+parse_taxa_swap <- function(lines, curve_code_filter) {
   tibble::tibble(line = lines) |>
     filter(nchar(line) >= 72) |>
     transmute(
@@ -82,13 +79,18 @@ parse_t1apr_from_taswap <- function(lines) {
       r_252 = sign * value_raw / 1e9,
       forward_date = refdate + days(cur_days)
     ) |>
-    filter(curve_code == "T1APR", !is.na(refdate), !is.na(cur_days),
-           !is.na(biz_days), !is.na(r_252)) |>
+    filter(curve_code == curve_code_filter, !is.na(refdate),
+           !is.na(cur_days), !is.na(biz_days), !is.na(r_252)) |>
     select(refdate, forward_date, biz_days, r_252) |>
     arrange(biz_days) |> distinct(biz_days, .keep_all = TRUE)
 }
 
-get_pre_from_taswap <- function(ref_date) {
+# Cache em memoria do TaxaSwap pra evitar refazer download a cada candidate
+TASWAP_CACHE <- new.env(parent = emptyenv())
+
+download_taswap_lines <- function(ref_date) {
+  key <- format(as.Date(ref_date), "%Y-%m-%d")
+  if (!is.null(TASWAP_CACHE[[key]])) return(TASWAP_CACHE[[key]])
   ymd_token <- format(as.Date(ref_date), "%y%m%d")
   endpoint <- sprintf(
     "https://www.b3.com.br/pesquisapregao/download?filelist=TS%s.ex_", ymd_token
@@ -101,118 +103,67 @@ get_pre_from_taswap <- function(ref_date) {
     suppressWarnings(utils::download.file(endpoint, tmp_zip, mode = "wb", quiet = TRUE))
     file.exists(tmp_zip) && file.info(tmp_zip)$size > 0
   }, error = function(e) FALSE)
-  if (!ok) stop(sprintf("falha download TaxaSwap (%s)", endpoint))
+  if (!ok) {
+    TASWAP_CACHE[[key]] <- character(0)
+    return(character(0))
+  }
   outer <- suppressWarnings(tryCatch(utils::unzip(tmp_zip, list = TRUE), error = function(e) NULL))
-  if (is.null(outer) || !nrow(outer)) stop("ZIP TaxaSwap vazio")
+  if (is.null(outer) || !nrow(outer)) {
+    TASWAP_CACHE[[key]] <- character(0); return(character(0))
+  }
   ts_name <- outer$Name[grepl("^TS[0-9]{6}\\.ex_$", basename(outer$Name), ignore.case = TRUE)][1]
-  if (!length(ts_name) || is.na(ts_name)) stop("TS*.ex_ nao encontrado")
+  if (!length(ts_name) || is.na(ts_name)) {
+    TASWAP_CACHE[[key]] <- character(0); return(character(0))
+  }
   suppressWarnings(utils::unzip(tmp_zip, files = ts_name, exdir = tmp_dir, overwrite = TRUE))
   exe_path <- file.path(tmp_dir, basename(ts_name))
   entries <- suppressWarnings(tryCatch(utils::unzip(exe_path[1], list = TRUE), error = function(e) NULL))
-  if (is.null(entries) || !"TaxaSwap.txt" %in% entries$Name) stop("TaxaSwap.txt nao encontrado")
+  if (is.null(entries) || !"TaxaSwap.txt" %in% entries$Name) {
+    TASWAP_CACHE[[key]] <- character(0); return(character(0))
+  }
   utils::unzip(exe_path[1], files = "TaxaSwap.txt", exdir = tmp_dir, overwrite = TRUE)
   txt_path <- file.path(tmp_dir, "TaxaSwap.txt")
-  if (!file.exists(txt_path)) stop("falha extrair TaxaSwap.txt")
+  if (!file.exists(txt_path)) {
+    TASWAP_CACHE[[key]] <- character(0); return(character(0))
+  }
   lines <- readLines(txt_path, warn = FALSE, encoding = "latin1")
-  parsed <- parse_t1apr_from_taswap(lines)
+  TASWAP_CACHE[[key]] <- lines
+  lines
+}
+
+get_curve_from_taswap <- function(ref_date, curve_code_filter) {
+  lines <- download_taswap_lines(ref_date)
+  if (!length(lines)) stop(sprintf("TaxaSwap vazio (%s)", format(ref_date)))
+  parsed <- parse_taxa_swap(lines, curve_code_filter)
   parsed |> filter(refdate == as.Date(ref_date))
 }
 
-resolve_pre_curve <- function(target_date, max_lookback_days = 10) {
+resolve_curve <- function(target_date, rb3_curve, taswap_code, max_lookback_days = 10) {
   target_date <- as.Date(target_date)
   for (i in 0:max_lookback_days) {
     candidate <- target_date - days(i)
     # tentativa 1: rb3
     if (has_rb3) {
-      yc <- tryCatch(get_b3_curve_rb3(candidate, "PRE"), error = function(e) NULL)
-      if (!is.null(yc) && nrow(yc) > 0) return(list(used_refdate = candidate, data = yc))
+      yc <- tryCatch(get_b3_curve_rb3(candidate, rb3_curve), error = function(e) NULL)
+      if (!is.null(yc) && nrow(yc) > 0) {
+        message(sprintf("%s via rb3 em %s", rb3_curve, format(candidate)))
+        return(list(used_refdate = candidate, data = yc))
+      }
     }
     # tentativa 2: TaxaSwap
-    yc <- tryCatch(get_pre_from_taswap(candidate), error = function(e) {
-      message(sprintf("[taswap] %s sem PRE (%s)", format(candidate), conditionMessage(e)))
+    yc <- tryCatch(get_curve_from_taswap(candidate, taswap_code), error = function(e) {
+      message(sprintf("[taswap] %s sem %s (%s)", format(candidate), taswap_code, conditionMessage(e)))
       NULL
     })
     if (!is.null(yc) && nrow(yc) > 0) {
-      message(sprintf("PRE via TaxaSwap em %s", format(candidate)))
+      message(sprintf("%s via TaxaSwap em %s", taswap_code, format(candidate)))
       return(list(used_refdate = candidate, data = yc))
     }
   }
   NULL
 }
 
-## ---------- Tesouro Direto CSV (fallback IPCA) ----------
-
-TD_URL <- paste0(
-  "https://www.tesourotransparente.gov.br/ckan/dataset/",
-  "df56aa42-484a-4a59-8184-7676580c81e3/resource/",
-  "796d2059-14e9-44e3-80c9-2d9e30b405c1/download/precotaxatesourodireto.csv"
-)
-
-parse_taxa_percent <- function(x) {
-  if (is.numeric(x)) return(as.numeric(x))
-  chr <- trimws(as.character(x))
-  has_comma <- grepl(",", chr, fixed = TRUE)
-  chr[has_comma] <- gsub("\\.", "", chr[has_comma])
-  chr[has_comma] <- sub(",", ".", chr[has_comma], fixed = TRUE)
-  suppressWarnings(as.numeric(chr))
-}
-
-td_cache <- NULL
-fetch_td_ipca <- function() {
-  if (!is.null(td_cache)) return(td_cache)
-  message("Baixando Tesouro Direto (fallback IPCA)...")
-  resp <- request(TD_URL) |>
-    req_headers("User-Agent" = "Mozilla/5.0 (AZInvestDataBot/1.0)") |>
-    req_timeout(120) |> req_perform()
-  raw <- resp_body_string(resp, encoding = "latin1")
-  df <- read_delim(I(raw), delim = ";",
-    locale = locale(encoding = "Latin1", decimal_mark = ",", grouping_mark = "."),
-    show_col_types = FALSE, name_repair = "minimal") |>
-    transmute(
-      tipo_titulo = .data[["Tipo Titulo"]],
-      vencimento = dmy(.data[["Data Vencimento"]]),
-      data_base = dmy(.data[["Data Base"]]),
-      taxa_venda = parse_taxa_percent(.data[["Taxa Venda Manha"]])
-    ) |>
-    filter(!is.na(vencimento), !is.na(data_base), !is.na(taxa_venda),
-           trimws(tipo_titulo) == "Tesouro IPCA+")
-  td_cache <<- df
-  df
-}
-
-resolve_ipca_curve_td <- function(target_date) {
-  df <- tryCatch(fetch_td_ipca(), error = function(e) {
-    message(sprintf("Tesouro falhou: %s", conditionMessage(e))); NULL
-  })
-  if (is.null(df) || !nrow(df)) return(NULL)
-  u <- sort(unique(as.Date(df$data_base)))
-  cand <- u[u <= as.Date(target_date)]
-  if (!length(cand)) return(NULL)
-  ref <- max(cand)
-  snap <- df |> filter(data_base == ref) |> arrange(vencimento) |>
-    select(vencimento, taxa_venda)
-  list(used_refdate = ref, data = snap, source = "td")
-}
-
-resolve_ipca_curve <- function(target_date, max_lookback_days = 10) {
-  target_date <- as.Date(target_date)
-  # tenta rb3 DIC nos ultimos dias
-  if (has_rb3) {
-    for (i in 0:max_lookback_days) {
-      candidate <- target_date - days(i)
-      yc <- tryCatch(get_b3_curve_rb3(candidate, "DIC"), error = function(e) NULL)
-      if (!is.null(yc) && nrow(yc) > 0) {
-        return(list(used_refdate = candidate, data = yc, source = "rb3"))
-      }
-    }
-  }
-  # fallback Tesouro CSV
-  td <- resolve_ipca_curve_td(target_date)
-  if (!is.null(td)) return(td)
-  NULL
-}
-
-## ---------- Interpolacao + Plot ----------
+## ---------- Interpolacao ----------
 
 interp_yield <- function(yc_data, target_dates) {
   yc <- yc_data |> arrange(biz_days) |> distinct(biz_days, .keep_all = TRUE) |>
@@ -239,8 +190,8 @@ interp_yield <- function(yc_data, target_dates) {
   bind_rows(Filter(Negate(is.null), rows))
 }
 
-build_pre_snapshot <- function(anchor_date, label_prefix, target_vencs) {
-  resolved <- resolve_pre_curve(anchor_date)
+build_snapshot <- function(anchor_date, label_prefix, rb3_curve, taswap_code, target_vencs) {
+  resolved <- resolve_curve(anchor_date, rb3_curve, taswap_code)
   if (is.null(resolved)) return(NULL)
   interp <- interp_yield(resolved$data, target_vencs)
   if (!nrow(interp)) return(NULL)
@@ -249,41 +200,31 @@ build_pre_snapshot <- function(anchor_date, label_prefix, target_vencs) {
        rows = interp |> mutate(curve_key = label_prefix, snapshot_label = lab))
 }
 
-build_ipca_snapshot <- function(anchor_date, label_prefix, target_vencs) {
-  resolved <- resolve_ipca_curve(anchor_date)
-  if (is.null(resolved)) return(NULL)
-  ref <- as.Date(resolved$used_refdate)
-  lab <- sprintf("%s (%s)", label_prefix, format(ref, "%d/%m/%Y"))
-  if (identical(resolved$source, "td")) {
-    rows <- resolved$data |> filter(vencimento %in% target_vencs)
-    if (!nrow(rows)) rows <- resolved$data
-    rows <- rows |> mutate(curve_key = label_prefix, snapshot_label = lab)
-  } else {
-    interp <- interp_yield(resolved$data, target_vencs)
-    if (!nrow(interp)) return(NULL)
-    rows <- interp |> mutate(curve_key = label_prefix, snapshot_label = lab)
-  }
-  list(refdate = ref, rows = rows)
-}
-
 requested_refdate <- as.Date(with_tz(Sys.time(), tzone = "America/Sao_Paulo"))
 message("Refdate solicitado: ", format(requested_refdate))
 
-build_set <- function(builder, target_vencs, slug) {
-  today <- builder(requested_refdate, "Hoje", target_vencs)
-  d30   <- builder(requested_refdate - days(30), "D-30", target_vencs)
-  d90   <- builder(requested_refdate - days(90), "D-90", target_vencs)
-  snaps <- Filter(Negate(is.null), list(today, d30, d90))
+# Labels: "Recente" em vez de "Hoje" (dado e' sempre D-1 ou mais antigo).
+LABEL_RECENT <- "Recente"
+LABEL_D30 <- "D-30"
+LABEL_D90 <- "D-90"
+
+build_set <- function(rb3_curve, taswap_code, target_vencs, slug) {
+  recent <- build_snapshot(requested_refdate,        LABEL_RECENT, rb3_curve, taswap_code, target_vencs)
+  d30    <- build_snapshot(requested_refdate - days(30), LABEL_D30, rb3_curve, taswap_code, target_vencs)
+  d90    <- build_snapshot(requested_refdate - days(90), LABEL_D90, rb3_curve, taswap_code, target_vencs)
+  snaps <- Filter(Negate(is.null), list(recent, d30, d90))
   if (!length(snaps)) {
     message(sprintf("AVISO: sem dados para %s", slug)); return(NULL)
   }
   long_df <- bind_rows(lapply(snaps, `[[`, "rows")) |>
     mutate(snapshot_label = factor(snapshot_label, levels = unique(snapshot_label)))
-  list(long_df = long_df, ref_today = if (!is.null(today)) today$refdate else NA)
+  list(long_df = long_df, ref_today = if (!is.null(recent)) recent$refdate else NA)
 }
 
-cores_pre  <- c(`D-90` = "#56B4E9", `D-30` = "#00008B", Hoje = "#000000")
-cores_ipca <- c(`D-90` = "#F8766D", `D-30` = "#8B0000", Hoje = "#000000")
+## ---------- Cores e plot ----------
+
+cores_pre  <- c(`D-90` = "#56B4E9", `D-30` = "#00008B", Recente = "#000000")
+cores_ipca <- c(`D-90` = "#F8766D", `D-30` = "#8B0000", Recente = "#000000")
 
 plot_curves <- function(long_df, pal) {
   label_map <- long_df |> distinct(curve_key, snapshot_label) |>
@@ -318,22 +259,16 @@ write_curve_table_json <- function(long_df, slug, generated_at, ref_today) {
     out
   })
   ref_today <- as.Date(ref_today)
-  chart_start <- ref_today
-  chart_end <- if (!is.na(ref_today)) seq.Date(ref_today, by = "12 months", length.out = 2)[2] else NA
-  curve_lag <- if (!is.na(ref_today)) as.integer(Sys.Date() - ref_today) else NA_integer_
   payload <- list(
     status = "ok", generated_at = generated_at,
     ref_today = if (!is.na(ref_today)) format(ref_today, "%Y-%m-%d") else NULL,
-    chart_start = if (!is.na(chart_start)) format(chart_start, "%Y-%m-%d") else NULL,
-    chart_end = if (!is.na(chart_end)) format(chart_end, "%Y-%m-%d") else NULL,
-    curve_lag_calendar_days = if (!is.na(curve_lag)) curve_lag else NULL,
     columns = columns, rows = rows
   )
   write_json(payload, file.path(tables_dir, paste0(slug, ".json")), auto_unbox = TRUE, pretty = TRUE)
 }
 
-run_one <- function(builder, target_vencs, slug, palette, title_log) {
-  result <- build_set(builder, target_vencs, slug)
+run_one <- function(rb3_curve, taswap_code, target_vencs, slug, palette, title_log) {
+  result <- build_set(rb3_curve, taswap_code, target_vencs, slug)
   if (is.null(result)) return(invisible(NULL))
   message(sprintf("%s -> refdate=%s", title_log, format(result$ref_today)))
   p <- plot_curves(result$long_df, palette)
@@ -345,7 +280,7 @@ run_one <- function(builder, target_vencs, slug, palette, title_log) {
   message(sprintf("SVG: %s.svg", slug))
 }
 
-run_one(build_pre_snapshot,  TARGET_VENC_PRE,  "juros_prefixado", cores_pre,  "Prefixado")
-run_one(build_ipca_snapshot, TARGET_VENC_IPCA, "juros_ipca",      cores_ipca, "IPCA+")
+run_one("PRE", "T1APR", TARGET_VENC_PRE,  "juros_prefixado", cores_pre,  "Prefixado")
+run_one("DIC", "T1DIC", TARGET_VENC_IPCA, "juros_ipca",      cores_ipca, "IPCA+")
 
 message("build_yield_curves_svg.R OK")
