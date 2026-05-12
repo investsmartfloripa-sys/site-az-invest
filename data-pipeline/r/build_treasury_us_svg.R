@@ -163,7 +163,7 @@ curves <- bind_rows(
   curve_to_long(row_365, snap_label("D-365", row_365)),
   curve_to_long(row_90, snap_label("D-90", row_90)),
   curve_to_long(row_30, snap_label("D-30", row_30)),
-  curve_to_long(row_today, snap_label("Hoje", row_today))
+  curve_to_long(row_today, snap_label("Recente", row_today))
 )
 
 if (!nrow(curves)) {

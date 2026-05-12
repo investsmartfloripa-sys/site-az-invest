@@ -169,28 +169,11 @@ get_pre_curve <- function(ref_date) {
     filter(refdate == as.Date(ref_date))
 }
 
-resolve_pre_curve <- function(target_date, max_lookback_days = 10) {
+resolve_pre_curve <- function(target_date, max_lookback_days = 7) {
+  # Usa direto o TaxaSwap (rb3 falha consistentemente no CI com "Invalid file").
   target_date <- as.Date(target_date)
   for (i in 0:max_lookback_days) {
     candidate_date <- target_date - days(i)
-    yc_try <- tryCatch(
-      get_pre_curve(candidate_date),
-      error = function(e) {
-        message(sprintf("Sem curva PRE para %s (%s)", format(candidate_date), conditionMessage(e)))
-        NULL
-      }
-    )
-    if (!is.null(yc_try) && nrow(yc_try) > 0) {
-      if (i > 0) {
-        message(sprintf(
-          "Usando ultima curva disponivel em %s (fallback de %s).",
-          format(candidate_date), format(target_date)
-        ))
-      }
-      return(list(used_refdate = candidate_date, data = yc_try))
-    }
-
-    # Fallback resiliente: usa arquivo oficial da "Pesquisa por pregao" (TaxaSwap).
     yc_taswap_try <- tryCatch(
       get_pre_curve_from_taswap(candidate_date),
       error = function(e) {
@@ -277,11 +260,11 @@ today_series <- tryCatch(
 if (is.null(today_series)) quit(save = "no", status = 0)
 
 series_30 <- tryCatch(
-  build_curve_series(requested_refdate - days(30), "30d atras"),
+  build_curve_series(requested_refdate - days(30), "D-30"),
   error = function(e) NULL
 )
 series_90 <- tryCatch(
-  build_curve_series(requested_refdate - days(90), "90d atras"),
+  build_curve_series(requested_refdate - days(90), "D-90"),
   error = function(e) NULL
 )
 
@@ -315,7 +298,8 @@ compute_series_data <- function(series_info) {
     select(grid_date, curve, fwd, fwd_raw, fwd_025_up)
 }
 
-series_list <- Filter(Negate(is.null), list(today_series, series_30, series_90))
+# Ordem: D-90 (mais antigo) -> D-30 -> Recente (mais recente, ultima coluna)
+series_list <- Filter(Negate(is.null), list(series_90, series_30, today_series))
 df_plot <- bind_rows(lapply(series_list, compute_series_data)) |>
   mutate(grid_date = as.Date(grid_date))
 
@@ -325,9 +309,9 @@ if (!nrow(df_plot)) {
 }
 
 curve_order <- c(
-  sprintf("Recente (%s)", format(ref_today, "%d/%m/%Y")),
-  if (!is.null(series_30)) sprintf("30d atras (%s)", format(series_30$refdate, "%d/%m/%Y")) else NULL,
-  if (!is.null(series_90)) sprintf("90d atras (%s)", format(series_90$refdate, "%d/%m/%Y")) else NULL
+  if (!is.null(series_90)) sprintf("D-90 (%s)", format(series_90$refdate, "%d/%m/%Y")) else NULL,
+  if (!is.null(series_30)) sprintf("D-30 (%s)", format(series_30$refdate, "%d/%m/%Y")) else NULL,
+  sprintf("Recente (%s)", format(ref_today, "%d/%m/%Y"))
 )
 df_plot <- df_plot |>
   mutate(curve = factor(curve, levels = curve_order))
@@ -342,14 +326,14 @@ y_lab <- y_top + 0.06 * y_rng
 
 pal <- c(
   "Recente" = "#000000",
-  "30d" = "#6f6f6f",
-  "90d" = "#0078fd"
+  "D-30" = "#6f6f6f",
+  "D-90" = "#0078fd"
 )
 pick_color <- function(curve_name) {
   nm <- tolower(curve_name)
   if (grepl("^(recente|hoje)", nm)) return(pal[["Recente"]])
-  if (grepl("^30d", nm)) return(pal[["30d"]])
-  if (grepl("^90d", nm)) return(pal[["90d"]])
+  if (grepl("^d-30|^30d", nm)) return(pal[["D-30"]])
+  if (grepl("^d-90|^90d", nm)) return(pal[["D-90"]])
   "#000000"
 }
 
