@@ -2,7 +2,8 @@
 #
 # Fonte unica: TaxaSwap B3 (download direto do TS{YYMMDD}.ex_)
 #   - T1APR para curva PRE (Prefixado, taxa nominal)
-#   - T1DIC para curva DI x IPCA cupom sujo (IPCA+, taxa real dos NTN-B)
+#   - T1DPL para curva DI x IPCA cupom LIMPO (taxa real dos NTN-B - sem
+#     IPCA acumulado projetado, mais estavel que T1DIC)
 #
 # Curva e' interpolada nos vencimentos-padrao dos titulos do Tesouro Direto.
 # Coluna mais recente sempre por ultimo (direita) tanto na tabela quanto na legenda.
@@ -41,7 +42,7 @@ TARGET_VENC_IPCA <- as.Date(c(
 ))
 
 ## ---------- TaxaSwap B3 ----------
-## T1APR = DI x PRE (Prefixado), T1DIC = DI x IPCA cupom sujo (IPCA+ taxa real)
+## T1APR = DI x PRE (Prefixado), T1DPL = DI x IPCA Cupom Limpo (taxa real NTN-B)
 
 parse_taxa_swap <- function(lines, curve_code_filter) {
   tibble::tibble(line = lines) |>
@@ -231,6 +232,6 @@ run_one <- function(taswap_code, target_vencs, slug, palette, title_log) {
 }
 
 run_one("T1APR", TARGET_VENC_PRE,  "juros_prefixado", cores_pre,  "Prefixado")
-run_one("T1DIC", TARGET_VENC_IPCA, "juros_ipca",      cores_ipca, "IPCA+")
+run_one("T1DPL", TARGET_VENC_IPCA, "juros_ipca",      cores_ipca, "IPCA+")
 
 message("build_yield_curves_svg.R OK")
