@@ -1,0 +1,72 @@
+name: Market data (aba Ativos de mercado)
+
+# Roda 1x/dia, ~22:30 UTC = 19:30 BRT (apos fechamento do pregao B3).
+# Plus dispatch manual para testes.
+on:
+  schedule:
+    - cron: "30 22 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      lookback_years:
+        description: "Anos de historico para download"
+        required: false
+        default: "5"
+      fundamentals:
+        description: "Coletar fundamentos via .info (1=sim, 0=so historico)"
+        required: false
+        default: "1"
+
+concurrency:
+  group: market-data
+  cancel-in-progress: true
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATA_PIPELINE_OUT: ${{ github.workspace }}/data-pipeline/out
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: data-pipeline/python/requirements.txt
+
+      - name: Pip install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r data-pipeline/python/requirements.txt
+
+      - name: Catalogo (JSON estatico)
+        run: python data-pipeline/python/build_market_catalog_json.py --upload
+
+      - name: Historico de precos (5 anos, ~200 ativos)
+        run: |
+          python data-pipeline/python/build_market_history.py \
+            --lookback-years ${{ github.event.inputs.lookback_years || 5 }} \
+            --batch-size 30 \
+            --upload
+
+      - name: Fundamentos (.info via yfinance) - condicional
+        if: ${{ github.event.inputs.fundamentals != '0' }}
+        run: |
+          python data-pipeline/python/build_market_fundamentals.py \
+            --sleep 0.3 \
+            --upload
+        continue-on-error: true
+
+      - name: Upload artefatos (debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-data-${{ github.run_id }}
+          path: data-pipeline/out/market_*.json
+          if-no-files-found: warn
+          retention-days: 7
