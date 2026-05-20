@@ -155,7 +155,7 @@ def agrega_microdado(txt: Path, ano: int) -> dict:
         usecols=["seção", "saldomovimentação", "salário"],
     ):
         total_linhas += len(chunk)
-        chunk["sal"] = pd.to_numeric(chunk["salário"].str.replace(",", ".", regex=False), errors="coerce")
+        chunk["sal"] = pd.to_numeric(chunk["salário"].astype(str).str.replace(",", ".", regex=False), errors="coerce")
         chunk["fxv"] = (chunk["sal"] / sm).apply(_faixa)
         chunk["st"] = chunk["seção"].map(SECAO_PARA_SETOR).fillna("Outros")
 
