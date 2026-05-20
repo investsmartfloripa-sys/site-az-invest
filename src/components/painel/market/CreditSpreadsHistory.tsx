@@ -92,7 +92,7 @@ export function CreditSpreadsHistory({ data }: Props) {
     ? `Atualizado em ${new Date(data.generated_at).toLocaleString("pt-BR")} · Fonte: ${data.source}`
     : "";
 
-  const yLabel = klass === "DI" ? "Spread sobre CDI" : "Taxa real (IPCA+)";
+  const yLabel = klass === "DI" ? "Spread sobre CDI" : "Spread sobre NTN-B";
 
   return (
     <MarketCard
@@ -263,9 +263,12 @@ export function CreditSpreadsHistory({ data }: Props) {
         </div>
 
         <p className="text-xs italic text-zinc-500">
-          Para classe <strong>DI/CDI</strong>, a taxa indicativa publicada pela ANBIMA já é o spread
-          sobre o CDI. Para <strong>IPCA+</strong>, é a taxa real (cupom acima do IPCA). Mediana e
-          quartis são calculados sobre todos os papéis ativos em cada dia.
+          Para <strong>DI/CDI</strong>, o spread é a Taxa Indicativa ANBIMA (que por convenção já
+          mede o cupom sobre o CDI). Para <strong>IPCA+</strong>, o spread é calculado papel-a-papel
+          como{" "}
+          <code className="rounded bg-zinc-100 px-1">Taxa Indicativa do papel − Taxa NTN-B benchmark</code>
+          {" "}(a NTN-B de referência é definida pelo próprio ANBIMA na publicação diária). Mediana e
+          quartis agregam todos os papéis ativos em cada dia.
         </p>
       </div>
     </MarketCard>

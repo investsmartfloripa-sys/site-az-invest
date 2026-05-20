@@ -114,7 +114,10 @@ def parse_date_dmy(s: str) -> Optional[str]:
 def parse_deb_content(content: str, data_ref_iso: str) -> List[Dict]:
     """Parseia conteudo do db{}.txt. Retorna lista de dicts.
 
-    Cada dict: { codigo, indexador, classe, taxa_indicativa, duration }
+    Cada dict: { codigo, indexador, classe, taxa_indicativa, duration, ref_ntnb }
+    `ref_ntnb` eh a data de vencimento da NTN-B usada como benchmark
+    pelo papel IPCA+ (formato YYYY-MM-DD). None se nao se aplicar (DI/PRE)
+    ou se o ANBIMA nao publicou a referencia.
     """
     rows: List[Dict] = []
     lines = content.splitlines()
@@ -141,6 +144,8 @@ def parse_deb_content(content: str, data_ref_iso: str) -> List[Dict]:
             continue
         # Duration vem em dias (string com virgula); converte
         duration = parse_decimal_br(parts[12]) if len(parts) > 12 else None
+        # Referencia NTN-B (coluna 14) — vem como DD/MM/YYYY para papeis IPCA+
+        ref_ntnb = parse_date_dmy(parts[14]) if len(parts) > 14 else None
 
         rows.append({
             "data_ref": data_ref_iso,
@@ -149,22 +154,105 @@ def parse_deb_content(content: str, data_ref_iso: str) -> List[Dict]:
             "classe": classe,
             "taxa_indicativa": taxa_ind,
             "duration_days": duration,
+            "ref_ntnb": ref_ntnb,
         })
     return rows
 
 
-def aggregate_daily_stats(rows_by_day: Dict[str, List[Dict]]) -> Dict[str, Dict[str, List]]:
-    """Para cada dia, agrega por classe: mediana, p25, p75, n."""
+def build_ntnb_index(treasury_history: Optional[Dict]) -> Dict[str, Dict[str, float]]:
+    """Constroi indice {vencimento_iso: {data_ref_iso: taxa}} a partir do
+    treasury_history.json (categories.IPCA.series). Retorna dict vazio se input
+    invalido.
+    """
+    if not treasury_history or not isinstance(treasury_history, dict):
+        return {}
+    ipca = (treasury_history.get("categories") or {}).get("IPCA") or {}
+    series = ipca.get("series") or {}
+    idx: Dict[str, Dict[str, float]] = {}
+    for venc, points in series.items():
+        m: Dict[str, float] = {}
+        for entry in points:
+            if isinstance(entry, list) and len(entry) >= 2:
+                try:
+                    m[entry[0]] = float(entry[1])
+                except (TypeError, ValueError):
+                    continue
+        if m:
+            idx[venc] = m
+    return idx
+
+
+def lookup_ntnb_rate(
+    ntnb_index: Dict[str, Dict[str, float]],
+    ref_ntnb: str,
+    data_ref: str,
+    max_back_days: int = 30,
+) -> Optional[float]:
+    """Busca a taxa da NTN-B benchmark numa data. Se nao houver cotacao exata,
+    tenta forward-fill ate `max_back_days` dias uteis pra tras (cobre feriados,
+    fins de semana, lacunas curtas no historico).
+    """
+    series = ntnb_index.get(ref_ntnb)
+    if not series:
+        return None
+    if data_ref in series:
+        return series[data_ref]
+    from datetime import datetime, timedelta
+    try:
+        d = datetime.strptime(data_ref, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+    for back in range(1, max_back_days + 1):
+        candidate = (d - timedelta(days=back)).isoformat()
+        if candidate in series:
+            return series[candidate]
+    return None
+
+
+def aggregate_daily_stats(
+    rows_by_day: Dict[str, List[Dict]],
+    ntnb_index: Dict[str, Dict[str, float]],
+) -> Dict[str, Dict[str, List]]:
+    """Para cada dia, agrega por classe: mediana, p25, p75, n.
+
+    DI: usa Taxa Indicativa direto (ja eh spread sobre CDI por convencao ANBIMA).
+    IPCA: calcula spread real = Taxa Indicativa - Taxa NTN-B benchmark naquele dia.
+          So inclui papeis com referencia NTN-B preenchida e cotacao disponivel.
+    PRE: usa Taxa Indicativa direto.
+    """
     out: Dict[str, Dict[str, List]] = {
         "DI":   {"median": [], "p25": [], "p75": [], "n": []},
         "IPCA": {"median": [], "p25": [], "p75": [], "n": []},
         "PRE":  {"median": [], "p25": [], "p75": [], "n": []},
     }
+    skipped_ipca = 0
+    matched_ipca = 0
+
     dates_sorted = sorted(rows_by_day.keys())
     for d in dates_sorted:
         by_class: Dict[str, List[float]] = {"DI": [], "IPCA": [], "PRE": []}
         for r in rows_by_day[d]:
-            by_class[r["classe"]].append(r["taxa_indicativa"])
+            classe = r["classe"]
+            if classe == "IPCA":
+                # Precisa de NTN-B benchmark + cotacao disponivel
+                ref = r.get("ref_ntnb")
+                if not ref:
+                    skipped_ipca += 1
+                    continue
+                ntnb_rate = lookup_ntnb_rate(ntnb_index, ref, d)
+                if ntnb_rate is None:
+                    skipped_ipca += 1
+                    continue
+                spread = r["taxa_indicativa"] - ntnb_rate
+                # Filtro de sanidade: spread fora de [-2, 15]% provavelmente eh erro
+                if -2.0 <= spread <= 15.0:
+                    by_class["IPCA"].append(spread)
+                    matched_ipca += 1
+                else:
+                    skipped_ipca += 1
+            else:
+                by_class[classe].append(r["taxa_indicativa"])
+
         for cls, vals in by_class.items():
             if len(vals) < 3:
                 # Poucos pontos: pula esse dia/classe
@@ -180,6 +268,8 @@ def aggregate_daily_stats(rows_by_day: Dict[str, List[Dict]]) -> Dict[str, Dict[
             out[cls]["p25"].append([d, round(p25, 4)])
             out[cls]["p75"].append([d, round(p75, 4)])
             out[cls]["n"].append([d, n])
+
+    print(f"[deb] IPCA spread match: {matched_ipca} ok, {skipped_ipca} sem NTN-B ou fora de range")
     return out
 
 
@@ -209,25 +299,35 @@ def build_deb_history(business_days: int = 130, sleep_s: float = 0.15) -> Dict:
         time.sleep(sleep_s)
 
     print(f"[deb] OK {ok_count} dias, FAIL {fail_count} dias")
-    stats = aggregate_daily_stats(rows_by_day)
+
+    # Carrega historico de NTN-B (treasury_history.json do Blob) para calcular
+    # spread real dos papeis IPCA+ contra a NTN-B benchmark.
+    print("[deb] carregando treasury_history.json do Blob para cruzar NTN-B...")
+    treasury = blob_download_json("data/treasury_history.json")
+    ntnb_index = build_ntnb_index(treasury)
+    n_vencs_ntnb = len(ntnb_index)
+    print(f"[deb] NTN-B index: {n_vencs_ntnb} vencimentos disponiveis")
+
+    stats = aggregate_daily_stats(rows_by_day, ntnb_index)
 
     last_data_date = max(rows_by_day.keys(), default="")
 
     classes_out = {
-        "DI":   {"label": "DI / CDI",  "series": stats["DI"]},
-        "IPCA": {"label": "IPCA+",     "series": stats["IPCA"]},
-        "PRE":  {"label": "Prefixado", "series": stats["PRE"]},
+        "DI":   {"label": "DI / CDI (spread sobre CDI)",       "series": stats["DI"]},
+        "IPCA": {"label": "IPCA+ (spread sobre NTN-B)",        "series": stats["IPCA"]},
+        "PRE":  {"label": "Prefixado (taxa nominal)",          "series": stats["PRE"]},
     }
 
     return {
         "status": "ok" if ok_count > 0 else "error",
         "generated_at": datetime.now(tz=timezone.utc).isoformat(),
-        "source": "ANBIMA - Mercado Secundario Debentures",
-        "note": "Taxa indicativa agregada: DI = spread sobre CDI; IPCA = taxa real; PRE = nominal",
+        "source": "ANBIMA - Mercado Secundario Debentures (DI) + ANBIMA TPF / Tesouro Transparente (NTN-B benchmark)",
+        "note": "DI = spread sobre CDI (Taxa Indicativa direta); IPCA = spread = Taxa Indicativa - Taxa NTN-B benchmark do papel; PRE = taxa nominal",
         "lookback_business_days": business_days,
         "days_loaded": ok_count,
         "days_failed": fail_count,
         "last_data_date": last_data_date,
+        "ntnb_vencs_used": n_vencs_ntnb,
         "classes": classes_out,
     }
 
@@ -244,6 +344,16 @@ def merge_credit_with_existing(new_payload: Dict, existing: Optional[Dict]) -> D
 
     existing_classes = existing.get("classes") or {}
     new_classes = new_payload.get("classes") or {}
+
+    # Auto-migracao de formato: se a serie IPCA existente nao foi gerada com o
+    # calculo de spread vs NTN-B (label antigo, sem "spread sobre NTN-B"),
+    # descarta os dados velhos pra nao misturar taxa absoluta com spread.
+    old_ipca_label = (existing_classes.get("IPCA") or {}).get("label", "") or ""
+    legacy_ipca_format = bool(old_ipca_label) and "spread sobre NTN-B" not in old_ipca_label
+    if legacy_ipca_format:
+        print(f"[deb] migrando formato: IPCA antigo (label='{old_ipca_label}') descartado pra "
+              f"nao misturar taxa absoluta com spread.")
+        existing_classes = {k: v for k, v in existing_classes.items() if k != "IPCA"}
 
     merged_classes: Dict[str, Dict] = {}
     all_keys = set(new_classes.keys()) | set(existing_classes.keys())
