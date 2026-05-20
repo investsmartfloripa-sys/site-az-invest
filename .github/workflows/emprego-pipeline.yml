@@ -1,0 +1,78 @@
+name: Emprego pipeline (PNAD + CAGED)
+
+on:
+  schedule:
+    # PNAD trimestral — IBGE divulga dia 16 às 9h (BRT = UTC-3); rodamos 10h BRT pra garantir.
+    - cron: "0 13 16 * *"
+    # CAGED mensal — MTE divulga entre dias 25-30; rodamos diariamente 25-30 às 10h BRT.
+    # O job CAGED é idempotente (reprocessa últimos 6 meses, capturando revisões).
+    - cron: "0 13 25-30 * *"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Qual job rodar manualmente"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - all
+          - pnad
+          - caged
+          - caged-backfill
+
+concurrency:
+  group: emprego-pipeline
+  cancel-in-progress: true
+
+jobs:
+  pnad:
+    # roda apenas no cron do dia 16 ou quando manual com job=all|pnad
+    if: |
+      github.event_name == 'schedule' && github.event.schedule == '0 13 16 * *'
+      || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'all' || github.event.inputs.job == 'pnad'))
+    runs-on: ubuntu-latest
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: data-pipeline/python/requirements.txt
+      - name: Pip install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r data-pipeline/python/requirements.txt
+      - name: Build PNAD JSON e upload
+        run: python data-pipeline/python/build_emprego_pnad.py --upload
+
+  caged:
+    # roda nos crons 25-30 ou quando manual com job=all|caged|caged-backfill
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '0 13 25-30 * *')
+      || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'all' || github.event.inputs.job == 'caged' || github.event.inputs.job == 'caged-backfill'))
+    runs-on: ubuntu-latest
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      NEXT_PUBLIC_BLOB_BASE_URL: ${{ vars.NEXT_PUBLIC_BLOB_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: data-pipeline/python/requirements.txt
+      - name: Pip install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r data-pipeline/python/requirements.txt
+      - name: Build CAGED total (IPEADATA) e upload
+        run: python data-pipeline/python/build_emprego_caged_total.py --upload
+      - name: Build CAGED quebras (microdados) e upload
+        run: |
+          if [ "${{ github.event.inputs.job }}" = "caged-backfill" ]; then
+            python data-pipeline/python/build_emprego_caged_quebras.py --backfill --upload
+          else
+            python data-pipeline/python/build_emprego_caged_quebras.py --upload
+          fi
