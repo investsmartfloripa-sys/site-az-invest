@@ -302,8 +302,12 @@ def main() -> None:
 
     print("== Focus anuais ==")
     ano_atual = int(ipca_cheio["mes_recente"][:4])
-    focus = focus_anuais(ano_atual)
-    print(f"  Anos: {sorted(focus.keys())} | pontos por ano: {[len(focus[a]) for a in sorted(focus.keys())]}")
+    try:
+        focus = focus_anuais(ano_atual)
+        print(f"  Anos: {sorted(focus.keys())} | pontos por ano: {[len(focus[a]) for a in sorted(focus.keys())]}")
+    except Exception as e:
+        print(f"  [WARN] Focus indisponivel ({e}). Pipeline continua sem Focus.", file=sys.stderr)
+        focus = {}
 
     print("== Maiores influências do mês ==")
     inf = maiores_influencias(7060, ipca_cheio["mes_recente"], "63", "66")
@@ -337,11 +341,4 @@ def main() -> None:
             from shared.blob_upload import maybe_upload_json  # noqa: E402
             maybe_upload_json(out_file, BLOB_PATH)
         except Exception as e:  # noqa: BLE001
-            print(f"[upload] FALHOU: {e}", file=sys.stderr)
-            sys.exit(1)
-    else:
-        print("[upload] SKIP (use --upload pra subir pro Blob)")
-
-
-if __name__ == "__main__":
-    main()
+            print(f"[upload] FALHOU: 
