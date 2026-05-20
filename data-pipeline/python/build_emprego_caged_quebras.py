@@ -207,6 +207,25 @@ def carrega_blob_anterior() -> dict | None:
         return None
 
 
+def _salva_e_upload_parcial(serie_existente: dict, out_file: Path) -> None:
+    """Salva JSON parcial e faz upload pro Blob (usado em checkpoints de backfill)."""
+    serie = [serie_existente[k] for k in sorted(serie_existente.keys())]
+    out = {
+        "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "mes_recente": serie[-1]["mes"] if serie else "",
+        "serie": serie,
+        "metadata": {
+            "fonte": "MTE/PDET — microdados Novo CAGED (FTP), agregação local",
+            "nota": "Backfill em progresso — checkpoint intermediário.",
+            "cnae_para_setor": SECAO_PARA_SETOR,
+        },
+    }
+    out_file.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
+    sys.path.insert(0, str(HERE))
+    from shared.blob_upload import maybe_upload_json
+    maybe_upload_json(out_file, BLOB_PATH)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Build do JSON Painel Emprego — CAGED quebras")
     ap.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
@@ -249,11 +268,15 @@ def main() -> None:
         for item in anterior["serie"]:
             serie_existente[item["mes"]] = item
 
-    # Processa cada mês
+    # Processa cada mês — backfill resiliente: skipa já processados, upload incremental
     scratch = _scratch_dir()
     print(f"  scratch: {scratch}")
+    processados_no_run = 0
     for ano, mes in meses:
         anomes = f"{ano}-{mes:02d}"
+        if anomes in serie_existente and args.backfill:
+            print(f"--- {anomes} já processado, pulando ---")
+            continue
         print(f"\n--- {anomes} ---")
         txt = baixa_e_extrai(ano, mes, scratch)
         if txt is None:
@@ -262,6 +285,15 @@ def main() -> None:
         agg = agrega_microdado(txt, ano)
         agg["mes"] = anomes
         serie_existente[anomes] = agg
+        processados_no_run += 1
+
+        # Upload incremental a cada 10 meses pra proteger progresso de backfills longos
+        if args.upload and args.backfill and processados_no_run % 10 == 0:
+            try:
+                _salva_e_upload_parcial(serie_existente, out_file)
+                print(f"  [checkpoint] {processados_no_run} meses processados, upload incremental OK")
+            except Exception as e:
+                print(f"  [checkpoint] upload incremental falhou: {e}", file=sys.stderr)
 
     # Limpa scratch
     shutil.rmtree(scratch, ignore_errors=True)
