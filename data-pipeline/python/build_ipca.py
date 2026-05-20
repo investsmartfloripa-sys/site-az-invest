@@ -341,4 +341,12 @@ def main() -> None:
             from shared.blob_upload import maybe_upload_json  # noqa: E402
             maybe_upload_json(out_file, BLOB_PATH)
         except Exception as e:  # noqa: BLE001
-            print(f"[upload] FALHOU: 
+        except Exception as e:  # noqa: BLE001
+            print(f"[upload] FALHOU: {e}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        print("[upload] SKIP (use --upload pra subir pro Blob)")
+
+
+if __name__ == "__main__":
+    main()
