@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export const revalidate = 21600; // 6h
 
 export default async function PainelCagedPage() {
-  const { total, quebras } = await loadCagedFull();
+  const { total, quebras, ipca } = await loadCagedFull();
 
   if (!total) {
     return (
@@ -22,5 +22,5 @@ export default async function PainelCagedPage() {
     );
   }
 
-  return <CagedDashboard total={total} quebras={quebras} />;
+  return <CagedDashboard total={total} quebras={quebras} ipca={ipca} />;
 }
