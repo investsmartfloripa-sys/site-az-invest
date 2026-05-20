@@ -53,6 +53,7 @@ import requests
 
 sys.path.append(str(Path(__file__).parent))
 from shared.blob_upload import maybe_upload_json  # noqa: E402
+from shared.blob_download import download_json as blob_download_json  # noqa: E402
 
 
 ANBIMA_TPF_URL = "https://www.anbima.com.br/informacoes/merc-sec/arqs/ms{yymmdd}.txt"
@@ -215,6 +216,68 @@ def filter_relevant_vencimentos(series_by_venc: Dict[str, List[Tuple[str, float]
     return {v: s for v, s in series_by_venc.items() if len(s) >= min_observations}
 
 
+def merge_with_existing(new_payload: Dict, existing: Optional[Dict]) -> Dict:
+    """Merge incremental: combina series do payload novo com o JSON ja existente
+    (lido do Blob). Garante que o backfill historico (Tesouro Transparente) e
+    dias antigos da ANBIMA acumulados anteriormente NAO sejam perdidos.
+
+    Regra: por (categoria, vencimento), uniao por data_ref. Em caso de mesma
+    data em ambos, prevalece o NOVO (mais autoritativo da ANBIMA do dia).
+    """
+    if not existing or not isinstance(existing, dict):
+        return new_payload
+
+    existing_cats = (existing.get("categories") or {})
+    merged_cats: Dict[str, Dict] = {}
+
+    all_cat_keys = set(new_payload.get("categories", {}).keys()) | set(existing_cats.keys())
+    for cat in all_cat_keys:
+        new_cat = (new_payload.get("categories") or {}).get(cat, {})
+        old_cat = existing_cats.get(cat, {})
+
+        new_series: Dict[str, List[List]] = new_cat.get("series", {})
+        old_series: Dict[str, List[List]] = old_cat.get("series", {})
+
+        merged_series: Dict[str, List[List]] = {}
+        all_vencs = set(new_series.keys()) | set(old_series.keys())
+        for venc in all_vencs:
+            by_date: Dict[str, float] = {}
+            # 1. Velho primeiro (passa a base)
+            for entry in old_series.get(venc, []):
+                if isinstance(entry, list) and len(entry) >= 2:
+                    by_date[entry[0]] = entry[1]
+            # 2. Novo sobrescreve datas que coincidem
+            for entry in new_series.get(venc, []):
+                if isinstance(entry, list) and len(entry) >= 2:
+                    by_date[entry[0]] = entry[1]
+            if not by_date:
+                continue
+            merged_series[venc] = [[d, v] for d, v in sorted(by_date.items())]
+
+        vencimentos_sorted = sorted(merged_series.keys())
+        merged_cats[cat] = {
+            "label": new_cat.get("label") or old_cat.get("label") or cat,
+            "vencimentos": vencimentos_sorted,
+            "series": merged_series,
+        }
+
+    # Preserva metadados uteis do payload novo, indica que houve merge
+    out = dict(new_payload)
+    out["categories"] = merged_cats
+    # Data mais recente entre new e old
+    new_last = new_payload.get("last_data_date") or ""
+    old_last = existing.get("last_data_date") or ""
+    out["last_data_date"] = max(new_last, old_last)
+    # Indica origem combinada se o existing tinha source backfill
+    old_source = existing.get("source") or ""
+    new_source = new_payload.get("source") or ""
+    if "Tesouro" in old_source and "Tesouro" not in new_source:
+        out["source"] = f"{new_source} + {old_source}"
+    elif old_source and old_source != new_source and "+" in old_source:
+        out["source"] = old_source  # ja era combinada, preserva
+    return out
+
+
 def build_tpf_history(business_days: int = 130, sleep_s: float = 0.1) -> Dict:
     days = previous_business_days(business_days)
     print(f"[tpf] baixando {len(days)} dias uteis de {days[0]} a {days[-1]}")
@@ -273,6 +336,8 @@ def main() -> int:
     ap.add_argument("--sleep", type=float, default=0.1)
     ap.add_argument("--out-dir", default="data-pipeline/out")
     ap.add_argument("--upload", action="store_true")
+    ap.add_argument("--no-merge", action="store_true",
+                    help="Desliga merge incremental com Blob (rebuild from scratch — usar com cuidado)")
     args = ap.parse_args()
 
     out_dir = Path(args.out_dir)
@@ -280,6 +345,24 @@ def main() -> int:
     out_path = out_dir / "treasury_history.json"
 
     payload = build_tpf_history(business_days=args.business_days, sleep_s=args.sleep)
+
+    # Merge incremental: carrega o JSON ja existente no Blob e mescla as series.
+    # Sem isso, o cron diario sobrescreveria o backfill historico (Tesouro Transparente)
+    # e perderia dias antigos da ANBIMA que ja foram acumulados.
+    if not args.no_merge:
+        print("[tpf] merge incremental: lendo data/treasury_history.json existente do Blob...")
+        existing = blob_download_json("data/treasury_history.json")
+        if existing:
+            old_obs = sum(len(s) for c in (existing.get("categories") or {}).values()
+                          for s in (c.get("series") or {}).values())
+            print(f"[tpf]   existing: {old_obs} observacoes, last_data={existing.get('last_data_date')}")
+            payload = merge_with_existing(payload, existing)
+            new_obs = sum(len(s) for c in payload["categories"].values()
+                          for s in c["series"].values())
+            print(f"[tpf]   apos merge: {new_obs} observacoes (delta {new_obs - old_obs})")
+        else:
+            print("[tpf]   nenhum JSON existente no Blob — primeira execucao")
+
     out_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     size_kb = out_path.stat().st_size / 1024
     n_pre = len(payload["categories"].get("PRE", {}).get("vencimentos", []))

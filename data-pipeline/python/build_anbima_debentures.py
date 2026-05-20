@@ -55,6 +55,7 @@ from build_anbima_tpf import (  # noqa: E402
     previous_business_days,
 )
 from shared.blob_upload import maybe_upload_json  # noqa: E402
+from shared.blob_download import download_json as blob_download_json  # noqa: E402
 
 
 ANBIMA_DEB_URL = "https://www.anbima.com.br/informacoes/merc-sec-debentures/arqs/db{yymmdd}.txt"
@@ -231,12 +232,61 @@ def build_deb_history(business_days: int = 130, sleep_s: float = 0.15) -> Dict:
     }
 
 
+def merge_credit_with_existing(new_payload: Dict, existing: Optional[Dict]) -> Dict:
+    """Merge incremental: combina series de cada classe (DI/IPCA/PRE) com o JSON
+    ja existente no Blob, evitando perder dias antigos quando ANBIMA tira do servidor.
+
+    Cada classe tem series.{median, p25, p75, n}, cada uma e lista de [data, valor].
+    Union por data; novo sobrescreve old quando coincidem.
+    """
+    if not existing or not isinstance(existing, dict):
+        return new_payload
+
+    existing_classes = existing.get("classes") or {}
+    new_classes = new_payload.get("classes") or {}
+
+    merged_classes: Dict[str, Dict] = {}
+    all_keys = set(new_classes.keys()) | set(existing_classes.keys())
+
+    for cls in all_keys:
+        new_cls = new_classes.get(cls, {})
+        old_cls = existing_classes.get(cls, {})
+        new_series = new_cls.get("series") or {}
+        old_series = old_cls.get("series") or {}
+
+        merged_series: Dict[str, List[List]] = {}
+        for metric in ("median", "p25", "p75", "n"):
+            by_date: Dict[str, float] = {}
+            for entry in old_series.get(metric, []) or []:
+                if isinstance(entry, list) and len(entry) >= 2:
+                    by_date[entry[0]] = entry[1]
+            for entry in new_series.get(metric, []) or []:
+                if isinstance(entry, list) and len(entry) >= 2:
+                    by_date[entry[0]] = entry[1]
+            merged_series[metric] = [[d, v] for d, v in sorted(by_date.items())]
+
+        merged_classes[cls] = {
+            "label": new_cls.get("label") or old_cls.get("label") or cls,
+            "series": merged_series,
+        }
+
+    out = dict(new_payload)
+    out["classes"] = merged_classes
+    out["last_data_date"] = max(
+        new_payload.get("last_data_date") or "",
+        existing.get("last_data_date") or "",
+    )
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--business-days", type=int, default=130)
     ap.add_argument("--sleep", type=float, default=0.15)
     ap.add_argument("--out-dir", default="data-pipeline/out")
     ap.add_argument("--upload", action="store_true")
+    ap.add_argument("--no-merge", action="store_true",
+                    help="Desliga merge incremental com Blob (rebuild from scratch)")
     args = ap.parse_args()
 
     out_dir = Path(args.out_dir)
@@ -244,6 +294,19 @@ def main() -> int:
     out_path = out_dir / "credit_spreads_history.json"
 
     payload = build_deb_history(business_days=args.business_days, sleep_s=args.sleep)
+
+    if not args.no_merge:
+        print("[deb] merge incremental: lendo data/credit_spreads_history.json existente do Blob...")
+        existing = blob_download_json("data/credit_spreads_history.json")
+        if existing:
+            old_obs = sum(len(s.get("series", {}).get("median", []) or []) for s in (existing.get("classes") or {}).values())
+            print(f"[deb]   existing: {old_obs} obs (mediana), last_data={existing.get('last_data_date')}")
+            payload = merge_credit_with_existing(payload, existing)
+            new_obs = sum(len(c["series"]["median"]) for c in payload["classes"].values())
+            print(f"[deb]   apos merge: {new_obs} obs (mediana), delta {new_obs - old_obs}")
+        else:
+            print("[deb]   nenhum JSON existente no Blob — primeira execucao")
+
     out_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     size_kb = out_path.stat().st_size / 1024
     print(f"[deb] Gerado {out_path} ({size_kb:.1f} KB)")
