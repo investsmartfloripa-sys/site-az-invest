@@ -1,13 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { navItems } from "@/data/home";
-import { getSession } from "@/lib/auth";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export async function Header() {
-  const session = await getSession();
-  const loginHref = session ? "/area-restrita/painel" : "/area-restrita/login";
-  const loginLabel = session ? "Painel" : "Login";
   const whatsappHref = "https://wa.me/5548999386708";
 
   return (
@@ -35,10 +31,10 @@ export async function Header() {
             WhatsApp
           </a>
           <Link
-            href={loginHref}
+            href="/area-restrita/login"
             className="rounded-full bg-[#FF5713] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#d94a10]"
           >
-            {loginLabel}
+            Login
           </Link>
         </div>
       </div>
@@ -58,6 +54,10 @@ export async function Header() {
       </nav>
 
       <div className="h-1 bg-[#027DFC]" />
+    </header>
+  );
+}
+v className="h-1 bg-[#027DFC]" />
     </header>
   );
 }

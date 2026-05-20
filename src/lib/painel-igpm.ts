@@ -104,3 +104,6 @@ async function fetchBlobJson<T>(path: string): Promise<T | null> {
 export async function loadIgpmData(): Promise<IgpmData | null> {
   return fetchBlobJson<IgpmData>("data/igpm.json");
 }
+ction loadIgpmData(): Promise<IgpmData | null> {
+  return fetchBlobJson<IgpmData>("data/igpm.json");
+}

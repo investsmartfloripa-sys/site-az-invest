@@ -393,3 +393,13 @@ export function IgpmDashboard({ data }: { data: IgpmData }) {
     </div>
   );
 }
+ome} nome={nome} sub={sub} cor={CORES_COMP[nome] ?? "#132960"} />
+        ))}
+
+      <footer className="border-t border-zinc-200 pt-4 text-xs text-zinc-500">
+        Fontes: FGV (IGP-M e componentes IPA-M, IPC-M, INCC-M) via BCB SGS códigos 189/192/7450/7456/7465. IPCA pra
+        comparação cruzada: 433/13522. Dados gerados em {data.gerado_em}.
+      </footer>
+    </div>
+  );
+}

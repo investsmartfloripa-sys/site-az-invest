@@ -90,3 +90,5 @@ export async function getRendaFixaData() {
   ]);
   return { treasury, credit };
 }
+History>("data/credit_spreads_history.json");
+}
