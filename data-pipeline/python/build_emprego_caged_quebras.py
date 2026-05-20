@@ -212,7 +212,7 @@ def main() -> None:
     ap.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
     ap.add_argument("--upload", action="store_true")
     ap.add_argument("--meses-atras", type=int, default=3,
-                    help="Quantos meses reprocessar a cada run (default 6, captura ~95%% das revisões)")
+                    help="Quantos meses reprocessar a cada run (default 3, captura ~80%% das revisões; CAGED tem cauda longa de FOR)")
     ap.add_argument("--backfill", action="store_true",
                     help="Backfill total desde jan/2020 (uso pontual; ignora --meses-atras)")
     ap.add_argument("--no-merge", action="store_true",
