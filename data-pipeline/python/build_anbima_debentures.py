@@ -142,6 +142,8 @@ def parse_deb_content(content: str, data_ref_iso: str) -> List[Dict]:
         taxa_ind = parse_decimal_br(parts[6])
         if taxa_ind is None:
             continue
+        # PU (coluna 10) — valor de mercado em reais por debenture, usado para ponderacao
+        pu = parse_decimal_br(parts[10]) if len(parts) > 10 else None
         # Duration vem em dias (string com virgula); converte
         duration = parse_decimal_br(parts[12]) if len(parts) > 12 else None
         # Referencia NTN-B (coluna 14) — vem como DD/MM/YYYY para papeis IPCA+
@@ -153,6 +155,7 @@ def parse_deb_content(content: str, data_ref_iso: str) -> List[Dict]:
             "indexador": indexador,
             "classe": classe,
             "taxa_indicativa": taxa_ind,
+            "pu": pu,
             "duration_days": duration,
             "ref_ntnb": ref_ntnb,
         })
@@ -221,18 +224,20 @@ def aggregate_daily_stats(
     PRE: usa Taxa Indicativa direto.
     """
     out: Dict[str, Dict[str, List]] = {
-        "DI":   {"median": [], "p25": [], "p75": [], "n": [], "pct_neg": [], "pct_mid": [], "pct_high": []},
-        "IPCA": {"median": [], "p25": [], "p75": [], "n": [], "pct_neg": [], "pct_mid": [], "pct_high": []},
-        "PRE":  {"median": [], "p25": [], "p75": [], "n": [], "pct_neg": [], "pct_mid": [], "pct_high": []},
+        "DI":   {"median": [], "p25": [], "p75": [], "n": [], "pct_neg": [], "pct_mid": [], "pct_high": [], "mean_weighted": []},
+        "IPCA": {"median": [], "p25": [], "p75": [], "n": [], "pct_neg": [], "pct_mid": [], "pct_high": [], "mean_weighted": []},
+        "PRE":  {"median": [], "p25": [], "p75": [], "n": [], "pct_neg": [], "pct_mid": [], "pct_high": [], "mean_weighted": []},
     }
     skipped_ipca = 0
     matched_ipca = 0
 
     dates_sorted = sorted(rows_by_day.keys())
     for d in dates_sorted:
-        by_class: Dict[str, List[float]] = {"DI": [], "IPCA": [], "PRE": []}
+        # Listas paralelas (spread, pu) — ignora papeis sem PU para o ponderado
+        spreads_pu: Dict[str, List[Tuple[float, Optional[float]]]] = {"DI": [], "IPCA": [], "PRE": []}
         for r in rows_by_day[d]:
             classe = r["classe"]
+            pu = r.get("pu")
             if classe == "IPCA":
                 # Precisa de NTN-B benchmark + cotacao disponivel
                 ref = r.get("ref_ntnb")
@@ -246,17 +251,17 @@ def aggregate_daily_stats(
                 spread = r["taxa_indicativa"] - ntnb_rate
                 # Filtro de sanidade: spread fora de [-2, 15]% provavelmente eh erro
                 if -2.0 <= spread <= 15.0:
-                    by_class["IPCA"].append(spread)
+                    spreads_pu["IPCA"].append((spread, pu))
                     matched_ipca += 1
                 else:
                     skipped_ipca += 1
             else:
-                by_class[classe].append(r["taxa_indicativa"])
+                spreads_pu[classe].append((r["taxa_indicativa"], pu))
 
-        for cls, vals in by_class.items():
-            if len(vals) < 3:
-                # Poucos pontos: pula esse dia/classe
+        for cls, entries in spreads_pu.items():
+            if len(entries) < 3:
                 continue
+            vals = [v for v, _ in entries]
             vals_sorted = sorted(vals)
             median = statistics.median(vals_sorted)
             n = len(vals_sorted)
@@ -272,6 +277,16 @@ def aggregate_daily_stats(
             pct_mid = round(100.0 * n_mid / n, 1)
             pct_high = round(100.0 * n_high / n, 1)
 
+            # Spread medio ponderado por PU (medida que o mercado usa)
+            wsum = 0.0
+            wtot = 0.0
+            for v, pu in entries:
+                if pu is None or pu <= 0:
+                    continue
+                wsum += v * pu
+                wtot += pu
+            mean_weighted = round(wsum / wtot, 4) if wtot > 0 else None
+
             out[cls]["median"].append([d, round(median, 4)])
             out[cls]["p25"].append([d, round(p25, 4)])
             out[cls]["p75"].append([d, round(p75, 4)])
@@ -279,6 +294,8 @@ def aggregate_daily_stats(
             out[cls]["pct_neg"].append([d, pct_neg])
             out[cls]["pct_mid"].append([d, pct_mid])
             out[cls]["pct_high"].append([d, pct_high])
+            if mean_weighted is not None:
+                out[cls]["mean_weighted"].append([d, mean_weighted])
 
     print(f"[deb] IPCA spread match: {matched_ipca} ok, {skipped_ipca} sem NTN-B ou fora de range")
     return out
@@ -376,7 +393,7 @@ def merge_credit_with_existing(new_payload: Dict, existing: Optional[Dict]) -> D
         old_series = old_cls.get("series") or {}
 
         merged_series: Dict[str, List[List]] = {}
-        for metric in ("median", "p25", "p75", "n", "pct_neg", "pct_mid", "pct_high"):
+        for metric in ("median", "p25", "p75", "n", "pct_neg", "pct_mid", "pct_high", "mean_weighted"):
             by_date: Dict[str, float] = {}
             for entry in old_series.get(metric, []) or []:
                 if isinstance(entry, list) and len(entry) >= 2:

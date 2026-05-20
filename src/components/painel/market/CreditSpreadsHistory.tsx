@@ -97,6 +97,9 @@ export function CreditSpreadsHistory({ data }: Props) {
     typeof lastPctMid === "number" &&
     typeof lastPctHigh === "number";
 
+  // Media ponderada por PU (medida usada pelas mesas)
+  const lastWeighted = c.series.mean_weighted?.[c.series.mean_weighted.length - 1]?.[1] ?? null;
+
   const updatedTxt = data.generated_at
     ? `Atualizado em ${new Date(data.generated_at).toLocaleString("pt-BR")} · Fonte: ${data.source}`
     : "";
@@ -243,6 +246,14 @@ export function CreditSpreadsHistory({ data }: Props) {
                 </dd>
               </div>
               <div className="flex items-center justify-between border-t border-zinc-200 pt-2">
+                <dt className="text-zinc-600" title="Σ(spread × PU) / Σ(PU). Métrica usada por mesas de operação porque dá mais peso a papéis com mais volume de mercado.">
+                  Média ponderada (PU)
+                </dt>
+                <dd className="font-semibold tabular-nums text-[#027DFC]">
+                  {lastWeighted != null ? `${lastWeighted.toFixed(2)}%` : "—"}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between">
                 <dt className="text-zinc-600">Mediana janela</dt>
                 <dd className="font-semibold tabular-nums text-[#132960]">
                   {medianVal != null ? `${medianVal.toFixed(2)}%` : "—"}

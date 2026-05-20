@@ -39,6 +39,7 @@ export type CreditSeries = {
   pct_neg?: Array<[string, number]>;
   pct_mid?: Array<[string, number]>;
   pct_high?: Array<[string, number]>;
+  mean_weighted?: Array<[string, number]>;
 };
 
 export type CreditClass = {
