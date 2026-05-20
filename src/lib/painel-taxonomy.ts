@@ -86,6 +86,13 @@ const economiaBrasil: CategoryDef[] = [
     sourceHint: "IBGE, BCB",
   },
   {
+    slug: "emprego",
+    label: "Emprego",
+    description: "PNAD (taxas, informalidade, setor) e CAGED (saldo formal, faixa salarial).",
+    frequency: "mensal",
+    sourceHint: "IBGE/PNAD, MTE/CAGED, IPEADATA",
+  },
+  {
     slug: "fiscal",
     label: "Fiscal",
     description: "Arrecadação, gastos, resultado primário e dívida.",
