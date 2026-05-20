@@ -306,8 +306,18 @@ def main() -> None:
         focus = focus_anuais(ano_atual)
         print(f"  Anos: {sorted(focus.keys())} | pontos por ano: {[len(focus[a]) for a in sorted(focus.keys())]}")
     except Exception as e:
-        print(f"  [WARN] Focus indisponivel ({e}). Pipeline continua sem Focus.", file=sys.stderr)
+        print(f"  [WARN] Focus indisponivel ({e}). Tentando fallback do Blob anterior.", file=sys.stderr)
         focus = {}
+        # Merge incremental: se Focus falhar, preserva dados do build anterior
+        try:
+            sys.path.insert(0, str(HERE))
+            from shared.blob_download import download_json  # noqa: E402
+            prev = download_json(BLOB_PATH)
+            if prev and isinstance(prev, dict) and prev.get("focus"):
+                focus = prev["focus"]
+                print(f"  [WARN] Usando Focus do run anterior (gerado_em {prev.get('gerado_em')}).", file=sys.stderr)
+        except Exception as e2:
+            print(f"  [WARN] Fallback do Blob falhou ({e2}). Focus fica vazio.", file=sys.stderr)
 
     print("== Maiores influências do mês ==")
     inf = maiores_influencias(7060, ipca_cheio["mes_recente"], "63", "66")
@@ -331,21 +341,4 @@ def main() -> None:
         },
     }
 
-    out_file.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
-    size_kb = out_file.stat().st_size / 1024
-    print(f"\nJSON salvo em {out_file} ({size_kb:.1f} KB)")
-
-    if args.upload:
-        try:
-            sys.path.insert(0, str(HERE))
-            from shared.blob_upload import maybe_upload_json  # noqa: E402
-            maybe_upload_json(out_file, BLOB_PATH)
-        except Exception as e:  # noqa: BLE001
-            print(f"[upload] FALHOU: {e}", file=sys.stderr)
-            sys.exit(1)
-    else:
-        print("[upload] SKIP (use --upload pra subir pro Blob)")
-
-
-if __name__ == "__main__":
-    main()
+    out_file.write_text(json.dumps(o
