@@ -116,14 +116,18 @@ export function TreasuryTimeSeries({ data }: Props) {
 
   const cat = data?.categories[category];
 
-  // Default: pega 4 vencimentos espacados se nenhum estiver selecionado
+  // Default: pega 4 vencimentos espacados ENTRE OS AINDA VIVOS (data > last_data_date).
+  // Pre/IPCA tem vencimentos antigos no historico (LTN 2010 etc.) que ja venceram —
+  // useis pra ver series passadas, mas o default precisa mostrar a curva vigente.
   const defaultSelected = useMemo(() => {
     if (!cat) return [] as string[];
-    const v = cat.vencimentos;
-    if (v.length <= 4) return v;
-    const idx = [0, Math.floor(v.length / 3), Math.floor((v.length * 2) / 3), v.length - 1];
-    return Array.from(new Set(idx.map((i) => v[i])));
-  }, [cat]);
+    const lastDate = data?.last_data_date ?? "9999-12-31";
+    const alive = cat.vencimentos.filter((v) => v > lastDate);
+    const pool = alive.length >= 4 ? alive : cat.vencimentos;
+    if (pool.length <= 4) return pool;
+    const idx = [0, Math.floor(pool.length / 3), Math.floor((pool.length * 2) / 3), pool.length - 1];
+    return Array.from(new Set(idx.map((i) => pool[i])));
+  }, [cat, data?.last_data_date]);
 
   const activeSelected = selected[category].length > 0 ? selected[category] : defaultSelected;
 
@@ -225,10 +229,12 @@ export function TreasuryTimeSeries({ data }: Props) {
           ))}
         </div>
 
-        {/* Vencimentos disponiveis */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-zinc-500">Vencimento:</span>
-          {cat.vencimentos.map((venc) => {
+        {/* Vencimentos disponiveis: separa vivos (em circulacao) de vencidos (historico) */}
+        {(() => {
+          const lastDate = data.last_data_date ?? "9999-12-31";
+          const alive = cat.vencimentos.filter((v) => v > lastDate);
+          const expired = cat.vencimentos.filter((v) => v <= lastDate);
+          const renderChip = (venc: string, isExpired = false) => {
             const active = activeSelected.includes(venc);
             return (
               <button
@@ -238,17 +244,38 @@ export function TreasuryTimeSeries({ data }: Props) {
                 className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
                   active
                     ? "bg-[#027DFC] text-white"
-                    : "border border-[#132960]/15 bg-zinc-50 text-[#132960] hover:border-[#027DFC]"
+                    : isExpired
+                      ? "border border-zinc-200 bg-white text-zinc-500 hover:border-[#027DFC] hover:text-[#027DFC]"
+                      : "border border-[#132960]/15 bg-zinc-50 text-[#132960] hover:border-[#027DFC]"
                 }`}
+                title={isExpired ? "Vencido — disponível para visualizar série histórica" : undefined}
               >
                 {vencimentoLabel(venc)}
               </button>
             );
-          })}
-          <span className="text-[11px] italic text-zinc-500">
-            Máx 6 simultâneos. Default: 4 espaçados.
-          </span>
-        </div>
+          };
+          return (
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-medium text-zinc-500">Em circulação:</span>
+                {alive.map((v) => renderChip(v, false))}
+              </div>
+              {expired.length > 0 ? (
+                <details className="group">
+                  <summary className="cursor-pointer text-xs font-medium text-zinc-500 hover:text-[#027DFC]">
+                    <span className="select-none">Vencidos ({expired.length}) — clique para mostrar séries históricas</span>
+                  </summary>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {expired.map((v) => renderChip(v, true))}
+                  </div>
+                </details>
+              ) : null}
+              <p className="text-[11px] italic text-zinc-500">
+                Máx 6 vencimentos simultâneos. Default: 4 espaçados entre os em circulação.
+              </p>
+            </div>
+          );
+        })()}
 
         <div className="grid gap-3 lg:grid-cols-[1fr_220px]">
           {/* Grafico principal */}
