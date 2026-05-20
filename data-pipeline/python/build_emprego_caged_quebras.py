@@ -211,7 +211,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Build do JSON Painel Emprego — CAGED quebras")
     ap.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
     ap.add_argument("--upload", action="store_true")
-    ap.add_argument("--meses-atras", type=int, default=6,
+    ap.add_argument("--meses-atras", type=int, default=3,
                     help="Quantos meses reprocessar a cada run (default 6, captura ~95%% das revisões)")
     ap.add_argument("--backfill", action="store_true",
                     help="Backfill total desde jan/2020 (uso pontual; ignora --meses-atras)")
