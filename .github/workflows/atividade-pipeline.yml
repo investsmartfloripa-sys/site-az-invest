@@ -1,0 +1,124 @@
+name: Atividade pipeline (PIB + IBC-Br + PIM + PMC + PMS)
+
+on:
+  schedule:
+    # PIB trimestral — IBGE divulga ~dia 1-3 de mar/jun/set/dez. Rodamos 10h BRT (= 13h UTC).
+    - cron: "0 13 1-3 3,6,9,12 *"
+    # PIM mensal — IBGE divulga ~dia 1-3 de todo mês. Rodamos 10h30 BRT (= 13h30 UTC) pra evitar
+    # conflito com o cron do PIB nos meses trimestrais.
+    - cron: "30 13 1-3 * *"
+    # IBC-Br mensal — BCB divulga ~dia 15. Rodamos dia 15-17 às 11h BRT.
+    - cron: "0 14 15-17 * *"
+    # PMC + PMS mensal — IBGE divulga entre dias 12-15. Rodamos dia 12-15 às 11h BRT.
+    - cron: "0 14 12-15 * *"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Qual job rodar manualmente"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - all
+          - pib
+          - ibcbr
+          - pim
+          - pmc
+          - pms
+
+concurrency:
+  group: atividade-pipeline
+  cancel-in-progress: true
+
+jobs:
+  pib:
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '0 13 1-3 3,6,9,12 *')
+      || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'all' || github.event.inputs.job == 'pib'))
+    runs-on: ubuntu-latest
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      NEXT_PUBLIC_BLOB_BASE_URL: ${{ vars.NEXT_PUBLIC_BLOB_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: data-pipeline/python/requirements.txt
+      - name: Pip install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r data-pipeline/python/requirements.txt
+      - name: Build PIB JSON e upload
+        run: python data-pipeline/python/build_atividade_pib.py --upload
+
+  pim:
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '30 13 1-3 * *')
+      || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'all' || github.event.inputs.job == 'pim'))
+    runs-on: ubuntu-latest
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      NEXT_PUBLIC_BLOB_BASE_URL: ${{ vars.NEXT_PUBLIC_BLOB_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: data-pipeline/python/requirements.txt
+      - name: Pip install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r data-pipeline/python/requirements.txt
+      - name: Build PIM JSON e upload
+        run: python data-pipeline/python/build_atividade_pim.py --upload
+
+  ibcbr:
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '0 14 15-17 * *')
+      || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'all' || github.event.inputs.job == 'ibcbr'))
+    runs-on: ubuntu-latest
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      NEXT_PUBLIC_BLOB_BASE_URL: ${{ vars.NEXT_PUBLIC_BLOB_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: data-pipeline/python/requirements.txt
+      - name: Pip install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r data-pipeline/python/requirements.txt
+      - name: Build IBC-Br JSON e upload
+        run: python data-pipeline/python/build_atividade_ibcbr.py --upload
+
+  pmc-pms:
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '0 14 12-15 * *')
+      || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'all' || github.event.inputs.job == 'pmc' || github.event.inputs.job == 'pms'))
+    runs-on: ubuntu-latest
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      NEXT_PUBLIC_BLOB_BASE_URL: ${{ vars.NEXT_PUBLIC_BLOB_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: data-pipeline/python/requirements.txt
+      - name: Pip install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r data-pipeline/python/requirements.txt
+      - name: Build PMC JSON e upload
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.job != 'pms'
+        run: python data-pipeline/python/build_atividade_pmc.py --upload
+      - name: Build PMS JSON e upload
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.job != 'pmc'
+        run: python data-pipeline/python/build_atividade_pms.py --upload
