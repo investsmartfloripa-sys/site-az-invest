@@ -341,4 +341,22 @@ def main() -> None:
         },
     }
 
-    out_file.write_text(json.dumps(o
+
+    out_file.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
+    size_kb = out_file.stat().st_size / 1024
+    print(f"\nJSON salvo em {out_file} ({size_kb:.1f} KB)")
+
+    if args.upload:
+        try:
+            sys.path.insert(0, str(HERE))
+            from shared.blob_upload import maybe_upload_json
+            maybe_upload_json(out_file, BLOB_PATH)
+        except Exception as e:
+            print(f"[upload] FALHOU: {e}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        print("[upload] SKIP (use --upload pra subir pro Blob)")
+
+
+if __name__ == "__main__":
+    main()
