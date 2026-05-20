@@ -16,7 +16,7 @@ import type { TreasuryHistory, TreasuryCategory } from "@/lib/painel-renda-fixa-
 import { MarketCard } from "@/components/painel/market/MarketCard";
 
 type CategoryKey = "PRE" | "IPCA";
-type Period = "1m" | "3m" | "6m" | "1y" | "3y" | "5y" | "max";
+type Period = "1m" | "3m" | "6m" | "1y" | "3y" | "5y" | "10y" | "20y" | "max";
 
 const PERIODS: Array<{ id: Period; label: string }> = [
   { id: "1m", label: "1M" },
@@ -25,6 +25,8 @@ const PERIODS: Array<{ id: Period; label: string }> = [
   { id: "1y", label: "1A" },
   { id: "3y", label: "3A" },
   { id: "5y", label: "5A" },
+  { id: "10y", label: "10A" },
+  { id: "20y", label: "20A" },
   { id: "max", label: "Max" },
 ];
 
@@ -48,6 +50,8 @@ function periodCutoff(period: Period, latest: string): string {
     case "1y": d.setFullYear(d.getFullYear() - 1); break;
     case "3y": d.setFullYear(d.getFullYear() - 3); break;
     case "5y": d.setFullYear(d.getFullYear() - 5); break;
+    case "10y": d.setFullYear(d.getFullYear() - 10); break;
+    case "20y": d.setFullYear(d.getFullYear() - 20); break;
     case "max": return "1900-01-01";
   }
   return d.toISOString().slice(0, 10);
