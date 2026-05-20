@@ -221,9 +221,9 @@ def aggregate_daily_stats(
     PRE: usa Taxa Indicativa direto.
     """
     out: Dict[str, Dict[str, List]] = {
-        "DI":   {"median": [], "p25": [], "p75": [], "n": []},
-        "IPCA": {"median": [], "p25": [], "p75": [], "n": []},
-        "PRE":  {"median": [], "p25": [], "p75": [], "n": []},
+        "DI":   {"median": [], "p25": [], "p75": [], "n": [], "pct_neg": [], "pct_mid": [], "pct_high": []},
+        "IPCA": {"median": [], "p25": [], "p75": [], "n": [], "pct_neg": [], "pct_mid": [], "pct_high": []},
+        "PRE":  {"median": [], "p25": [], "p75": [], "n": [], "pct_neg": [], "pct_mid": [], "pct_high": []},
     }
     skipped_ipca = 0
     matched_ipca = 0
@@ -264,10 +264,21 @@ def aggregate_daily_stats(
             p75_idx = min(n - 1, int(n * 0.75))
             p25 = vals_sorted[p25_idx]
             p75 = vals_sorted[p75_idx]
+            # Buckets de distribuicao (% papeis em cada faixa de spread)
+            n_neg = sum(1 for v in vals_sorted if v < 0)
+            n_high = sum(1 for v in vals_sorted if v >= 1.0)  # >= 100 bps
+            n_mid = n - n_neg - n_high
+            pct_neg = round(100.0 * n_neg / n, 1)
+            pct_mid = round(100.0 * n_mid / n, 1)
+            pct_high = round(100.0 * n_high / n, 1)
+
             out[cls]["median"].append([d, round(median, 4)])
             out[cls]["p25"].append([d, round(p25, 4)])
             out[cls]["p75"].append([d, round(p75, 4)])
             out[cls]["n"].append([d, n])
+            out[cls]["pct_neg"].append([d, pct_neg])
+            out[cls]["pct_mid"].append([d, pct_mid])
+            out[cls]["pct_high"].append([d, pct_high])
 
     print(f"[deb] IPCA spread match: {matched_ipca} ok, {skipped_ipca} sem NTN-B ou fora de range")
     return out
@@ -365,7 +376,7 @@ def merge_credit_with_existing(new_payload: Dict, existing: Optional[Dict]) -> D
         old_series = old_cls.get("series") or {}
 
         merged_series: Dict[str, List[List]] = {}
-        for metric in ("median", "p25", "p75", "n"):
+        for metric in ("median", "p25", "p75", "n", "pct_neg", "pct_mid", "pct_high"):
             by_date: Dict[str, float] = {}
             for entry in old_series.get(metric, []) or []:
                 if isinstance(entry, list) and len(entry) >= 2:

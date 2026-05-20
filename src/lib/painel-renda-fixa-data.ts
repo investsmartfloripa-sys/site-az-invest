@@ -36,6 +36,9 @@ export type CreditSeries = {
   p25: Array<[string, number]>;
   p75: Array<[string, number]>;
   n: Array<[string, number]>;
+  pct_neg?: Array<[string, number]>;
+  pct_mid?: Array<[string, number]>;
+  pct_high?: Array<[string, number]>;
 };
 
 export type CreditClass = {

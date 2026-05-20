@@ -88,6 +88,15 @@ export function CreditSpreadsHistory({ data }: Props) {
     values.length > 0 ? [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)] : null;
   const latestN = chartData.length > 0 ? chartData[chartData.length - 1].n : null;
 
+  // Buckets de distribuicao (% papeis com spread negativo, 0-100bps, >100bps)
+  const lastPctNeg = c.series.pct_neg?.[c.series.pct_neg.length - 1]?.[1] ?? null;
+  const lastPctMid = c.series.pct_mid?.[c.series.pct_mid.length - 1]?.[1] ?? null;
+  const lastPctHigh = c.series.pct_high?.[c.series.pct_high.length - 1]?.[1] ?? null;
+  const hasDistribution =
+    typeof lastPctNeg === "number" &&
+    typeof lastPctMid === "number" &&
+    typeof lastPctHigh === "number";
+
   const updatedTxt = data.generated_at
     ? `Atualizado em ${new Date(data.generated_at).toLocaleString("pt-BR")} · Fonte: ${data.source}`
     : "";
@@ -261,6 +270,55 @@ export function CreditSpreadsHistory({ data }: Props) {
             </p>
           </div>
         </div>
+
+        {/* Distribuicao dos papeis no ultimo dia */}
+        {hasDistribution ? (
+          <div className="rounded-xl border border-[#132960]/10 bg-white p-3">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Distribuição do spread no último dia · {latestN ?? "—"} papéis
+            </p>
+            <div className="grid grid-cols-3 gap-3 text-sm">
+              <div className="rounded-lg border border-[#16A34A]/30 bg-[#16A34A]/5 p-2">
+                <p className="text-xs text-zinc-600">Spread &lt; 0 (abaixo da NTN-B)</p>
+                <p className="mt-1 text-lg font-semibold tabular-nums text-[#16A34A]">
+                  {lastPctNeg!.toFixed(1)}%
+                </p>
+                <p className="text-[10px] italic text-zinc-500">Papéis premium / fluxo institucional</p>
+              </div>
+              <div className="rounded-lg border border-[#027DFC]/30 bg-[#027DFC]/5 p-2">
+                <p className="text-xs text-zinc-600">Spread 0 a 100 bps</p>
+                <p className="mt-1 text-lg font-semibold tabular-nums text-[#027DFC]">
+                  {lastPctMid!.toFixed(1)}%
+                </p>
+                <p className="text-[10px] italic text-zinc-500">High-grade típico</p>
+              </div>
+              <div className="rounded-lg border border-[#DC2626]/30 bg-[#DC2626]/5 p-2">
+                <p className="text-xs text-zinc-600">Spread ≥ 100 bps (1%)</p>
+                <p className="mt-1 text-lg font-semibold tabular-nums text-[#DC2626]">
+                  {lastPctHigh!.toFixed(1)}%
+                </p>
+                <p className="text-[10px] italic text-zinc-500">Risco / setores estressados</p>
+              </div>
+            </div>
+            <div className="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-zinc-100">
+              <div
+                className="bg-[#16A34A]"
+                style={{ width: `${lastPctNeg}%` }}
+                title={`Spread negativo: ${lastPctNeg!.toFixed(1)}%`}
+              />
+              <div
+                className="bg-[#027DFC]"
+                style={{ width: `${lastPctMid}%` }}
+                title={`Spread 0-100 bps: ${lastPctMid!.toFixed(1)}%`}
+              />
+              <div
+                className="bg-[#DC2626]"
+                style={{ width: `${lastPctHigh}%` }}
+                title={`Spread ≥100 bps: ${lastPctHigh!.toFixed(1)}%`}
+              />
+            </div>
+          </div>
+        ) : null}
 
         <p className="text-xs italic text-zinc-500">
           Para <strong>DI/CDI</strong>, o spread é a Taxa Indicativa ANBIMA (que por convenção já
