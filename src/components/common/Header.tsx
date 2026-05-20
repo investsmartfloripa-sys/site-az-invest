@@ -57,7 +57,3 @@ export async function Header() {
     </header>
   );
 }
-v className="h-1 bg-[#027DFC]" />
-    </header>
-  );
-}

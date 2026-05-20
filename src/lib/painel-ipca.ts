@@ -65,6 +65,3 @@ async function fetchBlobJson<T>(path: string): Promise<T | null> {
 export async function loadIpcaData(): Promise<IpcaData | null> {
   return fetchBlobJson<IpcaData>("data/ipca.json");
 }
-| null> {
-  return fetchBlobJson<IpcaData>("data/ipca.json");
-}
