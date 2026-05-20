@@ -62,11 +62,30 @@ jobs:
             --upload
         continue-on-error: true
 
+      - name: ANBIMA TPF - historico curva juros (Pre + IPCA+)
+        run: |
+          python data-pipeline/python/build_anbima_tpf.py \
+            --business-days 130 \
+            --sleep 0.1 \
+            --upload
+        continue-on-error: true
+
+      - name: ANBIMA Debentures - spreads de credito privado
+        run: |
+          python data-pipeline/python/build_anbima_debentures.py \
+            --business-days 130 \
+            --sleep 0.15 \
+            --upload
+        continue-on-error: true
+
       - name: Upload artefatos (debug)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: market-data-${{ github.run_id }}
-          path: data-pipeline/out/market_*.json
+          path: |
+            data-pipeline/out/market_*.json
+            data-pipeline/out/treasury_history.json
+            data-pipeline/out/credit_spreads_history.json
           if-no-files-found: warn
           retention-days: 7
