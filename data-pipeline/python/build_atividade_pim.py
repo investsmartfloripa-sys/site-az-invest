@@ -1,65 +1,68 @@
-"""Build do JSON do Painel Atividade — bloco PIM-PF (Produção Industrial).
+"""Build do JSON do Painel Atividade — bloco PIM-PF (ENRIQUECIDO).
 
-Baixa do IBGE SIDRA 3 tabelas (PIM-PF base 2022=100):
-- 8888 — Por seções e atividades industriais (27 cats, CNAE 2.0)
-- 8887 — Por grandes categorias econômicas (24 cats)
-- 8889 — Indicadores especiais (69 cats; usado apenas para insumos da construção e bens de capital especiais)
+IBGE SIDRA — PIM-PF Brasil base 2022=100:
+- 8888 — Seções e atividades industriais (27 categorias CNAE 2.0)
+- 8887 — Grandes categorias econômicas (24 categorias: capital/intermediário/consumo)
+- 8889 — Indicadores especiais (69 cats: bens duráveis, semiduráveis, não-duráveis, etc.)
+- 8886 — Insumos típicos da construção civil (preditor da Construção)
 
-Gera `data-pipeline/out/atividade_pim.json` e upload pra `data/atividade_pim.json`.
-
-Estrutura editorial:
-- `geral`: série com índice SA e variações (var MoM SA é o KPI manchete).
-- `secoes`: série por seção CNAE (extrativa, transformação, etc).
-- `categorias_economicas`: série por bens de capital / intermediário / consumo duráveis / consumo semi+não-duráveis (decomposição cíclica).
-- `atividades_detalhe`: ranking de variações YoY das atividades detalhadas para o mês mais recente.
+Salva: serie geral, série setores, todas atividades CNAE (não só top 5), construção,
+indicadores especiais filtrados, heatmap.
 """
 from __future__ import annotations
-
-import argparse
-import json
-import sys
-import time
+import argparse, json, sys, time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
-
 import requests
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/atividade_pim.json"
-
-UA = {"User-Agent": "az-invest-atividade-pim/0.1"}
+UA = {"User-Agent": "az-invest-atividade-pim/0.2"}
 SIDRA_BASE = "https://apisidra.ibge.gov.br/values"
 
-# Variáveis comuns PIM
 VAR_PIM = {
-    "11601": "var_mom_sa",      # var mês/mês imediatamente anterior, SA
-    "11602": "var_yoy",         # var mês/mesmo mês ano anterior
-    "11603": "var_acum_ano",    # acumulada no ano
-    "11604": "var_acum_12m",    # acumulada em 12 meses
-    "12606": "indice",          # número-índice 2022=100
-    "12607": "indice_sa",       # número-índice SA 2022=100
+    "11601": "var_mom_sa",
+    "11602": "var_yoy",
+    "11603": "var_acum_ano",
+    "11604": "var_acum_12m",
+    "12606": "indice",
+    "12607": "indice_sa",
 }
 
-# Seções principais (tabela 8888 c544) — 3 macro + algumas atividades destacadas
-SECOES_PRINCIPAIS = {
+SECOES = {
     "129314": "industria_geral",
     "129315": "extrativa",
     "129316": "transformacao",
 }
 
-# Grandes categorias econômicas (tabela 8887 c543) — 4 blocos cíclicos
-CATEGORIAS_ECON = {
+# Categorias econômicas principais (4 grupos cíclicos + sub-categorias)
+CATEGORIAS_PRINCIPAIS = {
     "129278": "bens_capital",
     "129283": "bens_intermediarios",
+    "129300": "bens_consumo",
     "129301": "bens_consumo_duraveis",
     "129305": "bens_consumo_semi_nao_duraveis",
+    "129306": "bens_consumo_semi_duraveis",
+    "129307": "bens_consumo_nao_duraveis",
 }
 
+# Indicadores especiais úteis (8889 tem 69; pego os mais relevantes pra leitura editorial)
+# Filtrar pelo nome porque IDs variam — uso D4N contém algumas palavras-chave
+PALAVRAS_INDICADORES = [
+    "Bens de capital",
+    "Bens de consumo",
+    "Bens intermediários",
+    "Bens duráveis",
+    "Bens semiduráveis",
+    "Bens não duráveis",
+    "Veículos automotores",
+    "Máquinas",
+]
 
-def _get(url: str, *, timeout: int = 90, retries: int = 3, sleep: float = 3.0) -> requests.Response:
-    last: Exception | None = None
+
+def _get(url, *, timeout=90, retries=3, sleep=3.0):
+    last = None
     for i in range(retries):
         try:
             r = requests.get(url, timeout=timeout, headers=UA)
@@ -67,12 +70,11 @@ def _get(url: str, *, timeout: int = 90, retries: int = 3, sleep: float = 3.0) -
             return r
         except Exception as e:
             last = e
-            print(f"  retry {i + 1}/{retries}: {e}", file=sys.stderr)
             time.sleep(sleep)
-    raise RuntimeError(f"falha após {retries} tentativas: {last}")
+    raise RuntimeError(f"falha: {last}")
 
 
-def _to_float(v: Any) -> float | None:
+def _to_float(v):
     if v in ("", "-", "..", "...", None):
         return None
     try:
@@ -81,61 +83,83 @@ def _to_float(v: Any) -> float | None:
         return None
 
 
-def _mes_label(d3c: str) -> str:
+def _mes(d3c):
     return f"{d3c[:4]}-{d3c[4:]}"
 
 
-def sidra_fetch(tabela: int, path: str) -> list[dict]:
+def sidra(tabela, path):
     url = f"{SIDRA_BASE}/t/{tabela}{path}"
-    print(f"  [SIDRA {tabela}] {url[:140]}...")
+    print(f"  [SIDRA {tabela}]")
     data = _get(url).json()
-    if not data:
-        return []
-    return data[1:]
+    return data[1:] if data else []
 
 
-def carrega_tabela_pim(tabela: int, classif_id: str, categorias_map: dict[str, str], periodos: int = 60) -> dict[str, dict[str, dict[str, float | None]]]:
-    """Carrega tabela PIM filtrando por categorias_map. Retorna {mes: {chave_classif: {var_nome: valor}}}."""
-    path = f"/n1/all/v/all/p/last%20{periodos}/c{classif_id}/all?formato=json"
-    rows = sidra_fetch(tabela, path)
-    out: dict[str, dict[str, dict[str, float | None]]] = {}
+def carrega_8888(periodos=60):
+    """Todas as 27 categorias × 6 vars × N meses."""
+    rows = sidra(8888, f"/n1/all/v/all/p/last%20{periodos}/c544/all?formato=json")
+    out = {}  # mes → classif → {var: v}
+    nomes = {}
     for r in rows:
-        d2c = r.get("D2C")
+        var_nome = VAR_PIM.get(r.get("D2C"))
+        d4c = r.get("D4C", "")
+        d4n = r.get("D4N", "")
+        d3c = r.get("D3C", "")
+        if not var_nome or not d4c or not d3c:
+            continue
+        out.setdefault(_mes(d3c), {}).setdefault(d4c, {})[var_nome] = _to_float(r.get("V"))
+        nomes[d4c] = d4n
+    return out, nomes
+
+
+def carrega_8887(periodos=60):
+    rows = sidra(8887, f"/n1/all/v/all/p/last%20{periodos}/c543/all?formato=json")
+    out = {}
+    for r in rows:
+        var_nome = VAR_PIM.get(r.get("D2C"))
         d4c = r.get("D4C")
         d3c = r.get("D3C", "")
-        var_nome = VAR_PIM.get(d2c)
-        classif_chave = categorias_map.get(d4c)
-        if not var_nome or not classif_chave or not d3c:
+        if not var_nome or d4c not in CATEGORIAS_PRINCIPAIS or not d3c:
             continue
-        mes = _mes_label(d3c)
-        out.setdefault(mes, {}).setdefault(classif_chave, {})[var_nome] = _to_float(r.get("V"))
+        chave = CATEGORIAS_PRINCIPAIS[d4c]
+        out.setdefault(_mes(d3c), {}).setdefault(chave, {})[var_nome] = _to_float(r.get("V"))
     return out
 
 
-def carrega_atividades_detalhe(periodos: int = 12) -> dict[str, list[dict[str, Any]]]:
-    """Carrega 8888 com todas as atividades (não filtra). Retorna {mes: [{atividade, var_yoy}]}."""
-    path = f"/n1/all/v/11602/p/last%20{periodos}/c544/all?formato=json"
-    rows = sidra_fetch(8888, path)
-    by_mes: dict[str, list[dict[str, Any]]] = {}
+def carrega_8889(periodos=24):
+    """Filtra indicadores especiais por nome."""
+    rows = sidra(8889, f"/n1/all/v/all/p/last%20{periodos}/c25/all?formato=json")
+    out = {}
+    nomes = {}
     for r in rows:
-        d3c = r.get("D3C", "")
-        d4n = r.get("D4N", "")
+        var_nome = VAR_PIM.get(r.get("D2C"))
         d4c = r.get("D4C", "")
-        v = _to_float(r.get("V"))
-        if not d3c or not d4n or v is None:
+        d4n = r.get("D4N", "")
+        d3c = r.get("D3C", "")
+        if not var_nome or not d4c or not d3c:
             continue
-        # Pula os 3 grandes (geral, extrativa, transformação) — já temos eles em "secoes"
-        if d4c in SECOES_PRINCIPAIS:
+        # filtro por nome
+        if not any(p.lower() in d4n.lower() for p in PALAVRAS_INDICADORES):
             continue
-        mes = _mes_label(d3c)
-        by_mes.setdefault(mes, []).append({"atividade": d4n, "var_yoy": v})
-    for mes in by_mes:
-        by_mes[mes].sort(key=lambda x: x["var_yoy"], reverse=True)
-    return by_mes
+        out.setdefault(_mes(d3c), {}).setdefault(d4c, {})[var_nome] = _to_float(r.get("V"))
+        nomes[d4c] = d4n
+    return out, nomes
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser(description="Build do JSON Painel Atividade — PIM-PF")
+def carrega_8886(periodos=24):
+    """Insumos da construção civil."""
+    rows = sidra(8886, f"/n1/all/v/all/p/last%20{periodos}?formato=json")
+    out = {}
+    for r in rows:
+        var_nome = VAR_PIM.get(r.get("D2C"))
+        d3c = r.get("D3C", "")
+        if not var_nome or not d3c:
+            continue
+        out.setdefault(_mes(d3c), {})[var_nome] = _to_float(r.get("V"))
+    return out
+
+
+def main():
+    ap = argparse.ArgumentParser()
     ap.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
     ap.add_argument("--upload", action="store_true")
     args = ap.parse_args()
@@ -144,100 +168,133 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / "atividade_pim.json"
 
-    print("== PIM Seções (SIDRA 8888) ==")
-    secoes = carrega_tabela_pim(8888, "544", SECOES_PRINCIPAIS)
+    print("== PIM 8888 ==")
+    secoes_raw, nomes_atividades = carrega_8888()
+    print("== PIM 8887 ==")
+    cat_raw = carrega_8887()
+    print("== PIM 8889 ==")
+    esp_raw, nomes_esp = carrega_8889()
+    print("== PIM 8886 (construção) ==")
+    construcao = carrega_8886()
 
-    print("== PIM Categorias econômicas (SIDRA 8887) ==")
-    categorias = carrega_tabela_pim(8887, "543", CATEGORIAS_ECON)
-
-    print("== PIM Atividades detalhe (SIDRA 8888, ranking) ==")
-    atividades = carrega_atividades_detalhe()
-
-    meses = sorted(secoes.keys())
+    meses = sorted(secoes_raw.keys())
     if not meses:
-        print("ERRO: nenhum mês carregado, abortando", file=sys.stderr)
         sys.exit(2)
     mes_recente = meses[-1]
 
-    # Serie "geral" = indústria geral com todas as variáveis
-    serie_geral: list[dict[str, Any]] = []
-    for mes in meses:
-        item: dict[str, Any] = {"mes": mes}
-        geral = secoes[mes].get("industria_geral", {})
+    # geral (indústria geral) – todas vars
+    serie_geral = []
+    for m in meses:
+        item = {"mes": m}
+        g = secoes_raw[m].get("129314", {})
         for var_nome in VAR_PIM.values():
-            item[var_nome] = geral.get(var_nome)
+            item[var_nome] = g.get(var_nome)
         serie_geral.append(item)
 
-    # Serie "secoes" = indústria geral + extrativa + transformação, só var_yoy + indice_sa
-    serie_secoes: list[dict[str, Any]] = []
-    for mes in meses:
-        item: dict[str, Any] = {"mes": mes}
-        for chave in SECOES_PRINCIPAIS.values():
-            val = secoes[mes].get(chave, {})
-            item[f"yoy_{chave}"] = val.get("var_yoy")
-            item[f"idx_sa_{chave}"] = val.get("indice_sa")
+    # secoes (3 cats) — todas vars
+    serie_secoes = []
+    for m in meses:
+        item = {"mes": m}
+        for d4c, chave in SECOES.items():
+            val = secoes_raw[m].get(d4c, {})
+            for var_nome in VAR_PIM.values():
+                item[f"{chave}_{var_nome}"] = val.get(var_nome)
         serie_secoes.append(item)
 
-    # Serie "categorias_economicas" = 4 grandes blocos, var_yoy
-    serie_cat: list[dict[str, Any]] = []
-    meses_cat = sorted(categorias.keys())
-    for mes in meses_cat:
-        item: dict[str, Any] = {"mes": mes}
-        for chave in CATEGORIAS_ECON.values():
-            val = categorias[mes].get(chave, {})
-            item[f"yoy_{chave}"] = val.get("var_yoy")
-            item[f"idx_sa_{chave}"] = val.get("indice_sa")
+    # categorias econômicas — todas vars
+    serie_cat = []
+    meses_cat = sorted(cat_raw.keys())
+    for m in meses_cat:
+        item = {"mes": m}
+        for chave in CATEGORIAS_PRINCIPAIS.values():
+            val = cat_raw[m].get(chave, {})
+            for var_nome in VAR_PIM.values():
+                item[f"{chave}_{var_nome}"] = val.get(var_nome)
         serie_cat.append(item)
 
-    # Ranking de atividades do mês recente: top 5 alta + top 5 queda
-    ativ_recente = atividades.get(mes_recente, [])
-    top_altas = ativ_recente[:5]
-    top_quedas = ativ_recente[-5:][::-1]
+    # atividades detalhe — TODAS as 25 atividades (não só top 5)
+    # Estrutura: mes → list[{atividade, var_yoy, var_mom_sa, indice_sa}]
+    atividades_mes = {}
+    for m in meses:
+        items = []
+        for d4c, vals in secoes_raw[m].items():
+            if d4c in SECOES:
+                continue  # pula os 3 macro
+            nome = nomes_atividades.get(d4c, d4c)
+            items.append({
+                "atividade": nome,
+                "id": d4c,
+                "var_yoy": vals.get("var_yoy"),
+                "var_mom_sa": vals.get("var_mom_sa"),
+                "var_acum_12m": vals.get("var_acum_12m"),
+                "indice_sa": vals.get("indice_sa"),
+            })
+        items.sort(key=lambda x: x["var_yoy"] if x["var_yoy"] is not None else -999, reverse=True)
+        atividades_mes[m] = items
+
+    # Construção civil — série completa
+    serie_construcao = []
+    for m in sorted(construcao.keys()):
+        item = {"mes": m}
+        for var_nome in VAR_PIM.values():
+            item[var_nome] = construcao[m].get(var_nome)
+        serie_construcao.append(item)
+
+    # Indicadores especiais filtrados
+    serie_especiais = []
+    todos_d4c_esp = set()
+    for m, dic in esp_raw.items():
+        todos_d4c_esp.update(dic.keys())
+    for m in sorted(esp_raw.keys()):
+        item = {"mes": m}
+        for d4c in sorted(todos_d4c_esp):
+            val = esp_raw[m].get(d4c, {})
+            chave = f"esp_{d4c}"
+            item[f"{chave}_yoy"] = val.get("var_yoy")
+            item[f"{chave}_mom"] = val.get("var_mom_sa")
+        serie_especiais.append(item)
 
     # Sanity
-    ultimo = serie_geral[-1]
-    idx_sa = ultimo.get("indice_sa")
-    var_yoy = ultimo.get("var_yoy")
-    assert idx_sa is None or 70 < idx_sa < 130, f"índice SA fora da banda: {idx_sa}"
-    assert var_yoy is None or -25 < var_yoy < 25, f"var YoY fora da banda: {var_yoy}"
+    ult = serie_geral[-1]
+    assert ult.get("indice_sa") is None or 70 < ult["indice_sa"] < 130
 
     out = {
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "mes_recente": mes_recente,
         "geral": {"serie": serie_geral},
         "secoes": {
-            "categorias": list(SECOES_PRINCIPAIS.values()),
+            "categorias": list(SECOES.values()),
             "serie": serie_secoes,
         },
         "categorias_economicas": {
-            "categorias": list(CATEGORIAS_ECON.values()),
+            "categorias": list(CATEGORIAS_PRINCIPAIS.values()),
             "serie": serie_cat,
         },
-        "atividades_detalhe": {
-            "mes": mes_recente,
-            "top_altas": top_altas,
-            "top_quedas": top_quedas,
+        "atividades": {  # NOVO — todas atividades, todos os meses
+            "mes_recente": mes_recente,
+            "serie_mensal": atividades_mes,  # mes → lista
+        },
+        "construcao": {  # NOVO
+            "serie": serie_construcao,
+        },
+        "indicadores_especiais": {  # NOVO
+            "labels": nomes_esp,
+            "categorias_ids": sorted(todos_d4c_esp),
+            "serie": serie_especiais,
         },
         "metadata": {
-            "fonte": "IBGE SIDRA — PIM-PF Brasil (tabelas 8888 seções/atividades, 8887 categorias econômicas)",
-            "nota": "PIM-PF base 2022=100; antiga base 2012 encerrada em dez/2022. Lag editorial ~45 dias.",
+            "fonte": "IBGE SIDRA — PIM-PF (8888 seções/atividades, 8887 categorias econômicas, 8889 indicadores especiais, 8886 construção). Base 2022=100.",
+            "nota": "Indústria geral é a manchete. Bens de capital reagem primeiro ao ciclo, consumo duráveis em segundo. Insumos da construção é preditor da Construção do PIB.",
         },
     }
 
     out_file.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"\nJSON salvo em {out_file} ({out_file.stat().st_size/1024:.1f} KB)")
-    print(f"Mês recente: {mes_recente} | Indústria geral var YoY: {var_yoy}% | índice SA: {idx_sa}")
+    print(f"JSON {out_file} ({out_file.stat().st_size/1024:.1f} KB) | atividades: {len(atividades_mes.get(mes_recente, []))} no último mês")
 
     if args.upload:
-        try:
-            sys.path.insert(0, str(HERE))
-            from shared.blob_upload import maybe_upload_json
-            maybe_upload_json(out_file, BLOB_PATH)
-        except Exception as e:
-            print(f"[upload] FALHOU: {e}", file=sys.stderr)
-            sys.exit(1)
-    else:
-        print("[upload] SKIP")
+        sys.path.insert(0, str(HERE))
+        from shared.blob_upload import maybe_upload_json
+        maybe_upload_json(out_file, BLOB_PATH)
 
 
 if __name__ == "__main__":

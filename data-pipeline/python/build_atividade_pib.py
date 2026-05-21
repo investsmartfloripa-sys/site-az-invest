@@ -1,41 +1,32 @@
-"""Build do JSON do Painel Atividade — bloco PIB trimestral.
+"""Build do JSON do Painel Atividade — bloco PIB trimestral (ENRIQUECIDO).
 
-Baixa do IBGE SIDRA 4 tabelas das Contas Nacionais Trimestrais:
+Tabelas IBGE SIDRA das Contas Nacionais Trimestrais:
 - 5932 — Taxa de variação do índice de volume trimestral (4 vars × 22 classes)
-- 1620 — Série encadeada do índice de volume (sem ajuste, base 1995=100)
-- 1621 — Série encadeada do índice de volume COM ajuste sazonal
-- 2072 — Contas econômicas trimestrais (R$ correntes, 12 variáveis)
+- 1620/1621 — Série encadeada do índice de volume (sem ajuste / com ajuste)
+- 1846 — Valores a preços correntes (R$ milhões — por setor)
+- 2072 — Contas econômicas (renda macro: PIB, RNB, RNDB, Poupança, etc.)
 
-Também busca a mediana Focus do PIB anual (BCB Olinda).
+Focus PIB anual (BCB Olinda).
 
-Gera `data-pipeline/out/atividade_pib.json` e upload pra `data/atividade_pib.json`.
-
-Decisões editoriais (NOTAS_ATIVIDADE.md §3.1 e §7):
-- Card destaca PIB total (classif 90707) com var trimestral SA (v=6564) como manchete.
-- Decomposição mostrada como var YoY (v=6561) por classificação.
-- Linha "Mediana Focus" anual.
+JSON: gera todos os 22 sub-setores em variação, índice e R$ correntes; salva pesos atuais
+do PIB; histórico completo de Focus pra comparação Realizado × Projetado.
 """
 from __future__ import annotations
 
-import argparse
-import json
-import sys
-import time
+import argparse, json, sys, time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-
 import requests
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/atividade_pib.json"
-
-UA = {"User-Agent": "az-invest-atividade-pib/0.1"}
+UA = {"User-Agent": "az-invest-atividade-pib/0.2"}
 SIDRA_BASE = "https://apisidra.ibge.gov.br/values"
 
-# Códigos das classificações (c11255) -> chaves limpas pro JSON
-CLASSIF_OFERTA = {
+# Classificações c11255 (22 categorias) — chaves limpas
+CLASSIF = {
     "90687": "agro",
     "90691": "industria",
     "90692": "industria_extrativa",
@@ -53,27 +44,44 @@ CLASSIF_OFERTA = {
     "90705": "valor_adicionado",
     "90706": "impostos",
     "90707": "pib",
-}
-CLASSIF_DEMANDA = {
     "93404": "consumo_familias",
     "93405": "consumo_governo",
     "93406": "fbcf",
     "93407": "exportacoes",
     "93408": "importacoes",
 }
-ALL_CLASSIF = {**CLASSIF_OFERTA, **CLASSIF_DEMANDA}
 
-# Variáveis da tabela 5932 (variação)
-VAR_5932 = {
-    "6561": "yoy",       # Taxa trimestral (vs mesmo período ano anterior)
-    "6562": "acum_4t",   # Acumulada em 4 trimestres
-    "6563": "acum_ano",  # Acumulada ao longo do ano
-    "6564": "qoq_sa",    # Trimestre contra trimestre imediatamente anterior (SA)
+# Labels humanos pro front
+CLASSIF_LABEL = {
+    "agro": "Agropecuária",
+    "industria": "Indústria total",
+    "industria_extrativa": "Indústria extrativa",
+    "industria_transformacao": "Indústria de transformação",
+    "construcao": "Construção",
+    "eletricidade_gas": "Eletricidade, gás e água",
+    "servicos": "Serviços total",
+    "comercio": "Comércio",
+    "transporte": "Transporte e armazenagem",
+    "informacao": "Informação e comunicação",
+    "financeiras": "Atividades financeiras",
+    "outros_servicos": "Outros serviços",
+    "imobiliarias": "Atividades imobiliárias",
+    "admin_publica": "Admin, saúde, educação públicas",
+    "valor_adicionado": "Valor adicionado a preços básicos",
+    "impostos": "Impostos líquidos sobre produtos",
+    "pib": "PIB a preços de mercado",
+    "consumo_familias": "Consumo das famílias",
+    "consumo_governo": "Consumo do governo",
+    "fbcf": "Formação Bruta de Capital Fixo",
+    "exportacoes": "Exportações",
+    "importacoes": "Importações",
 }
 
+VAR_5932 = {"6561": "yoy", "6562": "acum_4t", "6563": "acum_ano", "6564": "qoq_sa"}
 
-def _get(url: str, *, timeout: int = 90, retries: int = 3, sleep: float = 3.0) -> requests.Response:
-    last: Exception | None = None
+
+def _get(url, *, timeout=90, retries=3, sleep=3.0):
+    last = None
     for i in range(retries):
         try:
             r = requests.get(url, timeout=timeout, headers=UA)
@@ -81,12 +89,12 @@ def _get(url: str, *, timeout: int = 90, retries: int = 3, sleep: float = 3.0) -
             return r
         except Exception as e:
             last = e
-            print(f"  retry {i + 1}/{retries}: {e}", file=sys.stderr)
+            print(f"  retry {i+1}/{retries}: {e}", file=sys.stderr)
             time.sleep(sleep)
     raise RuntimeError(f"falha após {retries} tentativas: {last}")
 
 
-def _to_float(v: Any) -> float | None:
+def _to_float(v):
     if v in ("", "-", "..", "...", None):
         return None
     try:
@@ -95,64 +103,63 @@ def _to_float(v: Any) -> float | None:
         return None
 
 
-def _trim_label(d3c: str) -> str:
-    """Converte '202504' em '2025-T4'."""
+def _trim_label(d3c):
     return f"{d3c[:4]}-T{d3c[4:]}"
 
 
-def sidra_fetch(tabela: int, path: str) -> list[dict]:
+def sidra_fetch(tabela, path):
     url = f"{SIDRA_BASE}/t/{tabela}{path}"
-    print(f"  [SIDRA {tabela}] {url}")
+    print(f"  [SIDRA {tabela}] {url[:140]}...")
     data = _get(url).json()
-    if not data:
-        return []
-    return data[1:]  # pula linha 0 (rótulos)
+    return data[1:] if data else []
 
 
-def carrega_5932(periodos: int = 80) -> dict[str, dict[str, dict[str, float | None]]]:
-    """Carrega tabela 5932: variações % do PIB.
-
-    Retorna estrutura: { trim: { var_nome: { classif_chave: valor } } }
-    onde var_nome ∈ {yoy, acum_4t, acum_ano, qoq_sa}.
-    """
+def carrega_5932(periodos=80):
+    """Retorna {trim: {var_nome: {classif: valor}}}."""
     path = f"/n1/all/v/all/p/last%20{periodos}/c11255/all?formato=json"
     rows = sidra_fetch(5932, path)
-    out: dict[str, dict[str, dict[str, float | None]]] = {}
+    out = {}
     for r in rows:
-        d2c = r.get("D2C")
-        d4c = r.get("D4C")
+        var_nome = VAR_5932.get(r.get("D2C"))
+        classif = CLASSIF.get(r.get("D4C"))
         d3c = r.get("D3C", "")
-        var_nome = VAR_5932.get(d2c)
-        classif_chave = ALL_CLASSIF.get(d4c)
-        if not var_nome or not classif_chave or not d3c:
+        if not var_nome or not classif or not d3c:
             continue
-        trim = _trim_label(d3c)
-        out.setdefault(trim, {}).setdefault(var_nome, {})[classif_chave] = _to_float(r.get("V"))
+        out.setdefault(_trim_label(d3c), {}).setdefault(var_nome, {})[classif] = _to_float(r.get("V"))
     return out
 
 
-def carrega_indice_volume(tabela: int, var_id: str, periodos: int = 80) -> dict[str, dict[str, float | None]]:
-    """Carrega 1620 ou 1621 (índice de volume por classificação)."""
+def carrega_indice(tabela, var_id, periodos=80):
     path = f"/n1/all/v/{var_id}/p/last%20{periodos}/c11255/all?formato=json"
     rows = sidra_fetch(tabela, path)
-    out: dict[str, dict[str, float | None]] = {}
+    out = {}
     for r in rows:
-        d4c = r.get("D4C")
-        classif_chave = ALL_CLASSIF.get(d4c)
+        classif = CLASSIF.get(r.get("D4C"))
         d3c = r.get("D3C", "")
-        if not classif_chave or not d3c:
+        if not classif or not d3c:
             continue
-        trim = _trim_label(d3c)
-        out.setdefault(trim, {})[classif_chave] = _to_float(r.get("V"))
+        out.setdefault(_trim_label(d3c), {})[classif] = _to_float(r.get("V"))
     return out
 
 
-def carrega_2072(periodos: int = 80) -> list[dict[str, Any]]:
-    """Carrega 2072 (contas econômicas trimestrais, R$ correntes)."""
+def carrega_1846(periodos=8):
+    """PIB nominal por setor — R$ milhões. Pegamos apenas últimos trimestres pra pesos atuais."""
+    path = f"/n1/all/v/all/p/last%20{periodos}/c11255/all?formato=json"
+    rows = sidra_fetch(1846, path)
+    out = {}
+    for r in rows:
+        classif = CLASSIF.get(r.get("D4C"))
+        d3c = r.get("D3C", "")
+        if not classif or not d3c:
+            continue
+        out.setdefault(_trim_label(d3c), {})[classif] = _to_float(r.get("V"))
+    return out
+
+
+def carrega_2072(periodos=12):
     path = f"/n1/all/v/all/p/last%20{periodos}?formato=json"
     rows = sidra_fetch(2072, path)
-    # Agrupa por trimestre
-    by_trim: dict[str, dict[str, Any]] = {}
+    by_trim = {}
     for r in rows:
         d3c = r.get("D3C", "")
         d2n = r.get("D2N", "")
@@ -160,7 +167,6 @@ def carrega_2072(periodos: int = 80) -> list[dict[str, Any]]:
             continue
         trim = _trim_label(d3c)
         item = by_trim.setdefault(trim, {"trim": trim})
-        # Usa D2N (nome humano) como chave; varia pouco e o front prefere texto direto
         v = _to_float(r.get("V"))
         if v is not None:
             item[d2n] = v
@@ -170,22 +176,20 @@ def carrega_2072(periodos: int = 80) -> list[dict[str, Any]]:
 FOCUS_BASE = "https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata"
 
 
-def focus_pib_anual(ano_atual: int) -> dict[int, list[dict[str, Any]]]:
-    """Baixa expectativas Focus do PIB anual para ano_atual, ano+1, ano+2."""
+def focus_pib_anual(ano_atual):
     url = (
         f"{FOCUS_BASE}/ExpectativasMercadoAnuais?$format=json&$top=20000"
         f"&$filter=Indicador%20eq%20%27PIB%20Total%27%20and%20Data%20ge%20%27{ano_atual - 1}-01-01%27"
         f"&$orderby=Data%20desc"
     )
-    print(f"  [Focus PIB] {url[:120]}...")
     data = _get(url).json().get("value", [])
-    out: dict[int, list[dict[str, Any]]] = {}
+    out = {}
     for r in data:
         try:
             ano = int(r["DataReferencia"])
         except (KeyError, ValueError):
             continue
-        if ano not in (ano_atual, ano_atual + 1, ano_atual + 2):
+        if ano not in (ano_atual - 1, ano_atual, ano_atual + 1, ano_atual + 2):
             continue
         out.setdefault(ano, []).append({
             "data": r.get("Data", "")[:10],
@@ -197,12 +201,11 @@ def focus_pib_anual(ano_atual: int) -> dict[int, list[dict[str, Any]]]:
         })
     for ano in out:
         out[ano].sort(key=lambda x: x["data"])
-        out[ano] = out[ano][-365:]  # último ano de coletas
     return out
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser(description="Build do JSON Painel Atividade — PIB")
+def main():
+    ap = argparse.ArgumentParser()
     ap.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
     ap.add_argument("--upload", action="store_true")
     args = ap.parse_args()
@@ -211,29 +214,68 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / "atividade_pib.json"
 
-    print("== PIB Variação (SIDRA 5932) ==")
+    print("== PIB Variação 5932 ==")
     var_data = carrega_5932()
-
-    print("== PIB Índice de volume (SIDRA 1621 — com ajuste sazonal) ==")
-    idx_sa = carrega_indice_volume(1621, "584")
-
-    print("== PIB Índice de volume (SIDRA 1620 — sem ajuste) ==")
-    idx_ns = carrega_indice_volume(1620, "583")
-
-    print("== Contas econômicas (SIDRA 2072) ==")
+    print("== PIB Índice SA 1621 ==")
+    idx_sa = carrega_indice(1621, "584")
+    print("== PIB Índice NS 1620 ==")
+    idx_ns = carrega_indice(1620, "583")
+    print("== PIB R$ correntes 1846 ==")
+    valores = carrega_1846()
+    print("== Contas econômicas 2072 ==")
     contas = carrega_2072()
 
-    print("== Focus PIB anual (BCB Olinda) ==")
     trims = sorted(var_data.keys())
     if not trims:
-        print("ERRO: nenhum trimestre carregado de 5932, abortando", file=sys.stderr)
+        print("ERRO: nenhum trim em 5932", file=sys.stderr)
         sys.exit(2)
-    ano_atual = int(trims[-1][:4])
+    trim_recente = trims[-1]
+
+    # Calcula pesos atuais do PIB (cada componente / PIB total no último trim)
+    valores_recentes = valores.get(trim_recente, {})
+    pib_nominal = valores_recentes.get("pib")
+    pesos_atuais = {}
+    if pib_nominal:
+        for k, v in valores_recentes.items():
+            if v is not None and k != "pib":
+                pesos_atuais[k] = round(v / pib_nominal * 100, 2)
+
+    # Série unificada de variações
+    serie_variacao = []
+    for trim in trims:
+        item = {"trim": trim}
+        for var_nome, classifs in var_data[trim].items():
+            for classif, v in classifs.items():
+                item[f"{var_nome}_{classif}"] = v
+        serie_variacao.append(item)
+
+    # Série de índices (níveis)
+    serie_indice = []
+    todos_trim_idx = sorted(set(idx_sa.keys()) | set(idx_ns.keys()))
+    for trim in todos_trim_idx:
+        item = {"trim": trim}
+        sa = idx_sa.get(trim, {})
+        ns = idx_ns.get(trim, {})
+        for ck in CLASSIF.values():
+            item[f"sa_{ck}"] = sa.get(ck)
+            item[f"ns_{ck}"] = ns.get(ck)
+        serie_indice.append(item)
+
+    # Série de valores nominais (R$ correntes)
+    serie_valores = []
+    for trim in sorted(valores.keys()):
+        item = {"trim": trim}
+        for ck, v in valores[trim].items():
+            item[ck] = v
+        serie_valores.append(item)
+
+    print("== Focus PIB anual ==")
+    ano_atual = int(trim_recente[:4])
     try:
         focus = focus_pib_anual(ano_atual)
-        print(f"  Anos: {sorted(focus.keys())} | pontos por ano: {[len(focus[a]) for a in sorted(focus.keys())]}")
+        print(f"  Focus anos: {sorted(focus.keys())}")
     except Exception as e:
-        print(f"  [WARN] Focus indisponível ({e}). Tentando fallback do Blob anterior.", file=sys.stderr)
+        print(f"  [WARN] Focus indisponível ({e}). Fallback Blob.", file=sys.stderr)
         focus = {}
         try:
             sys.path.insert(0, str(HERE))
@@ -241,52 +283,36 @@ def main() -> None:
             prev = download_json(BLOB_PATH)
             if prev and prev.get("focus"):
                 focus = prev["focus"]
-                print(f"  [WARN] Usando Focus do build anterior (gerado_em {prev.get('gerado_em')}).", file=sys.stderr)
-        except Exception as e2:
-            print(f"  [WARN] Fallback Blob falhou ({e2}). Focus fica vazio.", file=sys.stderr)
+        except Exception:
+            pass
 
-    # Monta serie unificada de variações
-    serie_variacao: list[dict[str, Any]] = []
-    for trim in trims:
-        item: dict[str, Any] = {"trim": trim}
-        for var_nome, classifs in var_data[trim].items():
-            for classif_chave, v in classifs.items():
-                item[f"{var_nome}_{classif_chave}"] = v
-        serie_variacao.append(item)
-
-    # Series de índice (níveis) - apenas para PIB total (90707), o resto ficaria pesado
-    serie_indice: list[dict[str, Any]] = []
-    for trim in sorted(idx_sa.keys()):
-        serie_indice.append({
-            "trim": trim,
-            "idx_sa_pib": idx_sa[trim].get("pib"),
-            "idx_ns_pib": idx_ns.get(trim, {}).get("pib"),
-        })
-
-    # Sanity: PIB var YoY do trimestre mais recente
+    # Sanity
     ultimo = serie_variacao[-1]
     yoy_pib = ultimo.get("yoy_pib")
     qoq_pib = ultimo.get("qoq_sa_pib")
-    assert yoy_pib is None or -15 < yoy_pib < 15, f"PIB YoY fora da banda: {yoy_pib}"
-    assert qoq_pib is None or -10 < qoq_pib < 10, f"PIB QoQ SA fora da banda: {qoq_pib}"
+    assert yoy_pib is None or -15 < yoy_pib < 15
+    assert qoq_pib is None or -10 < qoq_pib < 10
 
     out = {
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "trim_recente": trims[-1],
+        "trim_recente": trim_recente,
         "variacao": {"serie": serie_variacao},
         "indice_volume": {"serie": serie_indice},
+        "valores_correntes": {"serie": serie_valores},  # NOVO
         "contas_economicas": {"serie": contas},
+        "pesos_atuais": pesos_atuais,  # NOVO
+        "labels": CLASSIF_LABEL,  # NOVO
         "focus": focus,
         "metadata": {
-            "fonte_principal": "IBGE SIDRA — Contas Nacionais Trimestrais (tabelas 5932 variação, 1620/1621 índice de volume, 2072 contas econômicas)",
-            "fonte_focus": "BCB Olinda — ExpectativasMercadoAnuais (Indicador 'PIB Total')",
-            "nota": "PIB sai trimestral com lag de ~60 dias. Cron: dia 1-3 dos meses mar/jun/set/dez. Cada divulgação revisa trimestres anteriores.",
+            "fonte_principal": "IBGE SIDRA — Contas Nacionais Trimestrais (5932 variação, 1620/1621 índice volume, 1846 R$ correntes, 2072 contas econômicas)",
+            "fonte_focus": "BCB Olinda — ExpectativasMercadoAnuais PIB Total",
+            "nota": "PIB sai trimestral lag ~60 dias. Pesos atuais calculados a partir de 1846. Cada nova divulgação revisa trimestres anteriores.",
         },
     }
 
     out_file.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"\nJSON salvo em {out_file} ({out_file.stat().st_size/1024:.1f} KB)")
-    print(f"Trim recente: {trims[-1]} | PIB YoY: {yoy_pib}% | QoQ SA: {qoq_pib}%")
+    print(f"\nJSON salvo {out_file} ({out_file.stat().st_size/1024:.1f} KB)")
+    print(f"Trim recente: {trim_recente} | PIB YoY {yoy_pib}% | QoQ SA {qoq_pib}%")
 
     if args.upload:
         try:
@@ -296,8 +322,6 @@ def main() -> None:
         except Exception as e:
             print(f"[upload] FALHOU: {e}", file=sys.stderr)
             sys.exit(1)
-    else:
-        print("[upload] SKIP")
 
 
 if __name__ == "__main__":

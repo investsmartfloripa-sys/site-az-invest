@@ -1,35 +1,26 @@
-"""Build do JSON do Painel Atividade — bloco PMC (Comércio Varejista).
+"""Build do JSON do Painel Atividade — bloco PMC (ENRIQUECIDO).
 
-Baixa do IBGE SIDRA (PMC base 2022=100):
-- 8880 — Varejo restrito (índice geral)
-- 8881 — Varejo ampliado (índice geral)
-- 8882 — Varejo restrito por 11 atividades
-- 8883 — Varejo ampliado por 14 atividades
+IBGE SIDRA — PMC base 2022=100:
+- 8880 — Varejo restrito (geral)
+- 8881 — Varejo ampliado (geral)
+- 8882 — Restrito por 11 atividades
+- 8883 — Ampliado por 14 atividades
 
-Decisão editorial (NOTAS §3.4): gráfico principal mostra restrito + ampliado lado a lado.
-
-Gera `data-pipeline/out/atividade_pmc.json` e upload pra `data/atividade_pmc.json`.
+Salva: serie geral (restrito+ampliado, volume+receita_nominal), TODAS as atividades
+por mês (não só top 5), gap restrito-ampliado, heatmap mensal.
 """
 from __future__ import annotations
-
-import argparse
-import json
-import sys
-import time
+import argparse, json, sys, time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
-
 import requests
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/atividade_pmc.json"
-
-UA = {"User-Agent": "az-invest-atividade-pmc/0.1"}
+UA = {"User-Agent": "az-invest-atividade-pmc/0.2"}
 SIDRA_BASE = "https://apisidra.ibge.gov.br/values"
 
-# Variáveis comuns PMC (base 2022=100)
 VAR_PMC = {
     "11708": "var_mom_sa",
     "11709": "var_yoy",
@@ -39,17 +30,13 @@ VAR_PMC = {
     "7170": "indice_sa",
 }
 
-# Tipos de índice (c11046)
-TIPO_INDICE = {
-    "56733": "receita_nominal",  # restrito
-    "56734": "volume",            # restrito
-    "56735": "receita_nominal",  # ampliado (mesmo nome, tabela diferente)
-    "56736": "volume",            # ampliado
-}
+# Tipos de índice (c11046): receita nominal × volume
+TIPO_RESTRITO = {"56733": "receita_nominal", "56734": "volume"}
+TIPO_AMPLIADO = {"56735": "receita_nominal", "56736": "volume"}
 
 
-def _get(url: str, *, timeout: int = 90, retries: int = 3, sleep: float = 3.0) -> requests.Response:
-    last: Exception | None = None
+def _get(url, *, timeout=90, retries=3, sleep=3.0):
+    last = None
     for i in range(retries):
         try:
             r = requests.get(url, timeout=timeout, headers=UA)
@@ -57,12 +44,11 @@ def _get(url: str, *, timeout: int = 90, retries: int = 3, sleep: float = 3.0) -
             return r
         except Exception as e:
             last = e
-            print(f"  retry {i + 1}/{retries}: {e}", file=sys.stderr)
             time.sleep(sleep)
-    raise RuntimeError(f"falha após {retries} tentativas: {last}")
+    raise RuntimeError(f"falha: {last}")
 
 
-def _to_float(v: Any) -> float | None:
+def _to_float(v):
     if v in ("", "-", "..", "...", None):
         return None
     try:
@@ -71,64 +57,65 @@ def _to_float(v: Any) -> float | None:
         return None
 
 
-def _mes_label(d3c: str) -> str:
+def _mes(d3c):
     return f"{d3c[:4]}-{d3c[4:]}"
 
 
-def sidra_fetch(tabela: int, path: str) -> list[dict]:
+def sidra(tabela, path):
     url = f"{SIDRA_BASE}/t/{tabela}{path}"
-    print(f"  [SIDRA {tabela}] {url[:140]}...")
+    print(f"  [SIDRA {tabela}]")
     data = _get(url).json()
-    if not data:
-        return []
-    return data[1:]
+    return data[1:] if data else []
 
 
-def carrega_geral(tabela: int, periodos: int = 60) -> dict[str, dict[str, dict[str, float | None]]]:
-    """Carrega 8880 ou 8881 (índice geral por tipo). Retorna {mes: {tipo: {var: valor}}}."""
-    path = f"/n1/all/v/all/p/last%20{periodos}/c11046/all?formato=json"
-    rows = sidra_fetch(tabela, path)
-    out: dict[str, dict[str, dict[str, float | None]]] = {}
+def carrega_geral(tabela, tipo_map, periodos=60):
+    rows = sidra(tabela, f"/n1/all/v/all/p/last%20{periodos}/c11046/all?formato=json")
+    out = {}
     for r in rows:
-        d2c = r.get("D2C")
-        d4c = r.get("D4C")
+        var_nome = VAR_PMC.get(r.get("D2C"))
+        tipo = tipo_map.get(r.get("D4C"))
         d3c = r.get("D3C", "")
-        var_nome = VAR_PMC.get(d2c)
-        tipo = TIPO_INDICE.get(d4c)
         if not var_nome or not tipo or not d3c:
             continue
-        mes = _mes_label(d3c)
-        out.setdefault(mes, {}).setdefault(tipo, {})[var_nome] = _to_float(r.get("V"))
+        out.setdefault(_mes(d3c), {}).setdefault(tipo, {})[var_nome] = _to_float(r.get("V"))
     return out
 
 
-def carrega_atividades(tabela: int, periodos: int = 12) -> dict[str, list[dict[str, Any]]]:
-    """Carrega 8882 ou 8883 (por atividade) — apenas variável var_yoy do volume.
-
-    Retorna {mes: [{atividade, var_yoy}]}.
-    """
-    path = f"/n1/all/v/11709/p/last%20{periodos}/c11046/all/c85/all?formato=json"
-    rows = sidra_fetch(tabela, path)
-    by_mes: dict[str, list[dict[str, Any]]] = {}
+def carrega_atividades(tabela, tipo_volume, periodos=24):
+    """Todas as atividades com var_yoy + var_mom_sa + var_acum_12m + indice_sa."""
+    rows = sidra(tabela, f"/n1/all/v/all/p/last%20{periodos}/c11046/all/c85/all?formato=json")
+    out = {}  # mes → list[dict]
+    by_mes_ativ = {}  # mes → ativ → {var: v}
+    nomes = {}
     for r in rows:
+        var_nome = VAR_PMC.get(r.get("D2C"))
+        tipo = r.get("D4C", "")
         d3c = r.get("D3C", "")
-        d4c = r.get("D4C", "")  # c11046 tipo de índice
-        d5n = r.get("D5N", "")  # c85 atividade
-        v = _to_float(r.get("V"))
-        # Filtrar apenas Volume (não receita nominal)
-        if d4c not in ("56734", "56736"):
+        d5c = r.get("D5C", "")
+        d5n = r.get("D5N", "")
+        if not var_nome or tipo != tipo_volume or not d3c or not d5c:
             continue
-        if not d3c or not d5n or v is None:
-            continue
-        mes = _mes_label(d3c)
-        by_mes.setdefault(mes, []).append({"atividade": d5n, "var_yoy": v})
-    for mes in by_mes:
-        by_mes[mes].sort(key=lambda x: x["var_yoy"], reverse=True)
-    return by_mes
+        mes = _mes(d3c)
+        by_mes_ativ.setdefault(mes, {}).setdefault(d5c, {})[var_nome] = _to_float(r.get("V"))
+        nomes[d5c] = d5n
+    for mes, atividades in by_mes_ativ.items():
+        items = []
+        for d5c, vals in atividades.items():
+            items.append({
+                "id": d5c,
+                "atividade": nomes.get(d5c, d5c),
+                "var_yoy": vals.get("var_yoy"),
+                "var_mom_sa": vals.get("var_mom_sa"),
+                "var_acum_12m": vals.get("var_acum_12m"),
+                "indice_sa": vals.get("indice_sa"),
+            })
+        items.sort(key=lambda x: x["var_yoy"] if x["var_yoy"] is not None else -999, reverse=True)
+        out[mes] = items
+    return out, nomes
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser(description="Build do JSON Painel Atividade — PMC")
+def main():
+    ap = argparse.ArgumentParser()
     ap.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
     ap.add_argument("--upload", action="store_true")
     args = ap.parse_args()
@@ -137,79 +124,63 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / "atividade_pmc.json"
 
-    print("== PMC Restrito (SIDRA 8880) ==")
-    restrito = carrega_geral(8880)
-    print("== PMC Ampliado (SIDRA 8881) ==")
-    ampliado = carrega_geral(8881)
-    print("== PMC Restrito por atividade (SIDRA 8882) ==")
-    ativ_restrito = carrega_atividades(8882)
-    print("== PMC Ampliado por atividade (SIDRA 8883) ==")
-    ativ_ampliado = carrega_atividades(8883)
+    print("== PMC 8880 restrito ==")
+    restrito = carrega_geral(8880, TIPO_RESTRITO)
+    print("== PMC 8881 ampliado ==")
+    ampliado = carrega_geral(8881, TIPO_AMPLIADO)
+    print("== PMC 8882 restrito por atividade ==")
+    ativ_restrito, nomes_r = carrega_atividades(8882, "56734")  # volume restrito
+    print("== PMC 8883 ampliado por atividade ==")
+    ativ_ampliado, nomes_a = carrega_atividades(8883, "56736")  # volume ampliado
 
     meses = sorted(set(restrito.keys()) | set(ampliado.keys()))
     if not meses:
-        print("ERRO: nenhum mês carregado, abortando", file=sys.stderr)
         sys.exit(2)
     mes_recente = meses[-1]
 
-    # Serie unificada: para cada mês, volume_restrito + volume_ampliado em todas as vars + receita_nominal (compactamos com prefixo)
-    serie: list[dict[str, Any]] = []
-    for mes in meses:
-        item: dict[str, Any] = {"mes": mes}
-        r_vol = restrito.get(mes, {}).get("volume", {})
-        r_rec = restrito.get(mes, {}).get("receita_nominal", {})
-        a_vol = ampliado.get(mes, {}).get("volume", {})
-        a_rec = ampliado.get(mes, {}).get("receita_nominal", {})
-        for var_nome in VAR_PMC.values():
-            item[f"restrito_volume_{var_nome}"] = r_vol.get(var_nome)
-            item[f"restrito_receita_{var_nome}"] = r_rec.get(var_nome)
-            item[f"ampliado_volume_{var_nome}"] = a_vol.get(var_nome)
-            item[f"ampliado_receita_{var_nome}"] = a_rec.get(var_nome)
+    # Série unificada com TODAS as vars (volume + receita) restrito + ampliado
+    serie = []
+    for m in meses:
+        item = {"mes": m}
+        for tipo in ("volume", "receita_nominal"):
+            r = restrito.get(m, {}).get(tipo, {})
+            a = ampliado.get(m, {}).get(tipo, {})
+            for var_nome in VAR_PMC.values():
+                item[f"restrito_{tipo}_{var_nome}"] = r.get(var_nome)
+                item[f"ampliado_{tipo}_{var_nome}"] = a.get(var_nome)
+        # gap ampliado − restrito (var YoY volume)
+        rv = item.get("restrito_volume_var_yoy")
+        av = item.get("ampliado_volume_var_yoy")
+        item["gap_yoy"] = round(av - rv, 2) if (rv is not None and av is not None) else None
         serie.append(item)
 
-    # Atividades (mês recente, top 5 alta/queda, restrito e ampliado)
-    ativ_r = ativ_restrito.get(mes_recente, [])
-    ativ_a = ativ_ampliado.get(mes_recente, [])
-
     # Sanity
-    ultimo = serie[-1]
-    idx_r = ultimo.get("restrito_volume_indice_sa")
-    idx_a = ultimo.get("ampliado_volume_indice_sa")
-    yoy_r = ultimo.get("restrito_volume_var_yoy")
-    assert idx_r is None or 70 < idx_r < 140, f"índice restrito SA fora da banda: {idx_r}"
-    assert idx_a is None or 70 < idx_a < 140, f"índice ampliado SA fora da banda: {idx_a}"
+    ult = serie[-1]
+    idx_r = ult.get("restrito_volume_indice_sa")
+    assert idx_r is None or 70 < idx_r < 140
 
     out = {
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "mes_recente": mes_recente,
         "serie": serie,
         "atividades": {
-            "mes": mes_recente,
-            "restrito_top_altas": ativ_r[:5],
-            "restrito_top_quedas": ativ_r[-5:][::-1] if ativ_r else [],
-            "ampliado_top_altas": ativ_a[:5],
-            "ampliado_top_quedas": ativ_a[-5:][::-1] if ativ_a else [],
+            "mes_recente": mes_recente,
+            "restrito_mensal": ativ_restrito,  # mes → list
+            "ampliado_mensal": ativ_ampliado,  # mes → list
         },
         "metadata": {
-            "fonte": "IBGE SIDRA — PMC (tabelas 8880 restrito, 8881 ampliado, 8882 restrito por atividade, 8883 ampliado por atividade). Base 2022=100.",
-            "nota": "Volume é deflacionado e é a métrica principal; receita nominal disponível como toggle. Lag editorial ~45 dias.",
+            "fonte": "IBGE SIDRA — PMC (8880 restrito, 8881 ampliado, 8882/8883 por atividade). Base 2022=100.",
+            "nota": "Volume é deflacionado (manchete IBGE); receita nominal mostra impacto da inflação. Ampliado adiciona veículos + materiais de construção (mais volátil). Gap ampliado−restrito mede contribuição de autos/construção.",
         },
     }
 
     out_file.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"\nJSON salvo em {out_file} ({out_file.stat().st_size/1024:.1f} KB)")
-    print(f"Mês recente: {mes_recente} | Restrito YoY: {yoy_r}% | índice SA restrito: {idx_r}")
+    print(f"JSON {out_file} ({out_file.stat().st_size/1024:.1f} KB) | atividades restrito mes_rec: {len(ativ_restrito.get(mes_recente, []))} | ampliado: {len(ativ_ampliado.get(mes_recente, []))}")
 
     if args.upload:
-        try:
-            sys.path.insert(0, str(HERE))
-            from shared.blob_upload import maybe_upload_json
-            maybe_upload_json(out_file, BLOB_PATH)
-        except Exception as e:
-            print(f"[upload] FALHOU: {e}", file=sys.stderr)
-            sys.exit(1)
-    else:
-        print("[upload] SKIP")
+        sys.path.insert(0, str(HERE))
+        from shared.blob_upload import maybe_upload_json
+        maybe_upload_json(out_file, BLOB_PATH)
 
 
 if __name__ == "__main__":
