@@ -31,6 +31,7 @@ VAR_PMS = {
     "7168": "indice_sa",
 }
 TIPO = {"56725": "receita_nominal", "56726": "volume"}
+TIPO_TURISMO = {"56727": "receita_nominal", "56728": "volume"}
 
 
 def _get(url, *, timeout=90, retries=3, sleep=3.0):
@@ -116,7 +117,7 @@ def carrega_turismo(periodos=24):
     out = {}
     for r in rows:
         var_nome = VAR_PMS.get(r.get("D2C"))
-        tipo = TIPO.get(r.get("D4C"))
+        tipo = TIPO_TURISMO.get(r.get("D4C"))
         d3c = r.get("D3C", "")
         if not var_nome or not tipo or not d3c:
             continue
@@ -125,7 +126,7 @@ def carrega_turismo(periodos=24):
 
 
 def carrega_transportes(periodos=24):
-    rows = sidra(8695, f"/n1/all/v/all/p/last%20{periodos}/c11046/all?formato=json")
+    rows = sidra(8695, f"/n1/all/v/all/p/last%20{periodos}/c11046/all/c12355/all?formato=json")
     by_mes_d5 = {}
     nomes = {}
     for r in rows:
@@ -134,13 +135,10 @@ def carrega_transportes(periodos=24):
         d3c = r.get("D3C", "")
         d5c = r.get("D5C", "")
         d5n = r.get("D5N", "")
-        if not var_nome or tipo != "56726" or not d3c:
+        if not var_nome or tipo != "56726" or not d3c or not d5c:
             continue
-        # Pode não ter c5; salvar mesmo sem
-        key = d5c or "total"
-        by_mes_d5.setdefault(_mes(d3c), {}).setdefault(key, {})[var_nome] = _to_float(r.get("V"))
-        if d5c:
-            nomes[d5c] = d5n
+        by_mes_d5.setdefault(_mes(d3c), {}).setdefault(d5c, {})[var_nome] = _to_float(r.get("V"))
+        nomes[d5c] = d5n
     return by_mes_d5, nomes
 
 
@@ -204,7 +202,13 @@ def main():
         item = {"mes": m}
         for d5c, vals in transportes_raw[m].items():
             label = nomes_transp.get(d5c, d5c)
-            slug = label.lower().replace(" ", "_").replace(".", "")[:30]
+            # Slug curto e estável
+            if "passageiro" in label.lower():
+                slug = "passageiros"
+            elif "carga" in label.lower():
+                slug = "cargas"
+            else:
+                slug = label.lower().replace(" ", "_").replace(".", "")[:20] or "outros"
             for var_nome in VAR_PMS.values():
                 item[f"{slug}_{var_nome}"] = vals.get(var_nome)
         serie_transportes.append(item)
