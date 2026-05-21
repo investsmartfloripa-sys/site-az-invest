@@ -113,6 +113,13 @@ const economiaBrasil: CategoryDef[] = [
     frequency: "mensal",
     sourceHint: "BCB (BPM6), SGS",
   },
+  {
+    slug: "familias",
+    label: "Famílias",
+    description: "Renda, endividamento, comprometimento mensal e saúde financeira das famílias brasileiras.",
+    frequency: "mensal",
+    sourceHint: "BCB SGS, IBGE PNAD, Ipeadata",
+  },
 ];
 
 const economiaGlobal: CategoryDef[] = [
