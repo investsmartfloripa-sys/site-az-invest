@@ -106,6 +106,13 @@ const economiaBrasil: CategoryDef[] = [
     frequency: "diario",
     sourceHint: "BCB, B3",
   },
+  {
+    slug: "contas-externas",
+    label: "Contas externas",
+    description: "Balanço de pagamentos, investimento direto e reservas internacionais.",
+    frequency: "mensal",
+    sourceHint: "BCB (BPM6), SGS",
+  },
 ];
 
 const economiaGlobal: CategoryDef[] = [

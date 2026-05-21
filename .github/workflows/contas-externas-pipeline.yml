@@ -1,0 +1,33 @@
+name: Contas Externas pipeline (BCB BPM6)
+
+# BCB publica nota de imprensa do setor externo ~25 dias úteis após o fim do mês.
+# Reservas internacionais diárias atualizam em D+1. Cron diário cobre ambos.
+
+on:
+  schedule:
+    - cron: "30 23 * * *"  # 23h30 UTC = 20h30 BRT
+  workflow_dispatch:
+
+concurrency:
+  group: contas-externas-pipeline
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      NEXT_PUBLIC_BLOB_BASE_URL: ${{ vars.NEXT_PUBLIC_BLOB_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: data-pipeline/python/requirements.txt
+      - name: Pip install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r data-pipeline/python/requirements.txt
+      - name: Build Contas Externas JSON e upload
+        run: python data-pipeline/python/build_contas_externas.py --upload
