@@ -1,0 +1,60 @@
+name: Deploy to Vercel (produção)
+
+# Dispara em push pro main, mas só faz deploy se VERCEL_TOKEN estiver configurado
+# como secret. Caso contrário, o job é pulado silenciosamente.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "data-pipeline/out/**"
+      - "**/*.md"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vercel
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'investsmartfloripa-sys/site-az-invest' }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: team_HWLe97M5ATLtqBcbRft5vTxN
+      VERCEL_PROJECT_ID: prj_RY8ZHYMM6fXBKpNWLhWSxwXzWZsK
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detectar VERCEL_TOKEN
+        id: check
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "::warning::VERCEL_TOKEN não configurado — deploy pulado. Adicione em https://github.com/$GITHUB_REPOSITORY/settings/secrets/actions"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node
+        if: steps.check.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Vercel CLI
+        if: steps.check.outputs.skip != 'true'
+        run: npm install -g vercel
+
+      - name: Pull Vercel config
+        if: steps.check.outputs.skip != 'true'
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+
+      - name: Build
+        if: steps.check.outputs.skip != 'true'
+        run: vercel build --prod --token=$VERCEL_TOKEN
+
+      - name: Deploy
+        if: steps.check.outputs.skip != 'true'
+        run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
