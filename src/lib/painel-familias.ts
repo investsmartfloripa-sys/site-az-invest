@@ -1,9 +1,11 @@
 /**
  * Loaders dos JSONs do Painel Famílias — Brasil.
  *
- * Onda 1 — 2 JSONs no Blob:
- * - data/familias_endividamento.json — gerado por build_familias_endividamento.py
- * - data/familias_renda.json — gerado por build_familias_renda.py
+ * Ondas 1+2 — 4 JSONs no Blob:
+ * - data/familias_endividamento.json (B)
+ * - data/familias_renda.json (A)
+ * - data/familias_poder_compra.json (C)
+ * - data/familias_estrutura_social.json (D)
  *
  * Workflow GitHub Actions: familias-pipeline.yml (cron diário 23h30 UTC).
  */
@@ -13,9 +15,11 @@ import { painelBlobUrl } from "@/lib/painel-blob";
 export const FAMILIAS_REVALIDATE_SECONDS = 3600; // 1h
 const BLOB_PATH_ENDIVIDAMENTO = "data/familias_endividamento.json";
 const BLOB_PATH_RENDA = "data/familias_renda.json";
+const BLOB_PATH_PODER_COMPRA = "data/familias_poder_compra.json";
+const BLOB_PATH_ESTRUTURA_SOCIAL = "data/familias_estrutura_social.json";
 
 // ---------------------------------------------------------------------------
-// Tipos — Endividamento
+// Tipos compartilhados
 // ---------------------------------------------------------------------------
 type NumOrNull = number | null;
 
@@ -28,7 +32,7 @@ export type FamiliasKpi = {
 export type SeriePonto = {
   mes: string;            // YYYY-MM-DD (dia 01)
   valor: number;
-  revised_at?: string;    // YYYY-MM-DD do último update de valor
+  revised_at?: string;
 };
 
 export type ComposicaoPctPonto = {
@@ -42,6 +46,9 @@ export type ComposicaoPctPonto = {
   outras_pct: number;
 };
 
+// ---------------------------------------------------------------------------
+// Tipos — Endividamento (B)
+// ---------------------------------------------------------------------------
 export type FamiliasEndividamentoData = {
   gerado_em: string;
   fonte_principal: string;
@@ -78,10 +85,10 @@ export type FamiliasEndividamentoData = {
 };
 
 // ---------------------------------------------------------------------------
-// Tipos — Renda
+// Tipos — Renda (A)
 // ---------------------------------------------------------------------------
 export type RendaTotalPonto = {
-  trim: string;                          // 'YYYY-MM' (último mês do trim móvel)
+  trim: string;
   rendimento_medio_real?: NumOrNull;
   rendimento_medio_nominal?: NumOrNull;
   var_pct_aa_real?: NumOrNull;
@@ -138,11 +145,193 @@ export type FamiliasRendaData = {
 };
 
 // ---------------------------------------------------------------------------
+// Tipos — Poder de Compra (C)
+// ---------------------------------------------------------------------------
+export type CestaPonto = {
+  data: string;
+  cesta_brl: number;
+  sm_brl: number;
+  horas_sm: number;
+  pct_sm: number;
+};
+
+export type CambioPonto = {
+  data: string;
+  sm_brl: number;
+  ptax: number;
+  sm_usd_ptax: number;
+};
+
+export type PpcPonto = {
+  data: string;
+  sm_usd_ppc?: number;
+  ppc_taxa?: number;
+};
+
+export type RendaUsdPonto = {
+  data: string;
+  renda_brl: number;
+  ptax: number;
+  renda_usd_ptax: number;
+};
+
+export type FipezapPonto = {
+  data: string;
+  indice: number;
+  var_pct_aa: number | null;
+};
+
+export type FamiliasPoderCompraData = {
+  gerado_em: string;
+  mes_recente: string | null;
+  fonte_principal: string;
+  hero: {
+    cesta_horas_sm: {
+      data: string | null;
+      valor: NumOrNull;
+      pct_sm: NumOrNull;
+      unidade: string;
+    };
+    sm_usd_ptax: FamiliasKpi;
+    sm_usd_ppc: FamiliasKpi;
+    renda_media_usd_ptax: FamiliasKpi;
+    fipezap: {
+      data: string | null;
+      indice: NumOrNull;
+      var_pct_aa: NumOrNull;
+      unidade: string;
+    };
+  };
+  bloco_cesta_basica: {
+    serie: CestaPonto[];
+    horas_mes_referencia: number;
+    fonte: string;
+  };
+  bloco_cambio_ptax: {
+    serie: CambioPonto[];
+    fonte: string;
+  };
+  bloco_ppc: {
+    serie: PpcPonto[];
+    fonte: string;
+  };
+  bloco_renda_media_usd: {
+    serie: RendaUsdPonto[];
+    fonte: string;
+  };
+  bloco_fipezap: {
+    serie: FipezapPonto[];
+    fonte: string;
+  };
+  metadata: {
+    fonte: string;
+    defasagem_publicacao: string;
+    nota?: string;
+  };
+};
+
+// ---------------------------------------------------------------------------
+// Tipos — Estrutura Social (D)
+// ---------------------------------------------------------------------------
+export type ConcentracaoPonto = {
+  ano: string;
+  bottom40: number;
+  middle50: number;
+  top10: number;
+};
+
+export type PobrezaPonto = {
+  ano: string;
+  pct_300?: number;
+  pct_420?: number;
+  pct_830?: number;
+  abs_215?: number;
+  abs_365?: number;
+};
+
+export type TransferenciaPonto = {
+  data: string;
+  pbf_valor_milhoes?: number;
+  bpc_valor_milhoes?: number;
+  bpc_pessoas?: number;
+};
+
+export type GiniPonto = { ano: string; valor: number };
+
+export type IpcaFaixaPonto = {
+  data: string;
+  muito_baixa?: number;
+  baixa?: number;
+  media_baixa?: number;
+  media?: number;
+  media_alta?: number;
+  alta?: number;
+};
+
+export type FamiliasEstruturaSocialData = {
+  gerado_em: string;
+  ano_recente: string | null;
+  mes_recente_mensal: string | null;
+  fonte_principal: string;
+  hero: {
+    concentracao_top10: {
+      ano: string | null;
+      valor: NumOrNull;
+      bottom40: NumOrNull;
+      unidade: string;
+    };
+    pobreza_pct_830: {
+      ano: string | null;
+      valor: NumOrNull;
+      unidade: string;
+    };
+    gini: {
+      ano: string | null;
+      valor: NumOrNull;
+      unidade: string;
+    };
+    bolsa_familia: {
+      data: string | null;
+      valor_milhoes_brl: NumOrNull;
+      unidade: string;
+    };
+  };
+  bloco_concentracao_renda: {
+    serie: ConcentracaoPonto[];
+    fonte: string;
+  };
+  bloco_pobreza: {
+    serie: PobrezaPonto[];
+    fonte: string;
+  };
+  bloco_transferencias_sociais: {
+    serie: TransferenciaPonto[];
+    fonte: string;
+  };
+  bloco_gini: {
+    serie: GiniPonto[];
+    fonte: string;
+  };
+  bloco_ipca_faixa_renda: {
+    serie: IpcaFaixaPonto[];
+    faixas: Record<string, string>;
+    fonte: string;
+  };
+  metadata: {
+    fonte: string;
+    defasagem_publicacao: string;
+    nota?: string;
+  };
+};
+
+// ---------------------------------------------------------------------------
 // Tipo agregado
 // ---------------------------------------------------------------------------
 export type FamiliasData = {
   endividamento: FamiliasEndividamentoData | null;
   renda: FamiliasRendaData | null;
+  poder_compra: FamiliasPoderCompraData | null;
+  estrutura_social: FamiliasEstruturaSocialData | null;
 };
 
 // ---------------------------------------------------------------------------
@@ -177,10 +366,20 @@ export async function loadFamiliasRenda(): Promise<FamiliasRendaData | null> {
   return fetchJson<FamiliasRendaData>(BLOB_PATH_RENDA, "renda");
 }
 
+export async function loadFamiliasPoderCompra(): Promise<FamiliasPoderCompraData | null> {
+  return fetchJson<FamiliasPoderCompraData>(BLOB_PATH_PODER_COMPRA, "poder_compra");
+}
+
+export async function loadFamiliasEstruturaSocial(): Promise<FamiliasEstruturaSocialData | null> {
+  return fetchJson<FamiliasEstruturaSocialData>(BLOB_PATH_ESTRUTURA_SOCIAL, "estrutura_social");
+}
+
 export async function loadFamilias(): Promise<FamiliasData> {
-  const [endividamento, renda] = await Promise.all([
+  const [endividamento, renda, poder_compra, estrutura_social] = await Promise.all([
     loadFamiliasEndividamento(),
     loadFamiliasRenda(),
+    loadFamiliasPoderCompra(),
+    loadFamiliasEstruturaSocial(),
   ]);
-  return { endividamento, renda };
+  return { endividamento, renda, poder_compra, estrutura_social };
 }
