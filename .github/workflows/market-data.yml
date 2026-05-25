@@ -1,10 +1,14 @@
 name: Market data (aba Ativos de mercado)
 
-# Roda 1x/dia, ~22:30 UTC = 19:30 BRT (apos fechamento do pregao B3).
+# Roda 2x/dia em dias uteis:
+#   22:30 UTC = 19:30 BRT (primeira tentativa, pode ser marginal: ANBIMA publica ~19-21h BRT)
+#   00:30 UTC do dia seguinte = 21:30 BRT do dia util (retry quando o arquivo ja existe)
+# concurrency:cancel-in-progress garante que so um roda por vez.
 # Plus dispatch manual para testes.
 on:
   schedule:
     - cron: "30 22 * * 1-5"
+    - cron: "30 0 * * 2-6"
   workflow_dispatch:
     inputs:
       lookback_years:
