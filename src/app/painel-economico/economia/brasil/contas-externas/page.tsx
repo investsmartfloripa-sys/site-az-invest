@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 
 import { ContasExternasDashboard } from "@/components/painel/contas-externas/ContasExternasDashboard";
-import { loadContasExternas } from "@/lib/painel-contas-externas";
+import { loadContasExternas, loadContasExternasComex } from "@/lib/painel-contas-externas";
 
 export const metadata: Metadata = {
   title: "Contas Externas — AZ Invest",
   description:
-    "Balanço de pagamentos, investimento direto e reservas internacionais do Brasil. Dados BCB (BPM6) com atualização automática diária.",
+    "Balanço de pagamentos, investimento direto, reservas internacionais e comércio exterior por produto e destino. Dados BCB (BPM6) e SECEX/MDIC (Comex Stat), atualização automática diária.",
 };
 
 export const revalidate = 3600;
 
 export default async function PainelContasExternasPage() {
-  const data = await loadContasExternas();
+  const [data, comex] = await Promise.all([loadContasExternas(), loadContasExternasComex()]);
 
   if (!data) {
     return (
@@ -22,5 +22,5 @@ export default async function PainelContasExternasPage() {
     );
   }
 
-  return <ContasExternasDashboard data={data} />;
+  return <ContasExternasDashboard data={data} comex={comex} />;
 }

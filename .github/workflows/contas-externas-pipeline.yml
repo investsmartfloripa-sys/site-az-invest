@@ -1,7 +1,8 @@
-name: Contas Externas pipeline (BCB BPM6)
+name: Contas Externas pipeline (BCB BPM6 + Comex Stat)
 
-# BCB publica nota de imprensa do setor externo ~25 dias úteis após o fim do mês.
-# Reservas internacionais diárias atualizam em D+1. Cron diário cobre ambos.
+# BCB SGS atualiza diariamente (reservas) e mensalmente (BP).
+# SECEX Comex Stat atualiza mensalmente (defasagem ~1 mês).
+# Cron diário cobre os dois — Comex tem rate limit interno, rodada inteira leva ~3min.
 
 on:
   schedule:
@@ -29,5 +30,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r data-pipeline/python/requirements.txt
-      - name: Build Contas Externas JSON e upload
+      - name: Build BCB JSON e upload
         run: python data-pipeline/python/build_contas_externas.py --upload
+      - name: Build Comex Stat JSON e upload
+        run: python data-pipeline/python/build_contas_externas_comex.py --upload

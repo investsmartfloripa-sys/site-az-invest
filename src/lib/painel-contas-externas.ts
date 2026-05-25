@@ -98,7 +98,34 @@ export type ContasExternasData = {
 };
 
 // ---------------------------------------------------------------------------
-// Loader
+// Comex Stat (SECEX/MDIC) — comércio exterior por produto/país
+// ---------------------------------------------------------------------------
+const COMEX_BLOB_PATH = "data/contas_externas_comex.json";
+
+export type CategoriaPonto = { categoria: string; valor_us_bi: number };
+export type NcmPonto = { ncm: string; nome: string; valor_us_bi: number };
+export type PaisPonto = { pais: string; valor_us_bi: number };
+export type SecaoSeriePonto = Record<string, number | string>;
+
+export type ContasExternasComexData = {
+  gerado_em: string;
+  fonte_principal: string;
+  periodo_3m: { from: string; to: string };
+  top_ncm_export_3m: NcmPonto[];
+  top_ncm_import_3m: NcmPonto[];
+  categorias_export_3m: CategoriaPonto[];
+  categorias_import_3m: CategoriaPonto[];
+  top_destinos_3m: PaisPonto[];
+  top_origens_3m: PaisPonto[];
+  secao_export_12m: SecaoSeriePonto[];
+  secao_import_12m: SecaoSeriePonto[];
+  secao_export_top6: string[];
+  secao_import_top6: string[];
+  metadata: { fonte: string; endpoint: string; nota: string };
+};
+
+// ---------------------------------------------------------------------------
+// Loaders
 // ---------------------------------------------------------------------------
 export async function loadContasExternas(): Promise<ContasExternasData | null> {
   const url = painelBlobUrl(BLOB_PATH);
@@ -113,6 +140,23 @@ export async function loadContasExternas(): Promise<ContasExternasData | null> {
     return (await res.json()) as ContasExternasData;
   } catch (e) {
     console.error(`[contas-externas] fetch ${url}:`, e);
+    return null;
+  }
+}
+
+export async function loadContasExternasComex(): Promise<ContasExternasComexData | null> {
+  const url = painelBlobUrl(COMEX_BLOB_PATH);
+  try {
+    const res = await fetch(url, {
+      next: { revalidate: CONTAS_EXTERNAS_REVALIDATE_SECONDS },
+    });
+    if (!res.ok) {
+      console.error(`[contas-externas-comex] fetch ${url}: ${res.status}`);
+      return null;
+    }
+    return (await res.json()) as ContasExternasComexData;
+  } catch (e) {
+    console.error(`[contas-externas-comex] fetch ${url}:`, e);
     return null;
   }
 }
