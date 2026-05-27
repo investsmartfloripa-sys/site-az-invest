@@ -7,274 +7,376 @@ import {
 import type { FiscalTermometroData, Matriz, Lever } from "@/lib/painel-fiscal";
 import { CardHeader, KPI, Section } from "./FiscalShell";
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 function fmt(v: number | null | undefined, casas = 1, suf = ""): string {
   if (v == null) return "—";
   return `${v.toFixed(casas)}${suf}`;
 }
-
 function fmtPP(v: number | null | undefined, casas = 2): string {
   if (v == null) return "—";
   const s = v >= 0 ? "+" : "";
   return `${s}${v.toFixed(casas)} pp`;
 }
 
-// Heatmap-style — cor depende do nivel (mais alto = mais vermelho)
-function corHeat(valor: number, vmax: number): string {
-  const pct = Math.max(0, Math.min(1, valor / vmax));
-  // gradiente verde (baixo) -> amarelo -> vermelho (alto)
-  if (pct < 0.33) {
-    // verde
-    const t = pct / 0.33;
-    const r = Math.round(220 - (220 - 250) * t);
-    const g = Math.round(240 - (240 - 220) * t);
-    const b = 220;
-    return `rgb(${r},${g},${b})`;
-  } else if (pct < 0.66) {
-    // amarelo
-    const t = (pct - 0.33) / 0.33;
-    const r = 250;
-    const g = Math.round(230 - (230 - 180) * t);
-    const b = Math.round(180 - 180 * t);
-    return `rgb(${r},${g},${b})`;
-  } else {
-    // vermelho
-    const t = (pct - 0.66) / 0.34;
-    const r = Math.round(250 - (250 - 200) * t);
-    const g = Math.round(150 - 150 * t);
-    const b = Math.round(150 - 150 * t);
-    return `rgb(${r},${g},${b})`;
-  }
+// Glossario inline
+function Abbr({ termo, def, children }: { termo: string; def: string; children?: React.ReactNode }) {
+  return (
+    <abbr
+      title={`${termo}: ${def}`}
+      className="cursor-help underline decoration-dotted decoration-zinc-400 underline-offset-2"
+    >
+      {children ?? termo}
+    </abbr>
+  );
 }
 
-function MatrizDalio({ matriz, eixoX, sufY = "%", sufX = "%", destacaBR = true }:
-  { matriz: Matriz; eixoX: number[]; sufY?: string; sufX?: string; destacaBR?: boolean }) {
-  const vmax = Math.max(...matriz.valores.flat().map(Math.abs));
+// Gradiente verde -> amarelo -> vermelho. valor normalizado [0..1]
+function heatColor(t: number): string {
+  const c = Math.max(0, Math.min(1, t));
+  if (c < 0.5) {
+    const k = c / 0.5;
+    const r = Math.round(220 + (252 - 220) * k);
+    const g = Math.round(252 - (252 - 230) * k);
+    const b = Math.round(220 - (220 - 170) * k);
+    return `rgb(${r},${g},${b})`;
+  }
+  const k = (c - 0.5) / 0.5;
+  const r = Math.round(252 - (252 - 220) * k);
+  const g = Math.round(230 - 230 * k * 0.6);
+  const b = Math.round(170 - 170 * k);
+  return `rgb(${r},${g},${b})`;
+}
+
+// ---------------------------------------------------------------------------
+// MatrizDalio — tabela cruzada com legenda de eixos + heatmap + destaque BR
+// ---------------------------------------------------------------------------
+function MatrizDalio({
+  matriz, eixoX, labelY, labelX, sufY = "%", sufX = "%", destacaBR = true,
+  premissaTexto,
+}: {
+  matriz: Matriz;
+  eixoX: number[];
+  labelY: string;
+  labelX: string;
+  sufY?: string;
+  sufX?: string;
+  destacaBR?: boolean;
+  premissaTexto?: string;
+}) {
+  const flat = matriz.valores.flat();
+  const vmin = Math.min(...flat);
+  const vmax = Math.max(...flat);
+  const range = vmax - vmin || 1;
+
   const brStart = matriz.brasil?.starting ?? null;
   const brX = matriz.brasil?.deficit ?? matriz.brasil?.gap_pp ?? null;
-
-  // Encontra a célula BR mais próxima
-  const idxY = brStart == null ? -1 : matriz.eixo_y_starting.reduce((bi, v, i) =>
-    Math.abs(v - brStart) < Math.abs(matriz.eixo_y_starting[bi] - brStart) ? i : bi, 0);
-  const idxX = brX == null ? -1 : eixoX.reduce((bi, v, i) =>
-    Math.abs(v - brX) < Math.abs(eixoX[bi] - brX) ? i : bi, 0);
+  const idxY = brStart == null ? -1 : matriz.eixo_y_starting.reduce(
+    (bi, v, i) => Math.abs(v - brStart) < Math.abs(matriz.eixo_y_starting[bi] - brStart) ? i : bi, 0);
+  const idxX = brX == null ? -1 : eixoX.reduce(
+    (bi, v, i) => Math.abs(v - brX) < Math.abs(eixoX[bi] - brX) ? i : bi, 0);
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-xs">
-        <thead>
-          <tr>
-            <th className="border border-zinc-200 bg-zinc-50 p-2 text-zinc-500"></th>
-            {eixoX.map((v, i) => (
-              <th key={i} className="border border-zinc-200 bg-zinc-50 p-2 font-semibold text-zinc-700">
-                {v}{sufX}
+    <div className="space-y-2">
+      {premissaTexto && (
+        <div className="rounded-lg border-l-4 border-amber-400 bg-amber-50 p-3 text-xs text-amber-900">
+          <strong className="uppercase tracking-wide">Premissa: </strong>
+          {premissaTexto}
+        </div>
+      )}
+
+      <div className="overflow-x-auto">
+        <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider text-zinc-500">
+          <span className="font-semibold text-[#132960]">{labelX} →</span>
+        </div>
+        <table className="mt-1 w-full min-w-[640px] border-collapse text-xs">
+          <thead>
+            <tr>
+              <th className="border border-zinc-200 bg-[#132960] p-2 text-left text-[10px] uppercase tracking-wider text-white" rowSpan={1}>
+                <span className="block text-[9px] opacity-80">↓</span>
+                {labelY}
               </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {matriz.valores.map((row, i) => (
-            <tr key={i}>
-              <th className="border border-zinc-200 bg-zinc-50 p-2 text-right font-semibold text-zinc-700">
-                {matriz.eixo_y_starting[i]}{sufY}
-              </th>
-              {row.map((cell, j) => {
-                const isBR = destacaBR && i === idxY && j === idxX;
+              {eixoX.map((v, i) => {
+                const isBR = destacaBR && i === idxX;
                 return (
-                  <td
-                    key={j}
-                    className={`border p-2 text-center tabular-nums ${isBR ? "border-rose-600 border-2 font-bold text-rose-900" : "border-zinc-200 text-zinc-800"}`}
-                    style={{ background: isBR ? "rgba(244,63,94,0.12)" : corHeat(Math.abs(cell), vmax) }}
-                    title={isBR ? "Trajetoria atual do Brasil" : ""}
-                  >
-                    {cell}%
-                  </td>
+                  <th key={i} className={`border border-zinc-200 p-2 font-semibold ${isBR ? "bg-rose-600 text-white" : "bg-zinc-100 text-zinc-700"}`}>
+                    {v}{sufX}
+                  </th>
                 );
               })}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {matriz.valores.map((row, i) => {
+              const isBRRow = destacaBR && i === idxY;
+              return (
+                <tr key={i}>
+                  <th className={`border border-zinc-200 p-2 text-right font-semibold ${isBRRow ? "bg-rose-600 text-white" : "bg-zinc-100 text-zinc-700"}`}>
+                    {matriz.eixo_y_starting[i]}{sufY}
+                  </th>
+                  {row.map((cell, j) => {
+                    const isBR = destacaBR && i === idxY && j === idxX;
+                    const t = (cell - vmin) / range;
+                    return (
+                      <td
+                        key={j}
+                        className={`border p-2 text-center tabular-nums ${isBR ? "border-rose-600 border-[3px] font-bold text-rose-950 ring-2 ring-rose-600 ring-offset-1" : "border-zinc-200 text-zinc-800"}`}
+                        style={{ background: isBR ? "#fecaca" : heatColor(t) }}
+                        title={isBR ? `Brasil hoje: ${cell}%` : `${matriz.eixo_y_starting[i]}${sufY} × ${eixoX[j]}${sufX} → ${cell}%`}
+                      >
+                        {cell}%
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {destacaBR && matriz.brasil?.starting != null && (
+        <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-700">
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-3 w-3 border-[3px] border-rose-600 bg-rose-100"></span>
+            <strong>Brasil hoje:</strong> linha {matriz.brasil.starting}{sufY} (Dívida/Receita) × coluna {matriz.brasil.deficit ?? matriz.brasil.gap_pp}{sufX} → célula destacada
+          </span>
+        </div>
+      )}
     </div>
   );
 }
 
-function LeverCard({ titulo, descricao, atual, alvo, delta, sufix }:
-  { titulo: string; descricao: string; atual: number | undefined; alvo: number | undefined; delta?: number; sufix: string }) {
+// ---------------------------------------------------------------------------
+// LeverCard
+// ---------------------------------------------------------------------------
+function LeverCard({ numero, titulo, descricao, atual, alvo, delta, sufix, baseLabel, viavel }:
+  { numero: number; titulo: string; descricao: string; atual: number | undefined; alvo: number | undefined; delta?: number; sufix: string; baseLabel: string; viavel?: "alta" | "media" | "baixa" }) {
+  const viabilidadeBg = viavel === "baixa" ? "bg-rose-100 border-rose-300" : viavel === "media" ? "bg-amber-100 border-amber-300" : "bg-emerald-100 border-emerald-300";
+  const viabilidadeTxt = viavel === "baixa" ? "Difícil" : viavel === "media" ? "Possível" : "Plausível";
   return (
     <div className="rounded-2xl border border-[#132960]/15 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-bold text-[#132960]">{titulo}</h3>
-      <p className="mt-1 text-xs text-zinc-600">{descricao}</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="text-sm font-bold text-[#132960]">
+            <span className="mr-1 text-zinc-400">{numero}.</span>{titulo}
+          </h3>
+          <p className="mt-1 text-xs text-zinc-600">{descricao}</p>
+        </div>
+        {viavel && (
+          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${viabilidadeBg}`}>
+            {viabilidadeTxt}
+          </span>
+        )}
+      </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <div className="rounded-lg bg-zinc-50 p-2">
           <div className="text-[10px] uppercase tracking-wide text-zinc-500">Atual</div>
           <div className="text-lg font-bold text-zinc-700">{fmt(atual, 2, sufix)}</div>
         </div>
         <div className="rounded-lg bg-rose-50 p-2">
-          <div className="text-[10px] uppercase tracking-wide text-rose-700">Necessario</div>
+          <div className="text-[10px] uppercase tracking-wide text-rose-700">Necessário</div>
           <div className="text-lg font-bold text-rose-800">{fmt(alvo, 2, sufix)}</div>
         </div>
       </div>
+      <div className="mt-2 text-[10px] text-zinc-500">Base: {baseLabel}</div>
       {delta != null && (
-        <div className="mt-2 text-xs text-zinc-600">
-          Ajuste: <strong className="text-[#132960]">{fmtPP(delta)}</strong>
+        <div className="mt-1 text-xs text-zinc-700">
+          Ajuste necessário: <strong className="text-[#132960]">{fmtPP(delta)}</strong>
         </div>
       )}
     </div>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Component principal
+// ---------------------------------------------------------------------------
 export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData }) {
   const foto = data.foto_brasil;
   const traj = data.trajetoria_br_pct_receita ?? [];
   const trajData = traj.map((v, i) => ({ ano: i, valor: v }));
-
   const lev = data.levers;
 
   return (
     <div className="space-y-6">
       <CardHeader
-        titulo="Termometro Fiscal"
-        subtitulo='Aplicacao das formulas e tabelas de "How Countries Go Broke" (Ray Dalio, 2025) ao Brasil. Variaveis em tempo real via BCB SGS, Tesouro RTN e IBGE.'
+        titulo="Termômetro Fiscal"
+        subtitulo='Aplicação das fórmulas de "How Countries Go Broke" (Ray Dalio, 2025) ao Brasil. Dados em tempo real via BCB SGS, Tesouro RTN e IBGE.'
       />
 
+      {/* === LEIA ISTO PRIMEIRO === */}
+      <Section titulo="Leia isto primeiro (em 30 segundos)">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs">
+            <div className="mb-1 font-bold text-[#132960]">Por que Dívida/Receita?</div>
+            <p className="text-zinc-700">Dalio usa receita do governo no denominador (não PIB) porque é a fonte real de pagamento da dívida. Brasil hoje: dívida = <strong>4,3× a receita líquida</strong> do gov central.</p>
+          </div>
+          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs">
+            <div className="mb-1 font-bold text-[#132960]">O que é &quot;estabilizar&quot;?</div>
+            <p className="text-zinc-700">Dívida/Receita para de crescer — não diminui necessariamente. É o mínimo para evitar bola de neve. Hoje Brasil está com gap <strong>r − g = +3,1pp</strong>, dívida cresce mesmo com primário neutro.</p>
+          </div>
+          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs">
+            <div className="mb-1 font-bold text-[#132960]">Os 4 Levers</div>
+            <p className="text-zinc-700">Dalio diz: cada governo tem 4 alavancas — cortar juros, aceitar mais inflação, cortar despesa, ou aumentar receita. Calculamos abaixo quanto cada uma teria que mexer isoladamente.</p>
+          </div>
+        </div>
+      </Section>
+
       {/* === FOTO ATUAL BRASIL === */}
-      <Section titulo="Foto atual: variaveis do governo central brasileiro">
+      <Section titulo="Foto atual: governo central brasileiro" hint="Receita líquida do Tesouro (após transferências constitucionais a estados/municípios). DBGG = governo geral (BCB SGS 13762).">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-          <KPI label="DBGG / PIB" value={fmt(foto.divida.dbgg_pct_pib, 1, "%")} hint="Divida bruta gov geral" />
-          <KPI label="DBGG / Receita" value={fmt(foto.divida.dbgg_pct_receita, 0, "%")} hint="Metrica Dalio" trend="down" />
-          <KPI label="Deficit primario" value={fmt(foto.deficit_primario.primary_deficit_pct_receita, 1, "%")} hint="% Receita liquida" trend="down" />
-          <KPI label="Juros / Receita" value={fmt(foto.juros.juros_pct_receita, 1, "%")} hint="Metrica Dalio" trend="down" />
-          <KPI label="Custo medio divida" value={fmt(foto.juros.taxa_nominal_efetiva_aa, 2, "%")} hint="Juros/Divida, anualizado" />
-          <KPI label="i - g" value={fmtPP(foto.macro.gap_i_menos_g_pp)} hint="Juros - crescimento nominal" trend={foto.macro.gap_i_menos_g_pp > 0 ? "down" : "up"} />
+          <KPI label={<><Abbr termo="DBGG" def="Dívida Bruta do Governo Geral (gov central + estados + municípios)">DBGG</Abbr> / PIB</> as unknown as string} value={fmt(foto.divida.dbgg_pct_pib, 1, "%")} hint="Dívida bruta — gov geral" />
+          <KPI label="DBGG / Receita" value={fmt(foto.divida.dbgg_pct_receita, 0, "%")} hint="Métrica Dalio (Debt/Income)" trend="down" />
+          <KPI label="Déficit primário" value={fmt(foto.deficit_primario.primary_deficit_pct_receita, 1, "%")} hint="% Receita líquida" trend="down" />
+          <KPI label="Juros / Receita" value={fmt(foto.juros.juros_pct_receita, 1, "%")} hint="Métrica Dalio (Debt Service/Income)" trend="down" />
+          <KPI label="Custo médio dívida" value={fmt(foto.juros.taxa_nominal_efetiva_aa, 2, "%")} hint="Juros 12m ÷ DBGG, anualizado" />
+          <KPI label="r − g" value={fmtPP(foto.macro.gap_i_menos_g_pp)} hint="Juros menos crescimento nominal" trend={foto.macro.gap_i_menos_g_pp > 0 ? "down" : "up"} />
+        </div>
+        <div className="mt-3 text-[11px] text-zinc-600">
+          <strong>Convenção:</strong> déficit primário <strong>positivo</strong> = governo gasta mais que arrecada (convenção do livro). No padrão STN/BCB do Brasil, primário positivo = superávit (sinal contrário); o flip está aplicado no termômetro.
         </div>
       </Section>
 
       {/* === TRAJETORIA BR PROXIMOS 10 ANOS === */}
       {traj.length > 0 && (
         <Section
-          titulo="Trajetoria projetada do Brasil — proximos 10 anos"
-          hint="Manter primary deficit, juros e crescimento atuais. Equacao iterativa do livro: R(t+1) = R(t) * (1+i)/(1+g) + primary_deficit."
+          titulo="Trajetória projetada do Brasil — próximos 10 anos"
+          hint="Mantidos primário, juros e crescimento atuais. Equação iterativa do livro (cap. The Mechanics)."
         >
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trajData}>
+              <LineChart data={trajData} margin={{ left: 0, right: 24, top: 8, bottom: 16 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="ano" tick={{ fontSize: 11 }} label={{ value: "anos a partir de hoje", fontSize: 10, position: "insideBottom", offset: -2 }} />
+                <XAxis dataKey="ano" tick={{ fontSize: 11 }} label={{ value: "anos a partir de hoje", fontSize: 10, position: "insideBottom", offset: -8 }} />
                 <YAxis tick={{ fontSize: 11 }} unit="%" />
-                <Tooltip formatter={(v: unknown) => (typeof v === "number" ? `${v.toFixed(1)}%` : "—")} />
-                <ReferenceLine y={traj[0]} stroke="#475569" strokeDasharray="3 3" label={{ value: "Hoje", fontSize: 10, fill: "#475569", position: "left" }} />
+                <Tooltip formatter={(v: unknown) => (typeof v === "number" ? `${v.toFixed(1)}% da receita` : "—")} />
+                <ReferenceLine y={traj[0]} stroke="#475569" strokeDasharray="3 3" label={{ value: `Hoje ${traj[0].toFixed(0)}%`, fontSize: 10, fill: "#475569", position: "left" }} />
+                <ReferenceLine y={traj[traj.length-1]} stroke="#dc2626" strokeDasharray="3 3" label={{ value: `Em 10 anos ${traj[traj.length-1].toFixed(0)}%`, fontSize: 10, fill: "#dc2626", position: "right" }} />
                 <Line type="monotone" dataKey="valor" stroke="#dc2626" strokeWidth={2.5} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
+          <div className="mt-2 rounded-lg bg-rose-50 p-3 text-xs text-rose-900">
+            <strong>Leitura:</strong> mantidas as variáveis atuais (déficit primário {fmt(foto.deficit_primario.primary_deficit_pct_receita, 1)}% da receita, custo médio da dívida {fmt(foto.juros.taxa_nominal_efetiva_aa, 2)}% a.a., crescimento nominal {fmt(foto.macro.g_nominal_aa_pct, 2)}%), a dívida brasileira em proporção da receita cresce de <strong>{traj[0].toFixed(0)}% para {traj[traj.length-1].toFixed(0)}%</strong> em 10 anos — bola de neve clássica descrita por Dalio.
+          </div>
         </Section>
       )}
 
-      {/* === MATRIZES === */}
-      <Section
-        titulo={data.matrizes.endlevel_por_deficit.titulo}
-        hint={data.matrizes.endlevel_por_deficit.subtitulo + ". Quadrado vermelho: posicao do Brasil hoje."}
-      >
+      {/* === MATRIZ 1: DEBT-TO-INCOME APOS 10 ANOS (variando deficit, i=g) === */}
+      <Section titulo={data.matrizes.endlevel_por_deficit.titulo}>
         <MatrizDalio
           matriz={data.matrizes.endlevel_por_deficit}
           eixoX={data.matrizes.endlevel_por_deficit.eixo_x_deficit ?? []}
+          labelY="Dívida/Receita HOJE"
+          labelX="Déficit primário anual (% Receita)"
           sufY="%"
           sufX="%"
+          premissaTexto="Cenário simplificado do livro — assume juros nominais = crescimento nominal (i = g). Isola o efeito do déficit primário acumulado. Valor da célula = Dívida/Receita depois de 10 anos."
         />
-        <p className="mt-2 text-[11px] text-zinc-500">
-          Eixo Y: <strong>Divida atual / Receita</strong> (Starting D/I). Eixo X: <strong>Deficit primario / Receita</strong>. Valor: D/I apos 10 anos.
+        <p className="mt-3 text-[11px] text-zinc-600">
+          <strong>Como ler:</strong> escolha a linha que mostra a dívida HOJE em relação à receita, e a coluna do tamanho do déficit anual. A célula é onde a dívida vai estar daqui a 10 anos. Brasil hoje (~435%, déficit 5,6%) está marcado em vermelho.
         </p>
       </Section>
 
-      <Section
-        titulo={data.matrizes.change_por_deficit.titulo}
-        hint={data.matrizes.change_por_deficit.subtitulo + ". Pontos percentuais (pp) de variacao."}
-      >
-        <MatrizDalio
-          matriz={data.matrizes.change_por_deficit}
-          eixoX={data.matrizes.change_por_deficit.eixo_x_deficit ?? []}
-          sufY="%"
-          sufX="%"
-          destacaBR={false}
-        />
-      </Section>
-
-      <Section
-        titulo={data.matrizes.endlevel_por_gap.titulo}
-        hint={data.matrizes.endlevel_por_gap.subtitulo + ". Quadrado vermelho: Brasil hoje. (i - g) atual destacado."}
-      >
+      {/* === MATRIZ 2: DEBT-TO-INCOME APOS 10 ANOS (variando i-g, deficit constante BR) === */}
+      <Section titulo={data.matrizes.endlevel_por_gap.titulo}>
         <MatrizDalio
           matriz={data.matrizes.endlevel_por_gap}
           eixoX={data.matrizes.endlevel_por_gap.eixo_x_gap_pp ?? []}
+          labelY="Dívida/Receita HOJE"
+          labelX="Gap r − g (pontos percentuais)"
           sufY="%"
           sufX="pp"
+          premissaTexto={`Cenário realista — assume déficit primário constante (Brasil hoje: ${data.premissas.primary_deficit_pct_receita}% da receita). Varia o gap r−g (taxa nominal da dívida menos crescimento nominal). Quando r > g, a dívida cresce mesmo sem novos déficits.`}
         />
-        <p className="mt-2 text-[11px] text-zinc-500">
-          Eixo X: <strong>i − g</strong> (juros nominais menos crescimento nominal, em pp). Quando i &gt; g, divida cresce mesmo com primario neutro.
+        <p className="mt-3 text-[11px] text-zinc-600">
+          <strong>Como ler:</strong> mesmo eixo Y (dívida/receita hoje), mas eixo X agora é o gap entre juros e crescimento. Brasil hoje tem r−g ≈ +3pp (custo médio 9,3% − crescimento nominal 6,2%), marcado em vermelho.
         </p>
       </Section>
 
       {/* === 4 LEVERS === */}
       {lev && (
         <Section
-          titulo="Os 4 levers para estabilizar a divida brasileira"
-          hint="Quanto cada alavanca (juros, inflacao, corte de despesa, aumento de receita) precisaria mexer isoladamente para que a Divida/Receita pare de crescer."
+          titulo="Os 4 Levers para estabilizar a dívida brasileira"
+          hint='Dalio (2025): "todo governo com dívida em moeda própria tem 4 alavancas — juros, inflação, cortar gastos, aumentar receita". Cada card calcula o ajuste isolado em uma delas necessário para parar o crescimento da Dívida/Receita.'
         >
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
             {lev.lever_juros && (
               <LeverCard
-                titulo="1. Baixar juros"
-                descricao="Taxa de juros nominal necessaria para Debt/Income parar de crescer (mantendo as outras variaveis)."
+                numero={1}
+                titulo="Baixar juros"
+                descricao="Taxa nominal efetiva da dívida que estabilizaria Dívida/Receita."
                 atual={lev.lever_juros.i_atual_aa}
                 alvo={lev.lever_juros.i_estavel_aa}
                 delta={lev.lever_juros.delta_pp}
-                sufix="%"
+                sufix="% a.a."
+                baseLabel="custo médio efetivo da DPF"
+                viavel="baixa"
               />
             )}
             {lev.lever_inflacao && (
               <LeverCard
-                titulo="2. Mais inflacao"
-                descricao="Inflacao necessaria para subir o crescimento nominal o suficiente (erode divida via numerador)."
+                numero={2}
+                titulo="Mais inflação"
+                descricao="Inflação que subiria o crescimento nominal o suficiente para erodir a dívida."
                 atual={lev.lever_inflacao.inflacao_atual_aa}
                 alvo={lev.lever_inflacao.inflacao_estavel_aa}
                 delta={lev.lever_inflacao.delta_pp}
-                sufix="%"
+                sufix="% a.a."
+                baseLabel="IPCA 12m"
+                viavel="baixa"
               />
             )}
             {lev.lever_corte_despesa && (
               <LeverCard
-                titulo="3. Cortar despesa"
-                descricao="Corte na despesa primaria total necessario para zerar o deficit consistente com r-g atual."
+                numero={3}
+                titulo="Cortar despesa"
+                descricao="Corte na despesa primária total para fechar o gap consistente com r−g atual."
                 atual={lev.lever_corte_despesa.despesa_atual_pct_receita}
                 alvo={lev.lever_corte_despesa.despesa_alvo_pct_receita}
                 delta={lev.lever_corte_despesa.corte_pct_da_despesa}
-                sufix="%"
+                sufix="% Receita"
+                baseLabel="despesa primária / Receita líquida"
+                viavel="baixa"
               />
             )}
             {lev.lever_aumento_receita && (
               <LeverCard
-                titulo="4. Aumentar receita"
-                descricao="Aumento de receita liquida necessario (mantendo despesa) para estabilizar Debt/Income."
+                numero={4}
+                titulo="Aumentar receita"
+                descricao="Aumento da receita líquida (mantendo despesa atual) para estabilizar Dívida/Receita."
                 atual={100}
                 alvo={100 + lev.lever_aumento_receita.aumento_pct_da_receita!}
                 delta={lev.lever_aumento_receita.aumento_pct_da_receita}
-                sufix="%"
+                sufix="% (índice base 100)"
+                baseLabel="receita atual = 100"
+                viavel="baixa"
               />
             )}
+          </div>
+          <div className="mt-3 rounded-lg border-l-4 border-rose-500 bg-rose-50 p-3 text-xs text-rose-900">
+            <strong>Leitura combinada:</strong> nenhum lever sozinho resolve o caso brasileiro hoje em magnitudes plausíveis politicamente — Dalio prevê que países nesse perfil precisam combinar dois ou mais ao longo do tempo. O caso histórico mais próximo: <Abbr termo="UK 1976" def="Reino Unido, crise da libra, bailout do FMI">Reino Unido 1976</Abbr> (combinou aumento de impostos + corte de gastos + bailout externo).
           </div>
         </Section>
       )}
 
+      {/* === PREMISSAS / METODOLOGIA === */}
       <Section titulo="Premissas e metodologia">
         <div className="space-y-2 text-xs text-zinc-700">
-          <p>
-            <strong>Premissas atuais:</strong> Debt/Receita = {fmt(data.premissas.debt_pct_receita, 0, "%")},
-            Primary deficit = {fmt(data.premissas.primary_deficit_pct_receita, 1, "%")} da receita,
-            i = {fmt(data.premissas.i_nominal_aa, 2, "%")} a.a., g = {fmt(data.premissas.g_nominal_aa, 2, "%")} a.a.
-            Projecao iterativa de {data.premissas.anos_projecao} anos.
-          </p>
+          <div>
+            <strong>Variáveis de entrada (mês de referência {data.fonte_base}):</strong>
+            <ul className="ml-4 mt-1 list-disc space-y-0.5">
+              <li>Dívida/Receita = {fmt(data.premissas.debt_pct_receita, 0, "%")} (DBGG ÷ Receita líquida Tesouro 12m)</li>
+              <li>Déficit primário = {fmt(data.premissas.primary_deficit_pct_receita, 1, "%")} da receita</li>
+              <li>Taxa nominal efetiva (i) = {fmt(data.premissas.i_nominal_aa, 2, "%")} a.a. (juros 12m ÷ DBGG)</li>
+              <li>Crescimento nominal (g) = {fmt(data.premissas.g_nominal_aa, 2, "%")} a.a. (PIB real + IPCA 12m)</li>
+              <li>Projeção iterativa de {data.premissas.anos_projecao} anos</li>
+            </ul>
+          </div>
           <p>{data.metodologia}</p>
-          <p className="text-zinc-500">Ultima atualizacao: {new Date(data.gerado_em).toLocaleString("pt-BR")}.</p>
+          <p className="text-zinc-500">Última atualização: {new Date(data.gerado_em).toLocaleString("pt-BR")}. Pipeline diário 9h BRT.</p>
         </div>
       </Section>
     </div>
