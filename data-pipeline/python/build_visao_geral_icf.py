@@ -162,10 +162,14 @@ def main() -> None:
             series[key] = {}
 
     focus_12m = carregar_focus_ipca_12m_se_disponivel()
-    if focus_12m:
+    if focus_12m and len(focus_12m) >= 24:
         print(f"  [Focus IPCA 12m] {len(focus_12m)} obs (do JSON fiscal)")
     else:
-        print("  Focus 12m indisponível, usando IPCA realizado 12m como proxy do esperado")
+        if focus_12m:
+            print(f"  Focus 12m com apenas {len(focus_12m)} obs (esparso), usando IPCA realizado 12m como proxy")
+        else:
+            print("  Focus 12m indisponível, usando IPCA realizado 12m como proxy")
+        focus_12m = None
 
     # Selic real ex-ante: usa selic_meta se OK, fallback para selic_efetiva (4189)
     selic = series.get("selic_meta", {}) or series.get("selic_efetiva", {})
