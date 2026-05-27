@@ -139,17 +139,22 @@ def z_normalize(values: list[float]) -> list[float]:
 # Modelo iii: Gap HP threshold (mais simples — começa por ele)
 # ============================================================================
 def modelo_gap_threshold(hiato: list[tuple[str, float]]) -> dict[str, float]:
-    """P(recessão|gap) via logística sobre z-score do gap.
+    """P(recessão|gap) via logística sobre z-score do gap, suavizado MM3.
 
-    Lógica: gap muito negativo ⇒ alta probabilidade de recessão.
-    Calibração ad-hoc: P = sigmoid(-1.5 * z_gap). z=-1 ⇒ P≈82%; z=0 ⇒ P=50%.
+    Calibração: P = sigmoid(-0.8 * z_gap). z=-1.5 ⇒ P≈77%; z=0 ⇒ P=50%; z=+1.5 ⇒ P≈23%.
+    Suavização MM3 reduz oscilação visual.
     """
     meses = [m for m, _ in hiato]
     vals = [v for _, v in hiato]
     if not vals:
         return {}
     z = z_normalize(vals)
-    return {m: round(sigmoid(-1.5 * z[i]) * 100, 1) for i, m in enumerate(meses)}
+    # Suavizar z com MM3 antes da logística
+    z_smooth = []
+    for i in range(len(z)):
+        janela = z[max(0, i-2):i+1]
+        z_smooth.append(sum(janela) / len(janela))
+    return {m: round(sigmoid(-0.8 * z_smooth[i]) * 100, 1) for i, m in enumerate(meses)}
 
 
 # ============================================================================
@@ -178,9 +183,16 @@ def modelo_diffusion(antecedentes: dict[str, list[tuple[str, float]]]) -> dict[s
                 n_total += 1
                 if v < 0:
                     n_negativos += 1
+        # Exigir pelo menos 2 indicadores; quando só 1 ou 2 disponíveis, evita 100%/0% binário
         if n_total >= 2:
             out[mes] = round(n_negativos / n_total * 100, 1)
-    return out
+    # Suavização MM3 do resultado
+    meses_ord = sorted(out.keys())
+    smoothed = {}
+    for i, m in enumerate(meses_ord):
+        janela = [out[meses_ord[j]] for j in range(max(0, i-2), i+1)]
+        smoothed[m] = round(sum(janela) / len(janela), 1)
+    return smoothed
 
 
 # ============================================================================
