@@ -340,8 +340,8 @@ export type IpeadataData = {
   fenabrave_emplac: IpeadataBloco;
   cnc_icec: IpeadataBloco;
   fecomercio_icc: IpeadataBloco;
-  iaemp_fgv?: IpeadataBloco;
-  icce_fgv?: IpeadataBloco;
+  fgv_constr_exp?: IpeadataBloco;
+  fgv_constr_atual?: IpeadataBloco;
   metadata: MetaCommon;
 };
 
