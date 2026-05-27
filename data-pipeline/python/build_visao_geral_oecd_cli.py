@@ -1,8 +1,7 @@
-"""Build do Painel Visao Geral - bloco OECD CLI Brasil (via FRED).
+"""Build do Painel Visao Geral - bloco OECD CLI Brasil via DBnomics.
 
-Fonte unica: FRED BRALOLITOAASTSAM (espelho do OECD CLI Brasil amplitude-adjusted).
-SDMX OECD mudou para 9 dimensoes em 2024 e mapeamento ficou complexo;
-FRED ja serve o mesmo dado historico.
+DBnomics e espelho confiavel do OECD MEI_CLI (Composite Leading Indicators).
+Endpoint REST publico, sem auth, JSON estruturado.
 """
 from __future__ import annotations
 import argparse, json, sys, time
@@ -13,11 +12,11 @@ import requests
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/visao_geral_oecd_cli.json"
-UA = {"User-Agent": "Mozilla/5.0 (compatible; az-invest/0.2)"}
-FRED_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=BRALOLITOAASTSAM"
+UA = {"User-Agent": "Mozilla/5.0 (compatible; az-invest/0.3)"}
+DBNOMICS = "https://api.db.nomics.world/v22/series/OECD/MEI_CLI/LOLITOAA.BRA.M?observations=1"
 INPUTS = {"oecd_cli_bra": "1989-01"}
 
-def _get(url, *, timeout=60, retries=2, sleep=3.0):
+def _get(url, *, timeout=60, retries=3, sleep=4.0):
     last = None
     for i in range(retries):
         try:
@@ -30,25 +29,27 @@ def _get(url, *, timeout=60, retries=2, sleep=3.0):
             time.sleep(sleep)
     raise RuntimeError(f"falha apos {retries}: {last}")
 
-def parse_fred(text):
-    out = {}
-    for ln in text.strip().split("\n")[1:]:
-        parts = ln.split(",")
-        if len(parts) < 2: continue
-        d, v = parts[0].strip(), parts[1].strip()
-        if v in (".", "", "NaN"): continue
-        try:
-            out[d[:7]] = float(v)
-        except ValueError:
-            continue
-    return out
-
 def quadrante(nivel, mom6):
     if nivel is None or mom6 is None: return None
     if nivel >= 100 and mom6 >= 0: return "expansao"
     if nivel >= 100 and mom6 < 0: return "desaceleracao"
     if nivel < 100 and mom6 < 0: return "recessao"
     return "recuperacao"
+
+def parse_dbnomics(payload):
+    docs = payload.get("series", {}).get("docs", [])
+    if not docs: return {}
+    s = docs[0]
+    periods = s.get("period", [])
+    values = s.get("value", [])
+    out = {}
+    for p, v in zip(periods, values):
+        if v is None: continue
+        try:
+            out[p[:7]] = float(v)
+        except (ValueError, TypeError):
+            continue
+    return out
 
 def build_payload(serie_dict):
     meses = sorted(serie_dict.keys())
@@ -69,7 +70,7 @@ def build_payload(serie_dict):
         "inputs": INPUTS,
         "min_start_date": min(INPUTS.values()),
         "destaques": {"nivel_recente": ult.get("nivel"), "var_6m_anualizada_recente": ult.get("var_6m_anualizada"), "quadrante_recente": ult.get("quadrante")},
-        "metadata": {"fonte": "FRED BRALOLITOAASTSAM (espelho OECD CLI Brasil amplitude-adjusted)", "nota": "Linha 100 = tendencia. Var 6m anualizada e o leading verdadeiro. Defasagem tipica ~2 meses."},
+        "metadata": {"fonte": "DBnomics espelho OECD MEI_CLI LOLITOAA Brazil (amplitude-adjusted, monthly)", "nota": "Linha 100 = tendencia. Defasagem tipica ~2 meses."},
     }
 
 def main():
@@ -81,11 +82,11 @@ def main():
     out_dir = Path(args.out_dir).resolve(); out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / "visao_geral_oecd_cli.json"
 
-    print("== OECD CLI Brasil (via FRED) ==")
+    print("== OECD CLI Brasil (DBnomics) ==")
     try:
-        r = _get(FRED_URL)
-        serie_dict = parse_fred(r.text)
-        if not serie_dict: raise RuntimeError("FRED CSV vazio")
+        r = _get(DBNOMICS)
+        serie_dict = parse_dbnomics(r.json())
+        if not serie_dict: raise RuntimeError("DBnomics retornou serie vazia")
         print(f"  {len(serie_dict)} obs")
     except Exception as e:
         print(f"  FALHA: {e}", file=sys.stderr)
@@ -104,7 +105,9 @@ def main():
 
     payload = build_payload(serie_dict)
     out_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"JSON {out_file} ({out_file.stat().st_size/1024:.1f} KB)"); print("  mes:", payload['mes_recente'])
+    sz = out_file.stat().st_size / 1024
+    print(f"JSON {out_file} ({sz:.1f} KB)")
+    print("  mes:", payload["mes_recente"])
 
     if args.upload:
         sys.path.insert(0, str(HERE))
