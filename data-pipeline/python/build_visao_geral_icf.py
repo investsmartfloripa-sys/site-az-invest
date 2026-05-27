@@ -44,8 +44,9 @@ SERIES = {
     "selic_meta": 432,        # Meta Selic % a.a.
     "selic_efetiva": 4189,    # Selic efetiva anualizada
     "reer": 11752,            # Câmbio efetivo real (índice)
-    # "ibov": 7,  # SGS 7 descontinuado - retorna 404                # Ibovespa fechamento mensal
+    "ibov": 24369,  # SGS 24369 - Ibovespa fechamento mensal (substitui 7 descontinuado)                # Ibovespa fechamento mensal
     "ipca_12m": 13522,        # IPCA acumulado 12m (proxy quando Focus IPCA 12m não estiver disponível)
+    "selic_360d": 4189,       # Swap pré-DI 360d - usada para slope DI
 }
 
 INPUTS = {
