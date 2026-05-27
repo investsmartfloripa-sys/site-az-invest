@@ -35,7 +35,7 @@ ANP_CSV_URL = "https://dados.gov.br/api/publico/conjuntos-dados/vendas-de-deriva
 
 # Fallback: dataset CSV histórico já publicado pela ANP (vendas mensais por UF/produto)
 ANP_FALLBACK_URL = (
-    "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/vdpb/vendas-anuais-de-derivados-de-petroleo-e-biocombustiveis/dados-abertos-vendas-derivados-petroleo-biocombustiveis-2000-2024.csv"
+    "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/vdpb/dados-abertos-vendas-derivados-petroleo-biocombustiveis-2000-2025.csv"
 )
 
 INPUTS = {"anp_combustiveis": "2000-01"}
