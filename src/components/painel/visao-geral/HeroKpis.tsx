@@ -95,12 +95,12 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
       />
       <KpiCard
         titulo="Probabilidade de recessão"
-        tecnico={rec && rec.n_modelos < 4 ? `Parcial (${rec.n_modelos}/5 modelos)` : "Mediana 5 modelos"}
-        valor={kpi2 === null ? "—" : `${kpi2.toFixed(0)}%`}
+        tecnico={rec && (rec.sensiveis_presentes ?? 1) === 0 ? "n/d — sensíveis ausentes" : (rec && rec.n_modelos < 4 ? `Cobertura ${rec.n_modelos}/4 modelos` : "Mediana 4 modelos prob.")}
+        valor={rec && (rec.sensiveis_presentes ?? 1) === 0 ? "n/d" : (kpi2 === null ? "—" : `${kpi2.toFixed(0)}%`)}
         subtitulo={
           rec
-            ? `${rec.n_acima_50} de ${rec.n_modelos} modelos > 50%${rec.sinalizacao === "indeterminado" ? " (sinal incompleto)" : ""}`
-            : "MS-DFM, probit, gap HP, diffusion, Bry-Boschan."
+            ? `${rec.n_acima_50} dispararam alerta · ${rec.n_modelos}/4 rodaram${rec.sinalizacao === "indeterminado" ? " (sinal incompleto)" : ""}`
+            : "MS-DFM, probit, gap HP, diffusion (probabilísticos)."
         }
         cor={kpi2Cor}
         mes={rec?.mes}
