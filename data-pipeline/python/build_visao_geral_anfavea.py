@@ -105,7 +105,15 @@ def parse_xlsx(content: bytes) -> list[dict]:
         col_total = next((i for i, c in enumerate(header) if "TOTAL" in c), None)
         if col_ano is None or col_mes is None:
             continue
-        sheet_kind = "producao" if "PROD" in sheet_name.upper() else ("vendas" if "VENDA" in sheet_name.upper() else ("exportacao" if "EXPORT" in sheet_name.upper() else None))
+        sn = sheet_name.upper()
+        if "PROD" in sn:
+            sheet_kind = "producao"
+        elif "VENDA" in sn or "EMPLACAM" in sn:
+            sheet_kind = "vendas"
+        elif "EXPORT" in sn:
+            sheet_kind = "exportacao"
+        else:
+            sheet_kind = None
         for row in rows[header_idx + 1 :]:
             try:
                 ano = int(row[col_ano])
