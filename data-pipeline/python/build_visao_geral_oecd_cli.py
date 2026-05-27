@@ -17,7 +17,7 @@ UA = {"User-Agent": "Mozilla/5.0 (compatible; az-invest/0.2)"}
 FRED_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=BRALOLITOAASTSAM"
 INPUTS = {"oecd_cli_bra": "1989-01"}
 
-def _get(url, *, timeout=180, retries=5, sleep=10.0):
+def _get(url, *, timeout=60, retries=2, sleep=3.0):
     last = None
     for i in range(retries):
         try:
