@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "Pesquisa Industrial Mensal — Produção Física do IBGE. Indústria geral, extrativa, transformação e decomposição por categoria econômica (bens de capital, intermediários, consumo).",
 };
 
+export const dynamic = "force-dynamic";
 export const revalidate = 86400;
 
 export default async function PainelAtividadePimPage() {
