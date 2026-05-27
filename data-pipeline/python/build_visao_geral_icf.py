@@ -217,7 +217,15 @@ def main() -> None:
             comps.append(("reer", z_reer[i]))
         if not comps:
             continue
-        icf = sum(v for _, v in comps) / len(comps)
+        # Pesos: Selic real ex-ante 50%, Ibov 6m 25%, REER 25% (literatura Hatzius et al 2010)
+        PESOS = {"selic_real": 0.50, "ibov_6m": 0.25, "reer": 0.25}
+        soma_p = 0
+        soma_v = 0
+        for nome, v in comps:
+            p = PESOS.get(nome, 1/len(comps))
+            soma_v += v * p
+            soma_p += p
+        icf = soma_v / soma_p if soma_p > 0 else 0
         regime = "estimulativo" if icf > 1 else ("restritivo" if icf < -1 else "neutro")
         serie_out.append(
             {
