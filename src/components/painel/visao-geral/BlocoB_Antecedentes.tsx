@@ -154,7 +154,7 @@ export function BlocoBAntecedentes({
       <header>
         <h2 className="text-xl font-bold text-[#132960]">2. Para onde vamos (antecedentes)</h2>
         <p className="mt-1 text-xs text-zinc-600">
-          OECD CLI e FGV-IBRE. Antecedentes lideram o coincidente em 6-9 meses.
+          Indicadores que historicamente antecedem viradas de ciclo em 6-9 meses: OECD Composite Leading Indicator (BR) e antecedentes IBRE.
         </p>
       </header>
       <CardOecdCli data={oecdCli} codace={codace} />
