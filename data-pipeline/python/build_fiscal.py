@@ -1,13 +1,17 @@
-"""Build do JSON do Painel Fiscal — clássicos brasileiros.
+"""Build do JSON do Painel Fiscal — clássicos brasileiros (receita, gastos, dívida).
 
-Estratégia anti-rate-limit:
-- DIÁRIAS primeiro (reservas, Selic) antes do BCB SGS rate-limitar
-- Depois MENSAIS
+Fontes:
+- BCB SGS (DBGG, DLSP, primário/juros/NFSP % PIB, REER, Selic, IPCA, PIB nominal, PIB real)
+- BCB Olinda (Focus — Selic, IPCA, PIB, Câmbio)
+- Tesouro Nacional RTN (XLSX): receita líquida, despesa primária, juros nominais do
+  GOVERNO CENTRAL — séries mensais R$ MM desde 1997
+
+Output: data-pipeline/out/fiscal-classicos.json + upload Blob em data/fiscal-classicos.json
 
 Convenção contábil:
-- NFSP positivo = déficit do SP. NFSP = -primário + juros nominais.
-- Juros nominais positivo. Primário positivo = superávit.
-- Logo: primário = juros - NFSP
+- Primário positivo = SUPERÁVIT (convenção STN/BCB)
+- NFSP positivo = DÉFICIT (oposto do primário) — convenção BCB SGS
+- Juros nominais no RTN vêm negativos (saídas); convertemos pra positivo (custo)
 """
 from __future__ import annotations
 
@@ -16,10 +20,11 @@ import json
 import sys
 import time
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
-from typing import Any
 
 import requests
+from openpyxl import load_workbook
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -28,7 +33,7 @@ from shared.blob_upload import maybe_upload_json  # noqa: E402
 DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/fiscal-classicos.json"
 
-UA = {"User-Agent": "Mozilla/5.0 (compatible; az-invest-fiscal/0.1)"}
+UA = {"User-Agent": "Mozilla/5.0 (compatible; az-invest-fiscal/0.2)"}
 
 
 def _get(url, *, timeout=60, retries=4, sleep=4.0):
@@ -37,17 +42,14 @@ def _get(url, *, timeout=60, retries=4, sleep=4.0):
         try:
             r = requests.get(url, timeout=timeout, headers=UA)
             if r.status_code in (406, 429, 502, 503, 504):
-                backoff = (i + 1) * sleep
-                print(f"  HTTP {r.status_code} (backoff {backoff:.0f}s)", file=sys.stderr)
-                time.sleep(backoff)
+                time.sleep((i + 1) * sleep)
                 continue
             r.raise_for_status()
             return r
         except Exception as e:
             last = e
-            print(f"  retry {i + 1}/{retries}: {e}", file=sys.stderr)
             time.sleep((i + 1) * 2)
-    raise RuntimeError(f"falha após {retries} tentativas: {last}")
+    raise RuntimeError(f"falha apos {retries}: {last}")
 
 
 def _to_float(v):
@@ -59,38 +61,89 @@ def _to_float(v):
         return None
 
 
-def _parse_sgs_date(s):
+def _parse_sgs(s, daily=False):
     d, m, y = s.split("/")
-    return f"{y}-{m}"
+    return f"{y}-{m}-{d}" if daily else f"{y}-{m}"
 
 
-def _parse_sgs_full_date(s):
-    d, m, y = s.split("/")
-    return f"{y}-{m}-{d}"
-
-
-SGS_URL_FULL = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{cod}/dados?formato=json"
-SGS_URL_FROM = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{cod}/dados?formato=json&dataInicial={inicio}"
+SGS_URL = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{cod}/dados?formato=json"
+SGS_URL_FROM = SGS_URL + "&dataInicial={inicio}"
 
 
 def sgs_fetch(cod, *, daily=False, since=None):
-    url = SGS_URL_FROM.format(cod=cod, inicio=since) if since else SGS_URL_FULL.format(cod=cod)
-    print(f"  [SGS {cod}] {url}")
+    url = SGS_URL_FROM.format(cod=cod, inicio=since) if since else SGS_URL.format(cod=cod)
+    print(f"  [SGS {cod}]")
     try:
         data = _get(url).json()
     except Exception as e:
-        print(f"  [SGS {cod}] FALHA: {e}; lista vazia", file=sys.stderr)
+        print(f"  [SGS {cod}] FALHA: {e}", file=sys.stderr)
         return []
-    parser = _parse_sgs_full_date if daily else _parse_sgs_date
     out = []
     for r in data:
         try:
-            out.append({"data": parser(r["data"]), "valor": _to_float(r["valor"])})
+            out.append({"data": _parse_sgs(r["data"], daily), "valor": _to_float(r["valor"])})
         except Exception:
             continue
     return out
 
 
+# Tesouro RTN — XLSX dinâmico do SISWEB
+RTN_URL = "http://sisweb.tesouro.gov.br/apex/cosis/thot/link/rtn/serie-historica?conteudo=cdn"
+
+RTN_LINHAS = {
+    "receita_total": 6,
+    "transferencias": 29,
+    "receita_liquida": 38,
+    "despesa_total": 39,
+    "previdencia": 40,
+    "pessoal": 41,
+    "outras_obrigatorias": 42,
+    "discricionarias": 65,
+    "primario_acima": 66,
+    "juros_nominais": 74,
+    "nominal": 75,
+}
+
+
+def baixa_rtn_xlsx():
+    print(f"  [Tesouro RTN] baixando")
+    r = _get(RTN_URL, timeout=60)
+    return BytesIO(r.content)
+
+
+def parse_rtn(xlsx_stream):
+    wb = load_workbook(xlsx_stream, data_only=True, read_only=True)
+    sh = wb["1.1"]
+    header = next(sh.iter_rows(min_row=5, max_row=5, values_only=True))
+    datas_idx = []
+    for i, h in enumerate(header[1:], 1):
+        if h:
+            try:
+                if hasattr(h, "year"):
+                    datas_idx.append((i, f"{h.year:04d}-{h.month:02d}"))
+                else:
+                    datas_idx.append((i, str(h)[:7]))
+            except Exception:
+                continue
+
+    series = {k: [] for k in RTN_LINHAS}
+    for chave, row_num in RTN_LINHAS.items():
+        row = next(sh.iter_rows(min_row=row_num, max_row=row_num, values_only=True))
+        for i, mes in datas_idx:
+            v = row[i] if i < len(row) else None
+            if v in ("", None):
+                continue
+            try:
+                vf = float(v)
+                if chave == "juros_nominais":
+                    vf = -vf  # flip pra positivo (custo)
+                series[chave].append({"data": mes, "valor": round(vf, 2)})
+            except (TypeError, ValueError):
+                continue
+    return series
+
+
+# Focus
 FOCUS_BASE = "https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata"
 
 
@@ -129,6 +182,48 @@ def focus_anuais(indicador, ano_atual):
     return out
 
 
+def soma_12m(serie):
+    if len(serie) < 12:
+        return []
+    serie = sorted(serie, key=lambda x: x["data"])
+    out = []
+    for i in range(11, len(serie)):
+        window = serie[i - 11:i + 1]
+        vals = [w["valor"] for w in window if w["valor"] is not None]
+        if len(vals) < 12:
+            continue
+        out.append({"data": serie[i]["data"], "valor_12m": round(sum(vals), 2)})
+    return out
+
+
+def divide_por_pib(serie_12m, pib_map):
+    if not pib_map:
+        return []
+    meses_pib = sorted(pib_map.keys())
+    out = []
+    ultimo_pib = None
+    cur_idx = 0
+    for r in sorted(serie_12m, key=lambda x: x["data"]):
+        while cur_idx < len(meses_pib) and meses_pib[cur_idx] <= r["data"]:
+            ultimo_pib = pib_map[meses_pib[cur_idx]]
+            cur_idx += 1
+        if ultimo_pib is None or ultimo_pib == 0:
+            continue
+        out.append({"data": r["data"], "valor_pct": round(r["valor_12m"] / ultimo_pib * 100, 4)})
+    return out
+
+
+def divide_por_receita(serie_12m, receita_12m):
+    rmap = {r["data"]: r["valor_12m"] for r in receita_12m}
+    out = []
+    for r in serie_12m:
+        rec = rmap.get(r["data"])
+        if rec is None or rec == 0:
+            continue
+        out.append({"data": r["data"], "valor_pct": round(r["valor_12m"] / rec * 100, 4)})
+    return out
+
+
 def selic_real_ex_post(selic_diaria, ipca_mensal):
     selic_por_mes = {}
     for r in selic_diaria:
@@ -147,17 +242,25 @@ def selic_real_ex_post(selic_diaria, ipca_mensal):
     return out
 
 
-def derivar_primario_de_nfsp_juros(nfsp_pct, juros_pct):
-    """Primário 12m %PIB = juros_nominais - NFSP. Positivo = superávit primário."""
-    juros_map = {r["data"]: r["valor"] for r in juros_pct}
+def pib_real_yoy(pib_real_idx):
     out = []
-    for r in nfsp_pct:
-        j = juros_map.get(r["data"])
-        if j is None or r["valor"] is None:
-            continue
-        primario = j - r["valor"]
-        out.append({"data": r["data"], "valor_pct": round(primario, 4)})
+    idx_map = {r["data"]: r["valor"] for r in pib_real_idx if r["valor"] is not None}
+    meses = sorted(idx_map.keys())
+    for mes in meses:
+        y, m = mes.split("-")
+        ant = f"{int(y) - 1}-{m}"
+        if ant in idx_map and idx_map[ant]:
+            yoy = (idx_map[mes] / idx_map[ant] - 1) * 100
+            out.append({"data": mes, "valor_yoy_pct": round(yoy, 4)})
     return out
+
+
+def last_val(serie, key="valor"):
+    for r in reversed(serie):
+        v = r.get(key)
+        if v is not None:
+            return r
+    return None
 
 
 def main():
@@ -171,114 +274,126 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / "fiscal-classicos.json"
 
-    # --- DIÁRIAS PRIMEIRO (antes do rate-limit) ---
-    print("== [1/3] DIÁRIAS ==")
-    print("-- Reservas USD MM (SGS 13621) --")
+    print("== [1/4] Tesouro RTN (XLSX) ==")
+    rtn_data = parse_rtn(baixa_rtn_xlsx())
+    print(f"  Receita liquida: {len(rtn_data['receita_liquida'])} obs")
+
+    print("\n== [2/4] BCB SGS diarias ==")
     reservas_diaria = sgs_fetch(13621, daily=True, since="01/01/2018")
-    print(f"   {len(reservas_diaria)} obs")
     time.sleep(2)
-
-    print("-- Selic diária %a.a. (SGS 1178) --")
     selic_diaria = sgs_fetch(1178, daily=True, since="01/01/2018")
-    print(f"   {len(selic_diaria)} obs")
     time.sleep(2)
 
-    # --- MENSAIS ---
-    print("== [2/3] MENSAIS ==")
-    print("-- DBGG %PIB (13762) --")
-    dbgg = sgs_fetch(13762)
-    print(f"   {len(dbgg)} obs")
-    time.sleep(0.4)
+    print("\n== [3/4] BCB SGS mensais ==")
+    series_mensal = {
+        "dbgg": 13762, "dlsp_total": 4513, "dlsp_gov_central": 4503,
+        "nfsp_sp": 5727, "nfsp_central": 5717,
+        "juros_sp_pct": 5718, "juros_central_pct": 5728,
+        "pib_12m_brl": 4382, "reer": 11752,
+        "ipca_12m": 13522, "pib_real_idx": 22099,
+    }
+    sgs = {}
+    for nome, cod in series_mensal.items():
+        sgs[nome] = sgs_fetch(cod)
+        time.sleep(0.4)
 
-    print("-- DLSP total %PIB (4513) --")
-    dlsp = sgs_fetch(4513)
-    time.sleep(0.4)
-
-    print("-- DLSP gov central %PIB (4503) --")
-    dlsp_central = sgs_fetch(4503)
-    time.sleep(0.4)
-
-    print("-- NFSP SP 12m %PIB (5727) --")
-    nfsp_pct = sgs_fetch(5727)
-    time.sleep(0.4)
-
-    print("-- Juros nominais SP 12m %PIB (5718) --")
-    juros_nominais_pct = sgs_fetch(5718)
-    time.sleep(0.4)
-
-    print("-- NFSP gov central 12m %PIB (5717) --")
-    nfsp_central_pct = sgs_fetch(5717)
-    time.sleep(0.4)
-
-    print("-- Juros nominais gov central 12m %PIB (5728) --")
-    juros_central_pct = sgs_fetch(5728)
-    time.sleep(0.4)
-
-    print("-- PIB 12m R$ MM (4382) --")
-    pib_12m_sgs = sgs_fetch(4382)
-    print(f"   último: {pib_12m_sgs[-1] if pib_12m_sgs else 'vazio'}")
-    time.sleep(0.4)
-
-    print("-- REER (11752) --")
-    reer = sgs_fetch(11752)
-    time.sleep(0.4)
-
-    print("-- IPCA 12m (13522) --")
-    ipca_12m = sgs_fetch(13522)
-    time.sleep(0.4)
-
-    # --- Cálculos ---
-    print("== [3/3] DERIVADOS ==")
-    reservas_mensal_d = {}
+    print("\n== [4/4] Derivados ==")
+    reservas_mensal = {}
     for r in reservas_diaria:
         if r["valor"] is None:
             continue
-        reservas_mensal_d[r["data"][:7]] = r["valor"]
-    reservas_mensal = [{"data": k, "valor": v} for k, v in sorted(reservas_mensal_d.items())]
+        reservas_mensal[r["data"][:7]] = r["valor"]
+    reservas_mensal = [{"data": k, "valor": v} for k, v in sorted(reservas_mensal.items())]
 
-    primario_sp_pct = derivar_primario_de_nfsp_juros(nfsp_pct, juros_nominais_pct)
-    primario_central_pct = derivar_primario_de_nfsp_juros(nfsp_central_pct, juros_central_pct)
-    nominal_pct = [{"data": r["data"], "valor_pct": -r["valor"] if r["valor"] is not None else None} for r in nfsp_pct]
+    pib_map = {r["data"]: r["valor"] for r in sgs["pib_12m_brl"] if r["valor"] is not None}
 
-    selic_real = selic_real_ex_post(selic_diaria, ipca_12m)
-    pib_12m_brl_recente = pib_12m_sgs[-1]["valor"] if pib_12m_sgs else None
+    receita_liquida_12m = soma_12m(rtn_data["receita_liquida"])
+    despesa_total_12m = soma_12m(rtn_data["despesa_total"])
+    primario_central_12m = soma_12m(rtn_data["primario_acima"])
+    juros_central_12m = soma_12m(rtn_data["juros_nominais"])
+    previdencia_12m = soma_12m(rtn_data["previdencia"])
+    pessoal_12m = soma_12m(rtn_data["pessoal"])
+    outras_obrig_12m = soma_12m(rtn_data["outras_obrigatorias"])
+    discricionarias_12m = soma_12m(rtn_data["discricionarias"])
+
+    receita_pct_pib = divide_por_pib(receita_liquida_12m, pib_map)
+    despesa_pct_pib = divide_por_pib(despesa_total_12m, pib_map)
+    primario_central_pct_pib = divide_por_pib(primario_central_12m, pib_map)
+    juros_central_pct_pib = divide_por_pib(juros_central_12m, pib_map)
+    previdencia_pct_pib = divide_por_pib(previdencia_12m, pib_map)
+    pessoal_pct_pib = divide_por_pib(pessoal_12m, pib_map)
+
+    despesa_pct_rec = divide_por_receita(despesa_total_12m, receita_liquida_12m)
+    juros_pct_rec = divide_por_receita(juros_central_12m, receita_liquida_12m)
+    primario_pct_rec = divide_por_receita(primario_central_12m, receita_liquida_12m)
+    previdencia_pct_rec = divide_por_receita(previdencia_12m, receita_liquida_12m)
+    pessoal_pct_rec = divide_por_receita(pessoal_12m, receita_liquida_12m)
+
+    selic_real = selic_real_ex_post(selic_diaria, sgs["ipca_12m"])
+    pib_real_yoy_serie = pib_real_yoy(sgs["pib_real_idx"])
 
     ano_atual = datetime.now(timezone.utc).year
-    print(f"-- Focus ({ano_atual}-{ano_atual + 3}) --")
     focus_selic = focus_anuais("Selic", ano_atual)
     focus_ipca = focus_anuais("IPCA", ano_atual)
     focus_pib = focus_anuais("PIB Total", ano_atual)
     focus_cambio = focus_anuais("Câmbio", ano_atual)
 
+    pib_12m_recente = sgs["pib_12m_brl"][-1]["valor"] if sgs["pib_12m_brl"] else None
+
+    nominal_sp_pct = [{"data": r["data"], "valor_pct": -r["valor"] if r["valor"] is not None else None} for r in sgs["nfsp_sp"]]
+    primario_sp_pct = []
+    juros_sp_map = {r["data"]: r["valor"] for r in sgs["juros_sp_pct"]}
+    for r in sgs["nfsp_sp"]:
+        j = juros_sp_map.get(r["data"])
+        if j is None or r["valor"] is None:
+            continue
+        primario_sp_pct.append({"data": r["data"], "valor_pct": round(j - r["valor"], 4)})
+
     payload = {
         "gerado_em": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "mes_recente": dbgg[-1]["data"] if dbgg else None,
-        "pib_nominal_12m_brl_milhoes": pib_12m_brl_recente,
+        "mes_recente": sgs["dbgg"][-1]["data"] if sgs["dbgg"] else None,
+        "pib_nominal_12m_brl_milhoes": pib_12m_recente,
         "divida": {
-            "dbgg_pct": dbgg,
-            "dlsp_total_pct": dlsp,
-            "dlsp_gov_central_pct": dlsp_central,
+            "dbgg_pct_pib": sgs["dbgg"],
+            "dlsp_total_pct_pib": sgs["dlsp_total"],
+            "dlsp_gov_central_pct_pib": sgs["dlsp_gov_central"],
         },
-        "resultado_fiscal": {
+        "receita_e_gastos": {
+            "receita_liquida_12m_brl_mm": receita_liquida_12m,
+            "despesa_total_12m_brl_mm": despesa_total_12m,
+            "primario_central_12m_brl_mm": primario_central_12m,
+            "juros_central_12m_brl_mm": juros_central_12m,
+            "receita_liquida_pct_pib": receita_pct_pib,
+            "despesa_total_pct_pib": despesa_pct_pib,
+            "primario_central_pct_pib": primario_central_pct_pib,
+            "juros_central_pct_pib": juros_central_pct_pib,
+            "despesa_pct_receita": despesa_pct_rec,
+            "juros_pct_receita": juros_pct_rec,
+            "primario_pct_receita": primario_pct_rec,
+            "previdencia_12m_pct_pib": previdencia_pct_pib,
+            "pessoal_12m_pct_pib": pessoal_pct_pib,
+            "previdencia_12m_pct_receita": previdencia_pct_rec,
+            "pessoal_12m_pct_receita": pessoal_pct_rec,
+            "discricionarias_12m_brl_mm": discricionarias_12m,
+            "outras_obrigatorias_12m_brl_mm": outras_obrig_12m,
+            "nfsp_sp_12m_pct_pib": sgs["nfsp_sp"],
             "primario_sp_12m_pct_pib": primario_sp_pct,
-            "primario_central_12m_pct_pib": primario_central_pct,
-            "juros_nominais_sp_12m_pct_pib": juros_nominais_pct,
-            "juros_nominais_central_12m_pct_pib": juros_central_pct,
-            "nfsp_sp_12m_pct_pib": nfsp_pct,
-            "nfsp_central_12m_pct_pib": nfsp_central_pct,
-            "nominal_sp_12m_pct_pib": nominal_pct,
-        },
-        "stress": {
-            "reer_index": reer,
-            "reservas_usd_mm_mensal": reservas_mensal,
+            "juros_nominais_sp_12m_pct_pib": sgs["juros_sp_pct"],
+            "nominal_sp_12m_pct_pib": nominal_sp_pct,
         },
         "monetaria": {
             "selic_diaria_pct": selic_diaria[-730:],
-            "ipca_12m_pct": ipca_12m,
+            "ipca_12m_pct": sgs["ipca_12m"],
             "selic_real_ex_post_pct": selic_real,
+            "pib_real_yoy_pct": pib_real_yoy_serie,
+        },
+        "stress": {
+            "reer_index": sgs["reer"],
+            "reservas_usd_mm_mensal": reservas_mensal,
         },
         "pib": {
-            "acumulado_12m_brl_milhoes_mensal": pib_12m_sgs,
+            "acumulado_12m_brl_milhoes_mensal": sgs["pib_12m_brl"],
+            "real_idx": sgs["pib_real_idx"],
         },
         "expectativas_focus": {
             "selic_anuais": {str(k): v for k, v in focus_selic.items()},
@@ -287,22 +402,26 @@ def main():
             "cambio_anuais": {str(k): v for k, v in focus_cambio.items()},
         },
         "destaques": {
-            "dbgg_pct_recente": dbgg[-1] if dbgg else None,
-            "dlsp_pct_recente": dlsp[-1] if dlsp else None,
-            "primario_sp_12m_pct_recente": primario_sp_pct[-1] if primario_sp_pct else None,
-            "primario_central_12m_pct_recente": primario_central_pct[-1] if primario_central_pct else None,
-            "juros_nominais_sp_12m_pct_recente": (juros_nominais_pct[-1] if juros_nominais_pct else None),
-            "nfsp_sp_12m_pct_recente": nfsp_pct[-1] if nfsp_pct else None,
-            "nominal_sp_12m_pct_recente": nominal_pct[-1] if nominal_pct else None,
-            "reer_recente": reer[-1] if reer else None,
-            "reservas_usd_recente": reservas_mensal[-1] if reservas_mensal else None,
-            "selic_real_recente": selic_real[-1] if selic_real else None,
+            "dbgg_pct_recente": last_val(sgs["dbgg"]),
+            "dlsp_pct_recente": last_val(sgs["dlsp_total"]),
+            "receita_liquida_pct_pib_recente": last_val(receita_pct_pib, "valor_pct"),
+            "despesa_total_pct_pib_recente": last_val(despesa_pct_pib, "valor_pct"),
+            "primario_central_pct_pib_recente": last_val(primario_central_pct_pib, "valor_pct"),
+            "juros_central_pct_pib_recente": last_val(juros_central_pct_pib, "valor_pct"),
+            "juros_pct_receita_recente": last_val(juros_pct_rec, "valor_pct"),
+            "primario_pct_receita_recente": last_val(primario_pct_rec, "valor_pct"),
+            "nfsp_sp_pct_recente": last_val(sgs["nfsp_sp"]),
+            "reer_recente": last_val(sgs["reer"]),
+            "reservas_usd_recente": last_val(reservas_mensal),
+            "selic_real_recente": last_val(selic_real, "selic_real_pct"),
+            "pib_real_yoy_recente": last_val(pib_real_yoy_serie, "valor_yoy_pct"),
+            "ipca_12m_recente": last_val(sgs["ipca_12m"]),
         },
     }
 
     out_file.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     size = out_file.stat().st_size
-    print(f"\n  -> {out_file} ({size} bytes = {size / 1024:.1f} KB)")
+    print(f"\n  -> {out_file} ({size / 1024:.1f} KB)")
 
     if args.upload:
         maybe_upload_json(out_file, BLOB_PATH)

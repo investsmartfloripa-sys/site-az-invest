@@ -1,20 +1,19 @@
 /**
- * Loader dos JSONs da rota /painel-economico/economia/brasil/fiscal.
+ * Loaders dos JSONs do Painel Fiscal.
  *
- * JSONs gerados pelos scripts `data-pipeline/python/build_fiscal.py` e
- * `build_fiscal_termometro.py` (cron diário 9h BRT em `.github/workflows/fiscal-pipeline.yml`),
- * upload pro Vercel Blob em `data/fiscal-classicos.json` e `data/fiscal-termometro.json`.
+ * - fiscal-classicos.json: dados crus (BCB SGS + Tesouro RTN + Focus)
+ * - fiscal-termometro.json: aplicacao das formulas de Ray Dalio (How Countries Go Broke)
  */
-
 import { painelBlobUrl } from "@/lib/painel-blob";
 
-/** Cache ISR de 1 hora. */
 export const FISCAL_REVALIDATE_SECONDS = 3600;
 
 // === Tipos base ===
 export type PontoMensal = { data: string; valor: number | null };
+export type PontoMensal12m = { data: string; valor_12m: number | null };
 export type PontoMensalPct = { data: string; valor_pct: number | null };
 export type PontoDiario = { data: string; valor: number | null };
+export type PontoPibYoY = { data: string; valor_yoy_pct: number | null };
 
 export type SelicRealPonto = {
   data: string;
@@ -32,12 +31,10 @@ export type FocusPonto = {
   max: number | null;
 };
 
-export type DestaqueRecente = {
-  data: string;
-  valor?: number | null;
-  valor_pct?: number | null;
-  selic_real_pct?: number | null;
-} | null;
+export type DestaqueRecente =
+  | { data: string; valor?: number | null; valor_pct?: number | null; valor_yoy_pct?: number | null; selic_real_pct?: number | null }
+  | number
+  | null;
 
 // === fiscal-classicos.json ===
 export type FiscalClassicosData = {
@@ -45,85 +42,112 @@ export type FiscalClassicosData = {
   mes_recente: string | null;
   pib_nominal_12m_brl_milhoes: number | null;
   divida: {
-    dbgg_pct: PontoMensal[];
-    dlsp_total_pct: PontoMensal[];
-    dlsp_gov_central_pct: PontoMensal[];
+    dbgg_pct_pib: PontoMensal[];
+    dlsp_total_pct_pib: PontoMensal[];
+    dlsp_gov_central_pct_pib: PontoMensal[];
   };
-  resultado_fiscal: {
-    primario_sp_12m_pct_pib: PontoMensalPct[];
-    primario_central_12m_pct_pib: PontoMensalPct[];
-    juros_nominais_sp_12m_pct_pib: PontoMensal[];
-    juros_nominais_central_12m_pct_pib?: PontoMensal[];
+  receita_e_gastos: {
+    receita_liquida_12m_brl_mm: PontoMensal12m[];
+    despesa_total_12m_brl_mm: PontoMensal12m[];
+    primario_central_12m_brl_mm: PontoMensal12m[];
+    juros_central_12m_brl_mm: PontoMensal12m[];
+    receita_liquida_pct_pib: PontoMensalPct[];
+    despesa_total_pct_pib: PontoMensalPct[];
+    primario_central_pct_pib: PontoMensalPct[];
+    juros_central_pct_pib: PontoMensalPct[];
+    despesa_pct_receita: PontoMensalPct[];
+    juros_pct_receita: PontoMensalPct[];
+    primario_pct_receita: PontoMensalPct[];
+    previdencia_12m_pct_pib: PontoMensalPct[];
+    pessoal_12m_pct_pib: PontoMensalPct[];
+    previdencia_12m_pct_receita: PontoMensalPct[];
+    pessoal_12m_pct_receita: PontoMensalPct[];
+    discricionarias_12m_brl_mm: PontoMensal12m[];
+    outras_obrigatorias_12m_brl_mm: PontoMensal12m[];
     nfsp_sp_12m_pct_pib: PontoMensal[];
-    nfsp_central_12m_pct_pib?: PontoMensal[];
+    primario_sp_12m_pct_pib: PontoMensalPct[];
+    juros_nominais_sp_12m_pct_pib: PontoMensal[];
     nominal_sp_12m_pct_pib: PontoMensalPct[];
-  };
-  stress: {
-    reer_index: PontoMensal[];
-    reservas_usd_mm_mensal: PontoMensal[];
   };
   monetaria: {
     selic_diaria_pct: PontoDiario[];
     ipca_12m_pct: PontoMensal[];
     selic_real_ex_post_pct: SelicRealPonto[];
+    pib_real_yoy_pct: PontoPibYoY[];
+  };
+  stress: {
+    reer_index: PontoMensal[];
+    reservas_usd_mm_mensal: PontoMensal[];
   };
   pib: {
     acumulado_12m_brl_milhoes_mensal: PontoMensal[];
+    real_idx: PontoMensal[];
   };
-  expectativas_focus: {
-    selic_anuais: Record<string, FocusPonto[]>;
-    ipca_anuais: Record<string, FocusPonto[]>;
-    pib_anuais: Record<string, FocusPonto[]>;
-    cambio_anuais: Record<string, FocusPonto[]>;
-  };
-  destaques: {
-    dbgg_pct_recente: DestaqueRecente;
-    dlsp_pct_recente: DestaqueRecente;
-    primario_sp_12m_pct_recente: DestaqueRecente;
-    primario_central_12m_pct_recente: DestaqueRecente;
-    juros_nominais_sp_12m_pct_recente: DestaqueRecente;
-    nfsp_sp_12m_pct_recente: DestaqueRecente;
-    nominal_sp_12m_pct_recente: DestaqueRecente;
-    reer_recente: DestaqueRecente;
-    reservas_usd_recente: DestaqueRecente;
-    selic_real_recente: DestaqueRecente;
-  };
+  expectativas_focus: Record<string, Record<string, FocusPonto[]>>;
+  destaques: Record<string, DestaqueRecente>;
 };
 
-// === fiscal-termometro.json (18 indicadores Dalio) ===
-export type Direcao = "maior_pior" | "maior_melhor";
-export type Nivel = "verde" | "amarelo" | "vermelho" | "break" | "sem_dado";
+// === fiscal-termometro.json (Dalio) ===
+export type Lever = {
+  i_estavel_aa?: number;
+  i_atual_aa?: number;
+  inflacao_estavel_aa?: number;
+  inflacao_atual_aa?: number;
+  corte_pct_da_despesa?: number;
+  despesa_atual_pct_receita?: number;
+  despesa_alvo_pct_receita?: number;
+  aumento_pct_da_receita?: number;
+  delta_pp?: number;
+};
 
-export type IndicadorDalio = {
+export type Matriz = {
   titulo: string;
-  fonte: string;
-  categoria: string;
-  verde: number;
-  amarelo: number;
-  vermelho: number;
-  break: number;
-  direcao: Direcao;
-  marcos: string;
-  narrativa: string;
-  valor: number | null;
-  nivel: Nivel;
-  distancia_break: number | null;
-};
-
-export type ScoreGeral = {
-  score_medio: number | null;
-  nivel_geral: Nivel;
-  n_indicadores: number;
+  subtitulo: string;
+  eixo_y_starting: number[];
+  eixo_x_deficit?: number[];
+  eixo_x_gap_pp?: number[];
+  valores: number[][];
+  brasil?: { starting: number | null; deficit?: number | null; gap_pp?: number | null };
 };
 
 export type FiscalTermometroData = {
   gerado_em: string;
-  score: ScoreGeral;
-  indicadores: Record<string, IndicadorDalio>;
   fonte_base: string | null;
-  extras: {
-    divida_externa_serie: PontoMensal[];
-    spread_soberano_serie: PontoMensal[];
+  foto_brasil: {
+    divida: { dbgg_pct_pib: number | null; dbgg_pct_receita: number | null };
+    receita: { receita_liquida_pct_pib: number | null };
+    gastos: { despesa_total_pct_pib: number | null; despesa_total_pct_receita: number | null };
+    deficit_primario: { primary_deficit_pct_pib: number | null; primary_deficit_pct_receita: number | null };
+    juros: { juros_pct_pib: number | null; juros_pct_receita: number | null; taxa_nominal_efetiva_aa: number };
+    macro: {
+      pib_real_yoy_pct: number;
+      ipca_12m_pct: number;
+      selic_real_ex_post_pct: number;
+      g_nominal_aa_pct: number;
+      i_nominal_aa_pct: number;
+      gap_i_menos_g_pp: number;
+    };
+  };
+  trajetoria_br_pct_receita: number[] | null;
+  matrizes: {
+    endlevel_por_deficit: Matriz;
+    change_por_deficit: Matriz;
+    endlevel_por_gap: Matriz;
+    change_por_gap: Matriz;
+  };
+  levers: {
+    gap_atual_pp: number;
+    lever_juros?: Lever;
+    lever_inflacao?: Lever;
+    lever_corte_despesa?: Lever;
+    lever_aumento_receita?: Lever;
+  } | null;
+  premissas: {
+    i_nominal_aa: number;
+    g_nominal_aa: number;
+    primary_deficit_pct_receita: number | null;
+    debt_pct_receita: number | null;
+    anos_projecao: number;
   };
   metodologia: string;
 };
@@ -143,7 +167,6 @@ async function fetchBlobJson<T>(path: string): Promise<T | null> {
 export async function loadFiscalClassicos(): Promise<FiscalClassicosData | null> {
   return fetchBlobJson<FiscalClassicosData>("data/fiscal-classicos.json");
 }
-
 export async function loadFiscalTermometro(): Promise<FiscalTermometroData | null> {
   return fetchBlobJson<FiscalTermometroData>("data/fiscal-termometro.json");
 }
