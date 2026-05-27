@@ -95,6 +95,40 @@ def load_icf() -> list[tuple[str, float]]:
     return [(s["mes"], s["icf_zscore"]) for s in p["serie"] if s.get("icf_zscore") is not None]
 
 
+def load_slope_di() -> list[tuple[str, float]]:
+    """Slope DI = swap pré-DI 360d (SGS 4189) menos Selic diária (SGS 1178), mensalizado.
+
+    Spread positivo = curva inclinada (mercado esperando alta de juros);
+    spread negativo = curva invertida (sinal clássico de recessão pela literatura Estrella-Mishkin).
+    """
+    import requests, time
+    try:
+        UA_LOC = {"User-Agent": "Mozilla/5.0"}
+        out_360 = {}
+        out_over = {}
+        for cod, alvo in [(4189, out_360), (1178, out_over)]:
+            r = requests.get(f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.{cod}/dados?formato=json&dataInicial=01/01/2000",
+                             timeout=30, headers=UA_LOC)
+            r.raise_for_status()
+            for row in r.json():
+                try:
+                    d_, m_, y_ = row["data"].split("/")
+                    alvo.setdefault(f"{y_}-{m_}", []).append(float(row["valor"]))
+                except: pass
+            time.sleep(0.3)
+        meses = sorted(set(out_360.keys()) & set(out_over.keys()))
+        out = []
+        for mes in meses:
+            avg_360 = sum(out_360[mes]) / len(out_360[mes]) if out_360[mes] else None
+            avg_over = sum(out_over[mes]) / len(out_over[mes]) if out_over[mes] else None
+            if avg_360 is not None and avg_over is not None:
+                out.append((mes, avg_360 - avg_over))
+        return out
+    except Exception as e:
+        print(f"  load_slope_di erro: {e}", file=sys.stderr)
+        return []
+
+
 def load_codace_mensal() -> list[tuple[str, str]]:
     p = load_blob_json("data/visao_geral_codace.json")
     if not p or "mensal" not in p:
@@ -251,20 +285,24 @@ def modelo_bry_boschan(ibcbr: list[tuple[str, float]], janela: int = 5) -> dict[
 # ============================================================================
 # Modelo ii: Probit financeiro (Estrella & Mishkin) — versão simples
 # ============================================================================
-def modelo_probit_financeiro(icf: list[tuple[str, float]], codace_periodos: list[tuple[str, str]]) -> dict[str, float]:
-    """Regressão logística simples sobre ICF para prever recessão CODACE 12m à frente.
+def modelo_probit_financeiro(icf: list[tuple[str, float]], codace_periodos: list[tuple[str, str]], slope_di: list[tuple[str, float]] | None = None) -> dict[str, float]:
+    """Regressão logística sobre [ICF, slope DI] para prever recessão CODACE 12m à frente.
 
-    Sem sklearn — usamos ajuste analítico via Newton-Raphson básico (max 50 iter).
-    Se ICF curto demais, retorna vazio.
+    Adicionando slope DI (4189-1178) como segunda feature seguindo Estrella-Mishkin (1998),
+    que mostra slope negativo (curva invertida) como melhor antecedente de recessão.
     """
-    meses = [m for m, _ in icf]
-    x = [v for _, v in icf]
-    if len(x) < 60:
+    meses_icf = [m for m, _ in icf]
+    x1 = [v for _, v in icf]
+    # Mapear slope_di por mes
+    slope_map = dict(slope_di) if slope_di else {}
+    if len(x1) < 60:
         return {}
 
     # Target: recessão CODACE shifted -12 meses (prever 12 meses à frente)
+    meses = meses_icf
+    x = x1  # alias para retro-compatibilidade
+    x2 = [slope_map.get(m) for m in meses]  # slope DI alinhado por mes (pode ter None)
     mask = codace_mask(meses, codace_periodos)
-    # shift: y_t = recessão_em(t+12)
     horizon = 12
     y: list[int | None] = []
     for i in range(len(meses)):
@@ -273,37 +311,32 @@ def modelo_probit_financeiro(icf: list[tuple[str, float]], codace_periodos: list
         else:
             y.append(None)
 
-    pares_treino = [(x[i], y[i]) for i in range(len(x)) if y[i] is not None]
+    # Triplas (x1, x2, y) - somente onde slope disponível
+    pares_treino = [(x[i], x2[i], y[i]) for i in range(len(x)) if y[i] is not None and x2[i] is not None]
     if len(pares_treino) < 60:
         return {}
 
-    # Newton-Raphson para logística: P = sigmoid(b0 + b1 * x)
-    b0, b1 = 0.0, -0.5  # chute inicial: ICF mais negativo ⇒ mais P(recessão)
+    # Newton-Raphson para logística multivariada: P = sigmoid(b0 + b1*x1 + b2*x2)
+    # x1 = ICF z-score, x2 = slope DI (spread)
+    b0, b1, b2 = 0.0, -0.5, -0.3  # ICF neg & slope neg => mais P(recessão)
+    import numpy as np
+    X = np.array([[1.0, t[0], t[1]] for t in pares_treino])
+    Y = np.array([t[2] for t in pares_treino], dtype=float)
     for _ in range(50):
-        gr0 = 0.0
-        gr1 = 0.0
-        h00 = 0.0
-        h01 = 0.0
-        h11 = 0.0
-        for xi, yi in pares_treino:
-            p = sigmoid(b0 + b1 * xi)
-            gr0 += yi - p
-            gr1 += xi * (yi - p)
-            h00 += p * (1 - p)
-            h01 += xi * p * (1 - p)
-            h11 += xi * xi * p * (1 - p)
-        # passo: delta = H^{-1} * gradiente
-        det = h00 * h11 - h01 * h01
-        if abs(det) < 1e-12:
-            break
-        d0 = (h11 * gr0 - h01 * gr1) / det
-        d1 = (-h01 * gr0 + h00 * gr1) / det
-        b0 += d0
-        b1 += d1
-        if abs(d0) + abs(d1) < 1e-7:
+        z = X @ np.array([b0, b1, b2])
+        p = 1.0 / (1.0 + np.exp(-np.clip(z, -50, 50)))
+        gr = X.T @ (Y - p)
+        W = p * (1 - p)
+        H = (X.T * W) @ X
+        try:
+            delta = np.linalg.solve(H, gr)
+            b0 += delta[0]; b1 += delta[1]; b2 += delta[2]
+            if np.max(np.abs(delta)) < 1e-7: break
+        except np.linalg.LinAlgError:
             break
 
-    return {m: round(sigmoid(b0 + b1 * x[i]) * 100, 1) for i, m in enumerate(meses)}
+    return {m: round(sigmoid(b0 + b1 * x[i] + b2 * (x2[i] if x2[i] is not None else 0)) * 100, 1)
+            for i, m in enumerate(meses) if x[i] is not None}
 
 
 # ============================================================================
@@ -480,6 +513,10 @@ def main() -> None:
     codace_periodos = load_codace_mensal()
     print(f"    {len(codace_periodos)} períodos")
 
+    print("  Carregando slope DI (SGS 4189-1178)…")
+    slope_di = load_slope_di()
+    print(f"    {len(slope_di)} obs")
+
     # Rodar modelos
     modelos: dict[str, dict[str, float]] = {}
 
@@ -487,8 +524,8 @@ def main() -> None:
     modelos["msdfm"] = modelo_ms_dfm(ibcbr)
     print(f"    {len(modelos['msdfm'])} pontos")
 
-    print("  → Probit financeiro (Estrella & Mishkin)")
-    modelos["probit_financeiro"] = modelo_probit_financeiro(icf, codace_periodos)
+    print("  → Probit financeiro (Estrella & Mishkin) com slope DI")
+    modelos["probit_financeiro"] = modelo_probit_financeiro(icf, codace_periodos, slope_di)
     print(f"    {len(modelos['probit_financeiro'])} pontos")
 
     print("  → Gap HP threshold")
