@@ -205,8 +205,12 @@ export type RecessaoPonto = {
   bry_boschan: NumOrNull;
   mediana: NumOrNull;
   mediana_parcial?: NumOrNull;
+  media?: NumOrNull;
+  min_val?: NumOrNull;
+  max_val?: NumOrNull;
   n_modelos: number;
   n_acima_50: number;
+  sensiveis_presentes?: number;
   sinalizacao: "verde" | "amarelo" | "vermelho" | "indeterminado";
 };
 
@@ -336,6 +340,8 @@ export type IpeadataData = {
   fenabrave_emplac: IpeadataBloco;
   cnc_icec: IpeadataBloco;
   fecomercio_icc: IpeadataBloco;
+  iaemp_fgv?: IpeadataBloco;
+  icce_fgv?: IpeadataBloco;
   metadata: MetaCommon;
 };
 
