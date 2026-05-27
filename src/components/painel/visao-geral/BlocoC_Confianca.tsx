@@ -16,14 +16,7 @@ import type { CniData, FecomercioData, FgvConfiancaData, PmiData } from "@/lib/p
 import { formatMes } from "@/lib/painel-visao-geral";
 
 function CardFgvConfianca({ data }: { data: FgvConfiancaData | null }) {
-  if (!data) {
-    return (
-      <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-center">
-        <h3 className="text-base font-semibold text-zinc-500">C1 — Confiança FGV-IBRE</h3>
-        <p className="mt-2 text-xs text-zinc-400">Scraper em construção.</p>
-      </div>
-    );
-  }
+  if (!data || data.freshness_status === "missing") return null;
   const todosMeses = new Set<string>();
   for (const arr of [data.ice, data.ici, data.icom, data.ics, data.icst, data.icc]) {
     for (const p of arr) todosMeses.add(p.mes);
@@ -39,14 +32,7 @@ function CardFgvConfianca({ data }: { data: FgvConfiancaData | null }) {
       icst: data.icst.find((p) => p.mes === mes)?.valor ?? null,
       icc: data.icc.find((p) => p.mes === mes)?.valor ?? null,
     }));
-  if (dados.length === 0) {
-    return (
-      <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5">
-        <h3 className="text-base font-semibold text-amber-900">C1 — Confiança FGV-IBRE</h3>
-        <p className="mt-2 text-xs text-amber-700">Pipeline rodou mas séries vazias (status: {data.freshness_status}).</p>
-      </div>
-    );
-  }
+  if (dados.length === 0) return null;
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
       <div className="mb-3">
@@ -80,9 +66,12 @@ function CardFgvConfianca({ data }: { data: FgvConfiancaData | null }) {
 }
 
 function CardCniPmi({ cni, pmi }: { cni: CniData | null; pmi: PmiData | null }) {
+  const hasCni = cni && cni.icei.length > 0;
+  const hasPmi = pmi && pmi.serie.length > 0;
+  if (!hasCni && !hasPmi) return null;
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+      {hasCni && (<div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h3 className="text-base font-semibold text-zinc-900">CNI — ICEI + INEC</h3>
         {cni && cni.icei.length > 0 ? (
           <ResponsiveContainer width="100%" height={220}>
@@ -106,12 +95,10 @@ function CardCniPmi({ cni, pmi }: { cni: CniData | null; pmi: PmiData | null }) 
               <Line type="monotone" dataKey="inec" stroke="#2563EB" dot={false} strokeWidth={1.5} name="INEC" connectNulls />
             </LineChart>
           </ResponsiveContainer>
-        ) : (
-          <p className="mt-3 text-xs text-zinc-500">Aguardando pipeline CNI.</p>
-        )}
-      </div>
+        ) : null}
+      </div>)}
 
-      <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+      {hasPmi && (<div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h3 className="text-base font-semibold text-zinc-900">S&P Global PMI Brasil</h3>
         {pmi && pmi.serie.length > 0 ? (
           <ResponsiveContainer width="100%" height={220}>
@@ -130,23 +117,14 @@ function CardCniPmi({ cni, pmi }: { cni: CniData | null; pmi: PmiData | null }) 
               <Line type="monotone" dataKey="composto" stroke="#000000" dot={false} strokeWidth={2} connectNulls name="Composto" />
             </LineChart>
           </ResponsiveContainer>
-        ) : (
-          <p className="mt-3 text-xs text-zinc-500">Aguardando PMI mensal (atualiza dia 1 e 3).</p>
-        )}
-      </div>
+        ) : null}
+      </div>)}
     </div>
   );
 }
 
 function CardFecomercio({ data }: { data: FecomercioData | null }) {
-  if (!data || (data.icec.length === 0 && data.icf.length === 0)) {
-    return (
-      <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-center">
-        <h3 className="text-base font-semibold text-zinc-500">C4 — Fecomercio SP (ICEC + ICF)</h3>
-        <p className="mt-2 text-xs text-zinc-400">Aguardando pipeline.</p>
-      </div>
-    );
-  }
+  if (!data || (data.icec.length === 0 && data.icf.length === 0)) return null;
   const todosMeses = new Set<string>();
   for (const arr of [data.icec, data.icf]) for (const p of arr) todosMeses.add(p.mes);
   const dados = Array.from(todosMeses)
