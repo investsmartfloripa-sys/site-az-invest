@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "Trajetoria da divida bruta do governo geral (DBGG) e divida liquida do setor publico (DLSP) brasileiras. Fonte: BCB SGS.",
 };
 
+export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export default async function PainelDividaPage() {
