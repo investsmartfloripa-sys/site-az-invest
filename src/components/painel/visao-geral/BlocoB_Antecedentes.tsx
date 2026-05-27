@@ -152,7 +152,7 @@ export function BlocoBAntecedentes({
   return (
     <section className="space-y-5">
       <header>
-        <h2 className="text-xl font-bold text-[#132960]">2. Para onde vamos (antecedentes)</h2>
+        <h2 className="text-xl font-bold text-[#132960]">2. Sinais antecedentes (com ressalvas — OECD CLI defasado)</h2>
         <p className="mt-1 text-xs text-zinc-600">
           Indicadores que historicamente antecedem viradas de ciclo em 6-9 meses: OECD Composite Leading Indicator (BR) e antecedentes IBRE.
         </p>
