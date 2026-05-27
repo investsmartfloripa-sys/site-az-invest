@@ -69,6 +69,8 @@ function HeroCard({
   );
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function MercadoOverviewPage() {
   const [catalog, latest, full] = await Promise.all([
     getMarketCatalog(),
