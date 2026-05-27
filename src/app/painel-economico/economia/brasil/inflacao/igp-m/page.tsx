@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "Painel IGP-M: contribuição dos componentes IPA-M, IPC-M e INCC-M, variação mensal e acumulado em 12 meses. Atualizado mensalmente via BCB SGS.",
 };
 
+export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export default async function PainelIgpmPage() {
