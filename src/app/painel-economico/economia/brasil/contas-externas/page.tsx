@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "Balanço de pagamentos, investimento direto, reservas internacionais e comércio exterior por produto e destino. Dados BCB (BPM6) e SECEX/MDIC (Comex Stat), atualização automática diária.",
 };
 
+export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export default async function PainelContasExternasPage() {
