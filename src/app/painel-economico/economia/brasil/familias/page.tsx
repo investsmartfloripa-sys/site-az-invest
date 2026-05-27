@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "Renda, endividamento e saúde financeira das famílias brasileiras. Dados BCB SGS, IBGE PNAD e Ipeadata, com atualização automática diária.",
 };
 
+export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export default async function PainelFamiliasPage() {
