@@ -47,34 +47,24 @@ def localizar_xlsx_atual():
     return matches[0] if matches else None
 
 def parse_xlsx(content):
-    """Parse das abas com matriz pivotada por ano."""
+    """Parse das abas ANFAVEA - matriz pivotada por ano com blocos repetidos.
+
+    Estrutura tipica:
+      [bloco] Unidades  <ANO>   Jan Fev Mar Abr Mai Jun Jul Ago Set Out Nov Dez
+              Total              v1  v2  v3  v4  v5  v6  v7  v8  v9 v10 v11 v12
+              Veiculos leves     ...
+              ...
+
+    Estrategia: percorrer linhas sequencialmente. Quando achar linha com
+    "Unidades" + um ano 1957-2050, marcar ano corrente. Na proxima linha
+    "Total", capturar 12 numeros como valores mensais.
+    """
     from openpyxl import load_workbook
     wb = load_workbook(BytesIO(content), data_only=True, read_only=True)
     print(f"  abas: {wb.sheetnames}")
 
     by_mes = {}  # {mes_iso: {producao_unidades, vendas_unidades, exportacao_unidades}}
 
-    def encontrar_total(rows, ano):
-        """Procura linha 'Total' no bloco do ano e retorna 12 meses."""
-        for i, row in enumerate(rows):
-            cells = [str(c).strip() if c is not None else "" for c in row]
-            # Detectar bloco do ano
-            if str(ano) in cells:
-                # Proximas linhas: header (Jan/Fev/...) e Total
-                for j in range(i, min(i + 8, len(rows))):
-                    cells_j = [str(c).strip() if c is not None else "" for c in rows[j]]
-                    has_total = any("TOTAL" in c.upper() for c in cells_j[:5])
-                    if has_total:
-                        nums = []
-                        for c in rows[j]:
-                            if isinstance(c, (int, float)) and not isinstance(c, bool):
-                                if not (-100000 < c < 100000 and float(c).is_integer() and c < 3000 and c > 1990):
-                                    nums.append(float(c))
-                        if len(nums) >= 12:
-                            return nums[:12]
-        return None
-
-    # Mapear abas
     for aba in wb.sheetnames:
         nome = aba.upper()
         if "PROD" in nome:
@@ -85,26 +75,46 @@ def parse_xlsx(content):
             sheet_kind = "exportacao"
         else:
             continue
+
         ws = wb[aba]
         rows = list(ws.iter_rows(values_only=True))
-        # Detectar todos os anos presentes
-        anos_vistos = set()
-        for row in rows:
+        n_total_capturado = 0
+
+        for i, row in enumerate(rows):
+            # Identificar header de ano: linha com numero 1957-2050 em alguma celula
+            ano_atual = None
             for c in row:
-                try:
-                    n = int(c) if isinstance(c, (int, float)) else int(c)
+                if isinstance(c, (int, float)) and not isinstance(c, bool):
+                    n = int(c)
                     if 1957 <= n <= 2050:
-                        anos_vistos.add(n)
-                except (ValueError, TypeError):
-                    pass
-        for ano in sorted(anos_vistos):
-            doze = encontrar_total(rows, ano)
-            if not doze: continue
-            for m, v in enumerate(doze, start=1):
-                if v and v > 0:
-                    mes_iso = f"{ano:04d}-{m:02d}"
-                    by_mes.setdefault(mes_iso, {})[f"{sheet_kind}_unidades"] = v
-    return [by_mes[m] | {"mes": m} for m in sorted(by_mes.keys())]
+                        ano_atual = n
+                        break
+            if ano_atual is None:
+                continue
+            # Procurar linha "Total" nas proximas 5 linhas
+            for j in range(i + 1, min(i + 6, len(rows))):
+                row_j = rows[j]
+                cells_j = [str(c).strip() if c is not None else "" for c in row_j]
+                if any("TOTAL" == c.upper() or "TOTAL " in c.upper() for c in cells_j[:4]):
+                    # Capturar 12 numeros depois da label
+                    nums = []
+                    for c in row_j:
+                        if isinstance(c, (int, float)) and not isinstance(c, bool):
+                            v = float(c)
+                            # Filtrar anos (1957-2050) e zeros isolados nao sao filtrados
+                            if not (1957 <= v <= 2050 and v == int(v)):
+                                nums.append(v)
+                    if len(nums) >= 12:
+                        for m, val in enumerate(nums[:12], start=1):
+                            if val and val > 0:
+                                mes_iso = f"{ano_atual:04d}-{m:02d}"
+                                by_mes.setdefault(mes_iso, {})[f"{sheet_kind}_unidades"] = val
+                        n_total_capturado += 1
+                    break
+
+        print(f"    {aba} ({sheet_kind}): {n_total_capturado} anos capturados")
+
+    return [{**by_mes[m], "mes": m} for m in sorted(by_mes.keys())]
 
 def calcular(serie):
     base = {}
