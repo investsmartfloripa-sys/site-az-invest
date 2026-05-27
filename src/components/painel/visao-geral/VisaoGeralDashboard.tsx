@@ -26,6 +26,7 @@ function FichaTecnica({ payload }: { payload: VisaoGeralPayload }) {
     { bloco: "EPE energia", mes: payload.epe?.mes_recente, fonte: "EPE — Resenha Mensal", url: "https://www.epe.gov.br/pt/publicacoes-dados-abertos/publicacoes/consumo-de-energia-eletrica" },
     { bloco: "Hard data (ABCR/ABPO/SNIC/Aço/FENABRAVE)", mes: null, fonte: "Scrapers defensivos", url: "https://www.empapel.org.br/publicacoes/boletim-estatistico/" },
     { bloco: "Crédito e agregados", mes: null, fonte: "BCB SGS 20662, 20635, 20571, 20572, 27788-27791", url: "https://dadosabertos.bcb.gov.br/" },
+    { bloco: "Papelão ABPO + Aço + FENABRAVE + ICEC CNC + ICC Fecomercio (via IPEADATA)", mes: null, fonte: "IPEADATA — espelho IPEA", url: "http://ipeadata.gov.br" },
     { bloco: "ICF próprio", mes: payload.icf?.mes_recente, fonte: "Cálculo próprio: Selic real + Ibov 6m + REER", url: "https://www.bcb.gov.br/" },
   ];
   return (
@@ -65,7 +66,7 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
       <BlocoACicloAtual payload={payload} />
       <BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} />
       <BlocoCConfianca fgvConfianca={payload.fgvConfianca} cni={payload.cni} pmi={payload.pmi} fecomercio={payload.fecomercio} />
-      <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} />
+      <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} />
       <BlocoECondicoesFinanceiras icf={payload.icf} credito={payload.credito} />
       <FichaTecnica payload={payload} />
     </div>
