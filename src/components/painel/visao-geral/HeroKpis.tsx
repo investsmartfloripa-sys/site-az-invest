@@ -58,17 +58,17 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
   const kpi1Cor: "verde" | "amarelo" | "vermelho" | "neutro" =
     kpi1 === null ? "neutro" : kpi1 > 0 ? "verde" : kpi1 < -0.3 ? "vermelho" : "amarelo";
 
-  // KPI 2 — Probabilidade de recessão (mediana dos modelos)
+  // KPI 2 — Probabilidade de recessão (mediana dos modelos, só se n>=4)
   const rec = ultimaObs(payload.recessao?.serie);
-  const kpi2 = rec?.mediana ?? null;
+  const kpi2 = rec?.mediana ?? rec?.mediana_parcial ?? null;
   const kpi2Cor: "verde" | "amarelo" | "vermelho" | "neutro" =
-    rec === null ? "neutro" : sinalizacaoToCor(rec.sinalizacao);
+    !rec ? "neutro" : rec.sinalizacao === "indeterminado" ? "neutro" : sinalizacaoToCor(rec.sinalizacao as any);
 
-  // KPI 3 — Antecedente OECD CLI variação 6m anualizada
-  const oe = ultimaObs(payload.oecdCli?.serie);
-  const kpi3 = oe?.var_6m_anualizada ?? null;
+  // KPI 3 — Confiança Empresarial FGV (ICE) — antes era OECD CLI (estava stale dez/2023)
+  const ice = ultimaObs(payload.fgvConfianca?.ice);
+  const kpi3 = ice?.valor ?? null;
   const kpi3Cor: "verde" | "amarelo" | "vermelho" | "neutro" =
-    kpi3 === null ? "neutro" : kpi3 > 0.5 ? "verde" : kpi3 < -0.5 ? "vermelho" : "amarelo";
+    kpi3 === null ? "neutro" : kpi3 > 100 ? "verde" : kpi3 < 90 ? "vermelho" : "amarelo";
 
   // KPI 4 — ICF (z-score) → regime
   const icf = ultimaObs(payload.icf?.serie);
@@ -95,23 +95,23 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
       />
       <KpiCard
         titulo="Probabilidade de recessão"
-        tecnico="Mediana 5 modelos"
+        tecnico={rec && rec.n_modelos < 4 ? `Parcial (${rec.n_modelos}/5 modelos)` : "Mediana 5 modelos"}
         valor={kpi2 === null ? "—" : `${kpi2.toFixed(0)}%`}
         subtitulo={
           rec
-            ? `${rec.n_acima_50} de ${rec.n_modelos} modelos > 50%`
+            ? `${rec.n_acima_50} de ${rec.n_modelos} modelos > 50%${rec.sinalizacao === "indeterminado" ? " (sinal incompleto)" : ""}`
             : "MS-DFM, probit, gap HP, diffusion, Bry-Boschan."
         }
         cor={kpi2Cor}
         mes={rec?.mes}
       />
       <KpiCard
-        titulo="Antecedente OECD CLI"
-        tecnico="Var. 6m anualizada"
-        valor={formatPct(kpi3)}
-        subtitulo="Adianta viradas de ciclo em 6-9 meses."
+        titulo="Confiança Empresarial FGV"
+        tecnico="ICE (FGV-IBRE via SGS)"
+        valor={kpi3 === null ? "—" : kpi3.toFixed(1)}
+        subtitulo="100 = neutro. Acima = otimismo, abaixo = pessimismo."
         cor={kpi3Cor}
-        mes={oe?.mes}
+        mes={ice?.mes}
       />
       <KpiCard
         titulo="Condições financeiras"
