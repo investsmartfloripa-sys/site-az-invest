@@ -149,16 +149,32 @@ export function BlocoBAntecedentes({
   fgvAntecedentes: FgvAntecedentesData | null;
   codace: CodaceFaixa[];
 }) {
+  // OECD defasado >12m -> degradar visualmente para accordion
+  const oecdDefasado = oecdCli?.mes_recente && new Date(oecdCli.mes_recente + "-01").getTime() < Date.now() - 1000*60*60*24*365;
   return (
     <section className="space-y-5">
       <header>
-        <h2 className="text-xl font-bold text-[#132960]">2. Sinais antecedentes (com ressalvas — OECD CLI defasado)</h2>
+        <h2 className="text-xl font-bold text-[#132960]">2. Sinais antecedentes</h2>
         <p className="mt-1 text-xs text-zinc-600">
-          Indicadores que historicamente antecedem viradas de ciclo em 6-9 meses: OECD Composite Leading Indicator (BR) e antecedentes IBRE.
+          Indicadores que historicamente antecedem viradas de ciclo em 6-9 meses. Sinal corrente vem do FGV (Bloco 3 — Confiança Empresarial via SGS).
         </p>
+        {oecdDefasado && (
+          <div className="mt-2 rounded-md bg-amber-50 px-2 py-1 text-[11px] text-amber-800 border border-amber-200">
+            ⚠ OECD CLI publicado no Brasil está defasado em &gt;12 meses (último ponto: {oecdCli.mes_recente}). Mantido como contexto histórico no accordion abaixo.
+          </div>
+        )}
       </header>
-      <CardOecdCli data={oecdCli} codace={codace} />
       <CardFgvAntecedentes data={fgvAntecedentes} />
+      {oecdDefasado ? (
+        <details className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+          <summary className="cursor-pointer text-sm font-semibold text-zinc-700">📜 OECD CLI (contexto histórico — dado defasado)</summary>
+          <div className="mt-3">
+            <CardOecdCli data={oecdCli} codace={codace} />
+          </div>
+        </details>
+      ) : (
+        <CardOecdCli data={oecdCli} codace={codace} />
+      )}
     </section>
   );
 }
