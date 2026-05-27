@@ -33,17 +33,14 @@ UA = {"User-Agent": "az-invest-visao-geral-oecd/0.1", "Accept": "application/vnd
 
 # OECD SDMX REST — CLI Brazil, amplitude-adjusted, monthly
 # Reference: https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_CLI/BRA.....M/
-OECD_URL = (
-    "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_CLI/BRA.M.LI..AA...."
-    "?dimensionAtObservation=AllDimensions&format=csvfilewithlabels"
-)
+OECD_URL = "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_CLI/BRA.M.LI...AA.H?dimensionAtObservation=AllDimensions&format=csvfilewithlabels"
 # Fallback via FRED (BRALOLITOAASTSAM) caso OECD SDMX bloqueie por user-agent
 FRED_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=BRALOLITOAASTSAM"
 
 INPUTS = {"oecd_cli_bra": "1989-01"}  # série começa em 1989
 
 
-def _get(url: str, *, timeout: int = 60, retries: int = 3, sleep: float = 3.0) -> requests.Response:
+def _get(url: str, *, timeout: int = 120, retries: int = 4, sleep: float = 5.0) -> requests.Response:
     last: Exception | None = None
     for i in range(retries):
         try:
