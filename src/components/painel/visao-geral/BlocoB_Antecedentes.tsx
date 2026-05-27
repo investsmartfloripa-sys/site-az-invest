@@ -38,6 +38,12 @@ function CardOecdCli({ data, codace }: { data: OecdCliData | null; codace: Codac
           Linha 100 = tendência. Quadrante atual: <strong>{data.destaques?.quadrante_recente ?? "—"}</strong>. Adianta
           viradas em 6-9 meses.
         </p>
+        {data.mes_recente && new Date(data.mes_recente + "-01").getTime() < Date.now() - 1000*60*60*24*365 && (
+          <div className="mt-2 rounded-md bg-amber-50 px-2 py-1 text-[10px] text-amber-800 border border-amber-200">
+            ⚠ Série OECD com defasagem &gt;12 meses (último ponto: {data.mes_recente}). Tratar como contexto histórico.
+            Para sinal corrente use o card de Confiança Empresarial FGV no Bloco C.
+          </div>
+        )}
       </div>
       <ResponsiveContainer width="100%" height={260}>
         <ComposedChart data={dados} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
