@@ -9,6 +9,8 @@ export const metadata = {
     "Compare a evolução de ações, ETFs, índices, FX, commodities e cripto em janelas de 1 mês a 5 anos com rebase 100.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function HistoricoPage() {
   const [catalog, full] = await Promise.all([getMarketCatalog(), getMarketHistoryFull()]);
 
