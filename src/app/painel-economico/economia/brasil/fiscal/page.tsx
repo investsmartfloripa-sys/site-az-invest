@@ -31,6 +31,8 @@ const PAINEIS = [
   },
 ];
 
+export const dynamic = "force-dynamic";
+
 export default function PainelFiscalHub() {
   return (
     <div className="space-y-6">
