@@ -104,17 +104,22 @@ def _parse_fred_csv(text: str) -> dict[str, float]:
 
 
 def fetch_oecd_cli() -> dict[str, float]:
+    # FRED primeiro (mais estavel), OECD SDMX como fallback
     try:
-        print("  [OECD SDMX] tentando…")
-        r = _get(OECD_URL, retries=2)
-        data = _parse_oecd_csv(r.text)
+        print("  [FRED BRALOLITOAASTSAM] tentando...")
+        r = _get(FRED_URL, retries=2)
+        data = _parse_fred_csv(r.text)
         if data:
             return data
     except Exception as e:
+        print(f"  FRED falhou: {e}", file=sys.stderr)
+    try:
+        print("  [OECD SDMX] tentando...")
+        r = _get(OECD_URL, retries=1)
+        return _parse_oecd_csv(r.text)
+    except Exception as e:
         print(f"  OECD SDMX falhou: {e}", file=sys.stderr)
-    print("  [FRED] fallback…")
-    r = _get(FRED_URL, retries=2)
-    return _parse_fred_csv(r.text)
+        raise
 
 
 def quadrante(nivel: float | None, mom6_anualizado: float | None) -> str | None:
