@@ -173,7 +173,7 @@ export function BlocoCConfianca({
   return (
     <section className="space-y-5">
       <header>
-        <h2 className="text-xl font-bold text-[#132960]">Bloco C — Confiança</h2>
+        <h2 className="text-xl font-bold text-[#132960]">3. Como o mercado sente</h2>
         <p className="mt-1 text-xs text-zinc-600">
           Sondagens FGV-IBRE, CNI, S&amp;P PMI e Fecomercio SP. Quando os 4 concordam, sinal forte; quando divergem,
           incerteza.
