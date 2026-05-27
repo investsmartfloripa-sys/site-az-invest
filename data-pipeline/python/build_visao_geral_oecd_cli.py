@@ -104,7 +104,7 @@ def main():
 
     payload = build_payload(serie_dict)
     out_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"JSON {out_file} ({out_file.stat().st_size/1024:.1f} KB) mes {payload[\'mes_recente\']}")
+    print(f"JSON {out_file} ({out_file.stat().st_size/1024:.1f} KB)"); print("  mes:", payload['mes_recente'])
 
     if args.upload:
         sys.path.insert(0, str(HERE))
