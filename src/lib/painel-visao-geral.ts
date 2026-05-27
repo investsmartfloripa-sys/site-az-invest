@@ -469,5 +469,10 @@ export function fraseManchete(payload: VisaoGeralPayload): string {
     const regimeLabel = icf.regime === "estimulativo" ? "estimulativas" : icf.regime === "restritivo" ? "restritivas" : "neutras";
     partes.push("As condições financeiras estão " + regimeLabel + " (z-score " + icf.icf_zscore.toFixed(2) + ").");
   }
+  const ice = ultimaObs(payload.fgvConfianca?.ice);
+  if (ice && ice.valor !== null && ice.valor !== undefined) {
+    const cnf = ice.valor > 100 ? "em terreno otimista" : ice.valor < 90 ? "em terreno pessimista" : "em zona neutra";
+    partes.push("Confiança empresarial " + cnf + " (ICE FGV " + ice.valor.toFixed(1) + ").");
+  }
   return partes.join(" ");
 }
