@@ -1,46 +1,25 @@
-"""Build do JSON do Painel Visão Geral — bloco ANFAVEA (produção e vendas de veículos).
+"""Build do Painel Visao Geral - bloco ANFAVEA (producao e vendas de autoveiculos).
 
-Fonte: XLSX consolidado mensal publicado pela ANFAVEA em
-https://anfavea.com.br/site/edicoes-em-excel/
-
-A planilha contém séries mensais desde 1957 (produção, vendas internas,
-exportações em unidades). Estrutura defensiva: detecta colunas por header,
-falha limpa se shape inesperada.
-
-Calcula:
-- Variação a/a (12m), MM3m, índice base 2019=100
-- Produção × vendas (ratio — proxy de inventário)
-
-Ragged-edge tolerante.
+Fonte: https://anfavea.com.br/docs/siteautoveiculos<ANO>.xlsx
+Estrutura: matriz pivotada com anos como blocos de 12 meses.
+Abas: I.Emplacamento, V.Exportacao Volume, VI.Producao.
 """
 from __future__ import annotations
-
-import argparse
-import json
-import sys
-import time
+import argparse, json, sys, time, re, io
 from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
-
 import requests
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/visao_geral_anfavea.json"
-UA = {"User-Agent": "az-invest-visao-geral-anfavea/0.1", "Accept": "*/*"}
-
-# URL canônica da página de "Edições em Excel". A página tem links para o XLSX
-# consolidado mais recente; o nome do arquivo muda mensalmente. Mantemos URL
-# como page-fetch + regex pra achar XLSX, com fallback hardcoded.
-ANFAVEA_PAGE = "https://anfavea.com.br/site/edicoes-em-excel/"
-ANFAVEA_FALLBACK_XLSX = "https://anfavea.com.br/docs/SeriesTemporais_Autoveiculos.xlsx"
-
+UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+      "Referer": "https://anfavea.com.br/site/edicoes-em-excel/"}
 INPUTS = {"anfavea_veiculos": "1957-01"}
 
-
-def _get(url: str, *, timeout: int = 90, retries: int = 2, sleep: float = 5.0) -> requests.Response:
-    last: Exception | None = None
+def _get(url, *, timeout=120, retries=3, sleep=5.0):
+    last = None
     for i in range(retries):
         try:
             r = requests.get(url, timeout=timeout, headers=UA)
@@ -48,145 +27,125 @@ def _get(url: str, *, timeout: int = 90, retries: int = 2, sleep: float = 5.0) -
             return r
         except Exception as e:
             last = e
-            print(f"  retry {i + 1}/{retries}: {e}", file=sys.stderr)
             time.sleep(sleep)
-    raise RuntimeError(f"falha após {retries} tentativas: {last}")
+    raise RuntimeError(f"falha: {last}")
 
+def localizar_xlsx_atual():
+    """Pega a URL XLSX do ano atual ou recente da pagina de edicoes."""
+    ano = datetime.now(timezone.utc).year
+    for delta in range(0, 3):  # tenta ano atual, depois anterior
+        url = f"https://anfavea.com.br/docs/siteautoveiculos{ano - delta}.xlsx"
+        try:
+            r = requests.head(url, timeout=20, headers=UA)
+            if r.status_code == 200:
+                return url
+        except Exception:
+            continue
+    # fallback: parsear pagina e pegar primeiro XLSX
+    r = _get("https://anfavea.com.br/site/edicoes-em-excel/", retries=2)
+    matches = re.findall(r'href="(https?://anfavea\.com\.br/docs/[^"]+\.xlsx)"', r.text)
+    return matches[0] if matches else None
 
-def localizar_xlsx() -> str:
-    """Busca URL do XLSX mais recente; cai para fallback se não achar."""
-    try:
-        r = _get(ANFAVEA_PAGE, retries=1)
-        html = r.text
-        # procurar links que terminam em .xlsx
-        import re
-
-        urls = re.findall(r'href="(https?://[^"]+\.xlsx)"', html)
-        # priorizar "series" ou "temporais"
-        for u in urls:
-            if "serie" in u.lower() or "temporais" in u.lower() or "autoveic" in u.lower():
-                return u
-        if urls:
-            return urls[0]
-    except Exception as e:
-        print(f"  não achou XLSX no portal: {e}", file=sys.stderr)
-    return ANFAVEA_FALLBACK_XLSX
-
-
-def parse_xlsx(content: bytes) -> list[dict]:
-    """Parse defensivo do XLSX ANFAVEA usando openpyxl."""
+def parse_xlsx(content):
+    """Parse das abas com matriz pivotada por ano."""
     from openpyxl import load_workbook
-
     wb = load_workbook(BytesIO(content), data_only=True, read_only=True)
-    # ANFAVEA costuma ter abas "Produção", "Vendas Internas", "Exportações" ou consolidado.
-    # Estratégia: ler a primeira aba que tenha "AN" + "MÊS" + colunas numéricas.
-    sheet_names = wb.sheetnames
-    print(f"  abas: {sheet_names}")
+    print(f"  abas: {wb.sheetnames}")
 
-    by_mes: dict[str, dict] = {}
+    by_mes = {}  # {mes_iso: {producao_unidades, vendas_unidades, exportacao_unidades}}
 
-    for sheet_name in sheet_names:
-        ws = wb[sheet_name]
-        rows = list(ws.iter_rows(values_only=True))
-        if len(rows) < 5:
-            continue
-        # heuristic: encontrar linha de header (primeira que tenha "ANO" ou "MÊS")
-        header_idx = None
-        for i, row in enumerate(rows[:20]):
-            row_str = [str(c).upper() if c else "" for c in row]
-            if any("ANO" in c for c in row_str) and any("MÊS" in c or "MES" in c for c in row_str):
-                header_idx = i
-                break
-        if header_idx is None:
-            continue
-        header = [str(c).upper() if c else "" for c in rows[header_idx]]
-        col_ano = next((i for i, c in enumerate(header) if "ANO" in c), None)
-        col_mes = next((i for i, c in enumerate(header) if "MÊS" in c or "MES" in c), None)
-        col_total = next((i for i, c in enumerate(header) if "TOTAL" in c), None)
-        if col_ano is None or col_mes is None:
-            continue
-        sn = sheet_name.upper()
-        if "PROD" in sn:
+    def encontrar_total(rows, ano):
+        """Procura linha 'Total' no bloco do ano e retorna 12 meses."""
+        for i, row in enumerate(rows):
+            cells = [str(c).strip() if c is not None else "" for c in row]
+            # Detectar bloco do ano
+            if str(ano) in cells:
+                # Proximas linhas: header (Jan/Fev/...) e Total
+                for j in range(i, min(i + 8, len(rows))):
+                    cells_j = [str(c).strip() if c is not None else "" for c in rows[j]]
+                    has_total = any("TOTAL" in c.upper() for c in cells_j[:5])
+                    if has_total:
+                        nums = []
+                        for c in rows[j]:
+                            if isinstance(c, (int, float)) and not isinstance(c, bool):
+                                if not (-100000 < c < 100000 and float(c).is_integer() and c < 3000 and c > 1990):
+                                    nums.append(float(c))
+                        if len(nums) >= 12:
+                            return nums[:12]
+        return None
+
+    # Mapear abas
+    for aba in wb.sheetnames:
+        nome = aba.upper()
+        if "PROD" in nome:
             sheet_kind = "producao"
-        elif "VENDA" in sn or "EMPLACAM" in sn:
+        elif "EMPLACAM" in nome and "I." in aba:
             sheet_kind = "vendas"
-        elif "EXPORT" in sn:
+        elif "EXPORT" in nome:
             sheet_kind = "exportacao"
         else:
-            sheet_kind = None
-        for row in rows[header_idx + 1 :]:
-            try:
-                ano = int(row[col_ano])
-                mes = int(row[col_mes])
-            except (TypeError, ValueError):
-                continue
-            mes_iso = f"{ano:04d}-{mes:02d}"
-            entry = by_mes.setdefault(mes_iso, {"mes": mes_iso})
-            if sheet_kind and col_total is not None:
+            continue
+        ws = wb[aba]
+        rows = list(ws.iter_rows(values_only=True))
+        # Detectar todos os anos presentes
+        anos_vistos = set()
+        for row in rows:
+            for c in row:
                 try:
-                    val = float(row[col_total])
-                    entry[f"{sheet_kind}_unidades"] = val
-                except (TypeError, ValueError):
+                    n = int(c) if isinstance(c, (int, float)) else int(c)
+                    if 1957 <= n <= 2050:
+                        anos_vistos.add(n)
+                except (ValueError, TypeError):
                     pass
+        for ano in sorted(anos_vistos):
+            doze = encontrar_total(rows, ano)
+            if not doze: continue
+            for m, v in enumerate(doze, start=1):
+                if v and v > 0:
+                    mes_iso = f"{ano:04d}-{m:02d}"
+                    by_mes.setdefault(mes_iso, {})[f"{sheet_kind}_unidades"] = v
+    return [by_mes[m] | {"mes": m} for m in sorted(by_mes.keys())]
 
-    serie = [by_mes[m] for m in sorted(by_mes.keys())]
-    return serie
+def calcular(serie):
+    base = {}
+    for it in serie:
+        if it["mes"].startswith("2019-"):
+            for k in ("producao_unidades","vendas_unidades","exportacao_unidades"):
+                if it.get(k): base.setdefault(k, []).append(it[k])
+    base = {k: (sum(v)/len(v) if v else None) for k, v in base.items()}
+    by_mes = {it["mes"]: it for it in serie}
+    for it in serie:
+        a, m = it["mes"].split("-")
+        prev = by_mes.get(f"{int(a)-1:04d}-{m}")
+        for k in ("producao_unidades","vendas_unidades","exportacao_unidades"):
+            short = k.replace("_unidades", "")
+            cur = it.get(k); pv = prev.get(k) if prev else None
+            it[f"{short}_var_yoy_pct"] = round((cur/pv - 1)*100, 2) if (cur and pv and pv > 0) else None
+            bs = base.get(k)
+            it[f"{short}_indice_2019"] = round(cur/bs*100, 2) if (cur and bs and bs > 0) else None
+        p = it.get("producao_unidades"); v = it.get("vendas_unidades")
+        it["producao_sobre_vendas"] = round(p/v, 3) if (p and v) else None
 
-
-def calcular_variacoes(serie: list[dict]) -> None:
-    by_mes = {item["mes"]: item for item in serie}
-    # base 2019
-    bases: dict[str, list[float]] = {"producao_unidades": [], "vendas_unidades": [], "exportacao_unidades": []}
-    for item in serie:
-        if item["mes"].startswith("2019-"):
-            for k in bases:
-                if item.get(k):
-                    bases[k].append(item[k])
-    base_2019 = {k: (sum(v) / len(v) if v else None) for k, v in bases.items()}
-
-    for item in serie:
-        ano, m = item["mes"].split("-")
-        anterior = by_mes.get(f"{int(ano) - 1:04d}-{m}")
-        for key in ("producao_unidades", "vendas_unidades", "exportacao_unidades"):
-            atual = item.get(key)
-            prev = anterior.get(key) if anterior else None
-            short = key.replace("_unidades", "")
-            if atual is not None and prev is not None and prev > 0:
-                item[f"{short}_var_yoy_pct"] = round((atual / prev - 1) * 100, 2)
-            else:
-                item[f"{short}_var_yoy_pct"] = None
-            base = base_2019.get(key)
-            if atual is not None and base is not None and base > 0:
-                item[f"{short}_indice_2019"] = round(atual / base * 100, 2)
-            else:
-                item[f"{short}_indice_2019"] = None
-        # ratio produção/vendas (proxy de inventário)
-        p = item.get("producao_unidades")
-        v = item.get("vendas_unidades")
-        item["producao_sobre_vendas"] = round(p / v, 3) if (p and v) else None
-
-
-def main() -> None:
-    ap = argparse.ArgumentParser(description="Build do JSON Painel Visão Geral — ANFAVEA")
+def main():
+    ap = argparse.ArgumentParser()
     ap.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
     ap.add_argument("--upload", action="store_true")
     ap.add_argument("--soft-fail", action="store_true")
     args = ap.parse_args()
-
-    out_dir = Path(args.out_dir).resolve()
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = Path(args.out_dir).resolve(); out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / "visao_geral_anfavea.json"
 
-    print("== ANFAVEA — XLSX consolidado ==")
+    print("== ANFAVEA - XLSX ==")
     try:
-        url = localizar_xlsx()
-        print(f"  XLSX: {url}")
+        url = localizar_xlsx_atual()
+        if not url: raise RuntimeError("URL XLSX nao encontrada")
+        print(f"  URL: {url}")
         r = _get(url)
         serie = parse_xlsx(r.content)
-        if not serie:
-            raise RuntimeError("XLSX parseado mas série vazia — verificar formato")
+        if not serie: raise RuntimeError("XLSX parseado mas serie vazia")
+        calcular(serie)
     except Exception as e:
-        print(f"  FALHA ANFAVEA: {e}", file=sys.stderr)
+        print(f"  FALHA: {e}", file=sys.stderr)
         sys.path.insert(0, str(HERE))
         from shared.blob_download import download_json
         prev = download_json(BLOB_PATH)
@@ -194,15 +153,11 @@ def main() -> None:
             prev["freshness_status"] = "stale"
             prev["gerado_em"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
             out_file.write_text(json.dumps(prev, indent=2, ensure_ascii=False), encoding="utf-8")
-            print("  preservado JSON anterior (stale)")
             return
         if args.soft_fail:
-            payload = {"gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"), "freshness_status": "missing", "serie": []}
-            out_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+            out_file.write_text(json.dumps({"gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"), "freshness_status": "missing", "serie": []}, indent=2), encoding="utf-8")
             return
         sys.exit(2)
-
-    calcular_variacoes(serie)
 
     payload = {
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -211,25 +166,18 @@ def main() -> None:
         "serie": serie,
         "inputs": INPUTS,
         "min_start_date": min(INPUTS.values()),
-        "metadata": {
-            "fonte": "ANFAVEA — Séries temporais consolidadas (XLSX) com produção, vendas internas e exportações de autoveículos.",
-            "nota": "Unidades de veículos. Base índice = média 2019. Ratio produção/vendas é proxy indireto de variação de estoques.",
-        },
+        "metadata": {"fonte": "ANFAVEA - siteautoveiculos.xlsx (producao, emplacamento, exportacao)", "nota": "Unidades. Base 2019=100."},
     }
-
     out_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"JSON {out_file} ({out_file.stat().st_size / 1024:.1f} KB)")
+    print(f"JSON {out_file} ({out_file.stat().st_size/1024:.1f} KB)")
 
     if args.upload:
         sys.path.insert(0, str(HERE))
         from shared.blob_upload import maybe_upload_json
         try:
             maybe_upload_json(out_file, BLOB_PATH)
-        except Exception as e:
-            print(f"[upload] FALHOU: {e}", file=sys.stderr)
-            if not args.soft_fail:
-                sys.exit(1)
-
+        except Exception:
+            if not args.soft_fail: sys.exit(1)
 
 if __name__ == "__main__":
     main()
