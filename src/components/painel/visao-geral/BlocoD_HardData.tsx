@@ -27,7 +27,7 @@ function Termometro({
         Z-score do último mês vs média 5a. Cores quentes = aquecimento; frias = freio.
       </p>
       <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
-        {zScores.map(({ nome, z }) => {
+        {zScores.filter(({ z }) => z !== null).map(({ nome, z }) => {
           const cor =
             z === null
               ? "bg-zinc-100 text-zinc-400"
@@ -51,13 +51,7 @@ function Termometro({
 }
 
 function CardAnfavea({ data }: { data: AnfaveaData | null }) {
-  if (!data || data.serie.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-center">
-        <h3 className="text-base font-semibold text-zinc-500">D2 — ANFAVEA (produção e vendas)</h3>
-      </div>
-    );
-  }
+  if (!data || data.serie.length === 0) return null;
   const dados = data.serie.slice(-60).map((p) => ({
     mes: p.mes,
     producao: p.producao_indice_2019,
@@ -87,13 +81,7 @@ function CardAnfavea({ data }: { data: AnfaveaData | null }) {
 }
 
 function CardEnergia({ data }: { data: EpeData | null }) {
-  if (!data || data.serie.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-center">
-        <h3 className="text-base font-semibold text-zinc-500">D4 — Consumo de energia (EPE)</h3>
-      </div>
-    );
-  }
+  if (!data || data.serie.length === 0) return null;
   const dados = data.serie.slice(-60).map((p) => ({
     mes: p.mes,
     industrial: p.industrial_var_yoy_pct,
@@ -127,13 +115,7 @@ function CardEnergia({ data }: { data: EpeData | null }) {
 }
 
 function CardAnp({ data }: { data: AnpData | null }) {
-  if (!data || data.serie.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-center">
-        <h3 className="text-base font-semibold text-zinc-500">D5 — Vendas de combustíveis (ANP)</h3>
-      </div>
-    );
-  }
+  if (!data || data.serie.length === 0) return null;
   const dados = data.serie.slice(-60).map((p) => ({
     mes: p.mes,
     diesel: p.diesel_indice_2019,
@@ -167,14 +149,10 @@ function CardAnp({ data }: { data: AnpData | null }) {
 }
 
 function CardHardData({ data }: { data: HardDataData | null }) {
-  if (!data) {
-    return (
-      <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-center">
-        <h3 className="text-base font-semibold text-zinc-500">D6 — Hard data físico (papelão, cimento, aço)</h3>
-        <p className="mt-2 text-xs text-zinc-400">Scrapers ABCR/ABPO/SNIC/Aço/FENABRAVE em construção.</p>
-      </div>
-    );
-  }
+  if (!data) return null;
+  // Filtrar fontes que tem dado real
+  const fontesComDado = (["abcr","abpo","snic","aco","fenabrave"] as const).filter(k => (data as any)[k]?.serie?.length > 0);
+  if (fontesComDado.length === 0) return null;
   const fontes = [
     { key: "abcr", nome: "ABCR (pedágio)" },
     { key: "abpo", nome: "ABPO (papelão)" },
