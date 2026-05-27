@@ -41,7 +41,10 @@ function CardIbcBrCodace({ serie, codace }: { serie: IbcBrPonto[]; codace: Codac
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
       <div className="mb-3">
         <h3 className="text-base font-semibold text-zinc-900">Atividade mensal e cronologia de recessões</h3>
-        <p className="text-xs text-zinc-500">IBC-Br dessazonalizado (BCB, base 2002=100). Faixas cinzas = recessões CODACE.</p>
+        <p className="text-xs text-zinc-500">
+          IBC-Br dessazonalizado (BCB, base 2002=100). Faixas cinzas = recessões oficiais CODACE/FGV-IBRE.
+          <span className="ml-1 text-zinc-400">⚠ CODACE não datou eventos posteriores a jun/2020; ausência de faixas após essa data não significa ausência de ciclo.</span>
+        </p>
       </div>
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart data={dados} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
