@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "Escrutínio dos dados de mercado de trabalho do IBGE/PNAD Contínua: taxa de desocupação, participação, informalidade, composição da ocupação e setor de atividade. Atualizado trimestralmente.",
 };
 
+export const dynamic = "force-dynamic";
 export const revalidate = 21600; // 6h
 
 export default async function PainelPnadPage() {
