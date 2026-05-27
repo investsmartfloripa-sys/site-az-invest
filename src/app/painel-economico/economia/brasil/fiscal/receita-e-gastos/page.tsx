@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "Receita liquida do Tesouro, despesa primaria, juros nominais e resultado primario do governo central brasileiro. Fonte: STN/RTN + BCB.",
 };
 
+export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export default async function PainelReceitaGastosPage() {
