@@ -35,13 +35,13 @@ import requests
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/visao_geral_icf.json"
-UA = {"User-Agent": "az-invest-visao-geral-icf/0.1"}
+UA = {"User-Agent": "Mozilla/5.0 (compatible; az-invest/0.2)", "Accept": "application/json,text/json,*/*"}
 
 SGS_URL = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{cod}/dados?formato=json"
 
 # Códigos SGS
 SERIES = {
-    "selic_meta": 432,        # Meta Selic % a.a.
+    "selic_meta": 1178,        # Meta Selic % a.a.
     "selic_efetiva": 4189,    # Selic efetiva anualizada
     "reer": 11752,            # Câmbio efetivo real (índice)
     "ibov": 7,                # Ibovespa fechamento mensal
@@ -49,7 +49,7 @@ SERIES = {
 }
 
 INPUTS = {
-    "selic_meta": "1999-03",
+    "selic_meta": "1986-06",
     "reer": "1994-07",
     "ibov": "1990-01",
     "ipca_12m": "1980-01",
