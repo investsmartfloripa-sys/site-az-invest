@@ -70,10 +70,10 @@ function CardIbcBrCodace({ serie, codace }: { serie: IbcBrPonto[]; codace: Codac
 }
 
 const MODELOS_COR: Record<string, { cor: string; label: string }> = {
-  msdfm: { cor: "#DC2626", label: "MS-DFM (Chauvet)" },
-  probit_financeiro: { cor: "#2563EB", label: "Probit financeiro" },
-  gap_threshold: { cor: "#059669", label: "Gap HP threshold" },
-  diffusion: { cor: "#F59E0B", label: "Diffusion-based" },
+  msdfm: { cor: "#DC2626", label: "MS-DFM" },
+  probit_financeiro: { cor: "#2563EB", label: "Probit fin." },
+  gap_threshold: { cor: "#059669", label: "Gap HP" },
+  diffusion: { cor: "#F59E0B", label: "Diffusion" },
   bry_boschan: { cor: "#7C3AED", label: "Bry-Boschan" },
 };
 
