@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "Escrutínio dos dados do Novo CAGED (MTE): saldo mensal de admissões e demissões, quebra por faixa salarial e setor IBGE, salário médio de admissão e demissão. Atualizado mensalmente.",
 };
 
+export const dynamic = "force-dynamic";
 export const revalidate = 21600; // 6h
 
 export default async function PainelCagedPage() {
