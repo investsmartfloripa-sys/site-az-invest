@@ -11,7 +11,9 @@
 export function painelBlobBase(): string {
   const primary = process.env.NEXT_PUBLIC_BLOB_BASE_URL?.trim() ?? "";
   const fallback = process.env.PAINEL_BLOB_PUBLIC_FALLBACK?.trim() ?? "";
-  return (fallback || primary).replace(/\/$/, "");
+  // Fallback hardcoded como ultima linha de defesa quando env vars vazias
+  const HARDCODED = "https://8ytqvgmik75vk1it.public.blob.vercel-storage.com";
+  return (fallback || primary || HARDCODED).replace(/\/$/, "");
 }
 
 export function painelBlobUrl(path: string): string {
