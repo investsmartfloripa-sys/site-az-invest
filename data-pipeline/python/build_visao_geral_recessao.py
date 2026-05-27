@@ -390,11 +390,19 @@ def consolidar(modelos: dict[str, dict[str, float]]) -> list[dict[str, Any]]:
             continue
         vals_list = sorted(pontos.values())
         mediana = vals_list[len(vals_list) // 2]
+        media = sum(vals_list) / len(vals_list)
         n_acima_50 = sum(1 for v in vals_list if v > 50)
         n = len(pontos)
-        # Sinalizacao SO calibrada quando todos 5 modelos reportam; <4 -> "indeterminado"
-        if n < 4:
+        # Modelos "sensíveis" à virada (probit + diffusion). Se ambos faltam: sinal incerto
+        sensiveis_presentes = sum(1 for k in ("probit_financeiro", "diffusion") if k in pontos)
+        if n < 3:
             sinalizacao = "indeterminado"
+        elif sensiveis_presentes == 0:
+            # Sem probit nem diffusion, sinal mais conservador (amber por default)
+            if n_acima_50 >= max(2, n // 2 + 1):
+                sinalizacao = "vermelho"
+            else:
+                sinalizacao = "amarelo"
         elif n_acima_50 >= 3:
             sinalizacao = "vermelho"
         elif n_acima_50 >= 2:
@@ -411,8 +419,12 @@ def consolidar(modelos: dict[str, dict[str, float]]) -> list[dict[str, Any]]:
                 "bry_boschan": pontos.get("bry_boschan"),
                 "mediana": round(mediana, 1) if n >= 4 else None,
                 "mediana_parcial": round(mediana, 1),
+                "media": round(media, 1),
+                "min_val": round(vals_list[0], 1),
+                "max_val": round(vals_list[-1], 1),
                 "n_modelos": n,
                 "n_acima_50": n_acima_50,
+                "sensiveis_presentes": sensiveis_presentes,
                 "sinalizacao": sinalizacao,
             }
         )
