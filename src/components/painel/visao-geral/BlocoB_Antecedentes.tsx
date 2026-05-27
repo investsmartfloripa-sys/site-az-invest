@@ -78,13 +78,8 @@ function CardOecdCli({ data, codace }: { data: OecdCliData | null; codace: Codac
 }
 
 function CardFgvAntecedentes({ data }: { data: FgvAntecedentesData | null }) {
-  if (!data) {
-    return (
-      <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-center">
-        <h3 className="text-base font-semibold text-zinc-500">B2/B3 — Antecedentes FGV-IBRE</h3>
-        <p className="mt-2 text-xs text-zinc-400">Scraper em construção.</p>
-      </div>
-    );
+  if (!data || data.freshness_status === "missing") {
+    return null; // esconder até o scraper FGV ser ativado
   }
 
   const status = data.freshness_status;
@@ -108,16 +103,7 @@ function CardFgvAntecedentes({ data }: { data: FgvAntecedentesData | null }) {
       iie_br: iiebr.find((p) => p.mes === mes)?.valor ?? null,
     }));
 
-  if (dados.length === 0) {
-    return (
-      <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5">
-        <h3 className="text-base font-semibold text-amber-900">B2/B3 — Antecedentes FGV-IBRE</h3>
-        <p className="mt-2 text-xs text-amber-700">
-          Pipeline rodou mas nenhuma série localizada (status: {status}). Possivelmente layout do portal IBRE mudou.
-        </p>
-      </div>
-    );
-  }
+  if (dados.length === 0) return null;
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
