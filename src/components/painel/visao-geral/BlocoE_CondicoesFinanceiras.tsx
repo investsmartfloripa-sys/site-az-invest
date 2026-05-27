@@ -148,7 +148,7 @@ export function BlocoECondicoesFinanceiras({
       <header>
         <h2 className="text-xl font-bold text-[#132960]">5. O crédito está apertando? (condições financeiras)</h2>
         <p className="mt-1 text-xs text-zinc-600">
-          Estímulo ou aperto? ICF próprio, Selic real ex-ante, concessões e crédito/PIB.
+          Custo do dinheiro e disponibilidade de crédito definem o combustível do ciclo. Índice de Condições Financeiras próprio, Selic real ex-ante e dinâmica de concessões/PIB.
         </p>
       </header>
       <CardIcf data={icf} />
