@@ -10,6 +10,8 @@ export const metadata = {
     "Screener de fundamentos e mediana setorial: P/L, P/VP, EV/EBITDA, ROE, dividend yield. Compare ações BR e EUA.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function FundamentosPage() {
   const data = await getMarketFundamentals();
 
