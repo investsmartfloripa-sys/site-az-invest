@@ -12,7 +12,7 @@ import {
   Legend,
 } from "recharts";
 
-import type { AnfaveaData, AnpData, EpeData, HardDataData } from "@/lib/painel-visao-geral";
+import type { AnfaveaData, AnpData, EpeData, HardDataData, IpeadataData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
 
 function Termometro({
@@ -110,6 +110,42 @@ function CardEnergia({ data }: { data: EpeData | null }) {
           <Line type="monotone" dataKey="total" stroke="#132960" dot={false} strokeWidth={2} name="Total" connectNulls />
         </LineChart>
       </ResponsiveContainer>
+    </div>
+  );
+}
+
+function CardIpeadata({ data }: { data: IpeadataData | null }) {
+  if (!data || data.freshness_status === "missing") return null;
+  const blocos = [
+    { key: "papelao_abpo" as const, titulo: "Papelão ondulado (ABPO)", subt: "Antecedente clássico da PIM (ρ≈0.85)", cor: "#7C3AED" },
+    { key: "aco_bruto" as const, titulo: "Aço bruto - produção", subt: "Coincidente da indústria de transformação", cor: "#DC2626" },
+    { key: "fenabrave_emplac" as const, titulo: "FENABRAVE — emplacamentos", subt: "Antecedente suave de consumo durável", cor: "#2563EB" },
+  ];
+  const dadosValidos = blocos.filter(b => data[b.key]?.serie?.length > 0);
+  if (dadosValidos.length === 0) return null;
+  return (
+    <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+      <h3 className="text-base font-semibold text-zinc-900">D6 — Hard data físico (IPEADATA)</h3>
+      <p className="text-xs text-zinc-500">Antecedentes/coincidentes da indústria via espelho IPEADATA (ABPO, IBS, FENABRAVE). Variação a/a.</p>
+      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+        {dadosValidos.map(b => {
+          const serie = data[b.key].serie;
+          const ult = serie[serie.length - 1];
+          const yoy = ult?.var_yoy_pct;
+          return (
+            <div key={b.key} className="rounded-xl border border-zinc-100 bg-zinc-50 p-3">
+              <div className="text-xs font-semibold text-zinc-700">{b.titulo}</div>
+              <div className="mt-1 text-[10px] text-zinc-500">{b.subt}</div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-xl font-bold" style={{ color: b.cor }}>
+                  {yoy !== null && yoy !== undefined ? `${yoy >= 0 ? "+" : ""}${yoy.toFixed(1)}%` : "—"}
+                </span>
+                <span className="text-[10px] text-zinc-500">a/a, {formatMes(ult?.mes)}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -246,11 +282,13 @@ export function BlocoDHardData({
   anp,
   epe,
   hardData,
+  ipeadata,
 }: {
   anfavea: AnfaveaData | null;
   anp: AnpData | null;
   epe: EpeData | null;
   hardData: HardDataData | null;
+  ipeadata: IpeadataData | null;
 }) {
   const zScores = calcularZScores({ anfavea, anp, epe, hardData });
   return (
@@ -258,13 +296,15 @@ export function BlocoDHardData({
       <header>
         <h2 className="text-xl font-bold text-[#132960]">Bloco D — Hard data físico</h2>
         <p className="mt-1 text-xs text-zinc-600">
-          Indicadores físicos de alta frequência. Antecedem PIM/PMC em 1-2 meses.
+          Indicadores físicos de alta frequência. Antecedem PIM/PMC em 1-2 meses. Sequência: termômetro instantâneo →
+          produção e vendas (ANFAVEA) → consumo de energia industrial → combustíveis → papelão/aço/emplacamentos (IPEADATA).
         </p>
       </header>
       <Termometro zScores={zScores} />
       <CardAnfavea data={anfavea} />
       <CardEnergia data={epe} />
       <CardAnp data={anp} />
+      <CardIpeadata data={ipeadata} />
       <CardHardData data={hardData} />
     </section>
   );
