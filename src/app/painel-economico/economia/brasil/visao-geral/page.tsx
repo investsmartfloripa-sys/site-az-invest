@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 import { VisaoGeralDashboard } from "@/components/painel/visao-geral/VisaoGeralDashboard";
-import { loadVisaoGeralPayload, VISAO_GERAL_REVALIDATE_SECONDS } from "@/lib/painel-visao-geral";
+import { loadVisaoGeralPayload } from "@/lib/painel-visao-geral";
 
-export const revalidate = VISAO_GERAL_REVALIDATE_SECONDS;
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Visão Geral — Termômetro do Ciclo Brasileiro | AZ Invest",
