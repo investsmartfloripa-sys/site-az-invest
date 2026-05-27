@@ -127,6 +127,17 @@ function CardIpeadata({ data }: { data: IpeadataData | null }) {
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
       <h3 className="text-base font-semibold text-zinc-900">D6 — Hard data físico (IPEADATA)</h3>
       <p className="text-xs text-zinc-500">Antecedentes/coincidentes da indústria via espelho IPEADATA (ABPO, IBS, FENABRAVE). Variação a/a.</p>
+      {(() => {
+        const valores = blocos.map(b => ({ nome: b.titulo.split(" (")[0], yoy: data[b.key]?.serie?.[data[b.key].serie.length-1]?.var_yoy_pct }));
+        const positivos = valores.filter(v => v.yoy !== null && v.yoy !== undefined && v.yoy > 0).map(v => v.nome);
+        const negativos = valores.filter(v => v.yoy !== null && v.yoy !== undefined && v.yoy < 0).map(v => v.nome);
+        if (positivos.length > 0 && negativos.length > 0) {
+          return <p className="mt-1 text-xs italic text-zinc-600">Sinal misto: <strong>{positivos.join(", ")}</strong> em alta vs <strong>{negativos.join(", ")}</strong> em queda.</p>;
+        }
+        if (positivos.length === valores.length) return <p className="mt-1 text-xs italic text-zinc-600">Sinal positivo difundido nos {positivos.length} indicadores.</p>;
+        if (negativos.length === valores.length) return <p className="mt-1 text-xs italic text-zinc-600">Sinal negativo difundido — atenção.</p>;
+        return null;
+      })()}
       <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
         {dadosValidos.map(b => {
           const serie = data[b.key].serie;
