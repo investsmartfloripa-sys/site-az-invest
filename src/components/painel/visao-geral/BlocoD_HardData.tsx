@@ -294,7 +294,7 @@ export function BlocoDHardData({
   return (
     <section className="space-y-5">
       <header>
-        <h2 className="text-xl font-bold text-[#132960]">Bloco D — Hard data físico</h2>
+        <h2 className="text-xl font-bold text-[#132960]">4. O que os caminhões mostram (hard data)</h2>
         <p className="mt-1 text-xs text-zinc-600">
           Indicadores físicos de alta frequência. Antecedem PIM/PMC em 1-2 meses. Sequência: termômetro instantâneo →
           produção e vendas (ANFAVEA) → consumo de energia industrial → combustíveis → papelão/aço/emplacamentos (IPEADATA).
