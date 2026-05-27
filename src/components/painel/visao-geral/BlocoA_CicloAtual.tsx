@@ -34,14 +34,14 @@ function CardIbcBrCodace({ serie, codace }: { serie: IbcBrPonto[]; codace: Codac
   );
 
   if (dados.length === 0) {
-    return <PlaceholderCard titulo="A1 - IBC-Br com cronologia CODACE" />;
+    return <PlaceholderCard titulo="A1 — IBC-Br com cronologia CODACE" />;
   }
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
       <div className="mb-3">
-        <h3 className="text-base font-semibold text-zinc-900">Atividade mensal e cronologia de recessoes</h3>
-        <p className="text-xs text-zinc-500">IBC-Br dessazonalizado (BCB, base 2002=100). Faixas cinzas = recessoes CODACE.</p>
+        <h3 className="text-base font-semibold text-zinc-900">Atividade mensal e cronologia de recessões</h3>
+        <p className="text-xs text-zinc-500">IBC-Br dessazonalizado (BCB, base 2002=100). Faixas cinzas = recessões CODACE.</p>
       </div>
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart data={dados} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
@@ -85,7 +85,7 @@ function CardRecessaoMultiModelos({
   codace: CodaceFaixa[];
 }) {
   if (!serie || serie.length === 0) {
-    return <PlaceholderCard titulo="A2 - Probabilidade de recessao (5 modelos)" />;
+    return <PlaceholderCard titulo="A2 — Probabilidade de recessão (5 modelos)" />;
   }
 
   const ultimo = serie[serie.length - 1];
@@ -94,8 +94,8 @@ function CardRecessaoMultiModelos({
     <div className="rounded-2xl border-2 border-[#132960]/30 bg-gradient-to-br from-white to-zinc-50 p-5 shadow-md">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-zinc-900">Probabilidade de recessao - 5 modelos comparados</h3>
-          <p className="text-xs text-zinc-500">Cada modelo reproduz uma metodologia da literatura. Sinalizacao do hero usa contagem de modelos acima de 50%.</p>
+          <h3 className="text-base font-semibold text-zinc-900">Probabilidade de recessão — 5 modelos comparados</h3>
+          <p className="text-xs text-zinc-500">Cada modelo reproduz uma metodologia da literatura. Sinalização do hero usa contagem de modelos acima de 50%.</p>
         </div>
         <div className="shrink-0 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-right">
           <div className="text-[10px] uppercase tracking-wide text-zinc-500">Mediana ({formatMes(ultimo.mes)})</div>
@@ -130,7 +130,7 @@ function CardRecessaoMultiModelos({
 
 function CardHiatoLeque({ serie }: { serie: HiatoPonto[] }) {
   if (!serie || serie.length === 0) {
-    return <PlaceholderCard titulo="A3 - Hiato do produto (leque HP + Hamilton)" />;
+    return <PlaceholderCard titulo="A3 — Hiato do produto (leque HP + Hamilton)" />;
   }
   const dados = serie.map((p) => ({
     mes: p.mes,
@@ -143,8 +143,8 @@ function CardHiatoLeque({ serie }: { serie: HiatoPonto[] }) {
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
       <div className="mb-3">
-        <h3 className="text-base font-semibold text-zinc-900">Hiato do produto - leque de metodos</h3>
-        <p className="text-xs text-zinc-500">HP (lambda=129.600) e Hamilton (h=24m, p=4). Area cinza = leque min-max. Acima de 0 = aquecimento; abaixo = ociosidade.</p>
+        <h3 className="text-base font-semibold text-zinc-900">Hiato do produto — leque de métodos</h3>
+        <p className="text-xs text-zinc-500">HP (λ=129.600) e Hamilton (h=24m, p=4). Área cinza = leque min-max. Acima de 0 = aquecimento; abaixo = ociosidade.</p>
       </div>
       <ResponsiveContainer width="100%" height={280}>
         <ComposedChart data={dados} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
@@ -157,8 +157,8 @@ function CardHiatoLeque({ serie }: { serie: HiatoPonto[] }) {
           />
           <Legend wrapperStyle={{ fontSize: 11 }} />
           <ReferenceLine y={0} stroke="#000" strokeDasharray="2 4" />
-          <Area type="monotone" dataKey="leque_alto" stroke="none" fill="#9CA3AF" fillOpacity={0.18} name="Maximo" />
-          <Area type="monotone" dataKey="leque_baixo" stroke="none" fill="#fff" fillOpacity={1} name="Minimo" />
+          <Area type="monotone" dataKey="leque_alto" stroke="none" fill="#9CA3AF" fillOpacity={0.18} name="Máximo" />
+          <Area type="monotone" dataKey="leque_baixo" stroke="none" fill="#fff" fillOpacity={1} name="Mínimo" />
           <Line type="monotone" dataKey="gap_hp" stroke="#DC2626" dot={false} strokeWidth={1.5} name="HP" />
           <Line type="monotone" dataKey="gap_hamilton" stroke="#2563EB" dot={false} strokeWidth={1.5} name="Hamilton" />
         </ComposedChart>
@@ -171,7 +171,7 @@ function PlaceholderCard({ titulo }: { titulo: string }) {
   return (
     <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-center">
       <h3 className="text-base font-semibold text-zinc-500">{titulo}</h3>
-      <p className="mt-2 text-xs text-zinc-400">Pipeline rodando - dados aparecerao na proxima atualizacao.</p>
+      <p className="mt-2 text-xs text-zinc-400">Pipeline rodando — dados aparecerão na próxima atualização.</p>
     </div>
   );
 }
@@ -182,8 +182,8 @@ export function BlocoACicloAtual({ payload }: { payload: VisaoGeralPayload }) {
   return (
     <section className="space-y-5">
       <header>
-        <h2 className="text-xl font-bold text-[#132960]">Bloco A - Onde estamos no ciclo</h2>
-        <p className="mt-1 text-xs text-zinc-600">IBC-Br com cronologia CODACE, comparacao de modelos de probabilidade de recessao e leque de hiato.</p>
+        <h2 className="text-xl font-bold text-[#132960]">Bloco A — Onde estamos no ciclo</h2>
+        <p className="mt-1 text-xs text-zinc-600">IBC-Br com cronologia CODACE, comparação de modelos de probabilidade de recessão e leque de hiato.</p>
       </header>
       <CardRecessaoMultiModelos serie={payload.recessao?.serie ?? []} codace={codaceMensal} />
       <CardIbcBrCodace serie={payload.ibcbr?.serie ?? []} codace={codaceMensal} />
