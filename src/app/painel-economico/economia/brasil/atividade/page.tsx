@@ -38,6 +38,8 @@ const CARDS = [
   },
 ];
 
+export const dynamic = "force-dynamic";
+
 export default function PainelAtividadeHub() {
   return (
     <div className="space-y-6">
