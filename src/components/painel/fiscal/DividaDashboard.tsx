@@ -70,18 +70,18 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
   return (
     <div className="space-y-6">
       <CardHeader
-        titulo="Divida publica"
-        subtitulo="Trajetoria da divida bruta (DBGG) e divida liquida (DLSP). Fonte: BCB SGS series 13762, 4513 e 4503."
+        titulo="Dívida pública"
+        subtitulo="Trajetória da dívida bruta (DBGG) e dívida líquida (DLSP). Fonte: BCB SGS series 13762, 4513 e 4503."
         rightSlot={<Toggle value={horizonte.horizonte} onChange={horizonte.setHorizonte} options={[...HORIZONTES]} />}
       />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        <KPI label="DBGG / PIB" value={fmtPct(dbgg_recente)} hint="Divida bruta do governo geral" trend={dbgg_recente && dbgg_recente > 80 ? "down" : "neutral"} />
-        <KPI label="DLSP total / PIB" value={fmtPct(dlsp_recente)} hint="Divida liquida do setor publico" />
-        <KPI label="DLSP gov central / PIB" value={fmtPct(dlsp_central_recente)} hint="Divida liquida do governo central" />
+        <KPI label="DBGG / PIB" value={fmtPct(dbgg_recente)} hint="Dívida bruta do governo geral" trend={dbgg_recente && dbgg_recente > 80 ? "down" : "neutral"} />
+        <KPI label="DLSP total / PIB" value={fmtPct(dlsp_recente)} hint="Dívida líquida do setor público" />
+        <KPI label="DLSP gov central / PIB" value={fmtPct(dlsp_central_recente)} hint="Dívida líquida do governo central" />
       </div>
 
-      <Section titulo="Trajetoria DBGG e DLSP">
+      <Section titulo="Trajetória DBGG e DLSP">
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={serieTotal}>
@@ -101,7 +101,7 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
       </Section>
 
       <p className="text-xs text-zinc-500">
-        Ultima atualizacao: {new Date(data.gerado_em).toLocaleString("pt-BR")}.
+        Última atualização: {new Date(data.gerado_em).toLocaleString("pt-BR")}.
       </p>
     </div>
   );

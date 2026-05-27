@@ -4,30 +4,30 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Fiscal — AZ Invest",
   description:
-    "Paineis fiscais brasileiros: divida publica (DBGG, DLSP), receita e gastos do governo central, e Termometro Fiscal aplicando as formulas de Ray Dalio (How Countries Go Broke) ao Brasil.",
+    "Painéis fiscais brasileiros: divida publica (DBGG, DLSP), receita e gastos do governo central, e Termometro Fiscal aplicando as formulas de Ray Dalio (How Countries Go Broke) ao Brasil.",
 };
 
 const PAINEIS = [
   {
     slug: "divida",
-    titulo: "Divida",
+    titulo: "Dívida",
     subtitulo: "DBGG, DLSP — estoque",
     descricao:
-      "Trajetoria da divida bruta do governo geral (DBGG) e da divida liquida do setor publico (DLSP). Fonte: BCB SGS.",
+      "Trajetória da dívida bruta do governo geral (DBGG) e da dívida líquida do setor público (DLSP). Fonte: BCB SGS.",
   },
   {
     slug: "receita-e-gastos",
     titulo: "Receita e gastos",
     subtitulo: "Governo central — fluxo",
     descricao:
-      "Receita liquida do Tesouro, despesa primaria, juros nominais e resultado primario. Decomposicao por previdencia, pessoal e discricionarias. Fonte: STN/RTN + BCB.",
+      "Receita líquida do Tesouro, despesa primária, juros nominais e resultado primário. Decomposição por previdência, pessoal e discricionárias. Fonte: STN/RTN + BCB.",
   },
   {
     slug: "termometro-fiscal",
-    titulo: "Termometro Fiscal",
+    titulo: "Termômetro Fiscal",
     subtitulo: "Framework Ray Dalio",
     descricao:
-      "Aplicacao das formulas de How Countries Go Broke ao Brasil: projecao de Debt/Income em 10 anos, matrizes de sensibilidade e os 4 levers para estabilizar a divida.",
+      "Aplicação das fórmulas de How Countries Go Broke ao Brasil: projeção de Debt/Income em 10 anos, matrizes de sensibilidade e os 4 levers para estabilizar a dívida.",
   },
 ];
 
@@ -39,7 +39,7 @@ export default function PainelFiscalHub() {
       <header>
         <h1 className="text-2xl font-bold text-[#132960]">Fiscal — Brasil</h1>
         <p className="mt-1 text-sm text-zinc-600">
-          Escolha um dos paineis fiscais.
+          Escolha um dos painéis fiscais.
         </p>
       </header>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

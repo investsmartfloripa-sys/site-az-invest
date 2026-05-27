@@ -213,7 +213,7 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
     <div className="space-y-6">
       <CardHeader
         titulo="Receita e gastos do governo central"
-        subtitulo="Receita liquida do Tesouro (após transferências constitucionais), despesa primária e juros. Fonte: Tesouro Nacional/RTN."
+        subtitulo="Receita líquida do Tesouro (após transferências constitucionais), despesa primária e juros. Fonte: Tesouro Nacional/RTN."
         rightSlot={
           <div className="flex gap-2">
             <Toggle value={base} onChange={(v) => setBase(v as Base)} options={[...BASES]} size="sm" />
@@ -227,9 +227,9 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
 
       {/* === KPIs principais === */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <KPI label="Receita líquida" value={fmtPct(receita_pct)} hint="% PIB (12m). Após transferências constitucionais." />
+        <KPI label="Receita líquida" value={fmtPct(receita_pct)} hint="% PIB (12m), após transferências constitucionais" />
         <KPI label="Despesa total" value={fmtPct(despesa_pct)} hint="% PIB (12m)" trend={despesa_pct && despesa_pct > 20 ? "down" : "neutral"} />
-        <KPI label="Primário gov central" value={fmtPct(primario_pct)} hint="% PIB (12m). + = superávit" trend={primario_pct && primario_pct > 0 ? "up" : "down"} />
+        <KPI label="Primário gov central" value={fmtPct(primario_pct)} hint="% PIB (12m); + = superávit" trend={primario_pct && primario_pct > 0 ? "up" : "down"} />
         <KPI label="Juros nominais" value={fmtPct(juros_pct)} hint="% PIB (12m)" trend={juros_pct && juros_pct > 7 ? "down" : "neutral"} />
         <KPI label="Juros / Receita" value={fmtPct(juros_pct_rec)} hint="Métrica Dalio: % da receita líquida" trend={juros_pct_rec && juros_pct_rec > 30 ? "down" : "neutral"} />
         <KPI label="NFSP setor público" value={fmtPct(nfsp_pct)} hint="Necessidade fin. SP consolidado (12m % PIB)" />
@@ -309,7 +309,7 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
       </Section>
 
       <p className="text-xs text-zinc-500">
-        Ultima atualização: {new Date(data.gerado_em).toLocaleString("pt-BR")}. Pipeline diário 9h BRT.
+        Última atualização: {new Date(data.gerado_em).toLocaleString("pt-BR")}. Pipeline diário 9h BRT.
       </p>
     </div>
   );

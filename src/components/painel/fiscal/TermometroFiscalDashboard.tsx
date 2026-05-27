@@ -347,11 +347,11 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
                 numero={4}
                 titulo="Aumentar receita"
                 descricao="Aumento da receita líquida (mantendo despesa atual) para estabilizar Dívida/Receita."
-                atual={100}
-                alvo={100 + lev.lever_aumento_receita.aumento_pct_da_receita!}
+                atual={0}
+                alvo={lev.lever_aumento_receita.aumento_pct_da_receita}
                 delta={lev.lever_aumento_receita.aumento_pct_da_receita}
-                sufix="% (índice base 100)"
-                baseLabel="receita atual = 100"
+                sufix="%"
+                baseLabel="ajuste sobre receita atual"
                 viavel="baixa"
               />
             )}
