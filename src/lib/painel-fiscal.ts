@@ -64,6 +64,18 @@ export type FiscalClassicosData = {
     pessoal_12m_pct_receita: PontoMensalPct[];
     discricionarias_12m_brl_mm: PontoMensal12m[];
     outras_obrigatorias_12m_brl_mm: PontoMensal12m[];
+    abono_seguro_12m_pct_pib?: PontoMensalPct[];
+    bpc_loas_12m_pct_pib?: PontoMensalPct[];
+    fundeb_12m_pct_pib?: PontoMensalPct[];
+    subsidios_12m_pct_pib?: PontoMensalPct[];
+    discricionarias_12m_pct_pib?: PontoMensalPct[];
+    outras_obrigatorias_12m_pct_pib?: PontoMensalPct[];
+    abono_seguro_12m_pct_receita?: PontoMensalPct[];
+    bpc_loas_12m_pct_receita?: PontoMensalPct[];
+    fundeb_12m_pct_receita?: PontoMensalPct[];
+    subsidios_12m_pct_receita?: PontoMensalPct[];
+    discricionarias_12m_pct_receita?: PontoMensalPct[];
+    outras_obrigatorias_12m_pct_receita?: PontoMensalPct[];
     nfsp_sp_12m_pct_pib: PontoMensal[];
     primario_sp_12m_pct_pib: PontoMensalPct[];
     juros_nominais_sp_12m_pct_pib: PontoMensal[];
@@ -84,6 +96,10 @@ export type FiscalClassicosData = {
     real_idx: PontoMensal[];
   };
   expectativas_focus: Record<string, Record<string, FocusPonto[]>>;
+  metas_ldo?: {
+    _fonte: string;
+    anos: Record<string, { centro: number; banda_inf: number; banda_sup: number }>;
+  };
   destaques: Record<string, DestaqueRecente>;
 };
 

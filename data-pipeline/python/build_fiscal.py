@@ -98,6 +98,10 @@ RTN_LINHAS = {
     "previdencia": 40,
     "pessoal": 41,
     "outras_obrigatorias": 42,
+    "abono_seguro": 43,           # 4.3.01 Abono e Seguro Desemprego
+    "bpc_loas": 47,               # 4.3.05 Benefícios LOAS/RMV
+    "fundeb": 52,                 # 4.3.10 FUNDEB
+    "subsidios": 57,              # 4.3.15 Subsídios, subvenções, Proagro
     "discricionarias": 65,
     "primario_acima": 66,
     "juros_nominais": 74,
@@ -315,6 +319,10 @@ def main():
     pessoal_12m = soma_12m(rtn_data["pessoal"])
     outras_obrig_12m = soma_12m(rtn_data["outras_obrigatorias"])
     discricionarias_12m = soma_12m(rtn_data["discricionarias"])
+    abono_seguro_12m = soma_12m(rtn_data["abono_seguro"])
+    bpc_loas_12m = soma_12m(rtn_data["bpc_loas"])
+    fundeb_12m = soma_12m(rtn_data["fundeb"])
+    subsidios_12m = soma_12m(rtn_data["subsidios"])
 
     receita_pct_pib = divide_por_pib(receita_liquida_12m, pib_map)
     despesa_pct_pib = divide_por_pib(despesa_total_12m, pib_map)
@@ -328,6 +336,22 @@ def main():
     primario_pct_rec = divide_por_receita(primario_central_12m, receita_liquida_12m)
     previdencia_pct_rec = divide_por_receita(previdencia_12m, receita_liquida_12m)
     pessoal_pct_rec = divide_por_receita(pessoal_12m, receita_liquida_12m)
+
+    # Decomposicao expandida de despesa (% PIB)
+    abono_seguro_pct_pib = divide_por_pib(abono_seguro_12m, pib_map)
+    bpc_pct_pib = divide_por_pib(bpc_loas_12m, pib_map)
+    fundeb_pct_pib = divide_por_pib(fundeb_12m, pib_map)
+    subsidios_pct_pib = divide_por_pib(subsidios_12m, pib_map)
+    discricionarias_pct_pib = divide_por_pib(discricionarias_12m, pib_map)
+    outras_obrig_pct_pib = divide_por_pib(outras_obrig_12m, pib_map)
+
+    # Decomposicao expandida (% Receita liquida)
+    abono_seguro_pct_rec = divide_por_receita(abono_seguro_12m, receita_liquida_12m)
+    bpc_pct_rec = divide_por_receita(bpc_loas_12m, receita_liquida_12m)
+    fundeb_pct_rec = divide_por_receita(fundeb_12m, receita_liquida_12m)
+    subsidios_pct_rec = divide_por_receita(subsidios_12m, receita_liquida_12m)
+    discricionarias_pct_rec = divide_por_receita(discricionarias_12m, receita_liquida_12m)
+    outras_obrig_pct_rec = divide_por_receita(outras_obrig_12m, receita_liquida_12m)
 
     selic_real = selic_real_ex_post(selic_diaria, sgs["ipca_12m"])
     pib_real_yoy_serie = pib_real_yoy(sgs["pib_real_idx"])
@@ -376,6 +400,18 @@ def main():
             "pessoal_12m_pct_receita": pessoal_pct_rec,
             "discricionarias_12m_brl_mm": discricionarias_12m,
             "outras_obrigatorias_12m_brl_mm": outras_obrig_12m,
+            "abono_seguro_12m_pct_pib": abono_seguro_pct_pib,
+            "bpc_loas_12m_pct_pib": bpc_pct_pib,
+            "fundeb_12m_pct_pib": fundeb_pct_pib,
+            "subsidios_12m_pct_pib": subsidios_pct_pib,
+            "discricionarias_12m_pct_pib": discricionarias_pct_pib,
+            "outras_obrigatorias_12m_pct_pib": outras_obrig_pct_pib,
+            "abono_seguro_12m_pct_receita": abono_seguro_pct_rec,
+            "bpc_loas_12m_pct_receita": bpc_pct_rec,
+            "fundeb_12m_pct_receita": fundeb_pct_rec,
+            "subsidios_12m_pct_receita": subsidios_pct_rec,
+            "discricionarias_12m_pct_receita": discricionarias_pct_rec,
+            "outras_obrigatorias_12m_pct_receita": outras_obrig_pct_rec,
             "nfsp_sp_12m_pct_pib": sgs["nfsp_sp"],
             "primario_sp_12m_pct_pib": primario_sp_pct,
             "juros_nominais_sp_12m_pct_pib": sgs["juros_sp_pct"],
@@ -400,6 +436,16 @@ def main():
             "ipca_anuais": {str(k): v for k, v in focus_ipca.items()},
             "pib_anuais": {str(k): v for k, v in focus_pib.items()},
             "cambio_anuais": {str(k): v for k, v in focus_cambio.items()},
+        },
+        "metas_ldo": {
+            "_fonte": "LDO anuais (PLP 192/2023 e revisoes). Convenção: positivo = superávit primario do governo central, em % PIB. Banda ±0,25pp ao redor do centro segundo arcabouco fiscal (LC 200/2023).",
+            "anos": {
+                "2023": {"centro": -1.95, "banda_inf": -2.20, "banda_sup": -1.70},
+                "2024": {"centro": 0.00, "banda_inf": -0.25, "banda_sup": 0.25},
+                "2025": {"centro": 0.25, "banda_inf": 0.00, "banda_sup": 0.50},
+                "2026": {"centro": 0.50, "banda_inf": 0.25, "banda_sup": 0.75},
+                "2027": {"centro": 0.75, "banda_inf": 0.50, "banda_sup": 1.00}
+            }
         },
         "destaques": {
             "dbgg_pct_recente": last_val(sgs["dbgg"]),

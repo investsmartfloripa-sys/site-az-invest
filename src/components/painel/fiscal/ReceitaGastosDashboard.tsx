@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import {
-  CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis, Area, AreaChart,
+  Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ReferenceArea, ReferenceLine,
+  ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 
 import type { FiscalClassicosData, PontoMensalPct } from "@/lib/painel-fiscal";
@@ -66,11 +67,72 @@ function mergePct(series: { data: string; valor_pct: number | null }[][], keys: 
   return Array.from(mapa.values()).sort((a, b) => String(a.mes).localeCompare(String(b.mes)));
 }
 
+function anoAtual(): string {
+  return String(new Date().getFullYear());
+}
+
+// === Card da Regra Fiscal (meta LDO + arcabouço) ===
+function RegraFiscalCard({ data }: { data: FiscalClassicosData }) {
+  const ano = anoAtual();
+  const meta = data.metas_ldo?.anos?.[ano];
+  const primarioAtual = ultPct(data.receita_e_gastos.primario_central_pct_pib);
+  if (!meta || primarioAtual == null) {
+    return (
+      <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5 text-sm text-zinc-600">
+        Meta LDO {ano}: não disponível.
+      </div>
+    );
+  }
+  const dentro = primarioAtual >= meta.banda_inf && primarioAtual <= meta.banda_sup;
+  const acima = primarioAtual > meta.banda_sup;
+  const status = dentro ? "dentro" : acima ? "acima" : "abaixo";
+  const statusBg = dentro ? "bg-emerald-50 border-emerald-300" : "bg-rose-50 border-rose-300";
+  const statusTxt = dentro ? "text-emerald-900" : "text-rose-900";
+  const statusLabel = dentro ? "DENTRO da banda" : acima ? "ACIMA do teto da banda" : "ABAIXO do piso da banda";
+
+  return (
+    <div className={`rounded-2xl border-2 ${statusBg} p-5 shadow-sm`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className={`text-sm font-bold uppercase tracking-wide ${statusTxt}`}>Meta primária LDO {ano} (gov central)</h3>
+          <p className="mt-1 text-xs text-zinc-700">Convenção: primário positivo = superávit, em % PIB. Banda ±0,25pp segundo arcabouço fiscal (LC 200/2023).</p>
+        </div>
+        <span className={`rounded-full border-2 px-3 py-1 text-xs font-bold uppercase ${statusBg} ${statusTxt}`}>
+          {statusLabel}
+        </span>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="rounded-lg bg-white/70 p-3">
+          <div className="text-[10px] uppercase tracking-wide text-zinc-500">Centro da meta</div>
+          <div className="text-xl font-bold text-zinc-700">{fmtPct(meta.centro, 2)}</div>
+        </div>
+        <div className="rounded-lg bg-white/70 p-3">
+          <div className="text-[10px] uppercase tracking-wide text-zinc-500">Banda</div>
+          <div className="text-xl font-bold text-zinc-700">
+            {fmtPct(meta.banda_inf, 2)} a {fmtPct(meta.banda_sup, 2)}
+          </div>
+        </div>
+        <div className="rounded-lg bg-white/70 p-3">
+          <div className="text-[10px] uppercase tracking-wide text-zinc-500">Realizado 12m</div>
+          <div className={`text-xl font-bold ${statusTxt}`}>{fmtPct(primarioAtual, 2)}</div>
+        </div>
+        <div className="rounded-lg bg-white/70 p-3">
+          <div className="text-[10px] uppercase tracking-wide text-zinc-500">Gap vs centro</div>
+          <div className={`text-xl font-bold ${statusTxt}`}>
+            {(primarioAtual - meta.centro >= 0 ? "+" : "") + (primarioAtual - meta.centro).toFixed(2)} pp
+          </div>
+        </div>
+      </div>
+      <p className="mt-3 text-[11px] text-zinc-500">{data.metas_ldo?._fonte}</p>
+    </div>
+  );
+}
+
 export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) {
   const horizonte = useHorizonte(HORIZONTES, "10a");
   const [base, setBase] = useState<Base>("pib");
 
-  // KPIs - "% PIB" sempre exibidos (base mais comum no Brasil)
   const receita_pct = ultPct(data.receita_e_gastos.receita_liquida_pct_pib);
   const despesa_pct = ultPct(data.receita_e_gastos.despesa_total_pct_pib);
   const primario_pct = ultPct(data.receita_e_gastos.primario_central_pct_pib);
@@ -97,29 +159,9 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
       [
         tail(data.receita_e_gastos.primario_pct_receita, horizonte.n),
         tail(data.receita_e_gastos.juros_pct_receita, horizonte.n),
-        tail(data.receita_e_gastos.despesa_pct_receita.map((r) => ({ data: r.data, valor_pct: r.valor_pct })), horizonte.n),
+        tail(data.receita_e_gastos.despesa_pct_receita, horizonte.n),
       ],
       ["Primario", "Juros nominais", "Despesa total"],
-    );
-  }, [data, horizonte.n, base]);
-
-  // Decomposicao de despesa (12m, % PIB ou % Receita)
-  const serieDecomp = useMemo(() => {
-    if (base === "pib") {
-      return mergePct(
-        [
-          tail(data.receita_e_gastos.previdencia_12m_pct_pib, horizonte.n),
-          tail(data.receita_e_gastos.pessoal_12m_pct_pib, horizonte.n),
-        ],
-        ["Previdencia", "Pessoal"],
-      );
-    }
-    return mergePct(
-      [
-        tail(data.receita_e_gastos.previdencia_12m_pct_receita, horizonte.n),
-        tail(data.receita_e_gastos.pessoal_12m_pct_receita, horizonte.n),
-      ],
-      ["Previdencia", "Pessoal"],
     );
   }, [data, horizonte.n, base]);
 
@@ -134,11 +176,44 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
     );
   }, [data, horizonte.n]);
 
+  // Decomposicao COMPLETA de despesa
+  const serieDecomp = useMemo(() => {
+    const keyBase = base === "pib" ? "pct_pib" : "pct_receita";
+    const previdencia = data.receita_e_gastos[`previdencia_12m_${keyBase}` as const];
+    const pessoal = data.receita_e_gastos[`pessoal_12m_${keyBase}` as const];
+    const bpc = data.receita_e_gastos[`bpc_loas_12m_${keyBase}` as const];
+    const abono = data.receita_e_gastos[`abono_seguro_12m_${keyBase}` as const];
+    const fundeb = data.receita_e_gastos[`fundeb_12m_${keyBase}` as const];
+    const subsidios = data.receita_e_gastos[`subsidios_12m_${keyBase}` as const];
+    const discric = data.receita_e_gastos[`discricionarias_12m_${keyBase}` as const];
+
+    const all: Array<{ data: string; valor_pct: number | null }[]> = [];
+    const labels: string[] = [];
+    if (previdencia) { all.push(tail(previdencia, horizonte.n)); labels.push("Previdência"); }
+    if (pessoal) { all.push(tail(pessoal, horizonte.n)); labels.push("Pessoal"); }
+    if (bpc) { all.push(tail(bpc, horizonte.n)); labels.push("BPC/LOAS"); }
+    if (abono) { all.push(tail(abono, horizonte.n)); labels.push("Abono+seguro"); }
+    if (fundeb) { all.push(tail(fundeb, horizonte.n)); labels.push("FUNDEB compl."); }
+    if (subsidios) { all.push(tail(subsidios, horizonte.n)); labels.push("Subsídios"); }
+    if (discric) { all.push(tail(discric, horizonte.n)); labels.push("Discricionárias"); }
+    return { data: mergePct(all, labels), labels };
+  }, [data, horizonte.n, base]);
+
+  // KPIs decomposição (último ponto)
+  const ult = (key: string) => {
+    const s = (data.receita_e_gastos as unknown as Record<string, PontoMensalPct[] | undefined>)[key];
+    return ultPct(s);
+  };
+  const previdencia_pct = ult("previdencia_12m_pct_pib");
+  const pessoal_pct_kpi = ult("pessoal_12m_pct_pib");
+  const bpc_pct = ult("bpc_loas_12m_pct_pib");
+  const abono_pct = ult("abono_seguro_12m_pct_pib");
+
   return (
     <div className="space-y-6">
       <CardHeader
         titulo="Receita e gastos do governo central"
-        subtitulo="Receita liquida do Tesouro, despesa primaria, juros nominais e resultado primario. Fonte: STN/RTN + BCB."
+        subtitulo="Receita liquida do Tesouro (após transferências constitucionais), despesa primária e juros. Fonte: Tesouro Nacional/RTN."
         rightSlot={
           <div className="flex gap-2">
             <Toggle value={base} onChange={(v) => setBase(v as Base)} options={[...BASES]} size="sm" />
@@ -147,18 +222,24 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
         }
       />
 
+      {/* === REGRA FISCAL (meta LDO) === */}
+      <RegraFiscalCard data={data} />
+
+      {/* === KPIs principais === */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <KPI label="Receita liquida" value={fmtPct(receita_pct)} hint="% PIB (12m)" />
+        <KPI label="Receita líquida" value={fmtPct(receita_pct)} hint="% PIB (12m). Após transferências constitucionais." />
         <KPI label="Despesa total" value={fmtPct(despesa_pct)} hint="% PIB (12m)" trend={despesa_pct && despesa_pct > 20 ? "down" : "neutral"} />
-        <KPI label="Primario gov central" value={fmtPct(primario_pct)} hint="% PIB (12m). + = superavit" trend={primario_pct && primario_pct > 0 ? "up" : "down"} />
+        <KPI label="Primário gov central" value={fmtPct(primario_pct)} hint="% PIB (12m). + = superávit" trend={primario_pct && primario_pct > 0 ? "up" : "down"} />
         <KPI label="Juros nominais" value={fmtPct(juros_pct)} hint="% PIB (12m)" trend={juros_pct && juros_pct > 7 ? "down" : "neutral"} />
-        <KPI label="Juros / Receita" value={fmtPct(juros_pct_rec)} hint="% Receita (metrica Dalio)" trend={juros_pct_rec && juros_pct_rec > 30 ? "down" : "neutral"} />
-        <KPI label="NFSP SP" value={fmtPct(nfsp_pct)} hint="Necessidade fin. setor publico (12m % PIB)" />
+        <KPI label="Juros / Receita" value={fmtPct(juros_pct_rec)} hint="Métrica Dalio: % da receita líquida" trend={juros_pct_rec && juros_pct_rec > 30 ? "down" : "neutral"} />
+        <KPI label="NFSP setor público" value={fmtPct(nfsp_pct)} hint="Necessidade fin. SP consolidado (12m % PIB)" />
+        <KPI label="Previdência" value={fmtPct(previdencia_pct)} hint="% PIB (12m)" />
+        <KPI label="Pessoal" value={fmtPct(pessoal_pct_kpi)} hint="% PIB (12m)" />
       </div>
 
       <Section
         titulo="Receita vs despesa (% PIB, 12m)"
-        hint="Gap entre as duas linhas e o deficit primario do governo central. Fonte: Tesouro RTN."
+        hint="A área entre as linhas é o deficit primário do governo central. Fonte: Tesouro Nacional/RTN."
       >
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
@@ -193,24 +274,42 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
         </div>
       </Section>
 
-      <Section titulo={`Decomposicao de despesa: previdencia e pessoal (${base === "pib" ? "% PIB" : "% Receita"})`}>
-        <div className="h-72">
+      <Section
+        titulo={`Decomposição da despesa primária (${base === "pib" ? "% PIB" : "% Receita"})`}
+        hint="Empilhamento das principais rubricas obrigatórias e discricionárias do gov central. Fonte: Tesouro Nacional/RTN, tabela 1.1."
+      >
+        <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={serieDecomp}>
+            <AreaChart data={serieDecomp.data}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="mes" tickFormatter={fmtMes} tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} unit="%" />
               <Tooltip formatter={fmtTipPct} labelFormatter={fmtTipLabel} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Area type="monotone" dataKey="Previdencia" stackId="1" stroke={CORES_SERIES[0]} fill={CORES_SERIES[0]} fillOpacity={0.35} />
-              <Area type="monotone" dataKey="Pessoal" stackId="1" stroke={CORES_SERIES[1]} fill={CORES_SERIES[1]} fillOpacity={0.35} />
+              {serieDecomp.labels.map((lbl, i) => (
+                <Area
+                  key={lbl}
+                  type="monotone"
+                  dataKey={lbl}
+                  stackId="1"
+                  stroke={CORES_SERIES[i % CORES_SERIES.length]}
+                  fill={CORES_SERIES[i % CORES_SERIES.length]}
+                  fillOpacity={0.45}
+                />
+              ))}
             </AreaChart>
           </ResponsiveContainer>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-3 text-[11px] text-zinc-600">
+          <span><strong>Previdência:</strong> {fmtPct(previdencia_pct)} PIB</span>
+          <span><strong>Pessoal:</strong> {fmtPct(pessoal_pct_kpi)} PIB</span>
+          {bpc_pct != null && <span><strong>BPC/LOAS:</strong> {fmtPct(bpc_pct)} PIB</span>}
+          {abono_pct != null && <span><strong>Abono+seguro:</strong> {fmtPct(abono_pct)} PIB</span>}
         </div>
       </Section>
 
       <p className="text-xs text-zinc-500">
-        Ultima atualizacao: {new Date(data.gerado_em).toLocaleString("pt-BR")}.
+        Ultima atualização: {new Date(data.gerado_em).toLocaleString("pt-BR")}. Pipeline diário 9h BRT.
       </p>
     </div>
   );
