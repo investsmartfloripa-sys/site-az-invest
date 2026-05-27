@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "Pesquisa Mensal do Comércio. Volume de vendas no varejo restrito (9 atividades) e ampliado (inclui veículos e materiais de construção), comparação lado a lado.",
 };
 
+export const dynamic = "force-dynamic";
 export const revalidate = 86400;
 
 export default async function PainelAtividadePmcPage() {
