@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "Scrutínio dos dados do IPCA: contribuição por grupo, núcleos do BC, difusão, expectativas Focus e maiores influências do mês. Atualizado mensalmente via IBGE/SIDRA e BCB.",
 };
 
+export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export default async function PainelIpcaPage() {
