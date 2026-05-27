@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "Pesquisa Mensal de Serviços do IBGE. Volume agregado de serviços com ranking por segmento (alojamento, alimentação, transportes, profissionais, comunicação).",
 };
 
+export const dynamic = "force-dynamic";
 export const revalidate = 86400;
 
 export default async function PainelAtividadePmsPage() {
