@@ -411,19 +411,29 @@ def modelo_ms_dfm(ibcbr: list[tuple[str, float]]) -> dict[str, float]:
 # Consolidação
 # ============================================================================
 def consolidar(modelos: dict[str, dict[str, float]]) -> list[dict[str, Any]]:
+    """Consolida modelos probabilísticos (MS-DFM, probit, gap_threshold, diffusion).
+
+    Bry-Boschan é tratado SEPARADAMENTE como datação binária — não entra no ensemble
+    de mediana/min-max/média porque distorce (Harding-Pagan 2002 é datador, não probabilizador).
+    """
     todos_meses = sorted(set().union(*[m.keys() for m in modelos.values()]) if modelos else [])
     serie: list[dict[str, Any]] = []
+    MODELOS_PROB = ("msdfm", "probit_financeiro", "gap_threshold", "diffusion")  # bry_boschan tratado a parte
     for mes in todos_meses:
-        pontos: dict[str, float] = {}
+        pontos_prob: dict[str, float] = {}  # apenas modelos probabilísticos
         for nome, vals in modelos.items():
             v = vals.get(mes)
-            if v is not None:
-                pontos[nome] = v
-        if not pontos:
+            if v is not None and nome in MODELOS_PROB:
+                pontos_prob[nome] = v
+        # Bry-Boschan capturado separado
+        bb_val = modelos.get("bry_boschan", {}).get(mes)
+        # Para retro-compatibilidade do código abaixo, usa pontos_prob como "pontos"
+        pontos = pontos_prob
+        if not pontos and bb_val is None:
             continue
-        vals_list = sorted(pontos.values())
-        mediana = vals_list[len(vals_list) // 2]
-        media = sum(vals_list) / len(vals_list)
+        vals_list = sorted(pontos.values()) if pontos else []
+        mediana = vals_list[len(vals_list) // 2] if vals_list else 0
+        media = (sum(vals_list) / len(vals_list)) if vals_list else 0
         n_acima_50 = sum(1 for v in vals_list if v > 50)
         n = len(pontos)
         # Modelos "sensíveis" à virada (probit + diffusion). Se ambos faltam: sinal incerto
@@ -449,12 +459,12 @@ def consolidar(modelos: dict[str, dict[str, float]]) -> list[dict[str, Any]]:
                 "probit_financeiro": pontos.get("probit_financeiro"),
                 "gap_threshold": pontos.get("gap_threshold"),
                 "diffusion": pontos.get("diffusion"),
-                "bry_boschan": pontos.get("bry_boschan"),
-                "mediana": round(mediana, 1) if n >= 4 else None,
-                "mediana_parcial": round(mediana, 1),
-                "media": round(media, 1),
-                "min_val": round(vals_list[0], 1),
-                "max_val": round(vals_list[-1], 1),
+                "bry_boschan": bb_val,
+                "mediana": round(mediana, 1) if n >= 3 else None,
+                "mediana_parcial": round(mediana, 1) if n > 0 else None,
+                "media": round(media, 1) if n > 0 else None,
+                "min_val": round(vals_list[0], 1) if vals_list else None,
+                "max_val": round(vals_list[-1], 1) if vals_list else None,
                 "n_modelos": n,
                 "n_acima_50": n_acima_50,
                 "sensiveis_presentes": sensiveis_presentes,
@@ -565,7 +575,7 @@ def main() -> None:
                 "probit_financeiro": "Logística do ICF próprio prevendo recessão CODACE 12m ahead.",
                 "gap_threshold": "Logística sobre z-score do gap mediano (HP+Hamilton).",
                 "diffusion": "% de antecedentes em variação negativa (OECD CLI 6m, ANFAVEA YoY, ANP YoY, EPE industrial YoY).",
-                "bry_boschan": "Datação binária via picos/vales locais do IBC-Br (janela 5m).",
+                "bry_boschan": "Datação binária via picos/vales locais do IBC-Br (Harding-Pagan 2002). NÃO é probabilidade — exibido como overlay binário, fora do ensemble de mediana.",
             },
             "consolidacao": "Mediana dos modelos disponíveis no mês. Sinalização: vermelho se ≥4 acima 50%; amarelo se ≥3; verde caso contrário.",
             "nota": "Probabilidades revisáveis quando dados subjacentes forem revisados (IBC-Br, ICF, antecedentes). Persistir vintage no Blob para auditoria histórica.",
