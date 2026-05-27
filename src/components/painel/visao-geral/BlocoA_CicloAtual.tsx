@@ -186,7 +186,7 @@ export function BlocoACicloAtual({ payload }: { payload: VisaoGeralPayload }) {
     <section className="space-y-5">
       <header>
         <h2 className="text-xl font-bold text-[#132960]">1. Onde estamos no ciclo</h2>
-        <p className="mt-1 text-xs text-zinc-600">IBC-Br com cronologia CODACE, comparação de modelos de probabilidade de recessão e leque de hiato.</p>
+        <p className="mt-1 text-xs text-zinc-600">Comparação visual da atividade mensal (IBC-Br) com a cronologia oficial CODACE/FGV, leitura prospectiva via cinco modelos de probabilidade de recessão e medida de hiato do produto.</p>
       </header>
       <CardRecessaoMultiModelos serie={payload.recessao?.serie ?? []} codace={codaceMensal} />
       <CardIbcBrCodace serie={payload.ibcbr?.serie ?? []} codace={codaceMensal} />
