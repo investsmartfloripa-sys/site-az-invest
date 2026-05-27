@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "Produto Interno Bruto trimestral (IBGE Contas Nacionais) com decomposição por ótica da oferta e da demanda, expectativas Focus, e IBC-Br (BCB) como proxy mensal.",
 };
 
+export const dynamic = "force-dynamic";
 export const revalidate = 86400;
 
 export default async function PainelAtividadePibPage() {
