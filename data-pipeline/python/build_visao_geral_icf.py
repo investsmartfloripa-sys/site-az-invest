@@ -35,7 +35,7 @@ import requests
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/visao_geral_icf.json"
-UA = {"User-Agent": "Mozilla/5.0 (compatible; az-invest/0.2)", "Accept": "application/json,text/json,*/*"}
+UA = {"User-Agent": "Mozilla/5.0", "Accept": "*/*"}
 
 SGS_URL = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{cod}/dados?formato=json&dataInicial=01/01/2000"
 
@@ -167,8 +167,8 @@ def main() -> None:
     else:
         print("  Focus 12m indisponível, usando IPCA realizado 12m como proxy do esperado")
 
-    # Selic real ex-ante: Selic_t - Focus_ipca_12m_t (ou IPCA_12m_t como proxy)
-    selic = series.get("selic_meta", {})
+    # Selic real ex-ante: usa selic_meta se OK, fallback para selic_efetiva (4189)
+    selic = series.get("selic_meta", {}) or series.get("selic_efetiva", {})
     ipca_proxy = focus_12m or series.get("ipca_12m", {})
     todos_meses = sorted(set(selic.keys()) & set(ipca_proxy.keys()))
     selic_real_ex_ante = {m: selic[m] - ipca_proxy[m] for m in todos_meses}
