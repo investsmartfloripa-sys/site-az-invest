@@ -16,13 +16,7 @@ import type { CreditoData, IcfData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
 
 function CardIcf({ data }: { data: IcfData | null }) {
-  if (!data || data.serie.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-center">
-        <h3 className="text-base font-semibold text-zinc-500">E1 — ICF próprio</h3>
-      </div>
-    );
-  }
+  if (!data || data.serie.length === 0) return null;
   return (
     <div className="rounded-2xl border-2 border-[#132960]/20 bg-gradient-to-br from-white to-zinc-50 p-5 shadow-sm">
       <h3 className="text-base font-semibold text-zinc-900">E1 — Índice de Condições Financeiras (próprio)</h3>
@@ -79,13 +73,7 @@ function CardSelicReal({ data }: { data: IcfData | null }) {
 }
 
 function CardConcessoes({ data }: { data: CreditoData | null }) {
-  if (!data) {
-    return (
-      <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-center">
-        <h3 className="text-base font-semibold text-zinc-500">E4 — Concessões de crédito</h3>
-      </div>
-    );
-  }
+  if (!data) return null;
   const pf = data.concessoes.pf_total_real_12m_var_pct ?? [];
   const pj = data.concessoes.pj_total_real_12m_var_pct ?? [];
   const todos = new Set<string>();
