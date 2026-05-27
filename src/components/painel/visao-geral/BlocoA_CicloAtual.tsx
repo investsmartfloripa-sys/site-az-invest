@@ -102,8 +102,8 @@ function CardRecessaoMultiModelos({
         </div>
         <div className="shrink-0 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-right">
           <div className="text-[10px] uppercase tracking-wide text-zinc-500">Mediana ({formatMes(ultimo.mes)})</div>
-          <div className="text-2xl font-bold text-[#132960]">{ultimo.mediana.toFixed(0)}%</div>
-          <div className="mt-0.5 text-[10px] text-zinc-500">{ultimo.n_acima_50} de {ultimo.n_modelos} acima de 50%</div>
+          <div className="text-2xl font-bold text-[#132960]">{ultimo.mediana !== null && ultimo.mediana !== undefined ? `${ultimo.mediana.toFixed(0)}%` : (ultimo.mediana_parcial !== null && ultimo.mediana_parcial !== undefined ? `~${ultimo.mediana_parcial.toFixed(0)}%` : "—")}</div>
+          <div className="mt-0.5 text-[10px] text-zinc-500">{ultimo.n_acima_50} de {ultimo.n_modelos} acima de 50%{ultimo.n_modelos < 4 ? " (parcial)" : ""}</div>
         </div>
       </div>
 
