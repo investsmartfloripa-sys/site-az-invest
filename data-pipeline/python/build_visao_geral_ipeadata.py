@@ -30,8 +30,8 @@ SERIES = {
     "fenabrave_emplac":  ("FENABRAVE12_VENDVETOT12", "Emplacamentos autoveiculos (FENABRAVE)"),
     "cnc_icec":          ("CNC12_ICEC12",            "ICEC - Confianca Empresario Comercio (CNC)"),
     "fecomercio_icc":    ("FCESP12_IIC12",           "Confianca Consumidor (Fecomercio SP)"),
-    "iaemp_fgv":         ("SONDA12_IAEMP12",         "IAEmp - Antecedente Emprego (FGV-IBRE)"),
-    "icce_fgv":          ("SONDA12_ICCE12",          "ICCE - Coincidente Composto (FGV-IBRE)"),
+    "fgv_constr_exp":    ("FGV12_IECSTCA12",         "Expectativas Construcao (FGV-IBRE com ajuste)"),
+    "fgv_constr_atual":  ("FGV12_ISACSTCA12",        "Situacao Atual Construcao (FGV-IBRE com ajuste)"),
 }
 INPUTS = {k: "1995-01" for k in SERIES}
 
