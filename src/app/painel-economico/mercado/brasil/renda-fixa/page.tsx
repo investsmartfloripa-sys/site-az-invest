@@ -10,6 +10,8 @@ export const metadata = {
     "Curvas históricas de juros dos títulos públicos (Pré e IPCA+) por data de vencimento, e spreads de crédito privado via ANBIMA.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function RendaFixaPage() {
   const { treasury, credit } = await getRendaFixaData();
 
