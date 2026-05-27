@@ -203,10 +203,11 @@ export type RecessaoPonto = {
   gap_threshold: NumOrNull;
   diffusion: NumOrNull;
   bry_boschan: NumOrNull;
-  mediana: number;
+  mediana: NumOrNull;
+  mediana_parcial?: NumOrNull;
   n_modelos: number;
   n_acima_50: number;
-  sinalizacao: "verde" | "amarelo" | "vermelho";
+  sinalizacao: "verde" | "amarelo" | "vermelho" | "indeterminado";
 };
 
 export type RecessaoData = {
@@ -321,6 +322,23 @@ export type HardDataData = {
   metadata: MetaCommon & { fontes?: Record<string, string> };
 };
 
+export type IpeadataBloco = {
+  serie: { mes: string; valor: number | null; var_yoy_pct?: number | null }[];
+  label: string;
+  ipeacode: string;
+};
+
+export type IpeadataData = {
+  gerado_em: string;
+  freshness_status: Freshness;
+  papelao_abpo: IpeadataBloco;
+  aco_bruto: IpeadataBloco;
+  fenabrave_emplac: IpeadataBloco;
+  cnc_icec: IpeadataBloco;
+  fecomercio_icc: IpeadataBloco;
+  metadata: MetaCommon;
+};
+
 export type VisaoGeralPayload = {
   ibcbr: IbcBrData | null;
   oecdCli: OecdCliData | null;
@@ -338,6 +356,7 @@ export type VisaoGeralPayload = {
   pmi: PmiData | null;
   fecomercio: FecomercioData | null;
   hardData: HardDataData | null;
+  ipeadata: IpeadataData | null;
 };
 
 async function fetchJson<T>(blobPath: string): Promise<T | null> {
@@ -370,6 +389,7 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     pmi,
     fecomercio,
     hardData,
+    ipeadata,
   ] = await Promise.all([
     fetchJson<IbcBrData>("data/atividade_ibcbr.json"),
     fetchJson<OecdCliData>("data/visao_geral_oecd_cli.json"),
@@ -387,8 +407,9 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     fetchJson<PmiData>("data/visao_geral_pmi.json"),
     fetchJson<FecomercioData>("data/visao_geral_fecomercio.json"),
     fetchJson<HardDataData>("data/visao_geral_hard_data.json"),
+    fetchJson<IpeadataData>("data/visao_geral_ipeadata.json"),
   ]);
-  return { ibcbr, oecdCli, credito, anp, anfavea, epe, codace, hiato, icf, recessao, fgvAntecedentes, fgvConfianca, cni, pmi, fecomercio, hardData };
+  return { ibcbr, oecdCli, credito, anp, anfavea, epe, codace, hiato, icf, recessao, fgvAntecedentes, fgvConfianca, cni, pmi, fecomercio, hardData, ipeadata };
 }
 
 export function formatPct(v: NumOrNull, casas = 1): string {
@@ -412,6 +433,7 @@ export function formatMes(mes: string | null | undefined): string {
 export function sinalizacaoCor(s: RecessaoPonto["sinalizacao"]): { bg: string; text: string; label: string } {
   if (s === "vermelho") return { bg: "bg-red-100", text: "text-red-700", label: "Alerta de recessão" };
   if (s === "amarelo") return { bg: "bg-amber-100", text: "text-amber-700", label: "Sinal de risco" };
+  if (s === "indeterminado") return { bg: "bg-zinc-100", text: "text-zinc-600", label: "Sinal incompleto (precisa 4+ modelos)" };
   return { bg: "bg-emerald-100", text: "text-emerald-700", label: "Normal" };
 }
 
