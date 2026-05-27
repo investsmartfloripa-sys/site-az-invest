@@ -72,6 +72,13 @@ const mercadoGlobal: CategoryDef[] = [
 
 const economiaBrasil: CategoryDef[] = [
   {
+    slug: "visao-geral",
+    label: "Visão Geral",
+    description: "Termômetro do ciclo econômico brasileiro com antecedentes e probabilidade de recessão.",
+    frequency: "diario",
+    sourceHint: "BCB, IBGE, OECD, FGV-IBRE, ANFAVEA, EPE, ANP",
+  },
+  {
     slug: "atividade",
     label: "Atividade",
     description: "PIB, produção, consumo e dinâmica da economia real.",
