@@ -1,47 +1,27 @@
-"""Build do JSON do Painel Visão Geral — bloco Consumo de Energia Elétrica (EPE).
+"""Build do Painel Visao Geral - bloco EPE (consumo de energia eletrica).
 
-Fonte: Resenha Mensal do Mercado de Energia Elétrica da EPE em
-https://www.epe.gov.br/pt/publicacoes-dados-abertos/publicacoes/consumo-de-energia-eletrica
+Fonte: EPE "CONSUMO MENSAL DE ENERGIA ELETRICA POR CLASSE.xlsx".
+URL: https://www.epe.gov.br/sites-pt/publicacoes-dados-abertos/publicacoes/Documents/
 
-A EPE publica XLSX consolidado mensal com consumo por classe (residencial,
-industrial, comercial, outros) em GWh, desde 1970.
-
-Calcula:
-- Variação a/a por classe
-- MM3m
-- Índice base 2019=100
-
-O consumo industrial é antecedente FORTÍSSIMO da PIM — quando cai
-sustentado, sinal de freio industrial em 1-2 meses.
-
-Ragged-edge tolerante.
+Pre-trata XLSX para fixar bug do openpyxl com baseColWidth=\'8.43\' (decimal).
+Estrutura: abas TOTAL/RESIDENCIAL/INDUSTRIAL/COMERCIAL/OUTROS, cada uma com
+matriz pivotada (anos como blocos de 12 meses).
 """
 from __future__ import annotations
-
-import argparse
-import json
-import sys
-import time
+import argparse, json, sys, time, re, zipfile, io
 from datetime import datetime, timezone
-from io import BytesIO
 from pathlib import Path
-
 import requests
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/visao_geral_epe.json"
-UA = {"User-Agent": "az-invest-visao-geral-epe/0.1"}
+UA = {"User-Agent": "Mozilla/5.0 (compatible; az-invest/0.2)"}
+EPE_XLSX = "https://www.epe.gov.br/sites-pt/publicacoes-dados-abertos/publicacoes/Documents/CONSUMO%20MENSAL%20DE%20ENERGIA%20EL%C3%89TRICA%20POR%20CLASSE.xlsx"
+INPUTS = {"epe_consumo": "1995-01"}
 
-EPE_PAGE = "https://www.epe.gov.br/pt/publicacoes-dados-abertos/publicacoes/consumo-de-energia-eletrica"
-# URL fallback (XLSX consolidado publicado pela EPE). Nome muda; mantemos referência.
-EPE_FALLBACK_XLSX = "https://www.epe.gov.br/sites-pt/publicacoes-dados-abertos/publicacoes/PublicacoesArquivos/publicacao-153/RESENHA-MENSAL-MERCADO-ENERGIA-ELETRICA.xlsx"
-
-INPUTS = {"epe_consumo": "1970-01"}
-
-
-def _get(url: str, *, timeout: int = 90, retries: int = 2, sleep: float = 5.0) -> requests.Response:
-    last: Exception | None = None
+def _get(url, *, timeout=120, retries=3, sleep=5.0):
+    last = None
     for i in range(retries):
         try:
             r = requests.get(url, timeout=timeout, headers=UA)
@@ -49,170 +29,128 @@ def _get(url: str, *, timeout: int = 90, retries: int = 2, sleep: float = 5.0) -
             return r
         except Exception as e:
             last = e
-            print(f"  retry {i + 1}/{retries}: {e}", file=sys.stderr)
             time.sleep(sleep)
-    raise RuntimeError(f"falha após {retries} tentativas: {last}")
+    raise RuntimeError(f"falha: {last}")
 
+def fix_xlsx_basecolwidth(content):
+    """Recompacta XLSX trocando baseColWidth=\'8.43\' por 8 (bug openpyxl)."""
+    buf_in = io.BytesIO(content)
+    buf_out = io.BytesIO()
+    with zipfile.ZipFile(buf_in, "r") as zin:
+        with zipfile.ZipFile(buf_out, "w", zipfile.ZIP_DEFLATED) as zout:
+            for item in zin.namelist():
+                data = zin.read(item)
+                if item.endswith(".xml"):
+                    try:
+                        text = data.decode("utf-8")
+                        text2 = re.sub(r'baseColWidth="[\d.]+"', 'baseColWidth="8"', text)
+                        data = text2.encode("utf-8")
+                    except UnicodeDecodeError:
+                        pass
+                zout.writestr(item, data)
+    return buf_out.getvalue()
 
-def localizar_xlsx() -> str:
-    try:
-        r = _get(EPE_PAGE, retries=1)
-        import re
+def parse_xlsx_epe(content):
+    """Parse das abas do EPE. Estrutura: matriz pivotada com anos como blocos.
 
-        urls = re.findall(r'href="([^"]+\.xlsx)"', r.text)
-        # priorizar "resenha" ou "consumo"
-        for u in urls:
-            ul = u.lower()
-            if "resenha" in ul or "consumo" in ul or "mercado" in ul:
-                if u.startswith("//"):
-                    u = "https:" + u
-                if u.startswith("/"):
-                    u = "https://www.epe.gov.br" + u
-                return u
-    except Exception as e:
-        print(f"  não achou XLSX no portal EPE: {e}", file=sys.stderr)
-    return EPE_FALLBACK_XLSX
+    Cada aba tem linhas tipo:
+      [ANO_HEADER]
+      Jan Fev Mar Abr Mai Jun Jul Ago Set Out Nov Dez (header de meses)
+      [valor jan] [valor fev] ... (valores)
 
-
-MES_PT = {
-    "JAN": 1, "FEV": 2, "MAR": 3, "ABR": 4, "MAI": 5, "JUN": 6,
-    "JUL": 7, "AGO": 8, "SET": 9, "OUT": 10, "NOV": 11, "DEZ": 12,
-    "JANEIRO": 1, "FEVEREIRO": 2, "MARÇO": 3, "MARCO": 3, "ABRIL": 4, "MAIO": 5, "JUNHO": 6,
-    "JULHO": 7, "AGOSTO": 8, "SETEMBRO": 9, "OUTUBRO": 10, "NOVEMBRO": 11, "DEZEMBRO": 12,
-}
-
-
-def parse_xlsx(content: bytes) -> list[dict]:
+    Como cada aba e por classe (uma classe por aba), retornamos
+    {classe: {mes_iso: valor}}.
+    """
+    fixed = fix_xlsx_basecolwidth(content)
     from openpyxl import load_workbook
-
-    wb = load_workbook(BytesIO(content), data_only=True, read_only=True)
-    print(f"  abas: {wb.sheetnames}")
-    # EPE Resenha Mensal costuma ter abas "Consumo Mensal" ou "1.3-Consumo Total" com colunas
-    # ANO, MÊS, RESIDENCIAL, INDUSTRIAL, COMERCIAL, OUTROS (em GWh).
-    by_mes: dict[str, dict] = {}
-    for sheet_name in wb.sheetnames:
-        nome_upper = sheet_name.upper()
-        if not ("CONSUMO" in nome_upper or "CLASSE" in nome_upper or "TOTAL" in nome_upper or "BRASIL" in nome_upper):
-            continue
-        ws = wb[sheet_name]
+    wb = load_workbook(io.BytesIO(fixed), data_only=True, read_only=True)
+    print(f"  abas: {wb.sheetnames[:6]}")
+    out = {"total": {}, "residencial": {}, "industrial": {}, "comercial": {}, "outros": {}}
+    aba_to_key = {"TOTAL":"total","RESIDENCIAL":"residencial","INDUSTRIAL":"industrial","COMERCIAL":"comercial","OUTROS":"outros"}
+    meses_idx = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]
+    for aba in wb.sheetnames:
+        key = aba_to_key.get(aba.upper())
+        if not key: continue
+        ws = wb[aba]
         rows = list(ws.iter_rows(values_only=True))
-        header_idx = None
-        for i, row in enumerate(rows[:30]):
-            row_str = [str(c).upper() if c else "" for c in row]
-            if any("RESIDENC" in c for c in row_str) and any("INDUSTR" in c for c in row_str):
-                header_idx = i
-                break
-        if header_idx is None:
-            continue
-        header = [str(c).upper() if c else "" for c in rows[header_idx]]
-
-        def col(*keys: str) -> int | None:
-            for k in keys:
-                for i, c in enumerate(header):
-                    if k in c:
-                        return i
-            return None
-
-        col_ano = col("ANO", "YEAR")
-        col_mes = col("MÊS", "MES", "MONTH")
-        col_res = col("RESIDENC")
-        col_ind = col("INDUSTR")
-        col_com = col("COMERC")
-        col_out = col("OUTROS", "OTHER")
-        col_tot = col("TOTAL")
-        if col_ano is None or col_mes is None:
-            continue
-
-        for row in rows[header_idx + 1 :]:
-            try:
-                ano_raw = row[col_ano]
-                mes_raw = row[col_mes]
-                if ano_raw is None or mes_raw is None:
-                    continue
-                ano = int(ano_raw)
-                if isinstance(mes_raw, str):
-                    mes = MES_PT.get(mes_raw.upper().strip())
-                    if mes is None:
-                        try:
-                            mes = int(mes_raw)
-                        except ValueError:
-                            continue
-                else:
-                    mes = int(mes_raw)
-            except (TypeError, ValueError):
-                continue
-            mes_iso = f"{ano:04d}-{mes:02d}"
-            entry = by_mes.setdefault(mes_iso, {"mes": mes_iso})
-
-            def get(idx: int | None) -> float | None:
-                if idx is None:
-                    return None
+        ano_atual = None
+        # estrutura: por bloco - linha com Ano, linha com meses, linha com Brasil/total
+        for i, row in enumerate(rows):
+            cells = [str(c).strip() if c is not None else "" for c in row]
+            # detecta linha-ano: tem um numero entre 1990-2050 e poucos outros valores
+            for v in cells[:5]:
                 try:
-                    return float(row[idx])
-                except (TypeError, ValueError):
-                    return None
+                    n = int(float(v))
+                    if 1990 <= n <= 2050:
+                        ano_atual = n
+                        break
+                except ValueError:
+                    pass
+            # Se for linha com 12 numeros sequenciais e ja temos ano: capturar
+            if ano_atual is None:
+                continue
+            valores_numericos = []
+            for c in row:
+                if isinstance(c, (int, float)) and not isinstance(c, bool):
+                    valores_numericos.append(float(c))
+            if len(valores_numericos) >= 12:
+                # Pegar os primeiros 12 numeros depois da label
+                for m, v in enumerate(valores_numericos[:12], start=1):
+                    if v > 0:
+                        out[key][f"{ano_atual:04d}-{m:02d}"] = v
+                # avancar (proxima linha pode ser outro pais)
+    return out
 
-            entry["residencial_gwh"] = get(col_res) or entry.get("residencial_gwh")
-            entry["industrial_gwh"] = get(col_ind) or entry.get("industrial_gwh")
-            entry["comercial_gwh"] = get(col_com) or entry.get("comercial_gwh")
-            entry["outros_gwh"] = get(col_out) or entry.get("outros_gwh")
-            entry["total_gwh"] = get(col_tot) or entry.get("total_gwh")
-        if any(by_mes.values()):
-            break  # parou na primeira aba relevante
+def calcular(out_dict):
+    todos_meses = set()
+    for d in out_dict.values():
+        todos_meses.update(d.keys())
+    serie = []
+    for mes in sorted(todos_meses):
+        item = {"mes": mes}
+        for k in ("total","residencial","industrial","comercial","outros"):
+            v = out_dict[k].get(mes)
+            item[f"{k}_gwh"] = v
+        serie.append(item)
+    # base 2019
+    base = {}
+    for it in serie:
+        if it["mes"].startswith("2019-"):
+            for k in ("total","residencial","industrial","comercial","outros"):
+                key = f"{k}_gwh"
+                if it.get(key):
+                    base.setdefault(key, []).append(it[key])
+    base = {k: (sum(v)/len(v) if v else None) for k, v in base.items()}
+    by_mes = {it["mes"]: it for it in serie}
+    for it in serie:
+        a, m = it["mes"].split("-")
+        prev = by_mes.get(f"{int(a)-1:04d}-{m}")
+        for k in ("total","residencial","industrial","comercial","outros"):
+            key = f"{k}_gwh"
+            cur = it.get(key); pv = prev.get(key) if prev else None
+            it[f"{k}_var_yoy_pct"] = round((cur/pv - 1)*100, 2) if (cur and pv and pv > 0) else None
+            bs = base.get(key)
+            it[f"{k}_indice_2019"] = round(cur/bs*100, 2) if (cur and bs and bs > 0) else None
+    return serie
 
-    return [by_mes[m] for m in sorted(by_mes.keys())]
-
-
-def calcular_variacoes(serie: list[dict]) -> None:
-    by_mes = {item["mes"]: item for item in serie}
-    keys = ("residencial_gwh", "industrial_gwh", "comercial_gwh", "outros_gwh", "total_gwh")
-    bases: dict[str, list[float]] = {k: [] for k in keys}
-    for item in serie:
-        if item["mes"].startswith("2019-"):
-            for k in keys:
-                if item.get(k):
-                    bases[k].append(item[k])
-    base_2019 = {k: (sum(v) / len(v) if v else None) for k, v in bases.items()}
-
-    for item in serie:
-        ano, m = item["mes"].split("-")
-        prev = by_mes.get(f"{int(ano) - 1:04d}-{m}")
-        for k in keys:
-            short = k.replace("_gwh", "")
-            atual = item.get(k)
-            prev_v = prev.get(k) if prev else None
-            if atual is not None and prev_v is not None and prev_v > 0:
-                item[f"{short}_var_yoy_pct"] = round((atual / prev_v - 1) * 100, 2)
-            else:
-                item[f"{short}_var_yoy_pct"] = None
-            base = base_2019.get(k)
-            if atual is not None and base is not None and base > 0:
-                item[f"{short}_indice_2019"] = round(atual / base * 100, 2)
-            else:
-                item[f"{short}_indice_2019"] = None
-
-
-def main() -> None:
-    ap = argparse.ArgumentParser(description="Build do JSON Painel Visão Geral — EPE")
+def main():
+    ap = argparse.ArgumentParser()
     ap.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
     ap.add_argument("--upload", action="store_true")
     ap.add_argument("--soft-fail", action="store_true")
     args = ap.parse_args()
-
-    out_dir = Path(args.out_dir).resolve()
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = Path(args.out_dir).resolve(); out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / "visao_geral_epe.json"
 
-    print("== EPE — Resenha Mensal de Energia Elétrica ==")
+    print("== EPE - Consumo Mensal por Classe ==")
     try:
-        url = localizar_xlsx()
-        print(f"  XLSX: {url}")
-        r = _get(url)
-        serie = parse_xlsx(r.content)
-        if not serie:
-            raise RuntimeError("XLSX EPE parseado mas série vazia")
+        r = _get(EPE_XLSX)
+        out_dict = parse_xlsx_epe(r.content)
+        if not any(out_dict.values()):
+            raise RuntimeError("Nenhum valor lido do XLSX")
+        serie = calcular(out_dict)
     except Exception as e:
-        print(f"  FALHA EPE: {e}", file=sys.stderr)
+        print(f"  FALHA: {e}", file=sys.stderr)
         sys.path.insert(0, str(HERE))
         from shared.blob_download import download_json
         prev = download_json(BLOB_PATH)
@@ -220,15 +158,11 @@ def main() -> None:
             prev["freshness_status"] = "stale"
             prev["gerado_em"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
             out_file.write_text(json.dumps(prev, indent=2, ensure_ascii=False), encoding="utf-8")
-            print("  preservado JSON anterior (stale)")
             return
         if args.soft_fail:
-            payload = {"gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"), "freshness_status": "missing", "serie": []}
-            out_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+            out_file.write_text(json.dumps({"gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"), "freshness_status": "missing", "serie": []}, indent=2), encoding="utf-8")
             return
         sys.exit(2)
-
-    calcular_variacoes(serie)
 
     payload = {
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -237,13 +171,10 @@ def main() -> None:
         "serie": serie,
         "inputs": INPUTS,
         "min_start_date": min(INPUTS.values()),
-        "metadata": {
-            "fonte": "EPE — Resenha Mensal do Mercado de Energia Elétrica (XLSX). Consumo em GWh por classe.",
-            "nota": "Industrial é antecedente fortíssimo da PIM. Base índice = média 2019.",
-        },
+        "metadata": {"fonte": "EPE - Consumo Mensal de Energia Eletrica por Classe (XLSX). GWh.", "nota": "Industrial e antecedente forte da PIM. Base = media 2019."},
     }
     out_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"JSON {out_file} ({out_file.stat().st_size / 1024:.1f} KB)")
+    print(f"JSON {out_file} ({out_file.stat().st_size/1024:.1f} KB)")
 
     if args.upload:
         sys.path.insert(0, str(HERE))
@@ -251,10 +182,7 @@ def main() -> None:
         try:
             maybe_upload_json(out_file, BLOB_PATH)
         except Exception as e:
-            print(f"[upload] FALHOU: {e}", file=sys.stderr)
-            if not args.soft_fail:
-                sys.exit(1)
-
+            if not args.soft_fail: sys.exit(1)
 
 if __name__ == "__main__":
     main()
