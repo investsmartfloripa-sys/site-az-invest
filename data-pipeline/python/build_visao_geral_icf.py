@@ -176,9 +176,9 @@ def main() -> None:
     # Ibov retorno 6m
     ibov_var_6m = variacao_6m(series.get("ibov", {}))
 
-    # Constrói grid mensal usando interseção das séries críticas
+    # Constrói grid mensal usando interseção das séries críticas (Selic real + REER são essenciais)
     reer = series.get("reer", {})
-    meses_finais = sorted(set(selic_real_ex_ante.keys()) & set(ibov_var_6m.keys()) & set(reer.keys()))
+    meses_finais = sorted(set(selic_real_ex_ante.keys()) & set(reer.keys()))
 
     if not meses_finais:
         print("  insuficiente para calcular ICF", file=sys.stderr)
