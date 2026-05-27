@@ -37,14 +37,14 @@ DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/visao_geral_icf.json"
 UA = {"User-Agent": "Mozilla/5.0 (compatible; az-invest/0.2)", "Accept": "application/json,text/json,*/*"}
 
-SGS_URL = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{cod}/dados?formato=json"
+SGS_URL = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{cod}/dados?formato=json&dataInicial=01/01/2000"
 
 # Códigos SGS
 SERIES = {
-    "selic_meta": 1178,        # Meta Selic % a.a.
+    "selic_meta": 432,        # Meta Selic % a.a.
     "selic_efetiva": 4189,    # Selic efetiva anualizada
     "reer": 11752,            # Câmbio efetivo real (índice)
-    "ibov": 7,                # Ibovespa fechamento mensal
+    # "ibov": 7,  # SGS 7 descontinuado - retorna 404                # Ibovespa fechamento mensal
     "ipca_12m": 13522,        # IPCA acumulado 12m (proxy quando Focus IPCA 12m não estiver disponível)
 }
 
