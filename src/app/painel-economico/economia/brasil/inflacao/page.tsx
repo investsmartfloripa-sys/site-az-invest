@@ -24,6 +24,8 @@ const PAINEIS = [
   },
 ];
 
+export const dynamic = "force-dynamic";
+
 export default function PainelInflacaoHub() {
   return (
     <div className="space-y-6">
