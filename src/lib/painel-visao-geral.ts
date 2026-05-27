@@ -410,7 +410,7 @@ export function formatMes(mes: string | null | undefined): string {
 }
 
 export function sinalizacaoCor(s: RecessaoPonto["sinalizacao"]): { bg: string; text: string; label: string } {
-  if (s === "vermelho") return { bg: "bg-red-100", text: "text-red-700", label: "Alerta de recessao" };
+  if (s === "vermelho") return { bg: "bg-red-100", text: "text-red-700", label: "Alerta de recessão" };
   if (s === "amarelo") return { bg: "bg-amber-100", text: "text-amber-700", label: "Sinal de risco" };
   return { bg: "bg-emerald-100", text: "text-emerald-700", label: "Normal" };
 }
@@ -424,22 +424,22 @@ export function fraseManchete(payload: VisaoGeralPayload): string {
   const partes: string[] = [];
   const ibc = ultimaObs(payload.ibcbr?.serie);
   if (ibc?.mes && ibc.var_mom !== null && ibc.var_mom !== undefined) {
-    const verbo = Math.abs(ibc.var_mom) < 0.05 ? "ficou estavel" : ibc.var_mom > 0 ? "cresceu" : "caiu";
+    const verbo = Math.abs(ibc.var_mom) < 0.05 ? "ficou estável" : ibc.var_mom > 0 ? "cresceu" : "caiu";
     partes.push("Em " + formatMes(ibc.mes) + " a atividade " + verbo + " " + formatPct(ibc.var_mom) + " (IBC-Br dessazonalizado).");
   }
   const rec = ultimaObs(payload.recessao?.serie);
   if (rec) {
-    partes.push("Nossos modelos estimam mediana de " + rec.mediana.toFixed(0) + "% de probabilidade de recessao (" + rec.n_acima_50 + " de " + rec.n_modelos + " acima de 50%).");
+    partes.push("Nossos modelos estimam mediana de " + rec.mediana.toFixed(0) + "% de probabilidade de recessão (" + rec.n_acima_50 + " de " + rec.n_modelos + " acima de 50%).");
   }
   const oe = ultimaObs(payload.oecdCli?.serie);
   if (oe?.var_6m_anualizada !== null && oe?.var_6m_anualizada !== undefined) {
-    const verbo = oe.var_6m_anualizada > 0.5 ? "acelera" : oe.var_6m_anualizada < -0.5 ? "desacelera" : "esta estavel";
-    partes.push("O indicador antecedente OECD " + verbo + " em " + formatPct(oe.var_6m_anualizada) + " (variacao 6m anualizada).");
+    const verbo = oe.var_6m_anualizada > 0.5 ? "acelera" : oe.var_6m_anualizada < -0.5 ? "desacelera" : "está estável";
+    partes.push("O indicador antecedente OECD " + verbo + " em " + formatPct(oe.var_6m_anualizada) + " (variação 6m anualizada).");
   }
   const icf = ultimaObs(payload.icf?.serie);
   if (icf) {
     const regimeLabel = icf.regime === "estimulativo" ? "estimulativas" : icf.regime === "restritivo" ? "restritivas" : "neutras";
-    partes.push("As condicoes financeiras estao " + regimeLabel + " (z-score " + icf.icf_zscore.toFixed(2) + ").");
+    partes.push("As condições financeiras estão " + regimeLabel + " (z-score " + icf.icf_zscore.toFixed(2) + ").");
   }
   return partes.join(" ");
 }
