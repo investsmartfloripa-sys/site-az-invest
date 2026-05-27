@@ -146,7 +146,7 @@ export function BlocoECondicoesFinanceiras({
   return (
     <section className="space-y-5">
       <header>
-        <h2 className="text-xl font-bold text-[#132960]">Bloco E — Condições financeiras</h2>
+        <h2 className="text-xl font-bold text-[#132960]">5. O crédito está apertando? (condições financeiras)</h2>
         <p className="mt-1 text-xs text-zinc-600">
           Estímulo ou aperto? ICF próprio, Selic real ex-ante, concessões e crédito/PIB.
         </p>
