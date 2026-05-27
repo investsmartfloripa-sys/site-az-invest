@@ -451,7 +451,7 @@ export function fraseManchete(payload: VisaoGeralPayload): string {
   }
   const rec = ultimaObs(payload.recessao?.serie);
   if (rec) {
-    partes.push("Nossos modelos estimam mediana de " + rec.mediana.toFixed(0) + "% de probabilidade de recessão (" + rec.n_acima_50 + " de " + rec.n_modelos + " acima de 50%).");
+    partes.push("Nossos modelos estimam mediana de " + (rec.mediana ?? rec.mediana_parcial ?? 0).toFixed(0) + "% de probabilidade de recessão (" + rec.n_acima_50 + " de " + rec.n_modelos + " acima de 50%).");
   }
   const oe = ultimaObs(payload.oecdCli?.serie);
   if (oe?.var_6m_anualizada !== null && oe?.var_6m_anualizada !== undefined) {
