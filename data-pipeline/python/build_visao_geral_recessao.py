@@ -391,6 +391,16 @@ def consolidar(modelos: dict[str, dict[str, float]]) -> list[dict[str, Any]]:
         vals_list = sorted(pontos.values())
         mediana = vals_list[len(vals_list) // 2]
         n_acima_50 = sum(1 for v in vals_list if v > 50)
+        n = len(pontos)
+        # Sinalizacao SO calibrada quando todos 5 modelos reportam; <4 -> "indeterminado"
+        if n < 4:
+            sinalizacao = "indeterminado"
+        elif n_acima_50 >= 3:
+            sinalizacao = "vermelho"
+        elif n_acima_50 >= 2:
+            sinalizacao = "amarelo"
+        else:
+            sinalizacao = "verde"
         serie.append(
             {
                 "mes": mes,
@@ -399,10 +409,11 @@ def consolidar(modelos: dict[str, dict[str, float]]) -> list[dict[str, Any]]:
                 "gap_threshold": pontos.get("gap_threshold"),
                 "diffusion": pontos.get("diffusion"),
                 "bry_boschan": pontos.get("bry_boschan"),
-                "mediana": round(mediana, 1),
-                "n_modelos": len(pontos),
+                "mediana": round(mediana, 1) if n >= 4 else None,
+                "mediana_parcial": round(mediana, 1),
+                "n_modelos": n,
                 "n_acima_50": n_acima_50,
-                "sinalizacao": "vermelho" if n_acima_50 >= 4 else ("amarelo" if n_acima_50 >= 3 else "verde"),
+                "sinalizacao": sinalizacao,
             }
         )
     return serie
