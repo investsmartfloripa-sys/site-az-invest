@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 import {
-  Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ReferenceArea, ReferenceLine,
+  Area, AreaChart, CartesianGrid, Legend, Line, LineChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 
 import type { FiscalClassicosData, PontoMensalPct } from "@/lib/painel-fiscal";
-import { CORES_SERIES, CardHeader, IndicadorBox, KPI, Section, Toggle, useHorizonte } from "./FiscalShell";
+import { CORES_SERIES, CardHeader, IndicadorBox, Section, Toggle, useHorizonte } from "./FiscalShell";
 
 const HORIZONTES = [
   { value: "5a", label: "5 anos", n: 60 },
@@ -85,7 +85,6 @@ function RegraFiscalCard({ data }: { data: FiscalClassicosData }) {
   }
   const dentro = primarioAtual >= meta.banda_inf && primarioAtual <= meta.banda_sup;
   const acima = primarioAtual > meta.banda_sup;
-  const status = dentro ? "dentro" : acima ? "acima" : "abaixo";
   const statusBg = dentro ? "bg-emerald-50 border-emerald-300" : "bg-rose-50 border-rose-300";
   const statusTxt = dentro ? "text-emerald-900" : "text-rose-900";
   const statusLabel = dentro ? "DENTRO da banda" : acima ? "ACIMA do teto da banda" : "ABAIXO do piso da banda";
@@ -129,54 +128,138 @@ function RegraFiscalCard({ data }: { data: FiscalClassicosData }) {
   );
 }
 
+type SerieToggle = {
+  id: string;
+  label: string;
+  cor: string;
+  valor: number | null;
+  unidade: string;
+  fonte?: string;
+  formula?: string;
+  serieTemporal: PontoMensalPct[];
+  ativoInicial?: boolean;
+};
+
 export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) {
   const horizonte = useHorizonte(HORIZONTES, "10a");
   const [base, setBase] = useState<Base>("pib");
 
+  // === KPIs (último valor) ===
   const receita_pct = ultPct(data.receita_e_gastos.receita_liquida_pct_pib);
   const despesa_pct = ultPct(data.receita_e_gastos.despesa_total_pct_pib);
   const primario_pct = ultPct(data.receita_e_gastos.primario_central_pct_pib);
   const juros_pct = ultPct(data.receita_e_gastos.juros_central_pct_pib);
   const juros_pct_rec = ultPct(data.receita_e_gastos.juros_pct_receita);
-  const nfsp_pct = ultMensal(data.receita_e_gastos.nfsp_sp_12m_pct_pib);
+  const nfsp_pct_serie = data.receita_e_gastos.nfsp_sp_12m_pct_pib;
+  const nfsp_pct = ultMensal(nfsp_pct_serie);
 
-  // Serie de resultado fiscal (12m, % PIB ou % Receita)
-  const serieResultado = useMemo(() => {
-    if (base === "pib") {
-      return mergePct(
-        [
-          tail(data.receita_e_gastos.primario_central_pct_pib, horizonte.n),
-          tail(data.receita_e_gastos.juros_central_pct_pib, horizonte.n),
-          tail(
-            data.receita_e_gastos.nfsp_sp_12m_pct_pib.map((r) => ({ data: r.data, valor_pct: r.valor })),
-            horizonte.n,
-          ),
-        ],
-        ["Primario", "Juros nominais", "NFSP"],
-      );
-    }
+  // NFSP como PontoMensalPct (converter de {valor} para {valor_pct})
+  const nfspSerieToggle: PontoMensalPct[] = useMemo(
+    () => nfsp_pct_serie.map((r) => ({ data: r.data, valor_pct: r.valor })),
+    [nfsp_pct_serie],
+  );
+
+  // KPIs decomposição (último ponto)
+  const ult = (key: string) => {
+    const s = (data.receita_e_gastos as unknown as Record<string, PontoMensalPct[] | undefined>)[key];
+    return ultPct(s);
+  };
+  const getSerie = (key: string): PontoMensalPct[] => {
+    return (data.receita_e_gastos as unknown as Record<string, PontoMensalPct[] | undefined>)[key] ?? [];
+  };
+  const previdencia_pct = ult("previdencia_12m_pct_pib");
+  const pessoal_pct_kpi = ult("pessoal_12m_pct_pib");
+  const bpc_pct = ult("bpc_loas_12m_pct_pib");
+  const abono_pct = ult("abono_seguro_12m_pct_pib");
+
+  // === Definição das 6 séries com toggle (% PIB) ===
+  const seriesPossiveis: SerieToggle[] = useMemo(() => [
+    {
+      id: "receita",
+      label: "Receita líquida / PIB",
+      cor: CORES_SERIES[2], // verde
+      valor: receita_pct,
+      unidade: "%",
+      fonte: "Tesouro RTN L.38",
+      serieTemporal: data.receita_e_gastos.receita_liquida_pct_pib,
+      ativoInicial: true,
+    },
+    {
+      id: "despesa",
+      label: "Despesa total / PIB",
+      cor: "#1e3a8a", // azul-marinho institucional
+      valor: despesa_pct,
+      unidade: "%",
+      fonte: "Tesouro RTN L.39",
+      serieTemporal: data.receita_e_gastos.despesa_total_pct_pib,
+      ativoInicial: true,
+    },
+    {
+      id: "primario",
+      label: "Primário gov central / PIB",
+      cor: "#9467bd", // roxo (calculado)
+      valor: primario_pct,
+      unidade: "%",
+      formula: "Receita líquida − Despesa primária",
+      serieTemporal: data.receita_e_gastos.primario_central_pct_pib,
+      ativoInicial: false,
+    },
+    {
+      id: "juros",
+      label: "Juros nominais / PIB",
+      cor: "#1f77b4", // azul
+      valor: juros_pct,
+      unidade: "%",
+      fonte: "Tesouro RTN L.74",
+      serieTemporal: data.receita_e_gastos.juros_central_pct_pib,
+      ativoInicial: false,
+    },
+    {
+      id: "nfsp",
+      label: "NFSP setor público / PIB",
+      cor: "#17becf", // teal
+      valor: nfsp_pct,
+      unidade: "%",
+      fonte: "BCB SGS 5727",
+      serieTemporal: nfspSerieToggle,
+      ativoInicial: false,
+    },
+    {
+      id: "previdencia",
+      label: "Previdência / PIB",
+      cor: "#6a3d9a", // roxo escuro
+      valor: previdencia_pct,
+      unidade: "%",
+      fonte: "Tesouro RTN L.40",
+      serieTemporal: getSerie("previdencia_12m_pct_pib"),
+      ativoInicial: false,
+    },
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [data, receita_pct, despesa_pct, primario_pct, juros_pct, nfsp_pct, previdencia_pct, nfspSerieToggle]);
+
+  // Estado de quais séries estão ativas
+  const [ativas, setAtivas] = useState<Set<string>>(() => {
+    return new Set(seriesPossiveis.filter((s) => s.ativoInicial).map((s) => s.id));
+  });
+
+  function toggle(id: string) {
+    const nova = new Set(ativas);
+    if (nova.has(id)) nova.delete(id);
+    else nova.add(id);
+    setAtivas(nova);
+  }
+
+  // Dados do gráfico principal — só séries ativas
+  const chartData = useMemo(() => {
+    const ativasArr = seriesPossiveis.filter((s) => ativas.has(s.id));
+    if (ativasArr.length === 0) return [];
     return mergePct(
-      [
-        tail(data.receita_e_gastos.primario_pct_receita, horizonte.n),
-        tail(data.receita_e_gastos.juros_pct_receita, horizonte.n),
-        tail(data.receita_e_gastos.despesa_pct_receita, horizonte.n),
-      ],
-      ["Primario", "Juros nominais", "Despesa total"],
+      ativasArr.map((s) => tail(s.serieTemporal, horizonte.n)),
+      ativasArr.map((s) => s.id),
     );
-  }, [data, horizonte.n, base]);
+  }, [seriesPossiveis, ativas, horizonte.n]);
 
-  // Receita vs despesa
-  const serieReceitaDespesa = useMemo(() => {
-    return mergePct(
-      [
-        tail(data.receita_e_gastos.receita_liquida_pct_pib, horizonte.n),
-        tail(data.receita_e_gastos.despesa_total_pct_pib, horizonte.n),
-      ],
-      ["Receita liquida", "Despesa total"],
-    );
-  }, [data, horizonte.n]);
-
-  // Decomposicao COMPLETA de despesa
+  // Decomposicao COMPLETA de despesa (para bloco mais abaixo)
   const serieDecomp = useMemo(() => {
     const keyBase = base === "pib" ? "pct_pib" : "pct_receita";
     const previdencia = data.receita_e_gastos[`previdencia_12m_${keyBase}` as const];
@@ -224,21 +307,11 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
     return { data: mergePct(all, labels), labels };
   }, [data, horizonte.n]);
 
-  // KPIs decomposição (último ponto)
-  const ult = (key: string) => {
-    const s = (data.receita_e_gastos as unknown as Record<string, PontoMensalPct[] | undefined>)[key];
-    return ultPct(s);
-  };
-  const previdencia_pct = ult("previdencia_12m_pct_pib");
-  const pessoal_pct_kpi = ult("pessoal_12m_pct_pib");
-  const bpc_pct = ult("bpc_loas_12m_pct_pib");
-  const abono_pct = ult("abono_seguro_12m_pct_pib");
-
   return (
     <div className="space-y-6">
       <CardHeader
         titulo="Receita e gastos do governo central"
-        subtitulo="Receita líquida do Tesouro (após transferências constitucionais), despesa primária e juros. Fonte: Tesouro Nacional/RTN."
+        subtitulo="Receita líquida do Tesouro (após transferências constitucionais), despesa primária e juros. Clique nos cards acima do gráfico para adicionar/remover séries. Fonte: Tesouro Nacional/RTN."
         rightSlot={
           <div className="flex gap-2">
             <Toggle value={base} onChange={(v) => setBase(v as Base)} options={[...BASES]} size="sm" />
@@ -250,119 +323,98 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
       {/* === REGRA FISCAL (meta LDO) === */}
       <RegraFiscalCard data={data} />
 
-      {/* === KPIs principais === */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <IndicadorBox
-          titulo="Receita líquida"
-          valor={receita_pct}
-          unidade="%"
-          fonte="Tesouro RTN, tabela 1.1 linha 38"
-          narrativa="Receita do gov central após desconto das transferências constitucionais (FPE, FPM, FUNDEB) — é o que efetivamente fica disponível para gastos federais."
-          siglas={[
-            { sigla: "RTN", expansao: "Relatório do Tesouro Nacional" },
-            { sigla: "FPE/FPM", expansao: "Fundos de Participação dos Estados / Municípios" },
-          ]}
-        />
-        <IndicadorBox
-          titulo="Despesa total"
-          valor={despesa_pct}
-          unidade="%"
-          fonte="Tesouro RTN, tabela 1.1 linha 39"
-          narrativa="Soma de previdência + pessoal + outras obrigatórias + discricionárias. Limite arcabouço: crescimento real ≤ 70% do crescimento real da receita."
-          trend={despesa_pct && despesa_pct > 20 ? "ruim" : "neutra"}
-        />
-        <IndicadorBox
-          titulo="Primário gov central"
-          valor={primario_pct}
-          unidade="%"
-          formula="Receita líquida − Despesa primária (acima da linha)"
-          narrativa="Resultado fiscal sem juros. Positivo = superávit. Meta LDO 2026: 0,5% PIB com banda ±0,25pp. Realizado: déficit."
-          siglas={[
-            { sigla: "LDO", expansao: "Lei de Diretrizes Orçamentárias" },
-          ]}
-          trend={primario_pct && primario_pct > 0 ? "boa" : "ruim"}
-        />
-        <IndicadorBox
-          titulo="Juros nominais"
-          valor={juros_pct}
-          unidade="%"
-          fonte="Tesouro RTN linha 74"
-          narrativa="Despesa anual com juros da dívida federal. Brasil tem juros nominais altos por causa da Selic elevada + estoque DBGG grande."
-          trend={juros_pct && juros_pct > 7 ? "ruim" : "neutra"}
-        />
-        <IndicadorBox
-          titulo="Juros / Receita"
-          valor={juros_pct_rec}
-          unidade="%"
-          formula="Juros nominais 12m ÷ Receita líquida 12m"
-          narrativa="Métrica Dalio. Quanto da receita evapora em juros antes de qualquer serviço público. Acima de 30% é zona de alerta. Brasil hoje em BREAK (>40%)."
-          trend={juros_pct_rec && juros_pct_rec > 30 ? "ruim" : "neutra"}
-        />
-        <IndicadorBox
-          titulo="NFSP setor público"
-          valor={nfsp_pct}
-          unidade="%"
-          fonte="BCB SGS 5727"
-          narrativa="Necessidade de financiamento do setor público consolidado (União + estados + municípios + estatais). Soma primário + juros 12m."
-          siglas={[
-            { sigla: "NFSP", expansao: "Necessidade de Financiamento do Setor Público" },
-            { sigla: "SP", expansao: "Setor Público consolidado" },
-          ]}
-        />
-        <IndicadorBox
-          titulo="Previdência"
-          valor={previdencia_pct}
-          unidade="%"
-          fonte="Tesouro RTN linha 40"
-          narrativa="Benefícios previdenciários do RGPS. Maior linha do orçamento federal — mais que pessoal + discricionárias somados."
-          siglas={[
-            { sigla: "RGPS", expansao: "Regime Geral de Previdência Social (INSS)" },
-          ]}
-        />
-        <IndicadorBox
-          titulo="Pessoal"
-          valor={pessoal_pct_kpi}
-          unidade="%"
-          fonte="Tesouro RTN linha 41"
-          narrativa="Folha de pagamento da União (ativos + inativos + pensionistas civis e militares)."
-        />
+      {/* === CARDS-TOGGLE HORIZONTAIS ACIMA === */}
+      <div>
+        <div className="mb-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-[11px] text-zinc-700">
+          <strong>Tracejado</strong>: clique p/ adicionar série · <strong>Colorido</strong>: ativo (clique p/ remover)
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          {seriesPossiveis.map((s) => {
+            const ativo = ativas.has(s.id);
+            const semDado = s.valor == null;
+            return (
+              <button
+                type="button"
+                key={s.id}
+                onClick={() => toggle(s.id)}
+                disabled={semDado}
+                className={`group cursor-pointer rounded-lg p-2 text-left transition ${
+                  semDado ? "cursor-not-allowed border-2 border-zinc-200 bg-zinc-50 opacity-60" :
+                  ativo
+                    ? "border-2 shadow-md hover:shadow-lg hover:scale-[1.02]"
+                    : "border-2 border-dashed border-zinc-300 bg-white hover:border-solid hover:scale-[1.02] hover:shadow-md"
+                }`}
+                style={ativo && !semDado ? { borderColor: s.cor, background: `${s.cor}10` } : {}}
+              >
+                <div className="flex items-start gap-1.5">
+                  <span
+                    className="mt-0.5 inline-block h-2.5 w-2.5 flex-shrink-0 rounded-sm"
+                    style={{ background: ativo ? s.cor : "transparent", border: `2px solid ${s.cor}` }}
+                  />
+                  <h4 className="flex-1 text-[11.5px] font-bold leading-tight text-[#132960]">{s.label}</h4>
+                </div>
+                <div className="mt-1 text-xl font-bold tabular-nums text-zinc-900">
+                  {s.valor != null ? `${s.valor.toFixed(2)}${s.unidade}` : "—"}
+                </div>
+                <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                  {s.formula && (
+                    <span className="rounded bg-violet-100 px-1 py-0.5 text-[9px] font-bold uppercase text-violet-900">calc</span>
+                  )}
+                  {!semDado && (ativo ? (
+                    <span
+                      className="rounded px-1.5 py-0.5 text-[9px] font-bold uppercase text-white"
+                      style={{ background: s.cor }}
+                    >
+                      ativo
+                    </span>
+                  ) : (
+                    <span className="rounded border border-dashed border-zinc-400 px-1.5 py-0.5 text-[9px] font-bold uppercase text-zinc-500 group-hover:border-solid group-hover:text-[#132960]">
+                      + add
+                    </span>
+                  ))}
+                </div>
+                {s.formula && (
+                  <p className="mt-1 text-[9.5px] italic leading-tight text-violet-700">{s.formula}</p>
+                )}
+                {s.fonte && !s.formula && (
+                  <p className="mt-1 text-[9.5px] leading-tight text-zinc-500">{s.fonte}</p>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <Section
-        titulo="Receita vs despesa (% PIB, 12m)"
-        hint="A área entre as linhas é o deficit primário do governo central. Fonte: Tesouro Nacional/RTN."
-      >
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={serieReceitaDespesa}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="mes" tickFormatter={fmtMes} tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} unit="%" />
-              <Tooltip formatter={fmtTipPct} labelFormatter={fmtTipLabel} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Line type="monotone" dataKey="Receita liquida" stroke={CORES_SERIES[2]} strokeWidth={2.5} dot={false} />
-              <Line type="monotone" dataKey="Despesa total" stroke={CORES_SERIES[3]} strokeWidth={2.5} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </Section>
-
-      <Section titulo={`Resultado fiscal 12m (${base === "pib" ? "% PIB" : "% Receita"})`}>
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={serieResultado}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="mes" tickFormatter={fmtMes} tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} unit="%" />
-              <Tooltip formatter={fmtTipPct} labelFormatter={fmtTipLabel} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <ReferenceLine y={0} stroke="#475569" />
-              <Line type="monotone" dataKey="Primario" stroke={CORES_SERIES[2]} strokeWidth={2.5} dot={false} />
-              <Line type="monotone" dataKey="Juros nominais" stroke={CORES_SERIES[3]} strokeWidth={2.5} dot={false} />
-              <Line type="monotone" dataKey={base === "pib" ? "NFSP" : "Despesa total"} stroke={CORES_SERIES[5]} strokeWidth={2} strokeDasharray="3 3" dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+      {/* === GRÁFICO PRINCIPAL EM LARGURA TOTAL === */}
+      <Section titulo="Trajetória das séries">
+        {chartData.length === 0 ? (
+          <div className="flex h-80 items-center justify-center text-sm text-zinc-500">
+            Selecione pelo menos uma série nos cards acima.
+          </div>
+        ) : (
+          <div className="h-[32rem]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="mes" tickFormatter={fmtMes} tick={{ fontSize: 11 }} />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  unit="%"
+                  domain={[(dataMin: number) => Math.floor(Math.min(dataMin, -2)), (dataMax: number) => Math.ceil(dataMax / 2) * 2]}
+                  allowDecimals={false}
+                />
+                <Tooltip formatter={fmtTipPct} labelFormatter={fmtTipLabel} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                {seriesPossiveis.filter((s) => ativas.has(s.id)).map((s) => (
+                  <Line key={s.id} type="monotone" dataKey={s.id} name={s.label} stroke={s.cor} strokeWidth={2.75} dot={false} activeDot={{ r: 4 }} />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+        <p className="mt-2 text-[11px] text-zinc-500">
+          Todas as séries em % PIB, 12 meses acumulados. Receita e Despesa ativadas por default — clique nos cards acima pra somar primário, juros, NFSP e previdência.
+        </p>
       </Section>
 
       {/* === DEBT SERVICE / RECEITA + GAP BLANCHARD === */}
@@ -388,6 +440,86 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
               Quanto da despesa total é só juros — supera previdência+pessoal somados. Dalio: quando juros viram a maior linha do orçamento, espaço fiscal evapora.
             </p>
           </div>
+        </div>
+      </Section>
+
+      {/* === IndicadorBox detalhados (mantidos como referência expandida abaixo do gráfico) === */}
+      <Section titulo="Detalhamento dos indicadores principais" hint="Visão expandida com fonte, fórmula, glossário e narrativa de cada indicador.">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <IndicadorBox
+            titulo="Receita líquida"
+            valor={receita_pct}
+            unidade="%"
+            fonte="Tesouro RTN, tabela 1.1 linha 38"
+            narrativa="Receita do gov central após desconto das transferências constitucionais (FPE, FPM, FUNDEB) — é o que efetivamente fica disponível para gastos federais."
+            siglas={[
+              { sigla: "RTN", expansao: "Relatório do Tesouro Nacional" },
+              { sigla: "FPE/FPM", expansao: "Fundos de Participação dos Estados / Municípios" },
+            ]}
+          />
+          <IndicadorBox
+            titulo="Despesa total"
+            valor={despesa_pct}
+            unidade="%"
+            fonte="Tesouro RTN, tabela 1.1 linha 39"
+            narrativa="Soma de previdência + pessoal + outras obrigatórias + discricionárias. Limite arcabouço: crescimento real ≤ 70% do crescimento real da receita."
+            trend={despesa_pct && despesa_pct > 20 ? "ruim" : "neutra"}
+          />
+          <IndicadorBox
+            titulo="Primário gov central"
+            valor={primario_pct}
+            unidade="%"
+            formula="Receita líquida − Despesa primária (acima da linha)"
+            narrativa="Resultado fiscal sem juros. Positivo = superávit. Meta LDO 2026: 0,5% PIB com banda ±0,25pp. Realizado: déficit."
+            siglas={[
+              { sigla: "LDO", expansao: "Lei de Diretrizes Orçamentárias" },
+            ]}
+            trend={primario_pct && primario_pct > 0 ? "boa" : "ruim"}
+          />
+          <IndicadorBox
+            titulo="Juros nominais"
+            valor={juros_pct}
+            unidade="%"
+            fonte="Tesouro RTN linha 74"
+            narrativa="Despesa anual com juros da dívida federal. Brasil tem juros nominais altos por causa da Selic elevada + estoque DBGG grande."
+            trend={juros_pct && juros_pct > 7 ? "ruim" : "neutra"}
+          />
+          <IndicadorBox
+            titulo="Juros / Receita"
+            valor={juros_pct_rec}
+            unidade="%"
+            formula="Juros nominais 12m ÷ Receita líquida 12m"
+            narrativa="Métrica Dalio. Quanto da receita evapora em juros antes de qualquer serviço público. Acima de 30% é zona de alerta. Brasil hoje em BREAK (>40%)."
+            trend={juros_pct_rec && juros_pct_rec > 30 ? "ruim" : "neutra"}
+          />
+          <IndicadorBox
+            titulo="NFSP setor público"
+            valor={nfsp_pct}
+            unidade="%"
+            fonte="BCB SGS 5727"
+            narrativa="Necessidade de financiamento do setor público consolidado (União + estados + municípios + estatais). Soma primário + juros 12m."
+            siglas={[
+              { sigla: "NFSP", expansao: "Necessidade de Financiamento do Setor Público" },
+              { sigla: "SP", expansao: "Setor Público consolidado" },
+            ]}
+          />
+          <IndicadorBox
+            titulo="Previdência"
+            valor={previdencia_pct}
+            unidade="%"
+            fonte="Tesouro RTN linha 40"
+            narrativa="Benefícios previdenciários do RGPS. Maior linha do orçamento federal — mais que pessoal + discricionárias somados."
+            siglas={[
+              { sigla: "RGPS", expansao: "Regime Geral de Previdência Social (INSS)" },
+            ]}
+          />
+          <IndicadorBox
+            titulo="Pessoal"
+            valor={pessoal_pct_kpi}
+            unidade="%"
+            fonte="Tesouro RTN linha 41"
+            narrativa="Folha de pagamento da União (ativos + inativos + pensionistas civis e militares)."
+          />
         </div>
       </Section>
 
