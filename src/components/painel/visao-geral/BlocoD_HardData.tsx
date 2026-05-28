@@ -59,7 +59,7 @@ function CardAnfavea({ data }: { data: AnfaveaData | null }) {
   }));
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-      <h3 className="text-base font-semibold text-zinc-900">D2 — ANFAVEA: índice base 2019</h3>
+      <h3 className="text-base font-semibold text-zinc-900">D3 — ANFAVEA: índice base 2019</h3>
       <p className="text-xs text-zinc-500">Produção e vendas de veículos (unidades). Base 100 = média 2019.</p>
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={dados}>
@@ -189,7 +189,7 @@ function CardIpeadata({ data }: { data: IpeadataData | null }) {
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <h3 className="text-base font-semibold text-zinc-900">D7 — Hard data físico antecedente (IPEADATA)</h3>
+          <h3 className="text-base font-semibold text-zinc-900">D6 — Hard data físico antecedente (IPEADATA)</h3>
           <p className="text-xs text-zinc-500">Antecedentes e coincidentes secundários da indústria. Variação a/a (linha cinza tracejada = 0).</p>
           {(() => {
             const valores = dadosValidos.map(b => { const ser = data![b.key]?.serie ?? []; return { nome: b.titulo.split(" (")[0].split(" —")[0], yoy: ser[ser.length-1]?.var_yoy_pct }; });
