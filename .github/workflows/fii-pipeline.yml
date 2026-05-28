@@ -1,0 +1,71 @@
+name: FII pipeline (painel Fundos Imobiliários)
+
+# Roda em dias úteis após o fechamento do pregão:
+#   22:35 UTC = 19:35 BRT (5 min depois do market-data.yml pra escalonar yfinance)
+#   00:35 UTC do dia seguinte = 21:35 BRT (retry se primeira execução falhou)
+# Plus dispatch manual para testes/regenerar sob demanda.
+on:
+  schedule:
+    - cron: "35 22 * * 1-5"
+    - cron: "35 0 * * 2-6"
+  workflow_dispatch:
+    inputs:
+      run_detail:
+        description: "Rodar build_fii_detail (pesado: ~5min, 107 tickers x yfinance)"
+        required: false
+        default: "1"
+
+concurrency:
+  group: fii-pipeline
+  cancel-in-progress: true
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: data-pipeline/python/requirements.txt
+
+      - name: Pip install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r data-pipeline/python/requirements.txt
+
+      # 1. IFIX (hero + chart com benchmarks) — leve, ~30 segundos
+      - name: build_fii_ifix (hero IFIX + benchmarks)
+        run: python data-pipeline/python/build_fii_ifix.py --upload
+        continue-on-error: true
+
+      # 2. Screener (107 FIIs com PL, P/VP, DY, segmento) — médio, ~3 min
+      - name: build_fii_screener (tabela 107 FIIs)
+        run: python data-pipeline/python/build_fii_screener.py --upload
+        continue-on-error: true
+
+      # 3. Detail (página individual de cada FII com dividends, hero, indicadores) — pesado, ~5 min
+      - name: build_fii_detail (107 páginas individuais)
+        if: ${{ github.event.inputs.run_detail != '0' }}
+        run: python data-pipeline/python/build_fii_detail.py --upload
+        continue-on-error: true
+
+      - name: Upload artefatos (debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fii-pipeline-${{ github.run_id }}
+          path: |
+            data-pipeline/out/fii_ifix.json
+            data-pipeline/out/fii_screener.json
+            data-pipeline/out/fii_details.json
+          if-no-files-found: warn
+          retention-days: 7
