@@ -13,12 +13,13 @@ import { BlocoECondicoesFinanceiras } from "./BlocoE_CondicoesFinanceiras";
 import { FraseManchete } from "./FraseManchete";
 import { HeroKpis } from "./HeroKpis";
 
-type Vista = "antecedentes" | "coincidentes" | "confianca";
+type Vista = "geral" | "antecedentes" | "coincidentes" | "confianca";
 
 const TABS: { value: Vista; label: string; descr: string }[] = [
-  { value: "antecedentes", label: "1. Antecedentes", descr: "Lideram o PIB em 3-12 meses: OCDE CLI, IACE FGV, slope DI, Ibov, EMBI, expectativas" },
-  { value: "coincidentes", label: "2. Coincidentes", descr: "Movem-se junto com o PIB: IBC-Br, PIM-PF, hard data (ANFAVEA, EPE, ANP), crédito, hiato + 5 modelos de recessão" },
-  { value: "confianca", label: "3. Confiança", descr: "Sondagens empresariais + consumidor: FGV (7 índices), CNI ICEI, PMI, Fecomercio" },
+  { value: "geral", label: "1. Geral", descr: "Consolidações e cálculos derivados: 5 modelos de probabilidade de recessão, hiato HP+Hamilton, ICF próprio (Hatzius) e crédito/PIB" },
+  { value: "antecedentes", label: "2. Antecedentes", descr: "Séries que lideram o PIB em 3-12 meses: OCDE CLI, FGV antecedentes (IACE, IAEmp, IIE-Br) e os 9 próximos do roadmap (slope DI, Ibov, EMBI, expectativas)" },
+  { value: "coincidentes", label: "3. Coincidentes", descr: "Séries que movem junto com o PIB: PIM-PF oficial IBGE, ANFAVEA, EPE energia industrial, ANP combustíveis, IPEADATA papelão/aço/FENABRAVE" },
+  { value: "confianca", label: "4. Confiança", descr: "Sondagens empresariais e do consumidor: FGV (7 índices via SGS), CNI ICEI, PMI Brasil, Fecomercio SP" },
 ];
 
 function FichaTecnica({ payload }: { payload: VisaoGeralPayload }) {
@@ -63,7 +64,7 @@ function FichaTecnica({ payload }: { payload: VisaoGeralPayload }) {
 }
 
 export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload }) {
-  const [vista, setVista] = useState<Vista>("antecedentes");
+  const [vista, setVista] = useState<Vista>("geral");
   const codaceMensal = payload.codace?.mensal ?? [];
 
   const tabAtiva = TABS.find((t) => t.value === vista) ?? TABS[0];
@@ -102,17 +103,19 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
         <p className="text-[11px] text-zinc-500 px-1">{tabAtiva.descr}</p>
       </div>
 
-      {/* Conteúdo da tab ativa */}
+      {/* Conteudo da tab ativa */}
       <div>
+        {vista === "geral" && (
+          <div className="space-y-6">
+            <BlocoACicloAtual payload={payload} />
+            <BlocoECondicoesFinanceiras icf={payload.icf} credito={payload.credito} />
+          </div>
+        )}
         {vista === "antecedentes" && (
           <BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} />
         )}
         {vista === "coincidentes" && (
-          <div className="space-y-6">
-            <BlocoACicloAtual payload={payload} />
-            <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} />
-            <BlocoECondicoesFinanceiras icf={payload.icf} credito={payload.credito} />
-          </div>
+          <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} />
         )}
         {vista === "confianca" && (
           <BlocoCConfianca fgvConfianca={payload.fgvConfianca} cni={payload.cni} pmi={payload.pmi} fecomercio={payload.fecomercio} />
