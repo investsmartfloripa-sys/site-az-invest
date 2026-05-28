@@ -195,7 +195,7 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
         rightSlot={<Toggle value={horizonte.horizonte} onChange={horizonte.setHorizonte} options={[...HORIZONTES]} />}
       />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
         {/* === GRÁFICO PRINCIPAL === */}
         <Section titulo="Trajetória das séries">
           {chartData.length === 0 ? (
@@ -203,12 +203,12 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
               Selecione pelo menos uma série nos cards à direita.
             </div>
           ) : (
-            <div className="h-96">
+            <div className="h-[32rem]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="mes" tickFormatter={formatMes} tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} unit="%" />
+                  <YAxis tick={{ fontSize: 11 }} unit="%" domain={["dataMin - 5", "dataMax + 5"]} />
                   <Tooltip formatter={fmtTipPct} labelFormatter={fmtTipLabel} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <ReferenceLine y={80} stroke="#dc2626" strokeDasharray="3 3" label={{ value: "80% (atenção FMI)", fontSize: 9, fill: "#dc2626", position: "right" }} />
@@ -226,9 +226,9 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
         </Section>
 
         {/* === CARDS-TOGGLE À DIREITA === */}
-        <div className="space-y-2">
-          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2 text-[11px] text-zinc-700">
-            <strong>Cards tracejados</strong> = clique para adicionar série ao gráfico. <strong>Cards coloridos</strong> = série ativa, clique para remover.
+        <div className="space-y-1.5">
+          <div className="rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1.5 text-[10.5px] leading-snug text-zinc-700">
+            <strong>Tracejado</strong>: clique p/ adicionar série · <strong>Colorido</strong>: ativo (clique p/ remover)
           </div>
           {seriesPossiveis.map((s) => {
             const ativo = ativas.has(s.id);
@@ -239,7 +239,7 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
                 key={s.id}
                 onClick={() => toggle(s.id)}
                 disabled={semDado}
-                className={`group w-full cursor-pointer rounded-xl p-3 text-left transition ${
+                className={`group w-full cursor-pointer rounded-lg p-2.5 text-left transition ${
                   semDado ? "cursor-not-allowed border-2 border-zinc-200 bg-zinc-50 opacity-60" :
                   ativo
                     ? "border-2 shadow-md hover:shadow-lg hover:scale-[1.01]"
@@ -250,10 +250,10 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span
-                      className="inline-block h-3 w-3 rounded transition"
+                      className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-sm transition"
                       style={{ background: ativo ? s.cor : "transparent", border: `2px solid ${s.cor}` }}
                     />
-                    <h4 className="text-sm font-bold leading-tight text-[#132960]">{s.label}</h4>
+                    <h4 className="text-[13px] font-bold leading-tight text-[#132960]">{s.label}</h4>
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-1">
                     {s.formula && (
@@ -274,7 +274,7 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
                   </div>
                 </div>
                 {/* FIX #5 — valor maior + narrativa em details collapsible */}
-                <div className="mt-2 text-3xl font-bold tabular-nums text-zinc-900">
+                <div className="mt-1.5 text-2xl font-bold tabular-nums text-zinc-900">
                   {s.valor != null ? `${s.valor.toFixed(2)}${s.unidade}` : "—"}
                 </div>
                 {s.formula && (
