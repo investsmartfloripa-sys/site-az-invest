@@ -6,6 +6,7 @@ import {
 
 import type { FiscalTermometroData, Matriz, IndicadorSemaforo, Nivel } from "@/lib/painel-fiscal";
 import { CardHeader, KPI, Section } from "./FiscalShell";
+import { SimuladorTrajetoria } from "./SimuladorTrajetoria";
 
 function fmt(v: number | null | undefined, casas = 1, suf = ""): string {
   if (v == null) return "—";
@@ -298,8 +299,19 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
         </Section>
       )}
 
-      {/* === TRAJETÓRIA 10 ANOS === */}
-      {traj.length > 0 && (
+      {/* === SIMULADOR INTERATIVO (substitui trajetoria estatica) === */}
+      <SimuladorTrajetoria defaults={{
+        debt_pct_receita: data.premissas.debt_pct_receita ?? 435,
+        debt_pct_pib: foto.divida.dbgg_pct_pib ?? 80,
+        custo_medio_aa: foto.juros.taxa_nominal_efetiva_aa,
+        pib_real_yoy: foto.macro.pib_real_yoy_pct,
+        ipca_12m: foto.macro.ipca_12m_pct,
+        primario_pct_pib: foto.deficit_primario.primary_deficit_pct_pib != null ? -foto.deficit_primario.primary_deficit_pct_pib : -1,
+        receita_pct_pib: foto.receita.receita_liquida_pct_pib ?? 18,
+      }} />
+
+      {/* === TRAJETÓRIA 10 ANOS BASE (estática menor, contextual) === */}
+      {false && traj.length > 0 && (
         <Section titulo="Trajetória projetada do Brasil — próximos 10 anos" hint="Mantidos primário, juros e crescimento atuais. Equação iterativa do livro.">
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
