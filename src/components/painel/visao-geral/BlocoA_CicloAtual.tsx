@@ -136,6 +136,9 @@ function CardRecessaoMultiModelos({
         <div>
           <h3 className="text-base font-semibold text-zinc-900">Probabilidade de recessão — 5 modelos comparados</h3>
           <p className="text-xs text-zinc-500">Cada modelo reproduz uma metodologia da literatura. Sinalização do hero usa contagem de modelos acima de 50%.</p>
+          <div className="mt-1.5 inline-flex flex-wrap gap-1.5 text-[9px]">
+            <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 font-semibold uppercase tracking-wide text-amber-800" title="Implementação atual usa quintis sobre média móvel 6m do IBC-Br MoM. Aguardando statsmodels carregar no pipeline para Markov-Switching real (Hamilton 1989).">⚠ MS-AR fallback (quintis)</span>
+          </div>
         </div>
         <div className="shrink-0 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-right">
           <div className="text-[10px] uppercase tracking-wide text-zinc-500">Mediana ({formatMes(ultimo.mes)})</div>
@@ -243,6 +246,9 @@ function CardHiatoLeque({ serie, codace }: { serie: HiatoPonto[]; codace: Codace
       <div className="mb-3">
         <h3 className="text-base font-semibold text-zinc-900">Hiato do produto — leque de métodos</h3>
         <p className="text-xs text-zinc-500">HP (λ=129.600) e Hamilton (h=24m, p=4). Área cinza = leque min-max. Acima de 0 = aquecimento; abaixo = ociosidade.</p>
+        <div className="mt-2 rounded-md bg-amber-50 px-2 py-1 text-[10px] text-amber-800 border border-amber-200">
+          ⚠ <strong>Hamilton tem viés positivo pós-COVID</strong> (Quast &amp; Wolters 2020): regressão sobre log(IBC-Br) com break estrutural em 2020 superestima o hiato em ~3-5pp. Em divergência forte com HP, leitura HP é mais conservadora.
+        </div>
       </div>
       <ResponsiveContainer width="100%" height={280}>
         <ComposedChart data={dados} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>

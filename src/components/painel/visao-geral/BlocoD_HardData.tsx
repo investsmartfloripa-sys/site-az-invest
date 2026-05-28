@@ -2,7 +2,7 @@
 
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import type { AnfaveaData, AnpData, AtividadePimData, AtividadePmcData, AtividadePmsData, EmpregoPnadData, EpeData, HardDataData, IbcBrData, IpeadataData } from "@/lib/painel-visao-geral";
+import type { AnfaveaData, AnpData, AtividadePimData, AtividadePmcData, AtividadePmsData, CodaceFaixa, EmpregoPnadData, EpeData, HardDataData, IbcBrData, IpeadataData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
 
 import { ExploradorSeries, type SerieExplorador } from "./ExploradorSeries";
@@ -18,6 +18,7 @@ export function BlocoDHardData({
   empregoPnad,
   atividadePms,
   ibcbr,
+  codace = [],
 }: {
   anfavea: AnfaveaData | null;
   anp: AnpData | null;
@@ -29,6 +30,7 @@ export function BlocoDHardData({
   empregoPnad: EmpregoPnadData | null;
   atividadePms: AtividadePmsData | null;
   ibcbr: IbcBrData | null;
+  codace?: CodaceFaixa[];
 }) {
   const pimSerie = atividadePim?.geral?.serie ?? [];
   const pimUlt = pimSerie[pimSerie.length - 1];
@@ -223,7 +225,7 @@ export function BlocoDHardData({
         </div>
       )}
 
-      <ExploradorSeries series={series} titulo="Demais coincidentes" subtitulo="Quartet TCB: PMC vendas · PNAD desocup. · EPE indústria (já tem prod=PIM-PF) · ABPO papelão (ICCE) · setoriais ANFAVEA/ANP/Aço" />
+      <ExploradorSeries series={series} titulo="Demais coincidentes" subtitulo="Quartet TCB: PMC vendas · PNAD desocup. · EPE indústria · ABPO papelão (ICCE) · setoriais ANFAVEA/ANP/Aço" codace={codace} />
     </section>
   );
 }

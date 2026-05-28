@@ -12,6 +12,7 @@ import { BlocoDHardData } from "./BlocoD_HardData";
 import { BlocoECondicoesFinanceiras } from "./BlocoE_CondicoesFinanceiras";
 import { FraseManchete } from "./FraseManchete";
 import { HeroKpis } from "./HeroKpis";
+import { TermometroSintese } from "./TermometroSintese";
 
 type Vista = "geral" | "antecedentes" | "coincidentes" | "confianca";
 
@@ -72,7 +73,26 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <h1 className="text-2xl font-bold text-[#132960]">Termômetro do Ciclo Brasileiro</h1>
+        <div className="flex items-baseline justify-between gap-3 flex-wrap">
+          <h1 className="text-2xl font-bold text-[#132960]">Termômetro do Ciclo Brasileiro</h1>
+          {(() => {
+            const stamps = [
+              payload.recessao?.gerado_em,
+              payload.ibcbr?.gerado_em,
+              payload.icf?.gerado_em,
+              payload.atividadePim?.gerado_em,
+            ].filter(Boolean) as string[];
+            if (stamps.length === 0) return null;
+            const maisRecente = stamps.sort().reverse()[0];
+            const data = new Date(maisRecente);
+            const fmt = data.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+            return (
+              <span className="text-[10px] text-zinc-500" title="Última geração dos JSONs do pipeline">
+                Atualizado: {fmt} UTC · pipeline diário 22:00 UTC
+              </span>
+            );
+          })()}
+        </div>
         <p className="text-sm text-zinc-600">Síntese prospectiva da atividade econômica brasileira. Combina indicadores antecedentes, hard data físico e condições financeiras com cinco modelos diferentes de probabilidade de recessão.</p>
       </header>
 
@@ -107,6 +127,7 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
       <div>
         {vista === "geral" && (
           <div className="space-y-6">
+            <TermometroSintese payload={payload} />
             <BlocoACicloAtual payload={payload} />
             <BlocoECondicoesFinanceiras icf={payload.icf} credito={payload.credito} />
           </div>
@@ -115,7 +136,7 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
           <BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} icf={payload.icf} credito={payload.credito} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} fgvConfianca={payload.fgvConfianca} cni={payload.cni} />
         )}
         {vista === "coincidentes" && (
-          <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} atividadePmc={payload.atividadePmc} empregoPnad={payload.empregoPnad} atividadePms={payload.atividadePms} ibcbr={payload.ibcbr} />
+          <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} atividadePmc={payload.atividadePmc} empregoPnad={payload.empregoPnad} atividadePms={payload.atividadePms} ibcbr={payload.ibcbr} codace={codaceMensal} />
         )}
         {vista === "confianca" && (
           <BlocoCConfianca fgvConfianca={payload.fgvConfianca} cni={payload.cni} pmi={payload.pmi} fecomercio={payload.fecomercio} />

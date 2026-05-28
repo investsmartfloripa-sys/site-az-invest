@@ -577,51 +577,69 @@ export function ultimaObs<T extends { mes: string }>(serie: T[] | undefined): T 
 }
 
 export function fraseManchete(payload: VisaoGeralPayload): string {
-  const partes: string[] = [];
   const ibc = ultimaObs(payload.ibcbr?.serie);
+  const rec = ultimaObs(payload.recessao?.serie);
+  const icf = ultimaObs(payload.icf?.serie);
+  const ice = ultimaObs(payload.fgvConfianca?.ice);
+  const pim = (payload.atividadePim?.geral?.serie ?? []).slice(-1)[0];
+
+  // Coleta sinais
+  const atividadeCai = ibc?.var_mom !== null && ibc?.var_mom !== undefined && ibc.var_mom < -0.1;
+  const atividadeSobe = ibc?.var_mom !== null && ibc?.var_mom !== undefined && ibc.var_mom > 0.2;
+  const selicAlta = icf?.selic_real_ex_ante_pct !== null && icf?.selic_real_ex_ante_pct !== undefined && icf.selic_real_ex_ante_pct > 6;
+  const sondAlta = ice?.valor !== null && ice?.valor !== undefined && ice.valor > 100;
+  const sondBaixa = ice?.valor !== null && ice?.valor !== undefined && ice.valor < 90;
+  const medianaRec = rec?.mediana ?? rec?.mediana_parcial ?? null;
+  const sensiveis = rec?.sensiveis_presentes ?? 0;
+  const alerta = medianaRec !== null && medianaRec >= 50;
+  const cautela = medianaRec !== null && medianaRec >= 30 && medianaRec < 50;
+  const recSemModelos = !rec || rec.n_modelos < 2;
+
+  // Veredito honesto reconciliando conflitos
+  let veredito: string;
+  if (recSemModelos) {
+    veredito = "Sinal incompleto — cobertura de modelos insuficiente.";
+  } else if (alerta) {
+    veredito = "Alerta: múltiplos modelos sinalizam risco de recessão.";
+  } else if (atividadeCai && selicAlta && sondAlta) {
+    veredito = "Cenário ambíguo: política monetária restritiva e atividade hesitante, mas expectativas FGV ainda otimistas.";
+  } else if (atividadeCai && sondBaixa) {
+    veredito = "Atenção: atividade negativa e confiança em deterioração.";
+  } else if (cautela) {
+    veredito = "Cautela: probabilidade de recessão acima de 30% (mediana de modelos).";
+  } else if (atividadeSobe && sondAlta) {
+    veredito = "Expansão sustentada: atividade positiva e confiança em terreno otimista.";
+  } else if (atividadeCai) {
+    veredito = "Atividade desacelerando, mas modelos sem alerta de recessão.";
+  } else {
+    veredito = "Ciclo estável — sem disparos de alerta nos modelos.";
+  }
+
+  // Detalhamento (descreve sinais individuais, sem afirmar narrativa)
+  const detalhes: string[] = [];
   if (ibc?.mes && ibc.var_mom !== null && ibc.var_mom !== undefined) {
     const verbo = Math.abs(ibc.var_mom) < 0.05 ? "ficou estável" : ibc.var_mom > 0 ? "cresceu" : "caiu";
-    partes.push("Em " + formatMes(ibc.mes) + " a atividade " + verbo + " " + formatPct(ibc.var_mom) + " (IBC-Br dessazonalizado).");
+    detalhes.push("Em " + formatMes(ibc.mes) + " a atividade " + verbo + " " + formatPct(ibc.var_mom) + " (IBC-Br dessaz.).");
   }
-  const rec = ultimaObs(payload.recessao?.serie);
   if (rec) {
-    const sensiveis = rec.sensiveis_presentes ?? 0;
-    if (sensiveis === 0 && rec.n_modelos > 0) {
-      // Mostrar mediana parcial com asterisco quando faltam sensíveis
-      const mp = rec.mediana_parcial;
-      if (mp !== null && mp !== undefined) {
-        partes.push("Modelos de recessão mostram mediana parcial de ~" + mp.toFixed(0) + "% (" + rec.n_modelos + " de 4 modelos rodaram — Probit e Diffusion aguardando próxima rodada).");
-      } else {
-        partes.push("Modelos de recessão com cobertura parcial (" + rec.n_modelos + " de 4 rodaram).");
-      }
+    if (sensiveis === 0 && rec.n_modelos > 0 && rec.mediana_parcial !== null && rec.mediana_parcial !== undefined) {
+      detalhes.push("Modelos rodaram parcialmente: mediana " + rec.mediana_parcial.toFixed(0) + "% (" + rec.n_modelos + " de 4).");
     } else if (rec.mediana !== null && rec.mediana !== undefined) {
-      partes.push("Nossos modelos estimam mediana de " + rec.mediana.toFixed(0) + "% de probabilidade de recessão (" + rec.n_acima_50 + " de " + rec.n_modelos + " acima de 50%).");
-    } else if (rec.mediana_parcial !== null && rec.mediana_parcial !== undefined) {
-      partes.push("Modelos rodaram parcialmente: mediana ~" + rec.mediana_parcial.toFixed(0) + "% (" + rec.n_modelos + " de 4).");
+      detalhes.push("Mediana dos modelos: " + rec.mediana.toFixed(0) + "% de probabilidade de recessão (" + rec.n_acima_50 + "/" + rec.n_modelos + " > 50%).");
     }
   }
-  const oe = ultimaObs(payload.oecdCli?.serie);
-  if (oe?.var_6m_anualizada !== null && oe?.var_6m_anualizada !== undefined) {
-    const verbo = oe.var_6m_anualizada > 0.5 ? "acelera" : oe.var_6m_anualizada < -0.5 ? "desacelera" : "está estável";
-    partes.push("O indicador antecedente OECD " + verbo + " em " + formatPct(oe.var_6m_anualizada) + " (variação 6m anualizada).");
+  if (icf?.selic_real_ex_ante_pct !== null && icf?.selic_real_ex_ante_pct !== undefined) {
+    detalhes.push("Selic real ex-ante em " + icf.selic_real_ex_ante_pct.toFixed(1) + "% — " + (icf.selic_real_ex_ante_pct > 6 ? "fortemente restritiva" : icf.selic_real_ex_ante_pct > 3 ? "restritiva" : "neutra") + ".");
   }
-  const icf = ultimaObs(payload.icf?.serie);
-  if (icf) {
-    const regimeLabel = icf.regime === "estimulativo" ? "estimulativas" : icf.regime === "restritivo" ? "restritivas" : "neutras";
-    partes.push("As condições financeiras estão " + regimeLabel + " (z-score " + icf.icf_zscore.toFixed(2) + ").");
+  if (ice?.valor !== null && ice?.valor !== undefined) {
+    detalhes.push("Confiança empresarial ICE FGV em " + ice.valor.toFixed(1) + " (" + (ice.valor > 100 ? "otimismo" : ice.valor < 90 ? "pessimismo" : "neutra") + ").");
   }
-  const ice = ultimaObs(payload.fgvConfianca?.ice);
-  if (ice && ice.valor !== null && ice.valor !== undefined) {
-    const cnf = ice.valor > 100 ? "em terreno otimista" : ice.valor < 90 ? "em terreno pessimista" : "em zona neutra";
-    partes.push("Confiança empresarial " + cnf + " (ICE FGV " + ice.valor.toFixed(1) + ").");
+  if (pim?.var_yoy !== null && pim?.var_yoy !== undefined) {
+    detalhes.push("Produção industrial (PIM-PF) " + (pim.var_yoy >= 0 ? "expande" : "contrai") + " " + formatPct(pim.var_yoy) + " a/a.");
   }
-  // PIM-PF oficial IBGE como ground truth final
-  const pim = (payload.atividadePim?.geral?.serie ?? []).slice(-1)[0];
-  if (pim && pim.var_yoy !== null && pim.var_yoy !== undefined) {
-    partes.push("Produção industrial (PIM-PF IBGE) " + (pim.var_yoy >= 0 ? "expande" : "contrai") + " " + formatPct(pim.var_yoy) + " a/a em " + formatMes(pim.mes) + ".");
+
+  if (detalhes.length === 0) {
+    return veredito;
   }
-  if (partes.length === 0) {
-    return "Dados em atualização — aguardando próxima rodada do pipeline.";
-  }
-  return partes.join(" ");
+  return veredito + " " + detalhes.join(" ");
 }

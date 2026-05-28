@@ -1,17 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   CartesianGrid,
   Line,
   LineChart,
+  ReferenceArea,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+
+import type { CodaceFaixa } from "@/lib/painel-visao-geral";
 
 import { formatMes } from "@/lib/painel-visao-geral";
 
@@ -35,14 +38,39 @@ export function ExploradorSeries({
   titulo = "Series",
   subtitulo,
   initialId,
+  codace = [],
 }: {
   series: SerieExplorador[];
   titulo?: string;
   subtitulo?: string;
   initialId?: string;
+  codace?: CodaceFaixa[];
 }) {
   const [selecionadaId, setSelecionadaId] = useState<string>(initialId ?? series[0]?.id ?? "");
+  const [periodoMeses, setPeriodoMeses] = useState<number | "max">(60); // 5 anos default
+  const [clipOutliers, setClipOutliers] = useState<boolean>(false);
   const selecionada = series.find((s) => s.id === selecionadaId) ?? series[0];
+  const dadosFiltrados = useMemo(() => {
+    if (!selecionada) return [];
+    let dados = selecionada.data;
+    if (periodoMeses !== "max" && typeof periodoMeses === "number") {
+      dados = dados.slice(-periodoMeses);
+    }
+    if (clipOutliers && dados.length > 24) {
+      const vals = dados.map((d) => d.v).filter((v): v is number => v !== null && v !== undefined);
+      if (vals.length > 0) {
+        const m = vals.reduce((a, b) => a + b, 0) / vals.length;
+        const sd = Math.sqrt(vals.reduce((a, b) => a + (b - m) ** 2, 0) / vals.length);
+        const lo = m - 3 * sd;
+        const hi = m + 3 * sd;
+        dados = dados.map((d) => ({
+          mes: d.mes,
+          v: d.v !== null && d.v !== undefined ? Math.max(lo, Math.min(hi, d.v)) : d.v,
+        }));
+      }
+    }
+    return dados;
+  }, [selecionada, periodoMeses, clipOutliers]);
 
   if (!series.length || !selecionada) {
     return (
@@ -67,6 +95,31 @@ export function ExploradorSeries({
 
       {/* Area do grafico unica */}
       <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+        <div className="mb-2 flex flex-wrap items-center gap-2 justify-between">
+          <div className="flex items-center gap-1 text-[10px] flex-wrap">
+            <span className="text-zinc-500 mr-1">Período:</span>
+            {([
+              { v: 12, l: "1a" },
+              { v: 36, l: "3a" },
+              { v: 60, l: "5a" },
+              { v: 120, l: "10a" },
+              { v: "max" as const, l: "max" },
+            ] as const).map((b) => (
+              <button
+                key={b.l}
+                type="button"
+                onClick={() => setPeriodoMeses(b.v)}
+                className={`rounded px-2 py-0.5 ${periodoMeses === b.v ? "bg-[#132960] text-white" : "bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100"}`}
+              >
+                {b.l}
+              </button>
+            ))}
+            <label className="ml-2 inline-flex items-center gap-1 text-zinc-600">
+              <input type="checkbox" checked={clipOutliers} onChange={(e) => setClipOutliers(e.target.checked)} className="h-3 w-3" />
+              Clip ±3σ
+            </label>
+          </div>
+        </div>
         <div className="mb-2 flex items-start justify-between gap-3 flex-wrap">
           <div>
             <div className="flex items-center gap-2">
@@ -94,12 +147,12 @@ export function ExploradorSeries({
         </div>
         <div className="h-[260px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={selecionada.data} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
+            <LineChart data={dadosFiltrados} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
               <CartesianGrid stroke="#eee" strokeDasharray="3 3" />
               <XAxis
                 dataKey="mes"
                 tick={{ fontSize: 9 }}
-                interval={Math.max(1, Math.floor(selecionada.data.length / 10))}
+                interval={Math.max(1, Math.floor(dadosFiltrados.length / 10))}
               />
               <YAxis tick={{ fontSize: 9 }} tickFormatter={(v: number) => `${v.toFixed(unid === "%" ? 0 : 1)}${unid}`} />
               <Tooltip
@@ -109,6 +162,9 @@ export function ExploradorSeries({
               {selecionada.refLine !== undefined && (
                 <ReferenceLine y={selecionada.refLine} stroke="#000" strokeDasharray="2 4" />
               )}
+              {codace.map((f, i) => (
+                <ReferenceArea key={`cod-${f.pico}-${i}`} x1={f.pico} x2={f.vale} fill="#9CA3AF" fillOpacity={0.12} ifOverflow="visible" />
+              ))}
               <Line type="monotone" dataKey="v" stroke={selecionada.cor} strokeWidth={1.8} dot={false} connectNulls />
             </LineChart>
           </ResponsiveContainer>

@@ -34,7 +34,7 @@ function CardOecdCli({ data, codace }: { data: OecdCliData | null; codace: Codac
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
       <div className="mb-3">
         <h3 className="text-base font-semibold text-zinc-900">
-          Indicador antecedente OECD — Brasil
+          Indicador antecedente OCDE — Brasil (defasado, último ponto dez/2023)
         </h3>
         <p className="text-xs text-zinc-500">
           Linha 100 = tendência. Quadrante atual: <strong>{data.destaques?.quadrante_recente ?? "—"}</strong>. Adianta
@@ -388,7 +388,8 @@ export function BlocoBAntecedentes({
         <ExploradorSeries
           series={series}
           titulo="Indicadores antecedentes"
-          subtitulo="Selic real ex-ante · Concessões reais PF/PJ · OCDE CLI · futuros: slope DI, Ibov real, EMBI, Focus PIB, IIE-Br"
+          subtitulo="Selic real ex-ante · Concessões reais PF/PJ · OCDE CLI · sondagens FGV/CNI · PIM duráveis/capital"
+          codace={codace}
         />
       )}
 
