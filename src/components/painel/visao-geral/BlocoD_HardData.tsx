@@ -143,6 +143,7 @@ function CardIpeadata({ data }: { data: IpeadataData | null }) {
           const serie = data[b.key].serie;
           const ult = serie[serie.length - 1];
           const yoy = ult?.var_yoy_pct;
+          const sparkData = serie.slice(-24).map(p => ({ mes: p.mes, v: p.var_yoy_pct }));
           return (
             <div key={b.key} className="rounded-xl border border-zinc-100 bg-zinc-50 p-3">
               <div className="text-xs font-semibold text-zinc-700">{b.titulo}</div>
@@ -152,6 +153,13 @@ function CardIpeadata({ data }: { data: IpeadataData | null }) {
                   {yoy !== null && yoy !== undefined ? `${yoy >= 0 ? "+" : ""}${yoy.toFixed(1)}%` : "—"}
                 </span>
                 <span className="text-[10px] text-zinc-500">a/a, {formatMes(ult?.mes)}</span>
+              </div>
+              <div className="mt-2 h-12">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={sparkData} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
+                    <Line type="monotone" dataKey="v" stroke={b.cor} strokeWidth={1.5} dot={false} connectNulls />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </div>
           );
