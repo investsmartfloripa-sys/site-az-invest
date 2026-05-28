@@ -6,7 +6,7 @@
  */
 import { painelBlobUrl } from "@/lib/painel-blob";
 
-export const FISCAL_REVALIDATE_SECONDS = 3600;
+export const FISCAL_REVALIDATE_SECONDS = 60;
 
 // === Tipos base ===
 export type PontoMensal = { data: string; valor: number | null };
