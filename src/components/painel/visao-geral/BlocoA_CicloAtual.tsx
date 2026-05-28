@@ -87,12 +87,13 @@ function CardIbcBrCodace({ serie, codace }: { serie: IbcBrPonto[]; codace: Codac
   );
 }
 
+// Bry-Boschan removido da linha do grafico (e binario 0/100, polui visual).
+// E renderizado separadamente como faixas verticais marcando picos detectados.
 const MODELOS_COR: Record<string, { cor: string; label: string }> = {
-  msdfm: { cor: "#DC2626", label: "MS-AR (Hamilton)" },
+  msdfm: { cor: "#DC2626", label: "MS-AR*" },
   probit_financeiro: { cor: "#2563EB", label: "Probit fin." },
   gap_threshold: { cor: "#059669", label: "Gap HP" },
   diffusion: { cor: "#F59E0B", label: "Diffusion" },
-  bry_boschan: { cor: "#7C3AED", label: "Bry-Boschan" },
 };
 
 function CardRecessaoMultiModelos({
@@ -145,12 +146,29 @@ function CardRecessaoMultiModelos({
             <ReferenceArea key={f.pico + "-" + i} x1={f.pico} x2={f.vale} fill="#9CA3AF" fillOpacity={0.12} />
           ))}
           <ReferenceLine y={50} stroke="#000" strokeDasharray="2 4" />
+          {/* Bry-Boschan como pequenas faixas verticais tracejadas onde =100 (pico detectado retroativo) */}
+          {serie.map((p, i) => (
+            p.bry_boschan === 100 ? (
+              <ReferenceLine
+                key={`bb-${p.mes}-${i}`}
+                x={p.mes}
+                stroke="#7C3AED"
+                strokeDasharray="3 3"
+                strokeOpacity={0.35}
+              />
+            ) : null
+          ))}
           {Object.entries(MODELOS_COR).map(([key, { cor, label }]) => (
             <Line key={key} type="monotone" dataKey={key} stroke={cor} strokeWidth={1.5} dot={false} name={label} connectNulls />
           ))}
           <Line type="monotone" dataKey="mediana" stroke="#000" strokeWidth={3} dot={false} name="Mediana dos modelos" />
         </ComposedChart>
       </ResponsiveContainer>
+      <p className="mt-3 text-[10px] text-zinc-500">
+        * <strong>MS-AR</strong>: implementação atual usa fallback discreto (quintis sobre média móvel 6m do IBC-Br MoM) porque a biblioteca <code>statsmodels</code> não está carregada no pipeline. Próximo loop: instalar statsmodels e obter probabilidade contínua via Hamilton filter.
+        Linhas verticais tracejadas roxas marcam <strong>picos detectados pelo Bry-Boschan</strong> (datador retroativo, não-probabilístico).
+        Probit financeiro e Diffusion estão retornando null nos últimos meses (Newton-Raphson divergindo / ANFAVEA YoY null). Mediana usa só os modelos disponíveis em cada mês.
+      </p>
     </div>
   );
 }
@@ -223,7 +241,6 @@ export function BlocoACicloAtual({ payload }: { payload: VisaoGeralPayload }) {
         <p className="mt-1 text-xs text-zinc-600">Comparação visual da atividade mensal (IBC-Br) com a cronologia oficial CODACE/FGV, leitura prospectiva via cinco modelos de probabilidade de recessão e medida de hiato do produto.</p>
       </header>
       <CardRecessaoMultiModelos serie={payload.recessao?.serie ?? []} codace={codaceMensal} />
-      <CardIbcBrCodace serie={payload.ibcbr?.serie ?? []} codace={codaceMensal} />
       <CardHiatoLeque serie={payload.hiato?.serie ?? []} codace={codaceMensal} />
     </section>
   );

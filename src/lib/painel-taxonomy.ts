@@ -74,6 +74,13 @@ const economiaBrasil: CategoryDef[] = [
   {
     slug: "visao-geral",
     label: "Visão Geral",
+    description: "Síntese executiva consolidada (em construção).",
+    frequency: "diario",
+    sourceHint: "Em construção",
+  },
+  {
+    slug: "termometro-ciclo",
+    label: "Termômetro de Ciclo",
     description: "Termômetro do ciclo econômico brasileiro com antecedentes e probabilidade de recessão.",
     frequency: "diario",
     sourceHint: "BCB, IBGE, OECD, FGV-IBRE, ANFAVEA, EPE, ANP",

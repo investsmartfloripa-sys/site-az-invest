@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 import type { VisaoGeralPayload } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
 
@@ -8,27 +12,33 @@ import { BlocoDHardData } from "./BlocoD_HardData";
 import { BlocoECondicoesFinanceiras } from "./BlocoE_CondicoesFinanceiras";
 import { FraseManchete } from "./FraseManchete";
 import { HeroKpis } from "./HeroKpis";
-import { StickyNav } from "./StickyNav";
+
+type Vista = "ciclo" | "antecedentes" | "confianca" | "hard-data" | "credito";
+
+const TABS: { value: Vista; label: string; descr: string }[] = [
+  { value: "ciclo", label: "1. Ciclo", descr: "Probabilidade de recessão + hiato do produto" },
+  { value: "antecedentes", label: "2. Antecedentes", descr: "Sondagens FGV-IBRE antecedentes" },
+  { value: "confianca", label: "3. Confiança", descr: "FGV + CNI + PMI + Fecomercio" },
+  { value: "hard-data", label: "4. Hard data", descr: "PIM-PF, ANFAVEA, EPE, ANP, IPEADATA" },
+  { value: "credito", label: "5. Crédito", descr: "ICF, condições financeiras, crédito/PIB" },
+];
 
 function FichaTecnica({ payload }: { payload: VisaoGeralPayload }) {
   const fontes = [
     { bloco: "IBC-Br (atividade)", mes: payload.ibcbr?.mes_recente, fonte: "BCB SGS 24363 / 24364", url: "https://dadosabertos.bcb.gov.br/dataset/24363-indice-de-atividade-economica-do-banco-central---ibc-br" },
-    { bloco: "CODACE cronologia", mes: null, fonte: "FGV-IBRE — CODACE", url: "https://portalibre.fgv.br/codace-cronologia" },
-    { bloco: "Hiato HP+Hamilton", mes: payload.hiato?.mes_recente, fonte: "Cálculo próprio sobre IBC-Br", url: "https://www.bcb.gov.br/content/ri/relatorioinflacao/202406/ri202406b10p.pdf" },
-    { bloco: "Probabilidade de recessão (5 modelos)", mes: payload.recessao?.mes_recente, fonte: "Calculo proprio", url: "https://blogdoibre.fgv.br/posts/barometros-globais-e-probabilidades-de-recessao-no-atual-cenario-de-aperto-monetario" },
-    { bloco: "OECD CLI Brasil", mes: payload.oecdCli?.mes_recente, fonte: "OECD.Stat - BRALOLITOAASTSAM", url: "https://sdmx.oecd.org/" },
-    { bloco: "FGV antecedentes", mes: null, fonte: "Portal IBRE - scraper XLSX", url: "https://portalibre.fgv.br/iace-e-icce" },
-    { bloco: "FGV confianças", mes: null, fonte: "Portal IBRE — sondagens", url: "https://portalibre.fgv.br/en/confianca-empresarial" },
-    { bloco: "CNI (ICEI + INEC)", mes: null, fonte: "Portal da Indústria", url: "https://www.portaldaindustria.com.br/estatisticas/" },
-    { bloco: "PMI Brasil (S&P Global)", mes: null, fonte: "S&P Global press release", url: "https://www.pmi.spglobal.com/" },
-    { bloco: "Fecomercio SP (ICEC + ICF)", mes: null, fonte: "Fecomercio SP — pesquisas", url: "https://www.fecomercio.com.br/pesquisas/indices" },
-    { bloco: "ANFAVEA veículos", mes: payload.anfavea?.mes_recente, fonte: "ANFAVEA — XLSX consolidado", url: "https://anfavea.com.br/site/edicoes-em-excel/" },
-    { bloco: "ANP combustíveis", mes: payload.anp?.mes_recente, fonte: "ANP — dados abertos", url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos" },
-    { bloco: "EPE energia", mes: payload.epe?.mes_recente, fonte: "EPE — Resenha Mensal", url: "https://www.epe.gov.br/pt/publicacoes-dados-abertos/publicacoes/consumo-de-energia-eletrica" },
-    { bloco: "Hard data (ABCR/ABPO/SNIC/Aço/FENABRAVE)", mes: null, fonte: "Scrapers defensivos", url: "https://www.empapel.org.br/publicacoes/boletim-estatistico/" },
+    { bloco: "CODACE cronologia", mes: null, fonte: "FGV-IBRE - CODACE", url: "https://portalibre.fgv.br/codace-cronologia" },
+    { bloco: "Hiato HP+Hamilton", mes: payload.hiato?.mes_recente, fonte: "Cálculo próprio sobre IBC-Br", url: "https://www.bcb.gov.br/" },
+    { bloco: "Probabilidade de recessão", mes: payload.recessao?.mes_recente, fonte: "5 modelos: MS-AR + Probit + Gap HP + Diffusion + Bry-Boschan", url: "https://blogdoibre.fgv.br/" },
+    { bloco: "OECD CLI Brasil", mes: payload.oecdCli?.mes_recente, fonte: "DBnomics - OECD MEI_CLI BR (em rodapé, defasagem >12m)", url: "https://db.nomics.world/" },
+    { bloco: "FGV confianças", mes: null, fonte: "BCB SGS 21859-21866 (ICE/ICI/ICOM/ICS/ICST/ICA/ICC)", url: "https://portalibre.fgv.br/" },
+    { bloco: "CNI (ICEI)", mes: null, fonte: "BCB SGS 7341-7343", url: "https://www.portaldaindustria.com.br/" },
+    { bloco: "PIM-PF (oficial IBGE)", mes: payload.atividadePim?.mes_recente, fonte: "SIDRA tabela 8888 (base 2022=100)", url: "https://sidra.ibge.gov.br/" },
+    { bloco: "ANFAVEA veículos", mes: payload.anfavea?.mes_recente, fonte: "ANFAVEA - XLSX consolidado", url: "https://anfavea.com.br/" },
+    { bloco: "ANP combustíveis", mes: payload.anp?.mes_recente, fonte: "ANP - dados abertos", url: "https://www.gov.br/anp/" },
+    { bloco: "EPE energia", mes: payload.epe?.mes_recente, fonte: "EPE - Resenha Mensal", url: "https://www.epe.gov.br/" },
+    { bloco: "Hard data IPEADATA", mes: null, fonte: "Papelao ABPO + Aco bruto + FENABRAVE (espelho IPEA)", url: "http://ipeadata.gov.br" },
     { bloco: "Crédito e agregados", mes: null, fonte: "BCB SGS 20662, 20635, 20571, 20572, 27788-27791", url: "https://dadosabertos.bcb.gov.br/" },
-    { bloco: "Papelão ABPO + Aço + FENABRAVE + ICEC CNC + ICC Fecomercio (via IPEADATA)", mes: null, fonte: "IPEADATA — espelho IPEA", url: "http://ipeadata.gov.br" },
-    { bloco: "ICF próprio", mes: payload.icf?.mes_recente, fonte: "Cálculo próprio: Selic real + Ibov 6m + REER", url: "https://www.bcb.gov.br/" },
+    { bloco: "ICF próprio (Hatzius 50/25/25)", mes: payload.icf?.mes_recente, fonte: "Selic real ex-ante + Ibov 6m + REER (ref BCB WP 305)", url: "https://www.bcb.gov.br/" },
   ];
   return (
     <details className="rounded-xl border border-zinc-200 bg-white p-4 text-sm">
@@ -42,38 +52,74 @@ function FichaTecnica({ payload }: { payload: VisaoGeralPayload }) {
             {fontes.map((f) => (
               <tr key={f.bloco} className="border-b border-zinc-100">
                 <td className="py-2 pr-3 font-medium text-zinc-900">{f.bloco}</td>
-                <td className="py-2 pr-3 text-zinc-600">{f.mes ? formatMes(f.mes) : "—"}</td>
+                <td className="py-2 pr-3 text-zinc-600">{f.mes ? formatMes(f.mes) : "-"}</td>
                 <td className="py-2 pr-3 text-zinc-600">{f.url ? <a className="text-[#027DFC] hover:underline" href={f.url} target="_blank" rel="noopener noreferrer">{f.fonte}</a> : f.fonte}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        <p className="mt-3 text-[11px] text-zinc-500">Pipeline diário roda às 22:00 UTC. Cada bloco tem flag de freshness (fresh/stale/missing) — quando uma fonte atrasa, o painel segue rendendo com o resto.</p>
+        <p className="mt-3 text-[11px] text-zinc-500">Pipeline diário roda às 22:00 UTC. Cada bloco tem flag de freshness (fresh/stale/missing); quando uma fonte atrasa, o painel segue rendendo com o resto.</p>
       </div>
     </details>
   );
 }
 
 export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload }) {
+  const [vista, setVista] = useState<Vista>("ciclo");
   const codaceMensal = payload.codace?.mensal ?? [];
+
+  const tabAtiva = TABS.find((t) => t.value === vista) ?? TABS[0];
+
   return (
     <div className="space-y-6">
       <header className="space-y-2">
         <h1 className="text-2xl font-bold text-[#132960]">Termômetro do Ciclo Brasileiro</h1>
         <p className="text-sm text-zinc-600">Síntese prospectiva da atividade econômica brasileira. Combina indicadores antecedentes, hard data físico e condições financeiras com cinco modelos diferentes de probabilidade de recessão.</p>
       </header>
+
       <FraseManchete payload={payload} />
       <HeroKpis payload={payload} />
 
-      <StickyNav />
+      {/* Tabs (espelha padrão CAGED/PNAD) */}
+      <div className="space-y-1">
+        <div className="flex flex-wrap gap-1 border-b border-zinc-200">
+          {TABS.map((t) => {
+            const ativa = t.value === vista;
+            return (
+              <button
+                key={t.value}
+                onClick={() => setVista(t.value)}
+                className={`relative -mb-px px-4 py-2 text-sm font-semibold transition ${
+                  ativa
+                    ? "border-b-2 border-[#132960] text-[#132960]"
+                    : "border-b-2 border-transparent text-zinc-500 hover:text-zinc-800"
+                }`}
+                aria-current={ativa ? "page" : undefined}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-[11px] text-zinc-500 px-1">{tabAtiva.descr}</p>
+      </div>
 
-      <div id="bloco1"><BlocoACicloAtual payload={payload} /></div>
-      <div id="bloco2"><BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} /></div>
-      <div id="bloco3"><BlocoCConfianca fgvConfianca={payload.fgvConfianca} cni={payload.cni} pmi={payload.pmi} fecomercio={payload.fecomercio} /></div>
-      <div id="bloco4"><BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} /></div>
-      <div id="bloco5"><BlocoECondicoesFinanceiras icf={payload.icf} credito={payload.credito} /></div>
+      {/* Conteúdo da tab ativa */}
+      <div>
+        {vista === "ciclo" && <BlocoACicloAtual payload={payload} />}
+        {vista === "antecedentes" && (
+          <BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} />
+        )}
+        {vista === "confianca" && (
+          <BlocoCConfianca fgvConfianca={payload.fgvConfianca} cni={payload.cni} pmi={payload.pmi} fecomercio={payload.fecomercio} />
+        )}
+        {vista === "hard-data" && (
+          <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} />
+        )}
+        {vista === "credito" && <BlocoECondicoesFinanceiras icf={payload.icf} credito={payload.credito} />}
+      </div>
+
       <FichaTecnica payload={payload} />
     </div>
-
   );
 }
