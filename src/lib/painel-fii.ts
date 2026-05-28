@@ -15,6 +15,7 @@
  * Toda função retorna null em caso de falha (mesmo padrão do painel-data.ts).
  */
 import { painelBlobUrl } from "@/lib/painel-blob";
+import { prisma } from "@/lib/prisma";
 
 /** Cache ISR de 1 hora — dados atualizam 1x/dia. */
 export const FII_REVALIDATE_SECONDS = 3600;
@@ -142,4 +143,60 @@ export async function getFiiIfix(): Promise<FiiIfixData | null> {
 
 export async function getFiiScreener(): Promise<FiiScreenerData | null> {
   return fetchBlobJson<FiiScreenerData>("data/fii_screener.json");
+}
+
+// ---------------------------------------------------------------------------
+// Editorial (Prisma)
+// ---------------------------------------------------------------------------
+
+/**
+ * Busca posts ligados ao tema FII no blog do site. Filtro é tolerante:
+ * aceita category que contenha "fii", "imobili" ou "fundos-imobiliarios"
+ * (case insensitive), permitindo curadoria editorial flexível sem
+ * obrigar uma taxonomia rígida pré-existente.
+ */
+async function findFiiPosts(orderBy: "recent" | "oldest", take: number): Promise<FiiEditorialPost[]> {
+  try {
+    const posts = await prisma.post.findMany({
+      where: {
+        published: true,
+        OR: [
+          { category: { contains: "fii", mode: "insensitive" } },
+          { category: { contains: "imobili", mode: "insensitive" } },
+          { category: { contains: "fundos-imobiliarios", mode: "insensitive" } },
+        ],
+      },
+      orderBy: { createdAt: orderBy === "recent" ? "desc" : "asc" },
+      take,
+      select: {
+        slug: true,
+        title: true,
+        excerpt: true,
+        coverImage: true,
+        authorName: true,
+        createdAt: true,
+      },
+    });
+    return posts.map((p) => ({
+      slug: p.slug,
+      title: p.title,
+      excerpt: p.excerpt,
+      coverImage: p.coverImage,
+      authorName: p.authorName,
+      createdAt: p.createdAt.toISOString(),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getFiiUltimasNoticias(): Promise<FiiEditorialPost[]> {
+  return findFiiPosts("recent", 4);
+}
+
+export async function getFiiArtigosMaisLidos(): Promise<FiiEditorialPost[]> {
+  // Sem coluna `views` no modelo Post; usa os 5 mais antigos publicados como
+  // "fundamentais / mais consolidados" enquanto a métrica de visualizações
+  // não existir. Substituir por GA / Plausible no futuro.
+  return findFiiPosts("oldest", 5);
 }

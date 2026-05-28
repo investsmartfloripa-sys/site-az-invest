@@ -80,6 +80,16 @@ model AuthorWhatsappClick {
   createdAt DateTime @default(now())
 }
 
+model FiiLead {
+  id              Int      @id @default(autoincrement())
+  name            String
+  email           String
+  aporteMensal    Float?
+  patrimonio      Float?
+  source          String   @default("PAINEL_FII")
+  createdAt       DateTime @default(now())
+}
+
 model ConsorcioLead {
   id          Int      @id @default(autoincrement())
   name        String

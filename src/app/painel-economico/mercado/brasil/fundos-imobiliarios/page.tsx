@@ -1,6 +1,14 @@
+import { FiiArtigosMaisLidos } from "@/components/painel/fii/FiiArtigosMaisLidos";
+import { FiiComunidadeCta } from "@/components/painel/fii/FiiComunidadeCta";
+import { FiiNoticias } from "@/components/painel/fii/FiiNoticias";
 import { FiiScreener } from "@/components/painel/fii/FiiScreener";
 import { IfixHero } from "@/components/painel/fii/IfixHero";
-import { getFiiIfix, getFiiScreener } from "@/lib/painel-fii";
+import {
+  getFiiArtigosMaisLidos,
+  getFiiIfix,
+  getFiiScreener,
+  getFiiUltimasNoticias,
+} from "@/lib/painel-fii";
 
 export const metadata = {
   title: "Fundos Imobiliários — Ativos de mercado | AZ Invest",
@@ -9,7 +17,12 @@ export const metadata = {
 };
 
 export default async function FundosImobiliariosPage() {
-  const [ifix, screener] = await Promise.all([getFiiIfix(), getFiiScreener()]);
+  const [ifix, screener, noticias, artigos] = await Promise.all([
+    getFiiIfix(),
+    getFiiScreener(),
+    getFiiUltimasNoticias(),
+    getFiiArtigosMaisLidos(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -40,18 +53,9 @@ export default async function FundosImobiliariosPage() {
         </section>
       )}
 
-      {/* Blocos editoriais (Fase 5) */}
-      <section
-        aria-label="Notícias e artigos sobre FIIs"
-        className="rounded-2xl border border-[#132960]/10 bg-zinc-50/40 p-6"
-      >
-        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          Conteúdo editorial
-        </p>
-        <p className="mt-2 text-sm text-zinc-500">
-          Em construção — últimas notícias e artigos mais lidos sobre FIIs.
-        </p>
-      </section>
+      {/* Blocos editoriais */}
+      <FiiNoticias posts={noticias} />
+      <FiiArtigosMaisLidos posts={artigos} />
 
       {/* Screener */}
       {screener && screener.status === "ok" ? (
@@ -68,18 +72,8 @@ export default async function FundosImobiliariosPage() {
         </section>
       )}
 
-      {/* CTA Comunidade + Form (Fase 6) */}
-      <section
-        aria-label="Comunidade e inscrição"
-        className="rounded-2xl border border-[#132960]/10 bg-zinc-50/40 p-6"
-      >
-        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          Comunidade AZ Invest
-        </p>
-        <p className="mt-2 text-sm text-zinc-500">
-          Em construção — CTA comunidade WhatsApp + formulário de inscrição.
-        </p>
-      </section>
+      {/* CTA Comunidade + Form */}
+      <FiiComunidadeCta />
 
       <section className="rounded-2xl border border-[#132960]/10 bg-white p-4 text-xs text-zinc-600">
         <p className="font-semibold uppercase tracking-wide text-zinc-500">Notas metodológicas</p>
