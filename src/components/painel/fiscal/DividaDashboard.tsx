@@ -51,6 +51,7 @@ function merge(series: PontoMensal[][], keys: string[]): Array<Record<string, nu
   return Array.from(mapa.values()).sort((a, b) => String(a.mes).localeCompare(String(b.mes)));
 }
 
+// build: 2026-05-28 v3
 export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
   const horizonte = useHorizonte(HORIZONTES, "10a");
 
