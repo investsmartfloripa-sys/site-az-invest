@@ -63,16 +63,23 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
       </header>
       <FraseManchete payload={payload} />
       <HeroKpis payload={payload} />
-      <BlocoACicloAtual payload={payload} />
-      <BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} />
-      <BlocoCConfianca fgvConfianca={payload.fgvConfianca} cni={payload.cni} pmi={payload.pmi} fecomercio={payload.fecomercio} />
-      </div>
 
-      <div id="bloco4"><BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} />
-      </div>
+      <nav className="sticky top-0 z-10 -mx-2 mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 bg-white/95 px-3 py-2 text-xs font-medium text-zinc-700 shadow-sm backdrop-blur">
+        <span className="mr-2 text-zinc-500">Navegar →</span>
+        <a href="#bloco1" className="rounded-md px-2 py-1 hover:bg-zinc-100">1. Ciclo</a>
+        <a href="#bloco2" className="rounded-md px-2 py-1 hover:bg-zinc-100">2. Antecedentes</a>
+        <a href="#bloco3" className="rounded-md px-2 py-1 hover:bg-zinc-100">3. Confiança</a>
+        <a href="#bloco4" className="rounded-md px-2 py-1 hover:bg-zinc-100">4. Hard data</a>
+        <a href="#bloco5" className="rounded-md px-2 py-1 hover:bg-zinc-100">5. Crédito</a>
+      </nav>
 
+      <div id="bloco1"><BlocoACicloAtual payload={payload} /></div>
+      <div id="bloco2"><BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} /></div>
+      <div id="bloco3"><BlocoCConfianca fgvConfianca={payload.fgvConfianca} cni={payload.cni} pmi={payload.pmi} fecomercio={payload.fecomercio} /></div>
+      <div id="bloco4"><BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} /></div>
       <div id="bloco5"><BlocoECondicoesFinanceiras icf={payload.icf} credito={payload.credito} /></div>
       <FichaTecnica payload={payload} />
     </div>
+
   );
 }
