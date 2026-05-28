@@ -149,32 +149,23 @@ export function BlocoBAntecedentes({
   fgvAntecedentes: FgvAntecedentesData | null;
   codace: CodaceFaixa[];
 }) {
-  // OECD defasado >12m -> degradar visualmente para accordion
-  const oecdDefasado = oecdCli?.mes_recente && new Date(oecdCli.mes_recente + "-01").getTime() < Date.now() - 1000*60*60*24*365;
+  // OECD CLI permanentemente em rodapé -- portal IBRE publica com defasagem &gt;12m,
+  // então tratamos como contexto histórico em todas as renderizacoes (decisão loop 11)
   return (
     <section className="space-y-5">
       <header>
-        <h2 className="text-xl font-bold text-[#132960]">2. Sinais antecedentes</h2>
+        <h2 className="text-xl font-bold text-[#132960]">2. Sondagens antecedentes (FGV-IBRE)</h2>
         <p className="mt-1 text-xs text-zinc-600">
-          Indicadores que historicamente antecedem viradas de ciclo em 6-9 meses. Sinal corrente vem do FGV (Bloco 3 — Confiança Empresarial via SGS).
+          Indicadores antecedentes que historicamente lideram viradas de ciclo em 6-9 meses. O IACE composto da FGV agrega expectativas de empresários e consumidores. OECD CLI publica com defasagem &gt;12m e foi movido para nota de rodapé.
         </p>
-        {oecdDefasado && (
-          <div className="mt-2 rounded-md bg-amber-50 px-2 py-1 text-[11px] text-amber-800 border border-amber-200">
-            ⚠ OECD CLI publicado no Brasil está defasado em &gt;12 meses (último ponto: {oecdCli.mes_recente}). Mantido como contexto histórico no accordion abaixo.
-          </div>
-        )}
       </header>
       <CardFgvAntecedentes data={fgvAntecedentes} />
-      {oecdDefasado ? (
-        <details className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-          <summary className="cursor-pointer text-sm font-semibold text-zinc-700">📜 OECD CLI (contexto histórico — dado defasado)</summary>
-          <div className="mt-3">
-            <CardOecdCli data={oecdCli} codace={codace} />
-          </div>
-        </details>
-      ) : (
-        <CardOecdCli data={oecdCli} codace={codace} />
-      )}
+      <details className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+        <summary className="cursor-pointer text-xs font-semibold text-zinc-600">Nota de rodapé: OECD CLI (contexto histórico — publicação defasada)</summary>
+        <div className="mt-3">
+          <CardOecdCli data={oecdCli} codace={codace} />
+        </div>
+      </details>
     </section>
   );
 }

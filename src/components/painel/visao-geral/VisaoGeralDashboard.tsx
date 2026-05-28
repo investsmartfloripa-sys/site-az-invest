@@ -8,6 +8,7 @@ import { BlocoDHardData } from "./BlocoD_HardData";
 import { BlocoECondicoesFinanceiras } from "./BlocoE_CondicoesFinanceiras";
 import { FraseManchete } from "./FraseManchete";
 import { HeroKpis } from "./HeroKpis";
+import { StickyNav } from "./StickyNav";
 
 function FichaTecnica({ payload }: { payload: VisaoGeralPayload }) {
   const fontes = [
@@ -64,14 +65,7 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
       <FraseManchete payload={payload} />
       <HeroKpis payload={payload} />
 
-      <nav className="sticky top-0 z-10 -mx-2 mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 bg-white/95 px-3 py-2 text-xs font-medium text-zinc-700 shadow-sm backdrop-blur">
-        <span className="mr-2 text-zinc-500">Navegar →</span>
-        <a href="#bloco1" className="rounded-md px-2 py-1 hover:bg-zinc-100">1. Ciclo</a>
-        <a href="#bloco2" className="rounded-md px-2 py-1 hover:bg-zinc-100">2. Antecedentes</a>
-        <a href="#bloco3" className="rounded-md px-2 py-1 hover:bg-zinc-100">3. Confiança</a>
-        <a href="#bloco4" className="rounded-md px-2 py-1 hover:bg-zinc-100">4. Hard data</a>
-        <a href="#bloco5" className="rounded-md px-2 py-1 hover:bg-zinc-100">5. Crédito</a>
-      </nav>
+      <StickyNav />
 
       <div id="bloco1"><BlocoACicloAtual payload={payload} /></div>
       <div id="bloco2"><BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} /></div>

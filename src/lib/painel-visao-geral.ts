@@ -211,6 +211,10 @@ export type RecessaoPonto = {
   n_modelos: number;
   n_acima_50: number;
   sensiveis_presentes?: number;
+  // Flag: true quando probit_financeiro do mes mais recente eh carry-forward
+  // (replicado da ultima observacao real porque pipeline nao gerou valor novo)
+  probit_carry?: boolean;
+  carry_forward_modelos?: string[];
   sinalizacao: "verde" | "amarelo" | "vermelho" | "indeterminado";
 };
 

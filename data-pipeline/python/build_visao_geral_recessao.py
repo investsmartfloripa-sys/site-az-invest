@@ -431,6 +431,26 @@ def consolidar(modelos: dict[str, dict[str, float]]) -> list[dict[str, Any]]:
     de mediana/min-max/média porque distorce (Harding-Pagan 2002 é datador, não probabilizador).
     """
     todos_meses = sorted(set().union(*[m.keys() for m in modelos.values()]) if modelos else [])
+    # Mapa: nome_modelo -> set de meses onde valor foi carry-forward
+    def _detectar_carry(serie_dict):
+        if not serie_dict:
+            return set()
+        meses_d = sorted(serie_dict.keys())
+        if len(meses_d) < 4:
+            return set()
+        carry = set()
+        ult = serie_dict[meses_d[-1]]
+        iguais = 0
+        for m_ in reversed(meses_d):
+            if serie_dict[m_] == ult:
+                iguais += 1
+            else:
+                break
+        if iguais >= 3:
+            for m_ in meses_d[-(iguais-1):]:
+                carry.add(m_)
+        return carry
+    carry_por_modelo = {nome: _detectar_carry(vals) for nome, vals in modelos.items()}
     serie: list[dict[str, Any]] = []
     MODELOS_PROB = ("msdfm", "probit_financeiro", "gap_threshold", "diffusion")  # bry_boschan tratado a parte
     for mes in todos_meses:
@@ -482,6 +502,10 @@ def consolidar(modelos: dict[str, dict[str, float]]) -> list[dict[str, Any]]:
                 "n_modelos": n,
                 "n_acima_50": n_acima_50,
                 "sensiveis_presentes": sensiveis_presentes,
+                "probit_carry": mes in carry_por_modelo.get("probit_financeiro", set()),
+                "carry_forward_modelos": [
+                    nome for nome in MODELOS_PROB if mes in carry_por_modelo.get(nome, set())
+                ],
                 "sinalizacao": sinalizacao,
             }
         )

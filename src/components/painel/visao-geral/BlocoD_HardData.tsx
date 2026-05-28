@@ -114,57 +114,121 @@ function CardEnergia({ data }: { data: EpeData | null }) {
   );
 }
 
+function MiniSpark({
+  serie,
+  cor,
+  altura = 56,
+}: {
+  serie: { mes: string; v: number | null | undefined }[];
+  cor: string;
+  altura?: number;
+}) {
+  return (
+    <div style={{ height: altura }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={serie} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
+          <ReferenceLine y={0} stroke="#9CA3AF" strokeDasharray="2 2" />
+          <Tooltip
+            cursor={{ stroke: "#888", strokeWidth: 1 }}
+            contentStyle={{ fontSize: 10, padding: "4px 8px" }}
+            formatter={(v: unknown) => (typeof v === "number" ? `${v.toFixed(1)}%` : "—")}
+            labelFormatter={(l: unknown) => formatMes(String(l ?? ""))}
+          />
+          <Line type="monotone" dataKey="v" stroke={cor} strokeWidth={1.6} dot={false} connectNulls />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 function CardIpeadata({ data }: { data: IpeadataData | null }) {
   if (!data || data.freshness_status === "missing") return null;
+
+  // PIM-PF aparece SEPARADO em destaque (coincidente oficial / ground truth IBGE).
+  // Os demais sao antecedentes/coincidentes secundários.
+  const pim = data.pim_pf_geral;
+  const pimSerie = pim?.serie ?? [];
+  const pimUlt = pimSerie[pimSerie.length - 1];
+  const pimYoy = pimUlt?.var_yoy_pct;
+
   const blocos = [
-    { key: "papelao_abpo" as const, titulo: "Papelão ondulado (ABPO)", subt: "Antecedente clássico da PIM (ρ≈0.85)", cor: "#7C3AED" },
-    { key: "aco_bruto" as const, titulo: "Aço bruto - produção", subt: "Coincidente da indústria de transformação", cor: "#DC2626" },
-    { key: "fenabrave_emplac" as const, titulo: "FENABRAVE — emplacamentos", subt: "Antecedente suave de consumo durável", cor: "#2563EB" },
+    { key: "papelao_abpo" as const, titulo: "Papelão ondulado (ABPO)", subt: "Antecedente clássico da PIM (ρ≈0.85)", cor: "#7C3AED", tag: "antecedente" },
+    { key: "aco_bruto" as const, titulo: "Aço bruto — produção (IBS)", subt: "Coincidente da indústria de transformação", cor: "#DC2626", tag: "coincidente" },
+    { key: "fenabrave_emplac" as const, titulo: "FENABRAVE — emplacamentos", subt: "Antecedente suave de consumo durável", cor: "#2563EB", tag: "antecedente" },
   ];
-  const dadosValidos = blocos.filter(b => data[b.key]?.serie?.length > 0);
-  if (dadosValidos.length === 0) return null;
+  const dadosValidos = blocos.filter(b => (data[b.key]?.serie?.length ?? 0) > 0);
+  if (dadosValidos.length === 0 && !pim) return null;
+
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-      <h3 className="text-base font-semibold text-zinc-900">D6 — Hard data físico (IPEADATA)</h3>
-      <p className="text-xs text-zinc-500">Antecedentes/coincidentes da indústria via espelho IPEADATA (ABPO, IBS, FENABRAVE). Variação a/a.</p>
-      {(() => {
-        const valores = blocos.map(b => ({ nome: b.titulo.split(" (")[0], yoy: data[b.key]?.serie?.[data[b.key].serie.length-1]?.var_yoy_pct }));
-        const positivos = valores.filter(v => v.yoy !== null && v.yoy !== undefined && v.yoy > 0).map(v => v.nome);
-        const negativos = valores.filter(v => v.yoy !== null && v.yoy !== undefined && v.yoy < 0).map(v => v.nome);
-        if (positivos.length > 0 && negativos.length > 0) {
-          return <p className="mt-1 text-xs italic text-zinc-600">Sinal misto: <strong>{positivos.join(", ")}</strong> em alta vs <strong>{negativos.join(", ")}</strong> em queda.</p>;
-        }
-        if (positivos.length === valores.length) return <p className="mt-1 text-xs italic text-zinc-600">Sinal positivo difundido nos {positivos.length} indicadores.</p>;
-        if (negativos.length === valores.length) return <p className="mt-1 text-xs italic text-zinc-600">Sinal negativo difundido — atenção.</p>;
-        return null;
-      })()}
-      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-        {dadosValidos.map(b => {
-          const serie = data[b.key].serie;
-          const ult = serie[serie.length - 1];
-          const yoy = ult?.var_yoy_pct;
-          const sparkData = serie.slice(-24).map(p => ({ mes: p.mes, v: p.var_yoy_pct }));
-          return (
-            <div key={b.key} className="rounded-xl border border-zinc-100 bg-zinc-50 p-3">
-              <div className="text-xs font-semibold text-zinc-700">{b.titulo}</div>
-              <div className="mt-1 text-[10px] text-zinc-500">{b.subt}</div>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-xl font-bold" style={{ color: b.cor }}>
-                  {yoy !== null && yoy !== undefined ? `${yoy >= 0 ? "+" : ""}${yoy.toFixed(1)}%` : "—"}
-                </span>
-                <span className="text-[10px] text-zinc-500">a/a, {formatMes(ult?.mes)}</span>
+    <div className="space-y-3">
+      {pim && pimSerie.length > 0 && (
+        <div className="rounded-2xl border-2 border-[#132960]/25 bg-gradient-to-br from-white to-zinc-50 p-5 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-semibold text-zinc-900">D6 — PIM-PF: produção industrial (IBGE)</h3>
+                <span className="rounded bg-[#132960] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white">ground truth</span>
               </div>
-              <div className="mt-2 h-12">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={sparkData} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
-                    <Line type="monotone" dataKey="v" stroke={b.cor} strokeWidth={1.5} dot={false} connectNulls />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              <p className="mt-1 text-xs text-zinc-500">Coincidente oficial da indústria — referência contra a qual os demais hard data são comparados.</p>
             </div>
-          );
-        })}
-      </div>
+            <div className="text-right">
+              <div className={`text-2xl font-bold ${pimYoy === null || pimYoy === undefined ? "text-zinc-400" : pimYoy >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                {pimYoy !== null && pimYoy !== undefined ? `${pimYoy >= 0 ? "+" : ""}${pimYoy.toFixed(1)}%` : "—"}
+              </div>
+              <div className="text-[10px] text-zinc-500">a/a, {formatMes(pimUlt?.mes)}</div>
+            </div>
+          </div>
+          <div className="mt-3">
+            <MiniSpark
+              serie={pimSerie.slice(-36).map((p) => ({ mes: p.mes, v: p.var_yoy_pct }))}
+              cor="#132960"
+              altura={80}
+            />
+          </div>
+        </div>
+      )}
+
+      {dadosValidos.length > 0 && (
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <h3 className="text-base font-semibold text-zinc-900">D7 — Hard data físico antecedente (IPEADATA)</h3>
+          <p className="text-xs text-zinc-500">Antecedentes e coincidentes secundários da indústria. Variação a/a (linha cinza tracejada = 0).</p>
+          {(() => {
+            const valores = dadosValidos.map(b => ({ nome: b.titulo.split(" (")[0].split(" —")[0], yoy: data[b.key]?.serie?.[(data[b.key]!.serie!.length ?? 1) - 1]?.var_yoy_pct }));
+            const positivos = valores.filter(v => v.yoy !== null && v.yoy !== undefined && v.yoy > 0).map(v => v.nome);
+            const negativos = valores.filter(v => v.yoy !== null && v.yoy !== undefined && v.yoy < 0).map(v => v.nome);
+            if (positivos.length > 0 && negativos.length > 0) {
+              return <p className="mt-1 text-xs italic text-zinc-600">Sinal misto: <strong>{positivos.join(", ")}</strong> em alta vs <strong>{negativos.join(", ")}</strong> em queda.</p>;
+            }
+            if (positivos.length === valores.length && valores.length > 0) return <p className="mt-1 text-xs italic text-zinc-600">Sinal positivo difundido nos {positivos.length} indicadores.</p>;
+            if (negativos.length === valores.length && valores.length > 0) return <p className="mt-1 text-xs italic text-zinc-600">Sinal negativo difundido — atenção.</p>;
+            return null;
+          })()}
+          <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+            {dadosValidos.map(b => {
+              const serie = data[b.key]!.serie!;
+              const ult = serie[serie.length - 1];
+              const yoy = ult?.var_yoy_pct;
+              const sparkData = serie.slice(-24).map(p => ({ mes: p.mes, v: p.var_yoy_pct }));
+              return (
+                <div key={b.key} className="rounded-xl border border-zinc-100 bg-zinc-50 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-xs font-semibold text-zinc-700">{b.titulo}</div>
+                    <span className={`shrink-0 rounded px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wide ${b.tag === "antecedente" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>{b.tag}</span>
+                  </div>
+                  <div className="mt-1 text-[10px] text-zinc-500">{b.subt}</div>
+                  <div className="mt-2 flex items-baseline gap-2">
+                    <span className="text-xl font-bold" style={{ color: b.cor }}>
+                      {yoy !== null && yoy !== undefined ? `${yoy >= 0 ? "+" : ""}${yoy.toFixed(1)}%` : "—"}
+                    </span>
+                    <span className="text-[10px] text-zinc-500">a/a, {formatMes(ult?.mes)}</span>
+                  </div>
+                  <MiniSpark serie={sparkData} cor={b.cor} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
