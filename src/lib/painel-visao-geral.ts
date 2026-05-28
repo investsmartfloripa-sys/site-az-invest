@@ -350,6 +350,24 @@ export type IpeadataData = {
   metadata: MetaCommon;
 };
 
+
+// PIM-PF oficial via SIDRA IBGE (consumido de data/atividade_pim.json)
+// usado como BENCHMARK OFICIAL no Bloco 4
+export type AtividadePimPonto = {
+  mes: string;
+  var_mom_sa: NumOrNull;
+  var_yoy: NumOrNull;
+  var_acum_ano?: NumOrNull;
+  var_acum_12m?: NumOrNull;
+  indice?: NumOrNull;
+  indice_sa?: NumOrNull;
+};
+export type AtividadePimData = {
+  gerado_em: string;
+  mes_recente: string | null;
+  geral?: { serie: AtividadePimPonto[] };
+};
+
 export type VisaoGeralPayload = {
   ibcbr: IbcBrData | null;
   oecdCli: OecdCliData | null;
@@ -368,6 +386,7 @@ export type VisaoGeralPayload = {
   fecomercio: FecomercioData | null;
   hardData: HardDataData | null;
   ipeadata: IpeadataData | null;
+  atividadePim: AtividadePimData | null;
 };
 
 async function fetchJson<T>(blobPath: string): Promise<T | null> {
@@ -401,6 +420,7 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     fecomercio,
     hardData,
     ipeadata,
+    atividadePim,
   ] = await Promise.all([
     fetchJson<IbcBrData>("data/atividade_ibcbr.json"),
     fetchJson<OecdCliData>("data/visao_geral_oecd_cli.json"),
@@ -419,8 +439,9 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     fetchJson<FecomercioData>("data/visao_geral_fecomercio.json"),
     fetchJson<HardDataData>("data/visao_geral_hard_data.json"),
     fetchJson<IpeadataData>("data/visao_geral_ipeadata.json"),
+    fetchJson<AtividadePimData>("data/atividade_pim.json"),
   ]);
-  return { ibcbr, oecdCli, credito, anp, anfavea, epe, codace, hiato, icf, recessao, fgvAntecedentes, fgvConfianca, cni, pmi, fecomercio, hardData, ipeadata };
+  return { ibcbr, oecdCli, credito, anp, anfavea, epe, codace, hiato, icf, recessao, fgvAntecedentes, fgvConfianca, cni, pmi, fecomercio, hardData, ipeadata, atividadePim };
 }
 
 export function formatPct(v: NumOrNull, casas = 1): string {
@@ -462,7 +483,20 @@ export function fraseManchete(payload: VisaoGeralPayload): string {
   }
   const rec = ultimaObs(payload.recessao?.serie);
   if (rec) {
-    partes.push("Nossos modelos estimam mediana de " + (rec.mediana ?? rec.mediana_parcial ?? 0).toFixed(0) + "% de probabilidade de recessão (" + rec.n_acima_50 + " de " + rec.n_modelos + " acima de 50%).");
+    const sensiveis = rec.sensiveis_presentes ?? 0;
+    if (sensiveis === 0 && rec.n_modelos > 0) {
+      // Mostrar mediana parcial com asterisco quando faltam sensíveis
+      const mp = rec.mediana_parcial;
+      if (mp !== null && mp !== undefined) {
+        partes.push("Modelos de recessão mostram mediana parcial de ~" + mp.toFixed(0) + "% (" + rec.n_modelos + " de 4 modelos rodaram — Probit e Diffusion aguardando próxima rodada).");
+      } else {
+        partes.push("Modelos de recessão com cobertura parcial (" + rec.n_modelos + " de 4 rodaram).");
+      }
+    } else if (rec.mediana !== null && rec.mediana !== undefined) {
+      partes.push("Nossos modelos estimam mediana de " + rec.mediana.toFixed(0) + "% de probabilidade de recessão (" + rec.n_acima_50 + " de " + rec.n_modelos + " acima de 50%).");
+    } else if (rec.mediana_parcial !== null && rec.mediana_parcial !== undefined) {
+      partes.push("Modelos rodaram parcialmente: mediana ~" + rec.mediana_parcial.toFixed(0) + "% (" + rec.n_modelos + " de 4).");
+    }
   }
   const oe = ultimaObs(payload.oecdCli?.serie);
   if (oe?.var_6m_anualizada !== null && oe?.var_6m_anualizada !== undefined) {
@@ -478,6 +512,14 @@ export function fraseManchete(payload: VisaoGeralPayload): string {
   if (ice && ice.valor !== null && ice.valor !== undefined) {
     const cnf = ice.valor > 100 ? "em terreno otimista" : ice.valor < 90 ? "em terreno pessimista" : "em zona neutra";
     partes.push("Confiança empresarial " + cnf + " (ICE FGV " + ice.valor.toFixed(1) + ").");
+  }
+  // PIM-PF oficial IBGE como ground truth final
+  const pim = (payload.atividadePim?.geral?.serie ?? []).slice(-1)[0];
+  if (pim && pim.var_yoy !== null && pim.var_yoy !== undefined) {
+    partes.push("Produção industrial (PIM-PF IBGE) " + (pim.var_yoy >= 0 ? "expande" : "contrai") + " " + formatPct(pim.var_yoy) + " a/a em " + formatMes(pim.mes) + ".");
+  }
+  if (partes.length === 0) {
+    return "Dados em atualização — aguardando próxima rodada do pipeline.";
   }
   return partes.join(" ");
 }

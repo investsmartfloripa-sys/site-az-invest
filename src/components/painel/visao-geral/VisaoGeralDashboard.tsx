@@ -70,7 +70,7 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
       <div id="bloco1"><BlocoACicloAtual payload={payload} /></div>
       <div id="bloco2"><BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} /></div>
       <div id="bloco3"><BlocoCConfianca fgvConfianca={payload.fgvConfianca} cni={payload.cni} pmi={payload.pmi} fecomercio={payload.fecomercio} /></div>
-      <div id="bloco4"><BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} /></div>
+      <div id="bloco4"><BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} /></div>
       <div id="bloco5"><BlocoECondicoesFinanceiras icf={payload.icf} credito={payload.credito} /></div>
       <FichaTecnica payload={payload} />
     </div>

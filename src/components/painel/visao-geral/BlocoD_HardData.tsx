@@ -12,7 +12,7 @@ import {
   Legend,
 } from "recharts";
 
-import type { AnfaveaData, AnpData, EpeData, HardDataData, IpeadataData } from "@/lib/painel-visao-geral";
+import type { AnfaveaData, AnpData, AtividadePimData, EpeData, HardDataData, IpeadataData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
 
 function Termometro({
@@ -141,22 +141,21 @@ function MiniSpark({
   );
 }
 
-function CardIpeadata({ data }: { data: IpeadataData | null }) {
-  if (!data || data.freshness_status === "missing") return null;
+function CardIpeadata({ data, pim }: { data: IpeadataData | null; pim: AtividadePimData | null }) {
+  if ((!data || data.freshness_status === "missing") && !pim) return null;
 
-  // PIM-PF aparece SEPARADO em destaque (coincidente oficial / ground truth IBGE).
-  // Os demais sao antecedentes/coincidentes secundários.
-  const pim = data.pim_pf_geral;
-  const pimSerie = pim?.serie ?? [];
+  // PIM-PF oficial via SIDRA IBGE (data/atividade_pim.json) - BENCHMARK OFICIAL.
+  // Os demais (papelao, aco, FENABRAVE) são antecedentes/coincidentes secundários via IPEADATA.
+  const pimSerie = pim?.geral?.serie ?? [];
   const pimUlt = pimSerie[pimSerie.length - 1];
-  const pimYoy = pimUlt?.var_yoy_pct;
+  const pimYoy = pimUlt?.var_yoy ?? null;
 
   const blocos = [
     { key: "papelao_abpo" as const, titulo: "Papelão ondulado (ABPO)", subt: "Antecedente clássico da PIM (ρ≈0.85)", cor: "#7C3AED", tag: "antecedente" },
     { key: "aco_bruto" as const, titulo: "Aço bruto — produção (IBS)", subt: "Coincidente da indústria de transformação", cor: "#DC2626", tag: "coincidente" },
     { key: "fenabrave_emplac" as const, titulo: "FENABRAVE — emplacamentos", subt: "Antecedente suave de consumo durável", cor: "#2563EB", tag: "antecedente" },
   ];
-  const dadosValidos = blocos.filter(b => (data[b.key]?.serie?.length ?? 0) > 0);
+  const dadosValidos = data ? blocos.filter(b => (data[b.key]?.serie?.length ?? 0) > 0) : [];
   if (dadosValidos.length === 0 && !pim) return null;
 
   return (
@@ -165,14 +164,14 @@ function CardIpeadata({ data }: { data: IpeadataData | null }) {
         <div className="rounded-2xl border-2 border-[#132960]/25 bg-gradient-to-br from-white to-zinc-50 p-5 shadow-sm">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-base font-semibold text-zinc-900">D6 — PIM-PF: produção industrial (IBGE)</h3>
-                <span className="rounded bg-[#132960] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white">ground truth</span>
+                <span className="rounded bg-[#132960] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">Benchmark oficial IBGE</span>
               </div>
-              <p className="mt-1 text-xs text-zinc-500">Coincidente oficial da indústria — referência contra a qual os demais hard data são comparados.</p>
+              <p className="mt-1 text-xs text-zinc-500">Coincidente oficial publicado pelo IBGE via SIDRA (base 2022=100). Referência contra a qual os demais hard data são comparados. Cobre 20% do PIB (indústria).</p>
             </div>
             <div className="text-right">
-              <div className={`text-2xl font-bold ${pimYoy === null || pimYoy === undefined ? "text-zinc-400" : pimYoy >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+              <div className={`text-3xl font-bold ${pimYoy === null || pimYoy === undefined ? "text-zinc-400" : pimYoy >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
                 {pimYoy !== null && pimYoy !== undefined ? `${pimYoy >= 0 ? "+" : ""}${pimYoy.toFixed(1)}%` : "—"}
               </div>
               <div className="text-[10px] text-zinc-500">a/a, {formatMes(pimUlt?.mes)}</div>
@@ -180,7 +179,7 @@ function CardIpeadata({ data }: { data: IpeadataData | null }) {
           </div>
           <div className="mt-3">
             <MiniSpark
-              serie={pimSerie.slice(-36).map((p) => ({ mes: p.mes, v: p.var_yoy_pct }))}
+              serie={pimSerie.slice(-36).map((p) => ({ mes: p.mes, v: p.var_yoy }))}
               cor="#132960"
               altura={80}
             />
@@ -193,7 +192,7 @@ function CardIpeadata({ data }: { data: IpeadataData | null }) {
           <h3 className="text-base font-semibold text-zinc-900">D7 — Hard data físico antecedente (IPEADATA)</h3>
           <p className="text-xs text-zinc-500">Antecedentes e coincidentes secundários da indústria. Variação a/a (linha cinza tracejada = 0).</p>
           {(() => {
-            const valores = dadosValidos.map(b => ({ nome: b.titulo.split(" (")[0].split(" —")[0], yoy: data[b.key]?.serie?.[(data[b.key]!.serie!.length ?? 1) - 1]?.var_yoy_pct }));
+            const valores = dadosValidos.map(b => { const ser = data![b.key]?.serie ?? []; return { nome: b.titulo.split(" (")[0].split(" —")[0], yoy: ser[ser.length-1]?.var_yoy_pct }; });
             const positivos = valores.filter(v => v.yoy !== null && v.yoy !== undefined && v.yoy > 0).map(v => v.nome);
             const negativos = valores.filter(v => v.yoy !== null && v.yoy !== undefined && v.yoy < 0).map(v => v.nome);
             if (positivos.length > 0 && negativos.length > 0) {
@@ -205,7 +204,7 @@ function CardIpeadata({ data }: { data: IpeadataData | null }) {
           })()}
           <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
             {dadosValidos.map(b => {
-              const serie = data[b.key]!.serie!;
+              const serie = data![b.key]!.serie!;
               const ult = serie[serie.length - 1];
               const yoy = ult?.var_yoy_pct;
               const sparkData = serie.slice(-24).map(p => ({ mes: p.mes, v: p.var_yoy_pct }));
@@ -366,12 +365,14 @@ export function BlocoDHardData({
   epe,
   hardData,
   ipeadata,
+  atividadePim,
 }: {
   anfavea: AnfaveaData | null;
   anp: AnpData | null;
   epe: EpeData | null;
   hardData: HardDataData | null;
   ipeadata: IpeadataData | null;
+  atividadePim: AtividadePimData | null;
 }) {
   const zScores = calcularZScores({ anfavea, anp, epe, hardData });
   return (
@@ -380,14 +381,14 @@ export function BlocoDHardData({
         <h2 className="text-xl font-bold text-[#132960]">4. O que os caminhões mostram (hard data)</h2>
         <p className="mt-1 text-xs text-zinc-600">
           Indicadores físicos de alta frequência. Antecedem PIM/PMC em 1-2 meses. Sequência: termômetro instantâneo →
-          produção e vendas (ANFAVEA) → consumo de energia industrial → combustíveis → papelão/aço/emplacamentos (IPEADATA).
+          produção e vendas (ANFAVEA) → consumo de energia industrial → combustíveis → papelão/aço/emplacamentos (IPEADATA) → PIM-PF oficial IBGE.
         </p>
       </header>
       <Termometro zScores={zScores} />
       <CardAnfavea data={anfavea} />
       <CardEnergia data={epe} />
       <CardAnp data={anp} />
-      <CardIpeadata data={ipeadata} />
+      <CardIpeadata data={ipeadata} pim={atividadePim} />
       <CardHardData data={hardData} />
     </section>
   );

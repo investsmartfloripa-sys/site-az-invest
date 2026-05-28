@@ -65,6 +65,21 @@ function CardIbcBrCodace({ serie, codace }: { serie: IbcBrPonto[]; codace: Codac
               ifOverflow="visible"
             />
           ))}
+          {/* Faixa hachurada pos jun/2020: periodo sem datacao oficial CODACE */}
+          {dados.length > 0 && dados[dados.length-1].mes > "2020-06" && (
+            <ReferenceArea
+              x1="2020-06"
+              x2={dados[dados.length-1].mes}
+              fill="url(#hachuraSemDatacao)"
+              fillOpacity={1}
+              ifOverflow="visible"
+            />
+          )}
+          <defs>
+            <pattern id="hachuraSemDatacao" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="6" stroke="#CBD5E1" strokeWidth="1" />
+            </pattern>
+          </defs>
           <Line type="monotone" dataKey="indice_sa" stroke="#132960" dot={false} strokeWidth={2} name="IBC-Br SA" />
         </ComposedChart>
       </ResponsiveContainer>
@@ -73,7 +88,7 @@ function CardIbcBrCodace({ serie, codace }: { serie: IbcBrPonto[]; codace: Codac
 }
 
 const MODELOS_COR: Record<string, { cor: string; label: string }> = {
-  msdfm: { cor: "#DC2626", label: "MS-DFM" },
+  msdfm: { cor: "#DC2626", label: "MS-AR (Hamilton)" },
   probit_financeiro: { cor: "#2563EB", label: "Probit fin." },
   gap_threshold: { cor: "#059669", label: "Gap HP" },
   diffusion: { cor: "#F59E0B", label: "Diffusion" },

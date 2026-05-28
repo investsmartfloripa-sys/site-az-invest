@@ -22,11 +22,12 @@ function KpiCard({
   mes?: string | null;
   destaque?: boolean;
 }) {
+  // Reducao saturacao (loop 13): fundo branco em todos, cor apenas na borda esquerda
   const corClass = {
-    verde: "border-emerald-300 bg-emerald-50",
-    amarelo: "border-amber-300 bg-amber-50",
-    vermelho: "border-rose-300 bg-rose-50",
-    neutro: "border-zinc-200 bg-white",
+    verde: "border border-l-4 border-l-emerald-500 border-zinc-200 bg-white",
+    amarelo: "border border-l-4 border-l-amber-500 border-zinc-200 bg-white",
+    vermelho: "border border-l-4 border-l-rose-500 border-zinc-200 bg-white",
+    neutro: "border border-zinc-200 bg-white",
   }[cor];
   const dot = {
     verde: "bg-emerald-500",
@@ -38,7 +39,7 @@ function KpiCard({
   const padding = destaque ? "p-6" : "p-5";
   const ringExtra = destaque ? "ring-2 ring-[#132960]/10" : "";
   return (
-    <div className={`rounded-2xl border ${corClass} ${padding} shadow-sm ${ringExtra}`}>
+    <div className={`rounded-2xl ${corClass} ${padding} shadow-sm ${ringExtra}`}>
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="text-sm font-semibold text-zinc-900">{titulo}</div>

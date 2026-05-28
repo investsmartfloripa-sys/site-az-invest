@@ -568,7 +568,7 @@ def main() -> None:
     # Rodar modelos
     modelos: dict[str, dict[str, float]] = {}
 
-    print("\n  → MS-DFM (Chauvet 2002)")
+    print("\n  → MS-AR univariado sobre IBC-Br (Hamilton 1989)")
     modelos["msdfm"] = modelo_ms_dfm(ibcbr)
     print(f"    {len(modelos['msdfm'])} pontos")
 
