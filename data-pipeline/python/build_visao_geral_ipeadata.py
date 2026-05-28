@@ -32,6 +32,7 @@ SERIES = {
     "fecomercio_icc":    ("FCESP12_IIC12",           "Confianca Consumidor (Fecomercio SP)"),
     "fgv_constr_exp":    ("FGV12_IECSTCA12",         "Expectativas Construcao (FGV-IBRE com ajuste)"),
     "fgv_constr_atual":  ("FGV12_ISACSTCA12",        "Situacao Atual Construcao (FGV-IBRE com ajuste)"),
+    "pim_pf_geral":      ("PAN12_QIIGG12",           "PIM-PF - Producao Industrial Geral (IBGE)"),
 }
 INPUTS = {k: "1995-01" for k in SERIES}
 
