@@ -62,17 +62,18 @@ export type FiiIfixData = {
 // ---------------------------------------------------------------------------
 
 export type FiiSegment =
+  | "Papel"
   | "Logística"
   | "Lajes"
-  | "Recebíveis (CRI)"
   | "Shoppings"
   | "Híbrido"
-  | "Fundo de Fundos"
+  | "FoF"
+  | "Renda urbana"
   | "Residencial"
   | "Hospitalar"
   | "Educacional"
   | "Hotelaria"
-  | "Agro/Galpões"
+  | "Agro"
   | "Outros";
 
 export type FiiScreenerRow = {
@@ -80,14 +81,20 @@ export type FiiScreenerRow = {
   cnpj: string | null;
   name: string; // nome curto (denominação social abreviada)
   segment: FiiSegment | string;
+  /** "curated" = override interno; "cvm" = classificação CVM. */
+  segment_source?: "curated" | "cvm";
   /** Preço fechamento mais recente (BRL). */
   price: number | null;
   price_date: string | null;
   /** Dividend Yield 12m: soma de dividendos / preço atual, em %. */
   dy_12m_pct: number | null;
+  /** True quando DY > 18% — pode incluir amortização de capital. */
+  dy_atypical?: boolean;
   /** Preço / Valor Patrimonial por cota. */
   pvp: number | null;
   pvp_ref_date: string | null; // data de referência CVM
+  /** True quando P/VP < 0.7 — possível distress. */
+  pvp_warning?: boolean;
   /** Patrimônio Líquido absoluto (BRL). */
   pl: number | null;
   pl_ref_date: string | null;

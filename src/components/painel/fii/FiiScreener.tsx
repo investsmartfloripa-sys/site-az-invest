@@ -196,10 +196,32 @@ export function FiiScreener({ data }: Props) {
                     {r.price != null ? `R$ ${formatBRL(r.price)}` : "—"}
                   </td>
                   <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
-                    {formatPct(r.dy_12m_pct)}
+                    <span
+                      title={
+                        r.dy_atypical
+                          ? "DY > 18% pode incluir amortização de capital. Verifique o relatório gerencial do fundo."
+                          : undefined
+                      }
+                      className={r.dy_atypical ? "cursor-help text-amber-700" : undefined}
+                    >
+                      {formatPct(r.dy_12m_pct)}
+                      {r.dy_atypical ? "*" : ""}
+                    </span>
                   </td>
                   <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
-                    {formatRatio(r.pvp)}
+                    <span
+                      title={
+                        r.pvp_warning
+                          ? "P/VP < 0,7 pode indicar distress (vacância alta, problema de crédito da carteira). Verifique relatório gerencial."
+                          : r.pvp == null
+                          ? "Escala de Valor Patrimonial reportada pela CVM inconsistente — fora."
+                          : undefined
+                      }
+                      className={r.pvp_warning ? "cursor-help text-amber-700" : r.pvp == null ? "cursor-help" : undefined}
+                    >
+                      {formatRatio(r.pvp)}
+                      {r.pvp_warning ? "*" : ""}
+                    </span>
                   </td>
                   <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
                     {formatBig(r.pl)}
@@ -216,8 +238,9 @@ export function FiiScreener({ data }: Props) {
 
       <p className="mt-3 text-[10px] text-zinc-400">
         Universo: composição IFIX ({data.total_in_ifix} FIIs). Preço, dividendos e liquidez via
-        yfinance; segmento, PL e VP/cota via CVM Informe Mensal. Outliers de P/VP (escala não
-        padronizada na CVM) ficam como “—”.
+        yfinance; PL e VP/cota via CVM Informe Mensal. Segmento por catálogo curado (gestoras).
+        Outliers de P/VP (escala não padronizada na CVM) ficam como “—”. <strong>*</strong>{" "}
+        DY &gt; 18% pode incluir amortização — não é renda recorrente.
       </p>
     </section>
   );

@@ -34,6 +34,7 @@ import requests
 import yfinance as yf
 
 sys.path.append(str(Path(__file__).parent))
+from fii_segments_override import override_segment  # noqa: E402
 from shared.blob_upload import maybe_upload_json  # noqa: E402
 
 
@@ -280,6 +281,11 @@ def build_payload() -> Dict:
         if price and price > 0 and div12m is not None:
             dy_12m_pct = round(div12m / price * 100.0, 2)
 
+        # Sanity / heuristic atípico — flag pra UI:
+        # DY > 18% costuma indicar mistura amortização+rendimento (yfinance soma
+        # tudo como "dividend"). Sinaliza pro investidor verificar relatório.
+        dy_atypical = bool(dy_12m_pct is not None and dy_12m_pct > 18.0)
+
         # P/VP final — sanity filter pra cobrir inconsistências de escala da CVM
         # (alguns fundos reportam VP/cota em lotes, gerando outliers <0.1 ou >5).
         pvp_final = None
@@ -290,19 +296,30 @@ def build_payload() -> Dict:
             else:
                 pvp_ref_date = None  # rejeita também a data de ref pra não confundir
 
+        # P/VP < 0.7 sinaliza possível distress — flag pra tooltip na UI.
+        pvp_warning = bool(pvp_final is not None and pvp_final < 0.7)
+
         # Nome curto: usar ticker como fallback do asset name B3
         name = item["asset_name"] or name_cvm or ticker
+
+        # Override curado de segmento (corrige "Multicategoria/Híbrido" da CVM
+        # pra rótulo real: Papel, Logística, Lajes, Shoppings, FoF, etc.)
+        cvm_segment = segment or "Outros"
+        segment_final = override_segment(ticker, cvm_segment)
 
         rows.append({
             "ticker": ticker,
             "cnpj": cnpj,
             "name": name,
-            "segment": segment or "Outros",
+            "segment": segment_final,
+            "segment_source": "curated" if segment_final != cvm_segment else "cvm",
             "price": round(price, 2) if price else None,
             "price_date": price_date,
             "dy_12m_pct": dy_12m_pct,
+            "dy_atypical": dy_atypical,
             "pvp": pvp_final,
             "pvp_ref_date": pvp_ref_date,
+            "pvp_warning": pvp_warning,
             "pl": round(pl, 2) if pl else None,
             "pl_ref_date": pl_ref_date,
             "liquidity_avg_21d": round(liq, 2) if liq else None,

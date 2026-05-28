@@ -34,23 +34,23 @@ export function FiiComunidadeCta() {
       aria-label="Comunidade FII e inscrição"
       className="rounded-2xl border border-[#132960]/15 bg-gradient-to-br from-[#0e1f49] to-[#132960] p-4 text-white shadow-sm md:p-6"
     >
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* CTA Comunidade — esquerda */}
-        <div className="flex flex-col justify-center">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">
-            Comunidade AZ Invest
-          </p>
-          <h3 className="mt-2 text-xl font-bold leading-tight md:text-2xl">
-            Quer saber tudo sobre FIIs?
-          </h3>
-          <p className="mt-2 text-sm leading-relaxed text-white/85">
-            Entre na nossa comunidade no WhatsApp e receba{" "}
-            <strong className="font-semibold text-white">
-              alertas, análises e materiais selecionados sobre FIIs
-            </strong>{" "}
-            direto no seu celular.
-          </p>
-          {whatsappUrl ? (
+      <div className={whatsappUrl ? "grid gap-6 md:grid-cols-2" : "grid gap-6"}>
+        {/* CTA Comunidade — esquerda: só renderiza se URL existir, evita "Link em breve" em prod */}
+        {whatsappUrl ? (
+          <div className="flex flex-col justify-center">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">
+              Comunidade AZ Invest
+            </p>
+            <h3 className="mt-2 text-xl font-bold leading-tight md:text-2xl">
+              Quer saber tudo sobre FIIs?
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-white/85">
+              Entre na nossa comunidade no WhatsApp e receba{" "}
+              <strong className="font-semibold text-white">
+                alertas, análises e materiais selecionados sobre FIIs
+              </strong>{" "}
+              direto no seu celular.
+            </p>
             <a
               href={whatsappUrl}
               target="_blank"
@@ -60,15 +60,8 @@ export function FiiComunidadeCta() {
             >
               Entrar na comunidade →
             </a>
-          ) : (
-            <span
-              aria-disabled="true"
-              className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-white/15 px-6 py-3 text-sm font-semibold text-white/85 md:w-auto"
-            >
-              Link em breve
-            </span>
-          )}
-        </div>
+          </div>
+        ) : null}
 
         {/* Form inscrição — direita */}
         <div className="rounded-xl bg-white p-4 text-[#132960] md:p-5">

@@ -47,9 +47,11 @@ const DUMMY_LIST: FiiEditorialPost[] = [
 
 type Props = {
   posts: FiiEditorialPost[];
+  showDummies?: boolean;
 };
 
-export function FiiArtigosMaisLidos({ posts }: Props) {
+export function FiiArtigosMaisLidos({ posts, showDummies = false }: Props) {
+  if (posts.length === 0 && !showDummies) return null;
   const items = posts.length > 0 ? posts : DUMMY_LIST;
 
   return (

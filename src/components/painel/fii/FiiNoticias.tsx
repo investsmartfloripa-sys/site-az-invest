@@ -46,9 +46,13 @@ const DUMMY_POSTS: FiiEditorialPost[] = [
 
 type Props = {
   posts: FiiEditorialPost[];
+  /** Quando `false` (padrão), esconde o bloco se não houver posts reais.
+   *  Pode passar `true` em dev pra ver o layout com dummies. */
+  showDummies?: boolean;
 };
 
-export function FiiNoticias({ posts }: Props) {
+export function FiiNoticias({ posts, showDummies = false }: Props) {
+  if (posts.length === 0 && !showDummies) return null;
   const items = posts.length > 0 ? posts : DUMMY_POSTS;
   const showingDummies = posts.length === 0;
 
