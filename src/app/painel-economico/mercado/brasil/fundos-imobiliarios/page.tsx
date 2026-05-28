@@ -1,3 +1,5 @@
+import { FiiScreener } from "@/components/painel/fii/FiiScreener";
+import { IfixHero } from "@/components/painel/fii/IfixHero";
 import { getFiiIfix, getFiiScreener } from "@/lib/painel-fii";
 
 export const metadata = {
@@ -23,26 +25,20 @@ export default async function FundosImobiliariosPage() {
         </p>
       </header>
 
-      {/* Hero IFIX (será preenchido na Fase 3) */}
-      <section
-        aria-label="IFIX"
-        className="rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm"
-      >
-        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">IFIX</p>
-        {ifix?.hero ? (
-          <p className="mt-2 text-3xl font-semibold tabular-nums text-[#132960]">
-            {ifix.hero.last_value.toLocaleString("pt-BR", {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0,
-            })}{" "}
-            pts
-          </p>
-        ) : (
+      {/* Hero IFIX */}
+      {ifix && ifix.status === "ok" ? (
+        <IfixHero data={ifix} />
+      ) : (
+        <section
+          aria-label="IFIX"
+          className="rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm"
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">IFIX</p>
           <p className="mt-2 text-sm text-zinc-500">
             Pipeline em construção — dados serão preenchidos no próximo deploy.
           </p>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* Blocos editoriais (Fase 5) */}
       <section
@@ -57,24 +53,20 @@ export default async function FundosImobiliariosPage() {
         </p>
       </section>
 
-      {/* Screener (Fase 4) */}
-      <section
-        aria-label="Screener de FIIs"
-        className="rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm"
-      >
-        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          Screener
-        </p>
-        {screener?.total_rows ? (
-          <p className="mt-2 text-sm text-zinc-700">
-            {screener.total_rows} FIIs disponíveis ({screener.total_in_ifix} no IFIX).
-          </p>
-        ) : (
+      {/* Screener */}
+      {screener && screener.status === "ok" ? (
+        <FiiScreener data={screener} />
+      ) : (
+        <section
+          aria-label="Screener de FIIs"
+          className="rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm"
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Screener</p>
           <p className="mt-2 text-sm text-zinc-500">
             Pipeline em construção — universo IFIX + métricas via CVM.
           </p>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* CTA Comunidade + Form (Fase 6) */}
       <section
