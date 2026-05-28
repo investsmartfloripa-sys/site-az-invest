@@ -80,6 +80,18 @@ export type FiscalClassicosData = {
     primario_sp_12m_pct_pib: PontoMensalPct[];
     juros_nominais_sp_12m_pct_pib: PontoMensal[];
     nominal_sp_12m_pct_pib: PontoMensalPct[];
+    // Tributos individuais (12m % PIB)
+    imposto_renda_12m_pct_pib?: PontoMensalPct[];
+    cofins_12m_pct_pib?: PontoMensalPct[];
+    csll_12m_pct_pib?: PontoMensalPct[];
+    pis_pasep_12m_pct_pib?: PontoMensalPct[];
+    ipi_12m_pct_pib?: PontoMensalPct[];
+    iof_12m_pct_pib?: PontoMensalPct[];
+    imposto_importacao_12m_pct_pib?: PontoMensalPct[];
+    cide_12m_pct_pib?: PontoMensalPct[];
+    rgps_arrecadacao_12m_pct_pib?: PontoMensalPct[];
+    dividendos_12m_pct_pib?: PontoMensalPct[];
+    recursos_naturais_12m_pct_pib?: PontoMensalPct[];
   };
   monetaria: {
     selic_diaria_pct: PontoDiario[];
