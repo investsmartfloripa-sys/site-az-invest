@@ -335,8 +335,22 @@ def modelo_probit_financeiro(icf: list[tuple[str, float]], codace_periodos: list
         except np.linalg.LinAlgError:
             break
 
-    return {m: round(sigmoid(b0 + b1 * x[i] + b2 * (x2[i] if x2[i] is not None else 0)) * 100, 1)
-            for i, m in enumerate(meses) if x[i] is not None}
+    out = {}
+    last = None
+    for i, m in enumerate(meses):
+        if x[i] is not None:
+            # x2 pode ser None mesmo se x1 OK; carry-forward apenas se ambos None
+            slope_v = x2[i] if x2[i] is not None else (out.get(meses[i-1], None) and 0)  # fallback 0 se carry
+            try:
+                val = round(sigmoid(b0 + b1 * x[i] + b2 * (x2[i] if x2[i] is not None else 0)) * 100, 1)
+                out[m] = val
+                last = val
+            except Exception:
+                if last is not None: out[m] = last
+        else:
+            if last is not None:
+                out[m] = last  # carry-forward
+    return out
 
 
 # ============================================================================
