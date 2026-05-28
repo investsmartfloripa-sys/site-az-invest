@@ -7,7 +7,7 @@ import {
 } from "recharts";
 
 import type { FiscalClassicosData, PontoMensalPct } from "@/lib/painel-fiscal";
-import { CORES_SERIES, CardHeader, KPI, Section, Toggle, useHorizonte } from "./FiscalShell";
+import { CORES_SERIES, CardHeader, IndicadorBox, KPI, Section, Toggle, useHorizonte } from "./FiscalShell";
 
 const HORIZONTES = [
   { value: "5a", label: "5 anos", n: 60 },
@@ -251,15 +251,81 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
       <RegraFiscalCard data={data} />
 
       {/* === KPIs principais === */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <KPI label="Receita líquida" value={fmtPct(receita_pct)} hint="% PIB (12m), após transferências constitucionais" />
-        <KPI label="Despesa total" value={fmtPct(despesa_pct)} hint="% PIB (12m)" trend={despesa_pct && despesa_pct > 20 ? "down" : "neutral"} />
-        <KPI label="Primário gov central" value={fmtPct(primario_pct)} hint="% PIB (12m); + = superávit" trend={primario_pct && primario_pct > 0 ? "up" : "down"} />
-        <KPI label="Juros nominais" value={fmtPct(juros_pct)} hint="% PIB (12m)" trend={juros_pct && juros_pct > 7 ? "down" : "neutral"} />
-        <KPI label="Juros / Receita" value={fmtPct(juros_pct_rec)} hint="Métrica Dalio: % da receita líquida" trend={juros_pct_rec && juros_pct_rec > 30 ? "down" : "neutral"} />
-        <KPI label="NFSP setor público" value={fmtPct(nfsp_pct)} hint="Necessidade fin. SP consolidado (12m % PIB)" />
-        <KPI label="Previdência" value={fmtPct(previdencia_pct)} hint="% PIB (12m)" />
-        <KPI label="Pessoal" value={fmtPct(pessoal_pct_kpi)} hint="% PIB (12m)" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <IndicadorBox
+          titulo="Receita líquida"
+          valor={receita_pct}
+          unidade="%"
+          fonte="Tesouro RTN, tabela 1.1 linha 38"
+          narrativa="Receita do gov central após desconto das transferências constitucionais (FPE, FPM, FUNDEB) — é o que efetivamente fica disponível para gastos federais."
+          siglas={[
+            { sigla: "RTN", expansao: "Relatório do Tesouro Nacional" },
+            { sigla: "FPE/FPM", expansao: "Fundos de Participação dos Estados / Municípios" },
+          ]}
+        />
+        <IndicadorBox
+          titulo="Despesa total"
+          valor={despesa_pct}
+          unidade="%"
+          fonte="Tesouro RTN, tabela 1.1 linha 39"
+          narrativa="Soma de previdência + pessoal + outras obrigatórias + discricionárias. Limite arcabouço: crescimento real ≤ 70% do crescimento real da receita."
+          trend={despesa_pct && despesa_pct > 20 ? "ruim" : "neutra"}
+        />
+        <IndicadorBox
+          titulo="Primário gov central"
+          valor={primario_pct}
+          unidade="%"
+          formula="Receita líquida − Despesa primária (acima da linha)"
+          narrativa="Resultado fiscal sem juros. Positivo = superávit. Meta LDO 2026: 0,5% PIB com banda ±0,25pp. Realizado: déficit."
+          siglas={[
+            { sigla: "LDO", expansao: "Lei de Diretrizes Orçamentárias" },
+          ]}
+          trend={primario_pct && primario_pct > 0 ? "boa" : "ruim"}
+        />
+        <IndicadorBox
+          titulo="Juros nominais"
+          valor={juros_pct}
+          unidade="%"
+          fonte="Tesouro RTN linha 74"
+          narrativa="Despesa anual com juros da dívida federal. Brasil tem juros nominais altos por causa da Selic elevada + estoque DBGG grande."
+          trend={juros_pct && juros_pct > 7 ? "ruim" : "neutra"}
+        />
+        <IndicadorBox
+          titulo="Juros / Receita"
+          valor={juros_pct_rec}
+          unidade="%"
+          formula="Juros nominais 12m ÷ Receita líquida 12m"
+          narrativa="Métrica Dalio. Quanto da receita evapora em juros antes de qualquer serviço público. Acima de 30% é zona de alerta. Brasil hoje em BREAK (>40%)."
+          trend={juros_pct_rec && juros_pct_rec > 30 ? "ruim" : "neutra"}
+        />
+        <IndicadorBox
+          titulo="NFSP setor público"
+          valor={nfsp_pct}
+          unidade="%"
+          fonte="BCB SGS 5727"
+          narrativa="Necessidade de financiamento do setor público consolidado (União + estados + municípios + estatais). Soma primário + juros 12m."
+          siglas={[
+            { sigla: "NFSP", expansao: "Necessidade de Financiamento do Setor Público" },
+            { sigla: "SP", expansao: "Setor Público consolidado" },
+          ]}
+        />
+        <IndicadorBox
+          titulo="Previdência"
+          valor={previdencia_pct}
+          unidade="%"
+          fonte="Tesouro RTN linha 40"
+          narrativa="Benefícios previdenciários do RGPS. Maior linha do orçamento federal — mais que pessoal + discricionárias somados."
+          siglas={[
+            { sigla: "RGPS", expansao: "Regime Geral de Previdência Social (INSS)" },
+          ]}
+        />
+        <IndicadorBox
+          titulo="Pessoal"
+          valor={pessoal_pct_kpi}
+          unidade="%"
+          fonte="Tesouro RTN linha 41"
+          narrativa="Folha de pagamento da União (ativos + inativos + pensionistas civis e militares)."
+        />
       </div>
 
       <Section

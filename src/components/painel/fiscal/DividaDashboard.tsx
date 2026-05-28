@@ -6,7 +6,7 @@ import {
 } from "recharts";
 
 import type { FiscalClassicosData, PontoMensal } from "@/lib/painel-fiscal";
-import { CORES_SERIES, CardHeader, KPI, Section, Toggle, useHorizonte } from "./FiscalShell";
+import { CORES_SERIES, CardHeader, IndicadorBox, KPI, Section, Toggle, useHorizonte } from "./FiscalShell";
 
 const HORIZONTES = [
   { value: "5a", label: "5 anos", n: 60 },
@@ -104,13 +104,64 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
         rightSlot={<Toggle value={horizonte.horizonte} onChange={horizonte.setHorizonte} options={[...HORIZONTES]} />}
       />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-        <KPI label="DBGG / PIB" value={fmtPct(dbgg_recente)} hint="Dívida bruta gov geral" trend={dbgg_recente && dbgg_recente > 80 ? "down" : "neutral"} />
-        <KPI label="DLSP total / PIB" value={fmtPct(dlsp_recente)} hint="Dívida líquida setor público" />
-        <KPI label="DLSP gov central / PIB" value={fmtPct(dlsp_central_recente)} hint="Dívida líquida governo central" />
-        <KPI label="Wedge DBGG − DLSP" value={fmtPct(wedge)} hint="Créditos BNDES + reservas + ativos" trend="up" />
-        <KPI label="Crédito setor privado / PIB" value={fmtPct(credito_recente)} hint="Famílias + empresas. Big Debt Cycle Dalio." />
-        <KPI label="Dívida total economia / PIB" value={fmtPct(divida_total_economia)} hint="Gov + privado (proxy)" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <IndicadorBox
+          titulo="DBGG / PIB"
+          valor={dbgg_recente}
+          unidade="%"
+          fonte="BCB SGS 13762"
+          narrativa="Dívida bruta do governo geral em % do PIB — métrica padrão do FMI / Maastricht. Inclui União, estados, municípios e previdência."
+          siglas={[
+            { sigla: "DBGG", expansao: "Dívida Bruta do Governo Geral" },
+            { sigla: "PIB", expansao: "Produto Interno Bruto" },
+          ]}
+          trend={dbgg_recente && dbgg_recente > 80 ? "ruim" : "neutra"}
+          tamanho="lg"
+        />
+        <IndicadorBox
+          titulo="DLSP total / PIB"
+          valor={dlsp_recente}
+          unidade="%"
+          fonte="BCB SGS 4513"
+          narrativa="Dívida líquida do setor público — DBGG menos créditos do governo (BNDES) menos reservas internacionais menos outros ativos. Brasil é incomum em ter ativos significativos."
+          siglas={[
+            { sigla: "DLSP", expansao: "Dívida Líquida do Setor Público" },
+          ]}
+          tamanho="lg"
+        />
+        <IndicadorBox
+          titulo="DLSP gov central / PIB"
+          valor={dlsp_central_recente}
+          unidade="%"
+          fonte="BCB SGS 4503"
+          narrativa="Dívida líquida apenas do gov central (União, INSS, BCB). Métrica usada quando o foco é capacidade do Tesouro pagar."
+          tamanho="lg"
+        />
+        <IndicadorBox
+          titulo="Wedge DBGG − DLSP"
+          valor={wedge}
+          unidade=" pp"
+          formula="DBGG − DLSP total"
+          narrativa="Tamanho do 'colchão' brasileiro: créditos do BNDES + reservas internacionais + outros ativos públicos. Quanto maior, mais espaço o gov tem em caso de stress."
+          trend="boa"
+          tamanho="lg"
+        />
+        <IndicadorBox
+          titulo="Crédito setor privado / PIB"
+          valor={credito_recente}
+          unidade="%"
+          fonte="BCB SGS 20622"
+          narrativa="Crédito total ao setor privado (famílias + empresas) sobre PIB. No livro do Dalio, fase tardia do Big Debt Cycle = endividamento privado saturado."
+          tamanho="lg"
+        />
+        <IndicadorBox
+          titulo="Dívida total economia / PIB"
+          valor={divida_total_economia}
+          unidade="%"
+          formula="DBGG + Crédito setor privado / PIB"
+          narrativa="Endividamento agregado do país. Referência Dalio: EUA ~250%, China ~290%, Japão ~410%. Brasil em ~136% é relativamente baixo no comparativo internacional."
+          tamanho="lg"
+        />
       </div>
 
       <Section titulo="Trajetória DBGG e DLSP" hint="Linhas tracejadas vermelhas: 80% (atenção FMI) e 100% (limite Reinhart-Rogoff).">
@@ -138,11 +189,45 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
           titulo="Composição da DPMFi por indexador"
           hint="Dívida Pública Mobiliária Federal interna por tipo de indexador. Selic/LFT = exposta a aperto monetário. Câmbio = exposta a desvalorização. Fonte: BCB SGS 4174-4180."
         >
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <KPI label="Selic / LFT" value={fmtPct(pct_selic)} hint="Risco direto da Selic" trend={pct_selic && pct_selic > 50 ? "down" : "neutral"} />
-            <KPI label="IPCA (NTN-B)" value={fmtPct(pct_ipca)} hint="Calculado por resíduo" />
-            <KPI label="Prefixado" value={fmtPct(pct_prefix)} hint="Custo fixo — saudável" trend={pct_prefix && pct_prefix > 25 ? "up" : "down"} />
-            <KPI label="Câmbio" value={fmtPct(pct_cambio)} hint="Brasil estruturalmente baixo" trend={pct_cambio && pct_cambio > 5 ? "down" : "up"} />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <IndicadorBox
+              titulo="Selic / LFT"
+              valor={pct_selic}
+              unidade="%"
+              fonte="BCB SGS 4177"
+              narrativa="Parte da DPMFi indexada à Selic via LFT. Quando o BC sobe juros, o estoque inteiro encarece imediatamente. Brasil 2002: 70%. Hoje próximo de 50%."
+              siglas={[
+                { sigla: "DPMFi", expansao: "Dívida Pública Mobiliária Federal interna" },
+                { sigla: "LFT", expansao: "Letra Financeira do Tesouro (indexada à Selic)" },
+              ]}
+              trend={pct_selic && pct_selic > 50 ? "ruim" : "neutra"}
+            />
+            <IndicadorBox
+              titulo="IPCA (NTN-B)"
+              valor={pct_ipca}
+              unidade="%"
+              formula="100% − (Selic + Prefixado + Câmbio + outros)"
+              narrativa="Parte indexada à inflação via NTN-B. Calculado por resíduo das demais. Atrai investidores de longo prazo (fundos de pensão)."
+              siglas={[
+                { sigla: "NTN-B", expansao: "Nota do Tesouro Nacional série B (indexada ao IPCA)" },
+              ]}
+            />
+            <IndicadorBox
+              titulo="Prefixado"
+              valor={pct_prefix}
+              unidade="%"
+              fonte="BCB SGS 4178"
+              narrativa="Parte com custo travado na emissão. Protege o estoque contra alta de juros. Acima de 25% é considerado saudável."
+              trend={pct_prefix && pct_prefix > 25 ? "boa" : "ruim"}
+            />
+            <IndicadorBox
+              titulo="Câmbio"
+              valor={pct_cambio}
+              unidade="%"
+              fonte="BCB SGS 4175"
+              narrativa="Dívida em moeda estrangeira — vulnerável a desvalorizações. Brasil tem virtude estrutural: ~1-3%. Argentina pré-2001 tinha mais de 60%."
+              trend={pct_cambio && pct_cambio > 5 ? "ruim" : "boa"}
+            />
           </div>
           <div className="mt-4 h-72">
             <ResponsiveContainer width="100%" height="100%">

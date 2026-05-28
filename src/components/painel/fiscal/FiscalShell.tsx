@@ -338,3 +338,75 @@ export function Heatmap({
     </div>
   );
 }
+
+// ============================================================================
+// IndicadorBox — card de KPI no padrão Termometro:
+//   - badge CALCULADO se for derivado
+//   - valor grande
+//   - fórmula opcional
+//   - narrativa breve
+//   - glossário inline de siglas
+// ============================================================================
+export type IndicadorBoxProps = {
+  titulo: string;
+  valor: string | number | null | undefined;
+  unidade?: string;
+  fonte?: string;             // ex: "BCB SGS 13762"
+  formula?: string;           // se preenchido, mostra badge CALCULADO + texto
+  narrativa?: string;         // 1-2 linhas explicando o que é
+  siglas?: Array<{ sigla: string; expansao: string }>;
+  trend?: "boa" | "ruim" | "neutra";
+  tamanho?: "md" | "lg";
+};
+
+export function IndicadorBox({
+  titulo, valor, unidade, fonte, formula, narrativa, siglas, trend, tamanho = "md",
+}: IndicadorBoxProps) {
+  const corValor =
+    trend === "boa" ? "text-emerald-700" :
+    trend === "ruim" ? "text-rose-700" :
+    "text-[#132960]";
+  const fmtValor = valor == null || valor === "" ? "—"
+    : typeof valor === "number"
+      ? valor.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 2 })
+      : valor;
+  const isCalc = !!formula;
+  const valorFontClass = tamanho === "lg" ? "text-3xl" : "text-2xl";
+
+  return (
+    <div className="flex flex-col rounded-xl border-2 border-zinc-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <h4 className="text-sm font-bold leading-tight text-[#132960]">{titulo}</h4>
+        {isCalc && (
+          <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-violet-900" title="Indicador calculado, não vem direto de uma série">
+            calculado
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 flex items-baseline gap-1">
+        <span className={`${valorFontClass} font-bold tabular-nums ${corValor}`}>{fmtValor}</span>
+        {unidade && <span className="text-sm text-zinc-500">{unidade}</span>}
+      </div>
+
+      {formula && (
+        <p className="mt-1.5 text-[10px] italic text-violet-700">Fórmula: {formula}</p>
+      )}
+      {fonte && !formula && (
+        <p className="mt-1.5 text-[10px] text-zinc-500">Fonte: {fonte}</p>
+      )}
+      {narrativa && (
+        <p className="mt-2 text-[11px] leading-relaxed text-zinc-700">{narrativa}</p>
+      )}
+      {siglas && siglas.length > 0 && (
+        <div className="mt-2 border-t border-zinc-200 pt-2 text-[10px] text-zinc-600">
+          {siglas.map(({ sigla, expansao }) => (
+            <div key={sigla}>
+              <strong className="text-zinc-800">{sigla}:</strong> {expansao}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
