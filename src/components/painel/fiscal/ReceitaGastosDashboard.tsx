@@ -199,6 +199,31 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
     return { data: mergePct(all, labels), labels };
   }, [data, horizonte.n, base]);
 
+  // Receita decomposta por tributo (% PIB)
+  const serieReceitaPorTributo = useMemo(() => {
+    const keys = [
+      ["imposto_renda_12m_pct_pib", "Imposto de Renda"],
+      ["cofins_12m_pct_pib", "Cofins"],
+      ["csll_12m_pct_pib", "CSLL"],
+      ["pis_pasep_12m_pct_pib", "PIS/Pasep"],
+      ["ipi_12m_pct_pib", "IPI"],
+      ["iof_12m_pct_pib", "IOF"],
+      ["imposto_importacao_12m_pct_pib", "Imp. Importação"],
+      ["rgps_arrecadacao_12m_pct_pib", "RGPS"],
+      ["dividendos_12m_pct_pib", "Dividendos+Concessões"],
+    ] as const;
+    const all: { data: string; valor_pct: number | null }[][] = [];
+    const labels: string[] = [];
+    for (const [k, lbl] of keys) {
+      const serie = (data.receita_e_gastos as unknown as Record<string, PontoMensalPct[] | undefined>)[k];
+      if (serie?.length) {
+        all.push(tail(serie, horizonte.n));
+        labels.push(lbl);
+      }
+    }
+    return { data: mergePct(all, labels), labels };
+  }, [data, horizonte.n]);
+
   // KPIs decomposição (último ponto)
   const ult = (key: string) => {
     const s = (data.receita_e_gastos as unknown as Record<string, PontoMensalPct[] | undefined>)[key];
@@ -273,6 +298,56 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
           </ResponsiveContainer>
         </div>
       </Section>
+
+      {/* === DEBT SERVICE / RECEITA + GAP BLANCHARD === */}
+      <Section titulo="Carga de juros sobre a receita líquida" hint="Quanto da receita do gov central é consumida só para pagar juros. Métrica Dalio (Debt Service/Income).">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border-2 border-rose-300 bg-rose-50 p-5">
+            <div className="text-xs font-bold uppercase tracking-wide text-rose-900">Juros / Receita Líquida</div>
+            <div className="mt-2 text-4xl font-bold text-rose-900">{fmtPct(juros_pct_rec, 1)}</div>
+            <p className="mt-3 text-xs text-rose-900">
+              {juros_pct_rec != null && juros_pct_rec > 30
+                ? `Acima dos ${fmtPct(30, 0)} considerados zona de alerta por Dalio (cap. The Mechanics). Cada R$ 100 arrecadados, R$ ${juros_pct_rec.toFixed(0)} viram juros antes de qualquer serviço público.`
+                : "Patamar Dalio: < 10% verde, 10-20% atenção, 20-30% crítico, > 30% break."}
+            </p>
+          </div>
+          <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-5">
+            <div className="text-xs font-bold uppercase tracking-wide text-amber-900">Carga de juros / Despesa total</div>
+            <div className="mt-2 text-4xl font-bold text-amber-900">{
+              juros_pct != null && despesa_pct != null && despesa_pct > 0
+                ? `${((juros_pct / despesa_pct) * 100).toFixed(1)}%`
+                : "—"
+            }</div>
+            <p className="mt-3 text-xs text-amber-900">
+              Quanto da despesa total é só juros — supera previdência+pessoal somados. Dalio: quando juros viram a maior linha do orçamento, espaço fiscal evapora.
+            </p>
+          </div>
+        </div>
+      </Section>
+
+      {/* === RECEITA DECOMPOSTA POR TRIBUTO === */}
+      {serieReceitaPorTributo.labels.length > 0 && (
+        <Section
+          titulo="Decomposição da receita do gov central por tributo (% PIB, 12m)"
+          hint="Onde vem a receita: tributos administrados pela RFB, contribuição RGPS, receitas não-administradas (dividendos, concessões). Fonte: Tesouro Nacional/RTN, tabela 1.1, linhas 8-24."
+        >
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={serieReceitaPorTributo.data}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="mes" tickFormatter={fmtMes} tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} unit="%" />
+                <Tooltip formatter={fmtTipPct} labelFormatter={fmtTipLabel} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                {serieReceitaPorTributo.labels.map((lbl, i) => (
+                  <Area key={lbl} type="monotone" dataKey={lbl} stackId="1"
+                    stroke={CORES_SERIES[i % CORES_SERIES.length]} fill={CORES_SERIES[i % CORES_SERIES.length]} fillOpacity={0.55} />
+                ))}
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Section>
+      )}
 
       <Section
         titulo={`Decomposição da despesa primária (${base === "pib" ? "% PIB" : "% Receita"})`}

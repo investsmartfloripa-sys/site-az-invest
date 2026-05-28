@@ -106,6 +106,21 @@ RTN_LINHAS = {
     "primario_acima": 66,
     "juros_nominais": 74,
     "nominal": 75,
+    # Receita administrada RFB por tributo (linhas 8-17 do RTN aba 1.1)
+    "imposto_importacao": 8,         # 1.1.01 Imposto sobre Importação
+    "ipi": 9,                        # 1.1.02 IPI
+    "imposto_renda": 10,             # 1.1.03 Imposto de Renda
+    "iof": 11,                       # 1.1.04 IOF
+    "cofins": 12,                    # 1.1.05 Cofins
+    "pis_pasep": 13,                 # 1.1.06 PIS/Pasep
+    "csll": 14,                      # 1.1.07 CSLL
+    "cide_combustiveis": 16,         # 1.1.09 CIDE-Combustíveis
+    # Arrecadacao previdenciaria (RGPS)
+    "rgps_arrecadacao": 19,          # 1.3 Arrecadação Líquida para RGPS
+    # Receita nao-administrada
+    "concessoes": 21,                # 1.4.1 Concessões e Permissões
+    "dividendos": 22,                # 1.4.2 Dividendos e Participações
+    "recursos_naturais": 24,         # 1.4.4 Receitas de Exploração de Recursos Naturais
 }
 
 
@@ -328,6 +343,19 @@ def main():
     pessoal_12m = soma_12m(rtn_data["pessoal"])
     outras_obrig_12m = soma_12m(rtn_data["outras_obrigatorias"])
     discricionarias_12m = soma_12m(rtn_data["discricionarias"])
+    # Receita por tributo
+    ii_12m = soma_12m(rtn_data["imposto_importacao"])
+    ipi_12m = soma_12m(rtn_data["ipi"])
+    ir_12m = soma_12m(rtn_data["imposto_renda"])
+    iof_12m = soma_12m(rtn_data["iof"])
+    cofins_12m = soma_12m(rtn_data["cofins"])
+    pis_12m = soma_12m(rtn_data["pis_pasep"])
+    csll_12m = soma_12m(rtn_data["csll"])
+    cide_12m = soma_12m(rtn_data["cide_combustiveis"])
+    rgps_12m = soma_12m(rtn_data["rgps_arrecadacao"])
+    concessoes_12m = soma_12m(rtn_data["concessoes"])
+    dividendos_12m = soma_12m(rtn_data["dividendos"])
+    rec_naturais_12m = soma_12m(rtn_data["recursos_naturais"])
     abono_seguro_12m = soma_12m(rtn_data["abono_seguro"])
     bpc_loas_12m = soma_12m(rtn_data["bpc_loas"])
     fundeb_12m = soma_12m(rtn_data["fundeb"])
@@ -345,6 +373,20 @@ def main():
     primario_pct_rec = divide_por_receita(primario_central_12m, receita_liquida_12m)
     previdencia_pct_rec = divide_por_receita(previdencia_12m, receita_liquida_12m)
     pessoal_pct_rec = divide_por_receita(pessoal_12m, receita_liquida_12m)
+
+    # Decomposicao receita por tributo (% PIB)
+    ii_pct_pib = divide_por_pib(ii_12m, pib_map)
+    ipi_pct_pib = divide_por_pib(ipi_12m, pib_map)
+    ir_pct_pib = divide_por_pib(ir_12m, pib_map)
+    iof_pct_pib = divide_por_pib(iof_12m, pib_map)
+    cofins_pct_pib = divide_por_pib(cofins_12m, pib_map)
+    pis_pct_pib = divide_por_pib(pis_12m, pib_map)
+    csll_pct_pib = divide_por_pib(csll_12m, pib_map)
+    cide_pct_pib = divide_por_pib(cide_12m, pib_map)
+    rgps_pct_pib = divide_por_pib(rgps_12m, pib_map)
+    concessoes_pct_pib = divide_por_pib(concessoes_12m, pib_map)
+    dividendos_pct_pib = divide_por_pib(dividendos_12m, pib_map)
+    rec_naturais_pct_pib = divide_por_pib(rec_naturais_12m, pib_map)
 
     # Decomposicao expandida de despesa (% PIB)
     abono_seguro_pct_pib = divide_por_pib(abono_seguro_12m, pib_map)
@@ -421,6 +463,19 @@ def main():
             "subsidios_12m_pct_receita": subsidios_pct_rec,
             "discricionarias_12m_pct_receita": discricionarias_pct_rec,
             "outras_obrigatorias_12m_pct_receita": outras_obrig_pct_rec,
+            # Decomposicao receita por tributo (% PIB)
+            "imposto_renda_12m_pct_pib": ir_pct_pib,
+            "cofins_12m_pct_pib": cofins_pct_pib,
+            "csll_12m_pct_pib": csll_pct_pib,
+            "pis_pasep_12m_pct_pib": pis_pct_pib,
+            "ipi_12m_pct_pib": ipi_pct_pib,
+            "iof_12m_pct_pib": iof_pct_pib,
+            "imposto_importacao_12m_pct_pib": ii_pct_pib,
+            "cide_12m_pct_pib": cide_pct_pib,
+            "rgps_arrecadacao_12m_pct_pib": rgps_pct_pib,
+            "concessoes_12m_pct_pib": concessoes_pct_pib,
+            "dividendos_12m_pct_pib": dividendos_pct_pib,
+            "recursos_naturais_12m_pct_pib": rec_naturais_pct_pib,
             "nfsp_sp_12m_pct_pib": sgs["nfsp_sp"],
             "primario_sp_12m_pct_pib": primario_sp_pct,
             "juros_nominais_sp_12m_pct_pib": sgs["juros_sp_pct"],
