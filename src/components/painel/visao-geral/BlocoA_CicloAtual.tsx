@@ -155,7 +155,7 @@ function CardRecessaoMultiModelos({
   );
 }
 
-function CardHiatoLeque({ serie }: { serie: HiatoPonto[] }) {
+function CardHiatoLeque({ serie, codace }: { serie: HiatoPonto[]; codace: CodaceFaixa[] }) {
   if (!serie || serie.length === 0) {
     return <PlaceholderCard titulo="A3 — Hiato do produto (leque HP + Hamilton)" />;
   }
@@ -184,6 +184,16 @@ function CardHiatoLeque({ serie }: { serie: HiatoPonto[] }) {
           />
           <Legend wrapperStyle={{ fontSize: 11 }} />
           <ReferenceLine y={0} stroke="#000" strokeDasharray="2 4" />
+          {codace.map((f, i) => (
+            <ReferenceArea
+              key={`hiato-codace-${f.pico}-${i}`}
+              x1={f.pico}
+              x2={f.vale}
+              fill="#9CA3AF"
+              fillOpacity={0.12}
+              ifOverflow="visible"
+            />
+          ))}
           <Area type="monotone" dataKey="leque_alto" stroke="none" fill="#9CA3AF" fillOpacity={0.18} name="Máximo" />
           <Area type="monotone" dataKey="leque_baixo" stroke="none" fill="#fff" fillOpacity={1} name="Mínimo" />
           <Line type="monotone" dataKey="gap_hp" stroke="#DC2626" dot={false} strokeWidth={1.5} name="HP" />
@@ -214,7 +224,7 @@ export function BlocoACicloAtual({ payload }: { payload: VisaoGeralPayload }) {
       </header>
       <CardRecessaoMultiModelos serie={payload.recessao?.serie ?? []} codace={codaceMensal} />
       <CardIbcBrCodace serie={payload.ibcbr?.serie ?? []} codace={codaceMensal} />
-      <CardHiatoLeque serie={payload.hiato?.serie ?? []} />
+      <CardHiatoLeque serie={payload.hiato?.serie ?? []} codace={codaceMensal} />
     </section>
   );
 }

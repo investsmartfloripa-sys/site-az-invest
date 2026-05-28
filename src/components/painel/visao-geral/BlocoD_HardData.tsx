@@ -141,14 +141,43 @@ function MiniSpark({
   );
 }
 
-function CardIpeadata({ data, pim }: { data: IpeadataData | null; pim: AtividadePimData | null }) {
-  if ((!data || data.freshness_status === "missing") && !pim) return null;
-
-  // PIM-PF oficial via SIDRA IBGE (data/atividade_pim.json) - BENCHMARK OFICIAL.
-  // Os demais (papelao, aco, FENABRAVE) são antecedentes/coincidentes secundários via IPEADATA.
+function CardPimDestaque({ pim }: { pim: AtividadePimData | null }) {
   const pimSerie = pim?.geral?.serie ?? [];
   const pimUlt = pimSerie[pimSerie.length - 1];
   const pimYoy = pimUlt?.var_yoy ?? null;
+  if (!pim || pimSerie.length === 0) return null;
+  return (
+    <div className="rounded-2xl border-2 border-[#132960]/25 bg-gradient-to-br from-white to-zinc-50 p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-base font-semibold text-zinc-900">D2 — PIM-PF: produção industrial (IBGE)</h3>
+            <span className="rounded bg-[#132960] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">Benchmark oficial IBGE</span>
+          </div>
+          <p className="mt-1 text-xs text-zinc-500">Coincidente oficial publicado pelo IBGE via SIDRA (base 2022=100). Referência contra a qual os demais hard data são comparados. Cobre 20% do PIB (indústria).</p>
+        </div>
+        <div className="text-right">
+          <div className={`text-3xl font-bold ${pimYoy === null || pimYoy === undefined ? "text-zinc-400" : pimYoy >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+            {pimYoy !== null && pimYoy !== undefined ? `${pimYoy >= 0 ? "+" : ""}${pimYoy.toFixed(1)}%` : "—"}
+          </div>
+          <div className="text-[10px] text-zinc-500">a/a, {formatMes(pimUlt?.mes)}</div>
+        </div>
+      </div>
+      <div className="mt-3">
+        <MiniSpark
+          serie={pimSerie.slice(-36).map((p) => ({ mes: p.mes, v: p.var_yoy }))}
+          cor="#132960"
+          altura={80}
+        />
+      </div>
+    </div>
+  );
+}
+
+function CardIpeadata({ data }: { data: IpeadataData | null }) {
+  if (!data || data.freshness_status === "missing") return null;
+
+  // PIM-PF oficial via SIDRA IBGE renderizado em CardPimDestaque separado.
 
   const blocos = [
     { key: "papelao_abpo" as const, titulo: "Papelão ondulado (ABPO)", subt: "Antecedente clássico da PIM (ρ≈0.85)", cor: "#7C3AED", tag: "antecedente" },
@@ -156,39 +185,10 @@ function CardIpeadata({ data, pim }: { data: IpeadataData | null; pim: Atividade
     { key: "fenabrave_emplac" as const, titulo: "FENABRAVE — emplacamentos", subt: "Antecedente suave de consumo durável", cor: "#2563EB", tag: "antecedente" },
   ];
   const dadosValidos = data ? blocos.filter(b => (data[b.key]?.serie?.length ?? 0) > 0) : [];
-  if (dadosValidos.length === 0 && !pim) return null;
+  if (dadosValidos.length === 0) return null;
 
   return (
-    <div className="space-y-3">
-      {pim && pimSerie.length > 0 && (
-        <div className="rounded-2xl border-2 border-[#132960]/25 bg-gradient-to-br from-white to-zinc-50 p-5 shadow-sm">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base font-semibold text-zinc-900">D6 — PIM-PF: produção industrial (IBGE)</h3>
-                <span className="rounded bg-[#132960] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">Benchmark oficial IBGE</span>
-              </div>
-              <p className="mt-1 text-xs text-zinc-500">Coincidente oficial publicado pelo IBGE via SIDRA (base 2022=100). Referência contra a qual os demais hard data são comparados. Cobre 20% do PIB (indústria).</p>
-            </div>
-            <div className="text-right">
-              <div className={`text-3xl font-bold ${pimYoy === null || pimYoy === undefined ? "text-zinc-400" : pimYoy >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                {pimYoy !== null && pimYoy !== undefined ? `${pimYoy >= 0 ? "+" : ""}${pimYoy.toFixed(1)}%` : "—"}
-              </div>
-              <div className="text-[10px] text-zinc-500">a/a, {formatMes(pimUlt?.mes)}</div>
-            </div>
-          </div>
-          <div className="mt-3">
-            <MiniSpark
-              serie={pimSerie.slice(-36).map((p) => ({ mes: p.mes, v: p.var_yoy }))}
-              cor="#132960"
-              altura={80}
-            />
-          </div>
-        </div>
-      )}
-
-      {dadosValidos.length > 0 && (
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <h3 className="text-base font-semibold text-zinc-900">D7 — Hard data físico antecedente (IPEADATA)</h3>
           <p className="text-xs text-zinc-500">Antecedentes e coincidentes secundários da indústria. Variação a/a (linha cinza tracejada = 0).</p>
           {(() => {
@@ -226,8 +226,6 @@ function CardIpeadata({ data, pim }: { data: IpeadataData | null; pim: Atividade
               );
             })}
           </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -385,10 +383,11 @@ export function BlocoDHardData({
         </p>
       </header>
       <Termometro zScores={zScores} />
+      <CardPimDestaque pim={atividadePim} />
       <CardAnfavea data={anfavea} />
       <CardEnergia data={epe} />
       <CardAnp data={anp} />
-      <CardIpeadata data={ipeadata} pim={atividadePim} />
+      <CardIpeadata data={ipeadata} />
       <CardHardData data={hardData} />
     </section>
   );

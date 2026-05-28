@@ -19,7 +19,7 @@ export function FraseManchete({ payload }: { payload: VisaoGeralPayload }) {
   const frase = fraseManchete(payload);
   const rec = ultimaObs(payload.recessao?.serie);
   const v = veredito(rec ?? null);
-  if (!frase) {
+  if (!frase || frase.trim().length === 0) {
     return (
       <p className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-500">
         Dados carregando — frase-manchete será gerada quando todos os blocos estiverem disponíveis.

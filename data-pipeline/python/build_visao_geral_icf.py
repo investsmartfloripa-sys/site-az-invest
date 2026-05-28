@@ -218,7 +218,10 @@ def main() -> None:
             comps.append(("reer", z_reer[i]))
         if not comps:
             continue
-        # Pesos: Selic real ex-ante 50%, Ibov 6m 25%, REER 25% (literatura Hatzius et al 2010)
+        # Pesos: Selic real ex-ante 50%, Ibov 6m 25%, REER 25%.
+        # Pesos ad-hoc calibrados pela maior sensibilidade da economia BR a taxa real
+        # (canal de credito dominante). Hatzius et al 2010 (NBER WP 16150) usa PCA;
+        # aqui simplificamos. Ref: BCB WP 305 (Pereira da Silva 2014) sobre FCI Brasil.
         PESOS = {"selic_real": 0.50, "ibov_6m": 0.25, "reer": 0.25}
         soma_p = 0
         soma_v = 0

@@ -90,22 +90,23 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
           ? "vermelho"
           : "amarelo";
 
-  // Tecnico e subtitulo do KPI Recessao - tratamento explicito de amostra insuficiente
+  // Tecnico e subtitulo do KPI Recessao (loop 15): se ha mediana_parcial, mostrar X%* com asterisco
+  const medParcial = rec?.mediana_parcial;
   const kpi2Tecnico = amostraInsuficiente
-    ? "Amostra insuficiente"
+    ? `Parcial — ${rec?.n_modelos ?? 0} de 4 modelos`
     : rec && rec.n_modelos < 4
       ? `Cobertura ${rec.n_modelos}/4 modelos`
       : "Mediana 4 modelos prob.";
   const kpi2Valor = amostraInsuficiente
-    ? "n/d"
+    ? (medParcial !== null && medParcial !== undefined ? `${medParcial.toFixed(0)}%*` : "n/d")
     : kpi2 === null
       ? "—"
       : `${kpi2.toFixed(0)}%`;
   const kpi2Subtitulo = amostraInsuficiente
-    ? `Modelos sensíveis (Probit + Diffusion) ausentes · ${rec?.n_modelos ?? 0}/4 rodaram`
+    ? `* Modelos sensíveis (Probit/Diffusion) aguardando próxima rodada. Sinal preliminar baseado em ${rec?.n_modelos ?? 0}/4 modelos.`
     : rec
       ? `${rec.n_acima_50} dispararam alerta · ${rec.n_modelos}/4 rodaram${rec.sinalizacao === "indeterminado" ? " (sinal incompleto)" : ""}`
-      : "MS-DFM, probit, gap HP, diffusion (probabilísticos).";
+      : "MS-AR, probit, gap HP, diffusion (probabilísticos).";
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
