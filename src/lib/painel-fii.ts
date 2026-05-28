@@ -235,7 +235,19 @@ export type FiiDetailsData = {
 };
 
 export async function getFiiDetails(): Promise<FiiDetailsData | null> {
-  return fetchBlobJson<FiiDetailsData>("data/fii_details.json");
+  // Cache mais curto que o padrão (3600s) — o JSON pesa ~4,6 MB e tem 107
+  // tickers; o cache ISR estava deixando entries cair entre builds. 5 min é
+  // equilibrado: fresh suficiente pra trazer novos tickers, leve o bastante
+  // pra não bater no CDN a cada request.
+  const url = painelBlobUrl("data/fii_details.json");
+  if (!url) return null;
+  try {
+    const res = await fetch(url, { next: { revalidate: 300 } });
+    if (!res.ok) return null;
+    return (await res.json()) as FiiDetailsData;
+  } catch {
+    return null;
+  }
 }
 
 export async function getFiiDetail(ticker: string): Promise<FiiDetailEntry | null> {

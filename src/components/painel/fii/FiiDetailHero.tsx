@@ -64,11 +64,48 @@ export function FiiDetailHero({ entry }: Props) {
   const hero = entry.hero;
   const positive = (hero.change_pct_1d ?? 0) >= 0;
 
+  // Detecção de evento societário (desdobramento, amortização extraordinária):
+  // se a cotação caiu mais de 50% no melhor caso dos últimos 12m, é quase
+  // certo que houve evento. Banner avisa o leitor que o histórico não pode
+  // ser comparado de cabeça.
+  const corporateEvent =
+    hero.max_12m != null && hero.min_12m != null && hero.price != null && hero.max_12m > 0
+      ? (hero.max_12m - hero.min_12m) / hero.max_12m > 0.5
+      : false;
+
   return (
     <section
       aria-label={`${entry.ticker} — Hero`}
       className="space-y-4 rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-6"
     >
+      {(entry.dy_atypical || corporateEvent) ? (
+        <div
+          role="alert"
+          className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"
+        >
+          <p className="font-semibold uppercase tracking-wide text-amber-800">
+            Atenção — leia antes de interpretar os números
+          </p>
+          <ul className="mt-1 list-disc pl-5 leading-relaxed">
+            {entry.dy_atypical ? (
+              <li>
+                <strong>DY 12m acima de 18%</strong>: pode incluir{" "}
+                <strong>devolução de capital</strong> (amortização extraordinária) tratada como
+                rendimento pelo provedor de dados. Confira a tabela de Rendimentos abaixo e o
+                relatório gerencial da gestora antes de tratar como renda recorrente.
+              </li>
+            ) : null}
+            {corporateEvent ? (
+              <li>
+                <strong>Variação de cotação superior a 50% nos últimos 12 meses</strong>: indica
+                provável <strong>desdobramento, agrupamento ou evento societário</strong> — o
+                histórico do gráfico pode não ser comparável diretamente. Verifique fatos
+                relevantes do fundo.
+              </li>
+            ) : null}
+          </ul>
+        </div>
+      ) : null}
       {/* Linha de KPIs grandes */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-6">
         {/* Ticker badge */}
@@ -91,7 +128,20 @@ export function FiiDetailHero({ entry }: Props) {
         <KpiBlock
           label="P/VP"
           value={hero.pvp != null ? hero.pvp.toFixed(3) : "—"}
-          tooltip={entry.pvp_warning ? "P/VP < 0,7 pode indicar distress." : undefined}
+          sub={
+            hero.pvp == null
+              ? "VP/cota indisponível"
+              : entry.pvp_warning
+              ? "P/VP < 0,7 — possível distress"
+              : undefined
+          }
+          tooltip={
+            hero.pvp == null
+              ? "Valor Patrimonial por cota reportado pela CVM está em escala inconsistente para este FII (não publicado em base por cota nominal). Ratio omitido para evitar exibir P/VP incorreto."
+              : entry.pvp_warning
+              ? "P/VP < 0,7 pode indicar distress (vacância alta, problema de crédito da carteira CRI). Verifique relatório gerencial."
+              : undefined
+          }
         />
       </div>
 

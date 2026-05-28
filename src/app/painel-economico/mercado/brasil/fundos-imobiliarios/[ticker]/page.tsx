@@ -13,6 +13,10 @@ type Props = {
   params: Promise<{ ticker: string }>;
 };
 
+// ISR de 5 minutos — bate com o cache do fetch e garante refresh rápido após
+// upload novo do `fii_details.json` pelo pipeline.
+export const revalidate = 300;
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { ticker } = await params;
   const entry = await getFiiDetail(ticker);

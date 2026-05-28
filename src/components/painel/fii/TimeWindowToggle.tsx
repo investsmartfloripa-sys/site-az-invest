@@ -8,10 +8,12 @@
 
 export type TimeWindow = "7d" | "5d" | "30d" | "6m" | "1y" | "5y";
 
+// Labels padrão Bloomberg/TradingView pra ficar consistente com investidores
+// que usam essas plataformas. 1D = último pregão, 5D = semana, 1M = mês, etc.
 export const TIME_WINDOW_OPTIONS: ReadonlyArray<{ id: TimeWindow; label: string; days: number }> = [
-  { id: "7d", label: "7 dias", days: 7 },
-  { id: "5d", label: "5 dias úteis", days: 7 }, // 5 pregões ≈ 7 dias corridos
-  { id: "30d", label: "30 dias", days: 30 },
+  { id: "7d", label: "1D", days: 2 },        // só o último pregão (1 dia útil + buffer)
+  { id: "5d", label: "5D", days: 9 },        // ~5 pregões
+  { id: "30d", label: "1M", days: 30 },
   { id: "6m", label: "6M", days: 183 },
   { id: "1y", label: "1A", days: 365 },
   { id: "5y", label: "5A", days: 365 * 5 },
