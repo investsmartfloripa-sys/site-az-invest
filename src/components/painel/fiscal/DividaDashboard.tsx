@@ -131,12 +131,12 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
     },
     {
       id: "wedge",
-      label: "Wedge DBGG − DLSP",
+      label: "Ativos públicos líquidos / PIB",
       cor: "#9467bd",
       valor: ultimoValor(wedgeSerie),
-      unidade: " pp",
+      unidade: "%",
       formula: "DBGG − DLSP total",
-      narrativa: "Tamanho do 'colchão' brasileiro: créditos do BNDES + reservas internacionais + outros ativos públicos. Quanto maior, mais espaço o gov tem em caso de stress.",
+      narrativa: "Diferença entre dívida bruta e líquida. Representa o conjunto de ativos do setor público: créditos do governo (BNDES, FAT, fundos), reservas internacionais e ativos da União que abatem da dívida bruta no cálculo da líquida. Quanto maior, mais 'colchão' o governo tem em caso de stress fiscal/cambial.",
       serieTemporal: wedgeSerie,
       ativoInicial: false,
     },
@@ -195,8 +195,71 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
         rightSlot={<Toggle value={horizonte.horizonte} onChange={horizonte.setHorizonte} options={[...HORIZONTES]} />}
       />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
-        {/* === GRÁFICO PRINCIPAL === */}
+      {/* === CARDS-TOGGLE HORIZONTAIS ACIMA === */}
+      <div>
+        <div className="mb-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-[11px] text-zinc-700">
+          <strong>Tracejado</strong>: clique p/ adicionar série · <strong>Colorido</strong>: ativo (clique p/ remover)
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          {seriesPossiveis.map((s) => {
+            const ativo = ativas.has(s.id);
+            const semDado = s.valor == null;
+            return (
+              <button
+                type="button"
+                key={s.id}
+                onClick={() => toggle(s.id)}
+                disabled={semDado}
+                className={`group cursor-pointer rounded-lg p-2 text-left transition ${
+                  semDado ? "cursor-not-allowed border-2 border-zinc-200 bg-zinc-50 opacity-60" :
+                  ativo
+                    ? "border-2 shadow-md hover:shadow-lg hover:scale-[1.02]"
+                    : "border-2 border-dashed border-zinc-300 bg-white hover:border-solid hover:scale-[1.02] hover:shadow-md"
+                }`}
+                style={ativo && !semDado ? { borderColor: s.cor, background: `${s.cor}10` } : {}}
+                title={s.narrativa}
+              >
+                <div className="flex items-start gap-1.5">
+                  <span
+                    className="mt-0.5 inline-block h-2.5 w-2.5 flex-shrink-0 rounded-sm"
+                    style={{ background: ativo ? s.cor : "transparent", border: `2px solid ${s.cor}` }}
+                  />
+                  <h4 className="flex-1 text-[11.5px] font-bold leading-tight text-[#132960]">{s.label}</h4>
+                </div>
+                <div className="mt-1 text-xl font-bold tabular-nums text-zinc-900">
+                  {s.valor != null ? `${s.valor.toFixed(2)}${s.unidade}` : "—"}
+                </div>
+                <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                  {s.formula && (
+                    <span className="rounded bg-violet-100 px-1 py-0.5 text-[9px] font-bold uppercase text-violet-900">calc</span>
+                  )}
+                  {!semDado && (ativo ? (
+                    <span
+                      className="rounded px-1.5 py-0.5 text-[9px] font-bold uppercase text-white"
+                      style={{ background: s.cor }}
+                    >
+                      ativo
+                    </span>
+                  ) : (
+                    <span className="rounded border border-dashed border-zinc-400 px-1.5 py-0.5 text-[9px] font-bold uppercase text-zinc-500 group-hover:border-solid group-hover:text-[#132960]">
+                      + add
+                    </span>
+                  ))}
+                </div>
+                {s.formula && (
+                  <p className="mt-1 text-[9.5px] italic leading-tight text-violet-700">{s.formula}</p>
+                )}
+                {s.fonte && !s.formula && (
+                  <p className="mt-1 text-[9.5px] leading-tight text-zinc-500">{s.fonte}</p>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        {/* === GRÁFICO PRINCIPAL EM LARGURA TOTAL === */}
         <Section titulo="Trajetória das séries">
           {chartData.length === 0 ? (
             <div className="flex h-80 items-center justify-center text-sm text-zinc-500">
@@ -230,85 +293,7 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
           </p>
         </Section>
 
-        {/* === CARDS-TOGGLE À DIREITA === */}
-        <div className="space-y-1.5">
-          <div className="rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1.5 text-[10.5px] leading-snug text-zinc-700">
-            <strong>Tracejado</strong>: clique p/ adicionar série · <strong>Colorido</strong>: ativo (clique p/ remover)
-          </div>
-          {seriesPossiveis.map((s) => {
-            const ativo = ativas.has(s.id);
-            const semDado = s.valor == null;
-            return (
-              <button
-                type="button"
-                key={s.id}
-                onClick={() => toggle(s.id)}
-                disabled={semDado}
-                className={`group w-full cursor-pointer rounded-lg p-2.5 text-left transition ${
-                  semDado ? "cursor-not-allowed border-2 border-zinc-200 bg-zinc-50 opacity-60" :
-                  ativo
-                    ? "border-2 shadow-md hover:shadow-lg hover:scale-[1.01]"
-                    : "border-2 border-dashed border-zinc-300 bg-white hover:border-solid hover:scale-[1.01] hover:shadow-md"
-                }`}
-                style={ativo && !semDado ? { borderColor: s.cor, background: `${s.cor}10` } : {}}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-sm transition"
-                      style={{ background: ativo ? s.cor : "transparent", border: `2px solid ${s.cor}` }}
-                    />
-                    <h4 className="text-[13px] font-bold leading-tight text-[#132960]">{s.label}</h4>
-                  </div>
-                  <div className="flex flex-shrink-0 items-center gap-1">
-                    {s.formula && (
-                      <span className="rounded bg-violet-100 px-1 py-0.5 text-[9px] font-bold uppercase text-violet-900">calc</span>
-                    )}
-                    {!semDado && (ativo ? (
-                      <span
-                        className="rounded px-1.5 py-0.5 text-[9px] font-bold uppercase text-white"
-                        style={{ background: s.cor }}
-                      >
-                        ✓ ativo
-                      </span>
-                    ) : (
-                      <span className="rounded border border-dashed border-zinc-400 px-1.5 py-0.5 text-[9px] font-bold uppercase text-zinc-500 group-hover:border-solid group-hover:text-[#132960]">
-                        + adicionar
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                {/* FIX #5 — valor maior + narrativa em details collapsible */}
-                <div className="mt-1.5 text-2xl font-bold tabular-nums text-zinc-900">
-                  {s.valor != null ? `${s.valor.toFixed(2)}${s.unidade}` : "—"}
-                </div>
-                {s.formula && (
-                  <p className="mt-1 text-[10px] italic text-violet-700">Fórmula: {s.formula}</p>
-                )}
-                {s.fonte && !s.formula && (
-                  <p className="mt-1 text-[10px] text-zinc-500">Fonte: {s.fonte}</p>
-                )}
-                <details className="mt-2 text-[10.5px] leading-snug text-zinc-700">
-                  <summary className="cursor-pointer text-[10px] font-semibold uppercase tracking-wider text-zinc-500 hover:text-[#132960]">
-                    Por que importa
-                  </summary>
-                  <p className="mt-1.5">{s.narrativa}</p>
-                  {s.siglas && s.siglas.length > 0 && (
-                    <div className="mt-1.5 border-t border-zinc-200/80 pt-1.5 text-[10px] text-zinc-600">
-                      {s.siglas.map((g) => (
-                        <div key={g.sigla}>
-                          <strong className="text-zinc-800">{g.sigla}:</strong> {g.expansao}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </details>
-              </button>
-            );
-          })}
-        </div>
       </div>
-
       {/* === COMPOSIÇÃO DPMFi (mantida) === */}
       {data.composicao_dpmfi && (() => {
         const comp = data.composicao_dpmfi;
