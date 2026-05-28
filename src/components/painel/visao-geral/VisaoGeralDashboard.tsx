@@ -66,8 +66,12 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
       <BlocoACicloAtual payload={payload} />
       <BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} />
       <BlocoCConfianca fgvConfianca={payload.fgvConfianca} cni={payload.cni} pmi={payload.pmi} fecomercio={payload.fecomercio} />
-      <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} />
-      <BlocoECondicoesFinanceiras icf={payload.icf} credito={payload.credito} />
+      </div>
+
+      <div id="bloco4"><BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} />
+      </div>
+
+      <div id="bloco5"><BlocoECondicoesFinanceiras icf={payload.icf} credito={payload.credito} /></div>
       <FichaTecnica payload={payload} />
     </div>
   );
