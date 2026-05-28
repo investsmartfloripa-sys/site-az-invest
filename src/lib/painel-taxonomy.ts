@@ -44,6 +44,13 @@ const mercadoBrasil: CategoryDef[] = [
     frequency: "tempo-real",
     sourceHint: "BCB, provedores FX",
   },
+  {
+    slug: "fundos-imobiliarios",
+    label: "Fundos Imobiliários",
+    description: "Panorama do IFIX, retornos vs benchmarks e screener completo dos FIIs listados.",
+    frequency: "diario",
+    sourceHint: "B3, CVM Dados Abertos, yfinance",
+  },
 ];
 
 const mercadoGlobal: CategoryDef[] = [
