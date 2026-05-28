@@ -13,7 +13,7 @@ import {
   Legend,
 } from "recharts";
 
-import type { CodaceFaixa, CreditoData, IcfData, IpeadataData, OecdCliData, FgvAntecedentesData } from "@/lib/painel-visao-geral";
+import type { AtividadePimData, CniData, CodaceFaixa, CreditoData, FgvConfiancaData, IcfData, IpeadataData, OecdCliData, FgvAntecedentesData } from "@/lib/painel-visao-geral";
 import { CardSelicReal, CardConcessoes } from "./BlocoE_CondicoesFinanceiras";
 import { ExploradorSeries, type SerieExplorador } from "./ExploradorSeries";
 import { formatMes } from "@/lib/painel-visao-geral";
@@ -149,6 +149,9 @@ export function BlocoBAntecedentes({
   icf,
   credito,
   ipeadata,
+  atividadePim,
+  fgvConfianca,
+  cni,
 }: {
   oecdCli: OecdCliData | null;
   fgvAntecedentes: FgvAntecedentesData | null;
@@ -156,6 +159,9 @@ export function BlocoBAntecedentes({
   icf: IcfData | null;
   credito: CreditoData | null;
   ipeadata: IpeadataData | null;
+  atividadePim: AtividadePimData | null;
+  fgvConfianca: FgvConfiancaData | null;
+  cni: CniData | null;
 }) {
   const oecdDefasado = oecdCli?.mes_recente
     ? new Date(oecdCli.mes_recente + "-01").getTime() < Date.now() - 1000 * 60 * 60 * 24 * 365
@@ -221,6 +227,127 @@ export function BlocoBAntecedentes({
       unidade: "%",
       refLine: 0,
       data: fenSer.map((p) => ({ mes: p.mes, v: p.var_yoy_pct })),
+    });
+  }
+  // PIM-PF bens consumo duraveis (componente IACE-FGV antecedente classico)
+  const pimCat = atividadePim?.categorias_economicas?.serie ?? [];
+  if (pimCat.length > 0) {
+    const u = pimCat[pimCat.length - 1];
+    series.push({
+      id: "pim-duraveis",
+      titulo: "PIM-PF bens duráveis",
+      subtitulo: "Produção de bens de consumo duráveis (var. a/a) — componente IACE-FGV",
+      cor: "#DC2626",
+      valorAtual: u?.bens_consumo_duraveis_var_yoy,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 0,
+      data: pimCat.map((p) => ({ mes: p.mes, v: p.bens_consumo_duraveis_var_yoy })),
+    });
+    series.push({
+      id: "pim-bens-capital",
+      titulo: "PIM-PF bens capital",
+      subtitulo: "Produção de bens de capital (var. a/a) — antecedente de investimento (FBKF)",
+      cor: "#7C3AED",
+      valorAtual: u?.bens_capital_var_yoy,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 0,
+      data: pimCat.map((p) => ({ mes: p.mes, v: p.bens_capital_var_yoy })),
+    });
+  }
+  // FGV ICI (Confiança Indústria - expectativas) — componente IACE
+  const ici = fgvConfianca?.ici ?? [];
+  if (ici.length > 0) {
+    const u = ici[ici.length - 1];
+    series.push({
+      id: "fgv-ici",
+      titulo: "FGV ICI (Indústria)",
+      subtitulo: "Confiança Indústria FGV — componente IACE (100 = neutro)",
+      cor: "#059669",
+      valorAtual: u?.valor,
+      mesAtual: u?.mes,
+      unidade: "",
+      refLine: 100,
+      data: ici.map((p) => ({ mes: p.mes, v: p.valor })),
+    });
+  }
+  const ics = fgvConfianca?.ics ?? [];
+  if (ics.length > 0) {
+    const u = ics[ics.length - 1];
+    series.push({
+      id: "fgv-ics",
+      titulo: "FGV ICS (Serviços)",
+      subtitulo: "Confiança Serviços FGV — componente IACE (100 = neutro)",
+      cor: "#0EA5E9",
+      valorAtual: u?.valor,
+      mesAtual: u?.mes,
+      unidade: "",
+      refLine: 100,
+      data: ics.map((p) => ({ mes: p.mes, v: p.valor })),
+    });
+  }
+  const icc = fgvConfianca?.icc ?? [];
+  if (icc.length > 0) {
+    const u = icc[icc.length - 1];
+    series.push({
+      id: "fgv-icc",
+      titulo: "FGV ICC (Consumidor)",
+      subtitulo: "Confiança Consumidor FGV — componente IACE (100 = neutro)",
+      cor: "#F59E0B",
+      valorAtual: u?.valor,
+      mesAtual: u?.mes,
+      unidade: "",
+      refLine: 100,
+      data: icc.map((p) => ({ mes: p.mes, v: p.valor })),
+    });
+  }
+  // CNI ICEI expectativas
+  const iceiExp = cni?.icei_expectativas ?? [];
+  if (iceiExp.length > 0) {
+    const u = iceiExp[iceiExp.length - 1];
+    series.push({
+      id: "cni-icei-exp",
+      titulo: "CNI ICEI expectativas",
+      subtitulo: "Expectativa empresário industrial (CNI) — 50 = neutro",
+      cor: "#10B981",
+      valorAtual: u?.valor,
+      mesAtual: u?.mes,
+      unidade: "",
+      refLine: 50,
+      data: iceiExp.map((p) => ({ mes: p.mes, v: p.valor })),
+    });
+  }
+  // FGV Construção expectativas (IPEADATA)
+  const fgvConstr = ipeadata?.fgv_constr_exp?.serie ?? [];
+  if (fgvConstr.length > 0) {
+    const u = fgvConstr[fgvConstr.length - 1];
+    series.push({
+      id: "fgv-constr-exp",
+      titulo: "FGV Construção (exp.)",
+      subtitulo: "Expectativa construção FGV — antecedente de FBKF",
+      cor: "#8B5CF6",
+      valorAtual: u?.valor,
+      mesAtual: u?.mes,
+      unidade: "",
+      refLine: 100,
+      data: fgvConstr.map((p) => ({ mes: p.mes, v: p.valor })),
+    });
+  }
+  // ICEC CNC (varejo) — IPEADATA
+  const icec = ipeadata?.cnc_icec?.serie ?? [];
+  if (icec.length > 0) {
+    const u = icec[icec.length - 1];
+    series.push({
+      id: "cnc-icec",
+      titulo: "CNC ICEC (varejo)",
+      subtitulo: "Confiança empresário comércio (CNC) — antecedente varejo",
+      cor: "#EC4899",
+      valorAtual: u?.valor,
+      mesAtual: u?.mes,
+      unidade: "",
+      refLine: 100,
+      data: icec.map((p) => ({ mes: p.mes, v: p.valor })),
     });
   }
   if (oecdCli?.serie?.length) {

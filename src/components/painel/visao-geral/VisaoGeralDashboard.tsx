@@ -112,10 +112,10 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
           </div>
         )}
         {vista === "antecedentes" && (
-          <BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} icf={payload.icf} credito={payload.credito} ipeadata={payload.ipeadata} />
+          <BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} icf={payload.icf} credito={payload.credito} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} fgvConfianca={payload.fgvConfianca} cni={payload.cni} />
         )}
         {vista === "coincidentes" && (
-          <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} atividadePmc={payload.atividadePmc} empregoPnad={payload.empregoPnad} />
+          <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} atividadePmc={payload.atividadePmc} empregoPnad={payload.empregoPnad} atividadePms={payload.atividadePms} ibcbr={payload.ibcbr} />
         )}
         {vista === "confianca" && (
           <BlocoCConfianca fgvConfianca={payload.fgvConfianca} cni={payload.cni} pmi={payload.pmi} fecomercio={payload.fecomercio} />

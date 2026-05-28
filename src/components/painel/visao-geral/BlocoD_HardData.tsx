@@ -2,7 +2,7 @@
 
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import type { AnfaveaData, AnpData, AtividadePimData, AtividadePmcData, EmpregoPnadData, EpeData, HardDataData, IpeadataData } from "@/lib/painel-visao-geral";
+import type { AnfaveaData, AnpData, AtividadePimData, AtividadePmcData, AtividadePmsData, EmpregoPnadData, EpeData, HardDataData, IbcBrData, IpeadataData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
 
 import { ExploradorSeries, type SerieExplorador } from "./ExploradorSeries";
@@ -16,6 +16,8 @@ export function BlocoDHardData({
   atividadePim,
   atividadePmc,
   empregoPnad,
+  atividadePms,
+  ibcbr,
 }: {
   anfavea: AnfaveaData | null;
   anp: AnpData | null;
@@ -25,6 +27,8 @@ export function BlocoDHardData({
   atividadePim: AtividadePimData | null;
   atividadePmc: AtividadePmcData | null;
   empregoPnad: EmpregoPnadData | null;
+  atividadePms: AtividadePmsData | null;
+  ibcbr: IbcBrData | null;
 }) {
   const pimSerie = atividadePim?.geral?.serie ?? [];
   const pimUlt = pimSerie[pimSerie.length - 1];
@@ -93,6 +97,81 @@ export function BlocoDHardData({
     });
   }
   // IPEADATA: papelao + aco (sem FENABRAVE - movida para Antecedentes - IACE-FGV duraveis)
+  // IBC-Br - benchmark mensal CODACE (coincidente oficial BCB)
+  if (ibcbr?.serie?.length) {
+    const ser = ibcbr.serie;
+    const u = ser[ser.length - 1];
+    series.push({
+      id: "ibcbr",
+      titulo: "IBC-Br (BCB)",
+      subtitulo: "Proxy mensal do PIB — benchmark CODACE",
+      cor: "#132960",
+      valorAtual: u?.var_yoy,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 0,
+      data: ser.map((p) => ({ mes: p.mes, v: p.var_yoy })),
+    });
+  }
+  // PIM-PF transformacao (cobre 80% da industria)
+  const pimSec = atividadePim?.secoes?.serie ?? [];
+  if (pimSec.length > 0) {
+    const u = pimSec[pimSec.length - 1];
+    series.push({
+      id: "pim-transformacao",
+      titulo: "PIM-PF transformação",
+      subtitulo: "Indústria de transformação (var. a/a)",
+      cor: "#7C3AED",
+      valorAtual: u?.transformacao_var_yoy,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 0,
+      data: pimSec.map((p) => ({ mes: p.mes, v: p.transformacao_var_yoy })),
+    });
+    series.push({
+      id: "pim-extrativa",
+      titulo: "PIM-PF extrativa",
+      subtitulo: "Indústria extrativa (var. a/a) — commodities domésticas",
+      cor: "#F59E0B",
+      valorAtual: u?.extrativa_var_yoy,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 0,
+      data: pimSec.map((p) => ({ mes: p.mes, v: p.extrativa_var_yoy })),
+    });
+  }
+  // PIM-PF bens intermediarios
+  const pimCat = atividadePim?.categorias_economicas?.serie ?? [];
+  if (pimCat.length > 0) {
+    const u = pimCat[pimCat.length - 1];
+    series.push({
+      id: "pim-intermediarios",
+      titulo: "PIM-PF bens interm.",
+      subtitulo: "Bens intermediários (var. a/a) — cadeia produtiva",
+      cor: "#0EA5E9",
+      valorAtual: u?.bens_intermediarios_var_yoy,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 0,
+      data: pimCat.map((p) => ({ mes: p.mes, v: p.bens_intermediarios_var_yoy })),
+    });
+  }
+  // PMS Pesquisa Mensal de Servicos (IBGE) - servicos é 70% do PIB
+  const pms = atividadePms?.serie ?? [];
+  if (pms.length > 0) {
+    const u = pms[pms.length - 1];
+    series.push({
+      id: "pms-servicos",
+      titulo: "PMS serviços (IBGE)",
+      subtitulo: "Volume serviços, var. a/a — 70% do PIB",
+      cor: "#10B981",
+      valorAtual: u?.volume_var_yoy,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 0,
+      data: pms.map((p) => ({ mes: p.mes, v: p.volume_var_yoy })),
+    });
+  }
   if (ipeadata) {
     const buckets: { key: "papelao_abpo" | "aco_bruto"; titulo: string; subt: string; cor: string }[] = [
       { key: "papelao_abpo", titulo: "Papelão (ABPO)", subt: "Componente ICCE-FGV oficial", cor: "#7C3AED" },

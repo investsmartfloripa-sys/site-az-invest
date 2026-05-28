@@ -281,6 +281,8 @@ export type CniData = {
   gerado_em: string;
   freshness_status: Freshness;
   icei: SeriePonto[];
+  icei_atual?: SeriePonto[];
+  icei_expectativas?: SeriePonto[];
   inec: SeriePonto[];
   inputs?: ContaInputs;
   min_start_date?: string;
@@ -406,10 +408,43 @@ export type AtividadePimPonto = {
   indice?: NumOrNull;
   indice_sa?: NumOrNull;
 };
+// PIM categorias econômicas (bens consumo duráveis, capital, intermediários etc — componentes do IACE)
+export type AtividadePimCategoriaPonto = {
+  mes: string;
+  bens_capital_var_yoy?: NumOrNull;
+  bens_capital_indice_sa?: NumOrNull;
+  bens_intermediarios_var_yoy?: NumOrNull;
+  bens_intermediarios_indice_sa?: NumOrNull;
+  bens_consumo_var_yoy?: NumOrNull;
+  bens_consumo_indice_sa?: NumOrNull;
+  bens_consumo_duraveis_var_yoy?: NumOrNull;
+  bens_consumo_duraveis_indice_sa?: NumOrNull;
+};
+// PIM seções (transformação, extrativa)
+export type AtividadePimSecaoPonto = {
+  mes: string;
+  industria_geral_var_yoy?: NumOrNull;
+  transformacao_var_yoy?: NumOrNull;
+  extrativa_var_yoy?: NumOrNull;
+};
 export type AtividadePimData = {
   gerado_em: string;
   mes_recente: string | null;
   geral?: { serie: AtividadePimPonto[] };
+  categorias_economicas?: { serie: AtividadePimCategoriaPonto[] };
+  secoes?: { serie: AtividadePimSecaoPonto[] };
+};
+
+// PMS — Pesquisa Mensal de Serviços (IBGE)
+export type AtividadePmsPonto = {
+  mes: string;
+  volume_var_yoy?: NumOrNull;
+  volume_indice_sa?: NumOrNull;
+};
+export type AtividadePmsData = {
+  gerado_em: string;
+  mes_recente: string | null;
+  serie?: AtividadePmsPonto[];
 };
 
 export type VisaoGeralPayload = {
@@ -434,6 +469,7 @@ export type VisaoGeralPayload = {
   focusPib: FocusData | null;
   atividadePmc: AtividadePmcData | null;
   empregoPnad: EmpregoPnadData | null;
+  atividadePms: AtividadePmsData | null;
 };
 
 async function fetchJson<T>(blobPath: string): Promise<T | null> {
@@ -471,6 +507,7 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     focusPib,
     atividadePmc,
     empregoPnad,
+    atividadePms,
   ] = await Promise.all([
     fetchJson<IbcBrData>("data/atividade_ibcbr.json"),
     fetchJson<OecdCliData>("data/visao_geral_oecd_cli.json"),
@@ -493,8 +530,9 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     fetchJson<FocusData>("data/fiscal-classicos.json"),
     fetchJson<AtividadePmcData>("data/atividade_pmc.json"),
     fetchJson<EmpregoPnadData>("data/emprego_pnad.json"),
+    fetchJson<AtividadePmsData>("data/atividade_pms.json"),
   ]);
-  return { ibcbr, oecdCli, credito, anp, anfavea, epe, codace, hiato, icf, recessao, fgvAntecedentes, fgvConfianca, cni, pmi, fecomercio, hardData, ipeadata, atividadePim, focusPib, atividadePmc, empregoPnad };
+  return { ibcbr, oecdCli, credito, anp, anfavea, epe, codace, hiato, icf, recessao, fgvAntecedentes, fgvConfianca, cni, pmi, fecomercio, hardData, ipeadata, atividadePim, focusPib, atividadePmc, empregoPnad, atividadePms };
 }
 
 // Extrai a mediana mais recente do Focus PIB para o ano corrente
