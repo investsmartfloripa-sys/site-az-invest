@@ -7,15 +7,16 @@ import { FiiDetailFicha } from "@/components/painel/fii/FiiDetailFicha";
 import { FiiDetailHero } from "@/components/painel/fii/FiiDetailHero";
 import { FiiDetailIndicators } from "@/components/painel/fii/FiiDetailIndicators";
 import { FiiDetailRelacionados } from "@/components/painel/fii/FiiDetailRelacionados";
-import { getFiiDetail, getFiiTickers } from "@/lib/painel-fii";
+import { getFiiDetail } from "@/lib/painel-fii";
 
 type Props = {
   params: Promise<{ ticker: string }>;
 };
 
-// ISR de 5 minutos — bate com o cache do fetch e garante refresh rápido após
-// upload novo do `fii_details.json` pelo pipeline.
-export const revalidate = 300;
+// Render dinâmico — o JSON de detalhes pesa ~4,6 MB e o cache ISR estava
+// servindo páginas vazias pra tickers que não foram pré-renderizados no build.
+// SSR puro garante que cada request vê o JSON atualizado no Blob.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { ticker } = await params;
@@ -29,15 +30,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-/**
- * Pré-gera estática pros tickers conhecidos (composição IFIX = 107 FIIs).
- * O `dynamicParams=true` (default) permite render sob demanda pra tickers
- * fora do universo IFIX que possam vir no futuro.
- */
-export async function generateStaticParams() {
-  const tickers = await getFiiTickers();
-  return tickers.map((t) => ({ ticker: t.toLowerCase() }));
-}
+// `generateStaticParams` removido junto com `dynamic = "force-dynamic"`.
+// O `getFiiTickers` ainda existe pro caso de voltarmos pro pré-render quando
+// migrar pra um JSON menor (índice + entries on-demand).
 
 export default async function FiiDetailPage({ params }: Props) {
   const { ticker } = await params;

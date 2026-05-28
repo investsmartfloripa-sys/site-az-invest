@@ -235,14 +235,14 @@ export type FiiDetailsData = {
 };
 
 export async function getFiiDetails(): Promise<FiiDetailsData | null> {
-  // Cache mais curto que o padrão (3600s) — o JSON pesa ~4,6 MB e tem 107
-  // tickers; o cache ISR estava deixando entries cair entre builds. 5 min é
-  // equilibrado: fresh suficiente pra trazer novos tickers, leve o bastante
-  // pra não bater no CDN a cada request.
+  // `cache: 'no-store'` — o JSON pesa ~4,6 MB e o cache ISR servia páginas
+  // vazias intermitentemente quando o entry não estava na snapshot do build.
+  // No-store força fetch fresh em todo render, o Vercel Blob (Cloudflare) é
+  // rápido o suficiente pra não pesar.
   const url = painelBlobUrl("data/fii_details.json");
   if (!url) return null;
   try {
-    const res = await fetch(url, { next: { revalidate: 300 } });
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return null;
     return (await res.json()) as FiiDetailsData;
   } catch {
