@@ -13,14 +13,12 @@ import { BlocoECondicoesFinanceiras } from "./BlocoE_CondicoesFinanceiras";
 import { FraseManchete } from "./FraseManchete";
 import { HeroKpis } from "./HeroKpis";
 
-type Vista = "ciclo" | "antecedentes" | "confianca" | "hard-data" | "credito";
+type Vista = "antecedentes" | "coincidentes" | "confianca";
 
 const TABS: { value: Vista; label: string; descr: string }[] = [
-  { value: "ciclo", label: "1. Ciclo", descr: "Probabilidade de recessão + hiato do produto" },
-  { value: "antecedentes", label: "2. Antecedentes", descr: "Sondagens FGV-IBRE antecedentes" },
-  { value: "confianca", label: "3. Confiança", descr: "FGV + CNI + PMI + Fecomercio" },
-  { value: "hard-data", label: "4. Hard data", descr: "PIM-PF, ANFAVEA, EPE, ANP, IPEADATA" },
-  { value: "credito", label: "5. Crédito", descr: "ICF, condições financeiras, crédito/PIB" },
+  { value: "antecedentes", label: "1. Antecedentes", descr: "Lideram o PIB em 3-12 meses: OCDE CLI, IACE FGV, slope DI, Ibov, EMBI, expectativas" },
+  { value: "coincidentes", label: "2. Coincidentes", descr: "Movem-se junto com o PIB: IBC-Br, PIM-PF, hard data (ANFAVEA, EPE, ANP), crédito, hiato + 5 modelos de recessão" },
+  { value: "confianca", label: "3. Confiança", descr: "Sondagens empresariais + consumidor: FGV (7 índices), CNI ICEI, PMI, Fecomercio" },
 ];
 
 function FichaTecnica({ payload }: { payload: VisaoGeralPayload }) {
@@ -65,7 +63,7 @@ function FichaTecnica({ payload }: { payload: VisaoGeralPayload }) {
 }
 
 export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload }) {
-  const [vista, setVista] = useState<Vista>("ciclo");
+  const [vista, setVista] = useState<Vista>("antecedentes");
   const codaceMensal = payload.codace?.mensal ?? [];
 
   const tabAtiva = TABS.find((t) => t.value === vista) ?? TABS[0];
@@ -106,17 +104,19 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
 
       {/* Conteúdo da tab ativa */}
       <div>
-        {vista === "ciclo" && <BlocoACicloAtual payload={payload} />}
         {vista === "antecedentes" && (
           <BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} />
+        )}
+        {vista === "coincidentes" && (
+          <div className="space-y-6">
+            <BlocoACicloAtual payload={payload} />
+            <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} />
+            <BlocoECondicoesFinanceiras icf={payload.icf} credito={payload.credito} />
+          </div>
         )}
         {vista === "confianca" && (
           <BlocoCConfianca fgvConfianca={payload.fgvConfianca} cni={payload.cni} pmi={payload.pmi} fecomercio={payload.fecomercio} />
         )}
-        {vista === "hard-data" && (
-          <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} />
-        )}
-        {vista === "credito" && <BlocoECondicoesFinanceiras icf={payload.icf} credito={payload.credito} />}
       </div>
 
       <FichaTecnica payload={payload} />

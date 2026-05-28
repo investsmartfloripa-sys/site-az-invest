@@ -149,23 +149,31 @@ export function BlocoBAntecedentes({
   fgvAntecedentes: FgvAntecedentesData | null;
   codace: CodaceFaixa[];
 }) {
-  // OECD CLI permanentemente em rodapé -- portal IBRE publica com defasagem &gt;12m,
-  // então tratamos como contexto histórico em todas as renderizacoes (decisão loop 11)
+  // OCDE CLI agora em destaque (decisão loop 18) com aviso quando >12m de defasagem
+  const oecdDefasado = oecdCli?.mes_recente
+    ? new Date(oecdCli.mes_recente + "-01").getTime() < Date.now() - 1000 * 60 * 60 * 24 * 365
+    : false;
   return (
     <section className="space-y-5">
       <header>
-        <h2 className="text-xl font-bold text-[#132960]">2. Sondagens antecedentes (FGV-IBRE)</h2>
+        <h2 className="text-xl font-bold text-[#132960]">Antecedentes do PIB</h2>
         <p className="mt-1 text-xs text-zinc-600">
-          Indicadores antecedentes que historicamente lideram viradas de ciclo em 6-9 meses. O IACE composto da FGV agrega expectativas de empresários e consumidores. OECD CLI publica com defasagem &gt;12m e foi movido para nota de rodapé.
+          Indicadores que historicamente lideram viradas de ciclo em 3-12 meses. Combinam expectativas (FGV), curva de juros (slope DI), mercado (Ibov, EMBI), crédito (concessões reais) e composite oficial (OCDE CLI). Literatura de referência: IACE/ICCE FGV-IBRE, Chauvet (2002), BCB WP 285 e WP 435 (Gaglianone-Areosa).
         </p>
       </header>
-      <CardFgvAntecedentes data={fgvAntecedentes} />
-      <details className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-        <summary className="cursor-pointer text-xs font-semibold text-zinc-600">Nota de rodapé: OECD CLI (contexto histórico — publicação defasada)</summary>
-        <div className="mt-3">
-          <CardOecdCli data={oecdCli} codace={codace} />
+      {oecdDefasado && (
+        <div className="rounded-md bg-amber-50 px-3 py-2 text-[11px] text-amber-800 border border-amber-200">
+          ⚠ OCDE CLI publica com defasagem &gt;12 meses (último: {oecdCli?.mes_recente}). O sinal corrente vem das sondagens FGV abaixo. OCDE serve como benchmark histórico cross-country.
         </div>
-      </details>
+      )}
+      <CardOecdCli data={oecdCli} codace={codace} />
+      <CardFgvAntecedentes data={fgvAntecedentes} />
+      <div className="rounded-2xl border-2 border-dashed border-zinc-300 bg-zinc-50 p-4 text-center">
+        <p className="text-sm font-semibold text-zinc-700">Mais antecedentes em construção</p>
+        <p className="mt-1 text-xs text-zinc-500">
+          Próximos a entrar (via APIs BCB SGS/Olinda + IBGE SIDRA + IPEADATA): IACE FGV oficial, slope DI 10a-2a dedicado, Ibov real 6m, EMBI+ Brasil, Focus PIB 12m-ahead, IIE-Br FGV, concessões crédito PF/PJ reais, spread crédito PJ, CAGED saldo MoM dessaz.
+        </p>
+      </div>
     </section>
   );
 }
