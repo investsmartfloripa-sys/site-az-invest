@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import type { FiiScreenerData, FiiScreenerRow } from "@/lib/painel-fii";
@@ -186,7 +187,12 @@ export function FiiScreener({ data }: Props) {
                   className="border-b border-zinc-100 transition hover:bg-zinc-50/60"
                 >
                   <td className="px-2 py-2">
-                    <span className="block font-semibold tabular-nums text-[#132960]">{r.ticker}</span>
+                    <Link
+                      href={`/painel-economico/mercado/brasil/fundos-imobiliarios/${r.ticker.toLowerCase()}`}
+                      className="block font-semibold tabular-nums text-[#132960] transition hover:text-[#027DFC] hover:underline"
+                    >
+                      {r.ticker}
+                    </Link>
                     <span className="block truncate text-[10px] text-zinc-500" title={r.name}>
                       {r.name}
                     </span>

@@ -153,6 +153,104 @@ export async function getFiiScreener(): Promise<FiiScreenerData | null> {
 }
 
 // ---------------------------------------------------------------------------
+// Página individual de cada FII (etapa 2)
+// ---------------------------------------------------------------------------
+
+export type FiiDividend = {
+  /** Data com (data-ex), YYYY-MM-DD. */
+  data_com: string;
+  /** Data de pagamento (yfinance só tem data-ex; pagamento normalmente é ~15 do
+   *  mês seguinte — backend pode estimar pra `data_com + ~15d` se não tiver). */
+  pagamento: string | null;
+  /** Valor pago por cota (BRL). */
+  valor: number;
+};
+
+export type FiiDetailHero = {
+  /** DY 12m em % (igual ao do screener). */
+  dy_12m_pct: number | null;
+  /** Último rendimento pago (R$/cota). */
+  last_dividend_brl: number | null;
+  last_dividend_date: string | null;
+  /** Patrimônio Líquido (BRL). */
+  pl: number | null;
+  pl_ref_date: string | null;
+  /** P/VP. */
+  pvp: number | null;
+  pvp_ref_date: string | null;
+  /** Cotação atual. */
+  price: number | null;
+  price_date: string | null;
+  /** Variação % do dia. */
+  change_pct_1d: number | null;
+  /** Máx/mín 12m da cotação. */
+  max_12m: number | null;
+  min_12m: number | null;
+};
+
+export type FiiDetailIndicators = {
+  /** VP por cota (BRL). */
+  vp_per_cota: number | null;
+  /** P/VP (repete o do hero). */
+  pvp: number | null;
+  /** Número de cotistas. */
+  num_cotistas: number | null;
+  /** CAGR 3a do DY (taxa equivalente anualizada da soma anual de dividendos). */
+  dy_cagr_3y_pct: number | null;
+  /** CAGR 3a da cotação (price-only, sem reinvestimento). */
+  valor_cagr_3y_pct: number | null;
+  /** Participação no IFIX (%). */
+  ifix_weight_pct: number | null;
+};
+
+export type FiiDetailFicha = {
+  cnpj: string | null;
+  full_name: string | null;
+  admin_name: string | null;
+  admin_cnpj: string | null;
+  segment: string | null;
+};
+
+export type FiiDetailEntry = {
+  ticker: string;
+  name: string;
+  hero: FiiDetailHero;
+  indicators: FiiDetailIndicators;
+  ficha: FiiDetailFicha;
+  /** Série diária de fechamento (~5 anos). Frontend reutiliza TimeWindowToggle. */
+  price_series_daily: Array<{ date: string; close: number }>;
+  /** Histórico de dividendos (mais recente primeiro). */
+  dividends: FiiDividend[];
+  /** Flags herdadas do screener (úteis pra tooltip). */
+  dy_atypical?: boolean;
+  pvp_warning?: boolean;
+};
+
+export type FiiDetailsData = {
+  status: "ok" | "error";
+  generated_at: string;
+  total: number;
+  /** Indexado por ticker (HGLG11, KNCR11, ...) — facilita lookup O(1). */
+  by_ticker: Record<string, FiiDetailEntry>;
+};
+
+export async function getFiiDetails(): Promise<FiiDetailsData | null> {
+  return fetchBlobJson<FiiDetailsData>("data/fii_details.json");
+}
+
+export async function getFiiDetail(ticker: string): Promise<FiiDetailEntry | null> {
+  const all = await getFiiDetails();
+  if (!all || all.status !== "ok") return null;
+  return all.by_ticker[ticker.toUpperCase()] ?? null;
+}
+
+export async function getFiiTickers(): Promise<string[]> {
+  const all = await getFiiDetails();
+  if (!all) return [];
+  return Object.keys(all.by_ticker);
+}
+
+// ---------------------------------------------------------------------------
 // Editorial (Prisma)
 // ---------------------------------------------------------------------------
 
