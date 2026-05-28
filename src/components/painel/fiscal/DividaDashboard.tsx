@@ -205,16 +205,21 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
           ) : (
             <div className="h-[32rem]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
+                <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="mes" tickFormatter={formatMes} tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} unit="%" domain={["dataMin - 5", "dataMax + 5"]} />
+                  <YAxis
+                    tick={{ fontSize: 11 }}
+                    unit="%"
+                    domain={[(dataMin: number) => Math.floor(dataMin / 10) * 10, (dataMax: number) => Math.ceil(dataMax / 10) * 10]}
+                    allowDecimals={false}
+                  />
                   <Tooltip formatter={fmtTipPct} labelFormatter={fmtTipLabel} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <ReferenceLine y={80} stroke="#dc2626" strokeDasharray="3 3" label={{ value: "80% (atenção FMI)", fontSize: 9, fill: "#dc2626", position: "right" }} />
-                  <ReferenceLine y={100} stroke="#7f1d1d" strokeDasharray="3 3" label={{ value: "100% (Reinhart-Rogoff)", fontSize: 9, fill: "#7f1d1d", position: "right" }} />
+                  <ReferenceLine y={80} stroke="#dc2626" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: "80% atenção FMI", fontSize: 10, fill: "#dc2626", position: "insideTopRight" }} />
+                  <ReferenceLine y={100} stroke="#7f1d1d" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: "100% Reinhart-Rogoff", fontSize: 10, fill: "#7f1d1d", position: "insideTopRight" }} />
                   {seriesPossiveis.filter((s) => ativas.has(s.id)).map((s) => (
-                    <Line key={s.id} type="monotone" dataKey={s.id} name={s.label} stroke={s.cor} strokeWidth={2.5} dot={false} />
+                    <Line key={s.id} type="monotone" dataKey={s.id} name={s.label} stroke={s.cor} strokeWidth={2.75} dot={false} activeDot={{ r: 4 }} />
                   ))}
                 </LineChart>
               </ResponsiveContainer>
