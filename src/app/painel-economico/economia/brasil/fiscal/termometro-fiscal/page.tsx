@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     "Aplicacao das formulas de How Countries Go Broke (Ray Dalio, 2025) ao Brasil. Projecao de Debt/Income em 10 anos, matrizes de sensibilidade e os 4 levers para estabilizar a divida.",
 };
 
-export const revalidate = 3600;
+export const revalidate = 300;
 export const dynamic = "force-dynamic";  // evita prerender que crasha quando JSON do Blob indisponivel em build time
 
 export default async function PainelTermometroFiscalPage() {

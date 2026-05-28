@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = "force-dynamic";
-export const revalidate = 3600;
+export const revalidate = 300;
 
 export default async function PainelReceitaGastosPage() {
   const data = await loadFiscalClassicos();
