@@ -87,6 +87,16 @@ export type FiscalClassicosData = {
     selic_real_ex_post_pct: SelicRealPonto[];
     pib_real_yoy_pct: PontoPibYoY[];
   };
+  composicao_dpmfi?: {
+    selic_pct: PontoMensal[];
+    prefixado_pct: PontoMensal[];
+    cambio_pct: PontoMensal[];
+    tr_pct?: PontoMensal[];
+    outros_pct?: PontoMensal[];
+  };
+  credito_economia?: {
+    credito_total_pct_pib: PontoMensal[];
+  };
   stress: {
     reer_index: PontoMensal[];
     reservas_usd_mm_mensal: PontoMensal[];
@@ -126,9 +136,36 @@ export type Matriz = {
   brasil?: { starting: number | null; deficit?: number | null; gap_pp?: number | null };
 };
 
+export type Nivel = "verde" | "amarelo" | "vermelho" | "break" | "sem_dado";
+
+export type IndicadorSemaforo = {
+  titulo: string;
+  categoria: string;
+  unidade: string;
+  direcao: "maior_pior" | "maior_melhor";
+  verde: number;
+  amarelo: number;
+  vermelho: number;
+  break: number;
+  narrativa: string;
+  valor: number | null;
+  nivel: Nivel;
+  distancia_break: number | null;
+};
+
+export type ScoreSemaforo = {
+  score_medio: number | null;
+  nivel_geral: Nivel;
+  n: number;
+  total: number;
+};
+
 export type FiscalTermometroData = {
   gerado_em: string;
   fonte_base: string | null;
+  score_semaforo?: ScoreSemaforo;
+  indicadores_semaforo?: Record<string, IndicadorSemaforo>;
+  categorias_ordem?: string[];
   foto_brasil: {
     divida: { dbgg_pct_pib: number | null; dbgg_pct_receita: number | null };
     receita: { receita_liquida_pct_pib: number | null };

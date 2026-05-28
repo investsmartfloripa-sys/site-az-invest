@@ -295,6 +295,15 @@ def main():
         "juros_sp_pct": 5718, "juros_central_pct": 5728,
         "pib_12m_brl": 4382, "reer": 11752,
         "ipca_12m": 13522, "pib_real_idx": 22099,
+        # Composicao DPMFi por indexador (BCB SGS)
+        "dpmfi_pct_selic": 4177,        # % indexado a Selic/LFT
+        "dpmfi_pct_prefixado": 4178,    # % prefixado (LTN+NTN-F)
+        "dpmfi_pct_cambio": 4175,       # % cambial
+        "dpmfi_pct_tr": 4174,           # % TR
+        "dpmfi_pct_outros": 4176,       # % outros indexadores
+        # Credito total economia (saldo % PIB)
+        "credito_total_pct_pib": 20622, # Saldo total de credito / PIB
+        # Selic over diaria? Ja temos 1178
     }
     sgs = {}
     for nome, cod in series_mensal.items():
@@ -423,6 +432,16 @@ def main():
             "selic_real_ex_post_pct": selic_real,
             "pib_real_yoy_pct": pib_real_yoy_serie,
         },
+        "composicao_dpmfi": {
+            "selic_pct": sgs["dpmfi_pct_selic"],
+            "prefixado_pct": sgs["dpmfi_pct_prefixado"],
+            "cambio_pct": sgs["dpmfi_pct_cambio"],
+            "tr_pct": sgs["dpmfi_pct_tr"],
+            "outros_pct": sgs["dpmfi_pct_outros"],
+        },
+        "credito_economia": {
+            "credito_total_pct_pib": sgs["credito_total_pct_pib"],
+        },
         "stress": {
             "reer_index": sgs["reer"],
             "reservas_usd_mm_mensal": reservas_mensal,
@@ -448,6 +467,10 @@ def main():
             }
         },
         "destaques": {
+            "dpmfi_selic_pct_recente": last_val(sgs["dpmfi_pct_selic"]),
+            "dpmfi_prefixado_pct_recente": last_val(sgs["dpmfi_pct_prefixado"]),
+            "dpmfi_cambio_pct_recente": last_val(sgs["dpmfi_pct_cambio"]),
+            "credito_total_pct_pib_recente": last_val(sgs["credito_total_pct_pib"]),
             "dbgg_pct_recente": last_val(sgs["dbgg"]),
             "dlsp_pct_recente": last_val(sgs["dlsp_total"]),
             "receita_liquida_pct_pib_recente": last_val(receita_pct_pib, "valor_pct"),
