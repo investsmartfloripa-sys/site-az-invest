@@ -112,7 +112,7 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
           </div>
         )}
         {vista === "antecedentes" && (
-          <BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} />
+          <BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} icf={payload.icf} credito={payload.credito} />
         )}
         {vista === "coincidentes" && (
           <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} />

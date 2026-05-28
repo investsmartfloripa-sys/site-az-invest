@@ -316,24 +316,45 @@ def modelo_probit_financeiro(icf: list[tuple[str, float]], codace_periodos: list
     if len(pares_treino) < 60:
         return {}
 
-    # Newton-Raphson para logística multivariada: P = sigmoid(b0 + b1*x1 + b2*x2)
-    # x1 = ICF z-score, x2 = slope DI (spread)
-    b0, b1, b2 = 0.0, -0.5, -0.3  # ICF neg & slope neg => mais P(recessão)
+    # Logistica multivariada com IRLS + Ridge L2 + step-halving (Loop 20).
+    # Razao: Hessiana fica singular pos-COVID por colinearidade ICF/slope DI.
+    # Patch sugerido pelo agent DS Loop 20.
     import numpy as np
     X = np.array([[1.0, t[0], t[1]] for t in pares_treino])
     Y = np.array([t[2] for t in pares_treino], dtype=float)
-    for _ in range(50):
-        z = X @ np.array([b0, b1, b2])
-        p = 1.0 / (1.0 + np.exp(-np.clip(z, -50, 50)))
-        gr = X.T @ (Y - p)
-        W = p * (1 - p)
-        H = (X.T * W) @ X
+    n, k = X.shape
+    b = np.array([0.0, -0.5, -0.3])
+    lam = 1.0 / n            # ridge fraco, regulariza colinearidade
+    I_reg = np.eye(k); I_reg[0, 0] = 0.0  # nao regulariza intercepto
+    prev_ll = -np.inf
+    for it in range(100):
+        z = np.clip(X @ b, -30, 30)
+        p_ = 1.0 / (1.0 + np.exp(-z))
+        p_ = np.clip(p_, 1e-6, 1 - 1e-6)
+        W = p_ * (1 - p_)
+        gr = X.T @ (Y - p_) - lam * (I_reg @ b)
+        H = (X.T * W) @ X + lam * I_reg
         try:
             delta = np.linalg.solve(H, gr)
-            b0 += delta[0]; b1 += delta[1]; b2 += delta[2]
-            if np.max(np.abs(delta)) < 1e-7: break
         except np.linalg.LinAlgError:
+            delta = np.linalg.lstsq(H, gr, rcond=None)[0]
+        # step-halving: aceita o passo so se LL nao piorar
+        step = 1.0
+        accepted = False
+        for _ in range(10):
+            b_new = b + step * delta
+            z_new = np.clip(X @ b_new, -30, 30)
+            ll = float(np.sum(Y * z_new - np.log1p(np.exp(z_new)))) - 0.5 * lam * float(b_new @ (I_reg @ b_new))
+            if ll > prev_ll - 1e-9:
+                b, prev_ll = b_new, ll
+                accepted = True
+                break
+            step *= 0.5
+        if not accepted:
             break
+        if float(np.max(np.abs(delta))) < 1e-6:
+            break
+    b0, b1, b2 = float(b[0]), float(b[1]), float(b[2])
 
     out = {}
     last = None

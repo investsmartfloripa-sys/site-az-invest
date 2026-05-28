@@ -44,7 +44,7 @@ function CardIcf({ data }: { data: IcfData | null }) {
   );
 }
 
-function CardSelicReal({ data }: { data: IcfData | null }) {
+export function CardSelicReal({ data }: { data: IcfData | null }) {
   if (!data || data.serie.length === 0) return null;
   const dados = data.serie.slice(-120).map((p) => ({
     mes: p.mes,
@@ -72,7 +72,7 @@ function CardSelicReal({ data }: { data: IcfData | null }) {
   );
 }
 
-function CardConcessoes({ data }: { data: CreditoData | null }) {
+export function CardConcessoes({ data }: { data: CreditoData | null }) {
   if (!data) return null;
   const pf = data.concessoes.pf_total_real_12m_var_pct ?? [];
   const pj = data.concessoes.pj_total_real_12m_var_pct ?? [];
@@ -148,12 +148,10 @@ export function BlocoECondicoesFinanceiras({
       <header>
         <h2 className="text-xl font-bold text-[#132960]">5. O crédito está apertando? (condições financeiras)</h2>
         <p className="mt-1 text-xs text-zinc-600">
-          Custo do dinheiro e disponibilidade de crédito definem o combustível do ciclo. Índice de Condições Financeiras próprio, Selic real ex-ante e dinâmica de concessões/PIB.
+          Custo do dinheiro e dinâmica de alavancagem do ciclo. ICF próprio (Hatzius 50/25/25: Selic real, Ibov, REER) e crédito ampliado/PIB. Selic real ex-ante e concessões reais 12m foram movidas para Antecedentes (são funcionalmente leading).
         </p>
       </header>
       <CardIcf data={icf} />
-      <CardSelicReal data={icf} />
-      <CardConcessoes data={credito} />
       <CardCreditoPib data={credito} />
     </section>
   );

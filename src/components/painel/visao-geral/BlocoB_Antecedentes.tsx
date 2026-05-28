@@ -13,7 +13,8 @@ import {
   Legend,
 } from "recharts";
 
-import type { CodaceFaixa, OecdCliData, FgvAntecedentesData } from "@/lib/painel-visao-geral";
+import type { CodaceFaixa, CreditoData, IcfData, OecdCliData, FgvAntecedentesData } from "@/lib/painel-visao-geral";
+import { CardSelicReal, CardConcessoes } from "./BlocoE_CondicoesFinanceiras";
 import { formatMes } from "@/lib/painel-visao-geral";
 
 function CardOecdCli({ data, codace }: { data: OecdCliData | null; codace: CodaceFaixa[] }) {
@@ -144,10 +145,14 @@ export function BlocoBAntecedentes({
   oecdCli,
   fgvAntecedentes,
   codace,
+  icf,
+  credito,
 }: {
   oecdCli: OecdCliData | null;
   fgvAntecedentes: FgvAntecedentesData | null;
   codace: CodaceFaixa[];
+  icf: IcfData | null;
+  credito: CreditoData | null;
 }) {
   // OCDE CLI agora em destaque (decisão loop 18) com aviso quando >12m de defasagem
   const oecdDefasado = oecdCli?.mes_recente
@@ -167,6 +172,8 @@ export function BlocoBAntecedentes({
         </div>
       )}
       <CardOecdCli data={oecdCli} codace={codace} />
+      <CardSelicReal data={icf} />
+      <CardConcessoes data={credito} />
       <CardFgvAntecedentes data={fgvAntecedentes} />
       <div className="rounded-2xl border-2 border-dashed border-zinc-300 bg-zinc-50 p-4 text-center">
         <p className="text-sm font-semibold text-zinc-700">Mais antecedentes em construção</p>
