@@ -367,6 +367,34 @@ export type FocusData = {
   };
 };
 
+// PMC volume varejo oficial via SIDRA IBGE (sales leg do quartet TCB)
+export type AtividadePmcPonto = {
+  mes: string;
+  restrito_volume_var_yoy?: NumOrNull;
+  ampliado_volume_var_yoy?: NumOrNull;
+  restrito_volume_indice_sa?: NumOrNull;
+  ampliado_volume_indice_sa?: NumOrNull;
+};
+export type AtividadePmcData = {
+  gerado_em: string;
+  mes_recente: string | null;
+  serie: AtividadePmcPonto[];
+};
+
+// PNAD Contínua trimestral - taxa de desocupacao (employment leg do quartet TCB)
+export type EmpregoPnadPonto = {
+  trim: string;
+  "Taxa de desocupação"?: NumOrNull;
+  "Taxa de participação na força de trabalho"?: NumOrNull;
+  "Taxa de informalidade"?: NumOrNull;
+  "Taxa composta de subutilização"?: NumOrNull;
+};
+export type EmpregoPnadData = {
+  gerado_em: string;
+  trim_recente: string | null;
+  taxas?: { serie: EmpregoPnadPonto[] };
+};
+
 // PIM-PF oficial via SIDRA IBGE (consumido de data/atividade_pim.json)
 // usado como BENCHMARK OFICIAL no Bloco 4
 export type AtividadePimPonto = {
@@ -404,6 +432,8 @@ export type VisaoGeralPayload = {
   ipeadata: IpeadataData | null;
   atividadePim: AtividadePimData | null;
   focusPib: FocusData | null;
+  atividadePmc: AtividadePmcData | null;
+  empregoPnad: EmpregoPnadData | null;
 };
 
 async function fetchJson<T>(blobPath: string): Promise<T | null> {
@@ -439,6 +469,8 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     ipeadata,
     atividadePim,
     focusPib,
+    atividadePmc,
+    empregoPnad,
   ] = await Promise.all([
     fetchJson<IbcBrData>("data/atividade_ibcbr.json"),
     fetchJson<OecdCliData>("data/visao_geral_oecd_cli.json"),
@@ -459,8 +491,10 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     fetchJson<IpeadataData>("data/visao_geral_ipeadata.json"),
     fetchJson<AtividadePimData>("data/atividade_pim.json"),
     fetchJson<FocusData>("data/fiscal-classicos.json"),
+    fetchJson<AtividadePmcData>("data/atividade_pmc.json"),
+    fetchJson<EmpregoPnadData>("data/emprego_pnad.json"),
   ]);
-  return { ibcbr, oecdCli, credito, anp, anfavea, epe, codace, hiato, icf, recessao, fgvAntecedentes, fgvConfianca, cni, pmi, fecomercio, hardData, ipeadata, atividadePim, focusPib };
+  return { ibcbr, oecdCli, credito, anp, anfavea, epe, codace, hiato, icf, recessao, fgvAntecedentes, fgvConfianca, cni, pmi, fecomercio, hardData, ipeadata, atividadePim, focusPib, atividadePmc, empregoPnad };
 }
 
 // Extrai a mediana mais recente do Focus PIB para o ano corrente

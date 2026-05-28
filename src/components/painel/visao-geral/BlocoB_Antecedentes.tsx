@@ -13,7 +13,7 @@ import {
   Legend,
 } from "recharts";
 
-import type { CodaceFaixa, CreditoData, IcfData, OecdCliData, FgvAntecedentesData } from "@/lib/painel-visao-geral";
+import type { CodaceFaixa, CreditoData, IcfData, IpeadataData, OecdCliData, FgvAntecedentesData } from "@/lib/painel-visao-geral";
 import { CardSelicReal, CardConcessoes } from "./BlocoE_CondicoesFinanceiras";
 import { ExploradorSeries, type SerieExplorador } from "./ExploradorSeries";
 import { formatMes } from "@/lib/painel-visao-geral";
@@ -148,12 +148,14 @@ export function BlocoBAntecedentes({
   codace,
   icf,
   credito,
+  ipeadata,
 }: {
   oecdCli: OecdCliData | null;
   fgvAntecedentes: FgvAntecedentesData | null;
   codace: CodaceFaixa[];
   icf: IcfData | null;
   credito: CreditoData | null;
+  ipeadata: IpeadataData | null;
 }) {
   const oecdDefasado = oecdCli?.mes_recente
     ? new Date(oecdCli.mes_recente + "-01").getTime() < Date.now() - 1000 * 60 * 60 * 24 * 365
@@ -203,6 +205,22 @@ export function BlocoBAntecedentes({
       unidade: "%",
       refLine: 0,
       data: pjReal.map((p) => ({ mes: p.mes, v: p.valor })),
+    });
+  }
+  // FENABRAVE emplacamentos - demanda de bens duráveis (antecedente IACE-FGV)
+  const fenSer = ipeadata?.fenabrave_emplac?.serie ?? [];
+  if (fenSer.length > 0) {
+    const u = fenSer[fenSer.length - 1];
+    series.push({
+      id: "fenabrave-emplac",
+      titulo: "FENABRAVE emplac.",
+      subtitulo: "Demanda de bens duráveis (componente antecedente IACE-FGV)",
+      cor: "#2563EB",
+      valorAtual: u?.var_yoy_pct,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 0,
+      data: fenSer.map((p) => ({ mes: p.mes, v: p.var_yoy_pct })),
     });
   }
   if (oecdCli?.serie?.length) {

@@ -2,7 +2,7 @@
 
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import type { AnfaveaData, AnpData, AtividadePimData, EpeData, HardDataData, IpeadataData } from "@/lib/painel-visao-geral";
+import type { AnfaveaData, AnpData, AtividadePimData, AtividadePmcData, EmpregoPnadData, EpeData, HardDataData, IpeadataData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
 
 import { ExploradorSeries, type SerieExplorador } from "./ExploradorSeries";
@@ -14,6 +14,8 @@ export function BlocoDHardData({
   hardData: _hardData,
   ipeadata,
   atividadePim,
+  atividadePmc,
+  empregoPnad,
 }: {
   anfavea: AnfaveaData | null;
   anp: AnpData | null;
@@ -21,6 +23,8 @@ export function BlocoDHardData({
   hardData: HardDataData | null;
   ipeadata: IpeadataData | null;
   atividadePim: AtividadePimData | null;
+  atividadePmc: AtividadePmcData | null;
+  empregoPnad: EmpregoPnadData | null;
 }) {
   const pimSerie = atividadePim?.geral?.serie ?? [];
   const pimUlt = pimSerie[pimSerie.length - 1];
@@ -46,11 +50,53 @@ export function BlocoDHardData({
     series.push({ id: "anp-diesel", titulo: "ANP diesel", subtitulo: "Atividade/logística (índice 2019=100)", cor: "#DC2626", valorAtual: ultap?.diesel_indice_2019, mesAtual: ultap?.mes, unidade: "", refLine: 100, data: ap.map((p) => ({ mes: p.mes, v: p.diesel_indice_2019 })) });
     series.push({ id: "anp-otto", titulo: "ANP ciclo Otto", subtitulo: "Consumo famílias (índice 2019=100)", cor: "#2563EB", valorAtual: ultap?.ciclo_otto_indice_2019, mesAtual: ultap?.mes, unidade: "", refLine: 100, data: ap.map((p) => ({ mes: p.mes, v: p.ciclo_otto_indice_2019 })) });
   }
+  // PMC (sales leg do quartet TCB) - varejo restrito IBGE
+  if (atividadePmc?.serie?.length) {
+    const ser = atividadePmc.serie;
+    const u = ser[ser.length - 1];
+    series.push({
+      id: "pmc-restrito",
+      titulo: "PMC varejo restrito (IBGE)",
+      subtitulo: "Volume vendas, var. a/a — sales leg quartet TCB",
+      cor: "#059669",
+      valorAtual: u?.restrito_volume_var_yoy,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 0,
+      data: ser.map((p) => ({ mes: p.mes, v: p.restrito_volume_var_yoy })),
+    });
+    series.push({
+      id: "pmc-ampliado",
+      titulo: "PMC varejo ampliado",
+      subtitulo: "Volume vendas, var. a/a — inclui veículos+construção",
+      cor: "#0EA5E9",
+      valorAtual: u?.ampliado_volume_var_yoy,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 0,
+      data: ser.map((p) => ({ mes: p.mes, v: p.ampliado_volume_var_yoy })),
+    });
+  }
+  // PNAD - taxa de desocupacao (employment leg, trimestral)
+  if (empregoPnad?.taxas?.serie?.length) {
+    const ser = empregoPnad.taxas.serie;
+    const u = ser[ser.length - 1];
+    series.push({
+      id: "pnad-desoc",
+      titulo: "Desocupação PNAD-C (IBGE)",
+      subtitulo: "Taxa trimestral — employment leg quartet TCB",
+      cor: "#F59E0B",
+      valorAtual: (u as unknown as Record<string, number | null | undefined>)?.["Taxa de desocupação"],
+      mesAtual: u?.trim,
+      unidade: "%",
+      data: ser.map((p) => ({ mes: p.trim, v: (p as unknown as Record<string, number | null | undefined>)["Taxa de desocupação"] })),
+    });
+  }
+  // IPEADATA: papelao + aco (sem FENABRAVE - movida para Antecedentes - IACE-FGV duraveis)
   if (ipeadata) {
-    const buckets: { key: "papelao_abpo" | "aco_bruto" | "fenabrave_emplac"; titulo: string; subt: string; cor: string }[] = [
-      { key: "papelao_abpo", titulo: "Papelão (ABPO)", subt: "Antecedente PIM", cor: "#7C3AED" },
-      { key: "aco_bruto", titulo: "Aço bruto (IBS)", subt: "Coincidente indústria", cor: "#DC2626" },
-      { key: "fenabrave_emplac", titulo: "FENABRAVE emplac.", subt: "Consumo durável", cor: "#2563EB" },
+    const buckets: { key: "papelao_abpo" | "aco_bruto"; titulo: string; subt: string; cor: string }[] = [
+      { key: "papelao_abpo", titulo: "Papelão (ABPO)", subt: "Componente ICCE-FGV oficial", cor: "#7C3AED" },
+      { key: "aco_bruto", titulo: "Aço bruto (IBS)", subt: "Coincidente indústria pesada", cor: "#DC2626" },
     ];
     for (const b of buckets) {
       const bloco = ipeadata[b.key];
@@ -65,7 +111,7 @@ export function BlocoDHardData({
     <section className="space-y-5">
       <header>
         <h2 className="text-xl font-bold text-[#132960]">Coincidentes — séries puras</h2>
-        <p className="mt-1 text-xs text-zinc-600">Indicadores que se movem junto com o PIB no presente. PIM-PF oficial IBGE é benchmark; os demais (ANFAVEA, EPE, ANP, IPEADATA) confirmam ou divergem. Clique em qualquer card para trocar a série do gráfico principal.</p>
+        <p className="mt-1 text-xs text-zinc-600">Séries que se movem junto com o PIB no presente. Quartet TCB clássico (Stock-Watson 1989 / Duarte-Issler-Spacov 2004 / ICCE-FGV): Produção (PIM-PF) + Vendas (PMC) + Emprego (PNAD-C) + Renda. Complementado pelos componentes oficiais ICCE-FGV: ABPO papelão e EPE energia industrial. Demais hard data (ANFAVEA, ANP, Aço) são coincidentes setoriais. Clique no card para trocar a série do gráfico.</p>
       </header>
 
       {atividadePim && pimSerie.length > 0 && (
@@ -98,7 +144,7 @@ export function BlocoDHardData({
         </div>
       )}
 
-      <ExploradorSeries series={series} titulo="Demais coincidentes" subtitulo="ANFAVEA · EPE energia · ANP combustíveis · IPEADATA papelão/aço/FENABRAVE" />
+      <ExploradorSeries series={series} titulo="Demais coincidentes" subtitulo="Quartet TCB: PMC vendas · PNAD desocup. · EPE indústria (já tem prod=PIM-PF) · ABPO papelão (ICCE) · setoriais ANFAVEA/ANP/Aço" />
     </section>
   );
 }
