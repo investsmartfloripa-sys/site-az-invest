@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 
 import type { FiscalTermometroData, Matriz, IndicadorSemaforo, Nivel } from "@/lib/painel-fiscal";
@@ -18,108 +18,255 @@ function fmtPP(v: number | null | undefined, casas = 2): string {
   return `${s}${v.toFixed(casas)} pp`;
 }
 
-const NIVEL_BG: Record<Nivel, string> = {
-  verde: "bg-emerald-50 border-emerald-300",
-  amarelo: "bg-amber-50 border-amber-300",
-  vermelho: "bg-rose-50 border-rose-300",
-  break: "bg-red-100 border-red-500",
-  sem_dado: "bg-zinc-50 border-zinc-200",
-};
-const NIVEL_DOT: Record<Nivel, string> = {
-  verde: "bg-emerald-500",
-  amarelo: "bg-amber-500",
-  vermelho: "bg-rose-500",
-  break: "bg-red-700",
-  sem_dado: "bg-zinc-300",
-};
-const NIVEL_TXT: Record<Nivel, string> = {
-  verde: "text-emerald-900",
-  amarelo: "text-amber-900",
-  vermelho: "text-rose-900",
-  break: "text-red-900",
-  sem_dado: "text-zinc-500",
-};
-const NIVEL_LABEL: Record<Nivel, string> = {
-  verde: "Verde",
-  amarelo: "Atenção",
-  vermelho: "Crítico",
-  break: "BREAK",
-  sem_dado: "Sem dado",
+const NIVEL_COR: Record<Nivel, { bg: string; bgFill: string; border: string; text: string; dot: string; label: string }> = {
+  verde: { bg: "bg-emerald-50", bgFill: "bg-emerald-500", border: "border-emerald-300", text: "text-emerald-900", dot: "bg-emerald-500", label: "Verde" },
+  amarelo: { bg: "bg-amber-50", bgFill: "bg-amber-500", border: "border-amber-300", text: "text-amber-900", dot: "bg-amber-500", label: "Atenção" },
+  vermelho: { bg: "bg-rose-50", bgFill: "bg-rose-500", border: "border-rose-300", text: "text-rose-900", dot: "bg-rose-500", label: "Crítico" },
+  break: { bg: "bg-red-100", bgFill: "bg-red-700", border: "border-red-500", text: "text-red-900", dot: "bg-red-700", label: "BREAK" },
+  sem_dado: { bg: "bg-zinc-50", bgFill: "bg-zinc-300", border: "border-zinc-200", text: "text-zinc-500", dot: "bg-zinc-300", label: "Sem dado" },
 };
 
-function IndicadorPill({ id, ind }: { id: string; ind: IndicadorSemaforo }) {
+// ============================================================================
+// Glossario de siglas — exibido inline no card de cada indicador
+// ============================================================================
+const GLOSSARIO_SIGLAS: Record<string, string> = {
+  DBGG: "Dívida Bruta do Governo Geral (gov. central + estados + municípios). Métrica padrão do FMI.",
+  DLSP: "Dívida Líquida do Setor Público (DBGG − créditos públicos − ativos).",
+  DPMFi: "Dívida Pública Mobiliária Federal interna (títulos do Tesouro).",
+  LFT: "Letra Financeira do Tesouro — título indexado à Selic.",
+  REER: "Real Effective Exchange Rate (câmbio real efetivo) — média ponderada pelas trocas comerciais.",
+  NFSP: "Necessidade de Financiamento do Setor Público — déficit nominal anual.",
+  PIB: "Produto Interno Bruto.",
+  IPCA: "Índice de Preços ao Consumidor Amplo (inflação oficial).",
+  Selic: "Taxa básica de juros do Banco Central.",
+};
+
+// ============================================================================
+// Indicadores derivados (calculados, não vem direto de uma série)
+// ============================================================================
+const DERIVADOS: Record<string, { formula: string }> = {
+  dbgg_pct_receita: { formula: "DBGG (R$) ÷ Receita líquida 12m do Tesouro" },
+  divida_total_economia_pct_pib: { formula: "DBGG + crédito ao setor privado (BCB SGS 20622)" },
+  custo_medio_aa_pct: { formula: "Juros nominais 12m ÷ DBGG (anualizado)" },
+  primario_estabilizador_pct_pib: { formula: "(g − i) × DBGG / (1 + g) — equação de Blanchard" },
+  r_menos_g_pp: { formula: "Taxa nominal efetiva da dívida − Crescimento nominal (g = PIB real + IPCA)" },
+  selic_real_ex_post_pct: { formula: "((1 + Selic) ÷ (1 + IPCA 12m)) − 1" },
+  lever_juros_delta_pp: { formula: "Diferença entre custo médio da dívida e o i* que estabiliza Dívida/Receita" },
+  lever_inflacao_delta_pp: { formula: "Inflação adicional necessária para o crescimento nominal cobrir o gap" },
+  lever_corte_despesa_pct: { formula: "(despesa atual − despesa alvo Blanchard) ÷ despesa atual" },
+  lever_aumento_receita_pct: { formula: "Aumento da receita necessária para zerar gap fiscal estrutural" },
+};
+
+// ============================================================================
+// TermometroVertical: régua à direita do valor com 4 faixas e ponto Brasil
+// ============================================================================
+function TermometroVertical({ ind }: { ind: IndicadorSemaforo }) {
+  const faixas = [
+    { nivel: "break" as const, valor: ind.break, label: "BREAK" },
+    { nivel: "vermelho" as const, valor: ind.vermelho, label: "Crítico" },
+    { nivel: "amarelo" as const, valor: ind.amarelo, label: "Atenção" },
+    { nivel: "verde" as const, valor: ind.verde, label: "Verde" },
+  ];
+  // Para maior_pior, faixa de cima = pior. Para maior_melhor, faixa de cima = melhor.
+  const direcaoLabel = ind.direcao === "maior_pior" ? ["Pior →", "Melhor →"] : ["Melhor →", "Pior →"];
+  // Posiciona ponto Brasil na faixa correta
+  const valorAtual = ind.valor;
+
+  // Calcula em qual faixa cai o valor atual (0 a 3, de cima pra baixo)
+  let posFaixa = -1;
+  if (valorAtual != null) {
+    if (ind.direcao === "maior_pior") {
+      if (valorAtual >= ind.break) posFaixa = 0;
+      else if (valorAtual >= ind.vermelho) posFaixa = 1;
+      else if (valorAtual >= ind.amarelo) posFaixa = 2;
+      else posFaixa = 3;
+    } else {
+      if (valorAtual <= ind.break) posFaixa = 0;
+      else if (valorAtual <= ind.vermelho) posFaixa = 1;
+      else if (valorAtual <= ind.amarelo) posFaixa = 2;
+      else posFaixa = 3;
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-stretch gap-0.5">
+      <div className="text-center text-[8px] font-semibold uppercase tracking-wider text-zinc-400">{direcaoLabel[0]}</div>
+      {faixas.map((f, i) => {
+        const cor = NIVEL_COR[f.nivel];
+        const isBR = i === posFaixa;
+        return (
+          <div
+            key={i}
+            className={`relative flex h-7 items-center justify-between gap-1 rounded px-1.5 ${cor.bgFill} ${isBR ? "ring-2 ring-offset-1 ring-rose-700" : ""}`}
+          >
+            <span className="text-[9px] font-bold uppercase text-white drop-shadow">{f.label}</span>
+            <span className="text-[9px] font-semibold tabular-nums text-white drop-shadow">
+              {ind.direcao === "maior_pior" ? "≥" : "≤"}{f.valor.toFixed(0)}{ind.unidade.trim()}
+            </span>
+            {isBR && (
+              <span className="absolute -left-2 top-1/2 -translate-y-1/2 text-rose-700" title="Brasil hoje">
+                ▶
+              </span>
+            )}
+          </div>
+        );
+      })}
+      <div className="text-center text-[8px] font-semibold uppercase tracking-wider text-zinc-400">{direcaoLabel[1]}</div>
+    </div>
+  );
+}
+
+// ============================================================================
+// IndicadorCard: card individual com termômetro vertical ao lado
+// ============================================================================
+function IndicadorCard({ id, ind }: { id: string; ind: IndicadorSemaforo }) {
+  const cor = NIVEL_COR[ind.nivel];
   const valor = ind.valor;
+  const isDerivado = id in DERIVADOS;
+
+  // Detecta siglas no título e mostra glossário
+  const siglasNoTitulo = Object.keys(GLOSSARIO_SIGLAS).filter((s) => ind.titulo.includes(s));
+
   return (
-    <div className={`rounded-lg border-2 p-3 ${NIVEL_BG[ind.nivel]}`}>
+    <div className={`rounded-xl border-2 ${cor.border} ${cor.bg} p-4 shadow-sm`}>
+      {/* Header com badge */}
       <div className="flex items-start justify-between gap-2">
-        <h4 className={`text-[11px] font-semibold leading-tight ${NIVEL_TXT[ind.nivel]}`}>{ind.titulo}</h4>
-        <span className={`inline-block h-2 w-2 rounded-full ${NIVEL_DOT[ind.nivel]} flex-shrink-0 mt-1`} title={NIVEL_LABEL[ind.nivel]} />
-      </div>
-      <div className={`mt-2 text-xl font-bold tabular-nums ${NIVEL_TXT[ind.nivel]}`}>
-        {fmt(valor, ind.unidade === " pp" ? 2 : (valor != null && Math.abs(valor) > 100 ? 0 : 2), ind.unidade)}
-      </div>
-      <details className="mt-2 text-[10px]">
-        <summary className="cursor-pointer opacity-70 hover:opacity-100">faixas Dalio</summary>
-        <div className="mt-1 grid grid-cols-4 gap-0.5 text-center text-[9px]">
-          <div className="rounded bg-emerald-100 px-1 py-0.5">V {ind.direcao === "maior_pior" ? "<" : ">"}{fmt(ind.verde, 1, ind.unidade)}</div>
-          <div className="rounded bg-amber-100 px-1 py-0.5">A {ind.direcao === "maior_pior" ? "<" : ">"}{fmt(ind.amarelo, 1, ind.unidade)}</div>
-          <div className="rounded bg-rose-100 px-1 py-0.5">C {ind.direcao === "maior_pior" ? "<" : ">"}{fmt(ind.vermelho, 1, ind.unidade)}</div>
-          <div className="rounded bg-red-200 px-1 py-0.5 font-bold">B {ind.direcao === "maior_pior" ? "≥" : "≤"}{fmt(ind.break, 1, ind.unidade)}</div>
+        <div className="flex-1">
+          <h4 className={`text-sm font-bold leading-tight ${cor.text}`}>{ind.titulo}</h4>
+          <div className="mt-1 flex flex-wrap gap-1">
+            {isDerivado && (
+              <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-violet-900" title="Indicador calculado, não vem direto de uma série">
+                calculado
+              </span>
+            )}
+            <span className={`rounded ${cor.dot} px-1.5 py-0.5 text-[9px] font-bold uppercase text-white`}>
+              {cor.label}
+            </span>
+          </div>
         </div>
-        <p className="mt-1 leading-snug opacity-80">{ind.narrativa}</p>
-      </details>
+      </div>
+
+      {/* Valor + Termometro vertical lado a lado */}
+      <div className="mt-3 flex items-start gap-3">
+        <div className="flex-1">
+          <div className={`text-3xl font-bold tabular-nums ${cor.text}`}>
+            {fmt(valor, valor != null && Math.abs(valor) > 100 ? 0 : 2, ind.unidade)}
+          </div>
+          {isDerivado && (
+            <p className="mt-1 text-[10px] italic text-violet-700">
+              Fórmula: {DERIVADOS[id].formula}
+            </p>
+          )}
+        </div>
+        <div className="w-32 flex-shrink-0">
+          <TermometroVertical ind={ind} />
+        </div>
+      </div>
+
+      {/* Narrativa Dalio */}
+      <p className="mt-3 text-[11px] leading-relaxed text-zinc-700">{ind.narrativa}</p>
+
+      {/* Glossário de siglas inline */}
+      {siglasNoTitulo.length > 0 && (
+        <div className="mt-2 border-t border-zinc-200 pt-2 text-[10px] text-zinc-600">
+          {siglasNoTitulo.map((s) => (
+            <div key={s}>
+              <strong className="text-zinc-800">{s}:</strong> {GLOSSARIO_SIGLAS[s]}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-function ScoreHero({ score }: { score: { score_medio: number | null; nivel_geral: Nivel; n: number; total: number } }) {
+// ============================================================================
+// Score como DISTRIBUIÇÃO (não nota inventada)
+// ============================================================================
+function DistribuicaoScore({ indicadores }: { indicadores: Record<string, IndicadorSemaforo> }) {
+  const counts: Record<Nivel, number> = { verde: 0, amarelo: 0, vermelho: 0, break: 0, sem_dado: 0 };
+  Object.values(indicadores).forEach((i) => { counts[i.nivel]++; });
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  const niveis: Nivel[] = ["verde", "amarelo", "vermelho", "break", "sem_dado"];
+
   return (
-    <div className={`rounded-2xl border-2 p-6 ${NIVEL_BG[score.nivel_geral]}`}>
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="rounded-2xl border-2 border-zinc-300 bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className={`text-xs font-medium uppercase tracking-wide opacity-70 ${NIVEL_TXT[score.nivel_geral]}`}>Score consolidado Dalio</div>
-          <div className={`mt-1 text-4xl font-bold ${NIVEL_TXT[score.nivel_geral]}`}>
-            {score.score_medio?.toFixed(2) ?? "—"}<span className="ml-2 text-lg font-normal opacity-70">/ 4.0</span>
-          </div>
-          <div className={`mt-1 text-sm font-bold uppercase ${NIVEL_TXT[score.nivel_geral]}`}>
-            {NIVEL_LABEL[score.nivel_geral]} ({score.n} de {score.total} indicadores)
-          </div>
+          <h3 className="text-sm font-bold uppercase tracking-wide text-[#132960]">Distribuição dos indicadores</h3>
+          <p className="mt-1 text-xs text-zinc-600">
+            Como cada indicador está classificado pelas faixas Dalio (verde / atenção / crítico / break). <strong>Não é nota — é contagem.</strong>
+          </p>
         </div>
-        <div className="flex flex-wrap gap-2 text-xs">
-          <div className="rounded-lg bg-white/70 px-3 py-1.5">
-            <span className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-500" /> Verde = 1
-          </div>
-          <div className="rounded-lg bg-white/70 px-3 py-1.5">
-            <span className="mr-1 inline-block h-2 w-2 rounded-full bg-amber-500" /> Amarelo = 2
-          </div>
-          <div className="rounded-lg bg-white/70 px-3 py-1.5">
-            <span className="mr-1 inline-block h-2 w-2 rounded-full bg-rose-500" /> Vermelho = 3
-          </div>
-          <div className="rounded-lg bg-white/70 px-3 py-1.5">
-            <span className="mr-1 inline-block h-2 w-2 rounded-full bg-red-700" /> Break = 4
-          </div>
-        </div>
+        <div className="text-right text-xs text-zinc-500">{total} indicadores</div>
+      </div>
+
+      {/* Barra empilhada de proporção */}
+      <div className="mt-4 flex h-8 w-full overflow-hidden rounded-lg border border-zinc-200">
+        {niveis.map((n) => {
+          const c = counts[n];
+          if (c === 0) return null;
+          const cor = NIVEL_COR[n];
+          const pct = (c / total) * 100;
+          return (
+            <div
+              key={n}
+              className={`flex items-center justify-center ${cor.bgFill} text-[11px] font-bold text-white`}
+              style={{ width: `${pct}%` }}
+              title={`${cor.label}: ${c} indicadores`}
+            >
+              {pct > 8 && c}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legenda contagem */}
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs md:grid-cols-5">
+        {niveis.map((n) => {
+          const cor = NIVEL_COR[n];
+          return (
+            <div key={n} className={`flex items-center gap-2 rounded-lg ${cor.bg} px-2 py-1.5`}>
+              <span className={`inline-block h-3 w-3 rounded ${cor.bgFill}`} />
+              <span className={`flex-1 ${cor.text}`}>{cor.label}</span>
+              <strong className={cor.text}>{counts[n]}</strong>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
+// ============================================================================
+// SemaforoPorCategoria — agora com cards isolados (não grid colado)
+// ============================================================================
 function SemaforoPorCategoria({ indicadores, categorias }: { indicadores: Record<string, IndicadorSemaforo>; categorias: string[] }) {
   const porCategoria: Record<string, Array<[string, IndicadorSemaforo]>> = {};
   Object.entries(indicadores).forEach(([id, ind]) => {
     if (!porCategoria[ind.categoria]) porCategoria[ind.categoria] = [];
     porCategoria[ind.categoria].push([id, ind]);
   });
+
+  // Traduções das categorias
+  const TRAD: Record<string, string> = {
+    "Carga": "A. Carga da dívida",
+    "Capacidade": "B. Capacidade de pagamento",
+    "Estrutura": "C. Estrutura da dívida",
+    "Stress": "D. Sinais de stress",
+    "Levers": "E. Alavancas (Levers) — quanto cada uma teria que mexer",
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {categorias.map((cat) => {
         const items = porCategoria[cat];
         if (!items?.length) return null;
         return (
           <div key={cat}>
-            <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-[#132960]">{cat}</h3>
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
-              {items.map(([id, ind]) => (<IndicadorPill key={id} id={id} ind={ind} />))}
+            <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-[#132960]">{TRAD[cat] ?? cat}</h3>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {items.map(([id, ind]) => (<IndicadorCard key={id} id={id} ind={ind} />))}
             </div>
           </div>
         );
@@ -128,6 +275,9 @@ function SemaforoPorCategoria({ indicadores, categorias }: { indicadores: Record
   );
 }
 
+// ============================================================================
+// MatrizDalio (mantido)
+// ============================================================================
 function heatColor(t: number): string {
   const c = Math.max(0, Math.min(1, t));
   if (c < 0.5) {
@@ -221,6 +371,9 @@ function MatrizDalio({ matriz, eixoX, labelY, labelX, sufY = "%", sufX = "%", de
   );
 }
 
+// ============================================================================
+// LeverCard (mantido)
+// ============================================================================
 function LeverCard({ numero, titulo, descricao, atual, alvo, delta, sufix, baseLabel, viavel }:
   { numero: number; titulo: string; descricao: string; atual: number | undefined; alvo: number | undefined; delta?: number; sufix: string; baseLabel: string; viavel?: "alta" | "media" | "baixa" }) {
   const viabilidadeBg = viavel === "baixa" ? "bg-rose-100 border-rose-300" : viavel === "media" ? "bg-amber-100 border-amber-300" : "bg-emerald-100 border-emerald-300";
@@ -256,12 +409,13 @@ function LeverCard({ numero, titulo, descricao, atual, alvo, delta, sufix, baseL
   );
 }
 
+// ============================================================================
+// Component principal
+// ============================================================================
 export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData }) {
   const foto = data.foto_brasil;
   const traj = data.trajetoria_br_pct_receita ?? [];
-  const trajData = traj.map((v, i) => ({ ano: i, valor: v }));
   const lev = data.levers;
-  const score = data.score_semaforo;
   const indicadores = data.indicadores_semaforo;
   const categorias = data.categorias_ordem ?? [];
 
@@ -272,7 +426,6 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
         subtitulo='Aplicação das fórmulas e tabelas de "How Countries Go Broke" (Ray Dalio, 2025) ao Brasil. Dados em tempo real via BCB SGS, Tesouro RTN e IBGE.'
       />
 
-      {/* === LEIA ISTO PRIMEIRO === */}
       <Section titulo="Leia isto primeiro (em 30 segundos)">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs">
@@ -284,22 +437,28 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
             <p className="text-zinc-700">Dívida/Receita para de crescer (não diminui). É o mínimo para evitar bola de neve. Hoje r−g = <strong>+3,1pp</strong>, dívida cresce mesmo com primário neutro.</p>
           </div>
           <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs">
-            <div className="mb-1 font-bold text-[#132960]">Os 4 Levers</div>
-            <p className="text-zinc-700">Cortar juros, aceitar mais inflação, cortar despesa, ou aumentar receita. Quanto cada um teria que mexer isoladamente — abaixo.</p>
+            <div className="mb-1 font-bold text-[#132960]">Os 4 Levers (alavancas)</div>
+            <p className="text-zinc-700">Cortar juros, aceitar mais inflação, cortar despesa, ou aumentar receita. O simulador interativo abaixo permite testar combinações.</p>
           </div>
         </div>
       </Section>
 
-      {/* === SCORE HERO + SEMÁFORO POR CATEGORIA === */}
-      {score && <ScoreHero score={score} />}
+      {/* === DISTRIBUIÇÃO DOS INDICADORES === */}
+      {indicadores && Object.keys(indicadores).length > 0 && (
+        <DistribuicaoScore indicadores={indicadores} />
+      )}
 
+      {/* === SEMÁFORO POR CATEGORIA === */}
       {indicadores && categorias.length > 0 && (
-        <Section titulo="Termômetro: 20 indicadores Dalio semaforizados" hint="Cada indicador tem 4 faixas — verde / atenção / crítico / break — baseadas em casos históricos do livro. Brasil hoje classificado em cada um.">
+        <Section
+          titulo="Indicadores Dalio semaforizados"
+          hint="20 indicadores em 5 categorias. Faixas verde / atenção / crítico / break baseadas em casos históricos descritos no livro (Reino Unido 1976, Japão pós-1990, Argentina 2001, EUA pós-2008). Ponto Brasil (▶) destacado na régua à direita de cada card."
+        >
           <SemaforoPorCategoria indicadores={indicadores} categorias={categorias} />
         </Section>
       )}
 
-      {/* === SIMULADOR INTERATIVO (substitui trajetoria estatica) === */}
+      {/* === SIMULADOR INTERATIVO === */}
       <SimuladorTrajetoria defaults={{
         debt_pct_receita: data.premissas.debt_pct_receita ?? 435,
         debt_pct_pib: foto.divida.dbgg_pct_pib ?? 80,
@@ -310,30 +469,8 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
         receita_pct_pib: foto.receita.receita_liquida_pct_pib ?? 18,
       }} />
 
-      {/* === TRAJETÓRIA 10 ANOS BASE (estática menor, contextual) === */}
-      {false && traj.length > 0 && (
-        <Section titulo="Trajetória projetada do Brasil — próximos 10 anos" hint="Mantidos primário, juros e crescimento atuais. Equação iterativa do livro.">
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trajData} margin={{ left: 0, right: 24, top: 8, bottom: 16 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="ano" tick={{ fontSize: 11 }} label={{ value: "anos a partir de hoje", fontSize: 10, position: "insideBottom", offset: -8 }} />
-                <YAxis tick={{ fontSize: 11 }} unit="%" />
-                <Tooltip formatter={(v: unknown) => (typeof v === "number" ? `${v.toFixed(1)}% da receita` : "—")} />
-                <ReferenceLine y={traj[0]} stroke="#475569" strokeDasharray="3 3" label={{ value: `Hoje ${traj[0].toFixed(0)}%`, fontSize: 10, fill: "#475569", position: "left" }} />
-                <ReferenceLine y={traj[traj.length-1]} stroke="#dc2626" strokeDasharray="3 3" label={{ value: `Em 10y ${traj[traj.length-1].toFixed(0)}%`, fontSize: 10, fill: "#dc2626", position: "right" }} />
-                <Line type="monotone" dataKey="valor" stroke="#dc2626" strokeWidth={2.5} dot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-2 rounded-lg bg-rose-50 p-3 text-xs text-rose-900">
-            <strong>Leitura:</strong> mantidas as variáveis atuais (déficit primário {fmt(foto.deficit_primario.primary_deficit_pct_receita, 1)}% da receita, custo médio {fmt(foto.juros.taxa_nominal_efetiva_aa, 2)}% a.a., crescimento nominal {fmt(foto.macro.g_nominal_aa_pct, 2)}%), dívida brasileira em proporção da receita cresce de <strong>{traj[0].toFixed(0)}% para {traj[traj.length-1].toFixed(0)}%</strong> em 10 anos.
-          </div>
-        </Section>
-      )}
-
       {/* === MATRIZES === */}
-      <Section titulo={data.matrizes.endlevel_por_deficit.titulo}>
+      <Section titulo="Dívida/Receita após 10 anos (tabela do livro, cap. The Mechanics)">
         <MatrizDalio
           matriz={data.matrizes.endlevel_por_deficit}
           eixoX={data.matrizes.endlevel_por_deficit.eixo_x_deficit ?? []}
@@ -343,7 +480,7 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
         />
       </Section>
 
-      <Section titulo={data.matrizes.endlevel_por_gap.titulo}>
+      <Section titulo="Dívida/Receita após 10 anos — variando o gap r − g (tabela do livro)">
         <MatrizDalio
           matriz={data.matrizes.endlevel_por_gap}
           eixoX={data.matrizes.endlevel_por_gap.eixo_x_gap_pp ?? []}
@@ -355,7 +492,7 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
 
       {/* === 4 LEVERS === */}
       {lev && (
-        <Section titulo="Os 4 Levers para estabilizar a dívida brasileira" hint='Dalio: "todo governo com dívida em moeda própria tem 4 alavancas". Cada card mostra o ajuste isolado necessário.'>
+        <Section titulo="Os 4 Levers (alavancas) para estabilizar a dívida" hint='Dalio: "todo governo com dívida em moeda própria tem 4 alavancas". Cada card mostra o ajuste isolado necessário.'>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
             {lev.lever_juros && (
               <LeverCard numero={1} titulo="Baixar juros"
