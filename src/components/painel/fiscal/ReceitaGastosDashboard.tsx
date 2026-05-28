@@ -20,11 +20,12 @@ function fmtPct(v: number | null | undefined, casas = 1): string {
   if (v == null) return "—";
   return `${v.toFixed(casas)}%`;
 }
-function fmtBRL(v: number | null | undefined): string {
-  if (v == null) return "—";
-  if (Math.abs(v) >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(2)} tri`;
-  if (Math.abs(v) >= 1_000) return `R$ ${(v / 1_000).toFixed(0)} bi`;
-  return `R$ ${v.toFixed(0)} mi`;
+function fmtBRL(v_bi: number | null | undefined): string {
+  if (v_bi == null) return "—";
+  // input já em bilhões
+  if (Math.abs(v_bi) >= 1000) return `R$ ${(v_bi / 1000).toFixed(2)} tri`;
+  if (Math.abs(v_bi) >= 1) return `R$ ${v_bi.toFixed(0)} bi`;
+  return `R$ ${(v_bi * 1000).toFixed(0)} mi`;
 }
 function fmtPP(v: number | null | undefined): string {
   if (v == null) return "—";
@@ -415,7 +416,7 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
               <LineChart data={seriePrimario} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="mes" tickFormatter={fmtMes} tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} unit="%" domain={[-3, 3]} />
+                <YAxis tick={{ fontSize: 11 }} unit="%" domain={[-12, 4]} allowDecimals={false} />
                 <Tooltip formatter={fmtTipPct} labelFormatter={fmtTipLabel} />
                 <ReferenceLine y={0} stroke="#475569" />
                 {data.metas_ldo?.anos?.[anoAtual()] && (
