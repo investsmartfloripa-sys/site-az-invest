@@ -15,6 +15,7 @@ import {
 
 import type { CodaceFaixa, CreditoData, IcfData, OecdCliData, FgvAntecedentesData } from "@/lib/painel-visao-geral";
 import { CardSelicReal, CardConcessoes } from "./BlocoE_CondicoesFinanceiras";
+import { ExploradorSeries, type SerieExplorador } from "./ExploradorSeries";
 import { formatMes } from "@/lib/painel-visao-geral";
 
 function CardOecdCli({ data, codace }: { data: OecdCliData | null; codace: CodaceFaixa[] }) {
@@ -154,31 +155,105 @@ export function BlocoBAntecedentes({
   icf: IcfData | null;
   credito: CreditoData | null;
 }) {
-  // OCDE CLI agora em destaque (decisão loop 18) com aviso quando >12m de defasagem
   const oecdDefasado = oecdCli?.mes_recente
     ? new Date(oecdCli.mes_recente + "-01").getTime() < Date.now() - 1000 * 60 * 60 * 24 * 365
     : false;
+
+  // Montar series do explorador (Selic real ex-ante + Concessoes PF/PJ reais + futuras)
+  const series: SerieExplorador[] = [];
+  if (icf?.serie?.length) {
+    const u = icf.serie[icf.serie.length - 1];
+    series.push({
+      id: "selic-real-exante",
+      titulo: "Selic real ex-ante",
+      subtitulo: "Selic meta - IPCA esperado 12m (Focus). Acima de ~4% costuma antecipar freio.",
+      cor: "#DC2626",
+      valorAtual: u?.selic_real_ex_ante_pct,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 4,
+      data: icf.serie.map((p) => ({ mes: p.mes, v: p.selic_real_ex_ante_pct })),
+    });
+  }
+  const pfReal = credito?.concessoes?.pf_total_real_12m_var_pct ?? [];
+  if (pfReal.length > 0) {
+    const u = pfReal[pfReal.length - 1];
+    series.push({
+      id: "concessoes-pf-real",
+      titulo: "Concessões PF reais 12m",
+      subtitulo: "Var. real a/a das concessões a pessoas físicas (BCB).",
+      cor: "#2563EB",
+      valorAtual: u?.valor,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 0,
+      data: pfReal.map((p) => ({ mes: p.mes, v: p.valor })),
+    });
+  }
+  const pjReal = credito?.concessoes?.pj_total_real_12m_var_pct ?? [];
+  if (pjReal.length > 0) {
+    const u = pjReal[pjReal.length - 1];
+    series.push({
+      id: "concessoes-pj-real",
+      titulo: "Concessões PJ reais 12m",
+      subtitulo: "Var. real a/a das concessões a pessoas jurídicas (BCB).",
+      cor: "#DC2626",
+      valorAtual: u?.valor,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 0,
+      data: pjReal.map((p) => ({ mes: p.mes, v: p.valor })),
+    });
+  }
+  if (oecdCli?.serie?.length) {
+    const u = oecdCli.serie[oecdCli.serie.length - 1];
+    series.push({
+      id: "oecd-cli-var6m",
+      titulo: "OCDE CLI var. 6m",
+      subtitulo: "Variação 6m anualizada do CLI Brasil. Defasagem >12m.",
+      cor: "#7C3AED",
+      valorAtual: u?.var_6m_anualizada,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 0,
+      data: oecdCli.serie.map((p) => ({ mes: p.mes, v: p.var_6m_anualizada })),
+    });
+  }
+
   return (
     <section className="space-y-5">
       <header>
         <h2 className="text-xl font-bold text-[#132960]">Antecedentes do PIB</h2>
         <p className="mt-1 text-xs text-zinc-600">
-          Indicadores que historicamente lideram viradas de ciclo em 3-12 meses. Combinam expectativas (FGV), curva de juros (slope DI), mercado (Ibov, EMBI), crédito (concessões reais) e composite oficial (OCDE CLI). Literatura de referência: IACE/ICCE FGV-IBRE, Chauvet (2002), BCB WP 285 e WP 435 (Gaglianone-Areosa).
+          Indicadores que historicamente lideram viradas de ciclo em 3-12 meses. Combinam composite OCDE oficial, taxa de juros real, dinâmica de concessões reais e expectativas FGV. Literatura: IACE/ICCE FGV-IBRE, Chauvet (2002), BCB WP 285 e WP 435 (Gaglianone-Areosa).
         </p>
       </header>
+
       {oecdDefasado && (
         <div className="rounded-md bg-amber-50 px-3 py-2 text-[11px] text-amber-800 border border-amber-200">
-          ⚠ OCDE CLI publica com defasagem &gt;12 meses (último: {oecdCli?.mes_recente}). O sinal corrente vem das sondagens FGV abaixo. OCDE serve como benchmark histórico cross-country.
+          ⚠ OCDE CLI publica com defasagem &gt;12 meses (último: {oecdCli?.mes_recente}). Sinal corrente vem das sondagens FGV abaixo. OCDE serve como benchmark histórico cross-country.
         </div>
       )}
+
+      {/* OCDE CLI benchmark sempre visível em cima */}
       <CardOecdCli data={oecdCli} codace={codace} />
-      <CardSelicReal data={icf} />
-      <CardConcessoes data={credito} />
+
+      {/* Explorador de séries antecedentes (gráfico único + cards seletores) */}
+      {series.length > 0 && (
+        <ExploradorSeries
+          series={series}
+          titulo="Indicadores antecedentes"
+          subtitulo="Selic real ex-ante · Concessões reais PF/PJ · OCDE CLI · futuros: slope DI, Ibov real, EMBI, Focus PIB, IIE-Br"
+        />
+      )}
+
+      {/* FGV antecedentes (quando o scraper voltar) */}
       <CardFgvAntecedentes data={fgvAntecedentes} />
+
       <div className="rounded-2xl border-2 border-dashed border-zinc-300 bg-zinc-50 p-4 text-center">
         <p className="text-sm font-semibold text-zinc-700">Mais antecedentes em construção</p>
         <p className="mt-1 text-xs text-zinc-500">
-          Próximos a entrar (via APIs BCB SGS/Olinda + IBGE SIDRA + IPEADATA): IACE FGV oficial, slope DI 10a-2a dedicado, Ibov real 6m, EMBI+ Brasil, Focus PIB 12m-ahead, IIE-Br FGV, concessões crédito PF/PJ reais, spread crédito PJ, CAGED saldo MoM dessaz.
+          Próximos (via APIs BCB SGS/Olinda + IBGE SIDRA + IPEADATA): IACE FGV oficial, slope DI 10a-2a, Ibov real 6m, EMBI+ Brasil, Focus PIB 12m-ahead, IIE-Br FGV, spread crédito PJ, CAGED saldo MoM dessaz, inadimplência PJ.
         </p>
       </div>
     </section>
