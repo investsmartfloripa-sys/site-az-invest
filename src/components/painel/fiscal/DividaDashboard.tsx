@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 
-import type { FiscalClassicosData, PontoMensal } from "@/lib/painel-fiscal";
+import type { FiscalClassicosData, PontoMensal, PontoMensalPct } from "@/lib/painel-fiscal";
 import { CORES_SERIES, CardHeader, IndicadorBox, KPI, Section, Toggle, useHorizonte } from "./FiscalShell";
 
 const HORIZONTES = [
@@ -40,214 +40,325 @@ function tail<T>(s: T[], n: number): T[] {
   return s.slice(Math.max(0, s.length - n));
 }
 
-function merge(series: PontoMensal[][], keys: string[]): Array<Record<string, number | string | null>> {
+// Junta múltiplas séries por mês
+function mergeMensais(series: Array<{ key: string; data: PontoMensal[] }>): Array<Record<string, number | string | null>> {
   const mapa = new Map<string, Record<string, number | string | null>>();
-  series.forEach((s, idx) => {
-    s.forEach((r) => {
+  series.forEach((s) => {
+    s.data.forEach((r) => {
       if (!mapa.has(r.data)) mapa.set(r.data, { mes: r.data });
-      mapa.get(r.data)![keys[idx]] = r.valor;
+      mapa.get(r.data)![s.key] = r.valor;
     });
   });
   return Array.from(mapa.values()).sort((a, b) => String(a.mes).localeCompare(String(b.mes)));
 }
 
-// build: 2026-05-28 v3
+type SerieToggle = {
+  id: string;
+  label: string;             // título mostrado no card e legenda
+  cor: string;               // cor da linha
+  valor: number | null;
+  unidade: string;
+  fonte?: string;
+  formula?: string;
+  narrativa: string;
+  siglas?: Array<{ sigla: string; expansao: string }>;
+  serieTemporal: PontoMensal[];   // dados pro gráfico (pode estar vazio se ainda não coletado)
+  ativoInicial?: boolean;
+};
+
 export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
   const horizonte = useHorizonte(HORIZONTES, "10a");
 
-  const dbgg_recente = ultimoValor(data.divida.dbgg_pct_pib);
-  const dlsp_recente = ultimoValor(data.divida.dlsp_total_pct_pib);
-  const dlsp_central_recente = ultimoValor(data.divida.dlsp_gov_central_pct_pib);
+  // === Calcular série temporal do Wedge (DBGG - DLSP total) ===
+  const wedgeSerie = useMemo<PontoMensal[]>(() => {
+    const dlspMap = new Map(data.divida.dlsp_total_pct_pib.map((p) => [p.data, p.valor]));
+    return data.divida.dbgg_pct_pib.map((p) => {
+      const d = dlspMap.get(p.data);
+      return { data: p.data, valor: (p.valor != null && d != null) ? p.valor - d : null };
+    });
+  }, [data]);
 
-  // Composição DPMFi (% indexador) — último valor de cada
-  const comp = data.composicao_dpmfi;
-  const pct_selic = comp ? ultimoValor(comp.selic_pct) : null;
-  const pct_prefix = comp ? ultimoValor(comp.prefixado_pct) : null;
-  const pct_cambio = comp ? ultimoValor(comp.cambio_pct) : null;
-  // IPCA é residual (não há série SGS direta — calculado como 100 - outros)
-  const soma_conhecidos = (pct_selic ?? 0) + (pct_prefix ?? 0) + (pct_cambio ?? 0) +
-                          (comp ? (ultimoValor(comp.tr_pct ?? []) ?? 0) : 0) +
-                          (comp ? (ultimoValor(comp.outros_pct ?? []) ?? 0) : 0);
-  const pct_ipca = soma_conhecidos > 0 ? Math.max(0, 100 - soma_conhecidos) : null;
+  // === Série temporal de Dívida total economia (DBGG + Crédito setor privado) ===
+  const credito = data.credito_economia?.credito_total_pct_pib ?? [];
+  const dividaTotalSerie = useMemo<PontoMensal[]>(() => {
+    if (credito.length === 0) return [];
+    const credMap = new Map(credito.map((p) => [p.data, p.valor]));
+    return data.divida.dbgg_pct_pib.map((p) => {
+      const c = credMap.get(p.data);
+      return { data: p.data, valor: (p.valor != null && c != null) ? p.valor + c : null };
+    });
+  }, [data, credito]);
 
-  // Wedge entre DBGG e DLSP (créditos do gov, reservas)
-  const wedge = (dbgg_recente != null && dlsp_recente != null) ? dbgg_recente - dlsp_recente : null;
+  // === Definição das 6 séries com toggle ===
+  const seriesPossiveis: SerieToggle[] = useMemo(() => [
+    {
+      id: "dbgg",
+      label: "DBGG / PIB",
+      cor: CORES_SERIES[3],
+      valor: ultimoValor(data.divida.dbgg_pct_pib),
+      unidade: "%",
+      fonte: "BCB SGS 13762",
+      narrativa: "Dívida bruta do governo geral em % do PIB — métrica padrão FMI / Maastricht. Inclui União, estados, municípios e previdência.",
+      siglas: [
+        { sigla: "DBGG", expansao: "Dívida Bruta do Governo Geral" },
+        { sigla: "PIB", expansao: "Produto Interno Bruto" },
+      ],
+      serieTemporal: data.divida.dbgg_pct_pib,
+      ativoInicial: true,
+    },
+    {
+      id: "dlsp_total",
+      label: "DLSP total / PIB",
+      cor: CORES_SERIES[0],
+      valor: ultimoValor(data.divida.dlsp_total_pct_pib),
+      unidade: "%",
+      fonte: "BCB SGS 4513",
+      narrativa: "Dívida líquida do setor público — DBGG menos créditos do governo (BNDES) menos reservas internacionais menos outros ativos.",
+      siglas: [{ sigla: "DLSP", expansao: "Dívida Líquida do Setor Público" }],
+      serieTemporal: data.divida.dlsp_total_pct_pib,
+      ativoInicial: true,
+    },
+    {
+      id: "dlsp_central",
+      label: "DLSP gov central / PIB",
+      cor: CORES_SERIES[4],
+      valor: ultimoValor(data.divida.dlsp_gov_central_pct_pib),
+      unidade: "%",
+      fonte: "BCB SGS 4503",
+      narrativa: "Dívida líquida apenas do gov central (União, INSS, BCB). Métrica usada quando o foco é capacidade do Tesouro pagar.",
+      serieTemporal: data.divida.dlsp_gov_central_pct_pib,
+      ativoInicial: false,
+    },
+    {
+      id: "wedge",
+      label: "Wedge DBGG − DLSP",
+      cor: CORES_SERIES[6],
+      valor: ultimoValor(wedgeSerie),
+      unidade: " pp",
+      formula: "DBGG − DLSP total",
+      narrativa: "Tamanho do 'colchão' brasileiro: créditos do BNDES + reservas internacionais + outros ativos públicos. Quanto maior, mais espaço o gov tem em caso de stress.",
+      serieTemporal: wedgeSerie,
+      ativoInicial: false,
+    },
+    {
+      id: "credito",
+      label: "Crédito setor privado / PIB",
+      cor: CORES_SERIES[2],
+      valor: credito.length > 0 ? ultimoValor(credito) : null,
+      unidade: "%",
+      fonte: "BCB SGS 20622",
+      narrativa: "Crédito total ao setor privado (famílias + empresas) sobre PIB. No livro do Dalio, fase tardia do Big Debt Cycle = endividamento privado saturado.",
+      serieTemporal: credito,
+      ativoInicial: false,
+    },
+    {
+      id: "divida_total",
+      label: "Dívida total economia / PIB",
+      cor: CORES_SERIES[11],
+      valor: ultimoValor(dividaTotalSerie),
+      unidade: "%",
+      formula: "DBGG + Crédito setor privado / PIB",
+      narrativa: "Endividamento agregado do país. Referência Dalio: EUA ~250%, China ~290%, Japão ~410%. Brasil em ~136% é relativamente baixo no comparativo internacional.",
+      serieTemporal: dividaTotalSerie,
+      ativoInicial: false,
+    },
+  ], [data, wedgeSerie, dividaTotalSerie, credito]);
 
-  const serieTotal = useMemo(() => {
-    return merge([
-      tail(data.divida.dbgg_pct_pib, horizonte.n),
-      tail(data.divida.dlsp_total_pct_pib, horizonte.n),
-      tail(data.divida.dlsp_gov_central_pct_pib, horizonte.n),
-    ], ["DBGG", "DLSP total", "DLSP gov central"]);
-  }, [data, horizonte.n]);
+  // Estado de quais séries estão ativas
+  const [ativas, setAtivas] = useState<Set<string>>(() => {
+    return new Set(seriesPossiveis.filter((s) => s.ativoInicial).map((s) => s.id));
+  });
 
-  // Série da composição DPMFi
-  const serieComp = useMemo(() => {
-    if (!comp) return [];
-    return merge([
-      tail(comp.selic_pct, horizonte.n),
-      tail(comp.prefixado_pct, horizonte.n),
-      tail(comp.cambio_pct, horizonte.n),
-    ], ["Selic/LFT", "Prefixado", "Câmbio"]);
-  }, [comp, horizonte.n]);
+  function toggle(id: string) {
+    const nova = new Set(ativas);
+    if (nova.has(id)) nova.delete(id);
+    else nova.add(id);
+    setAtivas(nova);
+  }
 
-  // Crédito total economia
-  const credito = data.credito_economia?.credito_total_pct_pib;
-  const credito_recente = credito ? ultimoValor(credito) : null;
-  const divida_total_economia = (dbgg_recente != null && credito_recente != null) ? dbgg_recente + credito_recente : null;
+  // Dados do gráfico — só séries ativas
+  const chartData = useMemo(() => {
+    const ativasArr = seriesPossiveis.filter((s) => ativas.has(s.id));
+    if (ativasArr.length === 0) return [];
+    const ativasComCorte = ativasArr.map((s) => ({
+      key: s.id,
+      data: tail(s.serieTemporal, horizonte.n),
+    }));
+    return mergeMensais(ativasComCorte);
+  }, [seriesPossiveis, ativas, horizonte.n]);
 
   return (
     <div className="space-y-6">
       <CardHeader
         titulo="Dívida pública"
-        subtitulo="Trajetória da dívida bruta (DBGG) e dívida líquida (DLSP) + composição da DPMFi por indexador. Fonte: BCB SGS séries 13762, 4513, 4503, 4174-4180."
+        subtitulo="Trajetória da dívida bruta (DBGG), líquida (DLSP) e do setor privado. Clique nos cards à direita para adicionar/remover séries do gráfico. Fonte: BCB SGS 13762, 4513, 4503, 20622."
         rightSlot={<Toggle value={horizonte.horizonte} onChange={horizonte.setHorizonte} options={[...HORIZONTES]} />}
       />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <IndicadorBox
-          titulo="DBGG / PIB"
-          valor={dbgg_recente}
-          unidade="%"
-          fonte="BCB SGS 13762"
-          narrativa="Dívida bruta do governo geral em % do PIB — métrica padrão do FMI / Maastricht. Inclui União, estados, municípios e previdência."
-          siglas={[
-            { sigla: "DBGG", expansao: "Dívida Bruta do Governo Geral" },
-            { sigla: "PIB", expansao: "Produto Interno Bruto" },
-          ]}
-          trend={dbgg_recente && dbgg_recente > 80 ? "ruim" : "neutra"}
-          tamanho="lg"
-        />
-        <IndicadorBox
-          titulo="DLSP total / PIB"
-          valor={dlsp_recente}
-          unidade="%"
-          fonte="BCB SGS 4513"
-          narrativa="Dívida líquida do setor público — DBGG menos créditos do governo (BNDES) menos reservas internacionais menos outros ativos. Brasil é incomum em ter ativos significativos."
-          siglas={[
-            { sigla: "DLSP", expansao: "Dívida Líquida do Setor Público" },
-          ]}
-          tamanho="lg"
-        />
-        <IndicadorBox
-          titulo="DLSP gov central / PIB"
-          valor={dlsp_central_recente}
-          unidade="%"
-          fonte="BCB SGS 4503"
-          narrativa="Dívida líquida apenas do gov central (União, INSS, BCB). Métrica usada quando o foco é capacidade do Tesouro pagar."
-          tamanho="lg"
-        />
-        <IndicadorBox
-          titulo="Wedge DBGG − DLSP"
-          valor={wedge}
-          unidade=" pp"
-          formula="DBGG − DLSP total"
-          narrativa="Tamanho do 'colchão' brasileiro: créditos do BNDES + reservas internacionais + outros ativos públicos. Quanto maior, mais espaço o gov tem em caso de stress."
-          trend="boa"
-          tamanho="lg"
-        />
-        <IndicadorBox
-          titulo="Crédito setor privado / PIB"
-          valor={credito_recente}
-          unidade="%"
-          fonte="BCB SGS 20622"
-          narrativa="Crédito total ao setor privado (famílias + empresas) sobre PIB. No livro do Dalio, fase tardia do Big Debt Cycle = endividamento privado saturado."
-          tamanho="lg"
-        />
-        <IndicadorBox
-          titulo="Dívida total economia / PIB"
-          valor={divida_total_economia}
-          unidade="%"
-          formula="DBGG + Crédito setor privado / PIB"
-          narrativa="Endividamento agregado do país. Referência Dalio: EUA ~250%, China ~290%, Japão ~410%. Brasil em ~136% é relativamente baixo no comparativo internacional."
-          tamanho="lg"
-        />
-      </div>
-
-      <Section titulo="Trajetória DBGG e DLSP" hint="Linhas tracejadas vermelhas: 80% (atenção FMI) e 100% (limite Reinhart-Rogoff).">
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={serieTotal}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="mes" tickFormatter={formatMes} tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} unit="%" />
-              <Tooltip formatter={fmtTipPct} labelFormatter={fmtTipLabel} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <ReferenceLine y={80} stroke="#dc2626" strokeDasharray="3 3" />
-              <ReferenceLine y={100} stroke="#7f1d1d" strokeDasharray="3 3" />
-              <Line type="monotone" dataKey="DBGG" stroke={CORES_SERIES[3]} strokeWidth={2.5} dot={false} />
-              <Line type="monotone" dataKey="DLSP total" stroke={CORES_SERIES[0]} strokeWidth={2.5} dot={false} />
-              <Line type="monotone" dataKey="DLSP gov central" stroke={CORES_SERIES[4]} strokeWidth={2} dot={false} strokeDasharray="3 3" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </Section>
-
-      {/* === COMPOSIÇÃO DA DPMFi POR INDEXADOR === */}
-      {comp && serieComp.length > 0 && (
-        <Section
-          titulo="Composição da DPMFi por indexador"
-          hint="Dívida Pública Mobiliária Federal interna por tipo de indexador. Selic/LFT = exposta a aperto monetário. Câmbio = exposta a desvalorização. Fonte: BCB SGS 4174-4180."
-        >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <IndicadorBox
-              titulo="Selic / LFT"
-              valor={pct_selic}
-              unidade="%"
-              fonte="BCB SGS 4177"
-              narrativa="Parte da DPMFi indexada à Selic via LFT. Quando o BC sobe juros, o estoque inteiro encarece imediatamente. Brasil 2002: 70%. Hoje próximo de 50%."
-              siglas={[
-                { sigla: "DPMFi", expansao: "Dívida Pública Mobiliária Federal interna" },
-                { sigla: "LFT", expansao: "Letra Financeira do Tesouro (indexada à Selic)" },
-              ]}
-              trend={pct_selic && pct_selic > 50 ? "ruim" : "neutra"}
-            />
-            <IndicadorBox
-              titulo="IPCA (NTN-B)"
-              valor={pct_ipca}
-              unidade="%"
-              formula="100% − (Selic + Prefixado + Câmbio + outros)"
-              narrativa="Parte indexada à inflação via NTN-B. Calculado por resíduo das demais. Atrai investidores de longo prazo (fundos de pensão)."
-              siglas={[
-                { sigla: "NTN-B", expansao: "Nota do Tesouro Nacional série B (indexada ao IPCA)" },
-              ]}
-            />
-            <IndicadorBox
-              titulo="Prefixado"
-              valor={pct_prefix}
-              unidade="%"
-              fonte="BCB SGS 4178"
-              narrativa="Parte com custo travado na emissão. Protege o estoque contra alta de juros. Acima de 25% é considerado saudável."
-              trend={pct_prefix && pct_prefix > 25 ? "boa" : "ruim"}
-            />
-            <IndicadorBox
-              titulo="Câmbio"
-              valor={pct_cambio}
-              unidade="%"
-              fonte="BCB SGS 4175"
-              narrativa="Dívida em moeda estrangeira — vulnerável a desvalorizações. Brasil tem virtude estrutural: ~1-3%. Argentina pré-2001 tinha mais de 60%."
-              trend={pct_cambio && pct_cambio > 5 ? "ruim" : "boa"}
-            />
-          </div>
-          <div className="mt-4 h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={serieComp}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="mes" tickFormatter={formatMes} tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} unit="%" />
-                <Tooltip formatter={fmtTipPct} labelFormatter={fmtTipLabel} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Area type="monotone" dataKey="Selic/LFT" stroke={CORES_SERIES[3]} fill={CORES_SERIES[3]} fillOpacity={0.4} strokeWidth={2} />
-                <Area type="monotone" dataKey="Prefixado" stroke={CORES_SERIES[2]} fill={CORES_SERIES[2]} fillOpacity={0.4} strokeWidth={2} />
-                <Area type="monotone" dataKey="Câmbio" stroke={CORES_SERIES[5]} fill={CORES_SERIES[5]} fillOpacity={0.4} strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-          <p className="mt-3 text-xs text-zinc-600">
-            <strong>Leitura Dalio:</strong> dívida em Selic é o canal direto da política monetária pro custo da dívida — quando o BC sobe juros, o estoque encarece automaticamente. Prefixado isola desse choque. Brasil tem virtude estrutural na exposição cambial muito baixa (3% vs Argentina 60%+).
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
+        {/* === GRÁFICO PRINCIPAL === */}
+        <Section titulo="Trajetória das séries">
+          {chartData.length === 0 ? (
+            <div className="flex h-80 items-center justify-center text-sm text-zinc-500">
+              Selecione pelo menos uma série nos cards à direita.
+            </div>
+          ) : (
+            <div className="h-96">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="mes" tickFormatter={formatMes} tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} unit="%" />
+                  <Tooltip formatter={fmtTipPct} labelFormatter={fmtTipLabel} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <ReferenceLine y={80} stroke="#dc2626" strokeDasharray="3 3" label={{ value: "80% (atenção FMI)", fontSize: 9, fill: "#dc2626", position: "right" }} />
+                  <ReferenceLine y={100} stroke="#7f1d1d" strokeDasharray="3 3" label={{ value: "100% (Reinhart-Rogoff)", fontSize: 9, fill: "#7f1d1d", position: "right" }} />
+                  {seriesPossiveis.filter((s) => ativas.has(s.id)).map((s) => (
+                    <Line key={s.id} type="monotone" dataKey={s.id} name={s.label} stroke={s.cor} strokeWidth={2.5} dot={false} />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+          <p className="mt-2 text-[11px] text-zinc-500">
+            Linhas tracejadas vermelhas: 80% (zona de atenção FMI) e 100% (limite Reinhart-Rogoff associado à fragilidade fiscal histórica).
           </p>
         </Section>
-      )}
+
+        {/* === CARDS-TOGGLE À DIREITA === */}
+        <div className="space-y-2">
+          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2 text-[11px] text-zinc-700">
+            <strong>Toque para adicionar/remover</strong> a série do gráfico. Cards com cor cheia estão ativos.
+          </div>
+          {seriesPossiveis.map((s) => {
+            const ativo = ativas.has(s.id);
+            const semDado = s.valor == null;
+            return (
+              <button
+                type="button"
+                key={s.id}
+                onClick={() => toggle(s.id)}
+                disabled={semDado}
+                className={`group w-full rounded-xl border-2 p-3 text-left transition ${
+                  semDado ? "cursor-not-allowed border-zinc-200 bg-zinc-50 opacity-60" :
+                  ativo ? "shadow-md" : "border-zinc-200 bg-white hover:border-zinc-400 opacity-70"
+                }`}
+                style={ativo && !semDado ? { borderColor: s.cor, background: `${s.cor}10` } : {}}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="inline-block h-3 w-3 rounded"
+                      style={{ background: ativo ? s.cor : "transparent", border: `2px solid ${s.cor}` }}
+                    />
+                    <h4 className="text-sm font-bold leading-tight text-[#132960]">{s.label}</h4>
+                  </div>
+                  {s.formula && (
+                    <span className="rounded bg-violet-100 px-1 py-0.5 text-[9px] font-bold uppercase text-violet-900">
+                      calc
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1.5 text-2xl font-bold tabular-nums text-zinc-900">
+                  {s.valor != null ? `${s.valor.toFixed(2)}${s.unidade}` : "—"}
+                </div>
+                {s.formula && (
+                  <p className="mt-1 text-[10px] italic text-violet-700">Fórmula: {s.formula}</p>
+                )}
+                {s.fonte && !s.formula && (
+                  <p className="mt-1 text-[10px] text-zinc-500">Fonte: {s.fonte}</p>
+                )}
+                <p className="mt-1.5 text-[10.5px] leading-snug text-zinc-700">{s.narrativa}</p>
+                {s.siglas && s.siglas.length > 0 && (
+                  <div className="mt-1.5 border-t border-zinc-200/80 pt-1.5 text-[10px] text-zinc-600">
+                    {s.siglas.map((g) => (
+                      <div key={g.sigla}>
+                        <strong className="text-zinc-800">{g.sigla}:</strong> {g.expansao}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* === COMPOSIÇÃO DPMFi (mantida) === */}
+      {data.composicao_dpmfi && (() => {
+        const comp = data.composicao_dpmfi;
+        const pct_selic = ultimoValor(comp.selic_pct);
+        const pct_prefix = ultimoValor(comp.prefixado_pct);
+        const pct_cambio = ultimoValor(comp.cambio_pct);
+        const soma_conhecidos = (pct_selic ?? 0) + (pct_prefix ?? 0) + (pct_cambio ?? 0) +
+                                (ultimoValor(comp.tr_pct ?? []) ?? 0) +
+                                (ultimoValor(comp.outros_pct ?? []) ?? 0);
+        const pct_ipca = soma_conhecidos > 0 ? Math.max(0, 100 - soma_conhecidos) : null;
+        const serieComp = mergeMensais([
+          { key: "Selic/LFT", data: tail(comp.selic_pct, horizonte.n) },
+          { key: "Prefixado", data: tail(comp.prefixado_pct, horizonte.n) },
+          { key: "Câmbio", data: tail(comp.cambio_pct, horizonte.n) },
+        ]);
+        return (
+          <Section
+            titulo="Composição da DPMFi por indexador"
+            hint="Dívida Pública Mobiliária Federal interna por tipo de indexador. Selic/LFT = exposta a aperto monetário. Câmbio = exposta a desvalorização. Fonte: BCB SGS 4174-4180."
+          >
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <IndicadorBox
+                titulo="Selic / LFT"
+                valor={pct_selic}
+                unidade="%"
+                fonte="BCB SGS 4177"
+                narrativa="Parte da DPMFi indexada à Selic via LFT. Quando o BC sobe juros, o estoque inteiro encarece imediatamente. Brasil 2002: 70%. Hoje próximo de 50%."
+                siglas={[
+                  { sigla: "DPMFi", expansao: "Dívida Pública Mobiliária Federal interna" },
+                  { sigla: "LFT", expansao: "Letra Financeira do Tesouro (indexada à Selic)" },
+                ]}
+                trend={pct_selic && pct_selic > 50 ? "ruim" : "neutra"}
+              />
+              <IndicadorBox
+                titulo="IPCA (NTN-B)"
+                valor={pct_ipca}
+                unidade="%"
+                formula="100% − (Selic + Prefixado + Câmbio + outros)"
+                narrativa="Parte indexada à inflação via NTN-B. Calculado por resíduo das demais. Atrai investidores de longo prazo (fundos de pensão)."
+                siglas={[{ sigla: "NTN-B", expansao: "Nota do Tesouro Nacional série B (indexada ao IPCA)" }]}
+              />
+              <IndicadorBox
+                titulo="Prefixado"
+                valor={pct_prefix}
+                unidade="%"
+                fonte="BCB SGS 4178"
+                narrativa="Parte com custo travado na emissão. Protege o estoque contra alta de juros. Acima de 25% é considerado saudável."
+                trend={pct_prefix && pct_prefix > 25 ? "boa" : "ruim"}
+              />
+              <IndicadorBox
+                titulo="Câmbio"
+                valor={pct_cambio}
+                unidade="%"
+                fonte="BCB SGS 4175"
+                narrativa="Dívida em moeda estrangeira — vulnerável a desvalorizações. Brasil tem virtude estrutural: ~1-3%. Argentina pré-2001 tinha mais de 60%."
+                trend={pct_cambio && pct_cambio > 5 ? "ruim" : "boa"}
+              />
+            </div>
+            <div className="mt-4 h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={serieComp}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="mes" tickFormatter={formatMes} tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} unit="%" />
+                  <Tooltip formatter={fmtTipPct} labelFormatter={fmtTipLabel} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Area type="monotone" dataKey="Selic/LFT" stroke={CORES_SERIES[3]} fill={CORES_SERIES[3]} fillOpacity={0.4} strokeWidth={2} />
+                  <Area type="monotone" dataKey="Prefixado" stroke={CORES_SERIES[2]} fill={CORES_SERIES[2]} fillOpacity={0.4} strokeWidth={2} />
+                  <Area type="monotone" dataKey="Câmbio" stroke={CORES_SERIES[5]} fill={CORES_SERIES[5]} fillOpacity={0.4} strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Section>
+        );
+      })()}
 
       <p className="text-xs text-zinc-500">
         Última atualização: {new Date(data.gerado_em).toLocaleString("pt-BR")}.
