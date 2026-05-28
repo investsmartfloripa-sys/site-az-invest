@@ -342,6 +342,7 @@ export type IpeadataData = {
   fecomercio_icc: IpeadataBloco;
   fgv_constr_exp?: IpeadataBloco;
   fgv_constr_atual?: IpeadataBloco;
+  pim_pf_geral?: IpeadataBloco;
   metadata: MetaCommon;
 };
 
