@@ -1,7 +1,7 @@
 "use client";
 
 import type { VisaoGeralPayload } from "@/lib/painel-visao-geral";
-import { formatPct, formatMes, ultimaObs } from "@/lib/painel-visao-geral";
+import { formatPct, formatMes, ultimaObs, focusPibAnoCorrente } from "@/lib/painel-visao-geral";
 
 function KpiCard({
   titulo,
@@ -121,10 +121,13 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
     ? `${(((hiatoUltimo.gap_hp_pct ?? 0) + (hiatoUltimo.gap_hamilton_pct ?? 0)) / 2).toFixed(2)}%`
     : "—";
 
+  // Focus PIB ano corrente (mediana mais recente)
+  const focusPib = focusPibAnoCorrente(payload.focusPib);
+
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
       {/* COLUNA ESQUERDA: Recessao full-height destaque */}
-      <div className="md:row-span-4 flex">
+      <div className="flex">
         <KpiCard
           titulo="Probabilidade de recessão"
           tecnico={kpi2Tecnico}
@@ -137,48 +140,58 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
         />
       </div>
 
-      {/* COLUNA DIREITA: 4 KPIs empilhados */}
-      <KpiCard
-        titulo="Atividade mensal"
-        tecnico="IBC-Br dessaz, var. m/m"
-        valor={formatPct(kpi1)}
-        subtitulo="Proxy mensal do PIB calculada pelo BCB."
-        variacao={ibc?.var_yoy !== null && ibc?.var_yoy !== undefined ? `12m: ${formatPct(ibc.var_yoy)}` : undefined}
-        cor={kpi1Cor}
-        mes={ibc?.mes}
-      />
-      <KpiCard
-        titulo="Confiança Empresarial FGV"
-        tecnico="ICE (FGV-IBRE via SGS)"
-        valor={kpi3 === null ? "—" : kpi3.toFixed(1)}
-        subtitulo="100 = neutro. Acima = otimismo, abaixo = pessimismo."
-        cor={kpi3Cor}
-        mes={ice?.mes}
-      />
-      <KpiCard
-        titulo="Condições financeiras"
-        tecnico="ICF próprio (z-score)"
-        valor={kpi4 === null ? "—" : kpi4.toFixed(2)}
-        subtitulo={
-          icf
-            ? icf.regime === "estimulativo"
-              ? "Estimulativas — facilitam atividade"
-              : icf.regime === "restritivo"
-                ? "Restritivas — apertam atividade"
-                : "Neutras"
-            : "Selic real + Ibov 6m + REER (z-scores)."
-        }
-        cor={kpi4Cor}
-        mes={icf?.mes}
-      />
-      <KpiCard
-        titulo="Hiato do produto"
-        tecnico="Mediana HP+Hamilton"
-        valor={hiatoValor}
-        subtitulo="Acima de 0 = aquecimento; abaixo = ociosidade."
-        cor="neutro"
-        mes={payload.hiato?.mes_recente}
-      />
+      {/* COLUNA DIREITA: 4 KPIs em grid 2x2 */}
+      <div className="grid grid-cols-2 gap-3">
+        <KpiCard
+          titulo="Atividade mensal"
+          tecnico="IBC-Br m/m + Focus PIB"
+          valor={formatPct(kpi1)}
+          subtitulo={
+            focusPib
+              ? `Focus PIB ${focusPib.ano}: ${focusPib.mediana.toFixed(1)}%`
+              : "Proxy mensal do PIB calculada pelo BCB."
+          }
+          variacao={ibc?.var_yoy !== null && ibc?.var_yoy !== undefined ? `12m: ${formatPct(ibc.var_yoy)}` : undefined}
+          cor={kpi1Cor}
+          mes={ibc?.mes}
+          compact
+        />
+        <KpiCard
+          titulo="Hiato do produto"
+          tecnico="Mediana HP+Hamilton"
+          valor={hiatoValor}
+          subtitulo="Acima de 0 = aquecimento; abaixo = ociosidade."
+          cor="neutro"
+          mes={payload.hiato?.mes_recente}
+          compact
+        />
+        <KpiCard
+          titulo="Confiança Empresarial FGV"
+          tecnico="ICE (FGV-IBRE via SGS)"
+          valor={kpi3 === null ? "—" : kpi3.toFixed(1)}
+          subtitulo="100 = neutro. Acima = otimismo, abaixo = pessimismo."
+          cor={kpi3Cor}
+          mes={ice?.mes}
+          compact
+        />
+        <KpiCard
+          titulo="Condições financeiras"
+          tecnico="ICF próprio (z-score)"
+          valor={kpi4 === null ? "—" : kpi4.toFixed(2)}
+          subtitulo={
+            icf
+              ? icf.regime === "estimulativo"
+                ? "Estimulativas — facilitam atividade"
+                : icf.regime === "restritivo"
+                  ? "Restritivas — apertam atividade"
+                  : "Neutras"
+              : "Selic real + Ibov 6m + REER (z-scores)."
+          }
+          cor={kpi4Cor}
+          mes={icf?.mes}
+          compact
+        />
+      </div>
     </div>
   );
 }
