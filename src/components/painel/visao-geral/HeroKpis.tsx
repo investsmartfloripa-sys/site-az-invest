@@ -12,6 +12,7 @@ function KpiCard({
   cor,
   mes,
   destaque,
+  fullHeight,
 }: {
   titulo: string;
   tecnico: string;
@@ -21,6 +22,7 @@ function KpiCard({
   cor: "verde" | "amarelo" | "vermelho" | "neutro";
   mes?: string | null;
   destaque?: boolean;
+  fullHeight?: boolean;
 }) {
   // Reducao saturacao (loop 13): fundo branco em todos, cor apenas na borda esquerda
   const corClass = {
@@ -35,20 +37,23 @@ function KpiCard({
     vermelho: "bg-rose-500",
     neutro: "bg-zinc-300",
   }[cor];
-  const valorSize = destaque ? "text-4xl md:text-5xl" : "text-3xl";
+  const valorSize = destaque && fullHeight ? "text-6xl md:text-7xl" : destaque ? "text-4xl md:text-5xl" : "text-3xl";
   const padding = destaque ? "p-6" : "p-5";
   const ringExtra = destaque ? "ring-2 ring-[#132960]/10" : "";
+  const heightClass = fullHeight ? "flex flex-col w-full" : "";
   return (
-    <div className={`rounded-2xl ${corClass} ${padding} shadow-sm ${ringExtra}`}>
+    <div className={`rounded-2xl ${corClass} ${padding} shadow-sm ${ringExtra} ${heightClass}`}>
       <div className="flex items-start justify-between gap-2">
         <div>
-          <div className="text-sm font-semibold text-zinc-900">{titulo}</div>
-          <div className="text-[11px] uppercase tracking-wide text-zinc-500">{tecnico}</div>
+          <div className={`font-semibold text-zinc-900 ${fullHeight ? "text-base" : "text-sm"}`}>{titulo}</div>
+          <div className={`uppercase tracking-wide text-zinc-500 ${fullHeight ? "text-xs" : "text-[11px]"}`}>{tecnico}</div>
         </div>
         <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${dot}`} />
       </div>
-      <div className={`mt-3 ${valorSize} font-bold text-zinc-900`}>{valor}</div>
-      {subtitulo && <div className="mt-1 text-xs text-zinc-600">{subtitulo}</div>}
+      <div className={`${fullHeight ? "flex-1 flex items-center justify-center" : "mt-3"}`}>
+        <div className={`${valorSize} font-bold text-zinc-900 leading-none`}>{valor}</div>
+      </div>
+      {subtitulo && <div className={`text-zinc-600 ${fullHeight ? "text-sm mt-2 text-center" : "mt-1 text-xs"}`}>{subtitulo}</div>}
       <div className="mt-2 flex items-center justify-between text-[11px] text-zinc-500">
         <span>{mes ? `Ref. ${formatMes(mes)}` : ""}</span>
         {variacao && <span className="font-medium">{variacao}</span>}
@@ -108,20 +113,16 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
       ? `${rec.n_acima_50} dispararam alerta · ${rec.n_modelos}/4 rodaram${rec.sinalizacao === "indeterminado" ? " (sinal incompleto)" : ""}`
       : "MS-AR, probit, gap HP, diffusion (probabilísticos).";
 
+  // Calcular hiato uma vez
+  const hiatoUltimo = ultimaObs(payload.hiato?.serie);
+  const hiatoValor = hiatoUltimo
+    ? `${(((hiatoUltimo.gap_hp_pct ?? 0) + (hiatoUltimo.gap_hamilton_pct ?? 0)) / 2).toFixed(2)}%`
+    : "—";
+
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
-      <div className="md:col-span-2">
-        <KpiCard
-          titulo="Atividade mensal"
-          tecnico="IBC-Br dessaz, var. m/m"
-          valor={formatPct(kpi1)}
-          subtitulo="Proxy mensal do PIB calculada pelo BCB."
-          variacao={ibc?.var_yoy !== null && ibc?.var_yoy !== undefined ? `12m: ${formatPct(ibc.var_yoy)}` : undefined}
-          cor={kpi1Cor}
-          mes={ibc?.mes}
-        />
-      </div>
-      <div className="md:col-span-2 md:row-span-1">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      {/* COLUNA ESQUERDA: Recessao full-height destaque */}
+      <div className="md:row-span-4 flex">
         <KpiCard
           titulo="Probabilidade de recessão"
           tecnico={kpi2Tecnico}
@@ -130,51 +131,52 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
           cor={kpi2Cor}
           mes={rec?.mes}
           destaque
+          fullHeight
         />
       </div>
-      <div className="md:col-span-2">
-        <KpiCard
-          titulo="Confiança Empresarial FGV"
-          tecnico="ICE (FGV-IBRE via SGS)"
-          valor={kpi3 === null ? "—" : kpi3.toFixed(1)}
-          subtitulo="100 = neutro. Acima = otimismo, abaixo = pessimismo."
-          cor={kpi3Cor}
-          mes={ice?.mes}
-        />
-      </div>
-      <div className="md:col-span-3">
-        <KpiCard
-          titulo="Condições financeiras"
-          tecnico="ICF próprio (z-score)"
-          valor={kpi4 === null ? "—" : kpi4.toFixed(2)}
-          subtitulo={
-            icf
-              ? icf.regime === "estimulativo"
-                ? "Estimulativas — facilitam atividade"
-                : icf.regime === "restritivo"
-                  ? "Restritivas — apertam atividade"
-                  : "Neutras"
-              : "Selic real + Ibov 6m + REER (z-scores)."
-          }
-          cor={kpi4Cor}
-          mes={icf?.mes}
-        />
-      </div>
-      <div className="md:col-span-3">
-        <KpiCard
-          titulo="Hiato do produto"
-          tecnico="Mediana HP+Hamilton"
-          valor={(() => {
-            const h = ultimaObs(payload.hiato?.serie);
-            if (!h) return "—";
-            const m = ((h.gap_hp_pct ?? 0) + (h.gap_hamilton_pct ?? 0)) / 2;
-            return `${m.toFixed(2)}%`;
-          })()}
-          subtitulo="Acima de 0 = aquecimento; abaixo = ociosidade."
-          cor="neutro"
-          mes={payload.hiato?.mes_recente}
-        />
-      </div>
+
+      {/* COLUNA DIREITA: 4 KPIs empilhados */}
+      <KpiCard
+        titulo="Atividade mensal"
+        tecnico="IBC-Br dessaz, var. m/m"
+        valor={formatPct(kpi1)}
+        subtitulo="Proxy mensal do PIB calculada pelo BCB."
+        variacao={ibc?.var_yoy !== null && ibc?.var_yoy !== undefined ? `12m: ${formatPct(ibc.var_yoy)}` : undefined}
+        cor={kpi1Cor}
+        mes={ibc?.mes}
+      />
+      <KpiCard
+        titulo="Confiança Empresarial FGV"
+        tecnico="ICE (FGV-IBRE via SGS)"
+        valor={kpi3 === null ? "—" : kpi3.toFixed(1)}
+        subtitulo="100 = neutro. Acima = otimismo, abaixo = pessimismo."
+        cor={kpi3Cor}
+        mes={ice?.mes}
+      />
+      <KpiCard
+        titulo="Condições financeiras"
+        tecnico="ICF próprio (z-score)"
+        valor={kpi4 === null ? "—" : kpi4.toFixed(2)}
+        subtitulo={
+          icf
+            ? icf.regime === "estimulativo"
+              ? "Estimulativas — facilitam atividade"
+              : icf.regime === "restritivo"
+                ? "Restritivas — apertam atividade"
+                : "Neutras"
+            : "Selic real + Ibov 6m + REER (z-scores)."
+        }
+        cor={kpi4Cor}
+        mes={icf?.mes}
+      />
+      <KpiCard
+        titulo="Hiato do produto"
+        tecnico="Mediana HP+Hamilton"
+        valor={hiatoValor}
+        subtitulo="Acima de 0 = aquecimento; abaixo = ociosidade."
+        cor="neutro"
+        mes={payload.hiato?.mes_recente}
+      />
     </div>
   );
 }

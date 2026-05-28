@@ -109,31 +109,38 @@ function CardRecessaoMultiModelos({
 
   const ultimo = serie[serie.length - 1];
 
+  // Mediana ALINHADA com hero: prioriza mediana real, depois parcial com asterisco
+  const sensiveisPresentes = ultimo.sensiveis_presentes ?? 0;
+  const amostraInsuficiente = sensiveisPresentes === 0;
+  const medValor =
+    !amostraInsuficiente && ultimo.mediana !== null && ultimo.mediana !== undefined
+      ? `${ultimo.mediana.toFixed(0)}%`
+      : ultimo.mediana_parcial !== null && ultimo.mediana_parcial !== undefined
+        ? `${ultimo.mediana_parcial.toFixed(0)}%*`
+        : "n/d";
+  const medSubtitulo = amostraInsuficiente
+    ? `Parcial — ${ultimo.n_modelos} de 4 modelos rodaram`
+    : `${ultimo.n_acima_50} de ${ultimo.n_modelos} acima de 50%${ultimo.n_modelos < 4 ? " (parcial)" : ""}`;
+
+  // Mini-cards laterais: valor atual de cada modelo + descrição curta
+  const MODELOS_INFO: { key: keyof typeof MODELOS_COR; descr: string }[] = [
+    { key: "diffusion", descr: "Difusão de sinais negativos no hard data físico (ANFAVEA, EPE, ANP, OECD CLI)." },
+    { key: "gap_threshold", descr: "Logística sobre o hiato HP. Negativo profundo eleva risco." },
+    { key: "msdfm", descr: "Markov-Switching no IBC-Br MoM (fallback discreto enquanto statsmodels não carrega)." },
+    { key: "probit_financeiro", descr: "Probit Estrella-Mishkin sobre slope DI + ICF z-score." },
+  ];
+
   return (
     <div className="rounded-2xl border-2 border-[#132960]/30 bg-gradient-to-br from-white to-zinc-50 p-5 shadow-md">
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-base font-semibold text-zinc-900">Probabilidade de recessão — 5 modelos comparados</h3>
-          <p className="text-xs text-zinc-500">Cada modelo reproduz uma metodologia da literatura. Sinalização do hero usa contagem de modelos acima de 50%.</p>
-        </div>
-        <div className="shrink-0 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-right">
-          <div className="text-[10px] uppercase tracking-wide text-zinc-500">Mediana ({formatMes(ultimo.mes)})</div>
-          <div className={`text-2xl font-bold ${(ultimo.sensiveis_presentes ?? 0) === 0 ? "text-zinc-400" : "text-[#132960]"}`}>{(ultimo.sensiveis_presentes ?? 1) > 0 && ultimo.mediana !== null && ultimo.mediana !== undefined ? `${ultimo.mediana.toFixed(0)}%` : (ultimo.sensiveis_presentes ?? 0) === 0 ? "n/d" : (ultimo.mediana_parcial !== null && ultimo.mediana_parcial !== undefined ? `~${ultimo.mediana_parcial.toFixed(0)}%` : "—")}</div>
-          <div className="mt-0.5 text-[10px] text-zinc-500">{(ultimo.sensiveis_presentes ?? 0) === 0 ? "amostra insuficiente" : `${ultimo.n_acima_50} de ${ultimo.n_modelos} acima de 50%${ultimo.n_modelos < 4 ? " (parcial)" : ""}`}</div>
-          {ultimo.min_val !== undefined && ultimo.max_val !== undefined && ultimo.min_val !== null && ultimo.max_val !== null && (
-            <div className="mt-1 text-[10px] text-zinc-400">Faixa: {ultimo.min_val.toFixed(0)}% – {ultimo.max_val.toFixed(0)}%</div>
-          )}
-          {(ultimo.carry_forward_modelos && ultimo.carry_forward_modelos.length > 0) && (
-            <div className="mt-1 inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-amber-800" title={`Valor mais recente é replicado da última observação real (carry-forward) em: ${ultimo.carry_forward_modelos.join(", ")}.`}>
-              <svg viewBox="0 0 12 12" className="h-2 w-2 fill-current"><circle cx="6" cy="6" r="5" /></svg>
-              carry-forward
-            </div>
-          )}
-        </div>
+      <div className="mb-3">
+        <h3 className="text-base font-semibold text-zinc-900">Probabilidade de recessão — 5 modelos comparados</h3>
+        <p className="text-xs text-zinc-500">Cada modelo reproduz uma metodologia da literatura. Sinalização do hero usa contagem de modelos acima de 50%.</p>
       </div>
 
-      <ResponsiveContainer width="100%" height={320}>
-        <ComposedChart data={serie} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <ResponsiveContainer width="100%" height={340}>
+            <ComposedChart data={serie} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
           <CartesianGrid stroke="#eee" strokeDasharray="3 3" />
           <XAxis dataKey="mes" tick={{ fontSize: 10 }} interval={Math.max(1, Math.floor(serie.length / 12))} />
           <YAxis tick={{ fontSize: 10 }} domain={[0, 100]} tickFormatter={(v: number) => v + "%"} />
@@ -161,9 +168,55 @@ function CardRecessaoMultiModelos({
           {Object.entries(MODELOS_COR).map(([key, { cor, label }]) => (
             <Line key={key} type="monotone" dataKey={key} stroke={cor} strokeWidth={1.5} dot={false} name={label} connectNulls />
           ))}
-          <Line type="monotone" dataKey="mediana" stroke="#000" strokeWidth={3} dot={false} name="Mediana dos modelos" />
-        </ComposedChart>
-      </ResponsiveContainer>
+              <Line type="monotone" dataKey="mediana" stroke="#000" strokeWidth={3} dot={false} name="Mediana dos modelos" />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Coluna direita: mini-cards com valor atual de cada modelo */}
+        <div className="lg:col-span-2 flex flex-col gap-2">
+          {/* Card MEDIANA destacado no topo */}
+          <div className="rounded-lg border-2 border-[#132960]/30 bg-white p-3">
+            <div className="flex items-baseline justify-between gap-2">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-[#132960]">Mediana</div>
+              <div className="text-[10px] text-zinc-500">{formatMes(ultimo.mes)}</div>
+            </div>
+            <div className={`mt-1 text-3xl font-bold ${amostraInsuficiente ? "text-zinc-500" : "text-[#132960]"}`}>{medValor}</div>
+            <div className="mt-0.5 text-[10px] text-zinc-500">{medSubtitulo}</div>
+            {ultimo.min_val !== undefined && ultimo.max_val !== undefined && ultimo.min_val !== null && ultimo.max_val !== null && (
+              <div className="mt-1 text-[10px] text-zinc-400">Faixa observada: {ultimo.min_val.toFixed(0)}% – {ultimo.max_val.toFixed(0)}%</div>
+            )}
+            {ultimo.carry_forward_modelos && ultimo.carry_forward_modelos.length > 0 && (
+              <div className="mt-1 inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-amber-800">
+                <svg viewBox="0 0 12 12" className="h-2 w-2 fill-current"><circle cx="6" cy="6" r="5" /></svg>
+                carry-forward
+              </div>
+            )}
+          </div>
+
+          {/* Mini-cards dos modelos individuais */}
+          {MODELOS_INFO.map((m) => {
+            const valor = (ultimo as Record<string, unknown>)[m.key];
+            const info = MODELOS_COR[m.key];
+            const valorNum = typeof valor === "number" ? valor : null;
+            return (
+              <div key={m.key} className="rounded-lg border border-zinc-200 bg-white p-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: info.cor }} />
+                    <span className="text-[11px] font-semibold text-zinc-800">{info.label}</span>
+                  </div>
+                  <span className={`text-base font-bold ${valorNum === null ? "text-zinc-300" : valorNum > 50 ? "text-rose-700" : "text-zinc-700"}`}>
+                    {valorNum !== null ? `${valorNum.toFixed(0)}%` : "—"}
+                  </span>
+                </div>
+                <p className="mt-1 text-[10px] leading-snug text-zinc-500">{m.descr}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       <p className="mt-3 text-[10px] text-zinc-500">
         * <strong>MS-AR</strong>: implementação atual usa fallback discreto (quintis sobre média móvel 6m do IBC-Br MoM) porque a biblioteca <code>statsmodels</code> não está carregada no pipeline. Próximo loop: instalar statsmodels e obter probabilidade contínua via Hamilton filter.
         Linhas verticais tracejadas roxas marcam <strong>picos detectados pelo Bry-Boschan</strong> (datador retroativo, não-probabilístico).
