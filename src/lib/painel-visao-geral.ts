@@ -351,6 +351,22 @@ export type IpeadataData = {
 };
 
 
+// Focus PIB do BCB (consumido de data/fiscal-classicos.json)
+// Apenas a mediana mais recente do ano corrente
+export type FocusPibPonto = {
+  data: string;
+  mediana: number;
+  media?: number;
+  dp?: number;
+  min?: number;
+  max?: number;
+};
+export type FocusData = {
+  expectativas_focus?: {
+    pib_anuais?: Record<string, FocusPibPonto[]>;
+  };
+};
+
 // PIM-PF oficial via SIDRA IBGE (consumido de data/atividade_pim.json)
 // usado como BENCHMARK OFICIAL no Bloco 4
 export type AtividadePimPonto = {
@@ -387,6 +403,7 @@ export type VisaoGeralPayload = {
   hardData: HardDataData | null;
   ipeadata: IpeadataData | null;
   atividadePim: AtividadePimData | null;
+  focusPib: FocusData | null;
 };
 
 async function fetchJson<T>(blobPath: string): Promise<T | null> {
@@ -421,6 +438,7 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     hardData,
     ipeadata,
     atividadePim,
+    focusPib,
   ] = await Promise.all([
     fetchJson<IbcBrData>("data/atividade_ibcbr.json"),
     fetchJson<OecdCliData>("data/visao_geral_oecd_cli.json"),
@@ -440,8 +458,20 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     fetchJson<HardDataData>("data/visao_geral_hard_data.json"),
     fetchJson<IpeadataData>("data/visao_geral_ipeadata.json"),
     fetchJson<AtividadePimData>("data/atividade_pim.json"),
+    fetchJson<FocusData>("data/fiscal-classicos.json"),
   ]);
-  return { ibcbr, oecdCli, credito, anp, anfavea, epe, codace, hiato, icf, recessao, fgvAntecedentes, fgvConfianca, cni, pmi, fecomercio, hardData, ipeadata, atividadePim };
+  return { ibcbr, oecdCli, credito, anp, anfavea, epe, codace, hiato, icf, recessao, fgvAntecedentes, fgvConfianca, cni, pmi, fecomercio, hardData, ipeadata, atividadePim, focusPib };
+}
+
+// Extrai a mediana mais recente do Focus PIB para o ano corrente
+export function focusPibAnoCorrente(focus: FocusData | null): { ano: number; mediana: number; data: string } | null {
+  if (!focus?.expectativas_focus?.pib_anuais) return null;
+  const anos = focus.expectativas_focus.pib_anuais;
+  const anoAtual = new Date().getFullYear();
+  const pontos = anos[String(anoAtual)] || anos[String(anoAtual + 1)];
+  if (!pontos || pontos.length === 0) return null;
+  const ult = pontos[pontos.length - 1];
+  return { ano: anoAtual, mediana: ult.mediana, data: ult.data };
 }
 
 export function formatPct(v: NumOrNull, casas = 1): string {

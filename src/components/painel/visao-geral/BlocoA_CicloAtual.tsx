@@ -132,12 +132,28 @@ function CardRecessaoMultiModelos({
 
   return (
     <div className="rounded-2xl border-2 border-[#132960]/30 bg-gradient-to-br from-white to-zinc-50 p-5 shadow-md">
-      <div className="mb-3">
-        <h3 className="text-base font-semibold text-zinc-900">Probabilidade de recessão — 5 modelos comparados</h3>
-        <p className="text-xs text-zinc-500">Cada modelo reproduz uma metodologia da literatura. Sinalização do hero usa contagem de modelos acima de 50%.</p>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-semibold text-zinc-900">Probabilidade de recessão — 5 modelos comparados</h3>
+          <p className="text-xs text-zinc-500">Cada modelo reproduz uma metodologia da literatura. Sinalização do hero usa contagem de modelos acima de 50%.</p>
+        </div>
+        <div className="shrink-0 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-right">
+          <div className="text-[10px] uppercase tracking-wide text-zinc-500">Mediana ({formatMes(ultimo.mes)})</div>
+          <div className={`text-2xl font-bold ${amostraInsuficiente ? "text-zinc-500" : "text-[#132960]"}`}>{medValor}</div>
+          <div className="mt-0.5 text-[10px] text-zinc-500">{medSubtitulo}</div>
+          {ultimo.min_val !== undefined && ultimo.max_val !== undefined && ultimo.min_val !== null && ultimo.max_val !== null && (
+            <div className="mt-1 text-[10px] text-zinc-400">Faixa: {ultimo.min_val.toFixed(0)}% – {ultimo.max_val.toFixed(0)}%</div>
+          )}
+          {ultimo.carry_forward_modelos && ultimo.carry_forward_modelos.length > 0 && (
+            <div className="mt-1 inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-amber-800">
+              <svg viewBox="0 0 12 12" className="h-2 w-2 fill-current"><circle cx="6" cy="6" r="5" /></svg>
+              carry-forward
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <div className="lg:col-span-3">
           <ResponsiveContainer width="100%" height={340}>
             <ComposedChart data={serie} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
@@ -173,44 +189,28 @@ function CardRecessaoMultiModelos({
           </ResponsiveContainer>
         </div>
 
-        {/* Coluna direita: mini-cards com valor atual de cada modelo */}
-        <div className="lg:col-span-2 flex flex-col gap-2">
-          {/* Card MEDIANA destacado no topo */}
-          <div className="rounded-lg border-2 border-[#132960]/30 bg-white p-3">
-            <div className="flex items-baseline justify-between gap-2">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-[#132960]">Mediana</div>
-              <div className="text-[10px] text-zinc-500">{formatMes(ultimo.mes)}</div>
-            </div>
-            <div className={`mt-1 text-3xl font-bold ${amostraInsuficiente ? "text-zinc-500" : "text-[#132960]"}`}>{medValor}</div>
-            <div className="mt-0.5 text-[10px] text-zinc-500">{medSubtitulo}</div>
-            {ultimo.min_val !== undefined && ultimo.max_val !== undefined && ultimo.min_val !== null && ultimo.max_val !== null && (
-              <div className="mt-1 text-[10px] text-zinc-400">Faixa observada: {ultimo.min_val.toFixed(0)}% – {ultimo.max_val.toFixed(0)}%</div>
-            )}
-            {ultimo.carry_forward_modelos && ultimo.carry_forward_modelos.length > 0 && (
-              <div className="mt-1 inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-amber-800">
-                <svg viewBox="0 0 12 12" className="h-2 w-2 fill-current"><circle cx="6" cy="6" r="5" /></svg>
-                carry-forward
-              </div>
-            )}
-          </div>
-
-          {/* Mini-cards dos modelos individuais */}
+        {/* Coluna direita FINA: mini-cards com valor atual de cada modelo */}
+        <div className="lg:col-span-1 flex flex-col gap-1.5">
           {MODELOS_INFO.map((m) => {
             const valor = (ultimo as Record<string, unknown>)[m.key];
             const info = MODELOS_COR[m.key];
             const valorNum = typeof valor === "number" ? valor : null;
+            const ehNull = valorNum === null;
             return (
-              <div key={m.key} className="rounded-lg border border-zinc-200 bg-white p-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: info.cor }} />
-                    <span className="text-[11px] font-semibold text-zinc-800">{info.label}</span>
+              <div key={m.key} className={`rounded-lg border bg-white p-2 ${ehNull ? "border-dashed border-zinc-300 opacity-60" : "border-zinc-200"}`}>
+                <div className="flex items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: info.cor }} />
+                    <span className="text-[10px] font-semibold text-zinc-800 truncate">{info.label}</span>
                   </div>
-                  <span className={`text-base font-bold ${valorNum === null ? "text-zinc-300" : valorNum > 50 ? "text-rose-700" : "text-zinc-700"}`}>
-                    {valorNum !== null ? `${valorNum.toFixed(0)}%` : "—"}
+                  <span className={`text-sm font-bold shrink-0 ${ehNull ? "text-zinc-300" : valorNum > 50 ? "text-rose-700" : "text-zinc-700"}`}>
+                    {ehNull ? "n/d" : `${valorNum.toFixed(0)}%`}
                   </span>
                 </div>
-                <p className="mt-1 text-[10px] leading-snug text-zinc-500">{m.descr}</p>
+                <p className="mt-0.5 text-[9px] leading-tight text-zinc-500">{m.descr}</p>
+                {ehNull && (
+                  <p className="mt-0.5 text-[9px] italic text-amber-700">Aguardando próxima rodada</p>
+                )}
               </div>
             );
           })}
