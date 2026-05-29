@@ -22,10 +22,10 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { date } = await params;
   const briefing = await getBriefing(date);
-  if (!briefing) return { title: "Briefing não encontrado | AZ Invest" };
+  if (!briefing) return { title: "Briefing não encontrado" };
 
   return {
-    title: `${briefing.title} | AZ Invest`,
+    title: briefing.title,
     description: briefing.description,
     openGraph: {
       title: briefing.title,
@@ -60,7 +60,7 @@ export default async function MorningCallPage({ params }: Props) {
           {"<-"} Voltar para Café com Mercado
         </Link>
 
-        <article className="mt-6 space-y-4">
+        <article className="az-card mt-6 space-y-4 p-6 md:p-10">
           <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
             {briefing.weekday ? `${briefing.weekday}, ` : ""}
             {formatDateBR(briefing.date)}
@@ -82,7 +82,7 @@ export default async function MorningCallPage({ params }: Props) {
           </div>
         </article>
 
-        <nav className="mt-16 flex flex-col gap-3 border-t border-[#132960]/10 pt-8 text-sm sm:flex-row sm:justify-between">
+        <nav className="mt-10 flex flex-col gap-3 text-sm sm:flex-row sm:justify-between">
           {prev ? (
             <Link
               href={`/morning-call/${prev}`}

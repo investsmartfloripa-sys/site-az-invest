@@ -23,7 +23,7 @@ export default async function MorningCallIndex() {
     <div className="min-h-screen text-[#132960]">
       <Header />
       <main className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
-        <header className="border-b border-[#132960]/10 pb-8">
+        <section className="az-card p-6 md:p-10">
           <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
             Briefings macro
           </p>
@@ -34,20 +34,23 @@ export default async function MorningCallIndex() {
             Briefing macro diário: dados econômicos, política, mercado e empresas no
             Brasil e no exterior. Publicado em dias úteis às ~10h Brasília.
           </p>
-        </header>
+        </section>
 
         {briefings.length === 0 ? (
-          <p className="py-12 text-zinc-700">Nenhum briefing publicado ainda.</p>
+          <p className="mt-8 py-12 text-zinc-700">Nenhum briefing publicado ainda.</p>
         ) : (
-          <ul className="divide-y divide-[#132960]/10">
+          <ul className="mt-6 space-y-4">
             {briefings.map((b) => (
-              <li key={b.date} className="py-6">
-                <Link href={`/morning-call/${b.date}`} className="group block">
+              <li key={b.date}>
+                <Link
+                  href={`/morning-call/${b.date}`}
+                  className="az-card group block p-5 transition hover:border-[#027DFC]/40 md:p-6"
+                >
                   <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
                     {b.weekday ? `${b.weekday}, ` : ""}
                     {formatDateBR(b.date)}
                   </p>
-                  <h2 className="mt-1 text-2xl font-semibold text-[#132960] group-hover:underline">
+                  <h2 className="mt-1 text-xl font-semibold text-[#132960] group-hover:text-[#027DFC]">
                     {b.title}
                   </h2>
                   {b.description ? (
