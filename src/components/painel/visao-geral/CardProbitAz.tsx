@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CartesianGrid, Line, LineChart, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import type { CodaceFaixa, ProbitAzData, RecessaoData } from "@/lib/painel-visao-geral";
+import type { CodaceFaixa, ProbitAzData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
 
 type Modelo = {
@@ -17,13 +17,22 @@ function corPara(p: number | null | undefined) {
   return p >= 0.65 ? "#DC2626" : p >= 0.35 ? "#F59E0B" : "#10B981";
 }
 
+// Mediana estatística correta: array par = média dos 2 centrais
+function medianaEstatistica(vs: number[]): number | null {
+  if (vs.length === 0) return null;
+  const ordenados = vs.slice().sort((a, b) => a - b);
+  const m = Math.floor(ordenados.length / 2);
+  if (ordenados.length % 2 === 0) {
+    return (ordenados[m - 1] + ordenados[m]) / 2;
+  }
+  return ordenados[m];
+}
+
 export function CardProbitAz({
   data,
-  recessao,
   codace = [],
 }: {
   data: ProbitAzData | null;
-  recessao?: RecessaoData | null;
   codace?: CodaceFaixa[];
 }) {
   const [showContribs, setShowContribs] = useState(false);
@@ -38,52 +47,32 @@ export function CardProbitAz({
   }
 
   const ultimaAz = data.probabilidades;
-  const ultimaRec = recessao?.serie?.[recessao.serie.length - 1];
 
-  // 5 modelos (Probit AZ + 4 do recessao.json)
-  const diffusion = ultimaAz?.diffusion ?? ultimaRec?.diffusion ?? null;
-  const gapHp = ultimaAz?.gap_hp ?? ultimaRec?.gap_threshold ?? null;
-  const probitFin = ultimaAz?.probit_fin ?? ultimaRec?.probit_financeiro ?? null;
-  const msArRaw = ultimaRec?.msdfm ?? null;
-  // msdfm pode vir como 0-100 (escala fora padrao). Normalizar para 0-1.
-  const msAr = msArRaw !== null && msArRaw !== undefined ? (msArRaw > 1 ? msArRaw / 100 : msArRaw) : null;
+  // FONTE CANÔNICA ÚNICA: probit_az.json. 4 modelos (MS-AR fica fora até statsmodels carregar).
+  const diffusion = ultimaAz?.diffusion ?? null;
+  const gapHp = ultimaAz?.gap_hp ?? null;
+  const probitFin = ultimaAz?.probit_fin ?? null;
   const probAz = ultimaAz?.probit_az ?? null;
 
-  // Mediana de até 5 (filtra null)
-  const valores = [diffusion, gapHp, probitFin, msAr, probAz].filter((v): v is number => v !== null && v !== undefined);
-  const mediana = valores.length > 0 ? valores.slice().sort((a, b) => a - b)[Math.floor(valores.length / 2)] : null;
+  // Mediana estatisticamente correta
+  const valores = [diffusion, gapHp, probitFin, probAz].filter((v): v is number => v !== null && v !== undefined);
+  const mediana = medianaEstatistica(valores);
   const corMediana = corPara(mediana);
+  const nModelos = valores.length;
 
   // Histerese Hamilton 2011 sobre a mediana
-  // Junta série Probit AZ + Recessão por mês
-  const seriePorMes: Record<string, { mes: string; diffusion?: number | null; gap_hp?: number | null; probit_fin?: number | null; ms_ar?: number | null; probit_az?: number | null; mediana?: number | null; bry_boschan?: number | null }> = {};
-  (data.serie ?? []).forEach((p) => {
-    seriePorMes[p.mes] = {
+  // Recalcular mediana mês a mês (estatística correta)
+  const serieFinal = (data.serie ?? []).map((p) => {
+    const vs = [p.diffusion, p.gap_hp, p.probit_fin, p.probit_az].filter((v): v is number => typeof v === "number");
+    return {
       mes: p.mes,
       diffusion: p.diffusion ?? undefined,
       gap_hp: p.gap_hp ?? undefined,
       probit_fin: p.probit_fin ?? undefined,
       probit_az: p.probit_az ?? undefined,
+      mediana: medianaEstatistica(vs),
     };
   });
-  (recessao?.serie ?? []).forEach((p) => {
-    const existente = seriePorMes[p.mes] ?? { mes: p.mes };
-    existente.ms_ar = p.msdfm ?? undefined;
-    existente.bry_boschan = p.bry_boschan ?? undefined;
-    // Se Probit AZ não trouxe alguns, completa com recessao
-    if (existente.diffusion === undefined) existente.diffusion = p.diffusion ?? undefined;
-    if (existente.gap_hp === undefined) existente.gap_hp = p.gap_threshold ?? undefined;
-    if (existente.probit_fin === undefined) existente.probit_fin = p.probit_financeiro ?? undefined;
-    seriePorMes[p.mes] = existente;
-  });
-  // Calcular mediana mensal e ordenar por mes
-  const serieFinal = Object.values(seriePorMes)
-    .sort((a, b) => a.mes.localeCompare(b.mes))
-    .map((p) => {
-      const vs = [p.diffusion, p.gap_hp, p.probit_fin, p.ms_ar, p.probit_az].filter((v): v is number => typeof v === "number");
-      const m = vs.length > 0 ? vs.slice().sort((a, b) => a - b)[Math.floor(vs.length / 2)] : null;
-      return { ...p, mediana: m };
-    });
 
   const ultimas2 = serieFinal.filter((p) => p.mediana !== null && p.mediana !== undefined).slice(-2);
   const todasAlerta = ultimas2.length >= 2 && ultimas2.every((p) => (p.mediana ?? 0) >= 0.65);
@@ -91,18 +80,14 @@ export function CardProbitAz({
   const estadoHist = todasAlerta ? "ALERTA" : todasCalmas ? "ESTÁVEL" : "CAUTELA";
   const corHist = estadoHist === "ALERTA" ? "#DC2626" : estadoHist === "ESTÁVEL" ? "#10B981" : "#F59E0B";
 
-  // Borda lateral colorida segundo o estado
   const borderColor = corMediana;
 
   const modelos: Modelo[] = [
     { key: "diffusion", label: "Diffusion", color: "#F59E0B", valor: diffusion },
-    { key: "gap_hp", label: "Gap HP/Hamilton", color: "#10B981", valor: gapHp },
-    { key: "ms_ar", label: "MS-AR Hamilton", color: "#A855F7", valor: msAr },
+    { key: "gap_hp", label: "Gap Hamilton 2018", color: "#10B981", valor: gapHp },
     { key: "probit_fin", label: "Probit Financeiro", color: "#3B82F6", valor: probitFin },
     { key: "probit_az", label: "Probit Misto AZ", color: "#DC2626", valor: probAz },
   ];
-
-  const msArFallback = msAr === 0.05; // sinal de fallback de quintis
 
   // Hachura pós CODACE oficial (jun/2020) — sem datação oficial
   const hachuraStart = "2020-06";
@@ -114,15 +99,16 @@ export function CardProbitAz({
       <div className="mb-3 flex items-start justify-between gap-3 flex-wrap">
         <div className="flex-1 min-w-[200px]">
           <h3 className="text-sm font-semibold text-zinc-900">
-            Probabilidade de recessão — ensemble de 5 modelos
+            Probabilidade de recessão — ensemble de {nModelos} modelos causais
           </h3>
           <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">
-            Mediana de 5 metodologias da literatura. Backtest causal OOS 1996-2026: AUC mediana <strong>0.86</strong>, Probit AZ 0.85.
+            Mediana de 4 metodologias da literatura (Moore 1950, Hamilton 2018, Estrella-Mishkin 1998, Issler-Vahid 2006). Backtest causal OOS 1996-2026: AUC mediana <strong>0.86</strong>.
+            <span className="ml-1 text-amber-700">⚠ MS-AR Hamilton 1989 aguardando statsmodels carregar no pipeline.</span>
           </p>
         </div>
         {mediana !== null && (
           <div className="text-right">
-            <div className="text-[10px] uppercase tracking-wider text-zinc-500">Mediana 5 modelos</div>
+            <div className="text-[10px] uppercase tracking-wider text-zinc-500">Mediana {nModelos} modelos</div>
             <div className="flex items-baseline gap-2 justify-end">
               <span className="text-4xl font-bold" style={{ color: corMediana }}>
                 {Math.round(mediana * 100)}%
@@ -131,7 +117,7 @@ export function CardProbitAz({
                 {estadoHist}
               </span>
             </div>
-            <div className="text-[10px] text-zinc-500">{formatMes(ultimaAz?.mes ?? ultimaRec?.mes ?? "")}</div>
+            <div className="text-[10px] text-zinc-500">{formatMes(ultimaAz?.mes ?? "")}</div>
             <div className="text-[9px] text-zinc-400">Histerese Hamilton 2011 · 65% entra · 35% sai · 2m persist.</div>
           </div>
         )}
@@ -143,7 +129,7 @@ export function CardProbitAz({
           <LineChart data={serieFinal} margin={{ top: 5, right: 8, bottom: 5, left: 0 }}>
             <CartesianGrid stroke="#e4e4e7" strokeDasharray="3 3" />
             <XAxis dataKey="mes" tick={{ fontSize: 9 }} interval={Math.max(1, Math.floor(serieFinal.length / 12))} />
-            <YAxis tick={{ fontSize: 9 }} domain={[0, 1]} />
+            <YAxis tick={{ fontSize: 9 }} domain={[0, 1]} tickFormatter={(v) => `${Math.round(v * 100)}%`} />
             <Tooltip formatter={(v: unknown) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "—")} labelFormatter={(l: unknown) => formatMes(String(l ?? ""))} />
             {/* Linhas referência histerese */}
             <ReferenceLine y={0.65} stroke="#DC2626" strokeDasharray="4 4" opacity={0.4} />
@@ -154,10 +140,9 @@ export function CardProbitAz({
             ))}
             {/* Hachura pós-2020 (sem datação CODACE) */}
             <ReferenceArea x1={hachuraStart} x2={ultimoMes} fill="#9CA3AF" fillOpacity={0.06} strokeOpacity={0} />
-            {/* 5 linhas dos modelos */}
+            {/* 4 linhas dos modelos */}
             <Line type="monotone" dataKey="diffusion" stroke="#F59E0B" strokeWidth={0.8} dot={false} connectNulls opacity={0.55} name="Diffusion" />
             <Line type="monotone" dataKey="gap_hp" stroke="#10B981" strokeWidth={0.8} dot={false} connectNulls opacity={0.55} name="Gap" />
-            <Line type="monotone" dataKey="ms_ar" stroke="#A855F7" strokeWidth={0.8} dot={false} connectNulls opacity={0.55} name="MS-AR" />
             <Line type="monotone" dataKey="probit_fin" stroke="#3B82F6" strokeWidth={0.8} dot={false} connectNulls opacity={0.55} name="Probit Fin" />
             <Line type="monotone" dataKey="probit_az" stroke="#DC2626" strokeWidth={0.9} dot={false} connectNulls opacity={0.65} name="Probit AZ" />
             {/* Mediana destacada */}
@@ -166,8 +151,8 @@ export function CardProbitAz({
         </ResponsiveContainer>
       </div>
 
-      {/* 5 chips dos modelos empilhados ABAIXO do gráfico */}
-      <div className="mb-2 grid grid-cols-5 gap-1.5">
+      {/* 4 chips dos modelos empilhados ABAIXO do gráfico */}
+      <div className="mb-2 grid grid-cols-4 gap-1.5">
         {modelos.map((m) => (
           <div key={m.key} className="rounded border bg-white px-2 py-1.5 border-l-[3px]" style={{ borderLeftColor: m.color }}>
             <div className="text-[9px] uppercase tracking-wider font-bold leading-none" style={{ color: m.color }}>
@@ -177,9 +162,6 @@ export function CardProbitAz({
               <span className="text-base font-bold text-zinc-900">
                 {m.valor !== null && m.valor !== undefined ? `${Math.round(m.valor * 100)}%` : "—"}
               </span>
-              {m.key === "ms_ar" && msArFallback && (
-                <span className="text-[8px] font-bold text-amber-700 uppercase">fallback</span>
-              )}
             </div>
           </div>
         ))}
@@ -189,7 +171,7 @@ export function CardProbitAz({
       <div className="flex items-center gap-2 text-[9px] text-zinc-500 mb-2 flex-wrap">
         <span className="inline-flex items-center gap-1"><span className="w-3 h-[2px]" style={{ backgroundColor: "#132960" }}></span><strong className="text-zinc-700">Mediana</strong></span>
         <span>·</span>
-        <span>linhas finas = 5 modelos individuais</span>
+        <span>linhas finas = 4 modelos individuais</span>
         <span>·</span>
         <span>faixas cinza = recessões CODACE oficiais</span>
         <span>·</span>
@@ -234,8 +216,7 @@ export function CardProbitAz({
       )}
 
       <p className="mt-2 text-[9px] text-zinc-500 leading-tight">
-        <strong>Refs:</strong> Moore 1950 (Diffusion) · Hodrick-Prescott 1997 / Ravn-Uhlig 2002 + Hamilton 2018 (Gap) · Hamilton 1989 (MS-AR) · Estrella-Mishkin 1998 + Wright 2006 + Mendonça-Galvão-Lima 2018 (Probit Fin) · Issler-Vahid 2006 (Probit AZ) · Bates-Granger 1969 (ensembles).
-        {msArFallback && <span className="text-amber-700"> ⚠ MS-AR em fallback de quintis até statsmodels carregar.</span>}
+        <strong>Refs:</strong> Moore 1950 (Diffusion) · Hodrick-Prescott 1997 / Ravn-Uhlig 2002 + Hamilton 2018 (Gap) · Estrella-Mishkin 1998 + Wright 2006 + Mendonça-Galvão-Lima 2018 (Probit Fin) · Issler-Vahid 2006 (Probit AZ) · Bates-Granger 1969 (ensembles).
       </p>
     </section>
   );

@@ -71,13 +71,22 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
   const kpi1Cor: "verde" | "amarelo" | "vermelho" | "neutro" =
     kpi1 === null ? "neutro" : kpi1 > 0 ? "verde" : kpi1 < -0.3 ? "vermelho" : "amarelo";
 
-  // KPI 2 - Probabilidade de recessão (mediana dos modelos, com tratamento de amostra insuficiente)
-  const rec = ultimaObs(payload.recessao?.serie);
-  const sensiveisPresentes = rec?.sensiveis_presentes ?? 0;
-  const amostraInsuficiente = !!rec && sensiveisPresentes === 0;
-  const kpi2 = rec?.mediana ?? rec?.mediana_parcial ?? null;
+  // KPI 2 - Probabilidade de recessão (FONTE CANONICA: probit_az.json - Loop 31)
+  // Mediana estatisticamente correta de 4 modelos causais (Diffusion + Gap Hamilton + Probit Fin + Probit AZ)
+  const probAz = payload.probitAz?.probabilidades;
+  const valoresProbit = probAz ? [probAz.diffusion, probAz.gap_hp, probAz.probit_fin, probAz.probit_az].filter((v): v is number => typeof v === "number") : [];
+  const kpi2Calc: number | null = (() => {
+    if (valoresProbit.length === 0) return null;
+    const ord = valoresProbit.slice().sort((a, b) => a - b);
+    const m = Math.floor(ord.length / 2);
+    return ord.length % 2 === 0 ? (ord[m - 1] + ord[m]) / 2 : ord[m];
+  })();
+  // kpi2 em escala 0-1; multiplicar por 100 para exibir
+  const kpi2 = kpi2Calc !== null ? kpi2Calc * 100 : null;
+  const nModelosProbit = valoresProbit.length;
+  const amostraInsuficiente = nModelosProbit === 0;
   const kpi2Cor: "verde" | "amarelo" | "vermelho" | "neutro" =
-    !rec ? "neutro" : amostraInsuficiente || rec.sinalizacao === "indeterminado" ? "neutro" : sinalizacaoToCor(rec.sinalizacao as any);
+    kpi2Calc === null ? "neutro" : kpi2Calc >= 0.65 ? "vermelho" : kpi2Calc >= 0.35 ? "amarelo" : "verde";
 
   // KPI 3 - Confiança Empresarial FGV (ICE) - antes era OECD CLI (stale dez/2023)
   const ice = ultimaObs(payload.fgvConfianca?.ice);
@@ -97,23 +106,19 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
           ? "vermelho"
           : "amarelo";
 
-  // Tecnico e subtitulo do KPI Recessao (loop 15): se ha mediana_parcial, mostrar X%* com asterisco
-  const medParcial = rec?.mediana_parcial;
+  // Tecnico/Valor/Subtitulo - Loop 31: fonte unica probit_az.json
+  const nAcima50 = valoresProbit.filter((v) => v >= 0.5).length;
   const kpi2Tecnico = amostraInsuficiente
-    ? `Parcial — ${rec?.n_modelos ?? 0} de 4 modelos`
-    : rec && rec.n_modelos < 4
-      ? `Cobertura ${rec.n_modelos}/4 modelos`
-      : "Mediana 4 modelos prob.";
+    ? "Aguardando pipeline"
+    : `Mediana ${nModelosProbit} modelos causais`;
   const kpi2Valor = amostraInsuficiente
-    ? (medParcial !== null && medParcial !== undefined ? `${medParcial.toFixed(0)}%*` : "n/d")
+    ? "n/d"
     : kpi2 === null
       ? "—"
       : `${kpi2.toFixed(0)}%`;
   const kpi2Subtitulo = amostraInsuficiente
-    ? `* Modelos sensíveis (Probit/Diffusion) aguardando próxima rodada. Sinal preliminar baseado em ${rec?.n_modelos ?? 0}/4 modelos.`
-    : rec
-      ? `${rec.n_acima_50} dispararam alerta · ${rec.n_modelos}/4 rodaram${rec.sinalizacao === "indeterminado" ? " (sinal incompleto)" : ""}`
-      : "MS-AR, probit, gap HP, diffusion (probabilísticos).";
+    ? "Modelos aguardando próxima rodada do pipeline."
+    : `${nAcima50} acima de 50% · ${nModelosProbit}/4 rodaram · backtest OOS AUC 0.86`;
 
   // Calcular hiato uma vez
   const hiatoUltimo = ultimaObs(payload.hiato?.serie);
@@ -134,7 +139,7 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
           valor={kpi2Valor}
           subtitulo={kpi2Subtitulo}
           cor={kpi2Cor}
-          mes={rec?.mes}
+          mes={probAz?.mes}
           destaque
           fullHeight
         />
