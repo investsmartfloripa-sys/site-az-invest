@@ -376,4 +376,35 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--soft-fail", action="store_true")
+    ap.add_argument("--out-dir")
+    ap.add_argument("--upload", action="store_true")
+    args, _ = ap.parse_known_args()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception as e:
+        if args.soft_fail:
+            print(f"FATAL but soft-fail enabled: {e}", file=__import__('sys').stderr)
+            # Stub stale para frontend não quebrar
+            from datetime import datetime, timezone
+            import json
+            from pathlib import Path as _P
+            stub = {
+                "gerado_em": datetime.now(timezone.utc).isoformat(),
+                "freshness_status": "stale",
+                "mes_recente": None,
+                "probabilidades": {},
+                "serie": [],
+                "contribuicoes_top15": [],
+                "metadata": {"error": str(e)[:300]},
+            }
+            out = _P(args.out_dir or "data-pipeline/out") / "visao_geral_probit_az.json"
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(json.dumps(stub))
+            print(f"Stub written to {out}", file=__import__('sys').stderr)
+        else:
+            raise

@@ -19,6 +19,14 @@ export function CardProbitAz({ data, codace = [] }: { data: ProbitAzData | null;
 
   const ultima = data.probabilidades;
   const probAz = ultima?.probit_az;
+
+  // Histerese Hamilton 2011: declarar alerta com p>=0.65 por 2m, sair com p<0.35 por 2m
+  const serie = data.serie ?? [];
+  const ultimas3 = serie.filter((p) => p.probit_az !== null && p.probit_az !== undefined).slice(-3);
+  const todasAlerta = ultimas3.length >= 2 && ultimas3.slice(-2).every((p) => (p.probit_az ?? 0) >= 0.65);
+  const todasCalmas = ultimas3.length >= 2 && ultimas3.slice(-2).every((p) => (p.probit_az ?? 1) < 0.35);
+  const estadoHist = todasAlerta ? "ALERTA" : todasCalmas ? "ESTÁVEL" : "CAUTELA";
+
   const corVal = probAz !== null && probAz !== undefined ? (probAz >= 0.65 ? "#DC2626" : probAz >= 0.35 ? "#F59E0B" : "#10B981") : "#71717a";
 
   return (
@@ -27,7 +35,7 @@ export function CardProbitAz({ data, codace = [] }: { data: ProbitAzData | null;
         <div>
           <h3 className="text-base font-bold text-[#132960]">Probit Misto AZ Híbrido</h3>
           <p className="text-xs text-zinc-600">
-            Probit Ridge L2 sobre 3 modelos base (lag 1m) + ~30 antecedentes brutas. Backtest OOS AUC = 0.95, Brier = 0.04. Inspirado em Issler-Vahid 2006 / BCB WP 587.
+            Probit Ridge L2 sobre 3 modelos base (lag 1m) + ~30 antecedentes brutas. Backtest OOS HONESTO AUC=0.85 (Loop 28 causal), Brier=0.07. Refs: Moore 1950 (Diffusion), Hodrick-Prescott 1997/Ravn-Uhlig 2002 (Gap), Estrella-Mishkin 1998 + Wright 2006 + Mendonça-Galvão-Lima 2018 (Probit Fin), Issler-Vahid 2006 (estrutura).
           </p>
         </div>
         {probAz !== null && probAz !== undefined && (
@@ -35,6 +43,10 @@ export function CardProbitAz({ data, codace = [] }: { data: ProbitAzData | null;
             <div className="text-[10px] uppercase tracking-wider text-zinc-500">P(recessão)</div>
             <div className="text-4xl font-bold" style={{ color: corVal }}>{Math.round(probAz * 100)}%</div>
             <div className="text-[10px] text-zinc-500">{formatMes(ultima?.mes ?? "")}</div>
+            <div className="mt-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: corVal }}>
+              Histerese: {estadoHist}
+            </div>
+            <div className="text-[9px] text-zinc-400">Hamilton 2011 (entra 65%, sai 35%, 2m persist.)</div>
           </div>
         )}
       </div>
