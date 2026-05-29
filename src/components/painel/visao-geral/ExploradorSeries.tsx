@@ -46,10 +46,50 @@ export function ExploradorSeries({
   initialId?: string;
   codace?: CodaceFaixa[];
 }) {
-  const [selecionadaId, setSelecionadaId] = useState<string>(initialId ?? series[0]?.id ?? "");
-  const [periodoMeses, setPeriodoMeses] = useState<number | "max">(60); // 5 anos default
-  const [clipOutliers, setClipOutliers] = useState<boolean>(false);
-  const selecionada = series.find((s) => s.id === selecionadaId) ?? series[0];
+  // Filtra series invalidas: data vazia, defasada >24m, ou outlier absurdo no valor atual
+  const hoje = new Date();
+  const seriesValidas = series.filter((s) => {
+    if (!s.data || s.data.length === 0) return false;
+    // Mes defasado >24 meses
+    if (s.mesAtual) {
+      const mes = s.mesAtual.length === 7 ? s.mesAtual + "-01" : s.mesAtual.includes("T") ? null : s.mesAtual + "-01";
+      if (mes) {
+        const dt = new Date(mes);
+        if (!isNaN(dt.getTime())) {
+          const diffMeses = (hoje.getTime() - dt.getTime()) / (1000 * 60 * 60 * 24 * 30);
+          if (diffMeses > 24) return false;
+        }
+      }
+    }
+    // Valor atual absurdo para retornos (% > 200 ou < -100)
+    if (
+      s.unidade === "%" &&
+      s.valorAtual !== null &&
+      s.valorAtual !== undefined &&
+      (s.valorAtual > 200 || s.valorAtual < -100)
+    ) {
+      return false;
+    }
+    return true;
+  });
+  const seriesFinal = seriesValidas.length > 0 ? seriesValidas : series;
+
+  // Detectar outlier > 100% no historico -> clipOutliers default true
+  const seriePadraoTemOutlier = (s: SerieExplorador): boolean => {
+    if (s.unidade !== "%") return false;
+    for (const p of s.data) {
+      const v = p.v;
+      if (v !== null && v !== undefined && Math.abs(v) > 100) return true;
+    }
+    return false;
+  };
+  const initialIdReal = initialId ?? seriesFinal[0]?.id ?? "";
+  const initialSerie = seriesFinal.find((s) => s.id === initialIdReal) ?? seriesFinal[0];
+  const clipDefault = initialSerie ? seriePadraoTemOutlier(initialSerie) : false;
+  const [selecionadaId, setSelecionadaId] = useState<string>(initialIdReal);
+  const [periodoMeses, setPeriodoMeses] = useState<number | "max">(60);
+  const [clipOutliers, setClipOutliers] = useState<boolean>(clipDefault);
+  const selecionada = seriesFinal.find((s) => s.id === selecionadaId) ?? seriesFinal[0];
   const dadosFiltrados = useMemo(() => {
     if (!selecionada) return [];
     let dados = selecionada.data;
@@ -72,7 +112,7 @@ export function ExploradorSeries({
     return dados;
   }, [selecionada, periodoMeses, clipOutliers]);
 
-  if (!series.length || !selecionada) {
+  if (!seriesFinal.length || !selecionada) {
     return (
       <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-4 text-center text-xs text-zinc-400">
         Nenhuma série disponível ainda.
@@ -90,7 +130,7 @@ export function ExploradorSeries({
           <h3 className="text-base font-semibold text-zinc-900">{titulo}</h3>
           {subtitulo && <p className="text-xs text-zinc-500">{subtitulo}</p>}
         </div>
-        <span className="text-[10px] text-zinc-500">{series.length} séries · clique no card para trocar</span>
+        <span className="text-[10px] text-zinc-500">{seriesFinal.length} séries · clique no card para trocar</span>
       </div>
 
       {/* Area do grafico unica */}
@@ -173,7 +213,7 @@ export function ExploradorSeries({
 
       {/* Grid de cards-thumbnail (seletores) */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {series.map((s) => {
+        {seriesFinal.map((s) => {
           const ativa = s.id === selecionadaId;
           const u = s.unidade ?? "%";
           const valorTxt =
