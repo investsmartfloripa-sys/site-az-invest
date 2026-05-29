@@ -18,7 +18,7 @@ import { CardProbitAz } from "./CardProbitAz";
 type Vista = "geral" | "antecedentes" | "coincidentes";
 
 const TABS: { value: Vista; label: string; descr: string }[] = [
-  { value: "geral", label: "1. Geral", descr: "Termômetro Síntese + 5 modelos de probabilidade de recessão + hiato HP+Hamilton + ICF próprio (Hatzius) + crédito/PIB" },
+  { value: "geral", label: "1. Geral", descr: "Ensemble de 5 modelos de probabilidade de recessão (Diffusion, Gap, MS-AR, Probit Fin, Probit AZ Misto)" },
   { value: "antecedentes", label: "2. Antecedentes", descr: "Séries que lideram o PIB em 3-12 meses: OCDE CLI, sondagens FGV/CNI, PIM duráveis/capital, slope DI, Ibov real, EMBI+, Selic real, concessões reais, FENABRAVE" },
   { value: "coincidentes", label: "3. Coincidentes", descr: "Séries que movem com o PIB: quartet TCB (PIM-PF produção, PMC vendas, PNAD emprego), IBC-Br, EPE, ANP, papelão, aço, ANFAVEA, PMS serviços" },
 ];

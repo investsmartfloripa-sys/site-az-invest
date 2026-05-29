@@ -44,7 +44,9 @@ export function CardProbitAz({
   const diffusion = ultimaAz?.diffusion ?? ultimaRec?.diffusion ?? null;
   const gapHp = ultimaAz?.gap_hp ?? ultimaRec?.gap_threshold ?? null;
   const probitFin = ultimaAz?.probit_fin ?? ultimaRec?.probit_financeiro ?? null;
-  const msAr = ultimaRec?.msdfm ?? null;
+  const msArRaw = ultimaRec?.msdfm ?? null;
+  // msdfm pode vir como 0-100 (escala fora padrao). Normalizar para 0-1.
+  const msAr = msArRaw !== null && msArRaw !== undefined ? (msArRaw > 1 ? msArRaw / 100 : msArRaw) : null;
   const probAz = ultimaAz?.probit_az ?? null;
 
   // Mediana de até 5 (filtra null)
