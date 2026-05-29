@@ -59,6 +59,9 @@ CATALOGO = [
     ("BCB_OLINDA", "Focus_IPCA_12m", "level"),
     ("BCB_OLINDA", "Focus_PIB_anual", "level"),
     ("BCB_OLINDA", "Focus_Selic_fim", "level"),
+    # Antecedentes faltantes (Loop 30 #3)
+    ("IPEADATA", "CAGED12_SALDONAJU12", "diff_12m"),
+    ("IPEADATA", "CNC12_IIECAJ12", "level"),
 ]
 
 RECESSOES = [

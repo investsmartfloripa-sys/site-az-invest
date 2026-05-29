@@ -419,28 +419,46 @@ export function BlocoBAntecedentes({
       <header>
         <h2 className="text-xl font-bold text-[#132960]">Antecedentes do PIB</h2>
         <p className="mt-1 text-xs text-zinc-600">
-          Indicadores que historicamente lideram viradas de ciclo em 3-12 meses. Combinam composite OCDE oficial, taxa de juros real, dinâmica de concessões reais e expectativas FGV. Literatura: IACE/ICCE FGV-IBRE, Chauvet (2002), BCB WP 285 e WP 435 (Gaglianone-Areosa).
+          Indicadores que historicamente lideram viradas de ciclo em 3-12 meses. Dividido em 2 subseções: (A) Confiança & sondagens — sentimento empresarial (FGV/CNI/CNC); (B) Financeiros e reais — preços, crédito e indústria. Literatura: IACE/ICCE FGV-IBRE, Chauvet 2002, BCB WP 435 (Gaglianone-Areosa).
         </p>
       </header>
 
-      {oecdDefasado && (
-        <div className="rounded-md bg-amber-50 px-3 py-2 text-[11px] text-amber-800 border border-amber-200">
-          ⚠ OCDE CLI publica com defasagem &gt;12 meses (último: {oecdCli?.mes_recente}). Sinal corrente vem das sondagens FGV abaixo. OCDE serve como benchmark histórico cross-country.
-        </div>
-      )}
+      <div className="rounded-md bg-blue-50 border border-blue-200 px-3 py-2 text-[11px] text-zinc-700 leading-relaxed">
+        <strong className="text-[#132960]">O que é o OCDE CLI?</strong> Composite Leading Indicator publicado mensalmente pela OCDE para 40+ países. Agrega slope DI, Ibov, FGV expectativas indústria, FGV ordens, Selic, demanda serviços e ITS comércio. Linha 100 = tendência (normalizada). Quadro &lt;100 caindo = downturn; &gt;100 subindo = expansão. Adianta viradas em 6-9 meses. {oecdDefasado && (<><strong className="text-amber-700"> ⚠ Atualmente defasado &gt;12m</strong> (último: {oecdCli?.mes_recente}) — use sondagens FGV abaixo como sinal corrente.</>)}
+      </div>
 
       {/* OCDE CLI benchmark sempre visível em cima */}
       <CardOecdCli data={oecdCli} codace={codace} />
 
-      {/* Explorador de séries antecedentes (gráfico único + cards seletores) */}
-      {series.length > 0 && (
-        <ExploradorSeries
-          series={series}
-          titulo="Indicadores antecedentes"
-          subtitulo="Selic real ex-ante · Concessões reais PF/PJ · OCDE CLI · sondagens FGV/CNI · PIM duráveis/capital"
-          codace={codace}
-        />
-      )}
+      {/* Subseção A: Confiança & Sondagens (sentimento) */}
+      {(() => {
+        const SOND_IDS = ["fgv-ici", "fgv-ics", "fgv-icc", "cni-icei-exp", "fgv-constr-exp", "cnc-icec"];
+        const sondSeries = series.filter((s) => SOND_IDS.includes(s.id));
+        if (sondSeries.length === 0) return null;
+        return (
+          <ExploradorSeries
+            series={sondSeries}
+            titulo="Confiança & sondagens empresariais (sentimento)"
+            subtitulo="FGV (ICI/ICS/ICC/Construção) + CNI ICEI + CNC ICEC. Componentes IACE-FGV. Antecedem viradas 3-6 meses."
+            codace={codace}
+          />
+        );
+      })()}
+
+      {/* Subseção B: Antecedentes financeiros e reais */}
+      {(() => {
+        const SOND_IDS = ["fgv-ici", "fgv-ics", "fgv-icc", "cni-icei-exp", "fgv-constr-exp", "cnc-icec"];
+        const finRealSeries = series.filter((s) => !SOND_IDS.includes(s.id));
+        if (finRealSeries.length === 0) return null;
+        return (
+          <ExploradorSeries
+            series={finRealSeries}
+            titulo="Antecedentes financeiros e reais"
+            subtitulo="Selic real · Concessões PF/PJ · FENABRAVE · PIM duráveis/capital · Slope DI · Ibov real · EMBI+ · OCDE CLI"
+            codace={codace}
+          />
+        );
+      })()}
 
       {/* FGV antecedentes (quando o scraper voltar) */}
       <CardFgvAntecedentes data={fgvAntecedentes} />

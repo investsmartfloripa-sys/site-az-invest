@@ -229,7 +229,7 @@ function CardRecessaoMultiModelos({
   );
 }
 
-function CardHiatoLeque({ serie, codace }: { serie: HiatoPonto[]; codace: CodaceFaixa[] }) {
+export function CardHiatoLeque({ serie, codace }: { serie: HiatoPonto[]; codace: CodaceFaixa[] }) {
   if (!serie || serie.length === 0) {
     return <PlaceholderCard titulo="A3 — Hiato do produto (leque HP + Hamilton)" />;
   }

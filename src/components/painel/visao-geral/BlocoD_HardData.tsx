@@ -2,10 +2,11 @@
 
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import type { AnfaveaData, AnpData, AtividadePimData, AtividadePmcData, AtividadePmsData, CodaceFaixa, EmpregoPnadData, EpeData, HardDataData, IbcBrData, IpeadataData, PnadRendaData } from "@/lib/painel-visao-geral";
+import type { AnfaveaData, AnpData, AtividadePimData, AtividadePmcData, AtividadePmsData, CodaceFaixa, EmpregoPnadData, EpeData, HardDataData, HiatoData, IbcBrData, IpeadataData, PnadRendaData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
 
 import { ExploradorSeries, type SerieExplorador } from "./ExploradorSeries";
+import { CardHiatoLeque } from "./BlocoA_CicloAtual";
 
 export function BlocoDHardData({
   anfavea,
@@ -19,6 +20,7 @@ export function BlocoDHardData({
   atividadePms,
   ibcbr,
   pnadRenda,
+  hiato,
   codace = [],
 }: {
   anfavea: AnfaveaData | null;
@@ -32,6 +34,7 @@ export function BlocoDHardData({
   atividadePms: AtividadePmsData | null;
   ibcbr: IbcBrData | null;
   pnadRenda: PnadRendaData | null;
+  hiato?: HiatoData | null;
   codace?: CodaceFaixa[];
 }) {
   const pimSerie = atividadePim?.geral?.serie ?? [];
@@ -212,6 +215,9 @@ export function BlocoDHardData({
         <h2 className="text-xl font-bold text-[#132960]">Coincidentes — séries puras</h2>
         <p className="mt-1 text-xs text-zinc-600">Séries que se movem junto com o PIB no presente. Quartet TCB clássico (Stock-Watson 1989 / Duarte-Issler-Spacov 2004 / ICCE-FGV): Produção (PIM-PF) + Vendas (PMC) + Emprego (PNAD-C) + Renda. Complementado pelos componentes oficiais ICCE-FGV: ABPO papelão e EPE energia industrial. Demais hard data (ANFAVEA, ANP, Aço) são coincidentes setoriais. Clique no card para trocar a série do gráfico.</p>
       </header>
+      {hiato?.serie && hiato.serie.length > 0 && (
+        <CardHiatoLeque serie={hiato.serie} codace={codace} />
+      )}
 
       {atividadePim && pimSerie.length > 0 && (
         <div className="rounded-2xl border-2 border-[#132960]/25 bg-gradient-to-br from-white to-zinc-50 p-5 shadow-sm">
