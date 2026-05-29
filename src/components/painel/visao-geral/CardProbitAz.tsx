@@ -24,67 +24,101 @@ function medianaEstatistica(vs: number[]): number | null {
   return ord.length % 2 === 0 ? (ord[m - 1] + ord[m]) / 2 : ord[m];
 }
 
-// Gauge semicircular SVG (speedometer Hamilton 2011)
+// Gauge semicircular SVG (speedometer Hamilton 2011) - Loop 33 #6
 function GaugeSpeedometer({ valor, label }: { valor: number; label: string }) {
-  // valor 0-1, mapeia para ângulo -90° (esquerda) a +90° (direita) = 180° total
+  // valor 0-1, semicirculo de -90 (esquerda) a +90 (direita) - 180 total
   const v = Math.max(0, Math.min(1, valor));
-  const ang = -90 + v * 180; // em graus
-  const angRad = (ang * Math.PI) / 180;
+  const corPonteiro = corPara(v);
 
-  // Geometria
-  const cx = 110;
-  const cy = 110;
-  const rOut = 96;
-  const rIn = 68;
+  // Geometria - viewBox amplo o suficiente pra TUDO caber
+  const W = 280;
+  const H = 220;
+  const cx = W / 2; // 140
+  const cy = 150;   // base do semicirculo - deixa espaco em baixo pro texto
+  const rOut = 110;
+  const rIn = 78;
 
-  // Helper: arc path
+  // Helper: arc path - startDeg/endDeg em graus desde topo (12h), sentido horario
   function arcPath(startDeg: number, endDeg: number, radius: number, innerRadius: number) {
-    const startRad = ((startDeg - 90) * Math.PI) / 180;
-    const endRad = ((endDeg - 90) * Math.PI) / 180;
-    const x1 = cx + radius * Math.cos(startRad);
-    const y1 = cy + radius * Math.sin(startRad);
-    const x2 = cx + radius * Math.cos(endRad);
-    const y2 = cy + radius * Math.sin(endRad);
-    const x3 = cx + innerRadius * Math.cos(endRad);
-    const y3 = cy + innerRadius * Math.sin(endRad);
-    const x4 = cx + innerRadius * Math.cos(startRad);
-    const y4 = cy + innerRadius * Math.sin(startRad);
+    // semicirculo do topo: 0deg = 12h = (cx, cy-r); 90deg = 3h; -90deg = 9h
+    // Para gauge horizontal queremos -90 (esq) -> +90 (dir)
+    // Convertendo: gauge angle (0..180 da esq pra dir) - 90 = SVG angle
+    const sa = ((startDeg - 90) * Math.PI) / 180;
+    const ea = ((endDeg - 90) * Math.PI) / 180;
+    const x1 = cx + radius * Math.cos(sa);
+    const y1 = cy + radius * Math.sin(sa);
+    const x2 = cx + radius * Math.cos(ea);
+    const y2 = cy + radius * Math.sin(ea);
+    const x3 = cx + innerRadius * Math.cos(ea);
+    const y3 = cy + innerRadius * Math.sin(ea);
+    const x4 = cx + innerRadius * Math.cos(sa);
+    const y4 = cy + innerRadius * Math.sin(sa);
     const largeArc = endDeg - startDeg > 180 ? 1 : 0;
     return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`;
   }
 
-  // 3 faixas: 0-35% verde, 35-65% âmbar, 65-100% vermelho
-  // Mapeando 0% → 0°, 100% → 180°
-  // 35% → 63°, 65% → 117°
-  const ponteiroX = cx + (rIn + 20) * Math.cos(angRad);
-  const ponteiroY = cy + (rIn + 20) * Math.sin(angRad);
-  const corPonteiro = corPara(v);
+  // Mapeando gauge: 0% -> 0deg (esq), 100% -> 180deg (dir)
+  // 35% -> 63deg, 65% -> 117deg
+  const angDeg = v * 180; // 0..180
+  const angSvgRad = ((angDeg - 90) * Math.PI) / 180; // -90 (esq) a +90 (dir)
+
+  // Ponta do ponteiro a 90% do raio externo
+  const pX = cx + (rOut - 8) * Math.cos(angSvgRad);
+  const pY = cy + (rOut - 8) * Math.sin(angSvgRad);
+
+  // Helper pra posicionar texto em um angulo
+  function posAt(deg: number, r: number) {
+    const a = ((deg - 90) * Math.PI) / 180;
+    return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+  }
+  const lbl0 = posAt(0, rOut + 14);
+  const lbl35 = posAt(63, rOut + 14);
+  const lbl65 = posAt(117, rOut + 14);
+  const lbl100 = posAt(180, rOut + 14);
+
+  // Tick marks pra cada 10%
+  const ticks = [10, 20, 30, 40, 50, 60, 70, 80, 90];
 
   return (
-    <svg viewBox="0 0 220 145" className="w-full max-w-[280px]">
-      {/* Arco verde 0-35% */}
-      <path d={arcPath(0, 63, rOut, rIn)} fill="#10B981" opacity={0.85} />
-      {/* Arco âmbar 35-65% */}
-      <path d={arcPath(63, 117, rOut, rIn)} fill="#F59E0B" opacity={0.85} />
-      {/* Arco vermelho 65-100% */}
-      <path d={arcPath(117, 180, rOut, rIn)} fill="#DC2626" opacity={0.85} />
-      {/* Linhas dos limites Hamilton 35/65 */}
-      <line x1={cx + rIn * Math.cos(((-90 + 63) * Math.PI) / 180)} y1={cy + rIn * Math.sin(((-90 + 63) * Math.PI) / 180)} x2={cx + (rOut + 4) * Math.cos(((-90 + 63) * Math.PI) / 180)} y2={cy + (rOut + 4) * Math.sin(((-90 + 63) * Math.PI) / 180)} stroke="#27272a" strokeWidth={1} />
-      <line x1={cx + rIn * Math.cos(((-90 + 117) * Math.PI) / 180)} y1={cy + rIn * Math.sin(((-90 + 117) * Math.PI) / 180)} x2={cx + (rOut + 4) * Math.cos(((-90 + 117) * Math.PI) / 180)} y2={cy + (rOut + 4) * Math.sin(((-90 + 117) * Math.PI) / 180)} stroke="#27272a" strokeWidth={1} />
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[300px]">
+      {/* Sombra do gauge (fundo cinza claro) */}
+      <path d={arcPath(0, 180, rOut + 2, rIn - 2)} fill="#f4f4f5" />
+
+      {/* 3 faixas Hamilton 2011 */}
+      <path d={arcPath(0, 63, rOut, rIn)} fill="#10B981" />
+      <path d={arcPath(63, 117, rOut, rIn)} fill="#F59E0B" />
+      <path d={arcPath(117, 180, rOut, rIn)} fill="#DC2626" />
+
+      {/* Linhas brancas entre faixas pra dar definicao */}
+      {[63, 117].map((d) => {
+        const p1 = posAt(d, rIn);
+        const p2 = posAt(d, rOut);
+        return <line key={d} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="white" strokeWidth={2} />;
+      })}
+
+      {/* Tick marks pequenos */}
+      {ticks.map((pct) => {
+        const d = (pct / 100) * 180;
+        const t1 = posAt(d, rOut - 4);
+        const t2 = posAt(d, rOut + 2);
+        return <line key={pct} x1={t1.x} y1={t1.y} x2={t2.x} y2={t2.y} stroke="#ffffff" strokeWidth={1} opacity={0.6} />;
+      })}
 
       {/* Labels 0%, 35%, 65%, 100% */}
-      <text x={cx + (rOut + 10) * Math.cos((-90 * Math.PI) / 180)} y={cy + (rOut + 10) * Math.sin((-90 * Math.PI) / 180) + 4} fontSize={9} fill="#71717a" textAnchor="middle">0%</text>
-      <text x={cx + (rOut + 10) * Math.cos((-27 * Math.PI) / 180)} y={cy + (rOut + 10) * Math.sin((-27 * Math.PI) / 180) + 4} fontSize={9} fill="#71717a" textAnchor="middle">35%</text>
-      <text x={cx + (rOut + 10) * Math.cos((27 * Math.PI) / 180)} y={cy + (rOut + 10) * Math.sin((27 * Math.PI) / 180) + 4} fontSize={9} fill="#71717a" textAnchor="middle">65%</text>
-      <text x={cx + (rOut + 10) * Math.cos((90 * Math.PI) / 180)} y={cy + (rOut + 10) * Math.sin((90 * Math.PI) / 180) + 4} fontSize={9} fill="#71717a" textAnchor="middle">100%</text>
+      <text x={lbl0.x} y={lbl0.y + 3} fontSize={11} fontWeight={600} fill="#52525b" textAnchor="middle">0%</text>
+      <text x={lbl35.x} y={lbl35.y + 3} fontSize={11} fontWeight={600} fill="#10B981" textAnchor="middle">35%</text>
+      <text x={lbl65.x} y={lbl65.y + 3} fontSize={11} fontWeight={600} fill="#F59E0B" textAnchor="middle">65%</text>
+      <text x={lbl100.x} y={lbl100.y + 3} fontSize={11} fontWeight={600} fill="#52525b" textAnchor="middle">100%</text>
 
       {/* Ponteiro */}
-      <line x1={cx} y1={cy} x2={ponteiroX} y2={ponteiroY} stroke={corPonteiro} strokeWidth={3} strokeLinecap="round" />
-      <circle cx={cx} cy={cy} r={5} fill={corPonteiro} />
+      <line x1={cx} y1={cy} x2={pX} y2={pY} stroke={corPonteiro} strokeWidth={4} strokeLinecap="round" />
+      <circle cx={cx} cy={cy} r={8} fill="white" stroke={corPonteiro} strokeWidth={2.5} />
+      <circle cx={cx} cy={cy} r={3} fill={corPonteiro} />
 
-      {/* Valor central */}
-      <text x={cx} y={cy + 30} fontSize={24} fontWeight={700} fill={corPonteiro} textAnchor="middle">{Math.round(v * 100)}%</text>
-      <text x={cx} y={cy + 42} fontSize={9} fill="#71717a" textAnchor="middle">{label}</text>
+      {/* Valor central GRANDE - bem abaixo do pivot pra nao colidir com ponteiro */}
+      <text x={cx} y={cy + 42} fontSize={32} fontWeight={800} fill={corPonteiro} textAnchor="middle">{Math.round(v * 100)}%</text>
+      {/* Label embaixo */}
+      <text x={cx} y={cy + 60} fontSize={11} fill="#71717a" textAnchor="middle" fontWeight={500}>{label}</text>
     </svg>
   );
 }
@@ -186,79 +220,4 @@ export function CardProbitAz({
           </div>
         </div>
 
-        {/* Coluna direita: Fan chart histórico */}
-        <div className="h-[300px] rounded border border-zinc-100 bg-zinc-50 p-1">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={serieFinal} margin={{ top: 5, right: 8, bottom: 5, left: 0 }}>
-              <CartesianGrid stroke="#e4e4e7" strokeDasharray="3 3" />
-              <XAxis dataKey="mes" tick={{ fontSize: 9 }} interval={Math.max(1, Math.floor(serieFinal.length / 12))} />
-              <YAxis tick={{ fontSize: 9 }} domain={[0, 1]} tickFormatter={(v) => `${Math.round(v * 100)}%`} />
-              <Tooltip formatter={(v: unknown) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "—")} labelFormatter={(l: unknown) => formatMes(String(l ?? ""))} />
-              <ReferenceLine y={0.65} stroke="#DC2626" strokeDasharray="4 4" opacity={0.4} />
-              <ReferenceLine y={0.35} stroke="#10B981" strokeDasharray="4 4" opacity={0.4} />
-              {codace.map((f, i) => (
-                <ReferenceArea key={`cod-${i}`} x1={f.pico} x2={f.vale} fill="#9CA3AF" fillOpacity={0.22} />
-              ))}
-              <ReferenceArea x1={hachuraStart} x2={ultimoMes} fill="#9CA3AF" fillOpacity={0.06} strokeOpacity={0} />
-              <Line type="monotone" dataKey="diffusion" stroke="#F59E0B" strokeWidth={0.8} dot={false} connectNulls opacity={0.5} />
-              <Line type="monotone" dataKey="gap_hp" stroke="#10B981" strokeWidth={0.8} dot={false} connectNulls opacity={0.5} />
-              <Line type="monotone" dataKey="probit_fin" stroke="#3B82F6" strokeWidth={0.8} dot={false} connectNulls opacity={0.5} />
-              <Line type="monotone" dataKey="probit_az" stroke="#DC2626" strokeWidth={0.9} dot={false} connectNulls opacity={0.6} />
-              <Line type="monotone" dataKey="mediana" stroke="#132960" strokeWidth={2.4} dot={false} connectNulls />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="mt-3 flex items-center gap-2 text-[9px] text-zinc-500 flex-wrap">
-        <span className="inline-flex items-center gap-1"><span className="w-3 h-[2px]" style={{ backgroundColor: "#132960" }}></span><strong className="text-zinc-700">Mediana</strong></span>
-        <span>·</span>
-        <span>linhas finas = 4 modelos individuais</span>
-        <span>·</span>
-        <span>faixas cinza = recessões CODACE oficiais</span>
-        <span>·</span>
-        <span>hachura pós-jun/2020 = sem datação CODACE</span>
-      </div>
-
-      {data.contribuicoes_top15 && data.contribuicoes_top15.length > 0 && (
-        <>
-          <button
-            onClick={() => setShowContribs((o) => !o)}
-            className="w-full text-left text-[10px] text-[#132960] hover:underline flex items-center gap-1 mt-2"
-          >
-            <span>{showContribs ? "▼" : "▶"}</span>
-            <span>Top 15 features do Probit AZ (β · x_std) em {formatMes(ultimaAz?.mes ?? "")}</span>
-          </button>
-          {showContribs && (
-            <table className="mt-2 w-full text-[10px]">
-              <thead>
-                <tr className="border-b border-zinc-200 text-zinc-500">
-                  <th className="text-left py-1">Feature</th>
-                  <th className="text-right">β</th>
-                  <th className="text-right">x (std)</th>
-                  <th className="text-right">β·x</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.contribuicoes_top15.slice(0, 10).map((c, i) => (
-                  <tr key={i} className="border-b border-zinc-100">
-                    <td className="py-1 font-mono text-[9px]">{c.feature}</td>
-                    <td className="text-right">{c.beta.toFixed(2)}</td>
-                    <td className="text-right">{c.x_std.toFixed(2)}</td>
-                    <td className="text-right font-semibold" style={{ color: c.contrib_z >= 0 ? "#DC2626" : "#10B981" }}>
-                      {c.contrib_z >= 0 ? "+" : ""}{c.contrib_z.toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </>
-      )}
-
-      <p className="mt-2 text-[9px] text-zinc-500 leading-tight">
-        <strong>Refs:</strong> Moore 1950 (Diffusion) · Hodrick-Prescott 1997 / Ravn-Uhlig 2002 + Hamilton 2018 (Gap) · Estrella-Mishkin 1998 + Wright 2006 + Mendonça-Galvão-Lima 2018 (Probit Fin) · Issler-Vahid 2006 (Probit AZ) · Bates-Granger 1969 (ensembles) · Hamilton 2011 (histerese 65/35).
-      </p>
-    </section>
-  );
-}
+    
