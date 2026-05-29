@@ -189,4 +189,52 @@ export function CardProbitAz({
         <span>·</span>
         <span>linhas finas = 5 modelos individuais</span>
         <span>·</span>
-        <
+        <span>faixas cinza = recessões CODACE oficiais</span>
+        <span>·</span>
+        <span>hachura pós-jun/2020 = sem datação CODACE</span>
+      </div>
+
+      {/* Contribuições do Probit AZ */}
+      {data.contribuicoes_top15 && data.contribuicoes_top15.length > 0 && (
+        <>
+          <button
+            onClick={() => setShowContribs((o) => !o)}
+            className="w-full text-left text-[10px] text-[#132960] hover:underline flex items-center gap-1 mt-1"
+          >
+            <span>{showContribs ? "▼" : "▶"}</span>
+            <span>Top 15 features do Probit AZ (β · x_std) em {formatMes(ultimaAz?.mes ?? "")}</span>
+          </button>
+          {showContribs && (
+            <table className="mt-2 w-full text-[10px]">
+              <thead>
+                <tr className="border-b border-zinc-200 text-zinc-500">
+                  <th className="text-left py-1">Feature</th>
+                  <th className="text-right">β</th>
+                  <th className="text-right">x (std)</th>
+                  <th className="text-right">β·x</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.contribuicoes_top15.slice(0, 10).map((c, i) => (
+                  <tr key={i} className="border-b border-zinc-100">
+                    <td className="py-1 font-mono text-[9px]">{c.feature}</td>
+                    <td className="text-right">{c.beta.toFixed(2)}</td>
+                    <td className="text-right">{c.x_std.toFixed(2)}</td>
+                    <td className="text-right font-semibold" style={{ color: c.contrib_z >= 0 ? "#DC2626" : "#10B981" }}>
+                      {c.contrib_z >= 0 ? "+" : ""}{c.contrib_z.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
+      )}
+
+      <p className="mt-2 text-[9px] text-zinc-500 leading-tight">
+        <strong>Refs:</strong> Moore 1950 (Diffusion) · Hodrick-Prescott 1997 / Ravn-Uhlig 2002 + Hamilton 2018 (Gap) · Hamilton 1989 (MS-AR) · Estrella-Mishkin 1998 + Wright 2006 + Mendonça-Galvão-Lima 2018 (Probit Fin) · Issler-Vahid 2006 (Probit AZ) · Bates-Granger 1969 (ensembles).
+        {msArFallback && <span className="text-amber-700"> ⚠ MS-AR em fallback de quintis até statsmodels carregar.</span>}
+      </p>
+    </section>
+  );
+}
