@@ -2,7 +2,7 @@
 
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import type { AnfaveaData, AnpData, AtividadePimData, AtividadePmcData, AtividadePmsData, CodaceFaixa, EmpregoPnadData, EpeData, HardDataData, IbcBrData, IpeadataData } from "@/lib/painel-visao-geral";
+import type { AnfaveaData, AnpData, AtividadePimData, AtividadePmcData, AtividadePmsData, CodaceFaixa, EmpregoPnadData, EpeData, HardDataData, IbcBrData, IpeadataData, PnadRendaData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
 
 import { ExploradorSeries, type SerieExplorador } from "./ExploradorSeries";
@@ -18,6 +18,7 @@ export function BlocoDHardData({
   empregoPnad,
   atividadePms,
   ibcbr,
+  pnadRenda,
   codace = [],
 }: {
   anfavea: AnfaveaData | null;
@@ -30,6 +31,7 @@ export function BlocoDHardData({
   empregoPnad: EmpregoPnadData | null;
   atividadePms: AtividadePmsData | null;
   ibcbr: IbcBrData | null;
+  pnadRenda: PnadRendaData | null;
   codace?: CodaceFaixa[];
 }) {
   const pimSerie = atividadePim?.geral?.serie ?? [];
@@ -172,6 +174,22 @@ export function BlocoDHardData({
       unidade: "%",
       refLine: 0,
       data: pms.map((p) => ({ mes: p.mes, v: p.volume_var_yoy })),
+    });
+  }
+  // PNAD-C rendimento medio real (income leg do quartet TCB)
+  const rendaSer = pnadRenda?.serie ?? [];
+  if (rendaSer.length > 0) {
+    const u = rendaSer[rendaSer.length - 1];
+    series.push({
+      id: "pnad-renda",
+      titulo: "PNAD-C rendimento real",
+      subtitulo: "Income leg quartet TCB — var. a/a do rendimento medio real",
+      cor: "#8B5CF6",
+      valorAtual: u?.var_yoy_pct,
+      mesAtual: u?.trim,
+      unidade: "%",
+      refLine: 0,
+      data: rendaSer.map((p) => ({ mes: p.trim, v: p.var_yoy_pct })),
     });
   }
   if (ipeadata) {

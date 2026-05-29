@@ -13,7 +13,7 @@ import {
   Legend,
 } from "recharts";
 
-import type { AtividadePimData, CniData, CodaceFaixa, CreditoData, FgvConfiancaData, IcfData, IpeadataData, OecdCliData, FgvAntecedentesData } from "@/lib/painel-visao-geral";
+import type { AntecedentesFinData, AtividadePimData, CniData, CodaceFaixa, CreditoData, FgvConfiancaData, IcfData, IpeadataData, OecdCliData, FgvAntecedentesData } from "@/lib/painel-visao-geral";
 import { CardSelicReal, CardConcessoes } from "./BlocoE_CondicoesFinanceiras";
 import { ExploradorSeries, type SerieExplorador } from "./ExploradorSeries";
 import { formatMes } from "@/lib/painel-visao-geral";
@@ -152,6 +152,7 @@ export function BlocoBAntecedentes({
   atividadePim,
   fgvConfianca,
   cni,
+  antecedentesFin,
 }: {
   oecdCli: OecdCliData | null;
   fgvAntecedentes: FgvAntecedentesData | null;
@@ -162,6 +163,7 @@ export function BlocoBAntecedentes({
   atividadePim: AtividadePimData | null;
   fgvConfianca: FgvConfiancaData | null;
   cni: CniData | null;
+  antecedentesFin: AntecedentesFinData | null;
 }) {
   const oecdDefasado = oecdCli?.mes_recente
     ? new Date(oecdCli.mes_recente + "-01").getTime() < Date.now() - 1000 * 60 * 60 * 24 * 365
@@ -348,6 +350,53 @@ export function BlocoBAntecedentes({
       unidade: "",
       refLine: 100,
       data: icec.map((p) => ({ mes: p.mes, v: p.valor })),
+    });
+  }
+  // Slope DI (Pré 360d - Selic meta). Negativo (curva invertida) antecede recessao.
+  const slope = antecedentesFin?.slope_di ?? [];
+  if (slope.length > 0) {
+    const u = slope[slope.length - 1];
+    series.push({
+      id: "slope-di",
+      titulo: "Slope DI (Pré 1a − Selic)",
+      subtitulo: "Negativo = curva invertida (antecede recessão, Estrella-Mishkin 1998)",
+      cor: "#DC2626",
+      valorAtual: u?.slope_di_pp,
+      mesAtual: u?.mes,
+      unidade: "pp",
+      refLine: 0,
+      data: slope.map((p) => ({ mes: p.mes, v: p.slope_di_pp })),
+    });
+  }
+  // Ibov real 6m
+  const ibov = antecedentesFin?.ibov_real ?? [];
+  if (ibov.length > 0) {
+    const u = ibov[ibov.length - 1];
+    series.push({
+      id: "ibov-real-6m",
+      titulo: "Ibovespa real 6m",
+      subtitulo: "Retorno acumulado 6m deflacionado pelo IPCA — componente IACE",
+      cor: "#059669",
+      valorAtual: u?.retorno_real_6m_pct,
+      mesAtual: u?.mes,
+      unidade: "%",
+      refLine: 0,
+      data: ibov.map((p) => ({ mes: p.mes, v: p.retorno_real_6m_pct })),
+    });
+  }
+  // EMBI+ Brasil
+  const embi = antecedentesFin?.embi ?? [];
+  if (embi.length > 0) {
+    const u = embi[embi.length - 1];
+    series.push({
+      id: "embi-br",
+      titulo: "EMBI+ Brasil",
+      subtitulo: "Risco-país em pontos-base (alta antecede aperto crédito)",
+      cor: "#F59E0B",
+      valorAtual: u?.embi_bps,
+      mesAtual: u?.mes,
+      unidade: "",
+      data: embi.map((p) => ({ mes: p.mes, v: p.embi_bps })),
     });
   }
   if (oecdCli?.serie?.length) {

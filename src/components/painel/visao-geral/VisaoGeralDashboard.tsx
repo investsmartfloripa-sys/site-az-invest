@@ -14,13 +14,12 @@ import { FraseManchete } from "./FraseManchete";
 import { HeroKpis } from "./HeroKpis";
 import { TermometroSintese } from "./TermometroSintese";
 
-type Vista = "geral" | "antecedentes" | "coincidentes" | "confianca";
+type Vista = "geral" | "antecedentes" | "coincidentes";
 
 const TABS: { value: Vista; label: string; descr: string }[] = [
-  { value: "geral", label: "1. Geral", descr: "Consolidações e cálculos derivados: 5 modelos de probabilidade de recessão, hiato HP+Hamilton, ICF próprio (Hatzius) e crédito/PIB" },
-  { value: "antecedentes", label: "2. Antecedentes", descr: "Séries que lideram o PIB em 3-12 meses: OCDE CLI, FGV antecedentes (IACE, IAEmp, IIE-Br) e os 9 próximos do roadmap (slope DI, Ibov, EMBI, expectativas)" },
-  { value: "coincidentes", label: "3. Coincidentes", descr: "Séries que movem junto com o PIB: PIM-PF oficial IBGE, ANFAVEA, EPE energia industrial, ANP combustíveis, IPEADATA papelão/aço/FENABRAVE" },
-  { value: "confianca", label: "4. Confiança", descr: "Sondagens empresariais e do consumidor: FGV (7 índices via SGS), CNI ICEI, PMI Brasil, Fecomercio SP" },
+  { value: "geral", label: "1. Geral", descr: "Termômetro Síntese + 5 modelos de probabilidade de recessão + hiato HP+Hamilton + ICF próprio (Hatzius) + crédito/PIB" },
+  { value: "antecedentes", label: "2. Antecedentes", descr: "Séries que lideram o PIB em 3-12 meses: OCDE CLI, sondagens FGV/CNI, PIM duráveis/capital, slope DI, Ibov real, EMBI+, Selic real, concessões reais, FENABRAVE" },
+  { value: "coincidentes", label: "3. Coincidentes", descr: "Séries que movem com o PIB: quartet TCB (PIM-PF produção, PMC vendas, PNAD emprego), IBC-Br, EPE, ANP, papelão, aço, ANFAVEA, PMS serviços" },
 ];
 
 function FichaTecnica({ payload }: { payload: VisaoGeralPayload }) {
@@ -133,13 +132,10 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
           </div>
         )}
         {vista === "antecedentes" && (
-          <BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} icf={payload.icf} credito={payload.credito} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} fgvConfianca={payload.fgvConfianca} cni={payload.cni} />
+          <BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} icf={payload.icf} credito={payload.credito} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} fgvConfianca={payload.fgvConfianca} cni={payload.cni} antecedentesFin={payload.antecedentesFin} />
         )}
         {vista === "coincidentes" && (
-          <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} atividadePmc={payload.atividadePmc} empregoPnad={payload.empregoPnad} atividadePms={payload.atividadePms} ibcbr={payload.ibcbr} codace={codaceMensal} />
-        )}
-        {vista === "confianca" && (
-          <BlocoCConfianca fgvConfianca={payload.fgvConfianca} cni={payload.cni} pmi={payload.pmi} fecomercio={payload.fecomercio} />
+          <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} atividadePmc={payload.atividadePmc} empregoPnad={payload.empregoPnad} atividadePms={payload.atividadePms} ibcbr={payload.ibcbr} pnadRenda={payload.pnadRenda} codace={codaceMensal} />
         )}
       </div>
 

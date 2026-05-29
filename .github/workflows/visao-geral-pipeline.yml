@@ -30,6 +30,10 @@ jobs:
         run: python data-pipeline/python/build_visao_geral_oecd_cli.py --upload --soft-fail
       - name: BCB SGS Credito e Agregados
         run: python data-pipeline/python/build_visao_geral_credito.py --upload --soft-fail
+      - name: Antecedentes financeiros (Slope DI + Ibov real + EMBI)
+        run: python data-pipeline/python/build_visao_geral_antecedentes_fin.py --upload --soft-fail
+      - name: PNAD renda (income leg quartet TCB)
+        run: python data-pipeline/python/build_visao_geral_pnad_renda.py --upload --soft-fail
       - name: ANP combustiveis
         run: python data-pipeline/python/build_visao_geral_anp.py --upload --soft-fail
       - name: ANFAVEA veiculos

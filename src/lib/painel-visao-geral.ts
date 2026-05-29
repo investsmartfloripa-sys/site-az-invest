@@ -447,6 +447,24 @@ export type AtividadePmsData = {
   serie?: AtividadePmsPonto[];
 };
 
+// Antecedentes financeiros: slope DI + Ibov real + EMBI+ (Loop 25)
+export type SlopeDiPonto = { mes: string; slope_di_pp: NumOrNull; pre_di_360d_pct?: NumOrNull; selic_meta_pct?: NumOrNull };
+export type IbovRealPonto = { mes: string; ibov_real_indice?: NumOrNull; retorno_real_6m_pct: NumOrNull };
+export type EmbiPonto = { mes: string; embi_bps: NumOrNull };
+export type PnadRendaPonto = { trim: string; rendimento_real_brl: NumOrNull; var_yoy_pct?: NumOrNull };
+export type PnadRendaData = {
+  gerado_em: string;
+  trim_recente: string | null;
+  serie?: PnadRendaPonto[];
+};
+
+export type AntecedentesFinData = {
+  gerado_em: string;
+  slope_di?: SlopeDiPonto[];
+  ibov_real?: IbovRealPonto[];
+  embi?: EmbiPonto[];
+};
+
 export type VisaoGeralPayload = {
   ibcbr: IbcBrData | null;
   oecdCli: OecdCliData | null;
@@ -470,6 +488,8 @@ export type VisaoGeralPayload = {
   atividadePmc: AtividadePmcData | null;
   empregoPnad: EmpregoPnadData | null;
   atividadePms: AtividadePmsData | null;
+  antecedentesFin: AntecedentesFinData | null;
+  pnadRenda: PnadRendaData | null;
 };
 
 async function fetchJson<T>(blobPath: string): Promise<T | null> {
@@ -508,6 +528,8 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     atividadePmc,
     empregoPnad,
     atividadePms,
+    antecedentesFin,
+    pnadRenda,
   ] = await Promise.all([
     fetchJson<IbcBrData>("data/atividade_ibcbr.json"),
     fetchJson<OecdCliData>("data/visao_geral_oecd_cli.json"),
@@ -531,8 +553,10 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     fetchJson<AtividadePmcData>("data/atividade_pmc.json"),
     fetchJson<EmpregoPnadData>("data/emprego_pnad.json"),
     fetchJson<AtividadePmsData>("data/atividade_pms.json"),
+    fetchJson<AntecedentesFinData>("data/visao_geral_antecedentes_fin.json"),
+    fetchJson<PnadRendaData>("data/visao_geral_pnad_renda.json"),
   ]);
-  return { ibcbr, oecdCli, credito, anp, anfavea, epe, codace, hiato, icf, recessao, fgvAntecedentes, fgvConfianca, cni, pmi, fecomercio, hardData, ipeadata, atividadePim, focusPib, atividadePmc, empregoPnad, atividadePms };
+  return { ibcbr, oecdCli, credito, anp, anfavea, epe, codace, hiato, icf, recessao, fgvAntecedentes, fgvConfianca, cni, pmi, fecomercio, hardData, ipeadata, atividadePim, focusPib, atividadePmc, empregoPnad, atividadePms, antecedentesFin, pnadRenda };
 }
 
 // Extrai a mediana mais recente do Focus PIB para o ano corrente
