@@ -21,9 +21,22 @@ export type Briefing = {
   body: string;
 };
 
-type BriefingFrontmatter = Partial<
-  Pick<Briefing, "date" | "weekday" | "title" | "hora" | "publishedAt" | "description">
->;
+type BriefingFrontmatter = {
+  date?: unknown;
+  weekday?: unknown;
+  title?: unknown;
+  hora?: unknown;
+  publishedAt?: unknown;
+  description?: unknown;
+};
+
+/** Coerce qualquer valor (Date, number, string) para string segura. YAML parseia datas no formato YYYY-MM-DD como Date — esse helper devolve sempre string. */
+function asString(value: unknown, fallback = ""): string {
+  if (value == null) return fallback;
+  if (typeof value === "string") return value;
+  if (value instanceof Date) return value.toISOString();
+  return String(value);
+}
 
 /**
  * Lista os slugs de briefings disponíveis em `content/morning-call`,
@@ -52,12 +65,13 @@ export async function getBriefing(date: string): Promise<Briefing | null> {
     const parsed = matter(raw);
     const fm = parsed.data as BriefingFrontmatter;
     return {
-      date: fm.date ?? date,
-      weekday: fm.weekday ?? "",
-      title: fm.title ?? `Briefing ${date}`,
-      hora: fm.hora ?? "",
-      publishedAt: fm.publishedAt ?? "",
-      description: fm.description ?? "",
+      // filename é a fonte de verdade pro slug (ignora fm.date pra não cair em Date object do YAML)
+      date,
+      weekday: asString(fm.weekday),
+      title: asString(fm.title, `Briefing ${date}`),
+      hora: asString(fm.hora),
+      publishedAt: asString(fm.publishedAt),
+      description: asString(fm.description),
       body: parsed.content.trim(),
     };
   } catch (e) {
