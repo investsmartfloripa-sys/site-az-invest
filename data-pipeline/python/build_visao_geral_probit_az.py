@@ -297,25 +297,34 @@ def main():
     ibov = panel_imp.get("yfinance_^BVSP")
     ipca = panel_imp.get("bcb_sgs_433")
     embi = panel_imp.get("ipeadata_JPM366_EMBI366")
-    feats_fin = pd.DataFrame({
-        "term_spread": pre360 - pre360.shift(12),
-        "real_ex_ante": pre360 - focus,
-        "ibov_real_6m": -((np.log(ibov) - np.log(ibov.shift(6)))*100 - (1+ipca/100).rolling(6).apply(lambda x: x.prod()-1, raw=True)*100),
-        "embi_yoy": (np.log(embi) - np.log(embi.shift(12)))*100,
-    }).dropna()
+    # Guards contra None - se alguma serie nao baixou, pular Probit Fin
+    import pandas as _pd
+    if any(x is None for x in [pre360, focus, ibov, ipca, embi]):
+        print(f"  WARN Probit Fin features faltando: pre360={pre360 is None}, focus={focus is None}, ibov={ibov is None}, ipca={ipca is None}, embi={embi is None}", file=sys.stderr)
+        probit_fin = _pd.Series(np.nan, index=panel_imp.index)
+        feats_fin_empty = True
+    else:
+        feats_fin_empty = False
+    if not feats_fin_empty:
+        feats_fin = pd.DataFrame({
+            "term_spread": pre360 - pre360.shift(12),
+            "real_ex_ante": pre360 - focus,
+            "ibov_real_6m": -((np.log(ibov) - np.log(ibov.shift(6)))*100 - (1+ipca/100).rolling(6).apply(lambda x: x.prod()-1, raw=True)*100),
+            "embi_yoy": (np.log(embi) - np.log(embi.shift(12)))*100,
+        }).dropna()
 
-    probit_fin = pd.Series(np.nan, index=panel_imp.index)
-    common = feats_fin.index.intersection(label.index)
-    for i in range(60, len(common)):
-        X_tr = feats_fin.loc[common[:i]].values
-        y_tr = label.loc[common[:i]].values.astype(float)
-        if y_tr.sum() < 5: continue
-        try:
-            b = probit_ridge(X_tr, y_tr, lam=2.0)  # Ridge forte
-            t = common[i]
-            z = np.clip(b[0] + feats_fin.loc[[t]].values @ b[1:], -6, 6)
-            probit_fin.loc[t] = stats.norm.cdf(z)[0]
-        except Exception: continue
+        probit_fin = pd.Series(np.nan, index=panel_imp.index)
+        common = feats_fin.index.intersection(label.index)
+        for i in range(60, len(common)):
+            X_tr = feats_fin.loc[common[:i]].values
+            y_tr = label.loc[common[:i]].values.astype(float)
+            if y_tr.sum() < 5: continue
+            try:
+                b = probit_ridge(X_tr, y_tr, lam=2.0)  # Ridge forte
+                t = common[i]
+                z = np.clip(b[0] + feats_fin.loc[[t]].values @ b[1:], -6, 6)
+                probit_fin.loc[t] = stats.norm.cdf(z)[0]
+            except Exception: continue
 
     # 6. Probit AZ
     base_outputs = pd.DataFrame({"M_diffusion": diffusion, "M_gap_hp": gap_hp_p, "M_probit_fin": probit_fin})
@@ -445,5 +454,6 @@ if __name__ == "__main__":
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(json.dumps(stub))
             print(f"Stub written to {out}", file=__import__('sys').stderr)
+            # NAO uploadar stub stale - melhor manter JSON antigo do Blob
         else:
             raise
