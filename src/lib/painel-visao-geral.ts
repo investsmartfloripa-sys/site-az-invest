@@ -452,12 +452,13 @@ export type SlopeDiPonto = { mes: string; slope_di_pp: NumOrNull; pre_di_360d_pc
 export type IbovRealPonto = { mes: string; ibov_real_indice?: NumOrNull; retorno_real_6m_pct: NumOrNull };
 export type EmbiPonto = { mes: string; embi_bps: NumOrNull };
 export type PnadRendaPonto = { trim: string; rendimento_real_brl: NumOrNull; var_yoy_pct?: NumOrNull };
-export type ProbitAzPonto = { mes: string; diffusion?: NumOrNull; gap_hp?: NumOrNull; probit_fin?: NumOrNull; probit_az?: NumOrNull };
+export type ProbitAzPonto = { mes: string; diffusion?: NumOrNull; gap_hp?: NumOrNull; probit_fin?: NumOrNull; probit_az?: NumOrNull; mediana?: NumOrNull };
 export type ProbitAzContribuicao = { feature: string; beta: number; x_std: number; contrib_z: number };
 export type ProbitAzData = {
   gerado_em: string;
   mes_recente: string | null;
-  probabilidades?: { mes?: string; diffusion?: NumOrNull; gap_hp?: NumOrNull; probit_fin?: NumOrNull; probit_az?: NumOrNull };
+  probabilidades?: { mes?: string; diffusion?: NumOrNull; gap_hp?: NumOrNull; probit_fin?: NumOrNull; probit_az?: NumOrNull; mediana?: NumOrNull };
+  sinal_principal?: NumOrNull;
   serie?: ProbitAzPonto[];
   contribuicoes_top15?: ProbitAzContribuicao[];
   metadata?: Record<string, unknown>;

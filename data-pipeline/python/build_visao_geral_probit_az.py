@@ -334,12 +334,19 @@ def main():
     serie_out = []
     for t in base_outputs.index:
         if t < pd.Timestamp("1996-01-01"): continue
+        diff_v = float(diffusion.get(t)) if pd.notna(diffusion.get(t)) else None
+        gap_v = float(gap_hp_p.get(t)) if pd.notna(gap_hp_p.get(t)) else None
+        pf_v = float(probit_fin.get(t)) if pd.notna(probit_fin.get(t)) else None
+        paz_v = float(probit_az.get(t)) if pd.notna(probit_az.get(t)) else None
+        valids = [v for v in (diff_v, gap_v, pf_v, paz_v) if v is not None]
+        med_v = float(sorted(valids)[len(valids)//2]) if len(valids) >= 3 else None
         serie_out.append({
             "mes": t.strftime("%Y-%m"),
-            "diffusion": round(float(diffusion.get(t)), 3) if pd.notna(diffusion.get(t)) else None,
-            "gap_hp": round(float(gap_hp_p.get(t)), 3) if pd.notna(gap_hp_p.get(t)) else None,
-            "probit_fin": round(float(probit_fin.get(t)), 3) if pd.notna(probit_fin.get(t)) else None,
-            "probit_az": round(float(probit_az.get(t)), 3) if pd.notna(probit_az.get(t)) else None,
+            "diffusion": round(diff_v, 3) if diff_v is not None else None,
+            "gap_hp": round(gap_v, 3) if gap_v is not None else None,
+            "probit_fin": round(pf_v, 3) if pf_v is not None else None,
+            "probit_az": round(paz_v, 3) if paz_v is not None else None,
+            "mediana": round(med_v, 3) if med_v is not None else None,
         })
 
     last_obs = serie_out[-1] if serie_out else {}
@@ -348,6 +355,7 @@ def main():
         "freshness_status": "fresh",
         "mes_recente": last_obs.get("mes"),
         "probabilidades": last_obs,
+        "sinal_principal": last_obs.get("mediana") if isinstance(last_obs, dict) else None,
         "serie": serie_out,
         "contribuicoes_top15": contrib,
         "metadata": {
