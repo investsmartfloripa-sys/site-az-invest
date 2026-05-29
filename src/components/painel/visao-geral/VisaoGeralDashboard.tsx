@@ -18,7 +18,7 @@ import { CardProbitAz } from "./CardProbitAz";
 type Vista = "geral" | "antecedentes" | "coincidentes";
 
 const TABS: { value: Vista; label: string; descr: string }[] = [
-  { value: "geral", label: "1. Geral", descr: "Ensemble de 5 modelos de probabilidade de recessão (Diffusion, Gap, MS-AR, Probit Fin, Probit AZ Misto)" },
+  { value: "geral", label: "1. Geral", descr: "Ensemble de 4 modelos causais de probabilidade de recessão (Diffusion, Gap Hamilton, Probit Fin, Probit AZ Misto)" },
   { value: "antecedentes", label: "2. Antecedentes", descr: "Séries que lideram o PIB em 3-12 meses: OCDE CLI, sondagens FGV/CNI, PIM duráveis/capital, slope DI, Ibov real, EMBI+, Selic real, concessões reais, FENABRAVE" },
   { value: "coincidentes", label: "3. Coincidentes", descr: "Séries que movem com o PIB: quartet TCB (PIM-PF produção, PMC vendas, PNAD emprego), IBC-Br, EPE, ANP, papelão, aço, ANFAVEA, PMS serviços" },
 ];
@@ -28,7 +28,7 @@ function FichaTecnica({ payload }: { payload: VisaoGeralPayload }) {
     { bloco: "IBC-Br (atividade)", mes: payload.ibcbr?.mes_recente, fonte: "BCB SGS 24363 / 24364", url: "https://dadosabertos.bcb.gov.br/dataset/24363-indice-de-atividade-economica-do-banco-central---ibc-br" },
     { bloco: "CODACE cronologia", mes: null, fonte: "FGV-IBRE - CODACE", url: "https://portalibre.fgv.br/codace-cronologia" },
     { bloco: "Hiato HP+Hamilton", mes: payload.hiato?.mes_recente, fonte: "Cálculo próprio sobre IBC-Br", url: "https://www.bcb.gov.br/" },
-    { bloco: "Probabilidade de recessão", mes: payload.recessao?.mes_recente, fonte: "5 modelos: MS-AR + Probit + Gap HP + Diffusion + Bry-Boschan", url: "https://blogdoibre.fgv.br/" },
+    { bloco: "Probabilidade de recessão", mes: payload.probitAz?.mes_recente, fonte: "4 modelos causais: Diffusion + Gap Hamilton 2018 + Probit Fin + Probit AZ Misto", url: "https://blogdoibre.fgv.br/" },
     { bloco: "OECD CLI Brasil", mes: payload.oecdCli?.mes_recente, fonte: "DBnomics - OECD MEI_CLI BR (em rodapé, defasagem >12m)", url: "https://db.nomics.world/" },
     { bloco: "FGV confianças", mes: null, fonte: "BCB SGS 21859-21866 (ICE/ICI/ICOM/ICS/ICST/ICA/ICC)", url: "https://portalibre.fgv.br/" },
     { bloco: "CNI (ICEI)", mes: null, fonte: "BCB SGS 7341-7343", url: "https://www.portaldaindustria.com.br/" },
@@ -127,7 +127,7 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
       <div>
         {vista === "geral" && (
           <div className="space-y-6">
-            <CardProbitAz data={payload.probitAz} recessao={payload.recessao} codace={codaceMensal} />
+            <CardProbitAz data={payload.probitAz} codace={codaceMensal} />
           </div>
         )}
         {vista === "antecedentes" && (

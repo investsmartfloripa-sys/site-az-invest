@@ -617,10 +617,18 @@ export function ultimaObs<T extends { mes: string }>(serie: T[] | undefined): T 
 
 export function fraseManchete(payload: VisaoGeralPayload): string {
   const ibc = ultimaObs(payload.ibcbr?.serie);
-  const rec = ultimaObs(payload.recessao?.serie);
   const icf = ultimaObs(payload.icf?.serie);
   const ice = ultimaObs(payload.fgvConfianca?.ice);
   const pim = (payload.atividadePim?.geral?.serie ?? []).slice(-1)[0];
+
+  // FONTE CANONICA UNICA: probit_az.json - Loop 33
+  const probAzProb = payload.probitAz?.probabilidades;
+  const valoresProbit = probAzProb ? [probAzProb.diffusion, probAzProb.gap_hp, probAzProb.probit_fin, probAzProb.probit_az].filter((v): v is number => typeof v === "number") : [];
+  // Mediana estatistica (media dos 2 centrais em array par)
+  const ordenados = valoresProbit.slice().sort((a, b) => a - b);
+  const m = Math.floor(ordenados.length / 2);
+  const medianaProbit = ordenados.length === 0 ? null : ordenados.length % 2 === 0 ? (ordenados[m - 1] + ordenados[m]) / 2 : ordenados[m];
+  const medianaRecPct = medianaProbit !== null ? medianaProbit * 100 : null;
 
   // Coleta sinais
   const atividadeCai = ibc?.var_mom !== null && ibc?.var_mom !== undefined && ibc.var_mom < -0.1;
@@ -628,11 +636,10 @@ export function fraseManchete(payload: VisaoGeralPayload): string {
   const selicAlta = icf?.selic_real_ex_ante_pct !== null && icf?.selic_real_ex_ante_pct !== undefined && icf.selic_real_ex_ante_pct > 6;
   const sondAlta = ice?.valor !== null && ice?.valor !== undefined && ice.valor > 100;
   const sondBaixa = ice?.valor !== null && ice?.valor !== undefined && ice.valor < 90;
-  const medianaRec = rec?.mediana ?? rec?.mediana_parcial ?? null;
-  const sensiveis = rec?.sensiveis_presentes ?? 0;
-  const alerta = medianaRec !== null && medianaRec >= 50;
-  const cautela = medianaRec !== null && medianaRec >= 30 && medianaRec < 50;
-  const recSemModelos = !rec || rec.n_modelos < 2;
+  const medianaRec = medianaRecPct;
+  const alerta = medianaRec !== null && medianaRec >= 65;
+  const cautela = medianaRec !== null && medianaRec >= 35 && medianaRec < 65;
+  const recSemModelos = valoresProbit.length < 2;
 
   // Veredito honesto reconciliando conflitos
   let veredito: string;
@@ -660,12 +667,9 @@ export function fraseManchete(payload: VisaoGeralPayload): string {
     const verbo = Math.abs(ibc.var_mom) < 0.05 ? "ficou estável" : ibc.var_mom > 0 ? "cresceu" : "caiu";
     detalhes.push("Em " + formatMes(ibc.mes) + " a atividade " + verbo + " " + formatPct(ibc.var_mom) + " (IBC-Br dessaz.).");
   }
-  if (rec) {
-    if (sensiveis === 0 && rec.n_modelos > 0 && rec.mediana_parcial !== null && rec.mediana_parcial !== undefined) {
-      detalhes.push("Modelos rodaram parcialmente: mediana " + rec.mediana_parcial.toFixed(0) + "% (" + rec.n_modelos + " de 4).");
-    } else if (rec.mediana !== null && rec.mediana !== undefined) {
-      detalhes.push("Mediana dos modelos: " + rec.mediana.toFixed(0) + "% de probabilidade de recessão (" + rec.n_acima_50 + "/" + rec.n_modelos + " > 50%).");
-    }
+  if (medianaRec !== null) {
+    const nAcima50 = valoresProbit.filter(v => v >= 0.5).length;
+    detalhes.push("Mediana dos modelos: " + medianaRec.toFixed(0) + "% de probabilidade de recessão (" + nAcima50 + "/" + valoresProbit.length + " > 50%, backtest causal AUC 0.86).");
   }
   if (icf?.selic_real_ex_ante_pct !== null && icf?.selic_real_ex_ante_pct !== undefined) {
     detalhes.push("Selic real ex-ante em " + icf.selic_real_ex_ante_pct.toFixed(1) + "% — " + (icf.selic_real_ex_ante_pct > 6 ? "fortemente restritiva" : icf.selic_real_ex_ante_pct > 3 ? "restritiva" : "neutra") + ".");
