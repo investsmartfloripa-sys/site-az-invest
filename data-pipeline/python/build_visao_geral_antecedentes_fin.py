@@ -16,7 +16,7 @@ import requests
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/visao_geral_antecedentes_fin.json"
-UA = {"User-Agent": "az-invest-antecedentes-fin/1.0"}
+UA = {"User-Agent": "az-invest-antecedentes-fin/1.0", "Accept": "application/json"}
 SGS_URL = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{cod}/dados?formato=json&dataInicial=01/01/2010"
 
 
@@ -56,54 +56,64 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # 1) Slope DI = SGS 4189 - SGS 432
-    print("Slope DI...")
-    pre_di = serie_mensal_ultimo(_get_sgs(4189))     # DI Pre 360d (% a.a.)
-    selic_meta = serie_mensal_ultimo(_get_sgs(432))  # Selic meta ano (% a.a.)
-    meses_slope = sorted(set(pre_di.keys()) & set(selic_meta.keys()))
-    slope_serie = [
-        {"mes": m, "slope_di_pp": round(pre_di[m] - selic_meta[m], 3),
-         "pre_di_360d_pct": pre_di[m], "selic_meta_pct": selic_meta[m]}
-        for m in meses_slope
-    ]
+    slope_serie = []
+    try:
+        print("Slope DI...")
+        pre_di = serie_mensal_ultimo(_get_sgs(4189))
+        selic_meta = serie_mensal_ultimo(_get_sgs(432))
+        meses_slope = sorted(set(pre_di.keys()) & set(selic_meta.keys()))
+        slope_serie = [
+            {"mes": m, "slope_di_pp": round(pre_di[m] - selic_meta[m], 3),
+             "pre_di_360d_pct": pre_di[m], "selic_meta_pct": selic_meta[m]}
+            for m in meses_slope
+        ]
+        print(f"  slope_di: {len(slope_serie)} obs")
+    except Exception as e:
+        print(f"  WARN slope_di: {e}", file=sys.stderr)
 
     # 2) Ibov real 6m
-    print("Ibov real 6m...")
-    ibov = serie_mensal_ultimo(_get_sgs(16121))  # Ibov fechamento medio mensal
-    ipca = _get_sgs(433)
-    ipca_by_mes = {}
-    for p in ipca:
-        try:
-            mes = _to_mes(p["data"])
-            valor = float(p["valor"])
-            ipca_by_mes[mes] = valor
-        except (ValueError, KeyError):
-            continue
-    # IPCA acumulado: calcular indice
-    meses_ipca = sorted(ipca_by_mes.keys())
-    idx = 100.0
-    ipca_indice = {}
-    for m in meses_ipca:
-        idx *= (1 + ipca_by_mes[m] / 100)
-        ipca_indice[m] = idx
-    # Ibov real = Ibov / ipca_indice (base no inicio)
-    meses_ibov = sorted(ibov.keys())
-    base_ipca = ipca_indice.get(meses_ibov[0]) if meses_ibov else None
     ibov_real_serie = []
-    for i, m in enumerate(meses_ibov):
-        if m not in ipca_indice:
-            continue
-        ibov_real = ibov[m] / (ipca_indice[m] / base_ipca) if base_ipca else None
-        # Retorno 6m
-        m_6m_ago = meses_ibov[i - 6] if i >= 6 else None
-        if m_6m_ago and m_6m_ago in ipca_indice:
-            ibov_real_6m_ago = ibov[m_6m_ago] / (ipca_indice[m_6m_ago] / base_ipca) if base_ipca else None
-            retorno_6m = ((ibov_real / ibov_real_6m_ago) - 1) * 100 if ibov_real_6m_ago else None
-        else:
-            retorno_6m = None
-        ibov_real_serie.append({
-            "mes": m, "ibov_real_indice": round(ibov_real, 2) if ibov_real else None,
-            "retorno_real_6m_pct": round(retorno_6m, 2) if retorno_6m is not None else None,
-        })
+    try:
+        print("Ibov real 6m...")
+        ibov = serie_mensal_ultimo(_get_sgs(16121))
+        ipca = _get_sgs(433)
+        ipca_by_mes = {}
+        for p in ipca:
+            try:
+                mes = _to_mes(p["data"])
+                valor = float(p["valor"])
+                ipca_by_mes[mes] = valor
+            except (ValueError, KeyError):
+                continue
+        # IPCA acumulado: calcular indice
+        meses_ipca = sorted(ipca_by_mes.keys())
+        idx = 100.0
+        ipca_indice = {}
+        for m in meses_ipca:
+            idx *= (1 + ipca_by_mes[m] / 100)
+            ipca_indice[m] = idx
+        # Ibov real = Ibov / ipca_indice (base no inicio)
+        meses_ibov = sorted(ibov.keys())
+        base_ipca = ipca_indice.get(meses_ibov[0]) if meses_ibov else None
+        ibov_real_serie = []
+        for i, m in enumerate(meses_ibov):
+            if m not in ipca_indice:
+                continue
+            ibov_real = ibov[m] / (ipca_indice[m] / base_ipca) if base_ipca else None
+            # Retorno 6m
+            m_6m_ago = meses_ibov[i - 6] if i >= 6 else None
+            if m_6m_ago and m_6m_ago in ipca_indice:
+                ibov_real_6m_ago = ibov[m_6m_ago] / (ipca_indice[m_6m_ago] / base_ipca) if base_ipca else None
+                retorno_6m = ((ibov_real / ibov_real_6m_ago) - 1) * 100 if ibov_real_6m_ago else None
+            else:
+                retorno_6m = None
+            ibov_real_serie.append({
+                "mes": m, "ibov_real_indice": round(ibov_real, 2) if ibov_real else None,
+                "retorno_real_6m_pct": round(retorno_6m, 2) if retorno_6m is not None else None,
+            })
+            print(f"  ibov_real: {len(ibov_real_serie)} obs")
+    except Exception as e:
+        print(f"  WARN ibov_real: {e}", file=sys.stderr)
 
     # 3) EMBI+ via IPEADATA
     print("EMBI+...")
