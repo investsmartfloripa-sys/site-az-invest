@@ -127,10 +127,7 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
       <div>
         {vista === "geral" && (
           <div className="space-y-6">
-            <TermometroSintese payload={payload} codace={codaceMensal} />
-            <CardProbitAz data={payload.probitAz} codace={codaceMensal} />
-            <BlocoACicloAtual payload={payload} />
-            <BlocoECondicoesFinanceiras icf={payload.icf} credito={payload.credito} />
+            <CardProbitAz data={payload.probitAz} recessao={payload.recessao} codace={codaceMensal} />
           </div>
         )}
         {vista === "antecedentes" && (

@@ -2,170 +2,191 @@
 
 import { useState } from "react";
 import { CartesianGrid, Line, LineChart, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import type { CodaceFaixa, ProbitAzData } from "@/lib/painel-visao-geral";
+import type { CodaceFaixa, ProbitAzData, RecessaoData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
 
-export function CardProbitAz({ data, codace = [] }: { data: ProbitAzData | null; codace?: CodaceFaixa[] }) {
+type Modelo = {
+  key: string;
+  label: string;
+  color: string;
+  valor: number | null | undefined;
+};
+
+function corPara(p: number | null | undefined) {
+  if (p === null || p === undefined) return "#71717a";
+  return p >= 0.65 ? "#DC2626" : p >= 0.35 ? "#F59E0B" : "#10B981";
+}
+
+export function CardProbitAz({
+  data,
+  recessao,
+  codace = [],
+}: {
+  data: ProbitAzData | null;
+  recessao?: RecessaoData | null;
+  codace?: CodaceFaixa[];
+}) {
   const [showContribs, setShowContribs] = useState(false);
 
   if (!data || !data.serie || data.serie.length === 0) {
     return (
-      <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-        <h3 className="text-sm font-semibold text-zinc-900">Probit Misto AZ — sinal de recessão</h3>
-        <p className="mt-1 text-xs text-zinc-500">Aguardando pipeline gerar dados...</p>
+      <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <h3 className="text-base font-semibold text-zinc-900">Probabilidade de recessão — ensemble</h3>
+        <p className="mt-2 text-sm text-zinc-500">Aguardando pipeline gerar dados...</p>
       </div>
     );
   }
 
-  const ultima = data.probabilidades;
-  const mediana = ultima?.mediana ?? data.sinal_principal ?? null;
-  const probAz = ultima?.probit_az;
-<<<<<<< Updated upstream
+  const ultimaAz = data.probabilidades;
+  const ultimaRec = recessao?.serie?.[recessao.serie.length - 1];
 
-  // Histerese Hamilton 2011: declarar alerta com p>=0.65 por 2m, sair com p<0.35 por 2m
-  const serie = data.serie ?? [];
-  const ultimas3 = serie.filter((p) => p.probit_az !== null && p.probit_az !== undefined).slice(-3);
-  const todasAlerta = ultimas3.length >= 2 && ultimas3.slice(-2).every((p) => (p.probit_az ?? 0) >= 0.65);
-  const todasCalmas = ultimas3.length >= 2 && ultimas3.slice(-2).every((p) => (p.probit_az ?? 1) < 0.35);
-  const estadoHist = todasAlerta ? "ALERTA" : todasCalmas ? "ESTÁVEL" : "CAUTELA";
+  // 5 modelos (Probit AZ + 4 do recessao.json)
+  const diffusion = ultimaAz?.diffusion ?? ultimaRec?.diffusion ?? null;
+  const gapHp = ultimaAz?.gap_hp ?? ultimaRec?.gap_threshold ?? null;
+  const probitFin = ultimaAz?.probit_fin ?? ultimaRec?.probit_financeiro ?? null;
+  const msAr = ultimaRec?.msdfm ?? null;
+  const probAz = ultimaAz?.probit_az ?? null;
 
-  const corVal = probAz !== null && probAz !== undefined ? (probAz >= 0.65 ? "#DC2626" : probAz >= 0.35 ? "#F59E0B" : "#10B981") : "#71717a";
-
-  return (
-    <section className="rounded-2xl border-2 border-[#132960]/30 bg-gradient-to-br from-white to-zinc-50 p-5 shadow-md">
-      <div className="mb-3 flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-base font-bold text-[#132960]">Probit Misto AZ Híbrido</h3>
-          <p className="text-xs text-zinc-600">
-            Probit Ridge L2 sobre 3 modelos base (lag 1m) + ~30 antecedentes brutas. Backtest OOS HONESTO AUC=0.85 (Loop 28 causal), Brier=0.07. Refs: Moore 1950 (Diffusion), Hodrick-Prescott 1997/Ravn-Uhlig 2002 (Gap), Estrella-Mishkin 1998 + Wright 2006 + Mendonça-Galvão-Lima 2018 (Probit Fin), Issler-Vahid 2006 (estrutura).
-          </p>
-        </div>
-        {probAz !== null && probAz !== undefined && (
-          <div className="text-right">
-            <div className="text-[10px] uppercase tracking-wider text-zinc-500">P(recessão)</div>
-            <div className="text-4xl font-bold" style={{ color: corVal }}>{Math.round(probAz * 100)}%</div>
-            <div className="text-[10px] text-zinc-500">{formatMes(ultima?.mes ?? "")}</div>
-            <div className="mt-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: corVal }}>
-              Histerese: {estadoHist}
-            </div>
-            <div className="text-[9px] text-zinc-400">Hamilton 2011 (entra 65%, sai 35%, 2m persist.)</div>
-=======
-  const diffusion = ultima?.diffusion;
-  const gapHp = ultima?.gap_hp;
-  const probitFin = ultima?.probit_fin;
-
-  const corPara = (p: number | null | undefined) =>
-    p !== null && p !== undefined ? (p >= 0.65 ? "#DC2626" : p >= 0.35 ? "#F59E0B" : "#10B981") : "#71717a";
+  // Mediana de até 5 (filtra null)
+  const valores = [diffusion, gapHp, probitFin, msAr, probAz].filter((v): v is number => v !== null && v !== undefined);
+  const mediana = valores.length > 0 ? valores.slice().sort((a, b) => a - b)[Math.floor(valores.length / 2)] : null;
   const corMediana = corPara(mediana);
 
-  // Histerese Hamilton 2011 aplicada à mediana (sinal principal)
-  const serie = data.serie ?? [];
-  const ultimas2 = serie.filter((p) => p.mediana !== null && p.mediana !== undefined).slice(-2);
+  // Histerese Hamilton 2011 sobre a mediana
+  // Junta série Probit AZ + Recessão por mês
+  const seriePorMes: Record<string, { mes: string; diffusion?: number | null; gap_hp?: number | null; probit_fin?: number | null; ms_ar?: number | null; probit_az?: number | null; mediana?: number | null; bry_boschan?: number | null }> = {};
+  (data.serie ?? []).forEach((p) => {
+    seriePorMes[p.mes] = {
+      mes: p.mes,
+      diffusion: p.diffusion ?? undefined,
+      gap_hp: p.gap_hp ?? undefined,
+      probit_fin: p.probit_fin ?? undefined,
+      probit_az: p.probit_az ?? undefined,
+    };
+  });
+  (recessao?.serie ?? []).forEach((p) => {
+    const existente = seriePorMes[p.mes] ?? { mes: p.mes };
+    existente.ms_ar = p.msdfm ?? undefined;
+    existente.bry_boschan = p.bry_boschan ?? undefined;
+    // Se Probit AZ não trouxe alguns, completa com recessao
+    if (existente.diffusion === undefined) existente.diffusion = p.diffusion ?? undefined;
+    if (existente.gap_hp === undefined) existente.gap_hp = p.gap_threshold ?? undefined;
+    if (existente.probit_fin === undefined) existente.probit_fin = p.probit_financeiro ?? undefined;
+    seriePorMes[p.mes] = existente;
+  });
+  // Calcular mediana mensal e ordenar por mes
+  const serieFinal = Object.values(seriePorMes)
+    .sort((a, b) => a.mes.localeCompare(b.mes))
+    .map((p) => {
+      const vs = [p.diffusion, p.gap_hp, p.probit_fin, p.ms_ar, p.probit_az].filter((v): v is number => typeof v === "number");
+      const m = vs.length > 0 ? vs.slice().sort((a, b) => a - b)[Math.floor(vs.length / 2)] : null;
+      return { ...p, mediana: m };
+    });
+
+  const ultimas2 = serieFinal.filter((p) => p.mediana !== null && p.mediana !== undefined).slice(-2);
   const todasAlerta = ultimas2.length >= 2 && ultimas2.every((p) => (p.mediana ?? 0) >= 0.65);
   const todasCalmas = ultimas2.length >= 2 && ultimas2.every((p) => (p.mediana ?? 1) < 0.35);
   const estadoHist = todasAlerta ? "ALERTA" : todasCalmas ? "ESTÁVEL" : "CAUTELA";
   const corHist = estadoHist === "ALERTA" ? "#DC2626" : estadoHist === "ESTÁVEL" ? "#10B981" : "#F59E0B";
 
+  // Borda lateral colorida segundo o estado
+  const borderColor = corMediana;
+
+  const modelos: Modelo[] = [
+    { key: "diffusion", label: "Diffusion", color: "#F59E0B", valor: diffusion },
+    { key: "gap_hp", label: "Gap HP/Hamilton", color: "#10B981", valor: gapHp },
+    { key: "ms_ar", label: "MS-AR Hamilton", color: "#A855F7", valor: msAr },
+    { key: "probit_fin", label: "Probit Financeiro", color: "#3B82F6", valor: probitFin },
+    { key: "probit_az", label: "Probit Misto AZ", color: "#DC2626", valor: probAz },
+  ];
+
+  const msArFallback = msAr === 0.05; // sinal de fallback de quintis
+
+  // Hachura pós CODACE oficial (jun/2020) — sem datação oficial
+  const hachuraStart = "2020-06";
+  const ultimoMes = serieFinal[serieFinal.length - 1]?.mes ?? "2026-12";
+
   return (
-    <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-      {/* Header compacto: mediana em destaque + 4 chips */}
-      <div className="mb-2 flex items-end justify-between gap-3 flex-wrap">
-        <div className="flex items-end gap-3 flex-wrap">
-          {mediana !== null && (
-            <div>
-              <div className="text-[10px] uppercase tracking-wider font-bold text-[#132960]">
-                Sinal principal · Mediana 4 modelos
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold" style={{ color: corMediana }}>
-                  {Math.round(mediana * 100)}%
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ backgroundColor: corHist + "22", color: corHist }}>
-                  {estadoHist}
-                </span>
-              </div>
-              <div className="text-[10px] text-zinc-500">{formatMes(ultima?.mes ?? "")}</div>
+    <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm border-l-4" style={{ borderLeftColor: borderColor }}>
+      {/* Header: Mediana destaque + título */}
+      <div className="mb-3 flex items-start justify-between gap-3 flex-wrap">
+        <div className="flex-1 min-w-[200px]">
+          <h3 className="text-sm font-semibold text-zinc-900">
+            Probabilidade de recessão — ensemble de 5 modelos
+          </h3>
+          <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">
+            Mediana de 5 metodologias da literatura. Backtest causal OOS 1996-2026: AUC mediana <strong>0.86</strong>, Probit AZ 0.85.
+          </p>
+        </div>
+        {mediana !== null && (
+          <div className="text-right">
+            <div className="text-[10px] uppercase tracking-wider text-zinc-500">Mediana 5 modelos</div>
+            <div className="flex items-baseline gap-2 justify-end">
+              <span className="text-4xl font-bold" style={{ color: corMediana }}>
+                {Math.round(mediana * 100)}%
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ backgroundColor: corHist + "22", color: corHist }}>
+                {estadoHist}
+              </span>
             </div>
-          )}
-          {/* 4 modelos individuais como mini-chips */}
-          <div className="flex gap-1.5 self-center">
-            {[
-              { v: diffusion, l: "Diff", c: "#F59E0B" },
-              { v: gapHp, l: "Gap", c: "#10B981" },
-              { v: probitFin, l: "Fin", c: "#3B82F6" },
-              { v: probAz, l: "AZ", c: "#DC2626" },
-            ].map((m) => (
-              <div key={m.l} className="rounded border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 text-[10px] text-center min-w-[36px]">
-                <div className="font-bold leading-none" style={{ color: m.c }}>{m.l}</div>
-                <div className="text-zinc-700 font-mono leading-tight">{m.v !== null && m.v !== undefined ? `${Math.round(m.v * 100)}%` : "—"}</div>
-              </div>
-            ))}
->>>>>>> Stashed changes
+            <div className="text-[10px] text-zinc-500">{formatMes(ultimaAz?.mes ?? ultimaRec?.mes ?? "")}</div>
+            <div className="text-[9px] text-zinc-400">Histerese Hamilton 2011 · 65% entra · 35% sai · 2m persist.</div>
           </div>
-        </div>
-        <div className="text-right text-[9px] text-zinc-500 max-w-[180px] leading-tight">
-          Hamilton 2011: entra ≥65% por 2m, sai &lt;35% por 2m
-        </div>
+        )}
       </div>
 
-      {/* Gráfico compacto */}
-      <div className="h-[150px] rounded border border-zinc-100 bg-zinc-50 p-1 mb-2">
+      {/* Gráfico grande */}
+      <div className="mb-2 h-[260px] rounded border border-zinc-100 bg-zinc-50 p-1">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data.serie} margin={{ top: 4, right: 6, bottom: 4, left: 0 }}>
-            <CartesianGrid stroke="#e4e4e7" strokeDasharray="2 3" />
-            <XAxis dataKey="mes" tick={{ fontSize: 8 }} interval={Math.max(1, Math.floor(data.serie.length / 10))} />
-            <YAxis tick={{ fontSize: 8 }} domain={[0, 1]} />
+          <LineChart data={serieFinal} margin={{ top: 5, right: 8, bottom: 5, left: 0 }}>
+            <CartesianGrid stroke="#e4e4e7" strokeDasharray="3 3" />
+            <XAxis dataKey="mes" tick={{ fontSize: 9 }} interval={Math.max(1, Math.floor(serieFinal.length / 12))} />
+            <YAxis tick={{ fontSize: 9 }} domain={[0, 1]} />
             <Tooltip formatter={(v: unknown) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "—")} labelFormatter={(l: unknown) => formatMes(String(l ?? ""))} />
-            <ReferenceLine y={0.65} stroke="#DC2626" strokeDasharray="3 3" opacity={0.5} />
-            <ReferenceLine y={0.35} stroke="#10B981" strokeDasharray="3 3" opacity={0.5} />
+            {/* Linhas referência histerese */}
+            <ReferenceLine y={0.65} stroke="#DC2626" strokeDasharray="4 4" opacity={0.4} />
+            <ReferenceLine y={0.35} stroke="#10B981" strokeDasharray="4 4" opacity={0.4} />
+            {/* Faixas CODACE oficial */}
             {codace.map((f, i) => (
-              <ReferenceArea key={`paz-${i}`} x1={f.pico} x2={f.vale} fill="#9CA3AF" fillOpacity={0.18} />
+              <ReferenceArea key={`cod-${i}`} x1={f.pico} x2={f.vale} fill="#9CA3AF" fillOpacity={0.22} />
             ))}
-            <Line type="monotone" dataKey="diffusion" stroke="#F59E0B" strokeWidth={0.7} dot={false} connectNulls opacity={0.45} />
-            <Line type="monotone" dataKey="gap_hp" stroke="#10B981" strokeWidth={0.7} dot={false} connectNulls opacity={0.45} />
-            <Line type="monotone" dataKey="probit_fin" stroke="#3B82F6" strokeWidth={0.7} dot={false} connectNulls opacity={0.45} />
-            <Line type="monotone" dataKey="probit_az" stroke="#DC2626" strokeWidth={0.9} dot={false} connectNulls opacity={0.55} />
-            <Line type="monotone" dataKey="mediana" stroke="#132960" strokeWidth={2.2} dot={false} connectNulls />
+            {/* Hachura pós-2020 (sem datação CODACE) */}
+            <ReferenceArea x1={hachuraStart} x2={ultimoMes} fill="#9CA3AF" fillOpacity={0.06} strokeOpacity={0} />
+            {/* 5 linhas dos modelos */}
+            <Line type="monotone" dataKey="diffusion" stroke="#F59E0B" strokeWidth={0.8} dot={false} connectNulls opacity={0.55} name="Diffusion" />
+            <Line type="monotone" dataKey="gap_hp" stroke="#10B981" strokeWidth={0.8} dot={false} connectNulls opacity={0.55} name="Gap" />
+            <Line type="monotone" dataKey="ms_ar" stroke="#A855F7" strokeWidth={0.8} dot={false} connectNulls opacity={0.55} name="MS-AR" />
+            <Line type="monotone" dataKey="probit_fin" stroke="#3B82F6" strokeWidth={0.8} dot={false} connectNulls opacity={0.55} name="Probit Fin" />
+            <Line type="monotone" dataKey="probit_az" stroke="#DC2626" strokeWidth={0.9} dot={false} connectNulls opacity={0.65} name="Probit AZ" />
+            {/* Mediana destacada */}
+            <Line type="monotone" dataKey="mediana" stroke="#132960" strokeWidth={2.4} dot={false} connectNulls name="Mediana" />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Footer: contribuições do Probit AZ - expansível */}
-      {data.contribuicoes_top15 && data.contribuicoes_top15.length > 0 && (
-        <button
-          onClick={() => setShowContribs((o) => !o)}
-          className="w-full text-left text-[10px] text-[#132960] hover:underline flex items-center gap-1"
-        >
-          <span>{showContribs ? "▼" : "▶"}</span>
-          <span>Top features do Probit AZ experimental (β · x_std) em {formatMes(ultima?.mes ?? "")}</span>
-        </button>
-      )}
-      {showContribs && data.contribuicoes_top15 && (
-        <table className="mt-2 w-full text-[10px]">
-          <thead>
-            <tr className="border-b border-zinc-200 text-zinc-500">
-              <th className="text-left py-1">Feature</th>
-              <th className="text-right">β</th>
-              <th className="text-right">x_std</th>
-              <th className="text-right">β·x</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.contribuicoes_top15.slice(0, 10).map((c, i) => (
-              <tr key={i} className="border-b border-zinc-100">
-                <td className="py-1 font-mono text-[9px]">{c.feature}</td>
-                <td className="text-right">{c.beta.toFixed(2)}</td>
-                <td className="text-right">{c.x_std.toFixed(2)}</td>
-                <td className="text-right font-semibold" style={{ color: c.contrib_z >= 0 ? "#DC2626" : "#10B981" }}>{c.contrib_z >= 0 ? "+" : ""}{c.contrib_z.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      {/* 5 chips dos modelos empilhados ABAIXO do gráfico */}
+      <div className="mb-2 grid grid-cols-5 gap-1.5">
+        {modelos.map((m) => (
+          <div key={m.key} className="rounded border bg-white px-2 py-1.5 border-l-[3px]" style={{ borderLeftColor: m.color }}>
+            <div className="text-[9px] uppercase tracking-wider font-bold leading-none" style={{ color: m.color }}>
+              {m.label}
+            </div>
+            <div className="mt-1 flex items-baseline gap-1">
+              <span className="text-base font-bold text-zinc-900">
+                {m.valor !== null && m.valor !== undefined ? `${Math.round(m.valor * 100)}%` : "—"}
+              </span>
+              {m.key === "ms_ar" && msArFallback && (
+                <span className="text-[8px] font-bold text-amber-700 uppercase">fallback</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
 
-      <p className="mt-2 text-[9px] text-zinc-500 leading-tight">
-        <span className="font-semibold">Mediana</span> de 4 modelos: Diffusion (Moore 1950), Gap Hamilton (2018), Probit Financeiro (Estrella-Mishkin 1998 + Wright 2006 + Mendonça-Galvão-Lima 2018), Probit Misto AZ (Issler-Vahid 2006). Backtest causal OOS 1996-2026: AUC mediana <strong>0.86</strong> · AUC Probit AZ 0.85. Em emergentes, ensembles simples competem com stacking complexo (Bates-Granger 1969). Faixas cinza = recessões CODACE oficiais.
-      </p>
-    </section>
-  );
-}
+      {/* Legenda compacta */}
+      <div className="flex items-center gap-2 text-[9px] text-zinc-500 mb-2 flex-wrap">
+        <span className="inline-flex items-center gap-1"><span className="w-3 h-[2px]" style={{ backgroundColor: "#132960" }}></span><strong className="text-zinc-700">Mediana</strong></span>
+        <span>·</span>
+        <span>linhas finas = 5 modelos individuais</span>
+        <span>·</span>
+        <
