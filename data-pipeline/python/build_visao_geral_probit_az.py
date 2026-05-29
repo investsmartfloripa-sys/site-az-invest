@@ -174,6 +174,28 @@ def hp_filter(y, lam=129600):
     return pd.Series(y.values - trend, index=y.index)
 
 
+def hamilton_filter(y, h=24, p=4):
+    """Hamilton 2018 regression filter (sem viés HP - Quast-Wolters 2020).
+    
+    Regredir y_{t+h} em y_t lag p. Cycle = residuo.
+    """
+    y = pd.Series(y).dropna()
+    n = len(y)
+    if n < h + p + 10:
+        return pd.Series(np.nan, index=y.index)
+    y_lead = y.shift(-h)
+    X_lags = pd.concat([y.shift(i) for i in range(p)], axis=1)
+    X_lags.columns = [f"lag_{i}" for i in range(p)]
+    df = pd.concat([y_lead.rename("y_lead"), X_lags], axis=1).dropna()
+    if len(df) < 30:
+        return pd.Series(np.nan, index=y.index)
+    Y = df["y_lead"].values
+    X = np.column_stack([np.ones(len(df)), df[X_lags.columns].values])
+    beta = np.linalg.lstsq(X, Y, rcond=None)[0]
+    Y_hat = X @ beta
+    return pd.Series(Y - Y_hat, index=df.index).reindex(y.index)
+
+
 def probit_ridge(X, y, lam=0.5, max_iter=80):
     n, k = X.shape
     X1 = np.column_stack([np.ones(n), X])
@@ -265,8 +287,9 @@ def main():
         if tot > 0: diffusion.iloc[t] = eq / tot
 
     log_ibc = np.log(panel_imp["bcb_sgs_24364"].replace(0, np.nan)).dropna()
-    gap_hp = hp_filter(log_ibc) * 100
-    gap_hp_p = 1 / (1 + np.exp(2.5 * gap_hp))
+    # Hamilton 2018 filter (sem viés pós-2020 - Quast-Wolters 2020)
+    cycle_h = hamilton_filter(log_ibc, h=24, p=4) * 100
+    gap_hp_p = 1 / (1 + np.exp(2.5 * cycle_h))
 
     # Probit Fin (4 features)
     pre360 = panel_imp.get("bcb_sgs_4189")
@@ -288,7 +311,7 @@ def main():
         y_tr = label.loc[common[:i]].values.astype(float)
         if y_tr.sum() < 5: continue
         try:
-            b = probit_ridge(X_tr, y_tr, lam=0.5)
+            b = probit_ridge(X_tr, y_tr, lam=2.0)  # Ridge forte
             t = common[i]
             z = np.clip(b[0] + feats_fin.loc[[t]].values @ b[1:], -6, 6)
             probit_fin.loc[t] = stats.norm.cdf(z)[0]
@@ -316,7 +339,7 @@ def main():
     last_betas = None
     for i in range(60, len(X)):
         try:
-            lam = len(feat_cols) / i
+            lam = 10.0  # Ridge L2 forte (Loop 28 TS-CV escolheu este)
             b = probit_ridge(X_std.iloc[:i].values, y.iloc[:i].values, lam=lam)
             z = np.clip(b[0] + X_std.iloc[i].values @ b[1:], -6, 6)
             probit_az.iloc[i] = stats.norm.cdf(z)
@@ -342,7 +365,12 @@ def main():
         pf_v = float(probit_fin.get(t)) if pd.notna(probit_fin.get(t)) else None
         paz_v = float(probit_az.get(t)) if pd.notna(probit_az.get(t)) else None
         valids = [v for v in (diff_v, gap_v, pf_v, paz_v) if v is not None]
-        med_v = float(sorted(valids)[len(valids)//2]) if len(valids) >= 3 else None
+        # Mediana estatistica correta: array par = media dos 2 centrais
+        med_v = None
+        if len(valids) >= 3:
+            vo = sorted(valids)
+            m = len(vo) // 2
+            med_v = float((vo[m-1] + vo[m]) / 2) if len(vo) % 2 == 0 else float(vo[m])
         serie_out.append({
             "mes": t.strftime("%Y-%m"),
             "diffusion": round(diff_v, 3) if diff_v is not None else None,
