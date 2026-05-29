@@ -1,0 +1,16 @@
+# Pautas da semana — arquivos .md vão aqui
+
+Frontmatter esperado:
+
+```yaml
+---
+slug: 2026-05-25  # opcional (default: nome do arquivo)
+date: 2026-05-25  # segunda da semana de referência
+title: A semana do PIB e do PCE
+publishedAt: 2026-05-25T08:00:00-03:00
+description: Resumo em 1-2 frases pro preview / WhatsApp / OG.
+videoUrl: https://www.youtube.com/watch?v=ID  # opcional
+---
+```
+
+Após o frontmatter vem o markdown com gráficos embutidos (imagens), tabelas, citações etc.

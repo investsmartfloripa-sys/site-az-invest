@@ -8,7 +8,7 @@ import {
   formatDateBR,
   getBriefing,
   listBriefingDates,
-} from "@/lib/morning-call";
+} from "@/lib/cafe-com-mercado";
 
 type Props = {
   params: Promise<{ date: string }>;
@@ -56,7 +56,7 @@ export default async function MorningCallPage({ params }: Props) {
     <div className="min-h-screen text-[#132960]">
       <Header />
       <main className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
-        <Link href="/morning-call" className="text-sm text-[#027DFC] hover:underline">
+        <Link href="/cafe-com-mercado" className="text-sm text-[#027DFC] hover:underline">
           {"<-"} Voltar para Café com Mercado
         </Link>
 
@@ -85,7 +85,7 @@ export default async function MorningCallPage({ params }: Props) {
         <nav className="mt-10 flex flex-col gap-3 text-sm sm:flex-row sm:justify-between">
           {prev ? (
             <Link
-              href={`/morning-call/${prev}`}
+              href={`/cafe-com-mercado/${prev}`}
               className="text-[#027DFC] hover:underline"
             >
               {"<-"} Briefing anterior ({formatDateBR(prev)})
@@ -95,7 +95,7 @@ export default async function MorningCallPage({ params }: Props) {
           )}
           {next ? (
             <Link
-              href={`/morning-call/${next}`}
+              href={`/cafe-com-mercado/${next}`}
               className="text-[#027DFC] hover:underline sm:text-right"
             >
               Briefing seguinte ({formatDateBR(next)}) {"->"}

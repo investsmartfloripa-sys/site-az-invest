@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
-import { listBriefings, formatDateBR } from "@/lib/morning-call";
+import { listBriefings, formatDateBR } from "@/lib/cafe-com-mercado";
 
 export const metadata: Metadata = {
   title: "Café com Mercado",
@@ -43,7 +43,7 @@ export default async function MorningCallIndex() {
             {briefings.map((b) => (
               <li key={b.date}>
                 <Link
-                  href={`/morning-call/${b.date}`}
+                  href={`/cafe-com-mercado/${b.date}`}
                   className="az-card group block p-5 transition hover:border-[#027DFC]/40 md:p-6"
                 >
                   <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">

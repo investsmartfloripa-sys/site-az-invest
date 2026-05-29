@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import matter from "gray-matter";
 
-const CONTENT_DIR = path.join(process.cwd(), "content", "morning-call");
+const CONTENT_DIR = path.join(process.cwd(), "content", "cafe-com-mercado");
 
 export type Briefing = {
   /** Slug da rota e nome do arquivo (sem .md), formato YYYY-MM-DD. */
