@@ -5,6 +5,7 @@ import { MaisLidos } from "@/components/home/MaisLidos";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { UltimasPublicacoes } from "@/components/home/UltimasPublicacoes";
 import { VideosSection } from "@/components/home/VideosSection";
+import { DestaquesDaSemana } from "@/components/conteudo/DestaquesDaSemana";
 import { findPosts, mapPost } from "@/lib/posts";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
@@ -45,6 +46,7 @@ export default async function Home() {
         className={`az-shell mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} flex-col gap-12 px-4 py-6 md:px-8 md:py-8`}
       >
         <HeroRecentes posts={hero} />
+        <DestaquesDaSemana />
         {maisLidos.length > 0 ? <MaisLidos posts={maisLidos} /> : null}
         <UltimasPublicacoes posts={restantes} />
         <VideosSection />

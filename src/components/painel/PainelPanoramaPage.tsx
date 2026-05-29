@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { PostCard } from "@/components/common/PostCard";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
+import { DestaquesDaSemana } from "@/components/conteudo/DestaquesDaSemana";
 import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection";
 import { StaticChartCard } from "@/components/painel/StaticChartCard";
 import { painelBlobUrl } from "@/lib/painel-blob";
@@ -183,6 +184,8 @@ export async function PainelPanoramaPage() {
           <code className="rounded bg-white px-1">charts/tables/</code>).
         </p>
       ) : null}
+
+      <DestaquesDaSemana />
 
       <section>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

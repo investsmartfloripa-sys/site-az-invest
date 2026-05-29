@@ -69,7 +69,7 @@ export default async function BlogPostPage({
           </div>
         ) : null}
 
-        <article className="mt-6 space-y-4">
+        <article className="az-card mt-6 space-y-4 p-6 md:p-10">
           <span
             className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${getPostCategorySoftPillClasses(post.category)}`}
           >
