@@ -130,23 +130,7 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
   const focusPib = focusPibAnoCorrente(payload.focusPib);
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-      {/* COLUNA ESQUERDA: Recessao full-height destaque */}
-      <div className="flex">
-        <KpiCard
-          titulo="Probabilidade de recessão"
-          tecnico={kpi2Tecnico}
-          valor={kpi2Valor}
-          subtitulo={kpi2Subtitulo}
-          cor={kpi2Cor}
-          mes={probAz?.mes}
-          destaque
-          fullHeight
-        />
-      </div>
-
-      {/* COLUNA DIREITA: 4 KPIs em grid 2x2 */}
-      <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <KpiCard
           titulo="Atividade mensal"
           tecnico="IBC-Br m/m + Focus PIB"
@@ -196,7 +180,6 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
           mes={icf?.mes}
           compact
         />
-      </div>
     </div>
   );
 }

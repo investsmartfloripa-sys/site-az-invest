@@ -17,15 +17,76 @@ function corPara(p: number | null | undefined) {
   return p >= 0.65 ? "#DC2626" : p >= 0.35 ? "#F59E0B" : "#10B981";
 }
 
-// Mediana estatística correta: array par = média dos 2 centrais
 function medianaEstatistica(vs: number[]): number | null {
   if (vs.length === 0) return null;
-  const ordenados = vs.slice().sort((a, b) => a - b);
-  const m = Math.floor(ordenados.length / 2);
-  if (ordenados.length % 2 === 0) {
-    return (ordenados[m - 1] + ordenados[m]) / 2;
+  const ord = vs.slice().sort((a, b) => a - b);
+  const m = Math.floor(ord.length / 2);
+  return ord.length % 2 === 0 ? (ord[m - 1] + ord[m]) / 2 : ord[m];
+}
+
+// Gauge semicircular SVG (speedometer Hamilton 2011)
+function GaugeSpeedometer({ valor, label }: { valor: number; label: string }) {
+  // valor 0-1, mapeia para ângulo -90° (esquerda) a +90° (direita) = 180° total
+  const v = Math.max(0, Math.min(1, valor));
+  const ang = -90 + v * 180; // em graus
+  const angRad = (ang * Math.PI) / 180;
+
+  // Geometria
+  const cx = 110;
+  const cy = 110;
+  const rOut = 96;
+  const rIn = 68;
+
+  // Helper: arc path
+  function arcPath(startDeg: number, endDeg: number, radius: number, innerRadius: number) {
+    const startRad = ((startDeg - 90) * Math.PI) / 180;
+    const endRad = ((endDeg - 90) * Math.PI) / 180;
+    const x1 = cx + radius * Math.cos(startRad);
+    const y1 = cy + radius * Math.sin(startRad);
+    const x2 = cx + radius * Math.cos(endRad);
+    const y2 = cy + radius * Math.sin(endRad);
+    const x3 = cx + innerRadius * Math.cos(endRad);
+    const y3 = cy + innerRadius * Math.sin(endRad);
+    const x4 = cx + innerRadius * Math.cos(startRad);
+    const y4 = cy + innerRadius * Math.sin(startRad);
+    const largeArc = endDeg - startDeg > 180 ? 1 : 0;
+    return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`;
   }
-  return ordenados[m];
+
+  // 3 faixas: 0-35% verde, 35-65% âmbar, 65-100% vermelho
+  // Mapeando 0% → 0°, 100% → 180°
+  // 35% → 63°, 65% → 117°
+  const ponteiroX = cx + (rIn + 20) * Math.cos(angRad);
+  const ponteiroY = cy + (rIn + 20) * Math.sin(angRad);
+  const corPonteiro = corPara(v);
+
+  return (
+    <svg viewBox="0 0 220 145" className="w-full max-w-[280px]">
+      {/* Arco verde 0-35% */}
+      <path d={arcPath(0, 63, rOut, rIn)} fill="#10B981" opacity={0.85} />
+      {/* Arco âmbar 35-65% */}
+      <path d={arcPath(63, 117, rOut, rIn)} fill="#F59E0B" opacity={0.85} />
+      {/* Arco vermelho 65-100% */}
+      <path d={arcPath(117, 180, rOut, rIn)} fill="#DC2626" opacity={0.85} />
+      {/* Linhas dos limites Hamilton 35/65 */}
+      <line x1={cx + rIn * Math.cos(((-90 + 63) * Math.PI) / 180)} y1={cy + rIn * Math.sin(((-90 + 63) * Math.PI) / 180)} x2={cx + (rOut + 4) * Math.cos(((-90 + 63) * Math.PI) / 180)} y2={cy + (rOut + 4) * Math.sin(((-90 + 63) * Math.PI) / 180)} stroke="#27272a" strokeWidth={1} />
+      <line x1={cx + rIn * Math.cos(((-90 + 117) * Math.PI) / 180)} y1={cy + rIn * Math.sin(((-90 + 117) * Math.PI) / 180)} x2={cx + (rOut + 4) * Math.cos(((-90 + 117) * Math.PI) / 180)} y2={cy + (rOut + 4) * Math.sin(((-90 + 117) * Math.PI) / 180)} stroke="#27272a" strokeWidth={1} />
+
+      {/* Labels 0%, 35%, 65%, 100% */}
+      <text x={cx + (rOut + 10) * Math.cos((-90 * Math.PI) / 180)} y={cy + (rOut + 10) * Math.sin((-90 * Math.PI) / 180) + 4} fontSize={9} fill="#71717a" textAnchor="middle">0%</text>
+      <text x={cx + (rOut + 10) * Math.cos((-27 * Math.PI) / 180)} y={cy + (rOut + 10) * Math.sin((-27 * Math.PI) / 180) + 4} fontSize={9} fill="#71717a" textAnchor="middle">35%</text>
+      <text x={cx + (rOut + 10) * Math.cos((27 * Math.PI) / 180)} y={cy + (rOut + 10) * Math.sin((27 * Math.PI) / 180) + 4} fontSize={9} fill="#71717a" textAnchor="middle">65%</text>
+      <text x={cx + (rOut + 10) * Math.cos((90 * Math.PI) / 180)} y={cy + (rOut + 10) * Math.sin((90 * Math.PI) / 180) + 4} fontSize={9} fill="#71717a" textAnchor="middle">100%</text>
+
+      {/* Ponteiro */}
+      <line x1={cx} y1={cy} x2={ponteiroX} y2={ponteiroY} stroke={corPonteiro} strokeWidth={3} strokeLinecap="round" />
+      <circle cx={cx} cy={cy} r={5} fill={corPonteiro} />
+
+      {/* Valor central */}
+      <text x={cx} y={cy + 30} fontSize={24} fontWeight={700} fill={corPonteiro} textAnchor="middle">{Math.round(v * 100)}%</text>
+      <text x={cx} y={cy + 42} fontSize={9} fill="#71717a" textAnchor="middle">{label}</text>
+    </svg>
+  );
 }
 
 export function CardProbitAz({
@@ -47,21 +108,16 @@ export function CardProbitAz({
   }
 
   const ultimaAz = data.probabilidades;
-
-  // FONTE CANÔNICA ÚNICA: probit_az.json. 4 modelos (MS-AR fica fora até statsmodels carregar).
   const diffusion = ultimaAz?.diffusion ?? null;
   const gapHp = ultimaAz?.gap_hp ?? null;
   const probitFin = ultimaAz?.probit_fin ?? null;
   const probAz = ultimaAz?.probit_az ?? null;
 
-  // Mediana estatisticamente correta
   const valores = [diffusion, gapHp, probitFin, probAz].filter((v): v is number => v !== null && v !== undefined);
   const mediana = medianaEstatistica(valores);
   const corMediana = corPara(mediana);
   const nModelos = valores.length;
 
-  // Histerese Hamilton 2011 sobre a mediana
-  // Recalcular mediana mês a mês (estatística correta)
   const serieFinal = (data.serie ?? []).map((p) => {
     const vs = [p.diffusion, p.gap_hp, p.probit_fin, p.probit_az].filter((v): v is number => typeof v === "number");
     return {
@@ -80,8 +136,6 @@ export function CardProbitAz({
   const estadoHist = todasAlerta ? "ALERTA" : todasCalmas ? "ESTÁVEL" : "CAUTELA";
   const corHist = estadoHist === "ALERTA" ? "#DC2626" : estadoHist === "ESTÁVEL" ? "#10B981" : "#F59E0B";
 
-  const borderColor = corMediana;
-
   const modelos: Modelo[] = [
     { key: "diffusion", label: "Diffusion", color: "#F59E0B", valor: diffusion },
     { key: "gap_hp", label: "Gap Hamilton 2018", color: "#10B981", valor: gapHp },
@@ -89,135 +143,54 @@ export function CardProbitAz({
     { key: "probit_az", label: "Probit Misto AZ", color: "#DC2626", valor: probAz },
   ];
 
-  // Hachura pós CODACE oficial (jun/2020) — sem datação oficial
   const hachuraStart = "2020-06";
   const ultimoMes = serieFinal[serieFinal.length - 1]?.mes ?? "2026-12";
 
   return (
-    <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm border-l-4" style={{ borderLeftColor: borderColor }}>
-      {/* Header: Mediana destaque + título */}
+    <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm border-l-4" style={{ borderLeftColor: corMediana }}>
+      {/* Header */}
       <div className="mb-3 flex items-start justify-between gap-3 flex-wrap">
         <div className="flex-1 min-w-[200px]">
-          <h3 className="text-sm font-semibold text-zinc-900">
-            Probabilidade de recessão — ensemble de {nModelos} modelos causais
+          <h3 className="text-base font-bold text-[#132960]">
+            Termômetro de recessão — ensemble de {nModelos} modelos causais
           </h3>
           <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">
-            Mediana de 4 metodologias da literatura (Moore 1950, Hamilton 2018, Estrella-Mishkin 1998, Issler-Vahid 2006). Backtest causal OOS 1996-2026: AUC mediana <strong>0.86</strong>.
-            <span className="ml-1 text-amber-700">⚠ MS-AR Hamilton 1989 aguardando statsmodels carregar no pipeline.</span>
+            Mediana de 4 metodologias (Moore 1950, Hamilton 2018, Estrella-Mishkin 1998, Issler-Vahid 2006). Backtest causal OOS 1996-2026: AUC <strong>0.86</strong>.
+            <span className="ml-1 text-amber-700">⚠ MS-AR Hamilton 1989 aguardando statsmodels carregar.</span>
           </p>
         </div>
-        {mediana !== null && (
-          <div className="text-right">
-            <div className="text-[10px] uppercase tracking-wider text-zinc-500">Mediana {nModelos} modelos</div>
-            <div className="flex items-baseline gap-2 justify-end">
-              <span className="text-4xl font-bold" style={{ color: corMediana }}>
-                {Math.round(mediana * 100)}%
-              </span>
-              <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ backgroundColor: corHist + "22", color: corHist }}>
-                {estadoHist}
-              </span>
-            </div>
-            <div className="text-[10px] text-zinc-500">{formatMes(ultimaAz?.mes ?? "")}</div>
-            <div className="text-[9px] text-zinc-400">Histerese Hamilton 2011 · 65% entra · 35% sai · 2m persist.</div>
-          </div>
-        )}
+        <div className="text-right">
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded" style={{ backgroundColor: corHist + "22", color: corHist }}>
+            HISTERESE: {estadoHist}
+          </span>
+          <div className="text-[9px] text-zinc-400 mt-1">Hamilton 2011 · 65/35 · 2m persist.</div>
+        </div>
       </div>
 
-      {/* Gráfico grande */}
-      <div className="mb-2 h-[260px] rounded border border-zinc-100 bg-zinc-50 p-1">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={serieFinal} margin={{ top: 5, right: 8, bottom: 5, left: 0 }}>
-            <CartesianGrid stroke="#e4e4e7" strokeDasharray="3 3" />
-            <XAxis dataKey="mes" tick={{ fontSize: 9 }} interval={Math.max(1, Math.floor(serieFinal.length / 12))} />
-            <YAxis tick={{ fontSize: 9 }} domain={[0, 1]} tickFormatter={(v) => `${Math.round(v * 100)}%`} />
-            <Tooltip formatter={(v: unknown) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "—")} labelFormatter={(l: unknown) => formatMes(String(l ?? ""))} />
-            {/* Linhas referência histerese */}
-            <ReferenceLine y={0.65} stroke="#DC2626" strokeDasharray="4 4" opacity={0.4} />
-            <ReferenceLine y={0.35} stroke="#10B981" strokeDasharray="4 4" opacity={0.4} />
-            {/* Faixas CODACE oficial */}
-            {codace.map((f, i) => (
-              <ReferenceArea key={`cod-${i}`} x1={f.pico} x2={f.vale} fill="#9CA3AF" fillOpacity={0.22} />
+      {/* GRID 2 colunas: Gauge à esquerda + Fan chart à direita */}
+      <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4 items-start">
+        {/* Coluna esquerda: Gauge */}
+        <div className="flex flex-col items-center bg-zinc-50 rounded-lg p-3 border border-zinc-100">
+          {mediana !== null && <GaugeSpeedometer valor={mediana} label={`Mediana · ${formatMes(ultimaAz?.mes ?? "")}`} />}
+          <div className="mt-2 grid grid-cols-2 gap-1.5 w-full">
+            {modelos.map((m) => (
+              <div key={m.key} className="rounded border bg-white px-2 py-1 border-l-[3px]" style={{ borderLeftColor: m.color }}>
+                <div className="text-[8px] uppercase tracking-wider font-bold leading-none" style={{ color: m.color }}>
+                  {m.label}
+                </div>
+                <div className="text-sm font-bold text-zinc-900">
+                  {m.valor !== null && m.valor !== undefined ? `${Math.round(m.valor * 100)}%` : "—"}
+                </div>
+              </div>
             ))}
-            {/* Hachura pós-2020 (sem datação CODACE) */}
-            <ReferenceArea x1={hachuraStart} x2={ultimoMes} fill="#9CA3AF" fillOpacity={0.06} strokeOpacity={0} />
-            {/* 4 linhas dos modelos */}
-            <Line type="monotone" dataKey="diffusion" stroke="#F59E0B" strokeWidth={0.8} dot={false} connectNulls opacity={0.55} name="Diffusion" />
-            <Line type="monotone" dataKey="gap_hp" stroke="#10B981" strokeWidth={0.8} dot={false} connectNulls opacity={0.55} name="Gap" />
-            <Line type="monotone" dataKey="probit_fin" stroke="#3B82F6" strokeWidth={0.8} dot={false} connectNulls opacity={0.55} name="Probit Fin" />
-            <Line type="monotone" dataKey="probit_az" stroke="#DC2626" strokeWidth={0.9} dot={false} connectNulls opacity={0.65} name="Probit AZ" />
-            {/* Mediana destacada */}
-            <Line type="monotone" dataKey="mediana" stroke="#132960" strokeWidth={2.4} dot={false} connectNulls name="Mediana" />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* 4 chips dos modelos empilhados ABAIXO do gráfico */}
-      <div className="mb-2 grid grid-cols-4 gap-1.5">
-        {modelos.map((m) => (
-          <div key={m.key} className="rounded border bg-white px-2 py-1.5 border-l-[3px]" style={{ borderLeftColor: m.color }}>
-            <div className="text-[9px] uppercase tracking-wider font-bold leading-none" style={{ color: m.color }}>
-              {m.label}
-            </div>
-            <div className="mt-1 flex items-baseline gap-1">
-              <span className="text-base font-bold text-zinc-900">
-                {m.valor !== null && m.valor !== undefined ? `${Math.round(m.valor * 100)}%` : "—"}
-              </span>
-            </div>
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Legenda compacta */}
-      <div className="flex items-center gap-2 text-[9px] text-zinc-500 mb-2 flex-wrap">
-        <span className="inline-flex items-center gap-1"><span className="w-3 h-[2px]" style={{ backgroundColor: "#132960" }}></span><strong className="text-zinc-700">Mediana</strong></span>
-        <span>·</span>
-        <span>linhas finas = 4 modelos individuais</span>
-        <span>·</span>
-        <span>faixas cinza = recessões CODACE oficiais</span>
-        <span>·</span>
-        <span>hachura pós-jun/2020 = sem datação CODACE</span>
-      </div>
-
-      {/* Contribuições do Probit AZ */}
-      {data.contribuicoes_top15 && data.contribuicoes_top15.length > 0 && (
-        <>
-          <button
-            onClick={() => setShowContribs((o) => !o)}
-            className="w-full text-left text-[10px] text-[#132960] hover:underline flex items-center gap-1 mt-1"
-          >
-            <span>{showContribs ? "▼" : "▶"}</span>
-            <span>Top 15 features do Probit AZ (β · x_std) em {formatMes(ultimaAz?.mes ?? "")}</span>
-          </button>
-          {showContribs && (
-            <table className="mt-2 w-full text-[10px]">
-              <thead>
-                <tr className="border-b border-zinc-200 text-zinc-500">
-                  <th className="text-left py-1">Feature</th>
-                  <th className="text-right">β</th>
-                  <th className="text-right">x (std)</th>
-                  <th className="text-right">β·x</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.contribuicoes_top15.slice(0, 10).map((c, i) => (
-                  <tr key={i} className="border-b border-zinc-100">
-                    <td className="py-1 font-mono text-[9px]">{c.feature}</td>
-                    <td className="text-right">{c.beta.toFixed(2)}</td>
-                    <td className="text-right">{c.x_std.toFixed(2)}</td>
-                    <td className="text-right font-semibold" style={{ color: c.contrib_z >= 0 ? "#DC2626" : "#10B981" }}>
-                      {c.contrib_z >= 0 ? "+" : ""}{c.contrib_z.toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </>
-      )}
-
-      <p className="mt-2 text-[9px] text-zinc-500 leading-tight">
-        <strong>Refs:</strong> Moore 1950 (Diffusion) · Hodrick-Prescott 1997 / Ravn-Uhlig 2002 + Hamilton 2018 (Gap) · Estrella-Mishkin 1998 + Wright 2006 + Mendonça-Galvão-Lima 2018 (Probit Fin) · Issler-Vahid 2006 (Probit AZ) · Bates-Granger 1969 (ensembles).
-      </p>
-    </section>
-  );
-}
+        {/* Coluna direita: Fan chart histórico */}
+        <div className="h-[300px] rounded border border-zinc-100 bg-zinc-50 p-1">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={serieFinal} margin={{ top: 5, right: 8, bottom: 5, left: 0 }}>
+              <CartesianGrid stroke="#e4e4e7" strokeDasharray="3 3" />
+              <XAxis dataKey="mes" tick={{ fontSize: 9 }} interval={Math.max(1, Math.floor(serieFinal.length / 12))} />
+              <YAxis tick={{ fontSize: 9 }} domain={[0, 1]} tickFormatter={(v) => `${Math.round(v * 100)}%`} />
+              <Tooltip formatter={(v: unknown) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "—")} labelFormatter={(l: unknown) => formatMes(
