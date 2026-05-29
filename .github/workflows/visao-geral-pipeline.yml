@@ -34,6 +34,8 @@ jobs:
         run: python data-pipeline/python/build_visao_geral_antecedentes_fin.py --upload --soft-fail
       - name: PNAD renda (income leg quartet TCB)
         run: python data-pipeline/python/build_visao_geral_pnad_renda.py --upload --soft-fail
+      - name: Probit AZ Hibrido (3 modelos base + Ridge L2 sobre ~30 antecedentes)
+        run: python data-pipeline/python/build_visao_geral_probit_az.py --upload --soft-fail
       - name: ANP combustiveis
         run: python data-pipeline/python/build_visao_geral_anp.py --upload --soft-fail
       - name: ANFAVEA veiculos

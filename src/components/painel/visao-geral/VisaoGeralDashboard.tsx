@@ -13,6 +13,7 @@ import { BlocoECondicoesFinanceiras } from "./BlocoE_CondicoesFinanceiras";
 import { FraseManchete } from "./FraseManchete";
 import { HeroKpis } from "./HeroKpis";
 import { TermometroSintese } from "./TermometroSintese";
+import { CardProbitAz } from "./CardProbitAz";
 
 type Vista = "geral" | "antecedentes" | "coincidentes";
 
@@ -127,6 +128,7 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
         {vista === "geral" && (
           <div className="space-y-6">
             <TermometroSintese payload={payload} codace={codaceMensal} />
+            <CardProbitAz data={payload.probitAz} codace={codaceMensal} />
             <BlocoACicloAtual payload={payload} />
             <BlocoECondicoesFinanceiras icf={payload.icf} credito={payload.credito} />
           </div>
