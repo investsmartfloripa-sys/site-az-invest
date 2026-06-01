@@ -26,9 +26,9 @@ const mercadoBrasil: CategoryDef[] = [
   {
     slug: "renda-variavel",
     label: "Renda variável",
-    description: "Ações, setores e amplitude de mercado local.",
-    frequency: "tempo-real",
-    sourceHint: "B3, provedores de mercado",
+    description: "Ibovespa, valuation da bolsa (P/L histórico com bandas e prêmio vs NTN-B) e screener de ações.",
+    frequency: "diario",
+    sourceHint: "B3, yfinance, CVM, BCB, ANBIMA",
   },
   {
     slug: "renda-fixa",
