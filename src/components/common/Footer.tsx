@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { navItems } from "@/data/home";
 
@@ -5,8 +6,16 @@ export function Footer() {
   return (
     <footer className="bg-white">
       <div className="mx-auto grid w-full max-w-[90rem] grid-cols-1 gap-8 px-4 py-10 text-[#132960] sm:grid-cols-2 sm:px-6 lg:grid-cols-3 lg:gap-10 lg:px-8 lg:py-14">
-        <div className="sm:col-span-2 lg:col-span-1">
-          <h2 className="text-center text-3xl leading-tight sm:text-left sm:text-4xl md:text-5xl">AZ INVEST</h2>
+        <div className="text-center sm:col-span-2 sm:text-left lg:col-span-1">
+          <Link href="/" className="inline-block">
+            <Image
+              src="/logo-az.png"
+              alt="AZ Invest - Investimentos de A a Z"
+              width={951}
+              height={310}
+              className="h-12 w-auto md:h-14"
+            />
+          </Link>
         </div>
         <div className="border-t border-[#132960]/10 pt-5 sm:border-0 sm:pt-0">
           <h2 className="text-xl">Atalhos</h2>
