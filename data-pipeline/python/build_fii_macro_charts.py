@@ -85,6 +85,10 @@ TIJOLO_SEGS = {
 PAPEL_SEGS = {"Papel"}
 
 LOOKBACK_YEARS = 5
+# Buffer de histórico extra (anos antes do start visualizado) pra garantir que o
+# rolling 365D de dividendos esteja COMPLETO já no primeiro ponto da janela.
+# Sem isso, os primeiros 12 meses ficam com soma parcial → DY artificialmente baixo.
+HISTORY_BUFFER_YEARS = 2
 TOP_N = 25
 
 
@@ -171,6 +175,12 @@ def build_cvm_history(years: List[int]) -> pd.DataFrame:
         "pl": pd.to_numeric(all_df.get("Patrimonio_Liquido"), errors="coerce"),
         "isin": all_df.get("Codigo_ISIN", "").astype(str),
         "segment_cvm": all_df.get("Segmento_Atuacao", "").astype(str),
+        # Rendimento mensal CVM (rendimento_distribuido / PL anterior, em decimal —
+        # 0.007 = 0.7% no mês). Histórico completo, fonte oficial. yfinance.dividends
+        # tem buraco histórico em FIIs (HGLG só retorna 2017 + 2022+ pulando 2018-2021).
+        "dy_pct_mes": pd.to_numeric(all_df.get("Percentual_Dividend_Yield_Mes"), errors="coerce"),
+        # Amortização separada — não inflar DY com devolução de capital.
+        "amort_pct_mes": pd.to_numeric(all_df.get("Percentual_Amortizacao_Cotas_Mes"), errors="coerce"),
     })
     # ISIN root (4 letras pra mapeamento ticker)
     out["isin_root"] = out["isin"].str.extract(r"BR(\w{4})CTF", expand=False)
@@ -190,13 +200,15 @@ def fetch_yf_history_batch(tickers: List[str]) -> Tuple[Dict[str, pd.DataFrame],
     """
     hist: Dict[str, pd.DataFrame] = {}
     divs: Dict[str, pd.Series] = {}
+    # Baixa LOOKBACK + BUFFER anos pra ter rolling 365D completo desde o início da janela visível.
+    history_period = f"{LOOKBACK_YEARS + HISTORY_BUFFER_YEARS}y"
     for i, t in enumerate(tickers):
         yf_t = f"{t}.SA"
         if i % 20 == 0:
-            print(f"[yf] {i}/{len(tickers)} batch — {t}...")
+            print(f"[yf] {i}/{len(tickers)} batch — {t}... (period={history_period})")
         try:
             tk = yf.Ticker(yf_t)
-            h = tk.history(period=f"{LOOKBACK_YEARS}y", auto_adjust=False)
+            h = tk.history(period=history_period, auto_adjust=False)
             if h is None or h.empty:
                 continue
             h = h[["Close", "Volume"]].copy()
@@ -265,8 +277,9 @@ def build_payload() -> Dict:
     hist, divs = fetch_yf_history_batch(universo)
     print(f"[macro]   {len(hist)} tickers com hist, {len(divs)} com dividendos")
 
-    # 3) CVM (Informe Mensal de 2020 até ano corrente)
-    years = list(range(today.year - LOOKBACK_YEARS - 1, today.year + 1))
+    # 3) CVM (Informe Mensal: 2 anos antes do start visualizado pra ter buffer
+    #    de 12m no rolling DY anualizado desde o primeiro ponto da janela.)
+    years = list(range(today.year - LOOKBACK_YEARS - 2, today.year + 1))
     print(f"[macro] Anos CVM a baixar: {years}")
     cvm = build_cvm_history(years)
     print(f"[macro] CVM history rows: {len(cvm)}")
@@ -395,83 +408,92 @@ def build_payload() -> Dict:
     print(f"[macro] P/VP tijolo: {len(pvp_history['tijolo'])} pts, papel: {len(pvp_history['papel'])} pts")
 
     # ----------------------------
-    # GRÁFICO 2 — Prêmio NTN-B vs DY tijolo (diário)
+    # GRÁFICO 2 — Prêmio NTN-B vs DY tijolo
     # ----------------------------
-    print("[macro] Calculando prêmio NTN-B vs DY tijolo (diário)...")
+    # IMPORTANTE: yfinance.dividends tem BURACO HISTÓRICO em FIIs brasileiros
+    # (HGLG só retorna 2017 + 2022+ pulando 2018-2021). Trocamos pra CVM
+    # `Percentual_Dividend_Yield_Mes` que é fonte oficial e tem histórico completo.
+    # Como CVM publica mensal, a série de prêmio também vira mensal (preço fim-de-mês
+    # do yfinance + DY 12m CVM agregado). Pro yield NTN-B usamos média mensal do
+    # diário pra manter a consistência.
+    print("[macro] Calculando prêmio NTN-B vs DY tijolo (mensal, CVM-based)...")
 
-    # Pré-calcular DY 12m diário pra cada ticker tijolo
-    # DY[t][d] = soma_dividendos[d-365 : d] / preço[d] * 100
-    dy_daily: Dict[str, pd.Series] = {}
-    for t in universo:
-        if ticker_segment.get(t) not in TIJOLO_SEGS:
-            continue
-        h = hist.get(t)
-        if h is None:
-            continue
-        d_series = divs.get(t)
-        if d_series is None or d_series.empty:
-            # Sem dividendos: DY=0
-            dy = pd.Series(0.0, index=h.index, name=t)
-        else:
-            # Rolling sum 365 dias
-            div_aligned = d_series.reindex(h.index, fill_value=0.0)
-            sum365 = div_aligned.rolling("365D").sum()
-            dy = (sum365 / h["Close"]) * 100.0
-        dy.index = pd.to_datetime(dy.index)
-        dy_daily[t] = dy
-
-    # Liquidez diária pra cada ticker
-    liq_daily: Dict[str, pd.Series] = {}
-    for t in universo:
-        if ticker_segment.get(t) not in TIJOLO_SEGS:
-            continue
-        h = hist.get(t)
-        if h is None:
-            continue
-        liq_daily[t] = (h["Close"] * h["Volume"]).rolling(21).mean()
-
-    # Pra cada dia útil do range, seleciona top 25 tijolo por liquidez 21d e tira mediana do DY
-    all_dates = sorted({d for t, s in dy_daily.items() for d in s.index})
-    all_dates = [d for d in all_dates if d >= start]
-
-    # Restringir ao range do NTN-B (precisamos do yield real pra calcular o prêmio)
-    ntnb_dict = dict(zip(ntnb_series["date"], ntnb_series["ntnb_yield"]))
-    ntnb_venc_dict = dict(zip(ntnb_series["date"], ntnb_series["ntnb_venc_year"]))
-
-    # Forward-fill o NTN-B (TD não publica em todo dia útil de mercado, ex sextas?)
+    # Forward-fill NTN-B em todos dias úteis (TD pode pular alguns dias)
     ntnb_full = ntnb_series.set_index("date").sort_index().reindex(
         pd.date_range(start, today, freq="B")
     ).ffill()
 
+    # Constrói: cnpj -> Series mensal de dy_pct_mes (decimal, ex 0.007 = 0.7% no mês)
+    cvm_by_cnpj_month_dy = cvm.set_index(["cnpj", "month_end"])["dy_pct_mes"].to_dict()
+
+    # Pra cada ticker tijolo, monta serie mensal de DY 12m (sum últimos 12 meses)
+    # Pulando meses com amortização > 0 (não é renda recorrente).
+    cvm_by_cnpj_month_amort = cvm.set_index(["cnpj", "month_end"])["amort_pct_mes"].to_dict()
+
+    # Universo de meses (igual ao P/VP)
+    # `months` já foi construído acima — reusa.
+
     premio_history: List[Dict] = []
-    for d in all_dates:
-        if d not in ntnb_full.index or pd.isna(ntnb_full.loc[d, "ntnb_yield"]):
-            continue
-        # Calcula ranking top-25 tijolo nesse dia (por liquidez 21d)
-        ranking = []
-        for t, ls in liq_daily.items():
-            if d in ls.index:
-                lv = ls.loc[d]
-                if pd.notna(lv) and lv > 0:
-                    ranking.append((t, float(lv)))
-        ranking.sort(key=lambda x: -x[1])
-        top = [t for t, _ in ranking[:TOP_N]]
+    for m in months:
+        if m not in ntnb_full.index or pd.isna(ntnb_full.loc[m, "ntnb_yield"]):
+            # Pega o NTN-B do último dia útil do mês via ffill (se m não é dia útil)
+            wn = ntnb_full.loc[:m]
+            if wn.empty or pd.isna(wn.iloc[-1]["ntnb_yield"]):
+                continue
+            ntnb_yld = float(wn.iloc[-1]["ntnb_yield"])
+            venc = wn.iloc[-1]["ntnb_venc_year"]
+        else:
+            ntnb_yld = float(ntnb_full.loc[m, "ntnb_yield"])
+            venc = ntnb_full.loc[m, "ntnb_venc_year"]
+
+        # Top 25 tijolo do mês m por liquidez
+        cat_liq: List[Tuple[str, float]] = []
+        for t in universo:
+            if ticker_segment.get(t) not in TIJOLO_SEGS:
+                continue
+            liq_s = liquidity_monthly.get(t)
+            if liq_s is None or m not in liq_s.index:
+                continue
+            liq_val = liq_s.loc[m]
+            if pd.notna(liq_val) and liq_val > 0:
+                cat_liq.append((t, float(liq_val)))
+        ranked = sorted(cat_liq, key=lambda x: -x[1])[:TOP_N]
+
+        # DY 12m por ticker: soma dos últimos 12 meses de Percentual_Dividend_Yield_Mes (CVM).
+        # Resultado em decimal — multiplica por 100 pra %.
+        # Convertendo p/ anualizado simples: sum_12m_decimal * 100 = aprox. DY 12m em %.
+        # (Composição ((1+r1)(1+r2)...) - 1 daria valor ~0.3% maior nesse range; aceita.)
         dys = []
-        for t in top:
-            dy_s = dy_daily[t]
-            if d in dy_s.index:
-                v = dy_s.loc[d]
-                if pd.notna(v) and v > 0 and v < 30:  # filtro outlier DY > 30%
-                    dys.append(float(v))
-        # Exige mínimo de 15 FIIs com 12m de dividendos pra ponto ser confiável
-        # (no início do período muitos FIIs ainda não tinham 12m de pagamentos).
-        if len(dys) < 15:
+        for t, _ in ranked:
+            cnpj = ticker_to_cnpj.get(t)
+            if not cnpj:
+                continue
+            # Últimos 12 meses incluindo m
+            mes_atual = m
+            soma = 0.0
+            valid_meses = 0
+            for k in range(12):
+                mes_k = (mes_atual - pd.DateOffset(months=k)) + pd.offsets.MonthEnd(0)
+                dy_k = cvm_by_cnpj_month_dy.get((cnpj, mes_k))
+                amort_k = cvm_by_cnpj_month_amort.get((cnpj, mes_k))
+                if dy_k is not None and not pd.isna(dy_k):
+                    # Inclui só rendimento puro (sem amortização)
+                    if amort_k is not None and not pd.isna(amort_k) and amort_k > 0:
+                        # Mês com amortização — usa só a parte de rendimento puro
+                        soma += float(dy_k)  # CVM já separa DY de Amortização — DY é puro rendimento
+                    else:
+                        soma += float(dy_k)
+                    valid_meses += 1
+            if valid_meses >= 10:  # exige pelo menos 10 dos 12 meses
+                dy_anual_pct = soma * 100.0  # decimal -> %
+                if 0 < dy_anual_pct < 30:
+                    dys.append(dy_anual_pct)
+
+        if len(dys) < 10:
             continue
         dy_med = float(np.median(dys))
-        ntnb_yld = float(ntnb_full.loc[d, "ntnb_yield"])
-        venc = ntnb_full.loc[d, "ntnb_venc_year"]
         premio_history.append({
-            "date": d.strftime("%Y-%m-%d"),
+            "date": m.strftime("%Y-%m-%d"),
             "dy_tijolo_pct": round(dy_med, 2),
             "ntnb_yield_pct": round(ntnb_yld, 2),
             "premio_pp": round(dy_med - ntnb_yld, 2),
@@ -479,7 +501,7 @@ def build_payload() -> Dict:
             "n_tijolo": len(dys),
         })
 
-    print(f"[macro] Prêmio história: {len(premio_history)} pts")
+    print(f"[macro] Prêmio história: {len(premio_history)} pts (mensal)")
 
     return {
         "status": "ok",
