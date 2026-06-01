@@ -1,11 +1,13 @@
 import { FiiArtigosMaisLidos } from "@/components/painel/fii/FiiArtigosMaisLidos";
 import { FiiComunidadeCta } from "@/components/painel/fii/FiiComunidadeCta";
+import { FiiMacroCharts } from "@/components/painel/fii/FiiMacroCharts";
 import { FiiNoticias } from "@/components/painel/fii/FiiNoticias";
 import { FiiScreener } from "@/components/painel/fii/FiiScreener";
 import { IfixHero } from "@/components/painel/fii/IfixHero";
 import {
   getFiiArtigosMaisLidos,
   getFiiIfix,
+  getFiiMacroCharts,
   getFiiScreener,
   getFiiUltimasNoticias,
 } from "@/lib/painel-fii";
@@ -17,11 +19,12 @@ export const metadata = {
 };
 
 export default async function FundosImobiliariosPage() {
-  const [ifix, screener, noticias, artigos] = await Promise.all([
+  const [ifix, screener, noticias, artigos, macroCharts] = await Promise.all([
     getFiiIfix(),
     getFiiScreener(),
     getFiiUltimasNoticias(),
     getFiiArtigosMaisLidos(),
+    getFiiMacroCharts(),
   ]);
 
   return (
@@ -52,6 +55,11 @@ export default async function FundosImobiliariosPage() {
           </p>
         </section>
       )}
+
+      {/* Macro charts (P/VP histórico + Prêmio NTN-B vs DY tijolo) */}
+      {macroCharts && macroCharts.status === "ok" ? (
+        <FiiMacroCharts data={macroCharts} />
+      ) : null}
 
       {/* Blocos editoriais */}
       <FiiNoticias posts={noticias} />

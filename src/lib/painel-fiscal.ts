@@ -80,7 +80,7 @@ export type FiscalClassicosData = {
     primario_sp_12m_pct_pib: PontoMensalPct[];
     juros_nominais_sp_12m_pct_pib: PontoMensal[];
     nominal_sp_12m_pct_pib: PontoMensalPct[];
-    // Tributos individuais (12m % PIB)
+    // === Tributos individuais (12m % PIB) ===
     imposto_renda_12m_pct_pib?: PontoMensalPct[];
     cofins_12m_pct_pib?: PontoMensalPct[];
     csll_12m_pct_pib?: PontoMensalPct[];

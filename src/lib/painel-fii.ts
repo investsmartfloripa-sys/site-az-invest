@@ -153,6 +153,43 @@ export async function getFiiScreener(): Promise<FiiScreenerData | null> {
 }
 
 // ---------------------------------------------------------------------------
+// Macro charts (P/VP histórico + Prêmio NTN-B vs DY tijolo)
+// ---------------------------------------------------------------------------
+
+export type FiiPvpPoint = {
+  date: string;  // YYYY-MM-DD (fim de mês)
+  n: number;
+  median: number;
+  p25: number | null;
+  p75: number | null;
+};
+
+export type FiiPremioPoint = {
+  date: string;  // YYYY-MM-DD
+  dy_tijolo_pct: number;
+  ntnb_yield_pct: number;
+  premio_pp: number;
+  ntnb_venc: number | null;
+  n_tijolo: number;
+};
+
+export type FiiMacroChartsData = {
+  status: "ok" | "error";
+  generated_at: string;
+  lookback_years: number;
+  top_n: number;
+  pvp_history: {
+    tijolo: FiiPvpPoint[];
+    papel: FiiPvpPoint[];
+  };
+  premio_history: FiiPremioPoint[];
+};
+
+export async function getFiiMacroCharts(): Promise<FiiMacroChartsData | null> {
+  return fetchBlobJson<FiiMacroChartsData>("data/fii_macro_charts.json");
+}
+
+// ---------------------------------------------------------------------------
 // Página individual de cada FII (etapa 2)
 // ---------------------------------------------------------------------------
 

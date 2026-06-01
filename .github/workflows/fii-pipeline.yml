@@ -58,6 +58,11 @@ jobs:
         run: python data-pipeline/python/build_fii_detail.py --upload
         continue-on-error: true
 
+      # 4. Macro charts (P/VP histórico 5 anos + Prêmio NTN-B vs DY tijolo) — pesado, ~10 min
+      - name: build_fii_macro_charts (P/VP + Prêmio histórico 5a)
+        run: python data-pipeline/python/build_fii_macro_charts.py --upload
+        continue-on-error: true
+
       - name: Upload artefatos (debug)
         if: always()
         uses: actions/upload-artifact@v4
@@ -67,5 +72,6 @@ jobs:
             data-pipeline/out/fii_ifix.json
             data-pipeline/out/fii_screener.json
             data-pipeline/out/fii_details.json
+            data-pipeline/out/fii_macro_charts.json
           if-no-files-found: warn
           retention-days: 7
