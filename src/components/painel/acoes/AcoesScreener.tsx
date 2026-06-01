@@ -178,7 +178,7 @@ export function AcoesScreener({ data }: Props) {
                 <tr key={r.ticker} className="border-b border-zinc-100 transition hover:bg-zinc-50/60">
                   <td className="px-2 py-2">
                     <Link
-                      href={`/painel-economico/mercado/ativo/${r.ticker.toLowerCase()}`}
+                      href={`/painel-economico/mercado/ativo/${r.ticker.toLowerCase()}.sa`}
                       className="block font-semibold tabular-nums text-[#132960] transition hover:text-[#027DFC] hover:underline"
                     >
                       {r.ticker}
