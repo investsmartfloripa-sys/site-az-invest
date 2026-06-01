@@ -11,10 +11,10 @@ export async function Header() {
       <div className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} items-center justify-between gap-4 px-4 py-4 md:px-8`}>
         <Link href="/" className="block">
           <Image
-            src="https://investimentosdeaz.com.br/wp-content/uploads/2025/10/Logo-Horizontal-Fundos-azuis-escuro-1024x370.png"
-            alt="Investimentos de A a Z"
-            width={220}
-            height={80}
+            src="/logo-az-branco.png"
+            alt="AZ Invest - Investimentos de A a Z"
+            width={951}
+            height={310}
             priority
             className="h-12 w-auto md:h-14"
           />
