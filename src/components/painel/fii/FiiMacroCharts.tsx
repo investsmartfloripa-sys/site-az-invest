@@ -49,23 +49,33 @@ function formatAxisDate(d: string, span: TimeWindow): string {
   return dt.toLocaleDateString("pt-BR", { month: "2-digit", year: "2-digit", timeZone: "UTC" });
 }
 
-// Merge tijolo + papel num único dataset com colunas distintas pro Recharts.
+// Merge tijolo + papel. Adiciona colunas auxiliares pra renderizar Area entre P25 e P75
+// (Recharts não suporta "Area between" direto — usa stacked Area com base = p25 e
+// altura = p75 - p25, transparente em cima da base).
 function buildPvpData(tijolo: FiiPvpPoint[], papel: FiiPvpPoint[]) {
   const byDate: Record<string, Record<string, number | null>> = {};
   for (const p of tijolo) {
+    const p25 = p.p25 ?? null;
+    const p75 = p.p75 ?? null;
     byDate[p.date] = {
       ...(byDate[p.date] || {}),
       tijolo_median: p.median,
-      tijolo_p25: p.p25 ?? null,
-      tijolo_p75: p.p75 ?? null,
+      tijolo_p25: p25,
+      tijolo_p75: p75,
+      tijolo_band_base: p25,
+      tijolo_band_height: p25 != null && p75 != null ? p75 - p25 : null,
     };
   }
   for (const p of papel) {
+    const p25 = p.p25 ?? null;
+    const p75 = p.p75 ?? null;
     byDate[p.date] = {
       ...(byDate[p.date] || {}),
       papel_median: p.median,
-      papel_p25: p.p25 ?? null,
-      papel_p75: p.p75 ?? null,
+      papel_p25: p25,
+      papel_p75: p75,
+      papel_band_base: p25,
+      papel_band_height: p25 != null && p75 != null ? p75 - p25 : null,
     };
   }
   return Object.entries(byDate)
@@ -102,7 +112,7 @@ export function FiiMacroCharts({ data }: Props) {
               P/VP mediana dos top 25
             </h3>
             <p className="mt-0.5 text-[11px] text-zinc-500">
-              25 FIIs mais líquidos de cada categoria (rebal mensal)
+              Mediana + banda P25-P75 dos 25 mais líquidos (cesta recomposta todo mês)
             </p>
           </div>
           <TimeWindowToggle value={pvpWin} onChange={setPvpWin} />
@@ -161,28 +171,49 @@ export function FiiMacroCharts({ data }: Props) {
                     return [n.toFixed(3), name];
                   }}
                 />
-                {/* Banda P25-P75 tijolo (área entre p25 e p75) */}
+                {/* Banda P25-P75 tijolo: base invisível + altura sombreada (stack) */}
                 <Area
                   type="monotone"
-                  dataKey="tijolo_p75"
+                  dataKey="tijolo_band_base"
                   stackId="tj"
                   stroke="none"
-                  fill={TIJOLO_COLOR}
-                  fillOpacity={0.0}
-                  name="Tijolo P75"
-                  isAnimationActive={false}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="tijolo_p25"
-                  stackId="tj-band"
-                  stroke="none"
-                  fill={TIJOLO_COLOR}
-                  fillOpacity={0.0}
+                  fill="transparent"
+                  fillOpacity={0}
                   isAnimationActive={false}
                   legendType="none"
                 />
-                {/* Mediana tijolo */}
+                <Area
+                  type="monotone"
+                  dataKey="tijolo_band_height"
+                  stackId="tj"
+                  stroke="none"
+                  fill={TIJOLO_COLOR}
+                  fillOpacity={0.12}
+                  name="Tijolo P25-P75"
+                  isAnimationActive={false}
+                />
+                {/* Banda P25-P75 papel: idem */}
+                <Area
+                  type="monotone"
+                  dataKey="papel_band_base"
+                  stackId="pp"
+                  stroke="none"
+                  fill="transparent"
+                  fillOpacity={0}
+                  isAnimationActive={false}
+                  legendType="none"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="papel_band_height"
+                  stackId="pp"
+                  stroke="none"
+                  fill={PAPEL_COLOR}
+                  fillOpacity={0.12}
+                  name="Papel P25-P75"
+                  isAnimationActive={false}
+                />
+                {/* Medianas (linhas cheias) */}
                 <Line
                   type="monotone"
                   dataKey="tijolo_median"
@@ -192,7 +223,6 @@ export function FiiMacroCharts({ data }: Props) {
                   name="Tijolo (mediana)"
                   isAnimationActive={false}
                 />
-                {/* Mediana papel */}
                 <Line
                   type="monotone"
                   dataKey="papel_median"
@@ -202,18 +232,15 @@ export function FiiMacroCharts({ data }: Props) {
                   name="Papel (mediana)"
                   isAnimationActive={false}
                 />
-                {/* Quartis pontilhados */}
-                <Line type="monotone" dataKey="tijolo_p25" stroke={TIJOLO_COLOR} strokeWidth={1} strokeDasharray="3 3" dot={false} name="Tijolo P25" isAnimationActive={false} />
-                <Line type="monotone" dataKey="tijolo_p75" stroke={TIJOLO_COLOR} strokeWidth={1} strokeDasharray="3 3" dot={false} name="Tijolo P75" isAnimationActive={false} />
-                <Line type="monotone" dataKey="papel_p25" stroke={PAPEL_COLOR} strokeWidth={1} strokeDasharray="3 3" dot={false} name="Papel P25" isAnimationActive={false} />
-                <Line type="monotone" dataKey="papel_p75" stroke={PAPEL_COLOR} strokeWidth={1} strokeDasharray="3 3" dot={false} name="Papel P75" isAnimationActive={false} />
               </ComposedChart>
             </ResponsiveContainer>
           )}
         </div>
         <p className="mt-2 text-[10px] text-zinc-400">
-          Linhas cheias: mediana. Pontilhadas: P25 e P75. Universo: 25 FIIs mais líquidos de cada
-          categoria a cada mês. P/VP = preço / valor patrimonial por cota (CVM Informe Mensal).
+          <strong>Tijolo</strong> = Logística, Lajes, Shoppings, Renda urbana, Residencial,
+          Hospitalar, Hotelaria, Educacional, Agro, Varejo. <strong>Papel</strong> = CRI.
+          Área sombreada = quartis P25-P75 mensais. P/VP = preço / valor patrimonial por cota
+          (CVM Informe Mensal). Não é recomendação.
         </p>
       </article>
 
@@ -273,11 +300,21 @@ export function FiiMacroCharts({ data }: Props) {
                   tick={{ fontSize: 10, fill: "#71717A" }}
                   minTickGap={32}
                 />
+                {/* Eixo esquerdo: DY tijolo e NTN-B em % */}
                 <YAxis
                   yAxisId="left"
                   tick={{ fontSize: 10, fill: "#71717A" }}
                   domain={["auto", "auto"]}
                   tickFormatter={(v) => `${typeof v === "number" ? v.toFixed(1) : v}%`}
+                  width={42}
+                />
+                {/* Eixo direito: Prêmio em pp (escala separada pra não esmagar) */}
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  tick={{ fontSize: 10, fill: PREMIO_COLOR }}
+                  domain={["auto", "auto"]}
+                  tickFormatter={(v) => `${typeof v === "number" ? v.toFixed(1) : v} pp`}
                   width={48}
                 />
                 <Tooltip
@@ -318,12 +355,12 @@ export function FiiMacroCharts({ data }: Props) {
                   isAnimationActive={false}
                 />
                 <Line
-                  yAxisId="left"
+                  yAxisId="right"
                   type="monotone"
                   dataKey="premio_pp"
                   stroke={PREMIO_COLOR}
                   strokeWidth={2}
-                  strokeDasharray="2 2"
+                  strokeDasharray="3 2"
                   dot={false}
                   name="Prêmio (pp)"
                   isAnimationActive={false}
@@ -333,9 +370,11 @@ export function FiiMacroCharts({ data }: Props) {
           )}
         </div>
         <p className="mt-2 text-[10px] text-zinc-400">
-          DY 12m calculado por FII (dividendos 12m / preço); mediana dos top 25 tijolo por
-          liquidez. NTN-B = yield real (Taxa Compra) do título IPCA+ mais longo disponível em cada
-          dia. Fonte: Tesouro Direto / yfinance.
+          DY 12m = soma dividendos 12m / preço atual por FII (yfinance), mediana dos top 25 tijolo.
+          NTN-B = yield real Taxa Compra (Tesouro Direto) do título IPCA+ sem cupom mais longo de
+          cada dia (vencimento muda ao longo do tempo — hoje 2050, antes 2045). Eixo direito = Prêmio
+          em pp. Indicador histórico — <strong>não é recomendação</strong>. FII tem risco de cota,
+          vacância e crédito que NTN-B não tem.
         </p>
       </article>
     </section>
