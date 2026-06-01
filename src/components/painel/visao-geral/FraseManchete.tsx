@@ -34,4 +34,12 @@ export function FraseManchete({ payload }: { payload: VisaoGeralPayload }) {
       </p>
     );
   }
-  re
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+      <p className="text-sm text-zinc-700 leading-relaxed">{frase}</p>
+      <p className="mt-2 text-xs text-zinc-500 leading-relaxed">
+        <strong className="text-zinc-700">Veredito Probit AZ:</strong> {v}
+      </p>
+    </div>
+  );
+}

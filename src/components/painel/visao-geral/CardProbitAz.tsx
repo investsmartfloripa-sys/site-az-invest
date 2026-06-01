@@ -220,6 +220,17 @@ export function CardProbitAz({
           </div>
         </div>
 
+        {/* Coluna direita: Fan chart com modelos individuais + mediana */}
+        <div className="min-w-0">
+          <ResponsiveContainer width="100%" height={240}>
+            <LineChart data={serieFinal} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <XAxis
+                dataKey="mes"
+                tick={{ fontSize: 9 }}
+                tickFormatter={(v) => formatMes(String(v))}
+                minTickGap={36}
+              />
               <YAxis tick={{ fontSize: 9 }} domain={[0, 1]} tickFormatter={(v) => `${Math.round(v * 100)}%`} />
               <Tooltip formatter={(v: unknown) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "—")} labelFormatter={(l: unknown) => formatMes(String(l ?? ""))} />
               <ReferenceLine y={0.65} stroke="#DC2626" strokeDasharray="4 4" opacity={0.4} />
