@@ -17,8 +17,13 @@
 import { painelBlobUrl } from "@/lib/painel-blob";
 import { prisma } from "@/lib/prisma";
 
-/** Cache ISR de 1 hora — dados atualizam 1x/dia. */
-export const FII_REVALIDATE_SECONDS = 3600;
+/**
+ * Cache ISR padrão. JSONs leves (ifix + screener) re-geram a cada 15 min
+ * via workflow GH Actions live, então 60s é equilibrado:
+ * fresh suficiente pra refletir mudanças, leve o bastante pra não bater Blob a cada request.
+ * JSONs pesados (detail, macro) usam o mesmo padrão — sobre-cobertura é OK.
+ */
+export const FII_REVALIDATE_SECONDS = 60;
 
 // ---------------------------------------------------------------------------
 // IFIX (hero + chart histórico com comparação)

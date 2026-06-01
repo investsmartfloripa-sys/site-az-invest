@@ -1,9 +1,11 @@
-name: FII pipeline (painel Fundos Imobiliários)
+name: FII pipeline pesado (Detail + Macro charts)
 
-# Roda em dias úteis após o fechamento do pregão:
+# Roda 1x por dia útil após o fechamento do pregão. Estes pipelines são pesados:
+#   - build_fii_detail: ~5 min (107 tickers × yfinance .dividends + history)
+#   - build_fii_macro_charts: ~10 min (CVM 7 anos + Tesouro Direto CSV 14 MB)
+# Por isso ficam separados do pipeline leve que roda a cada 15 min.
 #   22:35 UTC = 19:35 BRT (5 min depois do market-data.yml pra escalonar yfinance)
 #   00:35 UTC do dia seguinte = 21:35 BRT (retry se primeira execução falhou)
-# Plus dispatch manual para testes/regenerar sob demanda.
 on:
   schedule:
     - cron: "35 22 * * 1-5"
@@ -14,9 +16,13 @@ on:
         description: "Rodar build_fii_detail (pesado: ~5min, 107 tickers x yfinance)"
         required: false
         default: "1"
+      run_macro:
+        description: "Rodar build_fii_macro_charts (pesado: ~10min, CVM 7 anos + TD CSV)"
+        required: false
+        default: "1"
 
 concurrency:
-  group: fii-pipeline
+  group: fii-pipeline-heavy
   cancel-in-progress: true
 
 jobs:
@@ -42,24 +48,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r data-pipeline/python/requirements.txt
 
-      # 1. IFIX (hero + chart com benchmarks) — leve, ~30 segundos
-      - name: build_fii_ifix (hero IFIX + benchmarks)
-        run: python data-pipeline/python/build_fii_ifix.py --upload
-        continue-on-error: true
-
-      # 2. Screener (107 FIIs com PL, P/VP, DY, segmento) — médio, ~3 min
-      - name: build_fii_screener (tabela 107 FIIs)
-        run: python data-pipeline/python/build_fii_screener.py --upload
-        continue-on-error: true
-
-      # 3. Detail (página individual de cada FII com dividends, hero, indicadores) — pesado, ~5 min
+      # Detail (página individual de cada FII com dividends, hero, indicadores) — pesado, ~5 min
       - name: build_fii_detail (107 páginas individuais)
         if: ${{ github.event.inputs.run_detail != '0' }}
         run: python data-pipeline/python/build_fii_detail.py --upload
         continue-on-error: true
 
-      # 4. Macro charts (P/VP histórico 5 anos + Prêmio NTN-B vs DY tijolo) — pesado, ~10 min
+      # Macro charts (P/VP histórico 5 anos + Prêmio NTN-B vs DY tijolo) — pesado, ~10 min
       - name: build_fii_macro_charts (P/VP + Prêmio histórico 5a)
+        if: ${{ github.event.inputs.run_macro != '0' }}
         run: python data-pipeline/python/build_fii_macro_charts.py --upload
         continue-on-error: true
 
@@ -67,10 +64,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fii-pipeline-${{ github.run_id }}
+          name: fii-pipeline-heavy-${{ github.run_id }}
           path: |
-            data-pipeline/out/fii_ifix.json
-            data-pipeline/out/fii_screener.json
             data-pipeline/out/fii_details.json
             data-pipeline/out/fii_macro_charts.json
           if-no-files-found: warn
