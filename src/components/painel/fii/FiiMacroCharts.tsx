@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   Area,
+  Bar,
   CartesianGrid,
   ComposedChart,
   Legend,
@@ -64,6 +65,8 @@ function buildPvpData(tijolo: FiiPvpPoint[], papel: FiiPvpPoint[]) {
       tijolo_p75: p75,
       tijolo_band_base: p25,
       tijolo_band_height: p25 != null && p75 != null ? p75 - p25 : null,
+      // Desvio vs paridade (em %): -10 = P/VP 0,90; +5 = P/VP 1,05
+      tijolo_dev_pct: (p.median - 1) * 100,
     };
   }
   for (const p of papel) {
@@ -76,6 +79,7 @@ function buildPvpData(tijolo: FiiPvpPoint[], papel: FiiPvpPoint[]) {
       papel_p75: p75,
       papel_band_base: p25,
       papel_band_height: p25 != null && p75 != null ? p75 - p25 : null,
+      papel_dev_pct: (p.median - 1) * 100,
     };
   }
   return Object.entries(byDate)
@@ -150,10 +154,21 @@ export function FiiMacroCharts({ data }: Props) {
                   tick={{ fontSize: 10, fill: "#71717A" }}
                   minTickGap={32}
                 />
+                {/* Eixo esquerdo: P/VP absoluto (linhas e bandas) */}
                 <YAxis
+                  yAxisId="left"
                   tick={{ fontSize: 10, fill: "#71717A" }}
                   domain={["auto", "auto"]}
                   tickFormatter={(v) => (typeof v === "number" ? v.toFixed(2) : String(v))}
+                  width={42}
+                />
+                {/* Eixo direito: desvio % vs paridade 1,00 (barras) */}
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  tick={{ fontSize: 10, fill: "#71717A" }}
+                  domain={["auto", "auto"]}
+                  tickFormatter={(v) => `${typeof v === "number" ? (v >= 0 ? "+" : "") + v.toFixed(0) : v}%`}
                   width={42}
                 />
                 <Tooltip
@@ -171,8 +186,27 @@ export function FiiMacroCharts({ data }: Props) {
                     return [n.toFixed(3), name];
                   }}
                 />
+                {/* Barras de desvio vs paridade (eixo Y direito).
+                    Cor escura quando deságio (P/VP<1), clara quando ágio (P/VP>1). */}
+                <Bar
+                  yAxisId="right"
+                  dataKey="tijolo_dev_pct"
+                  fill={TIJOLO_COLOR}
+                  fillOpacity={0.35}
+                  name="Tijolo (% vs paridade)"
+                  isAnimationActive={false}
+                />
+                <Bar
+                  yAxisId="right"
+                  dataKey="papel_dev_pct"
+                  fill={PAPEL_COLOR}
+                  fillOpacity={0.35}
+                  name="Papel (% vs paridade)"
+                  isAnimationActive={false}
+                />
                 {/* Banda P25-P75 tijolo: base invisível + altura sombreada (stack) */}
                 <Area
+                  yAxisId="left"
                   type="monotone"
                   dataKey="tijolo_band_base"
                   stackId="tj"
@@ -183,6 +217,7 @@ export function FiiMacroCharts({ data }: Props) {
                   legendType="none"
                 />
                 <Area
+                  yAxisId="left"
                   type="monotone"
                   dataKey="tijolo_band_height"
                   stackId="tj"
@@ -194,6 +229,7 @@ export function FiiMacroCharts({ data }: Props) {
                 />
                 {/* Banda P25-P75 papel: idem */}
                 <Area
+                  yAxisId="left"
                   type="monotone"
                   dataKey="papel_band_base"
                   stackId="pp"
@@ -204,6 +240,7 @@ export function FiiMacroCharts({ data }: Props) {
                   legendType="none"
                 />
                 <Area
+                  yAxisId="left"
                   type="monotone"
                   dataKey="papel_band_height"
                   stackId="pp"
@@ -215,6 +252,7 @@ export function FiiMacroCharts({ data }: Props) {
                 />
                 {/* Medianas (linhas cheias) */}
                 <Line
+                  yAxisId="left"
                   type="monotone"
                   dataKey="tijolo_median"
                   stroke={TIJOLO_COLOR}
@@ -224,6 +262,7 @@ export function FiiMacroCharts({ data }: Props) {
                   isAnimationActive={false}
                 />
                 <Line
+                  yAxisId="left"
                   type="monotone"
                   dataKey="papel_median"
                   stroke={PAPEL_COLOR}
@@ -239,8 +278,9 @@ export function FiiMacroCharts({ data }: Props) {
         <p className="mt-2 text-[10px] text-zinc-400">
           <strong>Tijolo</strong> = Logística, Lajes, Shoppings, Renda urbana, Residencial,
           Hospitalar, Hotelaria, Educacional, Agro, Varejo. <strong>Papel</strong> = CRI.
-          Área sombreada = quartis P25-P75 mensais. P/VP = preço / valor patrimonial por cota
-          (CVM Informe Mensal). Não é recomendação.
+          Linhas = mediana. Áreas sombreadas = quartis P25-P75 mensais. <strong>Barras
+          (eixo direito)</strong> = desvio % vs paridade (P/VP = 1,00). Acima de 0%, ágio;
+          abaixo, deságio. P/VP = preço / VP por cota (CVM Informe Mensal). Não é recomendação.
         </p>
       </article>
 

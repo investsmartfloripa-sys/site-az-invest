@@ -430,11 +430,15 @@ def build_payload() -> Dict:
     # Pulando meses com amortização > 0 (não é renda recorrente).
     cvm_by_cnpj_month_amort = cvm.set_index(["cnpj", "month_end"])["amort_pct_mes"].to_dict()
 
-    # Universo de meses (igual ao P/VP)
-    # `months` já foi construído acima — reusa.
+    # Universo de meses (igual ao P/VP).
+    # Pula o mês corrente: ele praticamente nunca tem CVM publicado (prazo
+    # de envio é dia 25 do mês seguinte), então o último ponto sempre seria
+    # subestimado.
+    current_month_end = (pd.Timestamp.today() + pd.offsets.MonthEnd(0)).normalize()
+    premio_months = [m for m in months if m < current_month_end]
 
     premio_history: List[Dict] = []
-    for m in months:
+    for m in premio_months:
         if m not in ntnb_full.index or pd.isna(ntnb_full.loc[m, "ntnb_yield"]):
             # Pega o NTN-B do último dia útil do mês via ffill (se m não é dia útil)
             wn = ntnb_full.loc[:m]
@@ -485,7 +489,11 @@ def build_payload() -> Dict:
                         soma += float(dy_k)
                     valid_meses += 1
             if valid_meses >= 10:  # exige pelo menos 10 dos 12 meses
-                dy_anual_pct = soma * 100.0  # decimal -> %
+                # Anualiza pela proporção de meses válidos. CVM tem lag de ~25d
+                # de publicação, então o ÚLTIMO mês de cada FII tipicamente está
+                # ausente — sem anualizar, a soma fica subestimada em 1/12 = 8%
+                # e o DY aparenta "cair" artificialmente nos últimos pontos.
+                dy_anual_pct = soma * 100.0 * (12.0 / valid_meses)
                 if 0 < dy_anual_pct < 30:
                     dys.append(dy_anual_pct)
 
