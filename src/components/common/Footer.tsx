@@ -1,7 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { navItems } from "@/data/home";
-import { InstagramIcon, YoutubeIcon, WhatsappIcon } from "@/components/common/SocialIcons";
+import {
+  InstagramIcon,
+  YoutubeIcon,
+  LinkedinIcon,
+  TiktokIcon,
+  WhatsappIcon,
+} from "@/components/common/SocialIcons";
 
 const socials = [
   {
@@ -13,6 +19,16 @@ const socials = [
     label: "YouTube",
     href: "https://www.youtube.com/channel/UCuMfW1AOhcbSP1zRG5hyBZQ",
     Icon: YoutubeIcon,
+  },
+  {
+    label: "LinkedIn",
+    href: null,
+    Icon: LinkedinIcon,
+  },
+  {
+    label: "TikTok",
+    href: null,
+    Icon: TiktokIcon,
   },
   {
     label: "WhatsApp",
@@ -44,9 +60,9 @@ export function Footer() {
               {socials.map(({ label, href, Icon }) => (
                 <a
                   key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={href ?? undefined}
+                  target={href ? "_blank" : undefined}
+                  rel={href ? "noopener noreferrer" : undefined}
                   aria-label={label}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 text-white transition hover:border-[#027DFC] hover:text-[#027DFC]"
                 >
