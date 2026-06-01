@@ -15,7 +15,7 @@ export async function DestaquesDaSemana() {
     <section className="space-y-4">
       <div className="flex items-baseline justify-between">
         <h2 className="text-2xl font-semibold text-[#132960] md:text-3xl">
-          Destaques da semana
+          Periódicos
         </h2>
         <Link
           href="/conteudo"

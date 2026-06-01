@@ -1,10 +1,10 @@
 import Link from "next/link";
 
-import { YoutubeVideoCard } from "@/components/videos/YoutubeVideoCard";
+import { VideosShowcase } from "@/components/home/VideosShowcase";
 import { fetchChannelVideos } from "@/lib/youtube";
 
 export async function VideosSection() {
-  const { videos } = await fetchChannelVideos(3);
+  const { videos } = await fetchChannelVideos(7);
 
   if (videos.length === 0) return null;
 
@@ -20,11 +20,7 @@ export async function VideosSection() {
         </Link>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-3">
-        {videos.map((video) => (
-          <YoutubeVideoCard key={video.id} video={video} variant="home" />
-        ))}
-      </div>
+      <VideosShowcase videos={videos} />
     </section>
   );
 }
