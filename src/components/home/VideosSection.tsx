@@ -38,11 +38,9 @@ export async function VideosSection() {
               Ver todos
             </Link>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            {shorts.slice(0, 12).map((video) => (
-              <div key={video.id} className="w-40 shrink-0 sm:w-44">
-                <YoutubeVideoCard video={video} vertical />
-              </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {shorts.slice(0, 4).map((video) => (
+              <YoutubeVideoCard key={video.id} video={video} vertical />
             ))}
           </div>
         </div>

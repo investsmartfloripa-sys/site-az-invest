@@ -25,6 +25,9 @@ export function isLong(video: YoutubeVideo): boolean {
   return typeof video.durationSeconds === "number" && video.durationSeconds > SHORT_MAX_SECONDS;
 }
 
+// Exclui transmissoes "AO VIVO" das listagens — elas duplicam o VOD limpo. Temporario.
+const LIVE_TITLE_RE = /ao\s*vivo/i;
+
 export type PlaylistInfo = {
   slug: string;
   label: string;
@@ -221,7 +224,7 @@ export async function fetchChannelVideos(maxResults = 12): Promise<{
       };
     });
 
-    return { videos, source: "youtube" };
+    return { videos: videos.filter((v) => !LIVE_TITLE_RE.test(v.title)), source: "youtube" };
   } catch (err) {
     return {
       videos: toFallback(),
@@ -335,7 +338,7 @@ export async function fetchPlaylistVideos(
       };
     });
 
-    return { videos, source: "youtube" };
+    return { videos: videos.filter((v) => !LIVE_TITLE_RE.test(v.title)), source: "youtube" };
   } catch (err) {
     return {
       videos: toFallback(),
