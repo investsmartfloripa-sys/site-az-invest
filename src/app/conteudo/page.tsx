@@ -47,20 +47,21 @@ export default async function ConteudoHub({ searchParams }: ConteudoProps) {
     findPosts({
       where: { published: true },
       orderBy: { createdAt: "desc" },
-      take: 6,
+      take: 3,
     }),
     activePlaylist
       ? fetchPlaylistVideos(activePlaylist.playlistId, 50)
       : fetchChannelVideos(30),
-    listBriefings(5),
-    listPautas(5),
+    listBriefings(3),
+    listPautas(3),
   ]);
   const mappedPosts = posts.map(mapPost);
 
   let vids: YoutubeVideo[] = videoResult.videos;
   if (activeType === "shorts") vids = vids.filter(isShort);
   else if (activeType === "long") vids = vids.filter(isLong);
-  const videos = vids.slice(0, 9);
+  const videoLimit = activePlaylist || activeType ? 12 : 3;
+  const videos = vids.slice(0, videoLimit);
   const isShortsView = activeType === "shorts";
 
   return (
@@ -243,7 +244,7 @@ function VideoTab({
     <Link
       href={href}
       className={
-        "rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition " +
+        "rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition " +
         (active
           ? "bg-[#132960] text-white"
           : "border border-[#132960]/20 text-[#132960] hover:border-[#027DFC] hover:text-[#027DFC]")
