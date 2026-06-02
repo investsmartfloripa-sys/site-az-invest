@@ -1,75 +1,111 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import type { UserRole } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import {
+  buildSessionToken,
+  parseSessionToken,
+  SESSION_COOKIE_NAME,
+  SESSION_MAX_AGE,
+  type SessionUser,
+} from "@/lib/auth-token";
 
-const COOKIE_NAME = "az_admin_session";
-const SESSION_TTL_SECONDS = 60 * 60 * 12;
+export type { SessionUser, UserRole };
 
-export type UserRole = "MASTER" | "EDITOR";
-
-type SessionPayload = {
-  userId: number;
+export async function createSession(user: {
+  id: number;
   email: string;
   role: UserRole;
-  exp: number;
-};
+  authorId: number | null;
+  name: string | null;
+}) {
+  const token = buildSessionToken({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    authorId: user.authorId,
+    name: user.name,
+  });
 
-function getSecret() {
-  return process.env.AUTH_SECRET || "dev-only-change-me";
-}
-
-function toBase64Url(input: string) {
-  return Buffer.from(input).toString("base64url");
-}
-
-function signPayload(payload: SessionPayload) {
-  const body = toBase64Url(JSON.stringify(payload));
-  const signature = createHmac("sha256", getSecret()).update(body).digest("base64url");
-  return `${body}.${signature}`;
-}
-
-function parseSession(token: string): SessionPayload | null {
-  const [body, signature] = token.split(".");
-  if (!body || !signature) return null;
-
-  const expected = createHmac("sha256", getSecret()).update(body).digest();
-  const received = Buffer.from(signature, "base64url");
-
-  if (expected.length !== received.length || !timingSafeEqual(expected, received)) {
-    return null;
-  }
-
-  const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as SessionPayload;
-  if (Date.now() / 1000 > payload.exp) return null;
-  return payload;
-}
-
-export async function createSession(userId: number, email: string, role: UserRole) {
-  const payload: SessionPayload = {
-    userId,
-    email,
-    role,
-    exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
-  };
-
-  const token = signPayload(payload);
   const store = await cookies();
-  store.set(COOKIE_NAME, token, {
+  store.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: SESSION_TTL_SECONDS,
+    maxAge: SESSION_MAX_AGE,
   });
 }
 
 export async function destroySession() {
   const store = await cookies();
-  store.delete(COOKIE_NAME);
+  store.delete(SESSION_COOKIE_NAME);
 }
 
-export async function getSession() {
+export async function getSession(): Promise<SessionUser | null> {
   const store = await cookies();
-  const token = store.get(COOKIE_NAME)?.value;
+  const token = store.get(SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
-  return parseSession(token);
+  return parseSessionToken(token);
 }
+
+export async function getVerifiedSession(): Promise<SessionUser | null> {
+  const session = await getSession();
+  if (!session) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      authorId: true,
+      name: true,
+      active: true,
+    },
+  });
+
+  if (!user || !user.active) {
+    await destroySession();
+    return null;
+  }
+
+  if (
+    user.role !== session.role ||
+    user.email !== session.email ||
+    user.authorId !== session.authorId
+  ) {
+    await createSession(user);
+  }
+
+  return {
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    authorId: user.authorId,
+    name: user.name,
+    exp: session.exp,
+  };
+}
+
+export async function requireSession(loginPath = "/area-restrita/login") {
+  const session = await getVerifiedSession();
+  if (!session) redirect(loginPath);
+  return session;
+}
+
+export function isAdmin(role: UserRole) {
+  return role === "ADMIN";
+}
+
+export function isStaffOrAdmin(role: UserRole) {
+  return role === "ADMIN" || role === "STAFF";
+}
+
+export async function requireRole(roles: UserRole[], redirectTo = "/area-restrita/dashboard") {
+  const session = await requireSession();
+  if (!roles.includes(session.role)) redirect(redirectTo);
+  return session;
+}
+
+export { SESSION_COOKIE_NAME, parseSessionToken } from "@/lib/auth-token";

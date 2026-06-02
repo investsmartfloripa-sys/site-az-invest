@@ -13,13 +13,13 @@ async function main() {
     where: { email: MASTER_LOGIN },
     update: {
       passwordHash,
-      role: "MASTER",
+      role: "ADMIN",
       name: "Master",
     },
     create: {
       email: MASTER_LOGIN,
       passwordHash,
-      role: "MASTER",
+      role: "ADMIN",
       name: "Master",
     },
   });

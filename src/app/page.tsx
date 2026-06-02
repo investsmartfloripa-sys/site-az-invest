@@ -7,6 +7,7 @@ import { UltimasPublicacoes } from "@/components/home/UltimasPublicacoes";
 import { VideosSection } from "@/components/home/VideosSection";
 import { DestaquesDaSemana } from "@/components/conteudo/DestaquesDaSemana";
 import { findPosts, mapPost } from "@/lib/posts";
+import { publishedPostWhere } from "@/lib/workspace/posts";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export const metadata = {
 
 export default async function Home() {
   const posts = await findPosts({
-    where: { published: true },
+    where: publishedPostWhere,
     orderBy: { createdAt: "desc" },
     take: 21,
   });

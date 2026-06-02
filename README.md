@@ -8,7 +8,8 @@ Site institucional + blog dinamico, construido em Next.js 16 (App Router), Prism
 - **UI**: React 19, Tailwind CSS v4, lucide-react, recharts
 - **Banco**: Postgres (Neon em producao, Vercel Postgres tambem suportado)
 - **ORM**: Prisma
-- **Auth**: cookies HMAC + bcrypt, com 2 niveis (MASTER e EDITOR)
+- **Auth**: cookies HMAC + bcrypt, RBAC com 3 papeis (`ADMIN`, `STAFF`, `AUTHOR`)
+- **Workspace**: `/area-restrita/*` — editor TipTap, fila de revisao, metricas, leads, saude dos dados
 
 ## Rodando local
 
@@ -24,7 +25,7 @@ npm run db:seed-posts
 npm run dev
 ```
 
-3. Abra `http://localhost:3000`. Login Master padrao: `Borbarox` / `041291` em `/area-restrita/login`.
+3. Abra `http://localhost:3000`. Login admin padrao: `Borbarox` / `041291` em `/area-restrita/login` (titulo **AZ Workspace**).
 
 ## Deploy na Vercel
 
@@ -56,11 +57,21 @@ registrador**, nao o Next.js ou a Vercel em si.
 
 (Logins e rotas sao as mesmas, por exemplo `/area-restrita/login`.)
 
-Diagnostico local:
+Diagnostico e **validacao pos-deploy** (obrigatorio para agentes — ver tambem `AGENTS.md`):
 
 ```bash
 npm run site:check-access
 ```
+
+O script confirma HTTP 200 **e** se `/area-restrita/login` exibe **AZ Workspace** (nao o login legado nem a pagina de erro global). Se falhar, publique com `vercel --prod --yes` e repita.
+
+Deploy manual (producao pode estar a frente do `main` no GitHub):
+
+```bash
+vercel --prod --yes
+```
+
+Aguarde **Aliased** no log antes de rodar `site:check-access` de novo.
 
 **Corrigir DNS** (Registro.br ou provedor onde o dominio esta):
 
@@ -114,10 +125,26 @@ Configurar uma vez:
 Sem `RESEND_API_KEY`/`EMAIL_FROM`, os leads continuam sendo salvos no banco e
 listados no painel com status `SKIPPED`.
 
+## AZ Workspace (area logada)
+
+| Rota | Descricao |
+|------|-----------|
+| `/area-restrita/login` | Login (publico) |
+| `/area-restrita/dashboard` | Home do workspace |
+| `/area-restrita/conteudo` | Posts (rascunho → revisao → publicado) |
+| `/area-restrita/revisao` | Fila editorial (ADMIN/STAFF) |
+| `/area-restrita/autores` | Cadastro de assessores |
+| `/area-restrita/leads`, `/metricas` | CRM e analytics first-party |
+| `/area-restrita/dados` | Saude dos pipelines (cron + GitHub Actions) |
+| `/area-restrita/usuarios` | Convites e reset de senha (ADMIN/STAFF) |
+| `/area-restrita/perfil` | Perfil do autor vinculado |
+
+Rotas legadas `/area-restrita/painel` e `/admin` redirecionam para `/area-restrita/dashboard`.
+
 ## Estrutura
 
 - `src/app/` - App Router (paginas e layouts)
-- `src/app/area-restrita/` - login, painel e gerenciamento (autores, usuarios)
+- `src/app/area-restrita/` - login + AZ Workspace (`(workspace)/`)
 - `src/app/simuladores/` - simuladores financeiros (consorcio, juros compostos, etc)
 - `src/app/blog/[slug]` - posts individuais
 - `src/app/nosso-time/[slug]` - paginas individuais dos autores

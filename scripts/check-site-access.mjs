@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 /**
  * Verifica DNS/HTTPS do dominio de producao e do fallback *.vercel.app.
- * Imprime como usar login e senha Master (trocar em /area-restrita/usuarios).
+ * Confirma conteudo da pagina de login (AZ Workspace) e detecta pagina de erro global.
  */
 import dns from "node:dns/promises";
 
 const FALLBACK_HOST = "site-az-invest.vercel.app";
+const LOGIN_PATH = "/area-restrita/login";
+const LOGIN_MARKER = "Área logada";
+const ERROR_MARKER = "Tivemos um problema ao carregar";
+const LEGACY_LOGIN_MARKER = "Login da area restrita";
 
 function hostnameFromSiteUrl(raw) {
   const s = String(raw ?? "").trim();
@@ -36,18 +40,28 @@ async function resolveOk(name) {
   }
 }
 
-async function httpsStatus(host, path = "/") {
+async function httpsFetch(host, path = "/") {
   const url = `https://${host}${path}`;
   try {
     const r = await fetch(url, {
       method: "GET",
       redirect: "follow",
       signal: AbortSignal.timeout(20000),
+      headers: { "Cache-Control": "no-cache" },
     });
-    return r.status;
+    const body = await r.text();
+    return { status: r.status, body };
   } catch {
-    return 0;
+    return { status: 0, body: "" };
   }
+}
+
+function describeLoginPage(body) {
+  if (!body) return "FALHOU (sem corpo)";
+  if (body.includes(ERROR_MARKER)) return "ERRO GLOBAL (error.tsx)";
+  if (body.includes(LOGIN_MARKER)) return "OK (AZ Workspace)";
+  if (body.includes(LEGACY_LOGIN_MARKER)) return "DESATUALIZADO (login legado — falta deploy)";
+  return "INCONCLUSIVO (marca nao encontrada)";
 }
 
 async function main() {
@@ -57,15 +71,17 @@ async function main() {
   console.log(`[site-check] DNS resolve ${DOMAIN}: ${dnsOk ? "OK" : "FALHOU"}`);
 
   let prodHome = 0;
-  let prodLogin = 0;
+  let prodLoginLabel = "pulado (DNS falhou)";
   if (dnsOk) {
-    prodHome = await httpsStatus(DOMAIN, "/");
-    prodLogin = await httpsStatus(DOMAIN, "/area-restrita/login");
+    const home = await httpsFetch(DOMAIN, "/");
+    prodHome = home.status;
+    const login = await httpsFetch(DOMAIN, LOGIN_PATH);
+    prodLoginLabel = describeLoginPage(login.body);
     console.log(
       `[site-check] HTTPS https://${DOMAIN}/ → ${prodHome || "FALHOU"}`,
     );
     console.log(
-      `[site-check] HTTPS https://${DOMAIN}/area-restrita/login → ${prodLogin || "FALHOU"}`,
+      `[site-check] Login https://${DOMAIN}${LOGIN_PATH} → HTTP ${login.status || "FALHOU"} | ${prodLoginLabel}`,
     );
   } else {
     console.log(
@@ -76,30 +92,39 @@ async function main() {
     );
   }
 
-  const fbHome = await httpsStatus(FALLBACK_HOST, "/");
-  const fbLogin = await httpsStatus(FALLBACK_HOST, "/area-restrita/login");
+  const fbHome = await httpsFetch(FALLBACK_HOST, "/");
+  const fbLogin = await httpsFetch(FALLBACK_HOST, LOGIN_PATH);
+  const fbLoginLabel = describeLoginPage(fbLogin.body);
   console.log(
-    `[site-check] Fallback https://${FALLBACK_HOST}/ → ${fbHome || "FALHOU"}`,
+    `[site-check] Fallback https://${FALLBACK_HOST}/ → ${fbHome.status || "FALHOU"}`,
   );
   console.log(
-    `[site-check] Fallback /area-restrita/login → ${fbLogin || "FALHOU"}`,
-  );
-
-  console.log(
-    "[site-check] Uso: acesse /area-restrita/login (credenciais padrao do seed no README).",
-  );
-  console.log(
-    "[site-check] Troca de senha Master: apos login, /area-restrita/usuarios → campo Nova senha + Resetar na linha do usuario Master.",
+    `[site-check] Fallback login → HTTP ${fbLogin.status || "FALHOU"} | ${fbLoginLabel}`,
   );
 
   console.log(
-    "[site-check] Opcional na Vercel (so se for usar o recurso): NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL, RESEND_API_KEY, EMAIL_FROM. YouTube: YOUTUBE_API_KEY + YOUTUBE_CHANNEL_ID.",
+    "[site-check] Credenciais padrao (seed): login Borbarox / senha 041291 — ver README.",
+  );
+  console.log(
+    "[site-check] Pos-login: /area-restrita/dashboard deve carregar sem error.tsx.",
+  );
+  console.log(
+    "[site-check] Gestao de usuarios: /area-restrita/usuarios (ADMIN/STAFF).",
   );
 
-  const ok =
+  const loginOk =
+    prodLoginLabel.startsWith("OK") || fbLoginLabel.startsWith("OK");
+  const reachable =
     (dnsOk && prodHome >= 200 && prodHome < 500) ||
-    (fbHome >= 200 && fbHome < 500);
-  process.exit(ok ? 0 : 1);
+    (fbHome.status >= 200 && fbHome.status < 500);
+
+  if (!loginOk && reachable) {
+    console.log(
+      "[site-check] FALHA: login nao mostra AZ Workspace. Rode vercel --prod --yes e repita.",
+    );
+  }
+
+  process.exit(reachable && loginOk ? 0 : reachable ? 1 : 1);
 }
 
 main().catch((e) => {

@@ -44,7 +44,7 @@ export default async function BlogPostPage({
     include: { author: true },
   });
 
-  if (!post || !post.published) {
+  if (!post || post.status !== "APPROVED") {
     notFound();
   }
 

@@ -318,6 +318,7 @@ async function findFiiPosts(orderBy: "recent" | "oldest", take: number): Promise
   try {
     const posts = await prisma.post.findMany({
       where: {
+        status: "APPROVED",
         published: true,
         OR: [
           { category: { contains: "fii", mode: "insensitive" } },

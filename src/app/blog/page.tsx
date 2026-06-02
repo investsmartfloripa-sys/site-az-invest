@@ -6,6 +6,7 @@ import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { formatPostCategoryLabel, getPostCategoryFilterChipClasses } from "@/data/blog-categories";
 import { prisma } from "@/lib/prisma";
 import { findPosts, mapPost } from "@/lib/posts";
+import { publishedPostWhere } from "@/lib/workspace/posts";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export const dynamic = "force-dynamic";
@@ -37,13 +38,13 @@ export default async function BlogIndexPage({
   const [posts, categoriesRaw] = await Promise.all([
     findPosts({
       where: {
-        published: true,
+        ...publishedPostWhere,
         ...(filter ? { category: { equals: filter } } : {}),
       },
       orderBy: { createdAt: "desc" },
     }),
     prisma.post.findMany({
-      where: { published: true },
+      where: { status: "APPROVED", published: true },
       select: { category: true },
       distinct: ["category"],
       orderBy: { category: "asc" },

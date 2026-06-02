@@ -32,7 +32,7 @@ function initials(name: string) {
 export default async function NossoTimePage() {
   const authors = await prisma.author.findMany({
     orderBy: { name: "asc" },
-    include: { _count: { select: { posts: { where: { published: true } } } } },
+    include: { _count: { select: { posts: { where: { status: "APPROVED", published: true } } } } },
   });
 
   return (

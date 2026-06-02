@@ -88,7 +88,7 @@ export async function PainelPanoramaPage() {
   let mapped: ReturnType<typeof mapPost>[] = [];
   try {
     const posts = await findPosts({
-      where: { published: true, category: "Economia" },
+      where: { status: "APPROVED", published: true, category: "Economia" },
       orderBy: { createdAt: "desc" },
     });
     mapped = posts.map(mapPost);

@@ -1,7 +1,8 @@
 import bcrypt from "bcryptjs";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createSession, destroySession, getSession, type UserRole } from "@/lib/auth";
+import { createSession, destroySession, getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 async function logoutAction() {
@@ -14,12 +15,13 @@ async function loginAction(formData: FormData) {
   "use server";
   const rawLogin = String(formData.get("login") || "").trim();
   const password = String(formData.get("password") || "");
+  const next = String(formData.get("next") || "").trim();
 
   let user = await prisma.user.findUnique({ where: { email: rawLogin } });
-  if (!user) {
+  if (!user && rawLogin !== rawLogin.toLowerCase()) {
     user = await prisma.user.findUnique({ where: { email: rawLogin.toLowerCase() } });
   }
-  if (!user) {
+  if (!user || !user.active) {
     redirect("/area-restrita/login?error=invalid_credentials");
   }
 
@@ -28,61 +30,74 @@ async function loginAction(formData: FormData) {
     redirect("/area-restrita/login?error=invalid_credentials");
   }
 
-  await createSession(user.id, user.email, user.role as UserRole);
-  redirect("/area-restrita/painel");
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { lastLoginAt: new Date() },
+  });
+
+  await createSession(user);
+  redirect(next && next.startsWith("/area-restrita") ? next : "/area-restrita/dashboard");
 }
 
 export default async function RestrictedLoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
   const session = await getSession();
   const params = await searchParams;
   const hasError = params.error === "invalid_credentials";
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-4">
-      <div className="w-full rounded-xl border border-[#132960]/25 bg-white p-6">
-        <h1 className="text-2xl text-[#132960]">Login da area restrita</h1>
-        <p className="mt-2 text-sm text-zinc-600">Acesso da equipe editorial do blog.</p>
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-[#132960] px-4 py-10">
+      <Image
+        src="/logo-az-branco.png"
+        alt="AZ Invest - Investimentos de A a Z"
+        width={951}
+        height={310}
+        priority
+        className="mb-8 h-12 w-auto"
+      />
+      <div className="w-full max-w-md rounded-2xl border border-[#132960]/10 bg-white p-7 shadow-xl">
+        <h1 className="text-2xl font-semibold text-[#132960]">Área logada</h1>
+        <p className="mt-2 text-sm text-[#132960]/60">Acesso da equipe editorial do blog.</p>
 
         {session ? (
           <div className="mt-5 space-y-4">
             <p className="rounded-md bg-[#027DFC]/10 px-3 py-2 text-sm text-[#132960]">
-              Voce ja esta logado como{" "}
-              <span className="font-semibold">{session.email}</span>.
+              Você já está logado como <span className="font-semibold">{session.email}</span>.
             </p>
             <Link
-              href="/area-restrita/painel"
-              className="flex h-10 w-full items-center justify-center rounded-md bg-[#132960] text-sm font-semibold text-white hover:bg-[#0f214d]"
+              href="/area-restrita/dashboard"
+              className="flex h-11 w-full items-center justify-center rounded-md bg-[#027DFC] text-sm font-semibold text-white hover:bg-[#0268d4]"
             >
-              Ir para o painel
+              Ir ao dashboard
             </Link>
             <form action={logoutAction}>
               <button
                 type="submit"
-                className="h-10 w-full rounded-md border border-zinc-300 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+                className="h-11 w-full rounded-md border border-[#132960]/20 text-sm text-[#132960]/70 hover:bg-[#132960]/5"
               >
-                Sair e trocar de usuario
+                Sair
               </button>
             </form>
           </div>
         ) : (
           <>
             {hasError ? (
-              <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-                Credenciais invalidas.
+              <p className="mt-3 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-600">
+                Credenciais inválidas ou conta inativa.
               </p>
             ) : null}
             <form action={loginAction} className="mt-5 space-y-3">
+              {params.next ? <input type="hidden" name="next" value={params.next} /> : null}
               <input
                 name="login"
                 type="text"
                 required
-                placeholder="Login (e-mail ou usuario)"
+                placeholder="Login ou e-mail"
                 autoComplete="username"
-                className="h-10 w-full rounded-md border border-zinc-300 px-3 text-sm outline-none focus:border-[#027DFC]"
+                className="h-11 w-full rounded-md border border-[#132960]/20 bg-white px-3 text-sm text-[#132960] outline-none focus:border-[#027DFC]"
               />
               <input
                 name="password"
@@ -90,15 +105,20 @@ export default async function RestrictedLoginPage({
                 required
                 placeholder="Senha"
                 autoComplete="current-password"
-                className="h-10 w-full rounded-md border border-zinc-300 px-3 text-sm outline-none focus:border-[#027DFC]"
+                className="h-11 w-full rounded-md border border-[#132960]/20 bg-white px-3 text-sm text-[#132960] outline-none focus:border-[#027DFC]"
               />
               <button
                 type="submit"
-                className="h-10 w-full rounded-md bg-[#132960] text-sm font-semibold text-white hover:bg-[#0f214d]"
+                className="h-11 w-full rounded-md bg-[#FF5713] text-sm font-semibold text-white hover:bg-[#d94a10]"
               >
                 Entrar
               </button>
             </form>
+            <p className="mt-4 text-center text-xs text-[#132960]/50">
+              <Link href="/area-restrita/recuperar-senha" className="text-[#027DFC] hover:underline">
+                Esqueci minha senha
+              </Link>
+            </p>
           </>
         )}
       </div>

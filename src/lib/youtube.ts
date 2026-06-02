@@ -25,6 +25,9 @@ export function isLong(video: YoutubeVideo): boolean {
   return typeof video.durationSeconds === "number" && video.durationSeconds > SHORT_MAX_SECONDS;
 }
 
+// Exclui transmissoes "AO VIVO" das listagens — elas duplicam o VOD limpo. Temporario.
+const LIVE_TITLE_RE = /ao\s*vivo/i;
+
 export type PlaylistInfo = {
   slug: string;
   label: string;
@@ -33,8 +36,10 @@ export type PlaylistInfo = {
 
 export const KNOWN_PLAYLISTS: PlaylistInfo[] = [
   { slug: "fala-borba", label: "Fala Borba", playlistId: "PLqqJv6H5mqgoTCbMXIaqXsrSjOhFK0eP-" },
-  { slug: "lives", label: "Lives", playlistId: "PLqqJv6H5mqgrbxOAHFW2XYkQ22Wr0PL8A" },
+  { slug: "macros", label: "Macros", playlistId: "PLqqJv6H5mqgrbxOAHFW2XYkQ22Wr0PL8A" },
+  { slug: "educacional", label: "Educacional", playlistId: "PLqqJv6H5mqgqjRjmP6ZmGNZU-apNKlsg4" },
   { slug: "az-cast", label: "AZ Cast", playlistId: "PLqqJv6H5mqgqJfd7r4ZLJXvDGPwS0X0rF" },
+  { slug: "rende-mais", label: "Rende +", playlistId: "PLqqJv6H5mqgoSNQQg92U_YTf3FiypN2jA" },
   { slug: "economista-reage", label: "Economista Reage", playlistId: "PLqqJv6H5mqgpkcMTf_ZWtU5ldTv14VE4T" },
 ];
 
@@ -219,7 +224,7 @@ export async function fetchChannelVideos(maxResults = 12): Promise<{
       };
     });
 
-    return { videos, source: "youtube" };
+    return { videos: videos.filter((v) => !LIVE_TITLE_RE.test(v.title)), source: "youtube" };
   } catch (err) {
     return {
       videos: toFallback(),
@@ -333,7 +338,7 @@ export async function fetchPlaylistVideos(
       };
     });
 
-    return { videos, source: "youtube" };
+    return { videos: videos.filter((v) => !LIVE_TITLE_RE.test(v.title)), source: "youtube" };
   } catch (err) {
     return {
       videos: toFallback(),

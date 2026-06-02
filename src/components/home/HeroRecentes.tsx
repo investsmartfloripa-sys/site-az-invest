@@ -7,7 +7,7 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
   if (posts.length === 0) {
     return (
       <section className="space-y-4">
-        <h1 className="text-4xl text-[#027DFC]">Mais recentes</h1>
+        <h1 className="text-4xl text-[#027DFC]">Artigos</h1>
         <p className="rounded-xl border border-[#132960]/20 bg-white p-4 text-sm text-zinc-600">
           Nenhuma postagem publicada ainda. Use a área restrita para publicar a primeira.
         </p>
@@ -21,7 +21,7 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
   return (
     <section className="space-y-4">
       <div className="flex items-end justify-between gap-4">
-        <h1 className="text-4xl text-[#027DFC]">Mais recentes</h1>
+        <h1 className="text-4xl text-[#027DFC]">Artigos</h1>
         <Link
           href="/blog"
           className="text-xs font-semibold text-[#132960] hover:underline whitespace-nowrap"

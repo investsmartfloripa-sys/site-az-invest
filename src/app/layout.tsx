@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Michroma, Raleway } from "next/font/google";
 import "./globals.css";
 import { getSiteUrl } from "@/lib/site-url";
+import { AnalyticsBeacon } from "@/components/analytics/AnalyticsBeacon";
 
 const headingFont = Michroma({
   variable: "--font-heading",
@@ -62,7 +63,10 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${headingFont.variable} ${bodyFont.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <AnalyticsBeacon />
+        {children}
+      </body>
     </html>
   );
 }

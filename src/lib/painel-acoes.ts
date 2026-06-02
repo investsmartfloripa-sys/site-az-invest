@@ -182,6 +182,7 @@ async function findAcoesPosts(orderBy: "recent" | "oldest", take: number): Promi
   try {
     const posts = await prisma.post.findMany({
       where: {
+        status: "APPROVED",
         published: true,
         OR: [
           { category: { contains: "acoes", mode: "insensitive" } },
