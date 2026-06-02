@@ -38,6 +38,14 @@ type ConteudoProps = {
   searchParams: Promise<{ vp?: string; vt?: string }>;
 };
 
+type Periodico = {
+  kind: "Café" | "Pauta";
+  href: string;
+  date: string;
+  label: string;
+  title: string;
+};
+
 export default async function ConteudoHub({ searchParams }: ConteudoProps) {
   const { vp, vt } = await searchParams;
   const activePlaylist = findPlaylistBySlug(vp);
@@ -63,6 +71,25 @@ export default async function ConteudoHub({ searchParams }: ConteudoProps) {
   const videoLimit = activePlaylist || activeType ? 12 : 3;
   const videos = vids.slice(0, videoLimit);
   const isShortsView = activeType === "shorts";
+
+  const periodicos: Periodico[] = [
+    ...cafes.map((b) => ({
+      kind: "Café" as const,
+      href: `/cafe-com-mercado/${b.date}`,
+      date: b.date,
+      label: `${b.weekday ? `${b.weekday}, ` : ""}${formatDateBR(b.date)}`,
+      title: b.title,
+    })),
+    ...pautas.map((p) => ({
+      kind: "Pauta" as const,
+      href: `/pauta-da-semana/${p.slug}`,
+      date: p.date,
+      label: `Semana de ${formatDateBR(p.date)}`,
+      title: p.title,
+    })),
+  ]
+    .sort((a, b) => (a.date < b.date ? 1 : -1))
+    .slice(0, 6);
 
   return (
     <div className="min-h-screen text-[#132960]">
@@ -137,93 +164,52 @@ export default async function ConteudoHub({ searchParams }: ConteudoProps) {
           )}
         </section>
 
-        <section className="space-y-6">
-          <h2 className="text-2xl font-semibold text-[#132960] md:text-3xl">
-            Periódicos
-          </h2>
-
-          <div className="space-y-3">
-            <div className="flex items-baseline justify-between">
-              <h3 className="text-lg font-semibold text-[#132960] md:text-xl">
-                Café com Mercado
-              </h3>
-              <Link
-                href="/cafe-com-mercado"
-                className="text-sm font-semibold text-[#027DFC] hover:underline"
-              >
-                Ver arquivo →
-              </Link>
-            </div>
-            {cafes.length === 0 ? (
-              <p className="text-zinc-700">Sem briefings publicados ainda.</p>
-            ) : (
-              <ul className="space-y-3">
-                {cafes.map((b) => (
-                  <li key={b.date}>
-                    <Link
-                      href={`/cafe-com-mercado/${b.date}`}
-                      className="az-card group block p-5 transition hover:border-[#027DFC]/40"
-                    >
-                      <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
-                        {b.weekday ? `${b.weekday}, ` : ""}
-                        {formatDateBR(b.date)}
-                      </p>
-                      <h4 className="mt-1 text-lg font-semibold text-[#132960] group-hover:text-[#027DFC]">
-                        {b.title}
-                      </h4>
-                      {b.description ? (
-                        <p className="mt-2 line-clamp-2 text-sm text-zinc-700">
-                          {b.description}
-                        </p>
-                      ) : null}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
+        <section className="space-y-4">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-2xl font-semibold text-[#132960] md:text-3xl">
+              Periódicos
+            </h2>
+            <Link
+              href="/cafe-com-mercado"
+              className="text-sm font-semibold text-[#027DFC] hover:underline"
+            >
+              Ver arquivo →
+            </Link>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-baseline justify-between">
-              <h3 className="text-lg font-semibold text-[#132960] md:text-xl">
-                Pauta da Semana
-              </h3>
-              <Link
-                href="/pauta-da-semana"
-                className="text-sm font-semibold text-[#027DFC] hover:underline"
-              >
-                Ver todas →
-              </Link>
-            </div>
-            {pautas.length === 0 ? (
-              <p className="text-zinc-700">
-                A primeira pauta semanal sai em breve.
-              </p>
-            ) : (
-              <ul className="space-y-3">
-                {pautas.map((p) => (
-                  <li key={p.slug}>
-                    <Link
-                      href={`/pauta-da-semana/${p.slug}`}
-                      className="az-card group block p-5 transition hover:border-[#027DFC]/40"
+          {periodicos.length === 0 ? (
+            <p className="text-zinc-700">
+              Café com Mercado (diário) e Pauta da Semana em breve.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {periodicos.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="group flex items-center gap-3 rounded-lg border border-[#132960]/12 px-4 py-2.5 transition hover:border-[#027DFC]/40"
+                  >
+                    <span
+                      className={
+                        "shrink-0 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider " +
+                        (item.kind === "Café"
+                          ? "bg-[#027DFC]/10 text-[#027DFC]"
+                          : "bg-[#FF5713]/10 text-[#FF5713]")
+                      }
                     >
-                      <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
-                        Semana de {formatDateBR(p.date)}
-                      </p>
-                      <h4 className="mt-1 text-lg font-semibold text-[#132960] group-hover:text-[#027DFC]">
-                        {p.title}
-                      </h4>
-                      {p.description ? (
-                        <p className="mt-2 line-clamp-2 text-sm text-zinc-700">
-                          {p.description}
-                        </p>
-                      ) : null}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+                      {item.kind}
+                    </span>
+                    <span className="hidden shrink-0 text-xs font-semibold text-[#5b6b8c] sm:inline">
+                      {item.label}
+                    </span>
+                    <span className="truncate text-sm font-medium text-[#132960] group-hover:text-[#027DFC]">
+                      {item.title}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </main>
       <Footer />
