@@ -50,8 +50,8 @@ export default async function ConteudoHub({ searchParams }: ConteudoProps) {
       take: 6,
     }),
     activePlaylist
-      ? fetchPlaylistVideos(activePlaylist.playlistId, activeType ? 50 : 24)
-      : fetchChannelVideos(activeType ? 50 : 24),
+      ? fetchPlaylistVideos(activePlaylist.playlistId, 50)
+      : fetchChannelVideos(30),
     listBriefings(5),
     listPautas(5),
   ]);
