@@ -4,8 +4,6 @@ import { navItems } from "@/data/home";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export async function Header() {
-  const whatsappHref = "https://wa.me/5548999386708";
-
   return (
     <header className="border-b border-[#132960]/10 bg-[#132960] text-[#E8E7E5]">
       <div className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} items-center justify-between gap-4 px-4 py-4 md:px-8`}>
@@ -20,19 +18,10 @@ export async function Header() {
           />
         </Link>
 
-        <div className="flex items-center gap-2">
-          <a
-            href={whatsappHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Falar no WhatsApp"
-            className="rounded-full border border-[#22c55e]/40 bg-[#22c55e]/15 px-3 py-2 text-xs font-semibold text-[#22c55e] transition hover:bg-[#22c55e]/25"
-          >
-            WhatsApp
-          </a>
+        <div className="flex items-center">
           <Link
             href="/area-restrita/login"
-            className="rounded-full bg-[#FF5713] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#d94a10]"
+            className="rounded-full bg-[#FF5713] px-7 py-2.5 text-sm font-semibold text-white transition hover:bg-[#d94a10] md:px-8 md:py-3 md:text-base"
           >
             Login
           </Link>

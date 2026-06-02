@@ -33,8 +33,10 @@ export type PlaylistInfo = {
 
 export const KNOWN_PLAYLISTS: PlaylistInfo[] = [
   { slug: "fala-borba", label: "Fala Borba", playlistId: "PLqqJv6H5mqgoTCbMXIaqXsrSjOhFK0eP-" },
-  { slug: "lives", label: "Lives", playlistId: "PLqqJv6H5mqgrbxOAHFW2XYkQ22Wr0PL8A" },
+  { slug: "macros", label: "Macros", playlistId: "PLqqJv6H5mqgrbxOAHFW2XYkQ22Wr0PL8A" },
+  { slug: "educacional", label: "Educacional", playlistId: "PLqqJv6H5mqgqjRjmP6ZmGNZU-apNKlsg4" },
   { slug: "az-cast", label: "AZ Cast", playlistId: "PLqqJv6H5mqgqJfd7r4ZLJXvDGPwS0X0rF" },
+  { slug: "rende-mais", label: "Rende +", playlistId: "PLqqJv6H5mqgoSNQQg92U_YTf3FiypN2jA" },
   { slug: "economista-reage", label: "Economista Reage", playlistId: "PLqqJv6H5mqgpkcMTf_ZWtU5ldTv14VE4T" },
 ];
 
