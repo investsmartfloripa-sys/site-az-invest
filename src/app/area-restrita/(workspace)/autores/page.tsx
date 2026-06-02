@@ -6,6 +6,7 @@ import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
 import { canManageAllAuthors } from "@/lib/workspace/permissions";
+import { PhotoField } from "@/components/workspace/PhotoField";
 
 async function createAuthorAction(formData: FormData) {
   "use server";
@@ -92,8 +93,8 @@ export default async function AutoresPage() {
             <input name="role" required placeholder="Economista" className={inputClass} />
           </label>
           <label className="text-sm text-[#132960]/65 md:col-span-2">
-            Foto URL
-            <input name="photo" className={inputClass} />
+            Foto
+            <PhotoField />
           </label>
           <label className="text-sm text-[#132960]/65">
             E-mail

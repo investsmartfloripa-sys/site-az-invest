@@ -9,6 +9,7 @@ import { requireSession, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendInviteEmail } from "@/lib/workspace/emails";
 import { writeAuditLog } from "@/lib/workspace/audit";
+import { slugify } from "@/lib/slugify";
 
 export async function createUserAction(formData: FormData) {
   const session = await requireSession();
@@ -37,13 +38,35 @@ export async function createUserAction(formData: FormData) {
     ? await bcrypt.hash(randomBytes(16).toString("hex"), 12)
     : await bcrypt.hash(password, 12);
 
+  // AUTHOR sempre sai com um perfil de autor vinculado: usa o escolhido, ou cria
+  // um perfil generico (a pessoa refina depois em "Meu perfil").
+  let linkedAuthorId: number | null = null;
+  if (finalRole === "AUTHOR") {
+    if (authorId) {
+      linkedAuthorId = authorId;
+    } else {
+      const displayName = name || email.split("@")[0];
+      const baseSlug = slugify(displayName) || "autor";
+      let slug = baseSlug;
+      let n = 1;
+      while (await prisma.author.findUnique({ where: { slug } })) {
+        slug = `${baseSlug}-${n}`;
+        n += 1;
+      }
+      const createdAuthor = await prisma.author.create({
+        data: { slug, name: displayName, role: "Assessor de Investimentos", email },
+      });
+      linkedAuthorId = createdAuthor.id;
+    }
+  }
+
   await prisma.user.create({
     data: {
       email,
       name: name || null,
       passwordHash,
       role: finalRole,
-      authorId: finalRole === "AUTHOR" && authorId ? authorId : null,
+      authorId: linkedAuthorId,
       inviteToken: wantsInvite ? inviteToken : null,
       inviteExpiresAt: wantsInvite ? inviteExpiresAt : null,
     },

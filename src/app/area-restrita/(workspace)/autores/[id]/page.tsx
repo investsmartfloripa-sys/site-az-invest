@@ -20,6 +20,7 @@ import {
   ExperienceEditor,
   SpecialtyEditor,
 } from "@/components/workspace/AuthorListEditor";
+import { PhotoField } from "@/components/workspace/PhotoField";
 
 async function updateAuthorAction(formData: FormData) {
   "use server";
@@ -166,8 +167,8 @@ export default async function EditAuthorPage({ params, searchParams }: PageProps
               <input name="headline" defaultValue={author.headline ?? ""} className={inputClass} />
             </label>
             <label className="text-sm text-[#132960]/65 md:col-span-2">
-              Foto URL
-              <input name="photo" defaultValue={author.photo ?? ""} className={inputClass} />
+              Foto
+              <PhotoField defaultValue={author.photo ?? ""} />
             </label>
             <label className="text-sm text-[#132960]/65">
               E-mail

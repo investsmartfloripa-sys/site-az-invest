@@ -13,6 +13,7 @@ import {
   ExperienceEditor,
   SpecialtyEditor,
 } from "@/components/workspace/AuthorListEditor";
+import { PhotoField } from "@/components/workspace/PhotoField";
 
 export default async function PerfilPage({
   searchParams,
@@ -88,12 +89,8 @@ export default async function PerfilPage({
               />
             </label>
             <label className="block text-sm md:col-span-2">
-              <span className="text-[#132960]/65">Foto (URL)</span>
-              <input
-                name="photo"
-                defaultValue={author.photo ?? ""}
-                className="mt-1 w-full rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-[#132960] outline-none focus:border-[#027DFC]"
-              />
+              <span className="text-[#132960]/65">Foto</span>
+              <PhotoField defaultValue={author.photo ?? ""} />
             </label>
             <label className="block text-sm">
               <span className="text-[#132960]/65">E-mail</span>
