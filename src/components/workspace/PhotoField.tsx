@@ -4,6 +4,45 @@ import { useRef, useState } from "react";
 
 type Props = { name?: string; defaultValue?: string | null };
 
+const MAX_DIMENSION = 1600;
+const JPEG_QUALITY = 0.85;
+
+// Redimensiona/comprime no navegador antes do upload: evita o limite de corpo
+// da funcao serverless da Vercel (~4.5 MB) e mantem o site leve, sem perda visivel
+// numa foto de perfil. GIF e enviado como esta (preserva animacao).
+async function processImage(file: File): Promise<File> {
+  if (file.type === "image/gif") return file;
+  let bitmap: ImageBitmap;
+  try {
+    try {
+      bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    } catch {
+      bitmap = await createImageBitmap(file);
+    }
+  } catch {
+    return file;
+  }
+  const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+  const w = Math.max(1, Math.round(bitmap.width * scale));
+  const h = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    bitmap.close?.();
+    return file;
+  }
+  ctx.drawImage(bitmap, 0, 0, w, h);
+  bitmap.close?.();
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY),
+  );
+  if (!blob) return file;
+  const base = file.name.replace(/\.[^.]+$/, "") || "foto";
+  return new File([blob], `${base}.jpg`, { type: "image/jpeg" });
+}
+
 export function PhotoField({ name = "photo", defaultValue = "" }: Props) {
   const [url, setUrl] = useState(defaultValue ?? "");
   const [busy, setBusy] = useState(false);
@@ -16,8 +55,9 @@ export function PhotoField({ name = "photo", defaultValue = "" }: Props) {
     setBusy(true);
     setError(null);
     try {
+      const toUpload = await processImage(file);
       const body = new FormData();
-      body.append("file", file);
+      body.append("file", toUpload);
       const res = await fetch("/api/area-restrita/blog-upload", { method: "POST", body });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Falha no upload");
@@ -71,7 +111,9 @@ export function PhotoField({ name = "photo", defaultValue = "" }: Props) {
           className="hidden"
         />
       </div>
-      <p className="text-xs text-[#132960]/45">JPG, PNG, WebP ou GIF, até 5 MB.</p>
+      <p className="text-xs text-[#132960]/45">
+        JPG, PNG, WebP ou GIF — a imagem é otimizada automaticamente.
+      </p>
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
     </div>
   );
