@@ -18,7 +18,7 @@ export async function VideosSection() {
       <div className="flex items-end justify-between gap-3">
         <h2 className="text-4xl text-[#027DFC]">Vídeos</h2>
         <Link
-          href="/videos"
+          href="/conteudo#videos"
           className="text-xs font-semibold uppercase tracking-wider text-[#132960] underline-offset-4 hover:text-[#027DFC] hover:underline"
         >
           Ver todos
@@ -32,7 +32,7 @@ export async function VideosSection() {
           <div className="flex items-end justify-between gap-3">
             <h3 className="text-2xl font-semibold text-[#132960]">Shorts</h3>
             <Link
-              href="/videos?t=shorts"
+              href="/conteudo?vt=shorts#videos"
               className="text-xs font-semibold uppercase tracking-wider text-[#132960] underline-offset-4 hover:text-[#027DFC] hover:underline"
             >
               Ver todos

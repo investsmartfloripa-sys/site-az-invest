@@ -7,9 +7,19 @@ import { YoutubeVideoCard } from "@/components/videos/YoutubeVideoCard";
 import { formatDateBR, listBriefings } from "@/lib/cafe-com-mercado";
 import { listPautas } from "@/lib/pauta-da-semana";
 import { findPosts, mapPost } from "@/lib/posts";
-import { fetchChannelVideos } from "@/lib/youtube";
+import {
+  fetchChannelVideos,
+  fetchPlaylistVideos,
+  findPlaylistBySlug,
+  isLong,
+  isShort,
+  KNOWN_PLAYLISTS,
+  type YoutubeVideo,
+} from "@/lib/youtube";
 
 export const dynamic = "force-dynamic";
+
+const CHANNEL_URL = "https://www.youtube.com/@azinvestoficial";
 
 export const metadata: Metadata = {
   title: "Conteúdo",
@@ -24,25 +34,39 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ConteudoHub() {
+type ConteudoProps = {
+  searchParams: Promise<{ vp?: string; vt?: string }>;
+};
+
+export default async function ConteudoHub({ searchParams }: ConteudoProps) {
+  const { vp, vt } = await searchParams;
+  const activePlaylist = findPlaylistBySlug(vp);
+  const activeType = vt === "shorts" || vt === "long" ? vt : undefined;
+
   const [posts, videoResult, cafes, pautas] = await Promise.all([
     findPosts({
       where: { published: true },
       orderBy: { createdAt: "desc" },
       take: 6,
     }),
-    fetchChannelVideos(6),
+    activePlaylist
+      ? fetchPlaylistVideos(activePlaylist.playlistId, activeType ? 50 : 24)
+      : fetchChannelVideos(activeType ? 50 : 24),
     listBriefings(5),
     listPautas(5),
   ]);
   const mappedPosts = posts.map(mapPost);
-  const videos = videoResult.videos.slice(0, 6);
+
+  let vids: YoutubeVideo[] = videoResult.videos;
+  if (activeType === "shorts") vids = vids.filter(isShort);
+  else if (activeType === "long") vids = vids.filter(isLong);
+  const videos = vids.slice(0, 9);
+  const isShortsView = activeType === "shorts";
 
   return (
     <div className="min-h-screen text-[#132960]">
       <Header />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-12 px-4 py-8 md:px-8">
-        {/* Artigos */}
         <section className="space-y-4">
           <div className="flex items-baseline justify-between">
             <h2 className="text-2xl font-semibold text-[#132960] md:text-3xl">
@@ -66,29 +90,52 @@ export default async function ConteudoHub() {
           )}
         </section>
 
-        {/* Vídeos */}
-        {videos.length > 0 ? (
-          <section className="space-y-4">
-            <div className="flex items-baseline justify-between">
-              <h2 className="text-2xl font-semibold text-[#132960] md:text-3xl">
-                Vídeos
-              </h2>
-              <Link
-                href="/videos"
-                className="text-sm font-semibold text-[#027DFC] hover:underline"
-              >
-                Ver todos →
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <section id="videos" className="scroll-mt-24 space-y-4">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-2xl font-semibold text-[#132960] md:text-3xl">
+              Vídeos
+            </h2>
+            <Link
+              href={CHANNEL_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm font-semibold text-[#027DFC] hover:underline"
+            >
+              Ver no canal ↗
+            </Link>
+          </div>
+
+          <nav className="flex flex-wrap gap-2 border-b border-[#132960]/10 pb-2">
+            <VideoTab href="/conteudo#videos" label="Recentes" active={!activePlaylist && !activeType} />
+            <VideoTab href="/conteudo?vt=long#videos" label="Vídeos longos" active={!activePlaylist && activeType === "long"} />
+            <VideoTab href="/conteudo?vt=shorts#videos" label="Shorts" active={!activePlaylist && activeType === "shorts"} />
+            {KNOWN_PLAYLISTS.map((p) => (
+              <VideoTab
+                key={p.slug}
+                href={`/conteudo?vp=${p.slug}#videos`}
+                label={p.label}
+                active={activePlaylist?.slug === p.slug}
+              />
+            ))}
+          </nav>
+
+          {videos.length === 0 ? (
+            <p className="text-sm text-zinc-500">Nenhum vídeo encontrado neste filtro.</p>
+          ) : (
+            <div
+              className={
+                isShortsView
+                  ? "grid grid-cols-2 gap-4 sm:grid-cols-4"
+                  : "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+              }
+            >
               {videos.map((v) => (
-                <YoutubeVideoCard key={v.id} video={v} variant="home" />
+                <YoutubeVideoCard key={v.id} video={v} variant="home" vertical={isShortsView} />
               ))}
             </div>
-          </section>
-        ) : null}
+          )}
+        </section>
 
-        {/* Periódicos (Café com Mercado + Pauta da Semana) */}
         <section className="space-y-6">
           <h2 className="text-2xl font-semibold text-[#132960] md:text-3xl">
             Periódicos
@@ -180,5 +227,29 @@ export default async function ConteudoHub() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+function VideoTab({
+  href,
+  label,
+  active,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={
+        "rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition " +
+        (active
+          ? "bg-[#132960] text-white"
+          : "border border-[#132960]/20 text-[#132960] hover:border-[#027DFC] hover:text-[#027DFC]")
+      }
+    >
+      {label}
+    </Link>
   );
 }

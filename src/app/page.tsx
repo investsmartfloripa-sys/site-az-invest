@@ -49,8 +49,8 @@ export default async function Home() {
         <DestaquesDaSemana />
         {maisLidos.length > 0 ? <MaisLidos posts={maisLidos} /> : null}
         <UltimasPublicacoes posts={restantes} />
-        <CommunityCallout />
         <VideosSection />
+        <CommunityCallout />
       </main>
       <Footer />
     </div>
