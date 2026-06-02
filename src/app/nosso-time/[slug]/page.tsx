@@ -85,7 +85,7 @@ export default async function AuthorPage({
     where: { slug },
     include: {
       posts: {
-        where: { status: "APPROVED", published: true },
+        where: { published: true },
         orderBy: { createdAt: "desc" },
       },
     },
