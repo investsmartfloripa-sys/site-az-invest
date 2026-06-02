@@ -6,6 +6,7 @@ import {
   InstagramIcon,
   LinkedinIcon,
 } from "@/components/common/SocialIcons";
+import type { AuthorSpecialty } from "@/lib/authors";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export type AuthorHeroModel = {
@@ -20,6 +21,7 @@ export type AuthorHeroModel = {
 
 export type AuthorHeroProps = {
   author: AuthorHeroModel;
+  specialties: AuthorSpecialty[];
   whatsappDigits: string | null;
   fallbackWhatsappUrl: string;
   registerClickAction: (
@@ -121,6 +123,7 @@ function PhotoBlock({
 
 export function AuthorHero({
   author,
+  specialties,
   whatsappDigits,
   fallbackWhatsappUrl,
   registerClickAction,
@@ -181,6 +184,24 @@ export function AuthorHero({
                 ) : null}
               </div>
             </div>
+
+            {specialties.length > 0 ? (
+              <div className="mt-3 w-full border-t border-[#132960]/10 pt-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#FF5713] md:text-[11px]">
+                  Especialidades
+                </p>
+                <div className="mt-2 flex flex-wrap justify-center gap-2 md:justify-start">
+                  {specialties.map((item, i) => (
+                    <span
+                      key={i}
+                      className="rounded-lg border border-[#132960]/10 bg-[#f8fbff] px-3 py-1.5 text-xs font-medium text-[#132960]"
+                    >
+                      {item.title || item.description}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

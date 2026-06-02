@@ -3,12 +3,7 @@ import { AuthorHero } from "@/components/assessor/AuthorHero";
 import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { PostCard } from "@/components/common/PostCard";
-import {
-  parseEducation,
-  parseExperiences,
-  parseSpecialties,
-  formatEducationPeriodLabel,
-} from "@/lib/authors";
+import { parseSpecialties } from "@/lib/authors";
 import { prisma } from "@/lib/prisma";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
@@ -90,7 +85,7 @@ export default async function AuthorPage({
     where: { slug },
     include: {
       posts: {
-        where: { published: true },
+        where: { status: "APPROVED", published: true },
         orderBy: { createdAt: "desc" },
       },
     },
@@ -98,8 +93,6 @@ export default async function AuthorPage({
 
   if (!author) notFound();
 
-  const experiences = parseExperiences(author.experiencesJson);
-  const education = parseEducation(author.educationJson);
   const specialties = parseSpecialties(author.specialtiesJson);
   const whatsappDigits = normalizeWhatsapp(author.whatsapp);
   const fallbackWhatsappUrl = whatsappDigits
@@ -133,6 +126,7 @@ export default async function AuthorPage({
           linkedin: author.linkedin,
           instagram: author.instagram,
         }}
+        specialties={specialties}
         whatsappDigits={whatsappDigits}
         fallbackWhatsappUrl={fallbackWhatsappUrl}
         registerClickAction={registerWhatsappClickAction}
@@ -141,129 +135,6 @@ export default async function AuthorPage({
       <main
         className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} flex-col gap-6 px-4 py-6 md:gap-7 md:px-6 md:py-8`}
       >
-        <section className="grid gap-3 md:grid-cols-3 md:items-stretch md:gap-4">
-          <article className="flex h-full min-w-0 flex-col space-y-3 rounded-xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
-            <div className="space-y-0.5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#FF5713] md:text-[11px]">
-                Como posso ajudar
-              </p>
-              <h2 className="text-lg font-medium text-[#132960] md:text-xl">
-                Especialidades
-              </h2>
-            </div>
-            {specialties.length > 0 ? (
-              <ul className="flex flex-col gap-2">
-                {specialties.map((item, i) => (
-                  <li
-                    key={i}
-                    className="flex flex-col gap-1.5 rounded-lg border border-[#132960]/10 bg-[#f8fbff] px-3 py-2.5"
-                  >
-                    {item.title ? (
-                      <h3 className="text-sm font-semibold leading-snug text-[#132960]">
-                        {item.title}
-                      </h3>
-                    ) : null}
-                    {item.description ? (
-                      <p className="text-xs leading-snug text-zinc-600">
-                        {item.description}
-                      </p>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="rounded-lg border border-dashed border-[#132960]/20 bg-[#f8fbff] px-3 py-2 text-xs text-zinc-500">
-                Especialidades em breve.
-              </p>
-            )}
-          </article>
-
-          <article className="flex h-full min-w-0 flex-col space-y-3 rounded-xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
-            <div className="space-y-0.5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#027DFC] md:text-[11px]">
-                Background academico
-              </p>
-              <h2 className="text-lg font-medium text-[#132960] md:text-xl">
-                Formacao
-              </h2>
-            </div>
-            {education.length > 0 ? (
-              <ul className="grid gap-2">
-                {education.map((edu, i) => (
-                  <li
-                    key={i}
-                    className="rounded-lg border border-[#132960]/10 bg-[#f8fbff] px-3 py-2.5"
-                  >
-                    {edu.title ? (
-                      <p className="text-sm font-semibold leading-snug text-[#132960]">
-                        {edu.title}
-                      </p>
-                    ) : null}
-                    {edu.institution ? (
-                      <p className="text-xs leading-snug text-zinc-600">
-                        {edu.institution}
-                      </p>
-                    ) : null}
-                    {edu.period ? (
-                      <p className="mt-1.5 inline-flex items-center rounded border border-[#027DFC]/25 bg-[#027DFC]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#027DFC]">
-                        {formatEducationPeriodLabel(edu.period)}
-                      </p>
-                    ) : null}
-                    {edu.description ? (
-                      <p className="mt-1.5 text-xs leading-snug text-zinc-600">
-                        {edu.description}
-                      </p>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="rounded-lg border border-dashed border-[#132960]/20 bg-[#f8fbff] px-3 py-2 text-xs text-zinc-500">
-                Formacao academica em breve.
-              </p>
-            )}
-          </article>
-
-          <article className="flex h-full min-w-0 flex-col space-y-3 rounded-xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
-            <div className="space-y-0.5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#FF5713] md:text-[11px]">
-                Trajetoria
-              </p>
-              <h2 className="text-lg font-medium leading-tight text-[#132960] md:text-xl">
-                Experiencia profissional
-              </h2>
-            </div>
-            {experiences.length > 0 ? (
-              <ul className="grid gap-2">
-                {experiences.map((exp, i) => (
-                  <li
-                    key={i}
-                    className="rounded-lg border border-[#132960]/10 bg-[#f8fbff] px-3 py-2.5"
-                  >
-                    {exp.title ? (
-                      <p className="text-sm font-semibold leading-snug text-[#132960]">
-                        {exp.title}
-                      </p>
-                    ) : null}
-                    {exp.org ? (
-                      <p className="text-xs leading-snug text-zinc-600">{exp.org}</p>
-                    ) : null}
-                    {exp.description ? (
-                      <p className="mt-1.5 text-xs leading-snug text-zinc-600">
-                        {exp.description}
-                      </p>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="rounded-lg border border-dashed border-[#132960]/20 bg-[#f8fbff] px-3 py-2 text-xs text-zinc-500">
-                Experiencia profissional em breve.
-              </p>
-            )}
-          </article>
-        </section>
-
         {author.bio ? (
           <section className="rounded-xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
             <div className="space-y-0.5">
