@@ -30,12 +30,12 @@ export async function createUserAction(formData: FormData) {
   const inviteToken = randomBytes(32).toString("hex");
   const inviteExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-  let passwordHash: string;
-  if (password.length >= 8) {
-    passwordHash = await bcrypt.hash(password, 12);
-  } else {
-    passwordHash = await bcrypt.hash(randomBytes(16).toString("hex"), 12);
-  }
+  // Convite por e-mail SOMENTE quando o admin deixa a senha em branco.
+  // Se uma senha foi digitada, ela e' usada como esta' (nada de descartar em silencio).
+  const wantsInvite = password.length === 0;
+  const passwordHash = wantsInvite
+    ? await bcrypt.hash(randomBytes(16).toString("hex"), 12)
+    : await bcrypt.hash(password, 12);
 
   await prisma.user.create({
     data: {
@@ -44,12 +44,12 @@ export async function createUserAction(formData: FormData) {
       passwordHash,
       role: finalRole,
       authorId: finalRole === "AUTHOR" && authorId ? authorId : null,
-      inviteToken: password.length >= 8 ? null : inviteToken,
-      inviteExpiresAt: password.length >= 8 ? null : inviteExpiresAt,
+      inviteToken: wantsInvite ? inviteToken : null,
+      inviteExpiresAt: wantsInvite ? inviteExpiresAt : null,
     },
   });
 
-  if (password.length < 8) {
+  if (wantsInvite) {
     await sendInviteEmail({ to: email, token: inviteToken, name });
   }
 
@@ -69,12 +69,18 @@ export async function resetPasswordAction(formData: FormData) {
 
   const id = Number(formData.get("id"));
   const password = String(formData.get("password") || "");
-  if (!Number.isInteger(id) || password.length < 8) return;
+  if (!Number.isInteger(id) || password.length === 0) return;
 
   const passwordHash = await bcrypt.hash(password, 12);
   await prisma.user.update({
     where: { id },
-    data: { passwordHash, passwordResetToken: null, passwordResetExpiresAt: null },
+    data: {
+      passwordHash,
+      passwordResetToken: null,
+      passwordResetExpiresAt: null,
+      inviteToken: null,
+      inviteExpiresAt: null,
+    },
   });
 
   revalidatePath("/area-restrita/usuarios");
