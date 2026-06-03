@@ -15,13 +15,7 @@ export function CommunityCallout() {
       */}
       <div className="hidden md:block">
         {hasLink ? (
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={COMMUNITY_LABEL}
-            className="group relative block overflow-hidden rounded-3xl shadow-sm transition-transform [container-type:inline-size] hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#027DFC]"
-          >
+          <div className="relative overflow-hidden rounded-3xl shadow-sm [container-type:inline-size]">
             <Image
               src="/banner-comunidade.svg"
               alt="Entre na nossa comunidade no WhatsApp e receba alertas, análises e materiais selecionados direto no seu celular."
@@ -31,16 +25,20 @@ export function CommunityCallout() {
               className="h-auto w-full"
               priority={false}
             />
-            {/* Botão real sobreposto ao botão desenhado na arte (coordenadas em % do
-                viewBox 912x240): cobre o original e ganha hover/clique de verdade. */}
-            <span
-              aria-hidden="true"
-              className="absolute flex items-center justify-center rounded-md bg-[#FF5713] text-[1.68cqw] font-semibold text-white shadow-sm transition-colors duration-150 group-hover:bg-[#d94a10] group-active:bg-[#b03a0a]"
+            {/* Link real APENAS no botão: sobrepõe o botão desenhado na arte
+                (coordenadas em % do viewBox 912x240) com hover/clique/foco próprios.
+                O resto do banner não é clicável. */}
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={COMMUNITY_LABEL}
+              className="absolute flex items-center justify-center rounded-md bg-[#FF5713] text-[1.68cqw] font-semibold text-white shadow-sm transition-colors duration-150 hover:bg-[#d94a10] hover:shadow-md active:bg-[#b03a0a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               style={{ left: "48.6%", top: "70.9%", width: "13.7%", height: "17%" }}
             >
               Inscreva-se
-            </span>
-          </a>
+            </a>
+          </div>
         ) : (
           <div className="relative overflow-hidden rounded-3xl shadow-sm">
             <Image
