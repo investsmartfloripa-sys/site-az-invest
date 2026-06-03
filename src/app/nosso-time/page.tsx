@@ -74,7 +74,7 @@ export default async function NossoTimePage() {
                 return (
                 <li
                   key={author.id}
-                  className="group flex overflow-hidden rounded-2xl border border-[#132960]/15 bg-white transition hover:-translate-y-0.5 hover:border-[#027DFC]/40 hover:shadow-md"
+                  className="group flex h-48 overflow-hidden rounded-2xl border border-[#132960]/15 bg-white transition hover:-translate-y-0.5 hover:border-[#027DFC]/40 hover:shadow-md"
                 >
                   <Link
                     href={`/nosso-time/${author.slug}`}
@@ -112,7 +112,7 @@ export default async function NossoTimePage() {
                           {author.headline}
                         </p>
                       ) : author.bio ? (
-                        <p className="mt-2 line-clamp-3 text-xs text-zinc-600">
+                        <p className="mt-2 line-clamp-2 text-xs text-zinc-600">
                           {author.bio}
                         </p>
                       ) : null}
