@@ -67,6 +67,7 @@ type SearchResponse = {
 type VideosItem = {
   id: string;
   contentDetails?: { duration?: string };
+  snippet?: { thumbnails?: SearchItem["snippet"]["thumbnails"] };
 };
 
 type VideosResponse = {
@@ -181,13 +182,15 @@ export async function fetchChannelVideos(maxResults = 12): Promise<{
       };
     }
 
-    type DurationEntry = { formatted?: string; seconds?: number };
+    type DurationEntry = { formatted?: string; seconds?: number; thumb?: string };
     let durationsById = new Map<string, DurationEntry>();
     try {
       const ids = items.map((i) => i.id.videoId).join(",");
       const videosUrl = new URL(VIDEOS_ENDPOINT);
       videosUrl.searchParams.set("key", apiKey);
-      videosUrl.searchParams.set("part", "contentDetails");
+      // snippet junto: a API de search so entrega thumb ate 480px (high);
+      // videos.list traz standard/maxres (1280px) para o player grande.
+      videosUrl.searchParams.set("part", "snippet,contentDetails");
       videosUrl.searchParams.set("id", ids);
 
       const videosRes = await fetch(videosUrl.toString(), {
@@ -202,6 +205,9 @@ export async function fetchChannelVideos(maxResults = 12): Promise<{
             {
               formatted: formatIsoDuration(it.contentDetails?.duration),
               seconds: parseIsoDurationSeconds(it.contentDetails?.duration),
+              thumb: it.snippet?.thumbnails
+                ? pickThumbFromMap(it.snippet.thumbnails)
+                : undefined,
             },
           ]),
         );
@@ -217,7 +223,7 @@ export async function fetchChannelVideos(maxResults = 12): Promise<{
         youtubeId: item.id.videoId,
         title: decode(item.snippet.title),
         description: decode(item.snippet.description),
-        thumbnail: pickThumb(item),
+        thumbnail: d?.thumb || pickThumb(item),
         publishedAt: item.snippet.publishedAt,
         duration: d?.formatted,
         durationSeconds: d?.seconds,
@@ -297,13 +303,13 @@ export async function fetchPlaylistVideos(
       return { videos: [], source: "youtube" };
     }
 
-    type DurationEntry = { formatted?: string; seconds?: number };
+    type DurationEntry = { formatted?: string; seconds?: number; thumb?: string };
     let durationsById = new Map<string, DurationEntry>();
     try {
       const ids = items.map((i) => i.snippet.resourceId.videoId).join(",");
       const videosUrl = new URL(VIDEOS_ENDPOINT);
       videosUrl.searchParams.set("key", apiKey);
-      videosUrl.searchParams.set("part", "contentDetails");
+      videosUrl.searchParams.set("part", "snippet,contentDetails");
       videosUrl.searchParams.set("id", ids);
       const videosRes = await fetch(videosUrl.toString(), {
         next: { revalidate: REVALIDATE_SECONDS },
@@ -316,6 +322,9 @@ export async function fetchPlaylistVideos(
             {
               formatted: formatIsoDuration(it.contentDetails?.duration),
               seconds: parseIsoDurationSeconds(it.contentDetails?.duration),
+              thumb: it.snippet?.thumbnails
+                ? pickThumbFromMap(it.snippet.thumbnails)
+                : undefined,
             },
           ]),
         );
@@ -331,7 +340,7 @@ export async function fetchPlaylistVideos(
         youtubeId: it.snippet.resourceId.videoId,
         title: decode(it.snippet.title),
         description: decode(it.snippet.description),
-        thumbnail: pickThumbFromMap(it.snippet.thumbnails),
+        thumbnail: d?.thumb || pickThumbFromMap(it.snippet.thumbnails),
         publishedAt: it.snippet.publishedAt,
         duration: d?.formatted,
         durationSeconds: d?.seconds,
