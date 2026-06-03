@@ -72,7 +72,7 @@ export default async function AutoresPage() {
   if (!canManageAllAuthors(session)) redirect("/area-restrita/dashboard");
 
   const authors = await prisma.author.findMany({
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: "asc" },
     include: { _count: { select: { posts: true } }, workspaceUser: { select: { id: true } } },
   });
 
