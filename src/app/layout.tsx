@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "Investimentos de A a Z",
     description: SITE_DESCRIPTION,
   },

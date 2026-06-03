@@ -90,6 +90,18 @@ model Post {
   publishedAt  DateTime?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  comments     PostComment[]
+}
+
+model PostComment {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  name      String
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([postId, createdAt])
 }
 
 model AuthorLead {

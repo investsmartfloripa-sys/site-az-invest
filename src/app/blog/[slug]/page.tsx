@@ -6,6 +6,7 @@ import { Header } from "@/components/common/Header";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { PostMarkdownBody } from "@/components/blog/PostMarkdownBody";
 import { formatPostCategoryLabel, getPostCategorySoftPillClasses } from "@/data/blog-categories";
+import { addCommentAction } from "@/lib/comment-actions";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +42,10 @@ export default async function BlogPostPage({
   const { slug } = await params;
   const post = await prisma.post.findUnique({
     where: { slug },
-    include: { author: true },
+    include: {
+      author: true,
+      comments: { orderBy: { createdAt: "desc" }, take: 100 },
+    },
   });
 
   if (!post || post.status !== "APPROVED") {
@@ -57,7 +61,7 @@ export default async function BlogPostPage({
         </Link>
 
         {post.coverImage ? (
-          <div className="relative mt-4 aspect-[16/9] w-full overflow-hidden rounded-2xl">
+          <div className="relative mt-4 aspect-[21/8] w-full overflow-hidden rounded-2xl">
             <Image
               src={post.coverImage}
               alt={post.title}
@@ -114,6 +118,82 @@ export default async function BlogPostPage({
 
           <PostMarkdownBody markdown={post.content} />
         </article>
+
+        <section id="comentarios" className="az-card mt-8 space-y-6 p-6 md:p-10">
+          <h2 className="text-2xl font-semibold text-[#132960]">
+            Comentários{post.comments.length > 0 ? ` (${post.comments.length})` : ""}
+          </h2>
+
+          <form action={addCommentAction} className="space-y-3">
+            <input type="hidden" name="postId" value={post.id} />
+            <input type="hidden" name="slug" value={post.slug} />
+            <input
+              type="text"
+              name="site"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              className="hidden"
+            />
+            <div>
+              <label
+                htmlFor="comment-name"
+                className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+              >
+                Nome
+              </label>
+              <input
+                id="comment-name"
+                name="name"
+                required
+                maxLength={80}
+                placeholder="Seu nome"
+                className="mt-1 w-full rounded-lg border border-[#132960]/20 bg-white px-3 py-2 text-sm outline-none transition focus:border-[#027DFC]"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="comment-content"
+                className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+              >
+                Comentário
+              </label>
+              <textarea
+                id="comment-content"
+                name="content"
+                required
+                maxLength={2000}
+                rows={4}
+                placeholder="Escreva seu comentário..."
+                className="mt-1 w-full rounded-lg border border-[#132960]/20 bg-white px-3 py-2 text-sm outline-none transition focus:border-[#027DFC]"
+              />
+            </div>
+            <button
+              type="submit"
+              className="rounded-lg bg-[#027DFC] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#0265c9] active:bg-[#0253a4]"
+            >
+              Publicar comentário
+            </button>
+          </form>
+
+          {post.comments.length === 0 ? (
+            <p className="text-sm text-zinc-500">Seja o primeiro a comentar.</p>
+          ) : (
+            <ul className="space-y-4">
+              {post.comments.map((comment) => (
+                <li key={comment.id} className="rounded-xl border border-[#132960]/10 bg-[#F7F9FC] p-4">
+                  <p className="text-sm font-semibold text-[#132960]">
+                    {comment.name}{" "}
+                    <span className="text-xs font-normal text-zinc-500">
+                      | {new Date(comment.createdAt).toLocaleDateString("pt-BR")}
+                    </span>
+                  </p>
+                  <p className="mt-1 whitespace-pre-line text-sm text-zinc-700">{comment.content}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
         <div className="mt-10">
           <CommunityCallout />
