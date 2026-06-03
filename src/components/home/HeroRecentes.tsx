@@ -30,42 +30,35 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
         </Link>
       </div>
       <div className="grid gap-3 md:grid-cols-3">
-        <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-[#132960]/15 bg-white md:col-span-2">
-          <div className="relative h-64 md:h-auto md:min-h-[220px] md:flex-1">
-            <Image
-              src={main.image}
-              alt={main.title}
-              fill
-              sizes="(min-width: 768px) 66vw, 100vw"
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-black/10" />
-            <div className="absolute bottom-0 left-0 p-4 text-white">
-              <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${getPostCategorySolidPillClasses(main.category)}`}
-              >
-                {formatPostCategoryLabel(main.category)}
-              </span>
-              <h2 className="mt-2 text-3xl">
-                <Link href={`/blog/${main.slug}`}>{main.title}</Link>
-              </h2>
-              <p className="mt-1 text-xs">
-                {main.authorSlug ? (
-                  <Link href={`/nosso-time/${main.authorSlug}`} className="hover:underline">
-                    {main.authorName}
-                  </Link>
-                ) : (
-                  main.authorName
-                )}{" "}
-                | {main.date}
-              </p>
-            </div>
+        <article className="relative overflow-hidden rounded-2xl md:col-span-2">
+          <Image
+            src={main.image}
+            alt={main.title}
+            width={1024}
+            height={666}
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-black/10" />
+          <div className="absolute bottom-0 left-0 p-4 text-white">
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${getPostCategorySolidPillClasses(main.category)}`}
+            >
+              {formatPostCategoryLabel(main.category)}
+            </span>
+            <h2 className="mt-2 text-3xl">
+              <Link href={`/blog/${main.slug}`}>{main.title}</Link>
+            </h2>
+            <p className="mt-1 text-xs">
+              {main.authorSlug ? (
+                <Link href={`/nosso-time/${main.authorSlug}`} className="hover:underline">
+                  {main.authorName}
+                </Link>
+              ) : (
+                main.authorName
+              )}{" "}
+              | {main.date}
+            </p>
           </div>
-          {main.excerpt ? (
-            <Link href={`/blog/${main.slug}`} className="block bg-white p-4">
-              <p className="line-clamp-2 text-sm text-zinc-600">{main.excerpt}</p>
-            </Link>
-          ) : null}
         </article>
         <div className="space-y-3">
           {others.map((post) => (
