@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { blogPostCategoryOptions } from "@/data/blog-categories";
 import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
+import { PhotoField } from "@/components/workspace/PhotoField";
 import {
   deletePostAction,
   publishPostDirectAction,
@@ -98,13 +99,8 @@ export function PostEditorForm({
       </label>
 
       <label className="block text-sm">
-        <span className="text-[#132960]/65">URL da capa</span>
-        <input
-          name="coverImage"
-          defaultValue={post?.coverImage ?? ""}
-          placeholder="https://..."
-          className="mt-1 w-full rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-[#132960] outline-none focus:border-[#027DFC]"
-        />
+        <span className="text-[#132960]/65">Capa do texto</span>
+        <PhotoField name="coverImage" defaultValue={post?.coverImage ?? ""} variant="cover" />
       </label>
 
       <div>

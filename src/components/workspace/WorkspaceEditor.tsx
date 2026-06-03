@@ -5,7 +5,8 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { uploadImage } from "@/components/workspace/image-upload";
 
 type Props = {
   name: string;
@@ -21,6 +22,9 @@ export function WorkspaceEditor({
   onChange,
 }: Props) {
   const [html, setHtml] = useState(initialHtml || "<p></p>");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -49,6 +53,22 @@ export function WorkspaceEditor({
       editor.commands.setContent(initialHtml);
     }
   }, [editor, initialHtml]);
+
+  async function handleImageFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !editor) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const url = await uploadImage(file);
+      editor.chain().focus().setImage({ src: url }).run();
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Falha no upload");
+    } finally {
+      setUploading(false);
+      if (imageInputRef.current) imageInputRef.current.value = "";
+    }
+  }
 
   if (!editor) return null;
 
@@ -90,14 +110,22 @@ export function WorkspaceEditor({
         <button
           type="button"
           className={btn}
-          onClick={() => {
-            const url = window.prompt("URL da imagem");
-            if (url) editor.chain().focus().setImage({ src: url }).run();
-          }}
+          disabled={uploading}
+          onClick={() => imageInputRef.current?.click()}
         >
-          Imagem
+          {uploading ? "Enviando…" : "Imagem"}
         </button>
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          onChange={handleImageFile}
+          className="hidden"
+        />
       </div>
+      {uploadError ? (
+        <p className="border-b border-[#132960]/10 bg-red-50 px-3 py-1.5 text-xs text-red-600">{uploadError}</p>
+      ) : null}
       <EditorContent editor={editor} />
       <input type="hidden" name={name} value={html} readOnly />
     </div>
