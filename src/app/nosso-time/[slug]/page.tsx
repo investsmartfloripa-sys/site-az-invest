@@ -9,8 +9,7 @@ import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export const dynamic = "force-dynamic";
 
-const FALLBACK_IMAGE =
-  "https://investimentosdeaz.com.br/wp-content/uploads/2026/03/Seguros-1024x666.png";
+const FALLBACK_IMAGE = "/capa-padrao.svg";
 
 function normalizeWhatsapp(value: string | null | undefined) {
   if (!value) return null;
@@ -105,6 +104,8 @@ export default async function AuthorPage({
     slug: post.slug,
     category: post.category,
     authorName: author.name,
+    authorSlug: author.slug,
+    authorPhoto: author.photo,
     excerpt: post.excerpt,
     date: new Date(post.createdAt).toLocaleDateString("pt-BR"),
     image: post.coverImage || FALLBACK_IMAGE,

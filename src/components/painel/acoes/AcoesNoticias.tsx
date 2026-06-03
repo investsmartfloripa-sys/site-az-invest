@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { AcoesEditorialPost } from "@/lib/painel-acoes";
 
 const FALLBACK_IMG =
-  "https://investimentosdeaz.com.br/wp-content/uploads/2026/03/Seguros-1024x666.png";
+  "/capa-padrao.svg";
 
 type Props = {
   posts: AcoesEditorialPost[];

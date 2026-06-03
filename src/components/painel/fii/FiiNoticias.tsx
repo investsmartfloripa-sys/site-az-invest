@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { FiiEditorialPost } from "@/lib/painel-fii";
 
 const DUMMY_FALLBACK_IMG =
-  "https://investimentosdeaz.com.br/wp-content/uploads/2026/03/Seguros-1024x666.png";
+  "/capa-padrao.svg";
 
 // Dummies usados quando o blog ainda não tem nenhum post categorizado como FII.
 // Permite visualizar o layout sem depender de conteúdo. Some assim que houver

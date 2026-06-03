@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { PostCardData } from "@/components/common/PostCard";
 
 const FALLBACK_IMAGE =
-  "https://investimentosdeaz.com.br/wp-content/uploads/2026/03/Seguros-1024x666.png";
+  "/capa-padrao.svg";
 
 export type PostWithAuthor = Awaited<ReturnType<typeof findPosts>>[number];
 

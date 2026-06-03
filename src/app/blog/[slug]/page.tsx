@@ -51,7 +51,7 @@ export default async function BlogPostPage({
   return (
     <div className="min-h-screen text-[#132960]">
       <Header />
-      <main className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
+      <main className="mx-auto w-full max-w-[60rem] px-4 py-8 md:px-8">
         <Link href="/blog" className="text-sm text-[#027DFC] hover:underline">
           {"<-"} Voltar para Artigos
         </Link>
@@ -62,7 +62,7 @@ export default async function BlogPostPage({
               src={post.coverImage}
               alt={post.title}
               fill
-              sizes="(min-width: 768px) 768px, 100vw"
+              sizes="(min-width: 768px) 960px, 100vw"
               className="object-cover"
               priority
             />
@@ -76,7 +76,6 @@ export default async function BlogPostPage({
             {formatPostCategoryLabel(post.category)}
           </span>
           <h1 className="text-4xl font-semibold text-[#132960] md:text-5xl">{post.title}</h1>
-          {post.excerpt ? <p className="text-lg text-zinc-700">{post.excerpt}</p> : null}
 
           <div className="flex items-center gap-3 border-y border-[#132960]/10 py-3">
             {post.author ? (
