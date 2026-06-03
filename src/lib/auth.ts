@@ -65,17 +65,13 @@ export async function getVerifiedSession(): Promise<SessionUser | null> {
     },
   });
 
+  // Nao alterar cookies aqui: esta funcao roda durante a renderizacao de
+  // Server Components e o Next so permite mutar cookies em Server Actions /
+  // Route Handlers — mutar aqui derruba a pagina com erro global (foi o caso
+  // do autor com sessao criada antes do vinculo do authorId). O retorno usa
+  // sempre os dados frescos do banco; o cookie se corrige no proximo login.
   if (!user || !user.active) {
-    await destroySession();
     return null;
-  }
-
-  if (
-    user.role !== session.role ||
-    user.email !== session.email ||
-    user.authorId !== session.authorId
-  ) {
-    await createSession(user);
   }
 
   return {
