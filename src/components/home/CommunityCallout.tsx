@@ -20,7 +20,7 @@ export function CommunityCallout() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={COMMUNITY_LABEL}
-            className="group block overflow-hidden rounded-3xl shadow-sm transition-transform hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#027DFC]"
+            className="group relative block overflow-hidden rounded-3xl shadow-sm transition-transform [container-type:inline-size] hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#027DFC]"
           >
             <Image
               src="/banner-comunidade.svg"
@@ -31,6 +31,15 @@ export function CommunityCallout() {
               className="h-auto w-full"
               priority={false}
             />
+            {/* Botão real sobreposto ao botão desenhado na arte (coordenadas em % do
+                viewBox 912x240): cobre o original e ganha hover/clique de verdade. */}
+            <span
+              aria-hidden="true"
+              className="absolute flex items-center justify-center rounded-md bg-[#FF5713] text-[1.68cqw] font-semibold text-white shadow-sm transition-colors duration-150 group-hover:bg-[#d94a10] group-active:bg-[#b03a0a]"
+              style={{ left: "48.6%", top: "70.9%", width: "13.7%", height: "17%" }}
+            >
+              Inscreva-se
+            </span>
           </a>
         ) : (
           <div className="relative overflow-hidden rounded-3xl shadow-sm">
