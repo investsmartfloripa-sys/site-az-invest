@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "Pauta da Semana",
   description:
     "Pauta da Semana do AZ Invest: análise semanal escrita pelo economista da casa com os temas que vão mover a curva. Publicada toda segunda-feira.",
-  openGraph: {
+  openGraph: { images: ["/opengraph-image.png"],
     title: "Pauta da Semana | AZ Invest",
     description:
       "Análise semanal escrita pelo economista da casa com os temas que vão mover a curva.",

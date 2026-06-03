@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "Café com Mercado",
   description:
     "Briefing macroeconômico diário do AZ Invest: mercado brasileiro, internacional, empresas e agenda do dia. Publicado em dias úteis às ~10h Brasília.",
-  openGraph: {
+  openGraph: { images: ["/opengraph-image.png"],
     title: "Café com Mercado | AZ Invest",
     description:
       "Briefing macroeconômico diário do AZ Invest: mercado brasileiro, internacional, empresas e agenda do dia.",

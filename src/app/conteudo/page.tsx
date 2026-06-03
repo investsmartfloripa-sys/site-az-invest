@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   description:
     "Todo o conteúdo do AZ Invest em um só lugar: artigos, vídeos e os periódicos (Café com Mercado diário e Pauta da Semana).",
   alternates: { canonical: "/conteudo" },
-  openGraph: {
+  openGraph: { images: ["/opengraph-image.png"],
     title: "Conteúdo | AZ Invest",
     description:
       "Artigos, vídeos e periódicos (Café com Mercado e Pauta da Semana) sobre economia, mercado e educação financeira.",

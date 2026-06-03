@@ -16,7 +16,7 @@ export const metadata = {
   description:
     "Análises, guias e opiniões da equipe AZ Invest sobre economia, mercado financeiro e educação financeira.",
   alternates: { canonical: "/blog" },
-  openGraph: {
+  openGraph: { images: ["/opengraph-image.png"],
     title: "Artigos | AZ Invest",
     description:
       "Análises, guias e opiniões da equipe AZ Invest sobre economia, mercado financeiro e educação financeira.",
