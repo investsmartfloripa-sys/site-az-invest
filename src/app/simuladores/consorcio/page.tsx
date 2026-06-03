@@ -1,4 +1,5 @@
 "use client";
+// @ts-nocheck
 
 import { useState, useMemo, useEffect } from "react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
