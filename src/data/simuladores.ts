@@ -16,14 +16,6 @@ export const simuladores: Simulador[] = [
     highlight: "Investidor de longo prazo",
   },
   {
-    slug: "reserva-de-emergencia",
-    title: "Reserva de emergencia",
-    description:
-      "Calcule quanto voce precisa guardar para 6 a 12 meses de despesas e proteja seu orcamento.",
-    icon: "$",
-    highlight: "Protecao financeira",
-  },
-  {
     slug: "aposentadoria",
     title: "Aposentadoria",
     description:
@@ -46,5 +38,29 @@ export const simuladores: Simulador[] = [
       "Simule sua carta de credito, compare com financiamento (Price/SAC) e descubra quando voce deve ser contemplado.",
     icon: "*",
     highlight: "Sem juros",
+  },
+  {
+    slug: "pgbl",
+    title: "PGBL e restituicao",
+    description:
+      "Descubra quanto voce pode deduzir no IR com PGBL e o efeito da restituicao reinvestida no longo prazo.",
+    icon: "#",
+    highlight: "Beneficio fiscal",
+  },
+  {
+    slug: "compromissadas",
+    title: "Compromissadas",
+    description:
+      "Compare operacoes compromissadas com CDB e outras opcoes de renda fixa em diferentes prazos e taxas.",
+    icon: "$",
+    highlight: "Renda fixa",
+  },
+  {
+    slug: "sucessao-seguro",
+    title: "Sucessao e seguro de vida",
+    description:
+      "Planeje a sucessao patrimonial e veja como o seguro de vida protege a familia e reduz custos do inventario.",
+    icon: "&",
+    highlight: "Protecao patrimonial",
   },
 ];
