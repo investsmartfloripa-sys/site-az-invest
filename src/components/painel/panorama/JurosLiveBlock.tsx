@@ -225,6 +225,19 @@ const tooltipStyle = {
 const thClass = "py-2 pr-2 text-right font-semibold";
 const tdClass = "py-1.5 pr-2 text-right tabular-nums";
 
+/** True em telas estreitas (mobile) — p/ alternar labels das reunioes. */
+function useIsNarrow(): boolean {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    const update = () => setNarrow(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return narrow;
+}
+
 export function JurosLiveBlock({
   preCuts = {},
   ipcaCuts = {},
@@ -235,6 +248,7 @@ export function JurosLiveBlock({
   selicLabels = {},
   treasuryLabels = {},
 }: Props) {
+  const isNarrow = useIsNarrow();
   const [tab, setTab] = useState<TabId>("pre");
   const [showAll, setShowAll] = useState(false);
   const [show, setShow] = useState<ShowState>({ agora: true, d1: false, recent: true, d30: true, d90: false });
@@ -417,9 +431,11 @@ export function JurosLiveBlock({
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={selicChart} margin={{ top: 18, right: 16, bottom: 4, left: 0 }}>
                   <CartesianGrid stroke={GRID} strokeWidth={1} />
-                  {selicMeetings.map((m) => {
+                  {selicMeetings.map((m, idx) => {
                     const t = Date.parse(m.date);
                     if (!Number.isFinite(t)) return null;
+                    // No celular, mostra data em reunioes alternadas pra nao amontoar.
+                    const showLabel = !isNarrow || idx % 2 === 0;
                     return (
                       <ReferenceLine
                         key={m.date}
@@ -427,12 +443,17 @@ export function JurosLiveBlock({
                         stroke={PAL_SELIC.meeting}
                         strokeDasharray="4 4"
                         strokeWidth={1.2}
-                        label={{
-                          value: dateLabelBR(m.date).slice(0, 5),
-                          position: "top",
-                          fontSize: 9,
-                          fill: PAL_SELIC.meetingLabel,
-                        }}
+                        label={
+                          showLabel
+                            ? {
+                                value: dateLabelBR(m.date).slice(0, 5),
+                                position: "top",
+                                fontSize: isNarrow ? 8 : 9,
+                                fontWeight: 700,
+                                fill: "#000000",
+                              }
+                            : undefined
+                        }
                       />
                     );
                   })}

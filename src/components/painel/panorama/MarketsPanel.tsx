@@ -285,7 +285,7 @@ export function MarketsPanel(props: Props) {
               barCategoryGap="35%"
               margin={{ left: 4, right: 48, top: 8, bottom: 4 }}
             >
-              <CartesianGrid horizontal={false} stroke={AZ_CHART.grid} strokeWidth={1} />
+              <CartesianGrid stroke={AZ_CHART.grid} strokeWidth={1} />
               <XAxis
                 type="number"
                 tick={{ fontSize: 11, fill: AZ_CHART.ticks }}
