@@ -58,67 +58,106 @@ const FX_PERIOD_MAP: Record<string, string> = {
   "1y": "year",
 };
 
-/** Bandeira por palavra-chave do nome do índice global. */
+/** Codigo ISO do pais por palavra-chave do nome do índice global. */
 const INDEX_FLAGS: [string, string][] = [
-  ["Coreia", "🇰🇷"],
-  ["Argentina", "🇦🇷"],
-  ["Taiwan", "🇹🇼"],
-  ["Colômbia", "🇨🇴"],
-  ["Japão", "🇯🇵"],
-  ["Espanha", "🇪🇸"],
-  ["EUA", "🇺🇸"],
-  ["Alemanha", "🇩🇪"],
-  ["Singapura", "🇸🇬"],
-  ["Suíça", "🇨🇭"],
-  ["México", "🇲🇽"],
-  ["Reino Unido", "🇬🇧"],
-  ["China", "🇨🇳"],
-  ["Índia", "🇮🇳"],
-  ["Hong Kong", "🇭🇰"],
-  ["Brasil", "🇧🇷"],
-  ["França", "🇫🇷"],
-  ["Itália", "🇮🇹"],
-  ["Canadá", "🇨🇦"],
-  ["Austrália", "🇦🇺"],
+  ["Coreia", "kr"],
+  ["Argentina", "ar"],
+  ["Taiwan", "tw"],
+  ["Colômbia", "co"],
+  ["Japão", "jp"],
+  ["Espanha", "es"],
+  ["EUA", "us"],
+  ["Alemanha", "de"],
+  ["Singapura", "sg"],
+  ["Suíça", "ch"],
+  ["México", "mx"],
+  ["Reino Unido", "gb"],
+  ["China", "cn"],
+  ["Índia", "in"],
+  ["Hong Kong", "hk"],
+  ["Brasil", "br"],
+  ["França", "fr"],
+  ["Itália", "it"],
+  ["Canadá", "ca"],
+  ["Austrália", "au"],
 ];
 
-/** Bandeira pelo codigo da moeda (tickers tipo "EUR / USD"). */
+/** Codigo ISO do pais pelo codigo da moeda (tickers tipo "EUR / USD"). */
 const CURRENCY_FLAGS: Record<string, string> = {
-  EUR: "🇪🇺",
-  GBP: "🇬🇧",
-  JPY: "🇯🇵",
-  CNY: "🇨🇳",
-  MXN: "🇲🇽",
-  COP: "🇨🇴",
-  CLP: "🇨🇱",
-  ARS: "🇦🇷",
-  PEN: "🇵🇪",
-  ZAR: "🇿🇦",
-  RUB: "🇷🇺",
-  INR: "🇮🇳",
-  KRW: "🇰🇷",
-  TRY: "🇹🇷",
-  CHF: "🇨🇭",
-  AUD: "🇦🇺",
-  CAD: "🇨🇦",
-  BRL: "🇧🇷",
-  DXY: "🇺🇸",
-  USD: "🇺🇸",
+  EUR: "eu",
+  GBP: "gb",
+  JPY: "jp",
+  CNY: "cn",
+  MXN: "mx",
+  COP: "co",
+  CLP: "cl",
+  ARS: "ar",
+  PEN: "pe",
+  ZAR: "za",
+  RUB: "ru",
+  INR: "in",
+  KRW: "kr",
+  TRY: "tr",
+  CHF: "ch",
+  AUD: "au",
+  CAD: "ca",
+  BRL: "br",
+  DXY: "us",
+  USD: "us",
 };
 
+/**
+ * Codigo ISO-3166 (flagcdn) do pais. Emoji de bandeira nao renderiza no
+ * Chrome/Windows — usamos imagem SVG no tick do eixo Y.
+ */
 function flagFor(cat: CategoryId, rawName: string): string {
   if (cat === "indices") {
-    for (const [needle, flag] of INDEX_FLAGS) {
-      if (rawName.includes(needle)) return `${flag} `;
+    for (const [needle, code] of INDEX_FLAGS) {
+      if (rawName.includes(needle)) return code;
     }
     return "";
   }
   if (cat === "moedas") {
     const code = rawName.trim().slice(0, 3).toUpperCase();
-    const flag = CURRENCY_FLAGS[code] ?? CURRENCY_FLAGS[rawName.trim().toUpperCase()];
-    return flag ? `${flag} ` : "";
+    return CURRENCY_FLAGS[code] ?? CURRENCY_FLAGS[rawName.trim().toUpperCase()] ?? "";
   }
   return "";
+}
+
+/** name codificado como "br|Brasil (EWZ)" — separa flag e rotulo. */
+function splitFlagName(encoded: string): { code: string; label: string } {
+  const i = encoded.indexOf("|");
+  if (i === 2) return { code: encoded.slice(0, 2), label: encoded.slice(3) };
+  return { code: "", label: encoded };
+}
+
+type YTickProps = {
+  x?: number;
+  y?: number;
+  payload?: { value?: string };
+};
+
+/** Tick do eixo Y com bandeira (imagem flagcdn) + nome. */
+function FlagYTick({ x = 0, y = 0, payload }: YTickProps) {
+  const { code, label } = splitFlagName(String(payload?.value ?? ""));
+  const flagW = 15;
+  return (
+    <g transform={`translate(${x},${y})`}>
+      {code ? (
+        <image
+          href={`https://flagcdn.com/w20/${code}.png`}
+          x={-148}
+          y={-5.5}
+          width={flagW}
+          height={11}
+          preserveAspectRatio="xMidYMid slice"
+        />
+      ) : null}
+      <text x={code ? -148 + flagW + 4 : -148} y={4} fontSize={11} fill={AZ_CHART.labels}>
+        {label.length > 17 ? `${label.slice(0, 16)}…` : label}
+      </text>
+    </g>
+  );
 }
 
 type Props = {
@@ -147,7 +186,8 @@ function rowsFor(
       rows: up
         .map((r) => {
           const raw = String(r.ticker ?? "");
-          return { name: `${flagFor("moedas", raw)}${truncateName(raw)}`, value: Number(r.change_pct) };
+          const code = flagFor("moedas", raw);
+          return { name: `${code ? `${code}|` : ""}${truncateName(raw)}`, value: Number(r.change_pct) };
         })
         .filter((r) => Number.isFinite(r.value)),
       updatedAt: props.fxData?.generated_at,
@@ -171,7 +211,8 @@ function rowsFor(
     const num = typeof v === "number" ? v : Number(v);
     if (!Number.isFinite(num)) continue;
     const rawName = String(row.name ?? "");
-    rows.push({ name: `${flagFor(cat, rawName)}${truncateName(rawName)}`, value: num });
+    const code = flagFor(cat, rawName);
+    rows.push({ name: `${code ? `${code}|` : ""}${truncateName(rawName)}`, value: num });
   }
   return { rows, updatedAt: source?.generated_at };
 }
@@ -256,8 +297,8 @@ export function MarketsPanel(props: Props) {
               <YAxis
                 type="category"
                 dataKey="name"
-                width={148}
-                tick={{ fontSize: 11, fill: AZ_CHART.labels }}
+                width={158}
+                tick={<FlagYTick />}
                 axisLine={false}
                 tickLine={false}
                 interval={0}
@@ -275,6 +316,7 @@ export function MarketsPanel(props: Props) {
                 }}
                 itemStyle={{ color: "#fff" }}
                 labelStyle={{ color: "#94A3B8", fontWeight: 600 }}
+                labelFormatter={(label) => splitFlagName(String(label)).label}
                 formatter={(value) => {
                   const v = typeof value === "number" ? value : Number(value);
                   return [Number.isFinite(v) ? `${v > 0 ? "+" : ""}${v.toFixed(2)}%` : "—", "Retorno"];
