@@ -95,7 +95,7 @@ export const DATA_SOURCES: DataSourceDef[] = [
   { key: "market_catalog", label: "Catálogo de ativos", blobPath: "data/market_catalog.json", workflowName: "market-data.yml", cadence: "diario-util", painel: "mercado-ativos" },
   { key: "market_history_latest", label: "Histórico (recorte)", blobPath: "data/market_history_latest.json", workflowName: "market-data.yml", cadence: "diario-util", painel: "mercado-ativos" },
   { key: "market_history_full", label: "Histórico completo (5a)", blobPath: "data/market_history_full.json", workflowName: "market-data.yml", cadence: "diario-util", painel: "mercado-ativos", heavy: true },
-  { key: "market_fundamentals", label: "Fundamentos (yfinance)", blobPath: "data/market_fundamentals.json", workflowName: "market-data.yml", cadence: "semanal", painel: "mercado-ativos", pagePath: "/painel-economico/mercado/fundamentos" },
+  { key: "market_fundamentals", label: "Fundamentos (yfinance)", blobPath: "data/market_fundamentals.json", workflowName: "market-data.yml", cadence: "diario-util", painel: "mercado-ativos", pagePath: "/painel-economico/mercado/fundamentos" },
 
   // ── Termômetro de Ciclo (visao-geral-pipeline.yml, diário 22:00 UTC) ───────
   { key: "visao_geral_oecd_cli", label: "OCDE CLI Brasil", blobPath: "data/visao_geral_oecd_cli.json", workflowName: "visao-geral-pipeline.yml", cadence: "diario", painel: "termometro-ciclo" },

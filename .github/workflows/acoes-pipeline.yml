@@ -54,8 +54,11 @@ jobs:
         continue-on-error: true
 
       # Valuation (P/L bottom-up + prêmio EY/DY vs NTN-B) — pesado, ~5 min, append-only
+      # ATENÇÃO: em runs de `schedule` o github.event.inputs não existe e o if
+      # antigo (inputs.run_valuation != '0') avaliava FALSE — o step era PULADO
+      # silenciosamente em todo cron (valuation ficou parado 01-04/06/26).
       - name: build_acoes_valuation (P/L bandas + prêmio)
-        if: ${{ github.event.inputs.run_valuation != '0' }}
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.run_valuation != '0' }}
         run: python data-pipeline/python/build_acoes_valuation.py --upload --sleep 0.2
         continue-on-error: true
 

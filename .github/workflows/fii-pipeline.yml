@@ -49,14 +49,17 @@ jobs:
           pip install -r data-pipeline/python/requirements.txt
 
       # Detail (página individual de cada FII com dividends, hero, indicadores) — pesado, ~5 min
+      # ATENÇÃO: em runs de `schedule` o github.event.inputs não existe e o if
+      # antigo (inputs.run_detail != '0') avaliava FALSE — steps PULADOS em todo
+      # cron (detail/macro ficaram parados 28/05-04/06/26).
       - name: build_fii_detail (107 páginas individuais)
-        if: ${{ github.event.inputs.run_detail != '0' }}
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.run_detail != '0' }}
         run: python data-pipeline/python/build_fii_detail.py --upload
         continue-on-error: true
 
       # Macro charts (P/VP histórico 5 anos + Prêmio NTN-B vs DY tijolo) — pesado, ~10 min
       - name: build_fii_macro_charts (P/VP + Prêmio histórico 5a)
-        if: ${{ github.event.inputs.run_macro != '0' }}
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.run_macro != '0' }}
         run: python data-pipeline/python/build_fii_macro_charts.py --upload
         continue-on-error: true
 

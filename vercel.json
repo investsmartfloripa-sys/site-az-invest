@@ -5,6 +5,10 @@
     {
       "path": "/api/cron/data-health",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/dispatch-pipelines",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
