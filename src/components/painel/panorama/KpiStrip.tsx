@@ -102,8 +102,13 @@ export function KpiStrip({ base }: Props) {
       try {
         // Selic meta (SGS 432) client-side: CORS aberto e o WAF do BCB
         // às vezes recusa fetch de datacenter (server ficava "—").
+        // O endpoint /ultimos/N devolve 400 intermitente — usar range de datas.
+        const fmtBR = (d: Date) =>
+          `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+        const end = new Date();
+        const start = new Date(end.getTime() - 540 * 86_400_000);
         const res = await fetch(
-          "https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/400?formato=json",
+          `https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados?formato=json&dataInicial=${fmtBR(start)}&dataFinal=${fmtBR(end)}`,
           { cache: "no-store", signal: ctrl.signal },
         );
         if (res.ok) {
