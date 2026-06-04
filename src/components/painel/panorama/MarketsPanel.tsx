@@ -14,9 +14,8 @@ import {
   YAxis,
 } from "recharts";
 
-import { CurrencyToggle } from "@/components/painel/CurrencyToggle";
 import DataStamp from "@/components/painel/DataStamp";
-import { PeriodSelector } from "@/components/painel/PeriodSelector";
+import { AzSegmented } from "@/components/painel/panorama/AzSegmented";
 import type { FxMoversPayload } from "@/components/painel/DynamicFxMoversBar";
 import type { ByPeriodBlock, Row } from "@/components/painel/DynamicReturnsBar";
 
@@ -43,6 +42,14 @@ const CATEGORIES: { id: CategoryId; label: string; currencyToggle: boolean }[] =
   { id: "commodities", label: "Commodities", currencyToggle: true },
 ];
 
+const PERIODS = [
+  { id: "1d", label: "1D" },
+  { id: "1wk", label: "1S" },
+  { id: "1mo", label: "1M" },
+  { id: "3mo", label: "3M" },
+  { id: "1y", label: "1A" },
+];
+
 const FX_PERIOD_MAP: Record<string, string> = {
   "1d": "day",
   "1wk": "week",
@@ -50,6 +57,69 @@ const FX_PERIOD_MAP: Record<string, string> = {
   "3mo": "quarter",
   "1y": "year",
 };
+
+/** Bandeira por palavra-chave do nome do índice global. */
+const INDEX_FLAGS: [string, string][] = [
+  ["Coreia", "🇰🇷"],
+  ["Argentina", "🇦🇷"],
+  ["Taiwan", "🇹🇼"],
+  ["Colômbia", "🇨🇴"],
+  ["Japão", "🇯🇵"],
+  ["Espanha", "🇪🇸"],
+  ["EUA", "🇺🇸"],
+  ["Alemanha", "🇩🇪"],
+  ["Singapura", "🇸🇬"],
+  ["Suíça", "🇨🇭"],
+  ["México", "🇲🇽"],
+  ["Reino Unido", "🇬🇧"],
+  ["China", "🇨🇳"],
+  ["Índia", "🇮🇳"],
+  ["Hong Kong", "🇭🇰"],
+  ["Brasil", "🇧🇷"],
+  ["França", "🇫🇷"],
+  ["Itália", "🇮🇹"],
+  ["Canadá", "🇨🇦"],
+  ["Austrália", "🇦🇺"],
+];
+
+/** Bandeira pelo codigo da moeda (tickers tipo "EUR / USD"). */
+const CURRENCY_FLAGS: Record<string, string> = {
+  EUR: "🇪🇺",
+  GBP: "🇬🇧",
+  JPY: "🇯🇵",
+  CNY: "🇨🇳",
+  MXN: "🇲🇽",
+  COP: "🇨🇴",
+  CLP: "🇨🇱",
+  ARS: "🇦🇷",
+  PEN: "🇵🇪",
+  ZAR: "🇿🇦",
+  RUB: "🇷🇺",
+  INR: "🇮🇳",
+  KRW: "🇰🇷",
+  TRY: "🇹🇷",
+  CHF: "🇨🇭",
+  AUD: "🇦🇺",
+  CAD: "🇨🇦",
+  BRL: "🇧🇷",
+  DXY: "🇺🇸",
+  USD: "🇺🇸",
+};
+
+function flagFor(cat: CategoryId, rawName: string): string {
+  if (cat === "indices") {
+    for (const [needle, flag] of INDEX_FLAGS) {
+      if (rawName.includes(needle)) return `${flag} `;
+    }
+    return "";
+  }
+  if (cat === "moedas") {
+    const code = rawName.trim().slice(0, 3).toUpperCase();
+    const flag = CURRENCY_FLAGS[code] ?? CURRENCY_FLAGS[rawName.trim().toUpperCase()];
+    return flag ? `${flag} ` : "";
+  }
+  return "";
+}
 
 type Props = {
   assetPanorama: PanoramaByPeriod | null;
@@ -60,7 +130,7 @@ type Props = {
 
 type ChartRow = { name: string; value: number };
 
-function truncateName(s: string, max = 18): string {
+function truncateName(s: string, max = 20): string {
   return s.length > max ? `${s.slice(0, max - 1)}…` : s;
 }
 
@@ -75,7 +145,10 @@ function rowsFor(
     const up = props.fxData?.top?.[fxPeriod as keyof NonNullable<FxMoversPayload["top"]>]?.up ?? [];
     return {
       rows: up
-        .map((r) => ({ name: truncateName(String(r.ticker ?? "")), value: Number(r.change_pct) }))
+        .map((r) => {
+          const raw = String(r.ticker ?? "");
+          return { name: `${flagFor("moedas", raw)}${truncateName(raw)}`, value: Number(r.change_pct) };
+        })
         .filter((r) => Number.isFinite(r.value)),
       updatedAt: props.fxData?.generated_at,
     };
@@ -97,14 +170,15 @@ function rowsFor(
     }
     const num = typeof v === "number" ? v : Number(v);
     if (!Number.isFinite(num)) continue;
-    rows.push({ name: truncateName(String(row.name ?? "")), value: num });
+    const rawName = String(row.name ?? "");
+    rows.push({ name: `${flagFor(cat, rawName)}${truncateName(rawName)}`, value: num });
   }
   return { rows, updatedAt: source?.generated_at };
 }
 
 /**
  * Card unificado de mercados: Ativos | Índices globais | Moedas | Commodities
- * num único bar chart com segmented control. Grade vertical estilo ggplot2,
+ * com tabs underline + seletores AzSegmented. Grade vertical estilo ggplot2,
  * linha do zero em navy, valores na ponta das barras.
  */
 export function MarketsPanel(props: Props) {
@@ -119,27 +193,39 @@ export function MarketsPanel(props: Props) {
     [cat, period, currency, props],
   );
   const sorted = useMemo(() => [...rows].sort((a, b) => b.value - a.value), [rows]);
-  const height = Math.max(220, 28 * sorted.length + 56);
+  const height = Math.max(220, 26 * sorted.length + 52);
 
   return (
-    <section className="w-full min-w-0 rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+    <section className="flex w-full min-w-0 flex-col rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-bold text-[#132960] md:text-lg">Mercados — retornos (%)</h2>
         <div className="flex flex-wrap items-center gap-2">
-          {active.currencyToggle ? <CurrencyToggle value={currency} onChange={setCurrency} /> : null}
-          <PeriodSelector value={period} onChange={setPeriod} />
+          {active.currencyToggle ? (
+            <AzSegmented
+              ariaLabel="Moeda"
+              value={currency}
+              onChange={(v) => setCurrency(v as "brl" | "usd")}
+              options={[
+                { id: "brl", label: "BRL" },
+                { id: "usd", label: "USD" },
+              ]}
+            />
+          ) : null}
+          <AzSegmented ariaLabel="Período" value={period} onChange={setPeriod} options={PERIODS} />
         </div>
       </div>
 
-      <div className="mb-3 inline-flex flex-wrap rounded-lg bg-zinc-100 p-0.5">
+      <div className="mb-3 flex flex-wrap gap-0.5 border-b border-zinc-100">
         {CATEGORIES.map((c) => (
           <button
             key={c.id}
             type="button"
             onClick={() => setCat(c.id)}
             aria-pressed={cat === c.id}
-            className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-              cat === c.id ? "bg-white text-[#132960] shadow-sm" : "text-zinc-500 hover:text-[#132960]"
+            className={`rounded-t-lg border-b-2 px-3 py-2 text-xs font-semibold transition-colors duration-150 md:text-sm ${
+              cat === c.id
+                ? "border-[#027DFC] text-[#027DFC]"
+                : "border-transparent text-zinc-500 hover:text-[#132960]"
             }`}
           >
             {c.label}
@@ -170,7 +256,7 @@ export function MarketsPanel(props: Props) {
               <YAxis
                 type="category"
                 dataKey="name"
-                width={132}
+                width={148}
                 tick={{ fontSize: 11, fill: AZ_CHART.labels }}
                 axisLine={false}
                 tickLine={false}
@@ -215,7 +301,7 @@ export function MarketsPanel(props: Props) {
       )}
 
       {updatedAt ? (
-        <p className="mt-2 text-right">
+        <p className="mt-auto pt-2 text-right">
           {/* Fonte intradiária (cron 15min): generated_at carrega os minutos do dado. */}
           <DataStamp giro={updatedAt} dado={updatedAt} />
         </p>

@@ -21,8 +21,8 @@ type Props = {
 
 /**
  * Secao de mercados do Panorama (client wrapper — funcoes/estado nao
- * cruzam a fronteira RSC). Dois cards unificados com segmented control:
- * retornos (Ativos | Indices | Moedas | Commodities) e setores (BR | Global).
+ * cruzam a fronteira RSC). Mercados e Setores lado a lado em telas
+ * largas, cada um com tabs + seletores AzSegmented.
  */
 export function PainelPanoramaSection({
   assetPanorama,
@@ -33,7 +33,7 @@ export function PainelPanoramaSection({
   sectorBr,
 }: Props) {
   return (
-    <section className="space-y-5">
+    <section className="grid items-start gap-5 xl:grid-cols-2">
       <LazyMount minHeight={520}>
         <MarketsPanel
           assetPanorama={assetPanorama}
@@ -42,7 +42,7 @@ export function PainelPanoramaSection({
           commPanorama={commPanorama}
         />
       </LazyMount>
-      <LazyMount minHeight={420}>
+      <LazyMount minHeight={520}>
         <SectorsPanel sectorBr={sectorBr} sectorGlobal={sectorGlobal} />
       </LazyMount>
     </section>

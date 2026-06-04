@@ -14,7 +14,6 @@ import {
 
 import {
   fetchLiveCurve,
-  interpolateRate,
   maturityLabel,
   type LiveContract,
   type LiveCurve,
@@ -69,7 +68,7 @@ type Props = {
   /** Curva pre D-30/D-90 do pipeline TaxaSwap (Blob) p/ sobrepor no DI live. */
   d30Pre?: CurveCut[];
   d90Pre?: CurveCut[];
-  /** Selic implicita por reuniao COPOM (cortes do pipeline). */
+  /** Selic implicita por reuniao COPOM — cortes do pipeline R (modelo oficial). */
   selicMeetings?: SelicMeeting[];
   /** Curva Treasury por tenor (cortes do pipeline FRED). */
   treasuryTenors?: TreasuryTenor[];
@@ -86,10 +85,6 @@ type ChartPoint = {
 function fmtRate(v: number | null | undefined): string {
   if (v == null || !Number.isFinite(v)) return "—";
   return `${v.toFixed(2).replace(".", ",")}%`;
-}
-
-function fmtInt(v: number): string {
-  return v.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
 }
 
 function fmtQuotedAt(quotedAt: string | null): string {
@@ -115,68 +110,47 @@ function liquidContracts(contracts: LiveContract[], showAll: boolean): LiveContr
   return withRate.filter((c) => /F\d{2}$/.test(c.symbol) || c.trades > 2000);
 }
 
+/**
+ * Interpola (linear no tempo) um corte historico nos timestamps da curva
+ * live, sem extrapolar alem do range do corte — assim todas as series
+ * compartilham os mesmos pontos de X e o eixo Y enquadra tudo.
+ */
+function cutValueAt(cut: CurveCut[], t: number): number | null {
+  if (cut.length === 0) return null;
+  const pts = cut
+    .map((c) => ({ t: Date.parse(c.maturity), r: c.rate }))
+    .filter((p) => Number.isFinite(p.t))
+    .sort((a, b) => a.t - b.t);
+  if (pts.length === 0 || t < pts[0].t || t > pts[pts.length - 1].t) return null;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i];
+    const b = pts[i + 1];
+    if (t >= a.t && t <= b.t) {
+      if (b.t === a.t) return a.r;
+      const w = (t - a.t) / (b.t - a.t);
+      return a.r + w * (b.r - a.r);
+    }
+  }
+  return null;
+}
+
 function buildCurveChart(
   live: LiveContract[],
   cuts: { d30?: CurveCut[]; d90?: CurveCut[] },
   show: { d1: boolean; d30: boolean; d90: boolean },
 ): ChartPoint[] {
-  const byT = new Map<number, ChartPoint>();
-  const at = (t: number): ChartPoint => {
-    const prev = byT.get(t) ?? { t };
-    byT.set(t, prev);
-    return prev;
-  };
-
+  const out: ChartPoint[] = [];
   for (const c of live) {
     if (c.rate == null) continue;
     const t = Date.parse(c.maturity);
     if (!Number.isFinite(t)) continue;
-    const p = at(t);
-    p.agora = c.rate;
+    const p: ChartPoint = { t, agora: c.rate };
     if (show.d1) p.d1 = c.prevAdjust;
+    if (show.d30 && cuts.d30) p.d30 = cutValueAt(cuts.d30, t);
+    if (show.d90 && cuts.d90) p.d90 = cutValueAt(cuts.d90, t);
+    out.push(p);
   }
-  if (show.d30) {
-    for (const cut of cuts.d30 ?? []) {
-      const t = Date.parse(cut.maturity);
-      if (Number.isFinite(t)) at(t).d30 = cut.rate;
-    }
-  }
-  if (show.d90) {
-    for (const cut of cuts.d90 ?? []) {
-      const t = Date.parse(cut.maturity);
-      if (Number.isFinite(t)) at(t).d90 = cut.rate;
-    }
-  }
-  return [...byT.values()].sort((a, b) => a.t - b.t);
-}
-
-/**
- * Selic implicita "agora": forward anualizado entre reunioes COPOM
- * consecutivas usando a curva DI live (DU aproximado por 252/365).
- * Aproximacao editorial — o corte oficial D-1 vem do pipeline R.
- */
-function buildSelicLive(di: LiveCurve | null, meetings: SelicMeeting[]): Map<string, number> {
-  const out = new Map<string, number>();
-  if (!di || meetings.length < 2) return out;
-  const today = Date.now();
-  const DU_YEAR = 252;
-  const duOf = (iso: string) => Math.max(1, ((Date.parse(iso) - today) / 86_400_000) * (252 / 365));
-
-  for (let i = 0; i < meetings.length - 1; i++) {
-    const a = meetings[i];
-    const b = meetings[i + 1];
-    const ra = interpolateRate(di.contracts, a.date);
-    const rb = interpolateRate(di.contracts, b.date);
-    if (ra == null || rb == null) continue;
-    const duA = duOf(a.date);
-    const duB = duOf(b.date);
-    if (duB <= duA + 1) continue;
-    const fa = Math.pow(1 + ra / 100, duA / DU_YEAR);
-    const fb = Math.pow(1 + rb / 100, duB / DU_YEAR);
-    const fwd = (Math.pow(fb / fa, DU_YEAR / (duB - duA)) - 1) * 100;
-    if (Number.isFinite(fwd) && fwd > 0 && fwd < 30) out.set(a.date, fwd);
-  }
-  return out;
+  return out.sort((a, b) => a.t - b.t);
 }
 
 const tooltipStyle = {
@@ -187,6 +161,9 @@ const tooltipStyle = {
   fontSize: 12,
   boxShadow: "0 4px 12px rgba(19,41,96,.25)",
 } as const;
+
+const thClass = "py-2 pr-2 text-right font-semibold";
+const tdClass = "py-1.5 pr-2 text-right tabular-nums";
 
 export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTenors = [] }: Props) {
   const [tab, setTab] = useState<TabId>("di");
@@ -239,18 +216,15 @@ export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTen
     [dapLiquid],
   );
 
-  const selicLive = useMemo(() => buildSelicLive(di, selicMeetings), [di, selicMeetings]);
   const selicChart = useMemo(
     () =>
       selicMeetings.map((m) => ({
         t: Date.parse(m.date),
-        label: dateLabelBR(m.date),
-        agora: selicLive.get(m.date) ?? null,
         recent: m.recent,
         d30: m.d30,
         d90: m.d90,
       })),
-    [selicMeetings, selicLive],
+    [selicMeetings],
   );
 
   if (error && !di) {
@@ -275,8 +249,6 @@ export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTen
       {di.isToday ? "Pregão de hoje · atraso ~15 min" : "Último fechamento"}
     </span>
   ) : null;
-
-  const showSideTable = tab === "di" || tab === "ipca";
 
   const cutToggles: { key: keyof typeof show; label: string; color: string; available: boolean }[] = [
     { key: "d1", label: "D-1", color: TIME_COLORS.d1, available: true },
@@ -333,14 +305,14 @@ export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTen
                       onClick={() => setShow((s) => ({ ...s, [c.key]: !s[c.key] }))}
                       className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold transition ${
                         show[c.key]
-                          ? "border-transparent bg-zinc-100 text-[#132960]"
+                          ? "border-transparent bg-[#eef2f8] text-[#132960]"
                           : "border-zinc-200 bg-white text-zinc-400 hover:text-[#132960]"
                       }`}
                     >
                       <span
                         aria-hidden
-                        className="inline-block h-2 w-2 rounded-full"
-                        style={{ backgroundColor: c.color, opacity: show[c.key] ? 1 : 0.35 }}
+                        className="inline-block h-2 w-2 rounded-full transition-opacity duration-150"
+                        style={{ backgroundColor: c.color, opacity: show[c.key] ? 1 : 0.3 }}
                       />
                       {c.label}
                     </button>
@@ -361,9 +333,7 @@ export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTen
         </div>
       </div>
 
-      <div
-        className={`grid gap-5 p-4 md:p-5 ${showSideTable ? "lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]" : ""}`}
-      >
+      <div className="grid gap-5 p-4 md:p-5 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
         <div className="min-w-0">
           <div className="h-[300px] w-full md:h-[340px]">
             {!di ? (
@@ -393,16 +363,15 @@ export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTen
                     tickLine={false}
                   />
                   <Tooltip
-                    labelFormatter={(t) => `Reunião ${tsLabel(Number(t))}`}
+                    labelFormatter={(t) => `Reunião ${dateLabelBR(new Date(Number(t)).toISOString().slice(0, 10))}`}
                     formatter={(v, name) => [fmtRate(typeof v === "number" ? v : Number(v)), String(name)]}
                     contentStyle={tooltipStyle}
                     itemStyle={{ color: "#fff" }}
                     labelStyle={{ color: "#94A3B8", fontWeight: 600 }}
                   />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="stepAfter" dataKey="agora" name="Agora (B3 ~15 min)" stroke={TIME_COLORS.agora} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
-                  <Line type="stepAfter" dataKey="recent" name="Fechamento D-1" stroke={TIME_COLORS.d1} strokeWidth={1.6} strokeDasharray="5 3" dot={false} connectNulls isAnimationActive={false} />
-                  <Line type="stepAfter" dataKey="d30" name="D-30" stroke={TIME_COLORS.d30} strokeWidth={1.4} dot={false} connectNulls isAnimationActive={false} />
+                  <Line type="stepAfter" dataKey="recent" name="Recente (D-1)" stroke={TIME_COLORS.agora} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                  <Line type="stepAfter" dataKey="d30" name="D-30" stroke={TIME_COLORS.d30} strokeWidth={1.5} dot={false} connectNulls isAnimationActive={false} />
                   <Line type="stepAfter" dataKey="d90" name="D-90" stroke={TIME_COLORS.d90} strokeWidth={1.4} dot={false} connectNulls isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
@@ -476,7 +445,7 @@ export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTen
                     <Line type="monotone" dataKey="d1" name="Ajuste D-1" stroke={TIME_COLORS.d1} strokeWidth={1.6} strokeDasharray="5 3" dot={false} connectNulls isAnimationActive={false} />
                   ) : null}
                   {tab === "di" && show.d30 ? (
-                    <Line type="monotone" dataKey="d30" name="D-30" stroke={TIME_COLORS.d30} strokeWidth={1.4} dot={false} connectNulls isAnimationActive={false} />
+                    <Line type="monotone" dataKey="d30" name="D-30" stroke={TIME_COLORS.d30} strokeWidth={1.5} dot={false} connectNulls isAnimationActive={false} />
                   ) : null}
                   {tab === "di" && show.d90 ? (
                     <Line type="monotone" dataKey="d90" name="D-90" stroke={TIME_COLORS.d90} strokeWidth={1.4} dot={false} connectNulls isAnimationActive={false} />
@@ -487,66 +456,103 @@ export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTen
           </div>
           <p className="mt-2 text-[11px] text-zinc-500">
             {tab === "selic"
-              ? "Selic implícita por reunião COPOM. “Agora” é calculada da curva DI ao vivo (forward entre reuniões, DU aproximado); cortes D-1/D-30/D-90 vêm do pipeline AZ (B3 PRE)."
+              ? "Selic implícita por reunião COPOM — modelo forward do pipeline AZ (B3 PRE, D-1), mesmos valores da trilha de política monetária. Cortes D-30/D-90 em tons mais claros."
               : tab === "treasury"
                 ? "Curva Treasury EUA por prazo (FRED, D-1) — cortes históricos em tons progressivamente mais claros."
-                : "Fonte: cotações públicas B3 (~15 min de atraso). Cortes históricos do pipeline AZ (TaxaSwap B3, D-1) em tons mais claros. D-7 e D-365 entram quando o pipeline ganhar esses cortes."}
+                : "Fonte: cotações públicas B3 (~15 min de atraso). Cortes D-30/D-90 do pipeline AZ (TaxaSwap B3, D-1) interpolados nos vencimentos. D-7 e D-365 entram quando o pipeline ganhar esses cortes."}
           </p>
         </div>
 
-        {showSideTable ? (
-          <div className="min-w-0 overflow-x-auto">
+        <div className="min-w-0 overflow-x-auto">
+          {tab === "selic" ? (
             <table className="min-w-full text-xs">
               <thead>
-                <tr className="border-b border-zinc-200 text-left text-[10px] uppercase tracking-wider text-zinc-500">
-                  <th className="py-2 pr-2 font-semibold">Venc.</th>
-                  <th className="py-2 pr-2 text-right font-semibold">Agora</th>
-                  <th className="py-2 pr-2 text-right font-semibold">Δ dia</th>
-                  <th className="hidden py-2 pr-2 text-right font-semibold sm:table-cell">Mín–Máx</th>
-                  <th className="hidden py-2 text-right font-semibold md:table-cell">Contr. abertos</th>
+                <tr className="border-b border-zinc-200 text-[10px] uppercase tracking-wider text-zinc-500">
+                  <th className="py-2 pr-2 text-left font-semibold">Reunião</th>
+                  <th className={thClass}>D-90</th>
+                  <th className={thClass}>D-30</th>
+                  <th className={thClass}>Recente</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
-                {(tab === "ipca" ? dapLiquid : diLiquid).map((c) => {
-                  const bps = c.changeBps;
-                  const tone =
-                    bps == null
-                      ? "text-zinc-400"
-                      : Math.abs(bps) < 1
-                        ? "text-[#027DFC]"
-                        : bps > 0
-                          ? "text-[#16A34A]"
-                          : "text-[#DC2626]";
-                  const sign = bps == null ? "" : bps > 0 ? "+" : "";
-                  return (
-                    <tr key={c.symbol} className="tabular-nums">
-                      <td className="py-1.5 pr-2 font-semibold text-[#132960]">
-                        {maturityLabel(c.maturity)}
-                        <span className="ml-1 hidden text-[10px] font-normal text-zinc-400 lg:inline">
-                          {c.symbol}
-                        </span>
-                      </td>
-                      <td className="py-1.5 pr-2 text-right font-semibold text-[#132960]">{fmtRate(c.rate)}</td>
-                      <td className={`py-1.5 pr-2 text-right font-semibold ${tone}`}>
-                        {bps == null ? "—" : `${sign}${bps} bps`}
-                      </td>
-                      <td className="hidden py-1.5 pr-2 text-right text-zinc-500 sm:table-cell">
-                        {c.low != null && c.high != null
-                          ? `${c.low.toFixed(2).replace(".", ",")}–${c.high.toFixed(2).replace(".", ",")}`
-                          : "—"}
-                      </td>
-                      <td className="hidden py-1.5 text-right text-zinc-500 md:table-cell">{fmtInt(c.openInterest)}</td>
-                    </tr>
-                  );
-                })}
+                {selicMeetings.map((m) => (
+                  <tr key={m.date}>
+                    <td className="py-1.5 pr-2 font-semibold text-[#132960]">{dateLabelBR(m.date)}</td>
+                    <td className={`${tdClass} text-zinc-400`}>{fmtRate(m.d90)}</td>
+                    <td className={`${tdClass} text-zinc-500`}>{fmtRate(m.d30)}</td>
+                    <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(m.recent)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
-            <p className="mt-2 text-[11px] text-zinc-400">
-              Δ dia vs ajuste D-1 · verde = taxa subiu, azul = estável, vermelho = caiu. Sem negócio no dia, usa
-              mid bid/ask.
-            </p>
-          </div>
-        ) : null}
+          ) : tab === "treasury" ? (
+            <table className="min-w-full text-xs">
+              <thead>
+                <tr className="border-b border-zinc-200 text-[10px] uppercase tracking-wider text-zinc-500">
+                  <th className="py-2 pr-2 text-left font-semibold">Prazo</th>
+                  <th className={thClass}>D-365</th>
+                  <th className={thClass}>D-90</th>
+                  <th className={thClass}>D-30</th>
+                  <th className={thClass}>Recente</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {treasuryTenors.map((t) => (
+                  <tr key={t.tenor}>
+                    <td className="py-1.5 pr-2 font-semibold text-[#132960]">{t.tenor}a</td>
+                    <td className={`${tdClass} text-zinc-300`}>{fmtRate(t.d365)}</td>
+                    <td className={`${tdClass} text-zinc-400`}>{fmtRate(t.d90)}</td>
+                    <td className={`${tdClass} text-zinc-500`}>{fmtRate(t.d30)}</td>
+                    <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(t.recent)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <>
+              <table className="min-w-full text-xs">
+                <thead>
+                  <tr className="border-b border-zinc-200 text-[10px] uppercase tracking-wider text-zinc-500">
+                    <th className="py-2 pr-2 text-left font-semibold">Venc.</th>
+                    <th className={thClass}>Agora</th>
+                    <th className={thClass}>Δ dia</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100">
+                  {(tab === "ipca" ? dapLiquid : diLiquid).map((c) => {
+                    const bps = c.changeBps;
+                    const tone =
+                      bps == null
+                        ? "text-zinc-400"
+                        : Math.abs(bps) < 1
+                          ? "text-[#027DFC]"
+                          : bps > 0
+                            ? "text-[#16A34A]"
+                            : "text-[#DC2626]";
+                    const sign = bps == null ? "" : bps > 0 ? "+" : "";
+                    return (
+                      <tr key={c.symbol}>
+                        <td className="py-1.5 pr-2 font-semibold text-[#132960]">
+                          {maturityLabel(c.maturity)}
+                          <span className="ml-1 hidden text-[10px] font-normal text-zinc-400 xl:inline">
+                            {c.symbol}
+                          </span>
+                        </td>
+                        <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(c.rate)}</td>
+                        <td className={`${tdClass} font-semibold ${tone}`}>
+                          {bps == null ? "—" : `${sign}${bps} bps`}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <p className="mt-2 text-[11px] text-zinc-400">
+                Δ dia vs ajuste D-1 · verde = subiu, azul = estável, vermelho = caiu.
+              </p>
+            </>
+          )}
+        </div>
       </div>
     </section>
   );

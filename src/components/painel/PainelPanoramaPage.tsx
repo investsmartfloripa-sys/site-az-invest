@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { PostCard } from "@/components/common/PostCard";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
 import {
@@ -11,6 +9,7 @@ import {
 import { KpiStrip, type KpiCard } from "@/components/painel/panorama/KpiStrip";
 import { MarketTape, type TapeItem } from "@/components/painel/panorama/MarketTape";
 import { PanoramaResumo } from "@/components/painel/panorama/PanoramaResumo";
+import { PeriodicosChips } from "@/components/painel/panorama/PeriodicosChips";
 import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection";
 import { getPanoramaData, painelBlobConfigured, type PanoramaData } from "@/lib/painel-data";
 import { findPosts, mapPost } from "@/lib/posts";
@@ -339,19 +338,14 @@ export async function PainelPanoramaPage() {
         </p>
       ) : null}
 
-      <header className="flex flex-wrap items-end justify-between gap-2">
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-[#132960] md:text-3xl">Panorama</h1>
           <p className="text-sm text-zinc-500">
             Mercados, juros e setores em uma tela — com curvas DI e IPCA+ ao vivo da B3.
           </p>
         </div>
-        <Link
-          href="/painel-economico/mercado/brasil/renda-fixa"
-          className="text-sm font-semibold text-[#027DFC] hover:underline"
-        >
-          Renda fixa completa →
-        </Link>
+        <PeriodicosChips />
       </header>
 
       <PanoramaResumo data={data} />
