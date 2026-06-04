@@ -99,6 +99,44 @@ export function KpiStrip({ base }: Props) {
       } catch {
         // mantem card server
       }
+      try {
+        // Selic meta (SGS 432) client-side: CORS aberto e o WAF do BCB
+        // às vezes recusa fetch de datacenter (server ficava "—").
+        const res = await fetch(
+          "https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/400?formato=json",
+          { cache: "no-store", signal: ctrl.signal },
+        );
+        if (res.ok) {
+          const rows = (await res.json()) as { data: string; valor: string }[];
+          const last = rows[rows.length - 1];
+          const lastVal = Number(last?.valor);
+          if (Number.isFinite(lastVal)) {
+            let changeDate = last.data;
+            let prevVal: number | null = null;
+            for (let i = rows.length - 1; i >= 0; i--) {
+              const v = Number(rows[i].valor);
+              if (!Number.isFinite(v)) continue;
+              if (v !== lastVal) {
+                prevVal = v;
+                break;
+              }
+              changeDate = rows[i].data;
+            }
+            const bps = prevVal != null ? Math.round((lastVal - prevVal) * 100) : 0;
+            const [, mm, yyyy] = changeDate.split("/");
+            next["selic"] = {
+              id: "selic",
+              label: "Selic (meta)",
+              value: `${lastVal.toFixed(2).replace(".", ",")}%`,
+              change: bps !== 0 ? `${bps > 0 ? "+" : "−"}${Math.abs(bps)} bps` : null,
+              direction: bps === 0 ? "flat" : bps > 0 ? "up" : "down",
+              sub: `última mudança ${mm}/${yyyy.slice(2)} · BCB`,
+            };
+          }
+        }
+      } catch {
+        // mantem card server
+      }
       if (!cancelled && Object.keys(next).length > 0) setLive((prev) => ({ ...prev, ...next }));
     }
 
