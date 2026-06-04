@@ -149,7 +149,11 @@ async function fetchSelicAtual(): Promise<SelicNow> {
   try {
     const res = await fetch(
       "https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/400?formato=json",
-      { next: { revalidate: 3600 } },
+      {
+        next: { revalidate: 3600 },
+        // WAF do BCB recusa fetch sem User-Agent (Selic ficava "—" na Vercel).
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; AZInvestBot/1.0)", Accept: "application/json" },
+      },
     );
     if (!res.ok) return null;
     const rows = (await res.json()) as { data: string; valor: string }[];
