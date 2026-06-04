@@ -6,9 +6,10 @@
 
 const MESES_PT = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
-function pad2(n: number): string {
-  return String(n).padStart(2, "0");
-}
+/** Fuso fixo do site (público BR): mesma saída no SSR (UTC) e no client. */
+const TZ = "America/Sao_Paulo";
+
+// (datas YYYY-MM / YYYY-MM-DD de séries são formatadas por regex, sem fuso)
 
 function parseDate(value: string | Date | null | undefined): Date | null {
   if (!value) return null;
@@ -17,18 +18,43 @@ function parseDate(value: string | Date | null | undefined): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-/** Giro com precisão de DIA: "04/06/26". */
+type Parts = { dia: string; mes: string; ano2: string; hora: string; min: string };
+
+function partsSP(d: Date): Parts {
+  const fmt = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: TZ,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const map: Record<string, string> = {};
+  for (const p of fmt.formatToParts(d)) map[p.type] = p.value;
+  return {
+    dia: map.day ?? "",
+    mes: map.month ?? "",
+    ano2: (map.year ?? "").slice(2),
+    hora: map.hour === "24" ? "00" : (map.hour ?? ""),
+    min: map.minute ?? "",
+  };
+}
+
+/** Giro com precisão de DIA: "04/06/26" (horário de Brasília). */
 export function formatGiroDia(value: string | Date | null | undefined): string | null {
   const d = parseDate(value);
   if (!d) return null;
-  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}`;
+  const p = partsSP(d);
+  return `${p.dia}/${p.mes}/${p.ano2}`;
 }
 
-/** Giro com precisão de minuto (dashboard): "04/06 09:12". */
+/** Giro com precisão de minuto (dashboard): "04/06 09:12" (horário de Brasília). */
 export function formatGiroMinuto(value: string | Date | null | undefined): string | null {
   const d = parseDate(value);
   if (!d) return null;
-  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const p = partsSP(d);
+  return `${p.dia}/${p.mes} ${p.hora}:${p.min}`;
 }
 
 /**
@@ -66,11 +92,12 @@ export function formatDadoLabel(raw: string | Date | null | undefined): string |
   return value;
 }
 
-/** Dado intradiário com minutos: "04/06 14:32". */
+/** Dado intradiário com minutos: "04/06 14:32" (horário de Brasília). */
 export function formatDadoMinuto(value: string | Date | null | undefined): string | null {
   const d = parseDate(value);
   if (!d) return null;
-  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const p = partsSP(d);
+  return `${p.dia}/${p.mes} ${p.hora}:${p.min}`;
 }
 
 /** Idade relativa: "há 12 min" / "há 5 h" / "há 3 dias". */
