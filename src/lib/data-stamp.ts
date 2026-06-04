@@ -71,8 +71,8 @@ export function formatDadoLabel(raw: string | Date | null | undefined): string |
   const value = raw.trim();
   if (!value) return null;
 
-  const tri = value.match(/^(\d{4})[-\s]?[TQ](\d)$/i);
-  if (tri) return `T${tri[2]}/${tri[1].slice(2)}`;
+  const tri = value.match(/^(\d{4})[-\s]?[TQ](\d{1,2})$/i);
+  if (tri) return `T${Number(tri[2])}/${tri[1].slice(2)}`;
 
   const mes = value.match(/^(\d{4})-(\d{2})$/);
   if (mes) {
