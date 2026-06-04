@@ -89,6 +89,8 @@ export function SectorHeatmap({ data }: { data: MarketFundamentals | null }) {
       subtitle="Mediana de múltiplos por setor (ações BR + EUA)."
       badge="Yahoo Finance"
       bodyClassName="px-4 pb-4 pt-2"
+      stampGiro={data?.generated_at ?? null}
+      stampDado={data?.generated_at ?? null}
       toolbar={
         <div className="flex flex-wrap gap-1">
           {METRICS.map((m) => (

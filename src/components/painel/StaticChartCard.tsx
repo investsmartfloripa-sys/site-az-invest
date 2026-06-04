@@ -1,7 +1,7 @@
 "use client";
 
 import { painelBlobUrl } from "@/lib/painel-blob";
-import { formatUpdatedAt } from "./formatUpdatedAt";
+import DataStamp from "@/components/painel/DataStamp";
 
 type Props = {
   slug: string;
@@ -41,7 +41,6 @@ export function StaticChartCard({
 }: Props) {
   const baseUrl = (svgPublicSrc?.trim() || painelBlobUrl(`charts/static/${slug}.svg`)).trim();
   const url = baseUrl ? `${baseUrl}?v=${encodeURIComponent(cacheBuster ?? "1")}` : "";
-  const updatedAt = formatUpdatedAt(tableData?.generated_at);
 
   if (!url) {
     return (
@@ -79,7 +78,11 @@ export function StaticChartCard({
           decoding="async"
         />
       </div>
-      {updatedAt ? <p className="mt-2 text-xs italic text-zinc-700">Atualizado em {updatedAt}</p> : null}
+      {tableData?.generated_at || tableData?.ref_today ? (
+        <p className="mt-2">
+          <DataStamp giro={tableData?.generated_at} dado={tableData?.ref_today ?? tableData?.generated_at} />
+        </p>
+      ) : null}
       {tableData?.status === "ok" && (tableData.rows?.length ?? 0) > 0 && (tableData.columns?.length ?? 0) > 0 ? (
         <div className="mt-4 overflow-x-auto rounded-xl border border-zinc-200">
           <table className="min-w-full divide-y divide-zinc-200 text-xs">

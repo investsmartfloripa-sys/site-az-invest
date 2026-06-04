@@ -45,6 +45,7 @@ import {
   fmtSaldo,
   sequentialScale,
 } from "./shared";
+import DataStamp from "@/components/painel/DataStamp";
 
 const CORES_SETOR: Record<string, string> = {
   Agropecuária: "#84cc16",
@@ -148,6 +149,13 @@ export function CagedDashboard({
           <p className="text-sm text-zinc-500">Dados de quebras indisponíveis no momento.</p>
         )}
         {(vista === "faixa" || vista === "setor") && quebras && <NotaCobertura />}
+        <p className="mt-2">
+          {(vista === "faixa" || vista === "setor") && quebras ? (
+            <DataStamp giro={quebras.gerado_em} dado={quebras.serie[quebras.serie.length - 1]?.mes} />
+          ) : (
+            <DataStamp giro={total.gerado_em} dado={ultimoMes.mes} />
+          )}
+        </p>
       </div>
 
       <footer className="text-xs text-zinc-500 border-t pt-3 space-y-1">

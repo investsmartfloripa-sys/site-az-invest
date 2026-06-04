@@ -34,6 +34,7 @@ import {
   formatDivulgadoEm,
   useHorizonte,
 } from "./AtividadeShell";
+import DataStamp from "@/components/painel/DataStamp";
 
 type Visao = "pib" | "ibcbr";
 type Decomposicao = "nenhuma" | "oferta" | "demanda";
@@ -221,6 +222,9 @@ function PibView({
             />
           </ComposedChart>
         </ResponsiveContainer>
+        <p className="mt-2">
+          <DataStamp giro={pib.gerado_em} dado={serie[serie.length - 1]?.trim} />
+        </p>
       </section>
 
       {/* Decomposição */}
@@ -265,6 +269,9 @@ function PibView({
             </ComposedChart>
           </ResponsiveContainer>
         )}
+        <p className="mt-2">
+          <DataStamp giro={pib.gerado_em} dado={serie[serie.length - 1]?.trim} />
+        </p>
       </section>
 
       {/* Focus PIB */}
@@ -289,9 +296,12 @@ function PibView({
               />
             )}
           </div>
-          <p className="mt-3 text-[11px] text-zinc-400">
-            Fonte: BCB Olinda (boletim Focus). A mediana é a estimativa central das instituições consultadas.
-          </p>
+          <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <p className="text-[11px] text-zinc-400">
+              Fonte: BCB Olinda (boletim Focus). A mediana é a estimativa central das instituições consultadas.
+            </p>
+            <DataStamp giro={pib.gerado_em} dado={(ultimoFocusAtual ?? ultimoFocusProximo)?.data} />
+          </div>
         </section>
       )}
 
@@ -398,6 +408,9 @@ function IbcBrView({
             />
           </ComposedChart>
         </ResponsiveContainer>
+        <p className="mt-2">
+          <DataStamp giro={ibcbr.gerado_em} dado={serie[serie.length - 1]?.mes} />
+        </p>
       </section>
 
 

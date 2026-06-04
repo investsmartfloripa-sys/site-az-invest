@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import DataStamp from "@/components/painel/DataStamp";
 
 type Props = {
   title: string;
@@ -8,6 +9,10 @@ type Props = {
   toolbar?: ReactNode;
   /** Rodape pequeno (ex.: "Atualizado em ...") */
   footer?: ReactNode;
+  /** Carimbo discreto: data do último giro do pipeline (ISO). */
+  stampGiro?: string | Date | null;
+  /** Carimbo discreto: data do dado mais recente da série (rótulo cru). */
+  stampDado?: string | Date | null;
   /** Padding interno do corpo. Default = "p-4". Use "p-0" para tabelas full-bleed. */
   bodyClassName?: string;
   className?: string;
@@ -29,10 +34,13 @@ export function MarketCard({
   badge,
   toolbar,
   footer,
+  stampGiro,
+  stampDado,
   bodyClassName = "p-4 pt-3",
   className = "",
   children,
 }: Props) {
+  const hasStamp = Boolean(stampGiro || stampDado);
   return (
     <article
       className={`rounded-2xl border border-[#132960]/15 bg-white shadow-sm ${className}`}
@@ -54,9 +62,10 @@ export function MarketCard({
 
       <div className={bodyClassName}>{children}</div>
 
-      {footer ? (
-        <footer className="border-t border-[#132960]/10 px-4 py-2 text-xs italic text-zinc-500">
-          {footer}
+      {footer || hasStamp ? (
+        <footer className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t border-[#132960]/10 px-4 py-2 text-xs italic text-zinc-500">
+          <span className="min-w-0">{footer}</span>
+          {hasStamp ? <DataStamp giro={stampGiro} dado={stampDado} className="not-italic" /> : null}
         </footer>
       ) : null}
     </article>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import DataStamp from "@/components/painel/DataStamp";
 import type { FiiDividend } from "@/lib/painel-fii";
 
 function formatDateBR(d: string | null): string {
@@ -64,6 +65,9 @@ export function FiiDetailDividends({ dividends }: { dividends: FiiDividend[] }) 
           <p className="mt-2 text-[10px] text-zinc-400">
             Data de pagamento é estimativa (~14 dias após a data ex). Para pagamento exato, consulte o
             relatório gerencial da gestora.
+          </p>
+          <p className="mt-2 text-right">
+            <DataStamp dado={dividends[0]?.data_com ?? null} />
           </p>
         </>
       )}

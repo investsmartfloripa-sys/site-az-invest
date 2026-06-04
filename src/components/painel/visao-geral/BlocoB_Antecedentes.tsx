@@ -17,6 +17,7 @@ import type { AntecedentesFinData, AtividadePimData, CniData, CodaceFaixa, Credi
 import { CardSelicReal, CardConcessoes } from "./BlocoE_CondicoesFinanceiras";
 import { ExploradorSeries, type SerieExplorador } from "./ExploradorSeries";
 import { formatMes } from "@/lib/painel-visao-geral";
+import DataStamp from "@/components/painel/DataStamp";
 
 function CardOecdCli({ data, codace }: { data: OecdCliData | null; codace: CodaceFaixa[] }) {
   if (!data || !data.serie || data.serie.length === 0) {
@@ -81,6 +82,7 @@ function CardOecdCli({ data, codace }: { data: OecdCliData | null; codace: Codac
           />
         </ComposedChart>
       </ResponsiveContainer>
+      <p className="mt-2"><DataStamp giro={data.gerado_em} dado={dados[dados.length - 1]?.mes} /></p>
     </div>
   );
 }
@@ -138,6 +140,7 @@ function CardFgvAntecedentes({ data }: { data: FgvAntecedentesData | null }) {
           <Line type="monotone" dataKey="iie_br" stroke="#7C3AED" dot={false} strokeWidth={1.5} name="IIE-Br" connectNulls />
         </ComposedChart>
       </ResponsiveContainer>
+      <p className="mt-2"><DataStamp giro={data.gerado_em} dado={dados[dados.length - 1]?.mes} /></p>
     </div>
   );
 }

@@ -33,6 +33,7 @@ import {
   fmtTrim,
   sequentialScale,
 } from "./shared";
+import DataStamp from "@/components/painel/DataStamp";
 
 const CORES = [
   "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
@@ -143,6 +144,18 @@ export function PnadDashboard({ data }: { data: PnadData }) {
         {vista === "setor" && <SetorView data={data} />}
         {vista === "cruzamentos" && <CruzamentosView data={data} />}
         {vista === "serie" && <SerieCompletaView data={data} />}
+        <p className="mt-2">
+          <DataStamp
+            giro={data.gerado_em}
+            dado={
+              vista === "composicao"
+                ? data.composicao.serie[data.composicao.serie.length - 1]?.trim
+                : vista === "setor"
+                  ? data.setor.serie[data.setor.serie.length - 1]?.trim
+                  : trimRecente.trim
+            }
+          />
+        </p>
       </div>
 
       <footer className="text-xs text-zinc-500 border-t pt-3">

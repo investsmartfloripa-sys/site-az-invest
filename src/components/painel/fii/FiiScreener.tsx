@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import DataStamp from "@/components/painel/DataStamp";
 import type { FiiScreenerData, FiiScreenerRow } from "@/lib/painel-fii";
 
 type SortKey = "name" | "segment" | "price" | "dy_12m_pct" | "pvp" | "pl" | "liquidity_avg_21d";
@@ -247,6 +248,9 @@ export function FiiScreener({ data }: Props) {
         yfinance; PL e VP/cota via CVM Informe Mensal. Segmento por catálogo curado (gestoras).
         Outliers de P/VP (escala não padronizada na CVM) ficam como “—”. <strong>*</strong>{" "}
         DY &gt; 18% pode incluir amortização — não é renda recorrente.
+      </p>
+      <p className="mt-2 text-right">
+        <DataStamp giro={data.generated_at} dado={data.generated_at} />
       </p>
     </section>
   );

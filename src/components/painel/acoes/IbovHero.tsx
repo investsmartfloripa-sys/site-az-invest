@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
+import DataStamp from "@/components/painel/DataStamp";
 import {
   TIME_WINDOW_OPTIONS,
   TimeWindowToggle,
@@ -255,10 +256,16 @@ export function IbovHero({ data }: Props) {
               );
             })}
           </div>
-          <p className="text-[10px] text-zinc-400">
-            Ibovespa (<code>^BVSP</code>) via yfinance. Benchmarks em base 100 no início da janela:
-            CDI (BCB SGS 12), S&amp;P 500 (em USD) e USD/BRL. Não é recomendação.
-          </p>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <p className="min-w-0 text-[10px] text-zinc-400">
+              Ibovespa (<code>^BVSP</code>) via yfinance. Benchmarks em base 100 no início da janela:
+              CDI (BCB SGS 12), S&amp;P 500 (em USD) e USD/BRL. Não é recomendação.
+            </p>
+            <DataStamp
+              giro={data.generated_at}
+              dado={data.series_daily[data.series_daily.length - 1]?.date ?? null}
+            />
+          </div>
         </div>
       </div>
     </section>

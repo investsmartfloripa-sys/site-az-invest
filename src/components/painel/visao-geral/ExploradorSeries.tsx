@@ -17,6 +17,7 @@ import {
 import type { CodaceFaixa } from "@/lib/painel-visao-geral";
 
 import { formatMes } from "@/lib/painel-visao-geral";
+import DataStamp from "@/components/painel/DataStamp";
 
 export type SeriePonto = { mes: string; v: number | null | undefined };
 
@@ -209,6 +210,7 @@ export function ExploradorSeries({
             </LineChart>
           </ResponsiveContainer>
         </div>
+        <p className="mt-2"><DataStamp dado={selecionada.mesAtual ?? selecionada.data[selecionada.data.length - 1]?.mes} /></p>
       </div>
 
       {/* Grid de cards-thumbnail (seletores) */}

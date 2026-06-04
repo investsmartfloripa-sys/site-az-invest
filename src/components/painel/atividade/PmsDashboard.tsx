@@ -33,6 +33,7 @@ import {
   formatDivulgadoEm,
   useHorizonte,
 } from "./AtividadeShell";
+import DataStamp from "@/components/painel/DataStamp";
 
 type Detalhe = "segmentos" | "atividades";
 
@@ -168,6 +169,9 @@ export function PmsDashboard({ data }: { data: AtividadePmsData }) {
             <Line yAxisId="right" type="monotone" dataKey="indice_sa" name="Índice SA (2022=100)" stroke={COR_PRIMARIA} strokeWidth={2} dot={false} />
           </ComposedChart>
         </ResponsiveContainer>
+        <p className="mt-2">
+          <DataStamp giro={data.gerado_em} dado={serie[serie.length - 1]?.mes} />
+        </p>
       </Section>
 
       <Section
@@ -189,6 +193,9 @@ export function PmsDashboard({ data }: { data: AtividadePmsData }) {
             <Line type="monotone" dataKey="Receita nominal" stroke={COR_ACENTO} strokeWidth={2} strokeDasharray="4 3" dot={false} />
           </LineChart>
         </ResponsiveContainer>
+        <p className="mt-2">
+          <DataStamp giro={data.gerado_em} dado={serie[serie.length - 1]?.mes} />
+        </p>
       </Section>
 
       {turismoData.length > 0 && (
@@ -211,6 +218,9 @@ export function PmsDashboard({ data }: { data: AtividadePmsData }) {
               <Line type="monotone" dataKey="Receita nominal" stroke={COR_ACENTO} strokeWidth={2} strokeDasharray="4 3" dot={false} />
             </LineChart>
           </ResponsiveContainer>
+          <p className="mt-2">
+            <DataStamp giro={data.gerado_em} dado={turismoTail[turismoTail.length - 1]?.mes} />
+          </p>
         </Section>
       )}
 
@@ -235,6 +245,9 @@ export function PmsDashboard({ data }: { data: AtividadePmsData }) {
               ))}
             </LineChart>
           </ResponsiveContainer>
+          <p className="mt-2">
+            <DataStamp giro={data.gerado_em} dado={transportesTail[transportesTail.length - 1]?.mes} />
+          </p>
         </Section>
       )}
 
@@ -253,10 +266,16 @@ export function PmsDashboard({ data }: { data: AtividadePmsData }) {
         }
       >
         <Heatmap rows={heatmapRows} cols={heatmapCols} values={heatmapValues} />
+        <p className="mt-2">
+          <DataStamp giro={data.gerado_em} dado={data.mes_recente} />
+        </p>
       </Section>
 
       <Section titulo={`Ranking completo de ${detalhe} — ${formatMes(data.mes_recente)}`}>
         <RankingTable items={rankingItems} colunaPrincipal="var_yoy" labelPrincipal="Var. anual" />
+        <p className="mt-2">
+          <DataStamp giro={data.gerado_em} dado={data.mes_recente} />
+        </p>
       </Section>
 
       <footer className="text-[11px] text-zinc-500">{data.metadata.nota}</footer>

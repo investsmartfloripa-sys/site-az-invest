@@ -5,6 +5,7 @@ import { CartesianGrid, Line, LineChart, ReferenceArea, ReferenceLine, Responsiv
 
 import type { CodaceFaixa, VisaoGeralPayload } from "@/lib/painel-visao-geral";
 import { formatMes, ultimaObs } from "@/lib/painel-visao-geral";
+import DataStamp from "@/components/painel/DataStamp";
 
 type Sinal = "verde" | "amarelo" | "vermelho" | "neutro";
 
@@ -196,6 +197,7 @@ export function TermometroSintese({ payload, codace = [] }: { payload: VisaoGera
               </LineChart>
             </ResponsiveContainer>
           </div>
+          <p className="mt-2"><DataStamp dado={compostoHistorico[compostoHistorico.length - 1]?.mes} /></p>
         </div>
       )}
 

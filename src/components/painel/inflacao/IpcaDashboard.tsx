@@ -17,6 +17,8 @@ import {
 } from "recharts";
 
 import type { IpcaData, Influencia, SerieGrupo } from "@/lib/painel-ipca";
+import DataStamp from "@/components/painel/DataStamp";
+import { lastSeriesDate } from "@/lib/data-stamp";
 
 const CORES_GRUPOS = [
   "#1f77b4",
@@ -274,6 +276,9 @@ function AnchorChart({ data }: { data: IpcaData }) {
           </button>
         </div>
       </div>
+      <p className="mt-2">
+        <DataStamp giro={data.gerado_em} dado={dados.serie[dados.serie.length - 1]?.mes} />
+      </p>
     </div>
   );
 }
@@ -312,6 +317,9 @@ function MaioresInfluencias({ data }: { data: IpcaData }) {
           ))}
         </div>
       </div>
+      <p className="mt-2">
+        <DataStamp giro={data.gerado_em} dado={mes} />
+      </p>
     </div>
   );
 }
@@ -364,6 +372,9 @@ function NucleosChart({ data }: { data: IpcaData }) {
           </LineChart>
         </ResponsiveContainer>
       </div>
+      <p className="mt-2">
+        <DataStamp giro={data.gerado_em} dado={serie[serie.length - 1]?.mes} />
+      </p>
     </div>
   );
 }
@@ -391,6 +402,9 @@ function DifusaoChart({ data }: { data: IpcaData }) {
           </LineChart>
         </ResponsiveContainer>
       </div>
+      <p className="mt-2">
+        <DataStamp giro={data.gerado_em} dado={serie[serie.length - 1]?.mes} />
+      </p>
     </div>
   );
 }
@@ -450,6 +464,9 @@ function CategoriasChart({ data }: { data: IpcaData }) {
           </LineChart>
         </ResponsiveContainer>
       </div>
+      <p className="mt-2">
+        <DataStamp giro={data.gerado_em} dado={serie[serie.length - 1]?.mes} />
+      </p>
     </div>
   );
 }
@@ -502,6 +519,9 @@ function FocusChart({ data }: { data: IpcaData }) {
           </LineChart>
         </ResponsiveContainer>
       </div>
+      <p className="mt-2">
+        <DataStamp giro={data.gerado_em} dado={lastSeriesDate(serie)} />
+      </p>
     </div>
   );
 }
@@ -588,6 +608,9 @@ function TabelaInfluencias({ data }: { data: IpcaData }) {
           </tbody>
         </table>
       </div>
+      <p className="mt-2">
+        <DataStamp giro={data.gerado_em} dado={mes} />
+      </p>
     </div>
   );
 }

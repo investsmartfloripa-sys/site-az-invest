@@ -23,6 +23,7 @@ import type {
   VisaoGeralPayload,
 } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
+import DataStamp from "@/components/painel/DataStamp";
 
 function CardIbcBrCodace({ serie, codace }: { serie: IbcBrPonto[]; codace: CodaceFaixa[] }) {
   const dados = useMemo(
@@ -83,6 +84,7 @@ function CardIbcBrCodace({ serie, codace }: { serie: IbcBrPonto[]; codace: Codac
           <Line type="monotone" dataKey="indice_sa" stroke="#132960" dot={false} strokeWidth={2} name="IBC-Br SA" />
         </ComposedChart>
       </ResponsiveContainer>
+      <p className="mt-2"><DataStamp dado={dados[dados.length - 1]?.mes} /></p>
     </div>
   );
 }
@@ -225,6 +227,7 @@ function CardRecessaoMultiModelos({
         Linhas verticais tracejadas roxas marcam <strong>picos detectados pelo Bry-Boschan</strong> (datador retroativo, não-probabilístico).
         Probit financeiro e Diffusion estão retornando null nos últimos meses (Newton-Raphson divergindo / ANFAVEA YoY null). Mediana usa só os modelos disponíveis em cada mês.
       </p>
+      <p className="mt-2"><DataStamp dado={ultimo.mes} /></p>
     </div>
   );
 }
@@ -277,6 +280,7 @@ export function CardHiatoLeque({ serie, codace }: { serie: HiatoPonto[]; codace:
           <Line type="monotone" dataKey="gap_hamilton" stroke="#2563EB" dot={false} strokeWidth={1.5} name="Hamilton" />
         </ComposedChart>
       </ResponsiveContainer>
+      <p className="mt-2"><DataStamp dado={dados[dados.length - 1]?.mes} /></p>
     </div>
   );
 }

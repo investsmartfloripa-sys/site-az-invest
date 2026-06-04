@@ -33,6 +33,7 @@ import {
   formatDivulgadoEm,
   useHorizonte,
 } from "./AtividadeShell";
+import DataStamp from "@/components/painel/DataStamp";
 
 const CAT_LABELS: Record<string, string> = {
   bens_capital: "Bens de capital",
@@ -162,6 +163,9 @@ export function PimDashboard({ data }: { data: AtividadePimData }) {
             <Line yAxisId="right" type="monotone" dataKey="indice_sa" name="Índice SA (2022=100)" stroke={COR_PRIMARIA} strokeWidth={2} dot={false} />
           </ComposedChart>
         </ResponsiveContainer>
+        <p className="mt-2">
+          <DataStamp giro={data.gerado_em} dado={serie[serie.length - 1]?.mes} />
+        </p>
       </Section>
 
       <Section
@@ -191,6 +195,9 @@ export function PimDashboard({ data }: { data: AtividadePimData }) {
             ))}
           </LineChart>
         </ResponsiveContainer>
+        <p className="mt-2">
+          <DataStamp giro={data.gerado_em} dado={catSerie[catSerie.length - 1]?.mes} />
+        </p>
       </Section>
 
       <Section
@@ -213,6 +220,9 @@ export function PimDashboard({ data }: { data: AtividadePimData }) {
             <Line type="monotone" dataKey="Transformação" stroke={CORES_SERIES[2]} strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
+        <p className="mt-2">
+          <DataStamp giro={data.gerado_em} dado={secSerie[secSerie.length - 1]?.mes} />
+        </p>
       </Section>
 
       {construcaoChart.length > 0 && (
@@ -237,6 +247,9 @@ export function PimDashboard({ data }: { data: AtividadePimData }) {
               <Line yAxisId="right" type="monotone" dataKey="indice_sa" name="Índice SA (2022=100)" stroke={COR_PRIMARIA} strokeWidth={2} dot={false} />
             </ComposedChart>
           </ResponsiveContainer>
+          <p className="mt-2">
+            <DataStamp giro={data.gerado_em} dado={construcaoTail[construcaoTail.length - 1]?.mes} />
+          </p>
         </Section>
       )}
 
@@ -245,10 +258,16 @@ export function PimDashboard({ data }: { data: AtividadePimData }) {
         hint="Ranking por amplitude (módulo da variação) — destaca atividades mais voláteis ou em movimento mais forte."
       >
         <Heatmap rows={heatmapRows} cols={heatmapCols} values={heatmapValues} />
+        <p className="mt-2">
+          <DataStamp giro={data.gerado_em} dado={data.mes_recente} />
+        </p>
       </Section>
 
       <Section titulo={`Ranking completo das atividades industriais — ${formatMes(data.mes_recente)}`}>
         <RankingTable items={rankingItems} colunaPrincipal="var_yoy" labelPrincipal="Var. anual" />
+        <p className="mt-2">
+          <DataStamp giro={data.gerado_em} dado={data.mes_recente} />
+        </p>
       </Section>
 
       <footer className="text-[11px] text-zinc-500">{data.metadata.nota}</footer>

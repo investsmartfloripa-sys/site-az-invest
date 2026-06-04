@@ -13,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 
+import DataStamp from "@/components/painel/DataStamp";
 import {
   TIME_WINDOW_OPTIONS,
   TimeWindowToggle,
@@ -193,6 +194,12 @@ export function AcoesValuation({ data }: Props) {
           dia. {data.n_constituents} papéis, cobertura {data.coverage_weight_pct ?? "—"}% do índice.
           Não é recomendação.
         </p>
+        <p className="mt-2 text-right">
+          <DataStamp
+            giro={data.generated_at}
+            dado={data.series[data.series.length - 1]?.date ?? null}
+          />
+        </p>
       </article>
 
       {/* GRÁFICO 2 — Prêmio de risco (EY/DY vs NTN-B) */}
@@ -356,6 +363,12 @@ export function AcoesValuation({ data }: Props) {
           Earnings/dividend yield são nominais e a NTN-B é real — é o gauge usual de "quanto a bolsa
           paga acima do juro real". Acima de 0 = bolsa mais atrativa que o juro real; abaixo = mais
           cara. Não é recomendação.
+        </p>
+        <p className="mt-2 text-right">
+          <DataStamp
+            giro={data.generated_at}
+            dado={data.series[data.series.length - 1]?.date ?? null}
+          />
         </p>
       </article>
     </section>

@@ -113,7 +113,9 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
       subtitle="Performance de cada ativo em janelas de 1 dia a 5 anos."
       badge={latest ? `${latest.total_tickers_loaded} ativos` : undefined}
       bodyClassName="px-4 pb-4 pt-2"
-      footer={latest ? `Atualizado em ${new Date(latest.generated_at).toLocaleString("pt-BR")}` : undefined}
+      footer="Fonte: Yahoo Finance"
+      stampGiro={latest?.generated_at ?? null}
+      stampDado={latest?.generated_at ?? null}
     >
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">

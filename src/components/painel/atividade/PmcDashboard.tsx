@@ -35,6 +35,7 @@ import {
   formatDivulgadoEm,
   useHorizonte,
 } from "./AtividadeShell";
+import DataStamp from "@/components/painel/DataStamp";
 
 type Tipo = "volume" | "receita_nominal";
 type Escopo = "restrito" | "ampliado";
@@ -181,6 +182,9 @@ export function PmcDashboard({ data }: { data: AtividadePmcData }) {
             <Line type="monotone" dataKey="ampliado" name="Varejo ampliado" stroke={COR_ACENTO} strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
+        <p className="mt-2">
+          <DataStamp giro={data.gerado_em} dado={serie[serie.length - 1]?.mes} />
+        </p>
       </Section>
 
       <Section
@@ -202,6 +206,9 @@ export function PmcDashboard({ data }: { data: AtividadePmcData }) {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+        <p className="mt-2">
+          <DataStamp giro={data.gerado_em} dado={serie[serie.length - 1]?.mes} />
+        </p>
       </Section>
 
       <Section
@@ -234,16 +241,25 @@ export function PmcDashboard({ data }: { data: AtividadePmcData }) {
             <Line type="monotone" dataKey="Receita nominal" stroke={COR_ACENTO} strokeWidth={2} strokeDasharray="4 3" dot={false} />
           </LineChart>
         </ResponsiveContainer>
+        <p className="mt-2">
+          <DataStamp giro={data.gerado_em} dado={serie[serie.length - 1]?.mes} />
+        </p>
       </Section>
 
       <Section
         titulo={`Heatmap — atividades do comércio ${escopo} (variação anual %) — últimos 12 meses`}
       >
         <Heatmap rows={heatmapRows} cols={heatmapCols} values={heatmapValues} />
+        <p className="mt-2">
+          <DataStamp giro={data.gerado_em} dado={data.mes_recente} />
+        </p>
       </Section>
 
       <Section titulo={`Ranking de atividades (${escopo}) — ${formatMes(data.mes_recente)}`}>
         <RankingTable items={rankingItems} colunaPrincipal="var_yoy" labelPrincipal="Var. anual" />
+        <p className="mt-2">
+          <DataStamp giro={data.gerado_em} dado={data.mes_recente} />
+        </p>
       </Section>
 
       <footer className="text-[11px] text-zinc-500">{data.metadata.nota}</footer>

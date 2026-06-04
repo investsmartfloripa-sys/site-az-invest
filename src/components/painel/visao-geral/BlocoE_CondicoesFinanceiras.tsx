@@ -14,6 +14,7 @@ import {
 
 import type { CreditoData, IcfData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
+import DataStamp from "@/components/painel/DataStamp";
 
 function CardIcf({ data }: { data: IcfData | null }) {
   if (!data || data.serie.length === 0) return null;
@@ -40,6 +41,7 @@ function CardIcf({ data }: { data: IcfData | null }) {
           <Line type="monotone" dataKey="icf_zscore" stroke="#132960" strokeWidth={2.5} dot={false} name="ICF (z-score)" />
         </LineChart>
       </ResponsiveContainer>
+      <p className="mt-2"><DataStamp giro={data.gerado_em} dado={data.serie[data.serie.length - 1]?.mes} /></p>
     </div>
   );
 }
@@ -68,6 +70,7 @@ export function CardSelicReal({ data }: { data: IcfData | null }) {
           <Line type="monotone" dataKey="selic_real" stroke="#DC2626" strokeWidth={2} dot={false} name="Selic real ex-ante" />
         </LineChart>
       </ResponsiveContainer>
+      <p className="mt-2"><DataStamp giro={data.gerado_em} dado={dados[dados.length - 1]?.mes} /></p>
     </div>
   );
 }
@@ -107,6 +110,7 @@ export function CardConcessoes({ data }: { data: CreditoData | null }) {
           <Line type="monotone" dataKey="pj" stroke="#DC2626" dot={false} strokeWidth={1.5} name="PJ" connectNulls />
         </LineChart>
       </ResponsiveContainer>
+      <p className="mt-2"><DataStamp giro={data.gerado_em} dado={dados[dados.length - 1]?.mes} /></p>
     </div>
   );
 }
@@ -132,6 +136,7 @@ function CardCreditoPib({ data }: { data: CreditoData | null }) {
           <Line type="monotone" dataKey="credito_empresas_pct_pib" stroke="#DC2626" strokeWidth={1.5} dot={false} name="Empresas" connectNulls />
         </LineChart>
       </ResponsiveContainer>
+      <p className="mt-2"><DataStamp giro={data.gerado_em} dado={data.credito_pib[data.credito_pib.length - 1]?.mes} /></p>
     </div>
   );
 }

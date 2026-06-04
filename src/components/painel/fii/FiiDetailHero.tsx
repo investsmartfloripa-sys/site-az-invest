@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
+import DataStamp from "@/components/painel/DataStamp";
 import {
   TIME_WINDOW_OPTIONS,
   TimeWindowToggle,
@@ -212,6 +213,14 @@ export function FiiDetailHero({ entry }: Props) {
           </div>
         </div>
       </div>
+      <p className="mt-2 text-right">
+        <DataStamp
+          dado={
+            entry.price_series_daily[entry.price_series_daily.length - 1]?.date ??
+            hero.price_date
+          }
+        />
+      </p>
     </section>
   );
 }

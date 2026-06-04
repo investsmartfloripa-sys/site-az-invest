@@ -8,6 +8,8 @@ import {
 
 import type { FiscalClassicosData, PontoMensalPct, PontoMensal, PontoMensal12m } from "@/lib/painel-fiscal";
 import { CardHeader, Section } from "./FiscalShell";
+import DataStamp from "@/components/painel/DataStamp";
+import { lastSeriesDate } from "@/lib/data-stamp";
 
 // ============ HELPERS ============
 function fmtMes(s: string): string {
@@ -407,6 +409,7 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
               </LineChart>
             </ResponsiveContainer>
           </div>
+          <p className="mt-2"><DataStamp giro={data.gerado_em} dado={lastSeriesDate(rg.receita_liquida_pct_pib)} /></p>
         </Section>
 
         {/* Gráfico Primário com banda LDO */}
@@ -441,10 +444,13 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <p className="mt-2 text-[11px] text-zinc-500">
-            <strong>Primário estabilizador</strong> (Blanchard 1990) = (r − g) × DBGG/PIB, onde r = custo médio implícito da dívida e g = PIB real YoY.
-            Hoje: r ≈ {fmtPct(r_real, 2)} · g ≈ {fmtPct(g_real, 2)} · DBGG = {fmtPct(dbgg_pct, 1)} PIB → primário p/ estabilizar ≈ {fmtPct(primario_estabilizador, 2)} PIB.
-          </p>
+          <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <p className="text-[11px] text-zinc-500">
+              <strong>Primário estabilizador</strong> (Blanchard 1990) = (r − g) × DBGG/PIB, onde r = custo médio implícito da dívida e g = PIB real YoY.
+              Hoje: r ≈ {fmtPct(r_real, 2)} · g ≈ {fmtPct(g_real, 2)} · DBGG = {fmtPct(dbgg_pct, 1)} PIB → primário p/ estabilizar ≈ {fmtPct(primario_estabilizador, 2)} PIB.
+            </p>
+            <DataStamp giro={data.gerado_em} dado={lastSeriesDate(rg.primario_central_pct_pib)} />
+          </div>
         </Section>
       </section>
 
@@ -565,6 +571,7 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
               </AreaChart>
             </ResponsiveContainer>
           </div>
+          <p className="mt-2"><DataStamp giro={data.gerado_em} dado={lastSeriesDate(rg.imposto_renda_12m_pct_pib ?? [])} /></p>
         </Section>
 
         {/* Tabela legível */}
@@ -665,6 +672,7 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
               </AreaChart>
             </ResponsiveContainer>
           </div>
+          <p className="mt-2"><DataStamp giro={data.gerado_em} dado={lastSeriesDate(rg.previdencia_12m_pct_pib)} /></p>
         </Section>
 
         {/* Tabela despesa */}
@@ -755,6 +763,7 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
               </LineChart>
             </ResponsiveContainer>
           </div>
+          <p className="mt-2"><DataStamp giro={data.gerado_em} dado={lastSeriesDate(rg.juros_central_pct_pib)} /></p>
         </Section>
       </section>
 

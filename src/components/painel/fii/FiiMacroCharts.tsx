@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 
+import DataStamp from "@/components/painel/DataStamp";
 import {
   TIME_WINDOW_OPTIONS,
   TimeWindowToggle,
@@ -282,6 +283,12 @@ export function FiiMacroCharts({ data }: Props) {
           (eixo direito)</strong> = desvio % vs paridade (P/VP = 1,00). Acima de 0%, ágio;
           abaixo, deságio. P/VP = preço / VP por cota (CVM Informe Mensal). Não é recomendação.
         </p>
+        <p className="mt-2 text-right">
+          <DataStamp
+            giro={data.generated_at}
+            dado={latestPvpTj?.date ?? latestPvpPp?.date ?? null}
+          />
+        </p>
       </article>
 
       {/* GRÁFICO 2 — Prêmio NTN-B vs DY tijolo */}
@@ -415,6 +422,9 @@ export function FiiMacroCharts({ data }: Props) {
           cada dia (vencimento muda ao longo do tempo — hoje 2050, antes 2045). Eixo direito = Prêmio
           em pp. Indicador histórico — <strong>não é recomendação</strong>. FII tem risco de cota,
           vacância e crédito que NTN-B não tem.
+        </p>
+        <p className="mt-2 text-right">
+          <DataStamp giro={data.generated_at} dado={latestPremio?.date ?? null} />
         </p>
       </article>
     </section>

@@ -7,6 +7,7 @@ import {
 import type { FiscalTermometroData, Matriz, IndicadorSemaforo, Nivel } from "@/lib/painel-fiscal";
 import { CardHeader, KPI, Section } from "./FiscalShell";
 import { SimuladorTrajetoria } from "./SimuladorTrajetoria";
+import DataStamp from "@/components/painel/DataStamp";
 
 function fmt(v: number | null | undefined, casas = 1, suf = ""): string {
   if (v == null) return "—";
@@ -455,6 +456,7 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
           hint="20 indicadores em 5 categorias. Faixas verde / atenção / crítico / break baseadas em casos históricos descritos no livro (Reino Unido 1976, Japão pós-1990, Argentina 2001, EUA pós-2008). Ponto Brasil (▶) destacado na régua à direita de cada card."
         >
           <SemaforoPorCategoria indicadores={indicadores} categorias={categorias} />
+          <p className="mt-2"><DataStamp giro={data.gerado_em} dado={data.fonte_base} /></p>
         </Section>
       )}
 
@@ -478,6 +480,7 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
           sufY="%" sufX="%"
           premissaTexto="Cenário simplificado do livro — assume juros nominais = crescimento nominal (i = g). Isola o efeito do déficit primário acumulado. Valor da célula = Dívida/Receita depois de 10 anos."
         />
+        <p className="mt-2"><DataStamp giro={data.gerado_em} dado={data.fonte_base} /></p>
       </Section>
 
       <Section titulo="Dívida/Receita após 10 anos — variando o gap r − g (tabela do livro)">
@@ -488,6 +491,7 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
           sufY="%" sufX="pp"
           premissaTexto={`Cenário realista — assume déficit primário constante (Brasil hoje: ${data.premissas.primary_deficit_pct_receita}% da receita). Varia o gap r−g.`}
         />
+        <p className="mt-2"><DataStamp giro={data.gerado_em} dado={data.fonte_base} /></p>
       </Section>
 
       {/* === 4 LEVERS === */}
@@ -522,6 +526,7 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
           <div className="mt-3 rounded-lg border-l-4 border-rose-500 bg-rose-50 p-3 text-xs text-rose-900">
             <strong>Leitura combinada:</strong> nenhum lever sozinho resolve o caso brasileiro hoje em magnitudes plausíveis politicamente — Dalio prevê que países nesse perfil precisam combinar dois ou mais ao longo do tempo. Caso histórico mais próximo: Reino Unido 1976 (aumento de impostos + corte de gastos + bailout do FMI).
           </div>
+          <p className="mt-2"><DataStamp giro={data.gerado_em} dado={data.fonte_base} /></p>
         </Section>
       )}
 

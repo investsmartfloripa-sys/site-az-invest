@@ -7,6 +7,8 @@ import {
 
 import type { FiscalClassicosData, PontoMensal, PontoMensalPct } from "@/lib/painel-fiscal";
 import { CORES_SERIES, CardHeader, IndicadorBox, KPI, Section, Toggle, useHorizonte } from "./FiscalShell";
+import DataStamp from "@/components/painel/DataStamp";
+import { lastSeriesDate } from "@/lib/data-stamp";
 
 const HORIZONTES = [
   { value: "5a", label: "5 anos", n: 60 },
@@ -288,9 +290,12 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
               </ResponsiveContainer>
             </div>
           )}
-          <p className="mt-2 text-[11px] text-zinc-500">
-            Linhas tracejadas vermelhas: 80% (zona de atenção FMI) e 100% (limite Reinhart-Rogoff associado à fragilidade fiscal histórica).
-          </p>
+          <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <p className="text-[11px] text-zinc-500">
+              Linhas tracejadas vermelhas: 80% (zona de atenção FMI) e 100% (limite Reinhart-Rogoff associado à fragilidade fiscal histórica).
+            </p>
+            <DataStamp giro={data.gerado_em} dado={lastSeriesDate(data.divida.dbgg_pct_pib)} />
+          </div>
         </Section>
 
       </div>
@@ -366,6 +371,7 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
+            <p className="mt-2"><DataStamp giro={data.gerado_em} dado={lastSeriesDate(comp.selic_pct)} /></p>
           </Section>
         );
       })()}

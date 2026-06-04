@@ -24,6 +24,8 @@ import type {
   PaisPonto,
   SecaoSeriePonto,
 } from "@/lib/painel-contas-externas";
+import DataStamp from "@/components/painel/DataStamp";
+import { lastSeriesDate } from "@/lib/data-stamp";
 
 // ---------------------------------------------------------------------------
 // Paleta (alinhada ao site)
@@ -125,12 +127,16 @@ function ChartCard({
   title,
   subtitle,
   footer,
+  stampGiro,
+  stampDado,
   height = 300,
   children,
 }: {
   title: string;
   subtitle?: string;
   footer?: string;
+  stampGiro?: string | null;
+  stampDado?: string | null;
   height?: number;
   children: React.ReactNode;
 }) {
@@ -141,7 +147,12 @@ function ChartCard({
         {subtitle && <p className="text-xs text-zinc-500">{subtitle}</p>}
       </div>
       <div className="w-full" style={{ height }}>{children}</div>
-      {footer && <div className="mt-3 text-[11px] text-zinc-400">{footer}</div>}
+      {(footer || stampGiro || stampDado) && (
+        <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <div className="text-[11px] text-zinc-400">{footer}</div>
+          <DataStamp giro={stampGiro} dado={stampDado} className="not-italic" />
+        </div>
+      )}
     </div>
   );
 }
@@ -377,6 +388,8 @@ export function ContasExternasDashboard({
           title="Saldo do Brasil com o resto do mundo (% PIB)"
           subtitle="Transações correntes — barras anuais desde 2000 (12m no ano corrente)"
           footer="Fonte: BCB SGS 22701 / 4380 (PIB acum 12m em US$). * ano corrente em janela móvel de 12m."
+          stampGiro={data.gerado_em}
+          stampDado={ultima_referencia_mensal}
           height={300}
         >
           <ResponsiveContainer width="100%" height="100%">
@@ -403,6 +416,8 @@ export function ContasExternasDashboard({
             title="De onde vem o saldo (24m mensais)"
             subtitle="Decomposição em US$ bilhões"
             footer="Fonte: BCB SGS 22707 (bens) + 22719 (serviços) + 22740 (renda primária) + resíduo (renda secundária)."
+            stampGiro={data.gerado_em}
+            stampDado={lastSeriesDate(bloco_a.decomposicao_mensal_36m)}
             height={300}
           >
             <ResponsiveContainer width="100%" height="100%">
@@ -436,6 +451,8 @@ export function ContasExternasDashboard({
             title="Balança comercial — bens (24m mensais)"
             subtitle="Exportações vs importações vs saldo, US$ bilhões"
             footer="Fonte: BCB SGS 22711 (exportações) e 22707 (saldo). Importação derivada por identidade."
+            stampGiro={data.gerado_em}
+            stampDado={lastSeriesDate(bloco_a.balanca_comercial_36m)}
             height={300}
           >
             <ResponsiveContainer width="100%" height="100%">
@@ -468,6 +485,8 @@ export function ContasExternasDashboard({
               title="O que o Brasil exportou (últimos 3 meses)"
               subtitle="Principais categorias em US$ bilhões"
               footer={`Fonte: SECEX/MDIC Comex Stat. Período: ${comex.periodo_3m.from} a ${comex.periodo_3m.to}. Categorias agregadas por prefixo NCM.`}
+              stampGiro={comex.gerado_em}
+              stampDado={comex.periodo_3m.to}
               height={Math.max(280, catExp.length * 26)}
             >
               <HorizontalRankingBar
@@ -483,6 +502,8 @@ export function ContasExternasDashboard({
               title="O que o Brasil importou (últimos 3 meses)"
               subtitle="Principais categorias em US$ bilhões"
               footer={`Fonte: SECEX/MDIC Comex Stat. Período: ${comex.periodo_3m.from} a ${comex.periodo_3m.to}.`}
+              stampGiro={comex.gerado_em}
+              stampDado={comex.periodo_3m.to}
               height={Math.max(280, catImp.length * 26)}
             >
               <HorizontalRankingBar
@@ -500,6 +521,8 @@ export function ContasExternasDashboard({
               title="Top 12 produtos exportados — NCM"
               subtitle="Detalhamento por código NCM"
               footer="Fonte: SECEX/MDIC Comex Stat — NCM (Nomenclatura Comum do Mercosul)."
+              stampGiro={comex.gerado_em}
+              stampDado={comex.periodo_3m.to}
               height={Math.max(280, topNcmExp.length * 26)}
             >
               <HorizontalRankingBar
@@ -518,6 +541,8 @@ export function ContasExternasDashboard({
               title="Top 12 produtos importados — NCM"
               subtitle="Detalhamento por código NCM"
               footer="Fonte: SECEX/MDIC Comex Stat."
+              stampGiro={comex.gerado_em}
+              stampDado={comex.periodo_3m.to}
               height={Math.max(280, topNcmImp.length * 26)}
             >
               <HorizontalRankingBar
@@ -538,6 +563,8 @@ export function ContasExternasDashboard({
               title="Para onde o Brasil exporta"
               subtitle="Top 10 destinos das exportações"
               footer="Fonte: SECEX/MDIC Comex Stat."
+              stampGiro={comex.gerado_em}
+              stampDado={comex.periodo_3m.to}
               height={Math.max(280, topDest.length * 26)}
             >
               <HorizontalRankingBar
@@ -553,6 +580,8 @@ export function ContasExternasDashboard({
               title="De onde o Brasil importa"
               subtitle="Top 10 origens das importações"
               footer="Fonte: SECEX/MDIC Comex Stat."
+              stampGiro={comex.gerado_em}
+              stampDado={comex.periodo_3m.to}
               height={Math.max(280, topOrig.length * 26)}
             >
               <HorizontalRankingBar
@@ -569,6 +598,8 @@ export function ContasExternasDashboard({
             title="Composição das exportações ao longo dos meses (12m)"
             subtitle="Por seção do Sistema Harmonizado — US$ bilhões mensais"
             footer="Fonte: SECEX/MDIC Comex Stat. Top 6 seções agregadas + 'Outros'. Séries em US$ bilhões mensais."
+            stampGiro={comex.gerado_em}
+            stampDado={lastSeriesDate(secaoExp12m)}
             height={320}
           >
             <ResponsiveContainer width="100%" height="100%">
@@ -592,6 +623,8 @@ export function ContasExternasDashboard({
             title="Composição das importações ao longo dos meses (12m)"
             subtitle="Por seção do Sistema Harmonizado — US$ bilhões mensais"
             footer="Fonte: SECEX/MDIC Comex Stat. Top 6 seções + 'Outros'."
+            stampGiro={comex.gerado_em}
+            stampDado={lastSeriesDate(secaoImp12m)}
             height={320}
           >
             <ResponsiveContainer width="100%" height="100%">
@@ -621,6 +654,8 @@ export function ContasExternasDashboard({
           title="Capital de longo prazo cobre o déficit? (% PIB, 12m, desde 2010)"
           subtitle="IDP (verde) × déficit corrente em valor absoluto (vermelho)"
           footer="Fonte: BCB SGS 22885 (IDP) e 22701 (TC). Quando IDP ≥ déficit, financiamento é sadio (capital de longo prazo)."
+          stampGiro={data.gerado_em}
+          stampDado={lastSeriesDate(idpVsTc)}
           height={320}
         >
           <ResponsiveContainer width="100%" height="100%">
@@ -649,6 +684,8 @@ export function ContasExternasDashboard({
           title="Como o investimento entra (24m mensais)"
           subtitle="Participação no capital × reinvestimento × intercompanhia — US$ bilhões"
           footer="Fonte: BCB SGS 22891 + 22892 + intercompanhia (resíduo)."
+          stampGiro={data.gerado_em}
+          stampDado={lastSeriesDate(bloco_b.idp_decomposicao_36m)}
           height={300}
         >
           <ResponsiveContainer width="100%" height="100%">
@@ -679,6 +716,8 @@ export function ContasExternasDashboard({
           title="Reservas internacionais — evolução diária (5 anos)"
           subtitle="Conceito de liquidez — US$ bilhões"
           footer="Fonte: BCB SGS 13982. Série diária com downsample automático."
+          stampGiro={data.gerado_em}
+          stampDado={lastSeriesDate(bloco_c.reservas_diaria)}
           height={320}
         >
           <ResponsiveContainer width="100%" height="100%">

@@ -24,6 +24,8 @@ import type {
   SeriePonto,
   ComposicaoPctPonto,
 } from "@/lib/painel-familias";
+import DataStamp from "@/components/painel/DataStamp";
+import { lastSeriesDate } from "@/lib/data-stamp";
 
 // ----------------------------------------------------------------------------
 // Paleta
@@ -127,12 +129,16 @@ function ChartCard({
   title,
   subtitle,
   footer,
+  stampGiro,
+  stampDado,
   height = 300,
   children,
 }: {
   title: string;
   subtitle?: string;
   footer?: string;
+  stampGiro?: string | null;
+  stampDado?: string | null;
   height?: number;
   children: React.ReactNode;
 }) {
@@ -145,7 +151,12 @@ function ChartCard({
       <div style={{ height: `${height}px` }} className="w-full">
         {children}
       </div>
-      {footer && <div className="mt-3 text-[11px] text-zinc-400">{footer}</div>}
+      {(footer || stampGiro || stampDado) && (
+        <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <div className="text-[11px] text-zinc-400">{footer}</div>
+          <DataStamp giro={stampGiro} dado={stampDado} className="not-italic" />
+        </div>
+      )}
     </div>
   );
 }
@@ -260,6 +271,8 @@ function BlocoA({ renda }: { renda: FamiliasRendaData }) {
         title="Renda real do trabalho (média) — trimestre móvel"
         subtitle="Pessoas de 14+ ocupadas, rendimento habitualmente recebido, valores em R$ deflacionados pelo IBGE"
         footer="Fonte: IBGE/SIDRA PNAD Contínua Trimestral, tabela 6390 (var 5933 real, 5929 nominal)."
+        stampGiro={renda.gerado_em}
+        stampDado={lastSeriesDate(renda.bloco_renda_total.serie, "trim")}
       >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={a1Data} margin={{ top: 10, right: 20, left: 0, bottom: 4 }}>
@@ -280,6 +293,8 @@ function BlocoA({ renda }: { renda: FamiliasRendaData }) {
         title="Salário mínimo nominal × real (desde 1994)"
         subtitle="Linha azul = valor nominal (sobe sempre); laranja = valor real deflacionado pelo INPC"
         footer="Fonte: BCB SGS 1619 (nominal), Ipeadata GAC12_SALMINRE12 (real). Pontos anuais (último valor do ano)."
+        stampGiro={renda.gerado_em}
+        stampDado={lastSeriesDate(renda.bloco_salario_minimo.nominal_serie)}
         height={320}
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -299,6 +314,8 @@ function BlocoA({ renda }: { renda: FamiliasRendaData }) {
         title="Renda média real por posição na ocupação"
         subtitle="R$ por mês — formal (carteira) × informal (sem carteira) × público × conta-própria"
         footer="Fonte: IBGE/SIDRA PNAD Contínua, tabela 6389 (var 5932, classificação 11913)."
+        stampGiro={renda.gerado_em}
+        stampDado={lastSeriesDate(renda.bloco_renda_posicao.serie, "trim")}
       >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={a4Data} margin={{ top: 10, right: 20, left: 0, bottom: 4 }}>
@@ -389,6 +406,8 @@ function BlocoB({ endividamento }: { endividamento: FamiliasEndividamentoData })
         title="Endividamento das famílias com bancos (% da renda dos últimos 12 meses)"
         subtitle="Linha azul-escuro = total (com financiamento imobiliário); azul-claro = exceto habitacional"
         footer="Fonte: BCB SGS 29037 (total) e 29038 (sem habit)."
+        stampGiro={endividamento.gerado_em}
+        stampDado={lastSeriesDate(endividamento.bloco_endividamento.series_pontos["total"])}
         height={340}
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -413,6 +432,8 @@ function BlocoB({ endividamento }: { endividamento: FamiliasEndividamentoData })
         title="Comprometimento mensal de renda com dívida (%)"
         subtitle="Total = juros + amortização. Quanto da renda mensal vai pra pagar dívida"
         footer="Fonte: BCB SGS 29034 (total), 29033 (juros), 29036 (amortização), com ajuste sazonal."
+        stampGiro={endividamento.gerado_em}
+        stampDado={lastSeriesDate(endividamento.bloco_comprometimento.series_pontos["servico_divida"])}
       >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={b2Data} margin={{ top: 10, right: 20, left: 0, bottom: 4 }}>
@@ -434,6 +455,8 @@ function BlocoB({ endividamento }: { endividamento: FamiliasEndividamentoData })
         title="Inadimplência da pessoa física (>90 dias)"
         subtitle="Por modalidade — recursos livres. Cartão rotativo costuma ficar bem acima das demais"
         footer="Fonte: BCB SGS 21112/21114/21116/21121/21127/21129."
+        stampGiro={endividamento.gerado_em}
+        stampDado={lastSeriesDate(endividamento.bloco_inadimplencia.series_pontos["pf_livres_total"])}
         height={340}
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -458,6 +481,8 @@ function BlocoB({ endividamento }: { endividamento: FamiliasEndividamentoData })
         title="Composição do estoque de crédito PF (últimos 24 meses)"
         subtitle="Onde mora a dívida da família média — % do saldo total da pessoa física por modalidade"
         footer="Fonte: BCB SGS 20631 + 20632 + 20680/20689/20695/20697/20712. 'Outras' = residual."
+        stampGiro={endividamento.gerado_em}
+        stampDado={lastSeriesDate(endividamento.bloco_estoque.composicao_pct)}
         height={340}
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -507,6 +532,8 @@ function BlocoC({ poderCompra }: { poderCompra: FamiliasPoderCompraData }) {
         title="Quantas horas de salário mínimo pagam uma cesta básica?"
         subtitle="Cesta básica nacional DIEESE ÷ (SM ÷ 220h trabalhadas no mês). Quanto maior, menor o poder de compra"
         footer="Fonte: Ipeadata CESBTOTAL (DIEESE — média das 27 capitais) + BCB SGS 1619 (SM nominal)."
+        stampGiro={poderCompra.gerado_em}
+        stampDado={lastSeriesDate(poderCompra.bloco_cesta_basica.serie)}
         height={320}
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -532,6 +559,8 @@ function BlocoC({ poderCompra }: { poderCompra: FamiliasPoderCompraData }) {
         title="Salário mínimo em dólar (PTAX corrente)"
         subtitle="SM nominal R$ ÷ taxa PTAX média do mês. Sensível a câmbio — quando dólar sobe, SM em USD cai"
         footer="Fonte: BCB SGS 1619 (SM) ÷ SGS 3697 (PTAX média mensal)."
+        stampGiro={poderCompra.gerado_em}
+        stampDado={lastSeriesDate(poderCompra.bloco_cambio_ptax.serie)}
       >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={c2Data} margin={{ top: 10, right: 20, left: 0, bottom: 4 }}>
@@ -551,6 +580,8 @@ function BlocoC({ poderCompra }: { poderCompra: FamiliasPoderCompraData }) {
         title="Salário mínimo em US$ — paridade poder de compra (PPC)"
         subtitle="Quanto o SM brasileiro vale em poder de compra internamente, comparado a uma cesta padrão americana"
         footer="Fonte: Ipeadata GAC12_SALMINDOL12 (IPEA). Diferente do PTAX, captura custo de vida local."
+        stampGiro={poderCompra.gerado_em}
+        stampDado={lastSeriesDate(poderCompra.bloco_ppc.serie)}
       >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={c3Data} margin={{ top: 10, right: 20, left: 0, bottom: 4 }}>
@@ -570,6 +601,8 @@ function BlocoC({ poderCompra }: { poderCompra: FamiliasPoderCompraData }) {
         title="Renda média do trabalho em US$ (PTAX)"
         subtitle="Renda média PNAD ÷ PTAX média mensal — mostra ganho real em moeda forte"
         footer="Fonte: PNAD Contínua (rendimento médio real) ÷ BCB SGS 3697 (PTAX)."
+        stampGiro={poderCompra.gerado_em}
+        stampDado={lastSeriesDate(poderCompra.bloco_renda_media_usd.serie)}
         height={280}
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -590,6 +623,8 @@ function BlocoC({ poderCompra }: { poderCompra: FamiliasPoderCompraData }) {
         title="Índice FipeZap — imóveis residenciais (venda, Brasil)"
         subtitle="Índice mensal base jun/2012=100. Linha laranja mostra variação acumulada em 12 meses"
         footer="Fonte: Ipeadata FIPE12_VENBR12 (FipeZap residencial vendas Brasil)."
+        stampGiro={poderCompra.gerado_em}
+        stampDado={lastSeriesDate(poderCompra.bloco_fipezap.serie)}
         height={320}
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -640,6 +675,8 @@ function BlocoD({ estruturaSocial }: { estruturaSocial: FamiliasEstruturaSocialD
         title="Concentração de renda — quem fica com quanto"
         subtitle="% da renda domiciliar capturada pelos 10% mais ricos, 50% intermediários e 40% mais pobres (PNAD anual)"
         footer="Fonte: Ipeadata PNADS_BOTTOM40 + PNADS_MIDDLE50 (IBGE/PNAD); TOP10 = 100 - BOTTOM40 - MIDDLE50."
+        stampGiro={estruturaSocial.gerado_em}
+        stampDado={lastSeriesDate(estruturaSocial.bloco_concentracao_renda.serie, "ano")}
         height={340}
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -660,6 +697,8 @@ function BlocoD({ estruturaSocial }: { estruturaSocial: FamiliasEstruturaSocialD
         title="Pobreza monetária — % população abaixo de linhas internacionais (PPC)"
         subtitle="3 linhas do Banco Mundial: US$3/dia (extrema), US$4,20/dia (pobreza moderada), US$8,30/dia (pobreza alta)"
         footer="Fonte: Ipeadata PNADS_PERCPOBRE300/420/830 (PNAD/IBGE)."
+        stampGiro={estruturaSocial.gerado_em}
+        stampDado={lastSeriesDate(estruturaSocial.bloco_pobreza.serie, "ano")}
         height={320}
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -680,6 +719,8 @@ function BlocoD({ estruturaSocial }: { estruturaSocial: FamiliasEstruturaSocialD
         title="Transferências sociais — Bolsa Família e BPC (R$ milhões/mês)"
         subtitle="Valor mensal nacional pago pelo MDS (agregado dos 27 estados via Ipeadata)"
         footer="Fonte: Ipeadata VAL_PBF12 (Bolsa Família) + VAL_BPC (Benefício de Prestação Continuada)."
+        stampGiro={estruturaSocial.gerado_em}
+        stampDado={lastSeriesDate(estruturaSocial.bloco_transferencias_sociais.serie)}
         height={320}
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -701,6 +742,8 @@ function BlocoD({ estruturaSocial }: { estruturaSocial: FamiliasEstruturaSocialD
         title="Índice de Gini — concentração de renda domiciliar per capita"
         subtitle="0 = igualdade perfeita; 1 = concentração total. Brasil é dos mais desiguais do mundo (0,50+)"
         footer="Fonte: IBGE/SIDRA tabela 7435 var 10681 (PNAD Contínua Anual)."
+        stampGiro={estruturaSocial.gerado_em}
+        stampDado={lastSeriesDate(estruturaSocial.bloco_gini.serie, "ano")}
         height={280}
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -719,6 +762,8 @@ function BlocoD({ estruturaSocial }: { estruturaSocial: FamiliasEstruturaSocialD
         title="IPCA por faixa de renda — quem sente mais a inflação?"
         subtitle="Indicador IPEA: variação mensal da cesta de consumo de 6 faixas de renda (base jul/2006=1)"
         footer="Fonte: Ipeadata DIMAC_INF1..6 (IPEA Carta de Conjuntura — Indicador IPEA de Inflação por Faixa de Renda)."
+        stampGiro={estruturaSocial.gerado_em}
+        stampDado={lastSeriesDate(estruturaSocial.bloco_ipca_faixa_renda.serie)}
         height={320}
       >
         <ResponsiveContainer width="100%" height="100%">

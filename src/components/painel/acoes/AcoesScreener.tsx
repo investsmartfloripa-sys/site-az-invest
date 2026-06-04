@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import DataStamp from "@/components/painel/DataStamp";
 import type { AcoesScreenerData, AcoesScreenerRow } from "@/lib/painel-acoes";
 
 type SortKey =
@@ -232,6 +233,9 @@ export function AcoesScreener({ data }: Props) {
         valor de mercado via yfinance (<code>.info</code>); preço via yfinance. Setor por catálogo
         curado. <strong>*</strong> P/L de empresa com lucro negativo/atípico ou DY com proventos
         extraordinários. Não é recomendação.
+      </p>
+      <p className="mt-2 text-right">
+        <DataStamp giro={data.generated_at} dado={data.generated_at} />
       </p>
     </section>
   );

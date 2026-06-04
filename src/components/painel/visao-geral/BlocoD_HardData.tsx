@@ -4,6 +4,7 @@ import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Too
 
 import type { AnfaveaData, AnpData, AtividadePimData, AtividadePmcData, AtividadePmsData, CodaceFaixa, EmpregoPnadData, EpeData, HardDataData, HiatoData, IbcBrData, IpeadataData, PnadRendaData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
+import DataStamp from "@/components/painel/DataStamp";
 
 import { ExploradorSeries, type SerieExplorador } from "./ExploradorSeries";
 import { CardHiatoLeque } from "./BlocoA_CicloAtual";
@@ -246,6 +247,7 @@ export function BlocoDHardData({
               </LineChart>
             </ResponsiveContainer>
           </div>
+          <p className="mt-2"><DataStamp giro={atividadePim.gerado_em} dado={pimUlt?.mes} /></p>
         </div>
       )}
 

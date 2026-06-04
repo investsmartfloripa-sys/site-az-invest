@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
+import DataStamp from "@/components/painel/DataStamp";
 import {
   TIME_WINDOW_OPTIONS,
   TimeWindowToggle,
@@ -281,6 +282,12 @@ export function IfixHero({ data }: Props) {
           </div>
         </div>
       </div>
+      <p className="mt-2 text-right">
+        <DataStamp
+          giro={data.generated_at}
+          dado={data.series_daily[data.series_daily.length - 1]?.date ?? null}
+        />
+      </p>
     </section>
   );
 }

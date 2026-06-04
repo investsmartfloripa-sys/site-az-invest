@@ -214,7 +214,7 @@ export function HistoricoChart({ full, catalog, initial }: Props) {
     );
   }
 
-  const updated = full.generated_at ? new Date(full.generated_at).toLocaleString("pt-BR") : "";
+  const lastPlottedDate = chartData[chartData.length - 1]?.date ?? null;
 
   return (
     <MarketCard
@@ -222,7 +222,9 @@ export function HistoricoChart({ full, catalog, initial }: Props) {
       subtitle="Compare até 8 ativos em janelas de 1M a 5 anos."
       badge="Yahoo Finance"
       bodyClassName="px-4 pb-4 pt-2"
-      footer={updated ? `Atualizado em ${updated}` : undefined}
+      footer="Fonte: Yahoo Finance"
+      stampGiro={full.generated_at}
+      stampDado={typeof lastPlottedDate === "string" ? lastPlottedDate : null}
       toolbar={
         <div className="flex flex-wrap items-center gap-2">
           {PERIODS.map((p) => (

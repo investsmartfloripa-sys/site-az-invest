@@ -189,7 +189,9 @@ export function FundamentalsTable({ data }: Props) {
       }
       badge="Yahoo Finance .info"
       bodyClassName="px-4 pb-4 pt-2"
-      footer={data ? `Atualizado em ${new Date(data.generated_at).toLocaleString("pt-BR")}` : undefined}
+      footer="Fonte: Yahoo Finance (.info)"
+      stampGiro={data?.generated_at ?? null}
+      stampDado={data?.generated_at ?? null}
     >
       {!data ? (
         <div className="py-10 text-center text-sm text-zinc-500">

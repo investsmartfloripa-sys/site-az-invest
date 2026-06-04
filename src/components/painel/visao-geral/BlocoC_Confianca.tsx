@@ -14,6 +14,7 @@ import {
 
 import type { CniData, FecomercioData, FgvConfiancaData, PmiData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
+import DataStamp from "@/components/painel/DataStamp";
 
 function CardFgvConfianca({ data }: { data: FgvConfiancaData | null }) {
   if (!data || data.freshness_status === "missing") return null;
@@ -61,6 +62,7 @@ function CardFgvConfianca({ data }: { data: FgvConfiancaData | null }) {
           <Line type="monotone" dataKey="icc" stroke="#2563EB" strokeWidth={1.2} dot={false} name="ICC" connectNulls />
         </LineChart>
       </ResponsiveContainer>
+      <p className="mt-2"><DataStamp giro={data.gerado_em} dado={dados[dados.length - 1]?.mes} /></p>
     </div>
   );
 }
@@ -96,6 +98,9 @@ function CardCniPmi({ cni, pmi }: { cni: CniData | null; pmi: PmiData | null }) 
             </LineChart>
           </ResponsiveContainer>
         ) : null}
+        {cni && cni.icei.length > 0 && (
+          <p className="mt-2"><DataStamp giro={cni.gerado_em} dado={cni.icei[cni.icei.length - 1]?.mes} /></p>
+        )}
       </div>)}
 
       {hasPmi && (<div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
@@ -118,6 +123,9 @@ function CardCniPmi({ cni, pmi }: { cni: CniData | null; pmi: PmiData | null }) 
             </LineChart>
           </ResponsiveContainer>
         ) : null}
+        {pmi && pmi.serie.length > 0 && (
+          <p className="mt-2"><DataStamp giro={pmi.gerado_em} dado={pmi.serie[pmi.serie.length - 1]?.mes} /></p>
+        )}
       </div>)}
     </div>
   );
@@ -155,6 +163,7 @@ function CardFecomercio({ data }: { data: FecomercioData | null }) {
           <Line type="monotone" dataKey="icf" stroke="#2563EB" dot={false} strokeWidth={1.5} name="ICF" connectNulls />
         </LineChart>
       </ResponsiveContainer>
+      <p className="mt-2"><DataStamp giro={data.gerado_em} dado={dados[dados.length - 1]?.mes} /></p>
     </div>
   );
 }

@@ -24,6 +24,7 @@ import type {
   SerieLongaPonto,
   SubPainelComponente,
 } from "@/lib/painel-igpm";
+import DataStamp from "@/components/painel/DataStamp";
 
 const CORES_COMP: Record<string, string> = {
   "IPA-M": "#132960",
@@ -111,7 +112,7 @@ function dadosMensalOverview(serie: SerieIgpmOverview[], componentes: string[]):
   });
 }
 
-function VisaoGeral({ overview }: { overview: OverviewBlock }) {
+function VisaoGeral({ overview, giro }: { overview: OverviewBlock; giro?: string }) {
   const [periodo, setPeriodo] = useState<Periodo>("12m");
   const [modo, setModo] = useState<Modo>("empilhado");
   const [hidden, setHidden] = useState<Set<string>>(new Set());
@@ -181,6 +182,9 @@ function VisaoGeral({ overview }: { overview: OverviewBlock }) {
           <button type="button" onClick={() => setHidden(new Set(componentes))} className="px-2 py-1 text-xs text-[#027DFC] hover:underline">Limpar</button>
         </div>
       </div>
+      <p className="mt-2">
+        <DataStamp giro={giro} dado={overview.serie[overview.serie.length - 1]?.mes} />
+      </p>
     </div>
   );
 }
@@ -213,6 +217,9 @@ function ComparativoIPCA({ data }: { data: IgpmData }) {
           </LineChart>
         </ResponsiveContainer>
       </div>
+      <p className="mt-2">
+        <DataStamp giro={data.gerado_em} dado={serie[serie.length - 1]?.mes} />
+      </p>
     </div>
   );
 }
@@ -221,7 +228,7 @@ function ComparativoIPCA({ data }: { data: IgpmData }) {
  * Sub-painel POR componente (IPA-M, IPC-M, INCC-M)
  * ============================================================ */
 
-function SubPainel({ nome, sub, cor }: { nome: string; sub: SubPainelComponente; cor: string }) {
+function SubPainel({ nome, sub, cor, giro }: { nome: string; sub: SubPainelComponente; cor: string; giro?: string }) {
   const [view, setView] = useState<"12m" | "mensal" | "ano">("12m");
 
   const dataKey = view === "12m" ? "acum_12m" : view === "mensal" ? "mensal" : "acum_ano";
@@ -349,6 +356,9 @@ function SubPainel({ nome, sub, cor }: { nome: string; sub: SubPainelComponente;
           </div>
         </div>
       </div>
+      <p className="mt-2">
+        <DataStamp giro={giro} dado={sub.serie_longa[sub.serie_longa.length - 1]?.mes} />
+      </p>
     </section>
   );
 }
@@ -378,12 +388,12 @@ export function IgpmDashboard({ data }: { data: IgpmData }) {
         </p>
       </header>
 
-      <VisaoGeral overview={overview} />
+      <VisaoGeral overview={overview} giro={data.gerado_em} />
       <ComparativoIPCA data={data} />
 
       {data.componentes &&
         Object.entries(data.componentes).map(([nome, sub]) => (
-          <SubPainel key={nome} nome={nome} sub={sub} cor={CORES_COMP[nome] ?? "#132960"} />
+          <SubPainel key={nome} nome={nome} sub={sub} cor={CORES_COMP[nome] ?? "#132960"} giro={data.gerado_em} />
         ))}
 
       <footer className="border-t border-zinc-200 pt-4 text-xs text-zinc-500">

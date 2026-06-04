@@ -170,9 +170,11 @@ model DataSourceSnapshot {
   label          String
   freshness      String?
   generatedAt    DateTime?
+  lastDataLabel  String?
   workflowName   String?
   workflowStatus String?
   workflowUrl    String?
+  workflowRunAt  DateTime?
   error          String?
   checkedAt      DateTime  @default(now())
 }

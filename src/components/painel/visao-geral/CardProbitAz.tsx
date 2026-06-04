@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CartesianGrid, Line, LineChart, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { CodaceFaixa, ProbitAzData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
+import DataStamp from "@/components/painel/DataStamp";
 
 type Modelo = {
   key: string;
@@ -295,9 +296,12 @@ export function CardProbitAz({
         </>
       )}
 
-      <p className="mt-2 text-[9px] text-zinc-500 leading-tight">
-        <strong>Refs:</strong> Moore 1950 (Diffusion) · Hodrick-Prescott 1997 / Ravn-Uhlig 2002 + Hamilton 2018 (Gap) · Estrella-Mishkin 1998 + Wright 2006 + Mendonça-Galvão-Lima 2018 (Probit Fin) · Issler-Vahid 2006 (Probit AZ) · Bates-Granger 1969 (ensembles) · Hamilton 2011 (histerese 65/35).
-      </p>
+      <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <p className="text-[9px] text-zinc-500 leading-tight">
+          <strong>Refs:</strong> Moore 1950 (Diffusion) · Hodrick-Prescott 1997 / Ravn-Uhlig 2002 + Hamilton 2018 (Gap) · Estrella-Mishkin 1998 + Wright 2006 + Mendonça-Galvão-Lima 2018 (Probit Fin) · Issler-Vahid 2006 (Probit AZ) · Bates-Granger 1969 (ensembles) · Hamilton 2011 (histerese 65/35).
+        </p>
+        <DataStamp giro={data.gerado_em} dado={serieFinal[serieFinal.length - 1]?.mes} />
+      </div>
     </section>
   );
 }

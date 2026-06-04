@@ -171,17 +171,15 @@ export function TreasuryTimeSeries({ data }: Props) {
     );
   }
 
-  const updatedTxt = data.generated_at
-    ? `Atualizado em ${new Date(data.generated_at).toLocaleString("pt-BR")} · Fonte: ${data.source}`
-    : "";
-
   return (
     <MarketCard
       title="Curva histórica de juros"
       subtitle="Evolução da taxa indicativa de cada vencimento ao longo do tempo."
       badge={`ANBIMA · ${data.last_data_date}`}
       bodyClassName="px-4 pb-4 pt-2"
-      footer={updatedTxt}
+      footer={`Fonte: ${data.source}`}
+      stampGiro={data.generated_at}
+      stampDado={data.last_data_date}
       toolbar={
         <div className="flex gap-1">
           <button
