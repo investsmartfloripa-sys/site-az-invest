@@ -149,6 +149,49 @@ export async function fetchLiveCurve(code: string, signal?: AbortSignal): Promis
   };
 }
 
+type B3InstrumentPayload = {
+  BizSts?: { cd?: string };
+  Msg?: { dtTm?: string };
+  Trad?: { scty?: { symb?: string; SctyQtn?: { curPrc?: number; prcFlcn?: number; opngPric?: number; minPric?: number; maxPric?: number } } }[];
+};
+
+export type LiveIndexQuote = {
+  symbol: string;
+  /** Nivel atual (pontos). */
+  last: number;
+  /** Variacao % do dia informada pela B3 (prcFlcn). */
+  changePct: number | null;
+  low: number | null;
+  high: number | null;
+  quotedAt: string | null;
+  isToday: boolean;
+};
+
+/**
+ * Cotacao intraday de instrumento/indice (ex.: IBOV) — delayed ~15 min.
+ * Mesmo servico do widget da B3; client-side only (ver header do arquivo).
+ */
+export async function fetchIndexQuote(symbol: string, signal?: AbortSignal): Promise<LiveIndexQuote | null> {
+  const res = await fetch(`${B3_LIVE_BASE.replace("DerivativeQuotation", "InstrumentQuotation")}/${encodeURIComponent(symbol)}`, {
+    cache: "no-store",
+    signal,
+  });
+  if (!res.ok) throw new Error(`B3 instrument HTTP ${res.status}`);
+  const json = (await res.json()) as B3InstrumentPayload;
+  const qtn = json?.Trad?.[0]?.scty?.SctyQtn;
+  if (json?.BizSts?.cd !== "OK" || !qtn || typeof qtn.curPrc !== "number") return null;
+  const quotedAt = json.Msg?.dtTm ?? null;
+  return {
+    symbol,
+    last: qtn.curPrc,
+    changePct: typeof qtn.prcFlcn === "number" ? qtn.prcFlcn : null,
+    low: typeof qtn.minPric === "number" ? qtn.minPric : null,
+    high: typeof qtn.maxPric === "number" ? qtn.maxPric : null,
+    quotedAt,
+    isToday: quotedAt ? isSameDayAsNow(quotedAt) : false,
+  };
+}
+
 /** Rotulo curto pt-BR de vencimento: "jan/27". */
 export function maturityLabel(maturityIso: string): string {
   const months = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];

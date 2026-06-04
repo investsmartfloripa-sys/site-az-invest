@@ -2,49 +2,49 @@
 
 import { useEffect, useState } from "react";
 
-import { fetchLiveCurve, maturityLabel } from "@/lib/painel-b3-live";
+import { fetchIndexQuote, fetchLiveCurve } from "@/lib/painel-b3-live";
 
 export type KpiCard = {
+  id: string;
   label: string;
+  /** Valor principal (nominal/nivel), ja formatado. */
   value: string;
-  /** Linha pequena abaixo do valor (contexto/fonte). */
+  /** Variacao formatada (ex.: "+0,85%" ou "−25 bps") exibida colorida ao lado do valor. */
+  change?: string | null;
+  /** Direcao da variacao p/ cor: up=verde, flat=azul, down=vermelho. */
+  direction?: "up" | "down" | "flat" | null;
+  /** Linha pequena de contexto/fonte. */
   sub?: string;
-  /** Variacao do dia em % — define cor da seta; null = neutro. */
-  changePct?: number | null;
-  /** Cor da borda lateral: auto pela variacao se omitido. */
-  accent?: "up" | "down" | "info" | "neutral";
 };
 
 type Props = {
   base: KpiCard[];
 };
 
-const ACCENT: Record<NonNullable<KpiCard["accent"]>, string> = {
-  up: "border-l-[#16A34A]",
-  down: "border-l-[#DC2626]",
-  info: "border-l-[#027DFC]",
-  neutral: "border-l-zinc-300",
+const TONE: Record<NonNullable<KpiCard["direction"]>, { text: string; border: string }> = {
+  up: { text: "text-[#16A34A]", border: "border-l-[#16A34A]" },
+  down: { text: "text-[#DC2626]", border: "border-l-[#DC2626]" },
+  flat: { text: "text-[#027DFC]", border: "border-l-[#027DFC]" },
 };
 
-function accentOf(card: KpiCard): string {
-  if (card.accent) return ACCENT[card.accent];
-  if (card.changePct == null) return ACCENT.neutral;
-  return card.changePct >= 0 ? ACCENT.up : ACCENT.down;
+/** Direcao por variacao percentual: |v| < 0.03% conta como "no zero" (azul). */
+export function directionOf(changePct: number | null | undefined, flatBand = 0.03): KpiCard["direction"] {
+  if (changePct == null || !Number.isFinite(changePct)) return null;
+  if (Math.abs(changePct) < flatBand) return "flat";
+  return changePct > 0 ? "up" : "down";
 }
 
 function Card({ card }: { card: KpiCard }) {
-  const ch = card.changePct;
+  const tone = card.direction ? TONE[card.direction] : { text: "text-zinc-400", border: "border-l-zinc-300" };
   return (
     <article
-      className={`min-w-0 rounded-r-xl border border-l-4 border-[#132960]/10 bg-white px-3 py-2.5 shadow-sm ${accentOf(card)}`}
+      className={`min-w-0 rounded-r-xl border border-l-4 border-[#132960]/10 bg-white px-3 py-2.5 shadow-sm ${tone.border}`}
     >
       <p className="truncate text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{card.label}</p>
-      <p className="mt-0.5 flex items-baseline gap-1.5">
+      <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5">
         <span className="text-lg font-semibold tabular-nums text-[#132960]">{card.value}</span>
-        {ch != null ? (
-          <span className={`text-[11px] font-semibold ${ch >= 0 ? "text-[#16A34A]" : "text-[#DC2626]"}`}>
-            {ch >= 0 ? "▲" : "▼"} {Math.abs(ch).toFixed(2)}%
-          </span>
+        {card.change ? (
+          <span className={`text-[11px] font-semibold tabular-nums ${tone.text}`}>{card.change}</span>
         ) : null}
       </p>
       {card.sub ? <p className="truncate text-[10px] text-zinc-400">{card.sub}</p> : null}
@@ -53,44 +53,72 @@ function Card({ card }: { card: KpiCard }) {
 }
 
 /**
- * Faixa de KPIs do Panorama. Cards base vêm do servidor (Blob);
- * um card extra de DI jan curto chega ao vivo da B3 no client.
+ * Faixa de KPIs do Panorama. Ordem fixa definida editorialmente:
+ * Dolar · Bolsa · S&P · Selic · Tesouro 32 · T-bill curta · T10.
+ * Bolsa (IBOV) e Tesouro 32 (DI1F32) chegam ao vivo da B3 no client;
+ * os demais vem do servidor (Blob/SGS/FRED).
  */
 export function KpiStrip({ base }: Props) {
-  const [liveCard, setLiveCard] = useState<KpiCard | null>(null);
+  const [live, setLive] = useState<Record<string, KpiCard>>({});
 
   useEffect(() => {
     const ctrl = new AbortController();
     let cancelled = false;
 
-    fetchLiveCurve("DI1", ctrl.signal)
-      .then((di) => {
-        if (cancelled) return;
-        const front = di.contracts.find((c) => /F\d{2}$/.test(c.symbol) && c.rate != null);
-        if (!front) return;
-        const bps = front.changeBps;
-        setLiveCard({
-          label: `DI ${maturityLabel(front.maturity)}`,
-          value: `${(front.rate as number).toFixed(2).replace(".", ",")}%`,
-          sub: bps == null ? "B3 · delay 15 min" : `${bps > 0 ? "+" : ""}${bps} bps hoje · B3 15 min`,
-          changePct: null,
-          accent: bps == null ? "info" : bps > 0 ? "down" : "up",
-        });
-      })
-      .catch(() => {});
+    async function load() {
+      const next: Record<string, KpiCard> = {};
+      try {
+        const ibov = await fetchIndexQuote("IBOV", ctrl.signal);
+        if (ibov) {
+          next["bolsa"] = {
+            id: "bolsa",
+            label: "Ibovespa",
+            value: ibov.last.toLocaleString("pt-BR", { maximumFractionDigits: 0 }),
+            change: ibov.changePct != null ? `${ibov.changePct >= 0 ? "+" : "−"}${Math.abs(ibov.changePct).toFixed(2).replace(".", ",")}%` : null,
+            direction: directionOf(ibov.changePct),
+            sub: ibov.isToday ? "pts · B3 ~15 min" : "pts · último fechamento B3",
+          };
+        }
+      } catch {
+        // mantem card server
+      }
+      try {
+        const di = await fetchLiveCurve("DI1", ctrl.signal);
+        const f32 = di.contracts.find((c) => c.symbol === "DI1F32" && c.rate != null);
+        if (f32) {
+          const bps = f32.changeBps;
+          next["tesouro32"] = {
+            id: "tesouro32",
+            label: "Tesouro 2032 (DI)",
+            value: `${(f32.rate as number).toFixed(2).replace(".", ",")}%`,
+            change: bps != null ? `${bps > 0 ? "+" : bps < 0 ? "−" : ""}${Math.abs(bps)} bps` : null,
+            direction: bps == null ? null : Math.abs(bps) < 1 ? "flat" : bps > 0 ? "up" : "down",
+            sub: di.isToday ? "DI jan/32 · B3 ~15 min" : "DI jan/32 · fechamento",
+          };
+        }
+      } catch {
+        // mantem card server
+      }
+      if (!cancelled && Object.keys(next).length > 0) setLive((prev) => ({ ...prev, ...next }));
+    }
 
+    load();
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 60_000);
     return () => {
       cancelled = true;
       ctrl.abort();
+      window.clearInterval(id);
     };
   }, []);
 
-  const cards = liveCard ? [...base, liveCard] : base;
+  const cards = base.map((c) => live[c.id] ?? c);
 
   return (
     <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
       {cards.map((card) => (
-        <Card key={card.label} card={card} />
+        <Card key={card.id} card={card} />
       ))}
     </div>
   );

@@ -1,4 +1,8 @@
+import Link from "next/link";
+
 import DataStamp from "@/components/painel/DataStamp";
+import { listBriefings } from "@/lib/cafe-com-mercado";
+import { listPautas } from "@/lib/pauta-da-semana";
 import type { PanoramaData } from "@/lib/painel-data";
 
 type Mover = { name: string; pct: number };
@@ -38,17 +42,32 @@ function fmtSigned(pct: number): string {
   return `${s}${Math.abs(pct).toFixed(1).replace(".", ",")}%`;
 }
 
-/** Faixa "resumo do dia" gerada dos proprios dados do Blob (sem editor). */
-export function PanoramaResumo({ data }: { data: PanoramaData }) {
+/**
+ * Faixa "resumo do dia": frase gerada dos próprios dados do Blob +
+ * atalhos pros dois periódicos da casa (Café com Mercado e Pauta da
+ * Semana) — que deixaram de ter seção própria no Panorama.
+ */
+export async function PanoramaResumo({ data }: { data: PanoramaData }) {
   const { up, down } = pickMovers(data);
   const usd = findAsset(data, ["USD/BRL"]);
 
   const parts: string[] = [];
   if (up) parts.push(`maior alta do dia é ${up.name} (${fmtSigned(up.pct)} em BRL)`);
   if (down) parts.push(`maior queda é ${down.name} (${fmtSigned(down.pct)})`);
-  if (usd != null) parts.push(`dólar ${usd >= 0 ? "sobe" : "cai"} ${fmtSigned(Math.abs(usd)).replace("+", "").replace("−", "")} ante o real`);
+  if (usd != null)
+    parts.push(`dólar ${usd >= 0 ? "sobe" : "cai"} ${fmtSigned(Math.abs(usd)).replace("+", "").replace("−", "")} ante o real`);
 
-  if (parts.length === 0) return null;
+  let cafeHref: string | null = null;
+  let pautaHref: string | null = null;
+  try {
+    const [cafes, pautas] = await Promise.all([listBriefings(1), listPautas(1)]);
+    cafeHref = cafes[0] ? `/cafe-com-mercado/${cafes[0].date}` : null;
+    pautaHref = pautas[0] ? `/pauta-da-semana/${pautas[0].slug}` : null;
+  } catch {
+    // sem periodicos, a faixa segue só com a frase
+  }
+
+  if (parts.length === 0 && !cafeHref && !pautaHref) return null;
 
   const dateLabel = new Date().toLocaleDateString("pt-BR", {
     day: "2-digit",
@@ -59,13 +78,27 @@ export function PanoramaResumo({ data }: { data: PanoramaData }) {
   const sentence = parts.join("; ");
 
   return (
-    <div className="flex flex-wrap items-center gap-2.5 rounded-xl border border-[#132960]/10 bg-white px-4 py-2.5 shadow-sm">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border border-[#132960]/10 bg-white px-4 py-2.5 shadow-sm">
       <span className="rounded bg-[#eaf2ff] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#0C447C]">
         Resumo {dateLabel}
       </span>
-      <p className="min-w-0 flex-1 text-sm text-[#33415C]">
-        Entre os ativos acompanhados, {sentence}.
-      </p>
+      {sentence ? (
+        <p className="min-w-0 flex-1 basis-64 text-sm text-[#33415C]">
+          Entre os ativos acompanhados, {sentence}.
+        </p>
+      ) : null}
+      <span className="flex shrink-0 items-center gap-3 text-xs font-semibold">
+        {cafeHref ? (
+          <Link href={cafeHref} className="whitespace-nowrap text-[#027DFC] hover:underline">
+            Café com Mercado →
+          </Link>
+        ) : null}
+        {pautaHref ? (
+          <Link href={pautaHref} className="whitespace-nowrap text-[#027DFC] hover:underline">
+            Pauta da Semana →
+          </Link>
+        ) : null}
+      </span>
       {/* Fonte intradiária (cron 15min): generated_at carrega os minutos do dado. */}
       <DataStamp
         giro={data.assetPanorama.meta.generatedAt ?? null}

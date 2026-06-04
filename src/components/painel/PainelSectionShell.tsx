@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { getCategory, getScope, getTrail, painelTrails } from "@/lib/painel-taxonomy";
+import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 type Props = {
   children: ReactNode;
@@ -44,6 +45,8 @@ function buildBreadcrumb(pathname: string): NavItem[] {
 /**
  * Shell do painel economico: topbar navy sticky com menus por trilha
  * (gerados da taxonomia) + breadcrumb fino. Conteudo em largura total.
+ * A topbar replica a estetica da nav do Header global (mesma cor de
+ * fundo, mesmo max-width e mesma tipografia) pra parecer continuidade.
  */
 export function PainelSectionShell({ children }: Props) {
   const pathname = usePathname();
@@ -76,21 +79,16 @@ export function PainelSectionShell({ children }: Props) {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <div ref={navRef} className="sticky top-0 z-40 border-b border-white/10 bg-[#132960] shadow-md">
-        <div className="mx-auto flex w-full max-w-[96rem] items-center gap-1 px-4 md:px-8">
-          <Link
-            href="/painel-economico/panorama"
-            className="mr-2 hidden py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white/60 transition hover:text-white sm:block"
-          >
-            Painel econômico
-          </Link>
+      <div ref={navRef} className="sticky top-0 z-40 border-t border-white/10 bg-[#0e1f49] shadow-md">
+        <div className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} items-center gap-6 overflow-x-auto px-4 text-xs font-semibold uppercase tracking-wider md:px-8`}>
+          <span className="hidden whitespace-nowrap py-3 text-white/40 sm:block">Painel econômico</span>
 
           <Link
             href="/painel-economico/panorama"
-            className={`border-b-2 px-3 py-3 text-sm font-semibold transition ${
+            className={`whitespace-nowrap border-b-2 py-3 transition-colors ${
               panoramaActive
-                ? "border-[#4DA3FF] text-white"
-                : "border-transparent text-[#9db8e8] hover:text-white"
+                ? "border-[#027DFC] text-white"
+                : "border-transparent text-white/80 hover:text-[#027DFC]"
             }`}
           >
             Panorama
@@ -105,10 +103,10 @@ export function PainelSectionShell({ children }: Props) {
                   type="button"
                   aria-expanded={isOpen}
                   onClick={() => setOpenMenu(isOpen ? null : trail.slug)}
-                  className={`flex items-center gap-1.5 border-b-2 px-3 py-3 text-sm font-semibold transition ${
+                  className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
                     trailActive
-                      ? "border-[#4DA3FF] text-white"
-                      : "border-transparent text-[#9db8e8] hover:text-white"
+                      ? "border-[#027DFC] text-white"
+                      : "border-transparent text-white/80 hover:text-[#027DFC]"
                   }`}
                 >
                   {trail.slug === "mercado" ? "Mercado" : "Economia"}
@@ -140,7 +138,7 @@ export function PainelSectionShell({ children }: Props) {
                                 <li key={href}>
                                   <Link
                                     href={href}
-                                    className={`block rounded-md px-2 py-1.5 text-sm transition ${
+                                    className={`block rounded-md px-2 py-1.5 text-sm normal-case tracking-normal transition ${
                                       active
                                         ? "bg-[#ebf4ff] font-semibold text-[#027DFC]"
                                         : "text-[#132960] hover:bg-zinc-50 hover:text-[#027DFC]"
