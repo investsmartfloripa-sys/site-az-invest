@@ -3,6 +3,7 @@ import { CommunityCallout } from "@/components/home/CommunityCallout";
 import {
   JurosLiveBlock,
   type CurveCut,
+  type CurveCutSet,
   type CutLabels,
   type SelicMeeting,
   type TreasuryTenor,
@@ -75,9 +76,10 @@ function commodity1d(data: PanoramaData, needle: string): number | null {
   return null;
 }
 
-/** Extrai um corte (coluna por prefixo) da tabela de curva pre do pipeline. */
-function extractPreCut(data: PanoramaData, colPrefix: string): CurveCut[] {
-  const table = data.tablePrefixado.data;
+type CurveTable = PanoramaData["tablePrefixado"]["data"];
+
+/** Extrai um corte (coluna por prefixo) de uma tabela de curva do pipeline. */
+function extractCurveCut(table: CurveTable, colPrefix: string): CurveCut[] {
   const col = table?.columns?.find((c) => c.key.startsWith(colPrefix))?.key;
   if (!col) return [];
   const out: CurveCut[] = [];
@@ -90,6 +92,16 @@ function extractPreCut(data: PanoramaData, colPrefix: string): CurveCut[] {
     out.push({ maturity: `${m[3]}-${m[2]}-${m[1]}`, rate });
   }
   return out;
+}
+
+/** Cortes Recente/D-30/D-90 de uma tabela de curva (pre ou IPCA). */
+function extractCurveCutSet(table: CurveTable): CurveCutSet {
+  const recent = extractCurveCut(table, "Recente");
+  return {
+    recent: recent.length > 0 ? recent : extractCurveCut(table, "Hoje"),
+    d30: extractCurveCut(table, "D-30"),
+    d90: extractCurveCut(table, "D-90"),
+  };
 }
 
 /** Reunioes COPOM + cortes da selic implicita do pipeline (charts/tables/selic_implicita.json). */
@@ -229,17 +241,23 @@ export async function PainelPanoramaPage() {
   const blobDataPartial =
     blobConfigured && blobJsonLoadedCount > 0 && blobJsonLoadedCount < blobJsonBlocks.length;
 
-  const d30Pre = extractPreCut(data, "D-30");
-  const d90Pre = extractPreCut(data, "D-90");
+  const preCuts = extractCurveCutSet(data.tablePrefixado.data);
+  const ipcaCuts = extractCurveCutSet(data.tableIpca.data);
   const selicMeetings = extractSelicMeetings(data);
   const treasuryTenors = extractTreasury(data);
 
   /** Key da coluna do JSON ja vem com a data de referencia: "D-30 (05/05/2026)". */
   const colLabel = (cols: { key: string }[] | undefined, prefix: string): string | undefined =>
     cols?.find((c) => c.key.startsWith(prefix))?.key;
-  const diLabels: CutLabels = {
+  const preLabels: CutLabels = {
+    recent: colLabel(data.tablePrefixado.data?.columns, "Recente") ?? colLabel(data.tablePrefixado.data?.columns, "Hoje"),
     d30: colLabel(data.tablePrefixado.data?.columns, "D-30"),
     d90: colLabel(data.tablePrefixado.data?.columns, "D-90"),
+  };
+  const ipcaLabels: CutLabels = {
+    recent: colLabel(data.tableIpca.data?.columns, "Recente") ?? colLabel(data.tableIpca.data?.columns, "Hoje"),
+    d30: colLabel(data.tableIpca.data?.columns, "D-30"),
+    d90: colLabel(data.tableIpca.data?.columns, "D-90"),
   };
   const selicLabels: CutLabels = {
     recent: colLabel(data.tableSelic.data?.columns, "Recente") ?? colLabel(data.tableSelic.data?.columns, "Hoje"),
@@ -382,11 +400,12 @@ export async function PainelPanoramaPage() {
       />
 
       <JurosLiveBlock
-        d30Pre={d30Pre}
-        d90Pre={d90Pre}
+        preCuts={preCuts}
+        ipcaCuts={ipcaCuts}
         selicMeetings={selicMeetings}
         treasuryTenors={treasuryTenors}
-        diLabels={diLabels}
+        preLabels={preLabels}
+        ipcaLabels={ipcaLabels}
         selicLabels={selicLabels}
         treasuryLabels={treasuryLabels}
       />

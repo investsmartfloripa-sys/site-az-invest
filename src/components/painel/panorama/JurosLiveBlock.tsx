@@ -23,31 +23,37 @@ import {
 const REFRESH_MS = 60_000;
 
 /**
- * Gradiente temporal padrao AZ — MESMA rampa dos SVGs ggplot do pipeline
- * (Recente preto, passado em azuis cada vez mais claros; cf. memoria do
- * projeto: D-30=#00008B, D-90=#56B4E9, Recente=#000000).
+ * Paletas POR GRAFICO — exatamente as dos scripts R do pipeline
+ * (build_yield_curves_svg.R, build_selic_implicita.R, build_treasury_us_svg.R).
+ * A serie "ao vivo" (DI/DAP, que nao existia nos SVGs) usa o azul AZ #027DFC.
  */
-const TIME_COLORS = {
-  agora: "#000000",
-  d1: "#00008B",
-  d30: "#2E74C9",
-  d90: "#56B4E9",
-  d365: "#A9D4EF",
-} as const;
+const LIVE_COLOR = "#027DFC";
+
+const PAL_PRE = { recent: "#000000", d30: "#00008B", d90: "#56B4E9" } as const;
+const PAL_IPCA = { recent: "#000000", d30: "#8B0000", d90: "#F8766D" } as const;
+const PAL_SELIC = { recent: "#000000", d30: "#6f6f6f", d90: "#0078fd", meeting: "#ff5713", meetingLabel: "#0078fd" } as const;
+const PAL_TREASURY = { recent: "#000000", d30: "#0B6B2E", d90: "#2BBF5E", d365: "#8BE28F" } as const;
 
 const GRID = "#E2E8F0";
 const TICKS = "#64748B";
 
-type TabId = "di" | "ipca" | "selic" | "treasury";
+type TabId = "pre" | "ipca" | "selic" | "treasury";
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: "di", label: "Curva DI (pré)" },
-  { id: "ipca", label: "Curva IPCA+ (DAP)" },
+  { id: "pre", label: "Curva pré" },
+  { id: "ipca", label: "Curva IPCA+" },
   { id: "selic", label: "Selic implícita" },
   { id: "treasury", label: "Treasury EUA" },
 ];
 
 export type CurveCut = { maturity: string; rate: number };
+
+/** Cortes da curva de titulos do pipeline (TaxaSwap, D-1). */
+export type CurveCutSet = {
+  recent?: CurveCut[];
+  d30?: CurveCut[];
+  d90?: CurveCut[];
+};
 
 export type SelicMeeting = {
   /** Data da reuniao COPOM (ISO). */
@@ -74,15 +80,17 @@ export type CutLabels = {
 };
 
 type Props = {
-  /** Curva pre D-30/D-90 do pipeline TaxaSwap (Blob) p/ sobrepor no DI live. */
-  d30Pre?: CurveCut[];
-  d90Pre?: CurveCut[];
+  /** Curvas dos titulos prefixados (pipeline) p/ exibir junto do DI live. */
+  preCuts?: CurveCutSet;
+  /** Curvas IPCA+ dos titulos (pipeline) p/ exibir junto do DAP live. */
+  ipcaCuts?: CurveCutSet;
   /** Selic implicita por reuniao COPOM — cortes do pipeline R (modelo oficial). */
   selicMeetings?: SelicMeeting[];
   /** Curva Treasury por tenor (cortes do pipeline FRED). */
   treasuryTenors?: TreasuryTenor[];
   /** Datas de referencia p/ legenda (ex.: "D-30 (05/05/2026)"), por tab. */
-  diLabels?: CutLabels;
+  preLabels?: CutLabels;
+  ipcaLabels?: CutLabels;
   selicLabels?: CutLabels;
   treasuryLabels?: CutLabels;
 };
@@ -91,6 +99,7 @@ type ChartPoint = {
   t: number;
   agora?: number | null;
   d1?: number | null;
+  recent?: number | null;
   d30?: number | null;
   d90?: number | null;
 };
@@ -123,47 +132,64 @@ function liquidContracts(contracts: LiveContract[], showAll: boolean): LiveContr
   return withRate.filter((c) => /F\d{2}$/.test(c.symbol) || c.trades > 2000);
 }
 
-/**
- * Interpola (linear no tempo) um corte historico nos timestamps da curva
- * live, sem extrapolar alem do range do corte — assim todas as series
- * compartilham os mesmos pontos de X e o eixo Y enquadra tudo.
- */
-function cutValueAt(cut: CurveCut[], t: number): number | null {
-  if (cut.length === 0) return null;
-  const pts = cut
-    .map((c) => ({ t: Date.parse(c.maturity), r: c.rate }))
-    .filter((p) => Number.isFinite(p.t))
-    .sort((a, b) => a.t - b.t);
-  if (pts.length === 0 || t < pts[0].t || t > pts[pts.length - 1].t) return null;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const a = pts[i];
-    const b = pts[i + 1];
-    if (t >= a.t && t <= b.t) {
-      if (b.t === a.t) return a.r;
-      const w = (t - a.t) / (b.t - a.t);
-      return a.r + w * (b.r - a.r);
-    }
-  }
-  return null;
-}
+type ShowState = { agora: boolean; d1: boolean; recent: boolean; d30: boolean; d90: boolean };
 
+/**
+ * Monta os pontos do chart: live (DI/DAP) e cortes do pipeline cada um em
+ * seus proprios vencimentos (sem interpolacao — fidelidade aos graficos R).
+ */
 function buildCurveChart(
   live: LiveContract[],
-  cuts: { d30?: CurveCut[]; d90?: CurveCut[] },
-  show: { d1: boolean; d30: boolean; d90: boolean },
-): ChartPoint[] {
-  const out: ChartPoint[] = [];
-  for (const c of live) {
-    if (c.rate == null) continue;
-    const t = Date.parse(c.maturity);
-    if (!Number.isFinite(t)) continue;
-    const p: ChartPoint = { t, agora: c.rate };
-    if (show.d1) p.d1 = c.prevAdjust;
-    if (show.d30 && cuts.d30) p.d30 = cutValueAt(cuts.d30, t);
-    if (show.d90 && cuts.d90) p.d90 = cutValueAt(cuts.d90, t);
-    out.push(p);
+  cuts: CurveCutSet,
+  show: ShowState,
+): { points: ChartPoint[]; yDomain: [number, number] } {
+  const byT = new Map<number, ChartPoint>();
+  const at = (t: number): ChartPoint => {
+    const prev = byT.get(t) ?? { t };
+    byT.set(t, prev);
+    return prev;
+  };
+
+  let lo = Infinity;
+  let hi = -Infinity;
+  const see = (v: number | null | undefined) => {
+    if (v != null && Number.isFinite(v)) {
+      if (v < lo) lo = v;
+      if (v > hi) hi = v;
+    }
+  };
+
+  if (show.agora) {
+    for (const c of live) {
+      if (c.rate == null) continue;
+      const t = Date.parse(c.maturity);
+      if (!Number.isFinite(t)) continue;
+      const p = at(t);
+      p.agora = c.rate;
+      see(c.rate);
+      if (show.d1) {
+        p.d1 = c.prevAdjust;
+        see(c.prevAdjust);
+      }
+    }
   }
-  return out.sort((a, b) => a.t - b.t);
+
+  const addCut = (key: "recent" | "d30" | "d90", cut?: CurveCut[]) => {
+    for (const c of cut ?? []) {
+      const t = Date.parse(c.maturity);
+      if (!Number.isFinite(t)) continue;
+      at(t)[key] = c.rate;
+      see(c.rate);
+    }
+  };
+  if (show.recent) addCut("recent", cuts.recent);
+  if (show.d30) addCut("d30", cuts.d30);
+  if (show.d90) addCut("d90", cuts.d90);
+
+  const points = [...byT.values()].sort((a, b) => a.t - b.t);
+  if (!Number.isFinite(lo) || !Number.isFinite(hi)) return { points, yDomain: [0, 1] };
+  const pad = Math.max(0.08, (hi - lo) * 0.08);
+  return { points, yDomain: [Math.floor((lo - pad) * 10) / 10, Math.ceil((hi + pad) * 10) / 10] };
 }
 
 const tooltipStyle = {
@@ -179,17 +205,18 @@ const thClass = "py-2 pr-2 text-right font-semibold";
 const tdClass = "py-1.5 pr-2 text-right tabular-nums";
 
 export function JurosLiveBlock({
-  d30Pre,
-  d90Pre,
+  preCuts = {},
+  ipcaCuts = {},
   selicMeetings = [],
   treasuryTenors = [],
-  diLabels = {},
+  preLabels = {},
+  ipcaLabels = {},
   selicLabels = {},
   treasuryLabels = {},
 }: Props) {
-  const [tab, setTab] = useState<TabId>("di");
+  const [tab, setTab] = useState<TabId>("pre");
   const [showAll, setShowAll] = useState(false);
-  const [show, setShow] = useState({ d1: true, d30: true, d90: false });
+  const [show, setShow] = useState<ShowState>({ agora: true, d1: false, recent: true, d30: true, d90: false });
   const [di, setDi] = useState<LiveCurve | null>(null);
   const [dap, setDap] = useState<LiveCurve | null>(null);
   const [error, setError] = useState(false);
@@ -228,14 +255,8 @@ export function JurosLiveBlock({
   const diLiquid = useMemo(() => liquidContracts(di?.contracts ?? [], showAll), [di, showAll]);
   const dapLiquid = useMemo(() => liquidContracts(dap?.contracts ?? [], true), [dap]);
 
-  const diChart = useMemo(
-    () => buildCurveChart(diLiquid, { d30: d30Pre, d90: d90Pre }, show),
-    [diLiquid, d30Pre, d90Pre, show],
-  );
-  const dapChart = useMemo(
-    () => buildCurveChart(dapLiquid, {}, { d1: true, d30: false, d90: false }),
-    [dapLiquid],
-  );
+  const preChart = useMemo(() => buildCurveChart(diLiquid, preCuts, show), [diLiquid, preCuts, show]);
+  const ipcaChart = useMemo(() => buildCurveChart(dapLiquid, ipcaCuts, show), [dapLiquid, ipcaCuts, show]);
 
   const selicChart = useMemo(
     () =>
@@ -271,11 +292,21 @@ export function JurosLiveBlock({
     </span>
   ) : null;
 
-  const cutToggles: { key: keyof typeof show; label: string; color: string; available: boolean }[] = [
-    { key: "d1", label: "D-1", color: TIME_COLORS.d1, available: true },
-    { key: "d30", label: "D-30", color: TIME_COLORS.d30, available: (d30Pre?.length ?? 0) > 0 },
-    { key: "d90", label: "D-90", color: TIME_COLORS.d90, available: (d90Pre?.length ?? 0) > 0 },
+  const isCurveTab = tab === "pre" || tab === "ipca";
+  const pal = tab === "ipca" ? PAL_IPCA : PAL_PRE;
+  const labels = tab === "ipca" ? ipcaLabels : preLabels;
+  const cuts = tab === "ipca" ? ipcaCuts : preCuts;
+
+  const cutToggles: { key: keyof ShowState; label: string; color: string; available: boolean }[] = [
+    { key: "agora", label: "Agora", color: LIVE_COLOR, available: true },
+    { key: "d1", label: "Ajuste D-1", color: "#9CA3AF", available: true },
+    { key: "recent", label: "Recente", color: pal.recent, available: (cuts.recent?.length ?? 0) > 0 },
+    { key: "d30", label: "D-30", color: pal.d30, available: (cuts.d30?.length ?? 0) > 0 },
+    { key: "d90", label: "D-90", color: pal.d90, available: (cuts.d90?.length ?? 0) > 0 },
   ];
+
+  const liveName = tab === "ipca" ? "DAP · agora (B3 ~15 min)" : "DI futuro · agora (B3 ~15 min)";
+  const chart = tab === "ipca" ? ipcaChart : preChart;
 
   return (
     <section
@@ -311,11 +342,11 @@ export function JurosLiveBlock({
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-3 pb-2">
-          {tab === "di" ? (
+          {isCurveTab ? (
             <>
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                  Comparar:
+                  Séries:
                 </span>
                 {cutToggles.map((c) =>
                   c.available ? (
@@ -372,14 +403,14 @@ export function JurosLiveBlock({
                       <ReferenceLine
                         key={m.date}
                         x={t}
-                        stroke="#94A3B8"
-                        strokeDasharray="3 4"
-                        strokeWidth={1}
+                        stroke={PAL_SELIC.meeting}
+                        strokeDasharray="4 4"
+                        strokeWidth={1.2}
                         label={{
                           value: dateLabelBR(m.date).slice(0, 5),
                           position: "top",
                           fontSize: 9,
-                          fill: "#027DFC",
+                          fill: PAL_SELIC.meetingLabel,
                         }}
                       />
                     );
@@ -411,9 +442,9 @@ export function JurosLiveBlock({
                     labelStyle={{ color: "#94A3B8", fontWeight: 600 }}
                   />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="stepAfter" dataKey="recent" name={selicLabels.recent ?? "Recente (D-1)"} stroke={TIME_COLORS.agora} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
-                  <Line type="stepAfter" dataKey="d30" name={selicLabels.d30 ?? "D-30"} stroke={TIME_COLORS.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
-                  <Line type="stepAfter" dataKey="d90" name={selicLabels.d90 ?? "D-90"} stroke={TIME_COLORS.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="stepAfter" dataKey="d90" name={selicLabels.d90 ?? "D-90"} stroke={PAL_SELIC.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="stepAfter" dataKey="d30" name={selicLabels.d30 ?? "D-30"} stroke={PAL_SELIC.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="stepAfter" dataKey="recent" name={selicLabels.recent ?? "Recente (D-1)"} stroke={PAL_SELIC.recent} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
             ) : tab === "treasury" ? (
@@ -446,15 +477,15 @@ export function JurosLiveBlock({
                     labelStyle={{ color: "#94A3B8", fontWeight: 600 }}
                   />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="recent" name={treasuryLabels.recent ?? "Recente (D-1)"} stroke={TIME_COLORS.agora} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
-                  <Line type="monotone" dataKey="d30" name={treasuryLabels.d30 ?? "D-30"} stroke={TIME_COLORS.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
-                  <Line type="monotone" dataKey="d90" name={treasuryLabels.d90 ?? "D-90"} stroke={TIME_COLORS.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
-                  <Line type="monotone" dataKey="d365" name={treasuryLabels.d365 ?? "D-365"} stroke={TIME_COLORS.d365} strokeWidth={1.5} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="monotone" dataKey="d365" name={treasuryLabels.d365 ?? "D-365"} stroke={PAL_TREASURY.d365} strokeWidth={1.5} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="monotone" dataKey="d90" name={treasuryLabels.d90 ?? "D-90"} stroke={PAL_TREASURY.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="monotone" dataKey="d30" name={treasuryLabels.d30 ?? "D-30"} stroke={PAL_TREASURY.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="monotone" dataKey="recent" name={treasuryLabels.recent ?? "Recente (D-1)"} stroke={PAL_TREASURY.recent} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={tab === "di" ? diChart : dapChart} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
+                <LineChart data={chart.points} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
                   <CartesianGrid stroke={GRID} strokeWidth={1} />
                   <XAxis
                     dataKey="t"
@@ -469,7 +500,7 @@ export function JurosLiveBlock({
                   <YAxis
                     tick={{ fontSize: 10, fill: TICKS }}
                     width={52}
-                    domain={["auto", "auto"]}
+                    domain={chart.yDomain}
                     tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
                     axisLine={false}
                     tickLine={false}
@@ -483,15 +514,20 @@ export function JurosLiveBlock({
                     labelStyle={{ color: "#94A3B8", fontWeight: 600 }}
                   />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="agora" name="Agora (B3 ~15 min)" stroke={TIME_COLORS.agora} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
-                  {(tab === "ipca" || show.d1) ? (
-                    <Line type="monotone" dataKey="d1" name="Ajuste D-1" stroke={TIME_COLORS.d1} strokeWidth={1.6} strokeDasharray="5 3" dot={false} connectNulls isAnimationActive={false} />
+                  {show.d90 ? (
+                    <Line type="monotone" dataKey="d90" name={labels.d90 ?? "D-90"} stroke={pal.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   ) : null}
-                  {tab === "di" && show.d30 ? (
-                    <Line type="monotone" dataKey="d30" name={diLabels.d30 ?? "D-30"} stroke={TIME_COLORS.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  {show.d30 ? (
+                    <Line type="monotone" dataKey="d30" name={labels.d30 ?? "D-30"} stroke={pal.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   ) : null}
-                  {tab === "di" && show.d90 ? (
-                    <Line type="monotone" dataKey="d90" name={diLabels.d90 ?? "D-90"} stroke={TIME_COLORS.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  {show.recent ? (
+                    <Line type="monotone" dataKey="recent" name={labels.recent ?? "Recente (D-1)"} stroke={pal.recent} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                  ) : null}
+                  {show.agora && show.d1 ? (
+                    <Line type="monotone" dataKey="d1" name="Ajuste D-1 (B3)" stroke="#9CA3AF" strokeWidth={1.4} strokeDasharray="5 3" dot={false} connectNulls isAnimationActive={false} />
+                  ) : null}
+                  {show.agora ? (
+                    <Line type="monotone" dataKey="agora" name={liveName} stroke={LIVE_COLOR} strokeWidth={2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
                   ) : null}
                 </LineChart>
               </ResponsiveContainer>
@@ -499,10 +535,12 @@ export function JurosLiveBlock({
           </div>
           <p className="mt-2 text-[11px] text-zinc-500">
             {tab === "selic"
-              ? "Selic implícita por reunião COPOM — modelo forward do pipeline AZ (B3 PRE, D-1), mesmos valores da trilha de política monetária. Cortes D-30/D-90 em tons mais claros."
+              ? "Selic implícita por reunião COPOM — modelo forward do pipeline AZ (B3 PRE, D-1), mesmos valores da trilha de política monetária."
               : tab === "treasury"
-                ? "Curva Treasury EUA por prazo (FRED, D-1) — cortes históricos em tons progressivamente mais claros."
-                : "Fonte: cotações públicas B3 (~15 min de atraso). Cortes D-30/D-90 do pipeline AZ (TaxaSwap B3, D-1) interpolados nos vencimentos. D-7 e D-365 entram quando o pipeline ganhar esses cortes."}
+                ? "Curva Treasury EUA por prazo (FRED, D-1) — mesma paleta do gráfico original."
+                : tab === "ipca"
+                  ? "Recente/D-30/D-90: títulos IPCA+ (cupom limpo NTN-B, TaxaSwap B3, D-1) — as mesmas curvas do gráfico original. “Agora”: futuros DAP da B3 (~15 min), instrumento irmão do cupom de IPCA."
+                  : "Recente/D-30/D-90: títulos prefixados (TaxaSwap B3, D-1) — as mesmas curvas do gráfico original. “Agora”: futuros DI1 da B3 (~15 min), instrumento irmão do prefixado."}
           </p>
         </div>
 
@@ -591,7 +629,8 @@ export function JurosLiveBlock({
                 </tbody>
               </table>
               <p className="mt-2 text-[11px] text-zinc-400">
-                Δ dia vs ajuste D-1 · verde = subiu, azul = estável, vermelho = caiu.
+                Futuros {tab === "ipca" ? "DAP" : "DI1"} ao vivo · Δ dia vs ajuste D-1 · verde = subiu, azul =
+                estável, vermelho = caiu.
               </p>
             </>
           )}
