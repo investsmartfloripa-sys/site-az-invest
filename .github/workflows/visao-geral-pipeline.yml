@@ -26,26 +26,38 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r data-pipeline/python/requirements.txt
+      # continue-on-error em cada fonte: um timeout (ex. SIDRA 04/06/26) não pode
+      # derrubar as fontes seguintes em cascata (ragged-edge, nunca all-or-nothing).
       - name: OECD CLI Brasil
         run: python data-pipeline/python/build_visao_geral_oecd_cli.py --upload --soft-fail
+        continue-on-error: true
       - name: BCB SGS Credito e Agregados
         run: python data-pipeline/python/build_visao_geral_credito.py --upload --soft-fail
+        continue-on-error: true
       - name: Antecedentes financeiros (Slope DI + Ibov real + EMBI)
         run: python data-pipeline/python/build_visao_geral_antecedentes_fin.py --upload --soft-fail
+        continue-on-error: true
       - name: PNAD renda (income leg quartet TCB)
         run: python data-pipeline/python/build_visao_geral_pnad_renda.py --upload --soft-fail
+        continue-on-error: true
       - name: Probit AZ Hibrido (3 modelos base + Ridge L2 sobre ~30 antecedentes)
         run: python data-pipeline/python/build_visao_geral_probit_az.py --upload --soft-fail
+        continue-on-error: true
       - name: ANP combustiveis
         run: python data-pipeline/python/build_visao_geral_anp.py --upload --soft-fail
+        continue-on-error: true
       - name: ANFAVEA veiculos
         run: python data-pipeline/python/build_visao_geral_anfavea.py --upload --soft-fail
+        continue-on-error: true
       - name: EPE energia
         run: python data-pipeline/python/build_visao_geral_epe.py --upload --soft-fail
+        continue-on-error: true
       - name: CODACE cronologia
         run: python data-pipeline/python/build_visao_geral_codace.py --upload --soft-fail
+        continue-on-error: true
       - name: IPEADATA (papelao, aco, FENABRAVE, CNC, Fecomercio)
         run: python data-pipeline/python/build_visao_geral_ipeadata.py --upload --soft-fail
+        continue-on-error: true
 
   scrapers-confianca:
     runs-on: ubuntu-latest
@@ -65,14 +77,19 @@ jobs:
           pip install -r data-pipeline/python/requirements.txt
       - name: FGV antecedentes
         run: python data-pipeline/python/build_visao_geral_fgv_antecedentes.py --upload --soft-fail
+        continue-on-error: true
       - name: FGV confiancas
         run: python data-pipeline/python/build_visao_geral_fgv_confianca.py --upload --soft-fail
+        continue-on-error: true
       - name: CNI
         run: python data-pipeline/python/build_visao_geral_cni.py --upload --soft-fail
+        continue-on-error: true
       - name: PMI Brasil
         run: python data-pipeline/python/build_visao_geral_pmi.py --upload --soft-fail
+        continue-on-error: true
       - name: Fecomercio SP
         run: python data-pipeline/python/build_visao_geral_fecomercio.py --upload --soft-fail
+        continue-on-error: true
 
   scrapers-hard-data:
     runs-on: ubuntu-latest
@@ -92,10 +109,14 @@ jobs:
           pip install -r data-pipeline/python/requirements.txt
       - name: Hard data
         run: python data-pipeline/python/build_visao_geral_hard_data.py --upload --soft-fail
+        continue-on-error: true
 
   derivados:
     runs-on: ubuntu-latest
     needs: [fontes-externas, scrapers-confianca, scrapers-hard-data]
+    # Roda mesmo se algum job de fonte falhou: os derivados leem o Blob
+    # (que preserva o último dado válido de cada fonte).
+    if: ${{ always() }}
     env:
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
       NEXT_PUBLIC_BLOB_BASE_URL: ${{ vars.NEXT_PUBLIC_BLOB_BASE_URL }}
@@ -119,6 +140,7 @@ jobs:
   modelos-recessao:
     runs-on: ubuntu-latest
     needs: derivados
+    if: ${{ always() }}
     env:
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
       NEXT_PUBLIC_BLOB_BASE_URL: ${{ vars.NEXT_PUBLIC_BLOB_BASE_URL }}
