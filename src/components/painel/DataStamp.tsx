@@ -23,11 +23,12 @@ export default function DataStamp({
 
   return (
     <span
+      suppressHydrationWarning
       className={`inline-flex items-center gap-1 whitespace-nowrap text-[10px] font-normal leading-none text-zinc-400 ${className}`}
     >
-      {giroFmt ? <span>Giro {giroFmt}</span> : null}
+      {giroFmt ? <span suppressHydrationWarning>Giro {giroFmt}</span> : null}
       {giroFmt && dadoFmt ? <span aria-hidden>·</span> : null}
-      {dadoFmt ? <span>Dado {dadoFmt}</span> : null}
+      {dadoFmt ? <span suppressHydrationWarning>Dado {dadoFmt}</span> : null}
     </span>
   );
 }

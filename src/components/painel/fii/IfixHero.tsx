@@ -283,10 +283,9 @@ export function IfixHero({ data }: Props) {
         </div>
       </div>
       <p className="mt-2 text-right">
-        <DataStamp
-          giro={data.generated_at}
-          dado={data.series_daily[data.series_daily.length - 1]?.date ?? null}
-        />
+        {/* Fonte intradiária (giro a cada 15min em pregão): a cotação plotada é a
+            coletada no giro — usar generated_at preserva os minutos no carimbo. */}
+        <DataStamp giro={data.generated_at} dado={data.generated_at} />
       </p>
     </section>
   );
