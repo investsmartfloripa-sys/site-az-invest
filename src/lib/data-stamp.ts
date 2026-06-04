@@ -14,7 +14,11 @@ const TZ = "America/Sao_Paulo";
 function parseDate(value: string | Date | null | undefined): Date | null {
   if (!value) return null;
   if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
-  const d = new Date(value);
+  let s = value.trim();
+  // ISO datetime SEM offset (ex.: "2026-06-04T20:15:48.768"): os pipelines
+  // gravam em UTC, mas o JS interpretaria como hora local — força UTC.
+  if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(s)) s = `${s}Z`;
+  const d = new Date(s);
   return Number.isNaN(d.getTime()) ? null : d;
 }
 

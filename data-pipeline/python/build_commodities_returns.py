@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Metadata provided by user
 COMMODITIES = {
@@ -155,7 +155,7 @@ def main():
 
     payload = {
         "status": "ok",
-        "generated_at": datetime.now().isoformat(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "period": args.period,
         "data": data,
         "colors": {

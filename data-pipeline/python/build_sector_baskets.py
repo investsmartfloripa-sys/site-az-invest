@@ -10,7 +10,7 @@ import argparse
 import json
 import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -288,7 +288,7 @@ def main():
         # Output empty structure
         out = {
             "status": "error",
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "period": args.period,
             "view_brl": {"top10": [], "bottom10": []},
             "view_usd": {"top10": [], "bottom10": []}
@@ -304,7 +304,7 @@ def main():
         logging.error("No basket returns computed.")
         out = {
             "status": "error",
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "period": args.period,
             "view_brl": {"top10": [], "bottom10": []},
             "view_usd": {"top10": [], "bottom10": []}
@@ -327,7 +327,7 @@ def main():
     # 5. Build output
     data = {
         "status": "ok",
-        "generated_at": datetime.now().isoformat(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "period": args.period,
         "period_label": {
             "1d": "Diário",

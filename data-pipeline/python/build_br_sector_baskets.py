@@ -291,7 +291,7 @@ def main():
 
     out = {
         "status": "ok",
-        "generated_at": datetime.now().isoformat(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "period": args.period,
         "period_label": period_labels.get(args.period, args.period),
         "data": data

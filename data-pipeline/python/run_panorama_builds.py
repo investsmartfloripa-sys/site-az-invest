@@ -105,7 +105,7 @@ def build_commodities_unified() -> Path:
         by_period[p] = {"period": p, "data": data}
     payload = {
         "status": "ok",
-        "generated_at": pd.Timestamp.now().isoformat(),
+        "generated_at": pd.Timestamp.now(tz="UTC").isoformat(),
         "title": "Índice de Commodities",
         "chart_type": "horizontal_bar",
         "colors": {"positive": "#2ECC71", "negative": "#E74C3C"},
@@ -148,7 +148,7 @@ def build_sector_baskets_unified() -> Path:
         }
     payload = {
         "status": "ok",
-        "generated_at": pd.Timestamp.now().isoformat(),
+        "generated_at": pd.Timestamp.now(tz="UTC").isoformat(),
         "title": "Setores Globais",
         "chart_type": "sector_table",
         "period_label": PERIOD_LABELS,
@@ -173,7 +173,7 @@ def build_br_sector_unified() -> Path:
         }
     payload = {
         "status": "ok",
-        "generated_at": pd.Timestamp.now().isoformat(),
+        "generated_at": pd.Timestamp.now(tz="UTC").isoformat(),
         "title": "Setores Brasil",
         "chart_type": "sector_table",
         "period_label": PERIOD_LABELS,
