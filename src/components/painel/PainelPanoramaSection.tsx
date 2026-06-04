@@ -4,6 +4,7 @@ import { DynamicFxMoversBar, type FxMoversPayload } from "@/components/painel/Dy
 import { DynamicReturnsBar, type ByPeriodBlock, type Row } from "@/components/painel/DynamicReturnsBar";
 import { DynamicSectorBr, type SectorBrPayload } from "@/components/painel/DynamicSectorBr";
 import { DynamicSectorGlobal, type SectorGlobalPayload } from "@/components/painel/DynamicSectorGlobal";
+import { LazyMount } from "@/components/painel/panorama/LazyMount";
 
 type PanoramaByPeriod = { generated_at?: string; by_period?: ByPeriodBlock };
 
@@ -16,6 +17,12 @@ type Props = {
   sectorBr: SectorBrPayload | null;
 };
 
+/**
+ * Grid de mercados do Panorama (client wrapper): os charts recebem
+ * funcoes getValue/filterRow, que nao podem cruzar a fronteira RSC —
+ * por isso este componente e "use client" e monta tudo client-side,
+ * com LazyMount para nao pesar o primeiro paint.
+ */
 export function PainelPanoramaSection({
   assetPanorama,
   worldPanorama,
@@ -26,10 +33,13 @@ export function PainelPanoramaSection({
 }: Props) {
   return (
     <section className="space-y-4">
-      <h2 className="text-2xl font-semibold text-[#027DFC]">Panorama</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-[#132960] md:text-2xl">Mercados</h2>
+        <p className="text-xs text-zinc-400">yfinance · pipeline AZ a cada 15 min</p>
+      </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="min-w-0 w-full">
+      <div className="grid gap-5 lg:grid-cols-2">
+        <LazyMount minHeight={460}>
           <DynamicReturnsBar
             title="Retornos dos ativos (%)"
             byPeriod={(assetPanorama?.by_period ?? {}) as ByPeriodBlock}
@@ -43,8 +53,8 @@ export function PainelPanoramaSection({
               return Number(v);
             }}
           />
-        </div>
-        <div className="min-w-0 w-full">
+        </LazyMount>
+        <LazyMount minHeight={460}>
           <DynamicReturnsBar
             title="Retornos indices globais (%)"
             byPeriod={(worldPanorama?.by_period ?? {}) as ByPeriodBlock}
@@ -55,11 +65,11 @@ export function PainelPanoramaSection({
               return Number(v);
             }}
           />
-        </div>
-        <div className="min-w-0 w-full">
+        </LazyMount>
+        <LazyMount minHeight={460}>
           <DynamicFxMoversBar title="Principais moedas (var. %)" data={fxData} updatedAt={fxData?.generated_at} />
-        </div>
-        <div className="min-w-0 w-full">
+        </LazyMount>
+        <LazyMount minHeight={460}>
           <DynamicReturnsBar
             title="Indice de commodities (%)"
             byPeriod={(commPanorama?.by_period ?? {}) as ByPeriodBlock}
@@ -72,17 +82,17 @@ export function PainelPanoramaSection({
               return Number(v);
             }}
           />
-        </div>
-        <div className="min-w-0 w-full">
+        </LazyMount>
+        <LazyMount minHeight={460}>
           <DynamicSectorGlobal
             title="Setores globais (top / bottom 10)"
             data={sectorGlobal}
             updatedAt={sectorGlobal?.generated_at}
           />
-        </div>
-        <div className="min-w-0 w-full">
+        </LazyMount>
+        <LazyMount minHeight={460}>
           <DynamicSectorBr title="Setores Brasil (top / bottom)" data={sectorBr} updatedAt={sectorBr?.generated_at} />
-        </div>
+        </LazyMount>
       </div>
     </section>
   );

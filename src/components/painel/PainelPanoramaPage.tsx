@@ -3,11 +3,9 @@ import Link from "next/link";
 import { PostCard } from "@/components/common/PostCard";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { DestaquesDaSemana } from "@/components/conteudo/DestaquesDaSemana";
-import { DynamicFxMoversBar } from "@/components/painel/DynamicFxMoversBar";
-import { DynamicReturnsBar, type ByPeriodBlock, type Row } from "@/components/painel/DynamicReturnsBar";
-import { DynamicSectorBr } from "@/components/painel/DynamicSectorBr";
-import { DynamicSectorGlobal } from "@/components/painel/DynamicSectorGlobal";
+import type { Row } from "@/components/painel/DynamicReturnsBar";
 import { JurosLiveBlock } from "@/components/painel/panorama/JurosLiveBlock";
+import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection";
 import { KpiStrip, type KpiCard } from "@/components/painel/panorama/KpiStrip";
 import { LazyMount } from "@/components/painel/panorama/LazyMount";
 import { MarketTape, type TapeItem } from "@/components/painel/panorama/MarketTape";
@@ -271,77 +269,14 @@ export async function PainelPanoramaPage() {
 
       <JurosLiveBlock d30Pre={d30Pre} />
 
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-[#132960] md:text-2xl">Mercados</h2>
-          <p className="text-xs text-zinc-400">yfinance · pipeline AZ a cada 15 min</p>
-        </div>
-
-        <div className="grid gap-5 lg:grid-cols-2">
-          <LazyMount minHeight={460}>
-            <DynamicReturnsBar
-              title="Retornos dos ativos (%)"
-              byPeriod={(data.assetPanorama.data?.by_period ?? {}) as ByPeriodBlock}
-              updatedAt={data.assetPanorama.data?.generated_at}
-              currencyToggle
-              filterRow={(r: Row) => String(r.ticker ?? "") !== "BRL=X"}
-              getValue={(row, opts) => {
-                const cur = opts?.currency ?? "brl";
-                const v = cur === "brl" ? row.return_brl_pct : row.return_usd_pct;
-                if (v == null) return null;
-                return Number(v);
-              }}
-            />
-          </LazyMount>
-          <LazyMount minHeight={460}>
-            <DynamicReturnsBar
-              title="Retornos indices globais (%)"
-              byPeriod={(data.worldPanorama.data?.by_period ?? {}) as ByPeriodBlock}
-              updatedAt={data.worldPanorama.data?.generated_at}
-              getValue={(row) => {
-                const v = row.return_pct;
-                if (v == null) return null;
-                return Number(v);
-              }}
-            />
-          </LazyMount>
-          <LazyMount minHeight={460}>
-            <DynamicFxMoversBar
-              title="Principais moedas (var. %)"
-              data={data.fxData.data}
-              updatedAt={data.fxData.data?.generated_at}
-            />
-          </LazyMount>
-          <LazyMount minHeight={460}>
-            <DynamicReturnsBar
-              title="Indice de commodities (%)"
-              byPeriod={(data.commPanorama.data?.by_period ?? {}) as ByPeriodBlock}
-              updatedAt={data.commPanorama.data?.generated_at}
-              currencyToggle
-              getValue={(row, opts) => {
-                const cur = opts?.currency ?? "brl";
-                const v = cur === "brl" ? row.return_pct_brl : row.return_pct_usd;
-                if (v == null) return null;
-                return Number(v);
-              }}
-            />
-          </LazyMount>
-          <LazyMount minHeight={460}>
-            <DynamicSectorGlobal
-              title="Setores globais (top / bottom 10)"
-              data={data.sectorGlobal.data}
-              updatedAt={data.sectorGlobal.data?.generated_at}
-            />
-          </LazyMount>
-          <LazyMount minHeight={460}>
-            <DynamicSectorBr
-              title="Setores Brasil (top / bottom)"
-              data={data.sectorBr.data}
-              updatedAt={data.sectorBr.data?.generated_at}
-            />
-          </LazyMount>
-        </div>
-      </section>
+      <PainelPanoramaSection
+        assetPanorama={data.assetPanorama.data}
+        worldPanorama={data.worldPanorama.data}
+        fxData={data.fxData.data}
+        commPanorama={data.commPanorama.data}
+        sectorGlobal={data.sectorGlobal.data}
+        sectorBr={data.sectorBr.data}
+      />
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
