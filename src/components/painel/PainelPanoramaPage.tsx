@@ -3,10 +3,18 @@ import Link from "next/link";
 import { PostCard } from "@/components/common/PostCard";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { DestaquesDaSemana } from "@/components/conteudo/DestaquesDaSemana";
-import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection";
+import { DynamicFxMoversBar } from "@/components/painel/DynamicFxMoversBar";
+import { DynamicReturnsBar, type ByPeriodBlock, type Row } from "@/components/painel/DynamicReturnsBar";
+import { DynamicSectorBr } from "@/components/painel/DynamicSectorBr";
+import { DynamicSectorGlobal } from "@/components/painel/DynamicSectorGlobal";
+import { JurosLiveBlock } from "@/components/painel/panorama/JurosLiveBlock";
+import { KpiStrip, type KpiCard } from "@/components/painel/panorama/KpiStrip";
+import { LazyMount } from "@/components/painel/panorama/LazyMount";
+import { MarketTape, type TapeItem } from "@/components/painel/panorama/MarketTape";
+import { PanoramaResumo } from "@/components/painel/panorama/PanoramaResumo";
 import { StaticChartCard } from "@/components/painel/StaticChartCard";
 import { painelBlobUrl } from "@/lib/painel-blob";
-import { getPanoramaData, painelBlobConfigured } from "@/lib/painel-data";
+import { getPanoramaData, painelBlobConfigured, type PanoramaData } from "@/lib/painel-data";
 import { findPosts, mapPost } from "@/lib/posts";
 
 type TableRow = Record<string, string | number | null>;
@@ -15,11 +23,8 @@ function parseNumber(value: string | number | null | undefined): number | null {
   if (value == null) return null;
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   const s = String(value).trim();
-  // Rejeita data tipo "08/05/2026" ou "2026-05-08" (evita que vire 8052026).
   if (/^\d{1,4}[\/-]\d{1,2}[\/-]\d{1,4}$/.test(s)) return null;
-  // Exige separador decimal (.,) ou símbolo de percentual — descarta ID/tenor tipo "1", "10", "30".
   if (!/[.,%]/.test(s)) return null;
-  // Se tem vírgula, é formato BR (ponto = milhar). Senão, ponto = decimal (formato US).
   const hasComma = s.includes(",");
   const normalized = hasComma
     ? s.replace(/\./g, "").replace(",", ".").replace(/[^\d.-]/g, "")
@@ -31,8 +36,6 @@ function parseNumber(value: string | number | null | undefined): number | null {
 function firstRateValue(row: TableRow | undefined): number | null {
   if (!row) return null;
   const entries = Object.entries(row);
-
-  // Procura colunas que sugiram taxa/curva (inclui "Recente" e "Hoje" do pipeline).
   const ratePattern = /(taxa|rate|selic|yield|retorno|recente|hoje)/i;
   for (const [key, value] of entries) {
     if (ratePattern.test(key)) {
@@ -40,51 +43,87 @@ function firstRateValue(row: TableRow | undefined): number | null {
       if (parsed != null) return parsed;
     }
   }
-
-  // Fallback: pega o último valor da linha (curva mais recente por convenção do pipeline).
-  // Nunca o primeiro, que é sempre a coluna de data/vencimento/tenor.
   for (let i = entries.length - 1; i > 0; i--) {
     const parsed = parseNumber(entries[i][1]);
     if (parsed != null) return parsed;
   }
-
   return null;
 }
 
 function formatPct(value: number | null): string {
   if (value == null) return "—";
-  return `${value.toFixed(2)}%`;
+  return `${value.toFixed(2).replace(".", ",")}%`;
 }
 
-function firstNumericFromObject(obj: Record<string, unknown> | null | undefined, keyHints: string[]): number | null {
-  if (!obj) return null;
-
-  for (const [key, value] of Object.entries(obj)) {
-    if (keyHints.some((hint) => key.toLowerCase().includes(hint))) {
-      const parsed = parseNumber(value as string | number | null | undefined);
-      if (parsed != null) return parsed;
+/** Retorno 1d (em BRL) de um ativo do asset panorama, por nome. */
+function assetReturn1d(data: PanoramaData, needle: string): number | null {
+  const rows = data.assetPanorama.data?.by_period?.["1d"]?.data ?? [];
+  for (const row of rows) {
+    const name = String(row.name ?? "");
+    if (name.toLowerCase().includes(needle.toLowerCase())) {
+      const v = row.return_brl_pct;
+      const pct = typeof v === "number" ? v : Number(v);
+      if (Number.isFinite(pct)) return pct;
     }
   }
-
-  for (const value of Object.values(obj)) {
-    const parsed = parseNumber(value as string | number | null | undefined);
-    if (parsed != null) return parsed;
-  }
-
   return null;
 }
 
-function firstReturnFromPeriod(
-  byPeriod: Record<string, { data?: Record<string, unknown>[] }> | undefined,
-  period: string,
-  keyHints: string[],
-): number | null {
-  const row = byPeriod?.[period]?.data?.[0];
-  return firstNumericFromObject(row, keyHints);
+function commodityReturn1d(data: PanoramaData, needle: string): number | null {
+  const rows = data.commPanorama.data?.by_period?.["1d"]?.data ?? [];
+  for (const row of rows) {
+    const name = String(row.name ?? "");
+    if (name.toLowerCase().includes(needle.toLowerCase())) {
+      const v = (row as Row).return_pct_usd ?? (row as Row).return_pct_brl;
+      const pct = typeof v === "number" ? v : Number(v);
+      if (Number.isFinite(pct)) return pct;
+    }
+  }
+  return null;
+}
+
+/**
+ * Extrai a curva pre D-30 da tabela do pipeline (TaxaSwap, D-1) para
+ * sobrepor como serie historica no bloco de juros ao vivo.
+ */
+function extractD30Pre(data: PanoramaData): { maturity: string; rate: number }[] {
+  const table = data.tablePrefixado.data;
+  const d30Col = table?.columns?.find((c) => c.key.startsWith("D-30"))?.key;
+  if (!d30Col) return [];
+  const out: { maturity: string; rate: number }[] = [];
+  for (const row of table?.rows ?? []) {
+    const venc = String(row.vencimento ?? "");
+    const m = venc.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!m) continue;
+    const rate = parseNumber(row[d30Col]);
+    if (rate == null) continue;
+    out.push({ maturity: `${m[3]}-${m[2]}-${m[1]}`, rate });
+  }
+  return out;
+}
+
+function buildTapeItems(data: PanoramaData, selicImplicita: number | null): TapeItem[] {
+  const items: TapeItem[] = [];
+
+  const push = (label: string, pct: number | null) => {
+    if (pct != null) items.push({ label, changePct: pct });
+  };
+
+  push("BOLSA BR (EWZ)", assetReturn1d(data, "EWZ"));
+  push("S&P 500", assetReturn1d(data, "S&P 500"));
+  push("USD/BRL", assetReturn1d(data, "USD/BRL"));
+  push("MSCI EM", assetReturn1d(data, "Emergentes"));
+  push("BRENT", commodityReturn1d(data, "Brent"));
+  push("OURO", commodityReturn1d(data, "Ouro"));
+
+  if (selicImplicita != null) {
+    items.push({ label: "SELIC IMPL.", value: formatPct(selicImplicita), changePct: null });
+  }
+
+  return items;
 }
 
 export async function PainelPanoramaPage() {
-  // Tolera DB indisponivel (ex.: preview sem DATABASE_URL): renderiza painel sem "Analises recentes".
   let mapped: ReturnType<typeof mapPost>[] = [];
   try {
     const posts = await findPosts({
@@ -99,7 +138,6 @@ export async function PainelPanoramaPage() {
 
   const blobConfigured = painelBlobConfigured();
 
-  /** Quantos dos 10 JSONs do Blob responderam com conteudo (evita alerta falso). */
   const blobJsonBlocks = [
     data.assetPanorama.data,
     data.worldPanorama.data,
@@ -124,40 +162,69 @@ export async function PainelPanoramaPage() {
     data.tableTreasury.meta.generatedAt ??
     "1";
 
-  const metricCards = [
-    { title: "Câmbio (dia)", value: formatPct(data.fxData.data?.top?.day?.up?.[0]?.change_pct ?? null) },
+  const selicImplicita = firstRateValue(data.tableSelic.data?.rows?.[0] as TableRow | undefined);
+  const treasury10y = firstRateValue(
+    (data.tableTreasury.data?.rows ?? []).find((r) => {
+      const first = Object.values(r)[0];
+      return String(first).trim() === "10";
+    }) as TableRow | undefined,
+  );
+
+  const tapeItems = buildTapeItems(data, selicImplicita);
+  const d30Pre = extractD30Pre(data);
+
+  const ewz = assetReturn1d(data, "EWZ");
+  const usdbrl = assetReturn1d(data, "USD/BRL");
+  const spx = assetReturn1d(data, "S&P 500");
+  const brent = commodityReturn1d(data, "Brent");
+
+  const kpiBase: KpiCard[] = [
     {
-      title: "Selic implícita",
-      value: formatPct(firstRateValue(data.tableSelic.data?.rows?.[0] as TableRow | undefined)),
+      label: "Bolsa Brasil (EWZ)",
+      value: ewz != null ? `${ewz >= 0 ? "+" : ""}${ewz.toFixed(2).replace(".", ",")}%` : "—",
+      sub: "1 dia · em BRL",
+      changePct: null,
+      accent: ewz == null ? "neutral" : ewz >= 0 ? "up" : "down",
     },
     {
-      title: "Prefixado BR",
-      value: formatPct(firstRateValue(data.tablePrefixado.data?.rows?.[0] as TableRow | undefined)),
+      label: "Dólar (USD/BRL)",
+      value: usdbrl != null ? `${usdbrl >= 0 ? "+" : ""}${usdbrl.toFixed(2).replace(".", ",")}%` : "—",
+      sub: "variação 1 dia",
+      changePct: null,
+      accent: usdbrl == null ? "neutral" : usdbrl >= 0 ? "down" : "up",
     },
     {
-      title: "Treasury EUA",
-      value: formatPct(firstRateValue(data.tableTreasury.data?.rows?.[0] as TableRow | undefined)),
+      label: "S&P 500",
+      value: spx != null ? `${spx >= 0 ? "+" : ""}${spx.toFixed(2).replace(".", ",")}%` : "—",
+      sub: "1 dia · em BRL",
+      changePct: null,
+      accent: spx == null ? "neutral" : spx >= 0 ? "up" : "down",
     },
     {
-      title: "Commodities (1M)",
-      value: formatPct(firstReturnFromPeriod(data.commPanorama.data?.by_period, "1mo", ["return_pct_brl", "return_pct", "return"])),
+      label: "Selic implícita",
+      value: formatPct(selicImplicita),
+      sub: "próxima reunião · B3 D-1",
+      changePct: null,
+      accent: "info",
     },
     {
-      title: "Índices globais (1M)",
-      value: formatPct(firstReturnFromPeriod(data.worldPanorama.data?.by_period, "1mo", ["return_pct", "return"])),
+      label: "Treasury 10 anos",
+      value: formatPct(treasury10y),
+      sub: "FRED · D-1",
+      changePct: null,
+      accent: "info",
     },
     {
-      title: "Setor BR top (1M)",
-      value: formatPct(data.sectorBr.data?.by_period?.["1mo"]?.data?.top10?.[0]?.return_pct ?? null),
-    },
-    {
-      title: "Setor global top (1M)",
-      value: formatPct(data.sectorGlobal.data?.by_period?.["1mo"]?.view_usd?.top10?.[0]?.return_pct ?? null),
+      label: "Brent",
+      value: brent != null ? `${brent >= 0 ? "+" : ""}${brent.toFixed(2).replace(".", ",")}%` : "—",
+      sub: "1 dia · em USD",
+      changePct: null,
+      accent: brent == null ? "neutral" : brent >= 0 ? "up" : "down",
     },
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {!blobConfigured ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           Configure{" "}
@@ -176,86 +243,153 @@ export async function PainelPanoramaPage() {
       ) : null}
       {blobDataPartial ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          Alguns arquivos do Blob nao carregaram ({blobJsonLoadedCount} de {blobJsonBlocks.length} blocos). Os
-          graficos vazios tendem a corresponder a JSON em falta ou pipeline desatualizado — regenere os dados ou
-          confira se cada arquivo existe no store (ex.:{" "}
-          <code className="rounded bg-white px-1">data/asset_returns_panorama.json</code>,{" "}
-          <code className="rounded bg-white px-1">data/fx_top_movers.json</code>, tabelas em{" "}
-          <code className="rounded bg-white px-1">charts/tables/</code>).
+          Alguns arquivos do Blob nao carregaram ({blobJsonLoadedCount} de {blobJsonBlocks.length} blocos).
+          Regenere os dados ou confira se cada arquivo existe no store.
         </p>
       ) : null}
 
-      <DestaquesDaSemana />
-
-      <section>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {metricCards.map((card) => (
-            <article key={card.title} className="rounded-xl border border-[#132960]/15 bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{card.title}</p>
-              <p className="mt-1 text-2xl font-semibold text-[#132960]">{card.value}</p>
-            </article>
-          ))}
+      <header className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-semibold text-[#132960] md:text-3xl">Panorama</h1>
+          <p className="text-sm text-zinc-500">
+            Mercados, juros e setores em uma tela — com curvas DI e IPCA+ ao vivo da B3.
+          </p>
         </div>
-      </section>
+        <Link
+          href="/painel-economico/mercado/brasil/renda-fixa"
+          className="text-sm font-semibold text-[#027DFC] hover:underline"
+        >
+          Renda fixa completa →
+        </Link>
+      </header>
 
-      <PainelPanoramaSection
-        assetPanorama={data.assetPanorama.data}
-        worldPanorama={data.worldPanorama.data}
-        fxData={data.fxData.data}
-        commPanorama={data.commPanorama.data}
-        sectorGlobal={data.sectorGlobal.data}
-        sectorBr={data.sectorBr.data}
-      />
+      <MarketTape items={tapeItems} />
+
+      <PanoramaResumo data={data} />
+
+      <KpiStrip base={kpiBase} />
+
+      <JurosLiveBlock d30Pre={d30Pre} />
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-2xl font-semibold text-[#027DFC]">Juros</h3>
-          <Link href="/painel-economico/economia/brasil/politica-monetaria" className="text-sm text-[#027DFC] hover:underline">
-            Abrir trilha de política monetária
-          </Link>
+          <h2 className="text-xl font-semibold text-[#132960] md:text-2xl">Mercados</h2>
+          <p className="text-xs text-zinc-400">yfinance · pipeline AZ a cada 15 min</p>
         </div>
-        <div className="grid gap-6 lg:grid-cols-2">
-          <StaticChartCard
-            slug="juros_prefixado"
-            svgPublicSrc={painelBlobUrl("charts/static/juros_prefixado.svg")}
-            title="Curva prefixado"
-            subtitle="Curvas históricas (D-90, D-30 e Hoje)"
-            badge="BCB / Tesouro"
-            cacheBuster={chartCacheBuster}
-            tableData={data.tablePrefixado.data}
-          />
-          <StaticChartCard
-            slug="juros_ipca"
-            svgPublicSrc={painelBlobUrl("charts/static/juros_ipca.svg")}
-            title="Curva IPCA+"
-            subtitle="Curvas históricas (D-90, D-30 e Hoje)"
-            badge="Tesouro"
-            cacheBuster={chartCacheBuster}
-            tableData={data.tableIpca.data}
-          />
-          <StaticChartCard
-            slug="selic_implicita"
-            svgPublicSrc={painelBlobUrl("charts/static/selic_implicita.svg")}
-            title="Selic implícita (forward)"
-            subtitle="Série projetada de 12 meses (Hoje, 30d e 90d)"
-            badge="B3 PRE"
-            cacheBuster={chartCacheBuster}
-            tableData={data.tableSelic.data}
-          />
-          <StaticChartCard
-            slug="juros_treasury_us"
-            svgPublicSrc={painelBlobUrl("charts/static/juros_treasury_us.svg")}
-            title="Curva Treasury EUA"
-            subtitle="Curvas históricas (D-365, D-90, D-30 e Hoje)"
-            badge="FRED"
-            cacheBuster={chartCacheBuster}
-            tableData={data.tableTreasury.data}
-          />
+
+        <div className="grid gap-5 lg:grid-cols-2">
+          <LazyMount minHeight={460}>
+            <DynamicReturnsBar
+              title="Retornos dos ativos (%)"
+              byPeriod={(data.assetPanorama.data?.by_period ?? {}) as ByPeriodBlock}
+              updatedAt={data.assetPanorama.data?.generated_at}
+              currencyToggle
+              filterRow={(r: Row) => String(r.ticker ?? "") !== "BRL=X"}
+              getValue={(row, opts) => {
+                const cur = opts?.currency ?? "brl";
+                const v = cur === "brl" ? row.return_brl_pct : row.return_usd_pct;
+                if (v == null) return null;
+                return Number(v);
+              }}
+            />
+          </LazyMount>
+          <LazyMount minHeight={460}>
+            <DynamicReturnsBar
+              title="Retornos indices globais (%)"
+              byPeriod={(data.worldPanorama.data?.by_period ?? {}) as ByPeriodBlock}
+              updatedAt={data.worldPanorama.data?.generated_at}
+              getValue={(row) => {
+                const v = row.return_pct;
+                if (v == null) return null;
+                return Number(v);
+              }}
+            />
+          </LazyMount>
+          <LazyMount minHeight={460}>
+            <DynamicFxMoversBar
+              title="Principais moedas (var. %)"
+              data={data.fxData.data}
+              updatedAt={data.fxData.data?.generated_at}
+            />
+          </LazyMount>
+          <LazyMount minHeight={460}>
+            <DynamicReturnsBar
+              title="Indice de commodities (%)"
+              byPeriod={(data.commPanorama.data?.by_period ?? {}) as ByPeriodBlock}
+              updatedAt={data.commPanorama.data?.generated_at}
+              currencyToggle
+              getValue={(row, opts) => {
+                const cur = opts?.currency ?? "brl";
+                const v = cur === "brl" ? row.return_pct_brl : row.return_pct_usd;
+                if (v == null) return null;
+                return Number(v);
+              }}
+            />
+          </LazyMount>
+          <LazyMount minHeight={460}>
+            <DynamicSectorGlobal
+              title="Setores globais (top / bottom 10)"
+              data={data.sectorGlobal.data}
+              updatedAt={data.sectorGlobal.data?.generated_at}
+            />
+          </LazyMount>
+          <LazyMount minHeight={460}>
+            <DynamicSectorBr
+              title="Setores Brasil (top / bottom)"
+              data={data.sectorBr.data}
+              updatedAt={data.sectorBr.data?.generated_at}
+            />
+          </LazyMount>
         </div>
       </section>
 
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-[#132960] md:text-2xl">Juros — fechamento D-1</h2>
+          <Link
+            href="/painel-economico/economia/brasil/politica-monetaria"
+            className="text-sm text-[#027DFC] hover:underline"
+          >
+            Trilha de política monetária →
+          </Link>
+        </div>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <LazyMount minHeight={420}>
+            <StaticChartCard
+              slug="selic_implicita"
+              svgPublicSrc={painelBlobUrl("charts/static/selic_implicita.svg")}
+              title="Selic implícita (forward)"
+              subtitle="Série projetada de 12 meses (Recente, D-30 e D-90)"
+              badge="B3 PRE"
+              cacheBuster={chartCacheBuster}
+              tableData={data.tableSelic.data}
+            />
+          </LazyMount>
+          <LazyMount minHeight={420}>
+            <StaticChartCard
+              slug="juros_treasury_us"
+              svgPublicSrc={painelBlobUrl("charts/static/juros_treasury_us.svg")}
+              title="Curva Treasury EUA"
+              subtitle="Curvas históricas (D-365, D-90, D-30 e Recente)"
+              badge="FRED"
+              cacheBuster={chartCacheBuster}
+              tableData={data.tableTreasury.data}
+            />
+          </LazyMount>
+        </div>
+        <p className="text-xs text-zinc-400">
+          As curvas prefixada e IPCA+ D-1 completas (com tabelas por vencimento) seguem na trilha{" "}
+          <Link href="/painel-economico/mercado/brasil/renda-fixa" className="text-[#027DFC] hover:underline">
+            renda fixa
+          </Link>
+          .
+        </p>
+      </section>
+
+      <DestaquesDaSemana />
+
       <section id="analises" className="space-y-4">
-        <h3 className="text-2xl text-[#027DFC]">Análises recentes</h3>
+        <h2 className="text-xl font-semibold text-[#132960] md:text-2xl">Análises recentes</h2>
         {mapped.length === 0 ? (
           <p className="rounded-xl border border-[#132960]/20 bg-white p-6 text-sm text-zinc-600">
             Nenhuma análise publicada nessa categoria ainda.

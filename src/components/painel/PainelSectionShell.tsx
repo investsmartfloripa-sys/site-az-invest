@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { getCategory, getScope, getTrail, painelTrails } from "@/lib/painel-taxonomy";
 
@@ -11,19 +11,6 @@ type Props = {
 };
 
 type NavItem = { href: string; label: string };
-
-const primaryNav: NavItem[] = [
-  { href: "/painel-economico/panorama", label: "Panorama" },
-  { href: "/painel-economico/mercado", label: "Ativos de mercado" },
-  { href: "/painel-economico/economia", label: "Indicadores macroeconômicos" },
-];
-
-function isActive(pathname: string, href: string): boolean {
-  if (href === "/painel-economico/panorama") {
-    return pathname === "/painel-economico" || pathname === "/painel-economico/panorama";
-  }
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
 
 function buildBreadcrumb(pathname: string): NavItem[] {
   const cleanPath = pathname === "/painel-economico" ? "/painel-economico/panorama" : pathname;
@@ -44,179 +31,158 @@ function buildBreadcrumb(pathname: string): NavItem[] {
   if (trail && scopeSlug && categorySlug) {
     const category = getCategory(trailSlug, scopeSlug, categorySlug);
     if (category) {
-      breadcrumbs.push({ href: `/painel-economico/${trailSlug}/${scopeSlug}/${categorySlug}`, label: category.label });
+      breadcrumbs.push({
+        href: `/painel-economico/${trailSlug}/${scopeSlug}/${categorySlug}`,
+        label: category.label,
+      });
     }
   }
 
   return breadcrumbs;
 }
 
+/**
+ * Shell do painel economico: topbar navy sticky com menus por trilha
+ * (gerados da taxonomia) + breadcrumb fino. Conteudo em largura total.
+ */
 export function PainelSectionShell({ children }: Props) {
   const pathname = usePathname();
   const breadcrumbs = buildBreadcrumb(pathname);
-  const segments = useMemo(() => {
-    const cleanPath = pathname === "/painel-economico" ? "/painel-economico/panorama" : pathname;
-    return cleanPath.split("/").filter(Boolean).slice(1);
+
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const navRef = useRef<HTMLDivElement | null>(null);
+
+  // Fecha dropdown em clique fora / Esc / troca de rota.
+  useEffect(() => {
+    setOpenMenu(null);
   }, [pathname]);
 
-  const activeTrail = segments[0] ?? null;
-  const activeScope = segments[1] ?? null;
-  const activeCategory = segments[2] ?? null;
+  useEffect(() => {
+    function onPointerDown(e: PointerEvent) {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) setOpenMenu(null);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpenMenu(null);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
 
-  const [openTrails, setOpenTrails] = useState<Record<string, boolean>>({});
-  const [openScopes, setOpenScopes] = useState<Record<string, boolean>>({});
-
-  function toggleTrail(slug: string) {
-    setOpenTrails((prev) => ({ ...prev, [slug]: !prev[slug] }));
-  }
-
-  function toggleScope(trailSlug: string, scopeSlug: string) {
-    const key = `${trailSlug}/${scopeSlug}`;
-    setOpenScopes((prev) => ({ ...prev, [key]: !prev[key] }));
-  }
+  const panoramaActive = pathname === "/painel-economico" || pathname.startsWith("/painel-economico/panorama");
 
   return (
-    <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-8 px-4 py-8 md:px-8">
-      <section className="rounded-2xl border border-[#132960]/15 bg-gradient-to-r from-white to-[#f2f7ff] p-5 md:p-6">
-        <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">Painel econômico</p>
-          <h1 className="text-3xl font-semibold text-[#132960] md:text-4xl">Panorama e dados para decisão</h1>
-          <p className="max-w-3xl text-sm text-zinc-600">
-            Explore em duas trilhas paralelas: <strong>Ativos de mercado</strong> e{" "}
-            <strong>indicadores macroeconômicos</strong>, com recorte Brasil e global.
-          </p>
-        </div>
-      </section>
+    <div className="min-h-screen bg-[#f5f7fb]">
+      <div ref={navRef} className="sticky top-0 z-40 border-b border-white/10 bg-[#132960] shadow-md">
+        <div className="mx-auto flex w-full max-w-[96rem] items-center gap-1 px-4 md:px-8">
+          <Link
+            href="/painel-economico/panorama"
+            className="mr-2 hidden py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white/60 transition hover:text-white sm:block"
+          >
+            Painel econômico
+          </Link>
 
-      <section className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-          <article className="rounded-2xl border border-[#132960]/15 bg-white p-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">Explorador</p>
-            <div className="space-y-2">
-              {primaryNav
-                .filter((item) => item.href === "/painel-economico/panorama")
-                .map((item) => {
-                  const active = isActive(pathname, item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`block rounded-xl px-3 py-2 text-sm font-semibold transition ${
-                        active ? "bg-[#027DFC] text-white" : "bg-zinc-50 text-[#132960] hover:bg-[#eaf2ff]"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
+          <Link
+            href="/painel-economico/panorama"
+            className={`border-b-2 px-3 py-3 text-sm font-semibold transition ${
+              panoramaActive
+                ? "border-[#4DA3FF] text-white"
+                : "border-transparent text-[#9db8e8] hover:text-white"
+            }`}
+          >
+            Panorama
+          </Link>
 
-              {painelTrails.map((trail) => (
-                <div key={trail.slug} className="rounded-xl border border-[#132960]/10 bg-zinc-50/70 p-2">
-                  <button
-                    type="button"
-                    onClick={() => toggleTrail(trail.slug)}
-                    className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm font-semibold ${
-                      activeTrail === trail.slug ? "text-[#027DFC]" : "text-[#132960]"
-                    }`}
+          {painelTrails.map((trail) => {
+            const trailActive = pathname.startsWith(`/painel-economico/${trail.slug}`);
+            const isOpen = openMenu === trail.slug;
+            return (
+              <div key={trail.slug} className="relative">
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  onClick={() => setOpenMenu(isOpen ? null : trail.slug)}
+                  className={`flex items-center gap-1.5 border-b-2 px-3 py-3 text-sm font-semibold transition ${
+                    trailActive
+                      ? "border-[#4DA3FF] text-white"
+                      : "border-transparent text-[#9db8e8] hover:text-white"
+                  }`}
+                >
+                  {trail.slug === "mercado" ? "Mercado" : "Economia"}
+                  <svg
+                    viewBox="0 0 10 6"
+                    aria-hidden
+                    className={`h-1.5 w-2.5 fill-current transition-transform ${isOpen ? "rotate-180" : ""}`}
                   >
-                    <span>{trail.label}</span>
-                    <span className="text-xs">{openTrails[trail.slug] ? "-" : "+"}</span>
-                  </button>
+                    <path d="M0 0h10L5 6z" />
+                  </svg>
+                </button>
 
-                  <div
-                    className={`${
-                      (openTrails[trail.slug] ?? activeTrail === trail.slug) ? "mt-2 block" : "hidden"
-                    }`}
-                  >
-                    <Link
-                      href={`/painel-economico/${trail.slug}`}
-                      className={`mb-2 block rounded-lg px-2 py-1.5 text-xs font-medium ${
-                        isActive(pathname, `/painel-economico/${trail.slug}`)
-                          ? "bg-[#ebf4ff] text-[#027DFC]"
-                          : "text-zinc-600 hover:bg-white"
-                      }`}
-                    >
-                      Visao geral
-                    </Link>
-
-                    <div className="space-y-2">
-                      {trail.scopes.map((scope) => {
-                        const scopeKey = `${trail.slug}/${scope.slug}`;
-                        const scopeActive = activeTrail === trail.slug && activeScope === scope.slug;
-                        return (
-                          <div key={scopeKey} className="rounded-lg border border-[#132960]/10 bg-white/80 p-1.5">
-                            <button
-                              type="button"
-                              onClick={() => toggleScope(trail.slug, scope.slug)}
-                              className={`flex w-full items-center justify-between rounded-md px-2 py-1 text-xs font-semibold ${
-                                scopeActive ? "text-[#027DFC]" : "text-[#132960]"
-                              }`}
-                            >
-                              <span>{scope.label}</span>
-                              <span>{openScopes[scopeKey] ? "-" : "+"}</span>
-                            </button>
-
-                            <div
-                              className={`${
-                                openScopes[scopeKey] ?? (activeTrail === trail.slug && activeScope === scope.slug)
-                                  ? "mt-1 block"
-                                  : "hidden"
-                              } space-y-1`}
-                            >
-                              <Link
-                                href={`/painel-economico/${trail.slug}/${scope.slug}`}
-                                className={`block rounded-md px-2 py-1 text-xs ${
-                                  isActive(pathname, `/painel-economico/${trail.slug}/${scope.slug}`)
-                                    ? "bg-[#ebf4ff] text-[#027DFC]"
-                                    : "text-zinc-600 hover:bg-zinc-100"
-                                }`}
-                              >
-                                Resumo {scope.label}
-                              </Link>
-                              {scope.categories.map((category) => {
-                                const href = `/painel-economico/${trail.slug}/${scope.slug}/${category.slug}`;
-                                const active =
-                                  activeTrail === trail.slug && activeScope === scope.slug && activeCategory === category.slug;
-                                return (
+                {isOpen ? (
+                  <div className="absolute left-0 top-full z-50 mt-0 w-[560px] max-w-[88vw] rounded-b-xl border border-[#132960]/10 bg-white p-4 shadow-xl">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {trail.scopes.map((scope) => (
+                        <div key={scope.slug}>
+                          <Link
+                            href={`/painel-economico/${trail.slug}/${scope.slug}`}
+                            className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#027DFC] hover:underline"
+                          >
+                            {scope.label}
+                          </Link>
+                          <ul className="space-y-0.5">
+                            {scope.categories.map((category) => {
+                              const href = `/painel-economico/${trail.slug}/${scope.slug}/${category.slug}`;
+                              const active = pathname.startsWith(href);
+                              return (
+                                <li key={href}>
                                   <Link
-                                    key={href}
                                     href={href}
-                                    className={`block rounded-md px-2 py-1 text-xs ${
-                                      active ? "bg-[#ebf4ff] text-[#027DFC]" : "text-zinc-600 hover:bg-zinc-100"
+                                    className={`block rounded-md px-2 py-1.5 text-sm transition ${
+                                      active
+                                        ? "bg-[#ebf4ff] font-semibold text-[#027DFC]"
+                                        : "text-[#132960] hover:bg-zinc-50 hover:text-[#027DFC]"
                                     }`}
                                   >
                                     {category.label}
                                   </Link>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </article>
-        </aside>
-
-        <div className="min-w-0 space-y-4">
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#132960]/10 bg-white px-3 py-2 text-xs text-zinc-600">
-            <span className="font-medium text-zinc-500">Caminho:</span>
-            {breadcrumbs.map((crumb, idx) => (
-              <div key={crumb.href} className="flex items-center gap-2">
-                {idx > 0 ? <span className="text-zinc-400">/</span> : null}
-                <Link href={crumb.href} className="hover:text-[#027DFC]">
-                  {crumb.label}
-                </Link>
+                ) : null}
               </div>
-            ))}
-          </div>
-
-          {children}
+            );
+          })}
         </div>
-      </section>
+      </div>
+
+      <div className="mx-auto w-full max-w-[96rem] px-4 py-6 md:px-8">
+        {breadcrumbs.length > 1 ? (
+          <nav aria-label="Caminho" className="mb-4 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+            {breadcrumbs.map((crumb, idx) => (
+              <span key={crumb.href} className="flex items-center gap-2">
+                {idx > 0 ? <span className="text-zinc-300">/</span> : null}
+                {idx === breadcrumbs.length - 1 ? (
+                  <span className="font-semibold text-[#132960]">{crumb.label}</span>
+                ) : (
+                  <Link href={crumb.href} className="text-zinc-500 hover:text-[#027DFC]">
+                    {crumb.label}
+                  </Link>
+                )}
+              </span>
+            ))}
+          </nav>
+        ) : null}
+
+        {children}
+      </div>
     </div>
   );
 }
