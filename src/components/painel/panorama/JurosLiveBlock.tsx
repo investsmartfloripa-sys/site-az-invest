@@ -134,15 +134,35 @@ function liquidContracts(contracts: LiveContract[], showAll: boolean): LiveContr
 
 type ShowState = { agora: boolean; d1: boolean; recent: boolean; d30: boolean; d90: boolean };
 
+/** Janela [min,max] de vencimentos da base de titulos (TaxaSwap). */
+function cutBounds(cuts: CurveCutSet): { min: number; max: number } | null {
+  let min = Infinity;
+  let max = -Infinity;
+  for (const serie of [cuts.recent, cuts.d30, cuts.d90]) {
+    for (const c of serie ?? []) {
+      const t = Date.parse(c.maturity);
+      if (!Number.isFinite(t)) continue;
+      if (t < min) min = t;
+      if (t > max) max = t;
+    }
+  }
+  return Number.isFinite(min) && Number.isFinite(max) ? { min, max } : null;
+}
+
 /**
  * Monta os pontos do chart: live (DI/DAP) e cortes do pipeline cada um em
  * seus proprios vencimentos (sem interpolacao — fidelidade aos graficos R).
+ * O live e LIMITADO a janela de vencimentos da base de titulos, pra nao
+ * esticar o eixo com contratos muito alem da curva original.
  */
 function buildCurveChart(
   live: LiveContract[],
   cuts: CurveCutSet,
   show: ShowState,
 ): { points: ChartPoint[]; yDomain: [number, number] } {
+  const bounds = cutBounds(cuts);
+  // Folga de ~45 dias nas pontas pra nao cortar o contrato vizinho do 1o/ultimo titulo.
+  const SLACK = 45 * 86_400_000;
   const byT = new Map<number, ChartPoint>();
   const at = (t: number): ChartPoint => {
     const prev = byT.get(t) ?? { t };
@@ -164,6 +184,7 @@ function buildCurveChart(
       if (c.rate == null) continue;
       const t = Date.parse(c.maturity);
       if (!Number.isFinite(t)) continue;
+      if (bounds && (t < bounds.min - SLACK || t > bounds.max + SLACK)) continue;
       const p = at(t);
       p.agora = c.rate;
       see(c.rate);

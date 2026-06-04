@@ -10,7 +10,6 @@ import {
 } from "@/components/painel/panorama/JurosLiveBlock";
 import { KpiStrip, type KpiCard } from "@/components/painel/panorama/KpiStrip";
 import { MarketTape, type TapeItem } from "@/components/painel/panorama/MarketTape";
-import { PanoramaResumo } from "@/components/painel/panorama/PanoramaResumo";
 import { PeriodicosChips } from "@/components/painel/panorama/PeriodicosChips";
 import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection";
 import { getPanoramaData, painelBlobConfigured, type PanoramaData } from "@/lib/painel-data";
@@ -46,21 +45,21 @@ function directionOf(changePct: number | null, flatBand = 0.03): KpiCard["direct
   return changePct > 0 ? "up" : "down";
 }
 
-/** Linha 1d do asset panorama por nome (retorno % e nivel last_close). */
-function asset1d(data: PanoramaData, needle: string): { pct: number | null; level: number | null } {
+/** Linha 1d do asset panorama por nome (retornos % BRL/USD e nivel last_close). */
+function asset1d(
+  data: PanoramaData,
+  needle: string,
+): { pct: number | null; usdPct: number | null; level: number | null } {
+  const num = (v: unknown): number | null =>
+    typeof v === "number" ? v : Number.isFinite(Number(v)) ? Number(v) : null;
   const rows = data.assetPanorama.data?.by_period?.["1d"]?.data ?? [];
   for (const row of rows) {
     const name = String(row.name ?? "");
     if (name.toLowerCase().includes(needle.toLowerCase())) {
-      const p = row.return_brl_pct;
-      const l = row.last_close;
-      return {
-        pct: typeof p === "number" ? p : Number.isFinite(Number(p)) ? Number(p) : null,
-        level: typeof l === "number" ? l : Number.isFinite(Number(l)) ? Number(l) : null,
-      };
+      return { pct: num(row.return_brl_pct), usdPct: num(row.return_usd_pct), level: num(row.last_close) };
     }
   }
-  return { pct: null, level: null };
+  return { pct: null, usdPct: null, level: null };
 }
 
 function commodity1d(data: PanoramaData, needle: string): number | null {
@@ -273,6 +272,7 @@ export async function PainelPanoramaPage() {
 
   const usd = asset1d(data, "USD/BRL");
   const sp = asset1d(data, "S&P 500");
+  const msci = asset1d(data, "MSCI World");
   const brent = commodity1d(data, "Brent");
   const ouro = commodity1d(data, "Ouro");
 
@@ -314,6 +314,14 @@ export async function PainelPanoramaPage() {
       change: fmtSignedPct(sp.pct),
       direction: directionOf(sp.pct),
       sub: "BRL · yfinance 15 min",
+    },
+    {
+      id: "msci",
+      label: "MSCI Global (URTH)",
+      value: msci.level != null ? msci.level.toFixed(2).replace(".", ",") : "—",
+      change: fmtSignedPct(msci.usdPct),
+      direction: directionOf(msci.usdPct),
+      sub: "USD · yfinance 15 min",
     },
     {
       id: "selic",
@@ -376,17 +384,14 @@ export async function PainelPanoramaPage() {
         </p>
       ) : null}
 
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-[#132960] md:text-3xl">Panorama</h1>
-          <p className="text-sm text-zinc-500">
-            Mercados, juros e setores em uma tela — com curvas DI e IPCA+ ao vivo da B3.
-          </p>
-        </div>
-        <PeriodicosChips />
+      <header>
+        <h1 className="text-2xl font-semibold text-[#132960] md:text-3xl">Panorama</h1>
+        <p className="text-sm text-zinc-500">
+          Mercados, juros e setores em uma tela — com curvas DI e IPCA+ ao vivo da B3.
+        </p>
       </header>
 
-      <PanoramaResumo data={data} />
+      <PeriodicosChips />
 
       <KpiStrip base={kpiBase} />
 
