@@ -43,10 +43,10 @@ function buildBreadcrumb(pathname: string): NavItem[] {
 }
 
 /**
- * Shell do painel economico: topbar navy sticky com menus por trilha
- * (gerados da taxonomia) + breadcrumb fino. Conteudo em largura total.
- * A topbar replica a estetica da nav do Header global (mesma cor de
- * fundo, mesmo max-width e mesma tipografia) pra parecer continuidade.
+ * Shell do painel economico: topbar chumbo sticky (#1E293B — deliberadamente
+ * diferente do navy do header acima) com menus por trilha que abrem no hover
+ * (grace period no mouse-out) e animacao de entrada. Breadcrumb fino abaixo.
+ * NAO colocar overflow no container dos menus: clipa o dropdown absoluto.
  */
 export function PainelSectionShell({ children }: Props) {
   const pathname = usePathname();
@@ -54,6 +54,21 @@ export function PainelSectionShell({ children }: Props) {
 
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const navRef = useRef<HTMLDivElement | null>(null);
+  const closeTimer = useRef<number | null>(null);
+
+  // Abre no hover com "grace period" no mouse-out (nao fecha se o cursor
+  // estiver indo do botao pro menu). Clique continua alternando (mobile).
+  function openNow(slug: string) {
+    if (closeTimer.current != null) {
+      window.clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+    setOpenMenu(slug);
+  }
+  function closeSoon() {
+    if (closeTimer.current != null) window.clearTimeout(closeTimer.current);
+    closeTimer.current = window.setTimeout(() => setOpenMenu(null), 160);
+  }
 
   // Fecha dropdown em clique fora / Esc / troca de rota.
   useEffect(() => {
@@ -79,16 +94,16 @@ export function PainelSectionShell({ children }: Props) {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <div ref={navRef} className="sticky top-0 z-40 border-t border-white/10 bg-[#0e1f49] shadow-md">
-        <div className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} items-center gap-6 overflow-x-auto px-4 text-xs font-semibold uppercase tracking-wider md:px-8`}>
+      <div ref={navRef} className="sticky top-0 z-40 border-b border-white/10 bg-[#1E293B] shadow-md">
+        <div className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} items-center gap-6 px-4 text-xs font-semibold uppercase tracking-wider md:px-8`}>
           <span className="hidden whitespace-nowrap py-3 text-white/40 sm:block">Painel econômico</span>
 
           <Link
             href="/painel-economico/panorama"
-            className={`whitespace-nowrap border-b-2 py-3 transition-colors ${
+            className={`whitespace-nowrap border-b-2 py-3 transition-colors duration-150 ${
               panoramaActive
                 ? "border-[#027DFC] text-white"
-                : "border-transparent text-white/80 hover:text-[#027DFC]"
+                : "border-transparent text-white/70 hover:border-white/30 hover:text-white"
             }`}
           >
             Panorama
@@ -98,63 +113,80 @@ export function PainelSectionShell({ children }: Props) {
             const trailActive = pathname.startsWith(`/painel-economico/${trail.slug}`);
             const isOpen = openMenu === trail.slug;
             return (
-              <div key={trail.slug} className="relative">
+              <div
+                key={trail.slug}
+                className="relative"
+                onMouseEnter={() => openNow(trail.slug)}
+                onMouseLeave={closeSoon}
+              >
                 <button
                   type="button"
                   aria-expanded={isOpen}
-                  onClick={() => setOpenMenu(isOpen ? null : trail.slug)}
-                  className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                  onClick={() => (isOpen ? setOpenMenu(null) : openNow(trail.slug))}
+                  className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors duration-150 ${
                     trailActive
                       ? "border-[#027DFC] text-white"
-                      : "border-transparent text-white/80 hover:text-[#027DFC]"
+                      : isOpen
+                        ? "border-white/30 text-white"
+                        : "border-transparent text-white/70 hover:text-white"
                   }`}
                 >
                   {trail.slug === "mercado" ? "Mercado" : "Economia"}
                   <svg
                     viewBox="0 0 10 6"
                     aria-hidden
-                    className={`h-1.5 w-2.5 fill-current transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    className={`h-1.5 w-2.5 fill-current transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                   >
                     <path d="M0 0h10L5 6z" />
                   </svg>
                 </button>
 
-                {isOpen ? (
-                  <div className="absolute left-0 top-full z-50 mt-0 w-[560px] max-w-[88vw] rounded-b-xl border border-[#132960]/10 bg-white p-4 shadow-xl">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      {trail.scopes.map((scope) => (
-                        <div key={scope.slug}>
-                          <Link
-                            href={`/painel-economico/${trail.slug}/${scope.slug}`}
-                            className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#027DFC] hover:underline"
-                          >
-                            {scope.label}
-                          </Link>
-                          <ul className="space-y-0.5">
-                            {scope.categories.map((category) => {
-                              const href = `/painel-economico/${trail.slug}/${scope.slug}/${category.slug}`;
-                              const active = pathname.startsWith(href);
-                              return (
-                                <li key={href}>
-                                  <Link
-                                    href={href}
-                                    className={`block rounded-md px-2 py-1.5 text-sm normal-case tracking-normal transition ${
-                                      active
-                                        ? "bg-[#ebf4ff] font-semibold text-[#027DFC]"
-                                        : "text-[#132960] hover:bg-zinc-50 hover:text-[#027DFC]"
-                                    }`}
+                <div
+                  className={`absolute left-0 top-full z-50 w-[560px] max-w-[88vw] origin-top rounded-b-xl border border-[#132960]/10 bg-white p-4 shadow-xl transition-all duration-150 ease-out ${
+                    isOpen
+                      ? "visible translate-y-0 opacity-100"
+                      : "invisible -translate-y-1.5 opacity-0"
+                  }`}
+                >
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {trail.scopes.map((scope) => (
+                      <div key={scope.slug}>
+                        <Link
+                          href={`/painel-economico/${trail.slug}/${scope.slug}`}
+                          className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#027DFC] hover:underline"
+                        >
+                          {scope.label}
+                        </Link>
+                        <ul className="space-y-0.5">
+                          {scope.categories.map((category) => {
+                            const href = `/painel-economico/${trail.slug}/${scope.slug}/${category.slug}`;
+                            const active = pathname.startsWith(href);
+                            return (
+                              <li key={href}>
+                                <Link
+                                  href={href}
+                                  className={`group flex items-center justify-between rounded-md px-2 py-1.5 text-sm normal-case tracking-normal transition-colors duration-100 ${
+                                    active
+                                      ? "bg-[#ebf4ff] font-semibold text-[#027DFC]"
+                                      : "text-[#132960] hover:bg-[#027DFC]/[0.08] hover:text-[#027DFC]"
+                                  }`}
+                                >
+                                  {category.label}
+                                  <span
+                                    aria-hidden
+                                    className="translate-x-1 text-[#027DFC] opacity-0 transition-all duration-100 group-hover:translate-x-0 group-hover:opacity-100"
                                   >
-                                    {category.label}
-                                  </Link>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
+                                    →
+                                  </span>
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    ))}
                   </div>
-                ) : null}
+                </div>
               </div>
             );
           })}

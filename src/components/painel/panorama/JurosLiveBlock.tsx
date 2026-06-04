@@ -305,37 +305,64 @@ export function JurosLiveBlock({
     [selicMeetings],
   );
 
-  // Tabela das tabs de curva: vencimentos da base de titulos (D-90/D-30/Recente)
-  // + "Agora" do futuro live com vencimento mais proximo (<= 25 dias).
+  // Tabela das tabs de curva: UNIAO dos vencimentos — linhas dos titulos
+  // (D-90/D-30/Recente) + vencimentos do live sem titulo correspondente.
+  // Live casa com a linha do titulo quando os vencimentos distam <= 25 dias.
   const isCurve = tab === "pre" || tab === "ipca";
   const activeCuts = tab === "ipca" ? ipcaCuts : preCuts;
-  const activeLive = tab === "ipca" ? dap : di;
   const curveRows = useMemo(() => {
     if (!isCurve) return [];
-    const d30Map = new Map((activeCuts.d30 ?? []).map((c) => [c.maturity, c.rate]));
-    const d90Map = new Map((activeCuts.d90 ?? []).map((c) => [c.maturity, c.rate]));
-    const liveAll = (activeLive?.contracts ?? []).filter((c) => c.rate != null);
+    type CurveRow = {
+      t: number;
+      maturity: string;
+      d90: number | null;
+      d30: number | null;
+      recent: number | null;
+      agora: number | null;
+    };
+    const map = new Map<number, CurveRow>();
+    const upsert = (t: number, maturity: string): CurveRow => {
+      let r = map.get(t);
+      if (!r) {
+        r = { t, maturity, d90: null, d30: null, recent: null, agora: null };
+        map.set(t, r);
+      }
+      return r;
+    };
+    const put = (key: "d90" | "d30" | "recent", cut?: CurveCut[]) => {
+      for (const c of cut ?? []) {
+        const t = Date.parse(c.maturity);
+        if (!Number.isFinite(t)) continue;
+        upsert(t, c.maturity)[key] = c.rate;
+      }
+    };
+    put("d90", activeCuts.d90);
+    put("d30", activeCuts.d30);
+    put("recent", activeCuts.recent);
+
     const MAX_GAP = 25 * 86_400_000;
-    return (activeCuts.recent ?? []).map((c) => {
-      const t = Date.parse(c.maturity);
-      let best: LiveContract | null = null;
+    const liveArr = tab === "ipca" ? dapLiquid : diLiquid;
+    for (const lc of liveArr) {
+      if (lc.rate == null) continue;
+      const t = Date.parse(lc.maturity);
+      if (!Number.isFinite(t)) continue;
+      let best: CurveRow | null = null;
       let bestGap = Infinity;
-      for (const lc of liveAll) {
-        const gap = Math.abs(Date.parse(lc.maturity) - t);
+      for (const r of map.values()) {
+        const gap = Math.abs(r.t - t);
         if (gap < bestGap) {
           bestGap = gap;
-          best = lc;
+          best = r;
         }
       }
-      return {
-        maturity: c.maturity,
-        d90: d90Map.get(c.maturity) ?? null,
-        d30: d30Map.get(c.maturity) ?? null,
-        recent: c.rate,
-        agora: best && bestGap <= MAX_GAP ? best.rate : null,
-      };
-    });
-  }, [isCurve, activeCuts, activeLive]);
+      if (best && bestGap <= MAX_GAP) {
+        best.agora = lc.rate;
+      } else {
+        upsert(t, lc.maturity).agora = lc.rate;
+      }
+    }
+    return [...map.values()].sort((a, b) => a.t - b.t);
+  }, [isCurve, activeCuts, diLiquid, dapLiquid, tab]);
 
   if (error && !di) {
     return (
