@@ -157,7 +157,12 @@ export default async function AtivoPage({ params }: Props) {
 
       {/* Hero: preço + sparkline */}
       <div className="grid gap-4 lg:grid-cols-[1fr_2fr]">
-        <MarketCard title="Cotação" subtitle={latestRow ? `Última: ${latestRow.last_date}` : undefined}>
+        <MarketCard
+          title="Cotação"
+          subtitle={latestRow ? `Última: ${latestRow.last_date}` : undefined}
+          stampGiro={latest?.generated_at ?? null}
+          stampDado={latestRow?.last_date ?? null}
+        >
           <div>
             <p className="text-4xl font-semibold tabular-nums text-[#132960]">
               {last != null ? `${asset.currency === "BRL" ? "R$ " : "US$ "}${last.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` : "—"}
@@ -182,7 +187,12 @@ export default async function AtivoPage({ params }: Props) {
           </div>
         </MarketCard>
 
-        <MarketCard title="Histórico 1 ano" subtitle="Preço bruto (close ajustado)">
+        <MarketCard
+          title="Histórico 1 ano"
+          subtitle="Preço bruto (close ajustado)"
+          stampGiro={full?.generated_at ?? null}
+          stampDado={series1y[series1y.length - 1]?.[0] ?? null}
+        >
           {series1y.length > 1 ? (
             <TickerSparkline series={series1y} positive={positive} height={180} />
           ) : (
@@ -202,6 +212,8 @@ export default async function AtivoPage({ params }: Props) {
             : "Yahoo Finance não retornou múltiplos para este ativo."
         }
         bodyClassName="px-4 pb-4 pt-2"
+        stampGiro={fundamentals?.generated_at ?? null}
+        stampDado={fundamentals?.generated_at ?? null}
       >
         {!info ? (
           <div className="py-6 text-center text-sm text-zinc-500">
@@ -228,7 +240,12 @@ export default async function AtivoPage({ params }: Props) {
 
       {/* Peers */}
       {peers.length > 0 ? (
-        <MarketCard title="Peers do mesmo setor" subtitle={`${peers.length} ativos em "${asset.sector}"`}>
+        <MarketCard
+          title="Peers do mesmo setor"
+          subtitle={`${peers.length} ativos em "${asset.sector}"`}
+          stampGiro={latest?.generated_at ?? null}
+          stampDado={latest?.generated_at ?? null}
+        >
           <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {peers.map((p) => {
               const r = latest?.tickers[p.ticker]?.returns["1y"];

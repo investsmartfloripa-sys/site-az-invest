@@ -298,6 +298,17 @@ export async function getFiiDetail(ticker: string): Promise<FiiDetailEntry | nul
   return all.by_ticker[ticker.toUpperCase()] ?? null;
 }
 
+/** Entry + generated_at do payload (giro do pipeline) para o carimbo de datas. */
+export async function getFiiDetailWithMeta(
+  ticker: string,
+): Promise<{ entry: FiiDetailEntry; generatedAt: string | null } | null> {
+  const all = await getFiiDetails();
+  if (!all || all.status !== "ok") return null;
+  const entry = all.by_ticker[ticker.toUpperCase()] ?? null;
+  if (!entry) return null;
+  return { entry, generatedAt: all.generated_at ?? null };
+}
+
 export async function getFiiTickers(): Promise<string[]> {
   const all = await getFiiDetails();
   if (!all) return [];

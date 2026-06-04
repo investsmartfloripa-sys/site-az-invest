@@ -7,7 +7,7 @@ import { FiiDetailFicha } from "@/components/painel/fii/FiiDetailFicha";
 import { FiiDetailHero } from "@/components/painel/fii/FiiDetailHero";
 import { FiiDetailIndicators } from "@/components/painel/fii/FiiDetailIndicators";
 import { FiiDetailRelacionados } from "@/components/painel/fii/FiiDetailRelacionados";
-import { getFiiDetail } from "@/lib/painel-fii";
+import { getFiiDetail, getFiiDetailWithMeta } from "@/lib/painel-fii";
 
 type Props = {
   params: Promise<{ ticker: string }>;
@@ -37,8 +37,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function FiiDetailPage({ params }: Props) {
   const { ticker } = await params;
   const upper = ticker.toUpperCase();
-  const entry = await getFiiDetail(upper);
-  if (!entry) notFound();
+  const detail = await getFiiDetailWithMeta(upper);
+  if (!detail) notFound();
+  const { entry, generatedAt } = detail;
 
   return (
     <div className="space-y-6">
@@ -58,8 +59,8 @@ export default async function FiiDetailPage({ params }: Props) {
         </Link>
       </header>
 
-      <FiiDetailHero entry={entry} />
-      <FiiDetailIndicators indicators={entry.indicators} />
+      <FiiDetailHero entry={entry} generatedAt={generatedAt} />
+      <FiiDetailIndicators indicators={entry.indicators} generatedAt={generatedAt} />
       <FiiDetailDividends dividends={entry.dividends} />
       <FiiDetailFicha ticker={entry.ticker} ficha={entry.ficha} />
       <FiiDetailRelacionados />

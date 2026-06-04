@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { formatUpdatedAt } from "./formatUpdatedAt";
+import DataStamp from "./DataStamp";
 import { PeriodSelector } from "./PeriodSelector";
 
 type BasketRow = {
@@ -58,7 +58,6 @@ export function DynamicSectorBr({ title, data, updatedAt }: Props) {
   const inner = data?.by_period?.[period]?.data;
   const top10 = inner?.top10 ?? [];
   const bottom10 = inner?.bottom10 ?? [];
-  const formattedUpdatedAt = formatUpdatedAt(updatedAt);
 
   return (
     <div className="w-full min-w-0 rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm">
@@ -74,8 +73,11 @@ export function DynamicSectorBr({ title, data, updatedAt }: Props) {
           <SectorCol title="Bottom 10" rows={bottom10} />
         </div>
       )}
-      {formattedUpdatedAt ? (
-        <p className="mt-2 text-xs italic text-zinc-700">Panorama - atualizado em {formattedUpdatedAt}</p>
+      {updatedAt ? (
+        <p className="mt-2 text-right">
+          {/* Fonte intradiária (cron 15min): generated_at carrega os minutos do dado. */}
+          <DataStamp giro={updatedAt} dado={updatedAt} />
+        </p>
       ) : null}
     </div>
   );

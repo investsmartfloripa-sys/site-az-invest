@@ -1,3 +1,4 @@
+import DataStamp from "@/components/painel/DataStamp";
 import type { PanoramaData } from "@/lib/painel-data";
 
 type Mover = { name: string; pct: number };
@@ -65,6 +66,11 @@ export function PanoramaResumo({ data }: { data: PanoramaData }) {
       <p className="min-w-0 flex-1 text-sm text-[#33415C]">
         Entre os ativos acompanhados, {sentence}.
       </p>
+      {/* Fonte intradiária (cron 15min): generated_at carrega os minutos do dado. */}
+      <DataStamp
+        giro={data.assetPanorama.meta.generatedAt ?? null}
+        dado={data.assetPanorama.meta.generatedAt ?? null}
+      />
     </div>
   );
 }

@@ -56,9 +56,9 @@ function clipWindow(series: Array<{ date: string; close: number }>, windowId: Ti
   return series.filter((p) => new Date(p.date + "T00:00:00Z").getTime() >= cutoff);
 }
 
-type Props = { entry: FiiDetailEntry };
+type Props = { entry: FiiDetailEntry; generatedAt?: string | null };
 
-export function FiiDetailHero({ entry }: Props) {
+export function FiiDetailHero({ entry, generatedAt }: Props) {
   const [windowId, setWindowId] = useState<TimeWindow>("1y");
   const clipped = useMemo(() => clipWindow(entry.price_series_daily, windowId), [entry, windowId]);
 
@@ -215,6 +215,7 @@ export function FiiDetailHero({ entry }: Props) {
       </div>
       <p className="mt-2 text-right">
         <DataStamp
+          giro={generatedAt ?? null}
           dado={
             entry.price_series_daily[entry.price_series_daily.length - 1]?.date ??
             hero.price_date

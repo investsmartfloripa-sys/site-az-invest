@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { formatUpdatedAt } from "./formatUpdatedAt";
+import DataStamp from "./DataStamp";
 
 type MoverRow = { ticker: string; change_pct: number };
 
@@ -45,7 +45,6 @@ export function DynamicFxMoversBar({ title, data, updatedAt }: Props) {
       .map((r) => ({ name: r.ticker, value: r.change_pct }))
       .sort((a, b) => b.value - a.value);
   }, [data, period]);
-  const formattedUpdatedAt = formatUpdatedAt(updatedAt);
 
   return (
     <div className="w-full min-w-0 rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm">
@@ -96,8 +95,11 @@ export function DynamicFxMoversBar({ title, data, updatedAt }: Props) {
           </ResponsiveContainer>
         )}
       </div>
-      {formattedUpdatedAt ? (
-        <p className="mt-2 text-xs italic text-zinc-700">Panorama - atualizado em {formattedUpdatedAt}</p>
+      {updatedAt ? (
+        <p className="mt-2 text-right">
+          {/* Fonte intradiária (cron 15min): generated_at carrega os minutos do dado. */}
+          <DataStamp giro={updatedAt} dado={updatedAt} />
+        </p>
       ) : null}
     </div>
   );

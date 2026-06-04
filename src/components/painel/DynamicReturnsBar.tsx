@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { CurrencyToggle } from "./CurrencyToggle";
-import { formatUpdatedAt } from "./formatUpdatedAt";
+import DataStamp from "./DataStamp";
 import { PeriodSelector } from "./PeriodSelector";
 
 export type Row = Record<string, unknown>;
@@ -50,7 +50,6 @@ export function DynamicReturnsBar({
     }
     return out.sort((a, b) => b.value - a.value);
   }, [byPeriod, period, currency, currencyToggle, nameKey, getValue, filterRow]);
-  const formattedUpdatedAt = formatUpdatedAt(updatedAt);
 
   return (
     <div className="w-full min-w-0 rounded-2xl bg-white p-4 shadow-sm">
@@ -94,8 +93,11 @@ export function DynamicReturnsBar({
           </ResponsiveContainer>
         )}
       </div>
-      {formattedUpdatedAt ? (
-        <p className="mt-2 text-xs italic text-zinc-700">Panorama - atualizado em {formattedUpdatedAt}</p>
+      {updatedAt ? (
+        <p className="mt-2 text-right">
+          {/* Fonte intradiária (cron 15min): generated_at carrega os minutos do dado. */}
+          <DataStamp giro={updatedAt} dado={updatedAt} />
+        </p>
       ) : null}
     </div>
   );

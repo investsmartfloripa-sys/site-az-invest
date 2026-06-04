@@ -1,3 +1,4 @@
+import DataStamp from "@/components/painel/DataStamp";
 import type { FiiDetailIndicators as Indicators } from "@/lib/painel-fii";
 
 function formatBRL(value: number | null | undefined, frac = 2): string {
@@ -17,7 +18,13 @@ function formatRatio(value: number | null | undefined): string {
   return value.toFixed(3);
 }
 
-export function FiiDetailIndicators({ indicators }: { indicators: Indicators }) {
+export function FiiDetailIndicators({
+  indicators,
+  generatedAt,
+}: {
+  indicators: Indicators;
+  generatedAt?: string | null;
+}) {
   const items: Array<{ label: string; value: string; help?: string }> = [
     { label: "Valor Patrimonial / Cota", value: formatBRL(indicators.vp_per_cota, 2) },
     { label: "DY CAGR 3 anos", value: formatPct(indicators.dy_cagr_3y_pct), help: "Taxa anualizada de crescimento da soma anual de dividendos nos últimos 3 anos." },
@@ -41,6 +48,12 @@ export function FiiDetailIndicators({ indicators }: { indicators: Indicators }) 
           </div>
         ))}
       </dl>
+      {generatedAt ? (
+        <p className="mt-3 text-right">
+          {/* Snapshot CVM/yfinance coletado no giro do pipeline (com minutos). */}
+          <DataStamp giro={generatedAt} dado={generatedAt} />
+        </p>
+      ) : null}
     </section>
   );
 }

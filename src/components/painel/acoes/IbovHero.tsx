@@ -261,10 +261,9 @@ export function IbovHero({ data }: Props) {
               Ibovespa (<code>^BVSP</code>) via yfinance. Benchmarks em base 100 no início da janela:
               CDI (BCB SGS 12), S&amp;P 500 (em USD) e USD/BRL. Não é recomendação.
             </p>
-            <DataStamp
-              giro={data.generated_at}
-              dado={data.series_daily[data.series_daily.length - 1]?.date ?? null}
-            />
+            {/* Cotação do hero é coletada no giro do pipeline: generated_at
+                preserva os minutos para auditar atualização. */}
+            <DataStamp giro={data.generated_at} dado={data.generated_at} />
           </div>
         </div>
       </div>

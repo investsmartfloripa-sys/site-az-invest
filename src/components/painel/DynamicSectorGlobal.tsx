@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { CurrencyToggle } from "./CurrencyToggle";
-import { formatUpdatedAt } from "./formatUpdatedAt";
+import DataStamp from "./DataStamp";
 import { PeriodSelector } from "./PeriodSelector";
 
 type BasketRow = {
@@ -64,7 +64,6 @@ export function DynamicSectorGlobal({ title, data, updatedAt }: Props) {
   const view = currency === "brl" ? block?.view_brl : block?.view_usd;
   const top10 = view?.top10 ?? [];
   const bottom10 = view?.bottom10 ?? [];
-  const formattedUpdatedAt = formatUpdatedAt(updatedAt);
 
   return (
     <div className="w-full min-w-0 rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm">
@@ -83,8 +82,11 @@ export function DynamicSectorGlobal({ title, data, updatedAt }: Props) {
           <SectorCol title="Bottom 10" rows={bottom10} />
         </div>
       )}
-      {formattedUpdatedAt ? (
-        <p className="mt-2 text-xs italic text-zinc-700">Panorama - atualizado em {formattedUpdatedAt}</p>
+      {updatedAt ? (
+        <p className="mt-2 text-right">
+          {/* Fonte intradiária (cron 15min): generated_at carrega os minutos do dado. */}
+          <DataStamp giro={updatedAt} dado={updatedAt} />
+        </p>
       ) : null}
     </div>
   );
