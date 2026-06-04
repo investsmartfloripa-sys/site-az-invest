@@ -31,7 +31,7 @@ const LIVE_COLOR = "#027DFC";
 
 const PAL_PRE = { recent: "#000000", d30: "#00008B", d90: "#56B4E9" } as const;
 const PAL_IPCA = { recent: "#000000", d30: "#8B0000", d90: "#F8766D" } as const;
-const PAL_SELIC = { recent: "#000000", d30: "#6f6f6f", d90: "#0078fd", meeting: "#ff5713", meetingLabel: "#0078fd" } as const;
+const PAL_SELIC = { recent: "#000000", d30: "#2E74C9", d90: "#56B4E9", meeting: "#ff5713", meetingLabel: "#0078fd" } as const;
 const PAL_TREASURY = { recent: "#000000", d30: "#0B6B2E", d90: "#2BBF5E", d365: "#8BE28F" } as const;
 
 const GRID = "#E2E8F0";
@@ -251,7 +251,8 @@ export function JurosLiveBlock({
   const isNarrow = useIsNarrow();
   const [tab, setTab] = useState<TabId>("pre");
   const [showAll, setShowAll] = useState(false);
-  const [show, setShow] = useState<ShowState>({ agora: true, d1: false, recent: true, d30: true, d90: false });
+  // Todas as series ligadas por default — quem quiser enxugar, desliga.
+  const [show, setShow] = useState<ShowState>({ agora: true, d1: true, recent: true, d30: true, d90: true });
   const [di, setDi] = useState<LiveCurve | null>(null);
   const [dap, setDap] = useState<LiveCurve | null>(null);
   const [error, setError] = useState(false);
@@ -303,6 +304,38 @@ export function JurosLiveBlock({
       })),
     [selicMeetings],
   );
+
+  // Tabela das tabs de curva: vencimentos da base de titulos (D-90/D-30/Recente)
+  // + "Agora" do futuro live com vencimento mais proximo (<= 25 dias).
+  const isCurve = tab === "pre" || tab === "ipca";
+  const activeCuts = tab === "ipca" ? ipcaCuts : preCuts;
+  const activeLive = tab === "ipca" ? dap : di;
+  const curveRows = useMemo(() => {
+    if (!isCurve) return [];
+    const d30Map = new Map((activeCuts.d30 ?? []).map((c) => [c.maturity, c.rate]));
+    const d90Map = new Map((activeCuts.d90 ?? []).map((c) => [c.maturity, c.rate]));
+    const liveAll = (activeLive?.contracts ?? []).filter((c) => c.rate != null);
+    const MAX_GAP = 25 * 86_400_000;
+    return (activeCuts.recent ?? []).map((c) => {
+      const t = Date.parse(c.maturity);
+      let best: LiveContract | null = null;
+      let bestGap = Infinity;
+      for (const lc of liveAll) {
+        const gap = Math.abs(Date.parse(lc.maturity) - t);
+        if (gap < bestGap) {
+          bestGap = gap;
+          best = lc;
+        }
+      }
+      return {
+        maturity: c.maturity,
+        d90: d90Map.get(c.maturity) ?? null,
+        d30: d30Map.get(c.maturity) ?? null,
+        recent: c.rate,
+        agora: best && bestGap <= MAX_GAP ? best.rate : null,
+      };
+    });
+  }, [isCurve, activeCuts, activeLive]);
 
   if (error && !di) {
     return (
@@ -637,42 +670,27 @@ export function JurosLiveBlock({
                 <thead>
                   <tr className="border-b border-zinc-200 text-[10px] uppercase tracking-wider text-zinc-500">
                     <th className="py-2 pr-2 text-left font-semibold">Venc.</th>
+                    <th className={thClass}>D-90</th>
+                    <th className={thClass}>D-30</th>
+                    <th className={thClass}>Recente</th>
                     <th className={thClass}>Agora</th>
-                    <th className={thClass}>Δ dia</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
-                  {(tab === "ipca" ? dapLiquid : diLiquid).map((c) => {
-                    const bps = c.changeBps;
-                    const tone =
-                      bps == null
-                        ? "text-zinc-400"
-                        : Math.abs(bps) < 1
-                          ? "text-[#027DFC]"
-                          : bps > 0
-                            ? "text-[#16A34A]"
-                            : "text-[#DC2626]";
-                    const sign = bps == null ? "" : bps > 0 ? "+" : "";
-                    return (
-                      <tr key={c.symbol}>
-                        <td className="py-1.5 pr-2 font-semibold text-[#132960]">
-                          {maturityLabel(c.maturity)}
-                          <span className="ml-1 hidden text-[10px] font-normal text-zinc-400 xl:inline">
-                            {c.symbol}
-                          </span>
-                        </td>
-                        <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(c.rate)}</td>
-                        <td className={`${tdClass} font-semibold ${tone}`}>
-                          {bps == null ? "—" : `${sign}${bps} bps`}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {curveRows.map((r) => (
+                    <tr key={r.maturity}>
+                      <td className="py-1.5 pr-2 font-semibold text-[#132960]">{maturityLabel(r.maturity)}</td>
+                      <td className={`${tdClass} text-zinc-400`}>{fmtRate(r.d90)}</td>
+                      <td className={`${tdClass} text-zinc-500`}>{fmtRate(r.d30)}</td>
+                      <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(r.recent)}</td>
+                      <td className={`${tdClass} font-semibold text-[#027DFC]`}>{fmtRate(r.agora)}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
               <p className="mt-2 text-[11px] text-zinc-400">
-                Futuros {tab === "ipca" ? "DAP" : "DI1"} ao vivo · Δ dia vs ajuste D-1 · verde = subiu, azul =
-                estável, vermelho = caiu.
+                D-90/D-30/Recente: títulos (TaxaSwap B3, D-1). Agora: futuro {tab === "ipca" ? "DAP" : "DI1"} de
+                vencimento mais próximo (B3 ~15 min).
               </p>
             </>
           )}
