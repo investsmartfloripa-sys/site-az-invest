@@ -6,6 +6,7 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -22,16 +23,16 @@ import {
 const REFRESH_MS = 60_000;
 
 /**
- * Gradiente temporal padrao AZ: serie atual em preto e cortes
- * progressivamente mais claros conforme recuam no tempo
- * (ver PADRAO-VISUAL-GRAFICOS.md na pasta do projeto).
+ * Gradiente temporal padrao AZ — MESMA rampa dos SVGs ggplot do pipeline
+ * (Recente preto, passado em azuis cada vez mais claros; cf. memoria do
+ * projeto: D-30=#00008B, D-90=#56B4E9, Recente=#000000).
  */
 const TIME_COLORS = {
-  agora: "#0A0A0A",
-  d1: "#3D4E78",
-  d30: "#8A9AC0",
-  d90: "#C2CCE2",
-  d365: "#E0E6F2",
+  agora: "#000000",
+  d1: "#00008B",
+  d30: "#2E74C9",
+  d90: "#56B4E9",
+  d365: "#A9D4EF",
 } as const;
 
 const GRID = "#E2E8F0";
@@ -64,6 +65,14 @@ export type TreasuryTenor = {
   recent: number | null;
 };
 
+/** Rotulos com data de referencia de cada corte (keys das colunas do JSON). */
+export type CutLabels = {
+  recent?: string;
+  d30?: string;
+  d90?: string;
+  d365?: string;
+};
+
 type Props = {
   /** Curva pre D-30/D-90 do pipeline TaxaSwap (Blob) p/ sobrepor no DI live. */
   d30Pre?: CurveCut[];
@@ -72,6 +81,10 @@ type Props = {
   selicMeetings?: SelicMeeting[];
   /** Curva Treasury por tenor (cortes do pipeline FRED). */
   treasuryTenors?: TreasuryTenor[];
+  /** Datas de referencia p/ legenda (ex.: "D-30 (05/05/2026)"), por tab. */
+  diLabels?: CutLabels;
+  selicLabels?: CutLabels;
+  treasuryLabels?: CutLabels;
 };
 
 type ChartPoint = {
@@ -165,7 +178,15 @@ const tooltipStyle = {
 const thClass = "py-2 pr-2 text-right font-semibold";
 const tdClass = "py-1.5 pr-2 text-right tabular-nums";
 
-export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTenors = [] }: Props) {
+export function JurosLiveBlock({
+  d30Pre,
+  d90Pre,
+  selicMeetings = [],
+  treasuryTenors = [],
+  diLabels = {},
+  selicLabels = {},
+  treasuryLabels = {},
+}: Props) {
   const [tab, setTab] = useState<TabId>("di");
   const [showAll, setShowAll] = useState(false);
   const [show, setShow] = useState({ d1: true, d30: true, d90: false });
@@ -342,8 +363,27 @@ export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTen
               </div>
             ) : tab === "selic" ? (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={selicChart} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
+                <LineChart data={selicChart} margin={{ top: 18, right: 16, bottom: 4, left: 0 }}>
                   <CartesianGrid stroke={GRID} strokeWidth={1} />
+                  {selicMeetings.map((m) => {
+                    const t = Date.parse(m.date);
+                    if (!Number.isFinite(t)) return null;
+                    return (
+                      <ReferenceLine
+                        key={m.date}
+                        x={t}
+                        stroke="#94A3B8"
+                        strokeDasharray="3 4"
+                        strokeWidth={1}
+                        label={{
+                          value: dateLabelBR(m.date).slice(0, 5),
+                          position: "top",
+                          fontSize: 9,
+                          fill: "#027DFC",
+                        }}
+                      />
+                    );
+                  })}
                   <XAxis
                     dataKey="t"
                     type="number"
@@ -356,11 +396,12 @@ export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTen
                   />
                   <YAxis
                     tick={{ fontSize: 10, fill: TICKS }}
-                    width={44}
+                    width={52}
                     domain={["auto", "auto"]}
                     tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
                     axisLine={false}
                     tickLine={false}
+                    label={{ value: "Taxa (% a.a.)", angle: -90, position: "insideLeft", fontSize: 10, fill: TICKS }}
                   />
                   <Tooltip
                     labelFormatter={(t) => `Reunião ${dateLabelBR(new Date(Number(t)).toISOString().slice(0, 10))}`}
@@ -370,9 +411,9 @@ export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTen
                     labelStyle={{ color: "#94A3B8", fontWeight: 600 }}
                   />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="stepAfter" dataKey="recent" name="Recente (D-1)" stroke={TIME_COLORS.agora} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
-                  <Line type="stepAfter" dataKey="d30" name="D-30" stroke={TIME_COLORS.d30} strokeWidth={1.5} dot={false} connectNulls isAnimationActive={false} />
-                  <Line type="stepAfter" dataKey="d90" name="D-90" stroke={TIME_COLORS.d90} strokeWidth={1.4} dot={false} connectNulls isAnimationActive={false} />
+                  <Line type="stepAfter" dataKey="recent" name={selicLabels.recent ?? "Recente (D-1)"} stroke={TIME_COLORS.agora} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                  <Line type="stepAfter" dataKey="d30" name={selicLabels.d30 ?? "D-30"} stroke={TIME_COLORS.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="stepAfter" dataKey="d90" name={selicLabels.d90 ?? "D-90"} stroke={TIME_COLORS.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
             ) : tab === "treasury" ? (
@@ -390,11 +431,12 @@ export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTen
                   />
                   <YAxis
                     tick={{ fontSize: 10, fill: TICKS }}
-                    width={44}
+                    width={52}
                     domain={["auto", "auto"]}
                     tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
                     axisLine={false}
                     tickLine={false}
+                    label={{ value: "Taxa (% a.a.)", angle: -90, position: "insideLeft", fontSize: 10, fill: TICKS }}
                   />
                   <Tooltip
                     labelFormatter={(t) => `${t} ano${Number(t) > 1 ? "s" : ""}`}
@@ -404,10 +446,10 @@ export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTen
                     labelStyle={{ color: "#94A3B8", fontWeight: 600 }}
                   />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="recent" name="Recente (D-1)" stroke={TIME_COLORS.agora} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
-                  <Line type="monotone" dataKey="d30" name="D-30" stroke={TIME_COLORS.d30} strokeWidth={1.5} dot={false} connectNulls isAnimationActive={false} />
-                  <Line type="monotone" dataKey="d90" name="D-90" stroke={TIME_COLORS.d90} strokeWidth={1.4} dot={false} connectNulls isAnimationActive={false} />
-                  <Line type="monotone" dataKey="d365" name="D-365" stroke={TIME_COLORS.d365} strokeWidth={1.4} dot={false} connectNulls isAnimationActive={false} />
+                  <Line type="monotone" dataKey="recent" name={treasuryLabels.recent ?? "Recente (D-1)"} stroke={TIME_COLORS.agora} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                  <Line type="monotone" dataKey="d30" name={treasuryLabels.d30 ?? "D-30"} stroke={TIME_COLORS.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="monotone" dataKey="d90" name={treasuryLabels.d90 ?? "D-90"} stroke={TIME_COLORS.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="monotone" dataKey="d365" name={treasuryLabels.d365 ?? "D-365"} stroke={TIME_COLORS.d365} strokeWidth={1.5} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -426,11 +468,12 @@ export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTen
                   />
                   <YAxis
                     tick={{ fontSize: 10, fill: TICKS }}
-                    width={44}
+                    width={52}
                     domain={["auto", "auto"]}
                     tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
                     axisLine={false}
                     tickLine={false}
+                    label={{ value: "Taxa (% a.a.)", angle: -90, position: "insideLeft", fontSize: 10, fill: TICKS }}
                   />
                   <Tooltip
                     labelFormatter={(t) => tsLabel(Number(t))}
@@ -445,10 +488,10 @@ export function JurosLiveBlock({ d30Pre, d90Pre, selicMeetings = [], treasuryTen
                     <Line type="monotone" dataKey="d1" name="Ajuste D-1" stroke={TIME_COLORS.d1} strokeWidth={1.6} strokeDasharray="5 3" dot={false} connectNulls isAnimationActive={false} />
                   ) : null}
                   {tab === "di" && show.d30 ? (
-                    <Line type="monotone" dataKey="d30" name="D-30" stroke={TIME_COLORS.d30} strokeWidth={1.5} dot={false} connectNulls isAnimationActive={false} />
+                    <Line type="monotone" dataKey="d30" name={diLabels.d30 ?? "D-30"} stroke={TIME_COLORS.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   ) : null}
                   {tab === "di" && show.d90 ? (
-                    <Line type="monotone" dataKey="d90" name="D-90" stroke={TIME_COLORS.d90} strokeWidth={1.4} dot={false} connectNulls isAnimationActive={false} />
+                    <Line type="monotone" dataKey="d90" name={diLabels.d90 ?? "D-90"} stroke={TIME_COLORS.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   ) : null}
                 </LineChart>
               </ResponsiveContainer>

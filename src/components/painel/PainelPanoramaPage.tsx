@@ -3,6 +3,7 @@ import { CommunityCallout } from "@/components/home/CommunityCallout";
 import {
   JurosLiveBlock,
   type CurveCut,
+  type CutLabels,
   type SelicMeeting,
   type TreasuryTenor,
 } from "@/components/painel/panorama/JurosLiveBlock";
@@ -233,6 +234,25 @@ export async function PainelPanoramaPage() {
   const selicMeetings = extractSelicMeetings(data);
   const treasuryTenors = extractTreasury(data);
 
+  /** Key da coluna do JSON ja vem com a data de referencia: "D-30 (05/05/2026)". */
+  const colLabel = (cols: { key: string }[] | undefined, prefix: string): string | undefined =>
+    cols?.find((c) => c.key.startsWith(prefix))?.key;
+  const diLabels: CutLabels = {
+    d30: colLabel(data.tablePrefixado.data?.columns, "D-30"),
+    d90: colLabel(data.tablePrefixado.data?.columns, "D-90"),
+  };
+  const selicLabels: CutLabels = {
+    recent: colLabel(data.tableSelic.data?.columns, "Recente") ?? colLabel(data.tableSelic.data?.columns, "Hoje"),
+    d30: colLabel(data.tableSelic.data?.columns, "D-30"),
+    d90: colLabel(data.tableSelic.data?.columns, "D-90"),
+  };
+  const treasuryLabels: CutLabels = {
+    recent: colLabel(data.tableTreasury.data?.columns, "Recente") ?? colLabel(data.tableTreasury.data?.columns, "Hoje"),
+    d30: colLabel(data.tableTreasury.data?.columns, "D-30"),
+    d90: colLabel(data.tableTreasury.data?.columns, "D-90"),
+    d365: colLabel(data.tableTreasury.data?.columns, "D-365"),
+  };
+
   const usd = asset1d(data, "USD/BRL");
   const sp = asset1d(data, "S&P 500");
   const brent = commodity1d(data, "Brent");
@@ -366,6 +386,9 @@ export async function PainelPanoramaPage() {
         d90Pre={d90Pre}
         selicMeetings={selicMeetings}
         treasuryTenors={treasuryTenors}
+        diLabels={diLabels}
+        selicLabels={selicLabels}
+        treasuryLabels={treasuryLabels}
       />
 
       <section id="analises" className="space-y-4">
