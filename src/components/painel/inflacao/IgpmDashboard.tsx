@@ -397,8 +397,8 @@ export function IgpmDashboard({ data }: { data: IgpmData }) {
         ))}
 
       <footer className="border-t border-zinc-200 pt-4 text-xs text-zinc-500">
-        Fontes: FGV (IGP-M e componentes IPA-M, IPC-M, INCC-M) via BCB SGS códigos 189/192/7450/7456/7465. IPCA pra
-        comparação cruzada: 433/13522. Dados gerados em {data.gerado_em}.
+        Fontes: FGV (IGP-M e componentes IPA-M, IPC-M, INCC-M) via BCB SGS códigos 189/7450/7456/7465 (12m composto
+        no pipeline). IPCA pra comparação cruzada: 433/13522. Dados gerados em {data.gerado_em}.
       </footer>
     </div>
   );

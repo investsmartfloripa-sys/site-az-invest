@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { IgpmDashboard } from "@/components/painel/inflacao/IgpmDashboard";
+import { IgpmDashboardV2 } from "@/components/painel/inflacao/IgpmDashboardV2";
 import { loadIgpmData } from "@/lib/painel-igpm";
 
 export const metadata: Metadata = {
   title: "Inflação — IGP-M — AZ Invest",
   description:
-    "Painel IGP-M: contribuição dos componentes IPA-M, IPC-M e INCC-M, variação mensal e acumulado em 12 meses. Atualizado mensalmente via BCB SGS.",
+    "IGP-M esmiuçado: decomposição por componente com pesos efetivos, IGP-M × IPCA com defasagem, reajuste de aluguel na prática e série mensal completa. Atualizado via FGV/BCB-SGS.",
 };
 
-export const dynamic = "force-dynamic";
+// ISR puro: o dado é mensal; force-dynamic anularia o revalidate (plano de economia, P2).
 export const revalidate = 3600;
 
 export default async function PainelIgpmPage() {
@@ -23,5 +25,16 @@ export default async function PainelIgpmPage() {
     );
   }
 
-  return <IgpmDashboard data={data} />;
+  // Fallback: enquanto o Blob ainda servir o JSON v1 (sem decomposição com
+  // pesos efetivos), renderiza o dashboard antigo em vez de quebrar.
+  if (!data.schema_version || data.schema_version < 2 || !data.decomposicao) {
+    return <IgpmDashboard data={data} />;
+  }
+
+  return (
+    // Suspense exigido pelo useSearchParams (AzPeriodSelector) em rota prerenderizada
+    <Suspense fallback={<div className="h-[60vh] animate-pulse rounded-2xl bg-zinc-100" />}>
+      <IgpmDashboardV2 data={data} />
+    </Suspense>
+  );
 }
