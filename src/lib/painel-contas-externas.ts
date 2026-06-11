@@ -125,6 +125,97 @@ export type ContasExternasComexData = {
 };
 
 // ---------------------------------------------------------------------------
+// Câmbio econômico (sub-área de Contas Externas) — câmbio real e paridade de
+// juros. 1 JSON no Blob: data/cambio_macro.json — build_cambio_macro.py
+// (step próprio do contas-externas-pipeline.yml, continue-on-error).
+// ---------------------------------------------------------------------------
+const CAMBIO_MACRO_BLOB_PATH = "data/cambio_macro.json";
+
+export type CambioNominalPonto = {
+  mes: string;
+  ptax_media: number;
+  ptax_fim: NumOrNull;
+};
+
+export type CambioRealPonto = { mes: string; indice: number };
+
+/** Bloco de índice de câmbio real (bilateral construído ou REER 11752). */
+export type CambioRealBloco = {
+  serie: CambioRealPonto[];
+  media_hist: number;
+  dp_hist: number;
+  /** Janela usada na média/dp (ex.: "2000-01+"). */
+  janela_regua: string;
+  ultimo: { mes: string; indice: number };
+};
+
+export type DiferencialJurosPonto = {
+  mes: string;
+  selic_meta: number;
+  fed_funds: number;
+  diferencial_pp: number;
+};
+
+export type UipPonto = {
+  mes: string;
+  diferencial_t12_pp: number;
+  var_cambial_12m_pct: number;
+};
+
+export type CambioMacroData = {
+  schema_version: number;
+  generated_at: string;
+  ultima_referencia_mensal: string;
+  nominal: {
+    serie: CambioNominalPonto[];
+    ptax_ultimo: { data: string; valor: number };
+  };
+  cambio_real: {
+    /** CONVENÇÃO (não inverta): alta do índice = DEPRECIAÇÃO real do BRL. */
+    convencao: string;
+    bilateral: CambioRealBloco & {
+      base_100: string;
+      metodologia: string;
+      desvio_vs_media_pct: number;
+    };
+    reer: CambioRealBloco & {
+      sgs: number;
+      definicao: string;
+      var_12m_pct: NumOrNull;
+    };
+  };
+  juros: {
+    diferencial: { metodologia: string; serie: DiferencialJurosPonto[] };
+    uip: {
+      metodologia: string;
+      pontos: UipPonto[];
+      stats: {
+        n: number;
+        correlacao: NumOrNull;
+        erro_medio_pp: NumOrNull;
+        erro_dp_pp: NumOrNull;
+        pct_depreciou_com_dif_positivo: NumOrNull;
+      };
+    };
+  };
+  hero: {
+    ptax: { data: string; valor: number } | null;
+    bilateral_vs_media_pct: NumOrNull;
+    reer_var_12m_pct: NumOrNull;
+    diferencial_pp: NumOrNull;
+  };
+  /** Estrutura reservada p/ os modelos de previsão do dono (vazia por ora). */
+  previsao: { modelos: unknown[]; nota: string };
+  metadata: {
+    fonte: string;
+    series_sgs: Record<string, number>;
+    series_fred: Record<string, string>;
+    fed_funds_rota: string;
+    nota: string;
+  };
+};
+
+// ---------------------------------------------------------------------------
 // Loaders
 // ---------------------------------------------------------------------------
 export async function loadContasExternas(): Promise<ContasExternasData | null> {
@@ -164,6 +255,35 @@ export async function loadContasExternasComex(): Promise<ContasExternasComexData
     return data;
   } catch (e) {
     console.error(`[contas-externas-comex] fetch ${url}:`, e);
+    return null;
+  }
+}
+
+export async function loadCambioMacro(): Promise<CambioMacroData | null> {
+  const url = painelBlobUrl(CAMBIO_MACRO_BLOB_PATH);
+  try {
+    const res = await fetch(url, {
+      next: { revalidate: CONTAS_EXTERNAS_REVALIDATE_SECONDS },
+    });
+    if (!res.ok) {
+      console.error(`[cambio-macro] fetch ${url}: ${res.status}`);
+      return null;
+    }
+    const data = (await res.json()) as CambioMacroData;
+    // Guarda de shape: se o builder mudar o contrato, a página degrada com o
+    // card de erro em vez de derrubar o SSR com TypeError.
+    if (
+      !Array.isArray(data?.nominal?.serie) ||
+      !Array.isArray(data?.cambio_real?.bilateral?.serie) ||
+      !Array.isArray(data?.cambio_real?.reer?.serie) ||
+      !Array.isArray(data?.juros?.diferencial?.serie)
+    ) {
+      console.error("[cambio-macro] payload em shape inesperado — página desativada");
+      return null;
+    }
+    return data;
+  } catch (e) {
+    console.error(`[cambio-macro] fetch ${url}:`, e);
     return null;
   }
 }

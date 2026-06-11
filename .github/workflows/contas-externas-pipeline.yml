@@ -34,3 +34,11 @@ jobs:
         run: python data-pipeline/python/build_contas_externas.py --upload
       - name: Build Comex Stat JSON e upload
         run: python data-pipeline/python/build_contas_externas_comex.py --upload
+      # Sub-área Câmbio econômico (REER, paridade de juros, UIP). O builder
+      # valida antes de publicar e NUNCA sobrescreve dado bom com vazio;
+      # continue-on-error p/ uma falha de FRED/SGS não derrubar o resto.
+      - name: Build Câmbio macro JSON e upload
+        continue-on-error: true
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: python data-pipeline/python/build_cambio_macro.py --upload
