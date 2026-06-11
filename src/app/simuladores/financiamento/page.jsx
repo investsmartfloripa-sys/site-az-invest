@@ -251,17 +251,42 @@ export default function SimuladorFinanciamento() {
   const TR_STRESS = 1;  // a.a. — cenário pessimista (Selic alta mais persistente)
 
   const calcCenario = (trAno) => {
+    if (!podeCalcular) return { totalPrice: 0, totalSAC: 0, mediaPrice: 0, mediaSAC: 0 };
     const trMensal = Math.pow(1 + trAno / 100, 1 / 12) - 1;
-    const taxaEfetivaMensal = (1 + taxaMensal) * (1 + trMensal) - 1;
-    const price = podeCalcular ? calcPrice(valorFinanciado, taxaEfetivaMensal, prazoMeses) : [];
-    const sac = podeCalcular ? calcSAC(valorFinanciado, taxaEfetivaMensal, prazoMeses) : [];
-    const totalPrice = price.reduce((s, d) => s + d.parcela, 0);
-    const totalSAC = sac.reduce((s, d) => s + d.parcela, 0);
+    // Simulação mês a mês conforme o contrato SFH: a TR corrige o SALDO DEVEDOR
+    // e a prestação (Price) ou a amortização (SAC = saldo corrigido ÷ meses restantes)
+    // é recalculada sobre o saldo corrigido e o prazo restante — as parcelas crescem
+    // ao longo do contrato e o total nominal pago reflete o efeito real da TR.
+    let saldoPrice = valorFinanciado;
+    let totalPrice = 0;
+    for (let m = 1; m <= prazoMeses; m++) {
+      saldoPrice *= 1 + trMensal;
+      const restantes = prazoMeses - m + 1;
+      let pmt;
+      if (Math.abs(taxaMensal) < 1e-10) {
+        pmt = saldoPrice / restantes;
+      } else {
+        const fator = Math.pow(1 + taxaMensal, restantes);
+        pmt = (saldoPrice * taxaMensal * fator) / (fator - 1);
+      }
+      const juros = saldoPrice * taxaMensal;
+      saldoPrice = Math.max(0, saldoPrice - (pmt - juros));
+      totalPrice += pmt;
+    }
+    let saldoSAC = valorFinanciado;
+    let totalSAC = 0;
+    for (let m = 1; m <= prazoMeses; m++) {
+      saldoSAC *= 1 + trMensal;
+      const amortizacao = saldoSAC / (prazoMeses - m + 1);
+      const juros = saldoSAC * taxaMensal;
+      totalSAC += amortizacao + juros;
+      saldoSAC = Math.max(0, saldoSAC - amortizacao);
+    }
     return {
       totalPrice,
       totalSAC,
-      mediaPrice: price.length ? totalPrice / price.length : 0,
-      mediaSAC: sac.length ? totalSAC / sac.length : 0,
+      mediaPrice: totalPrice / prazoMeses,
+      mediaSAC: totalSAC / prazoMeses,
     };
   };
 
@@ -320,10 +345,10 @@ export default function SimuladorFinanciamento() {
             Simulador de Financiamento Imobiliário
           </div>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 leading-[1.1]">
-            SAC ou PRICE? <span style={{ color: C.navy }}>Cotamos pra você nos principais bancos.</span>
+            SAC ou PRICE? <span style={{ color: C.navy }}>Cotamos para você nos principais bancos.</span>
           </h1>
           <p className="text-base max-w-2xl" style={{ color: C.textDim }}>
-            Simule parcela, custo total e impacto da TR nos dois sistemas. Depois te conectamos aos nossos parceiros pra você fechar com a melhor oferta.
+            Simule parcela, custo total e impacto da TR nos dois sistemas. Depois, conectamos você aos nossos parceiros para fechar com a melhor oferta.
           </p>
         </div>
 
@@ -341,7 +366,7 @@ export default function SimuladorFinanciamento() {
             ))}
           </div>
           <div className="text-center text-[10px] mt-3" style={{ color: C.textMore }}>
-            Cada banco tem taxa, prazo máximo e regras próprias. Cotamos em todos pra encontrar a oferta certa pro seu perfil.
+            Cada banco tem taxa, prazo máximo e regras próprias. Cotamos em todos para encontrar a oferta certa para o seu perfil.
           </div>
         </div>
 
@@ -376,7 +401,7 @@ export default function SimuladorFinanciamento() {
 
             <InputCard
               label="Taxa de juros (a.a.)"
-              hint={`Default 11% (média SFH atual). Bancos variam de 9% a 13%.`}
+              hint={`Padrão: 11% (média SFH atual). As taxas variam de 9% a 13% conforme o banco.`}
             >
               <NumFieldDecimal value={taxaAno} onChange={setTaxaAno} min={0} max={50} suffix="% a.a." />
             </InputCard>
@@ -417,7 +442,7 @@ export default function SimuladorFinanciamento() {
             <Calculator className="w-12 h-12 mx-auto mb-4" style={{ color: C.textMore }} />
             <h3 className="text-lg font-semibold mb-1" style={{ color: C.dark }}>Preencha os dados acima</h3>
             <p className="text-sm" style={{ color: C.textDim }}>
-              Você precisa informar o valor a financiar, o prazo e a taxa de juros pra ver a comparação.
+              Você precisa informar o valor a financiar, o prazo e a taxa de juros para ver a comparação.
             </p>
           </div>
         ) : (
@@ -556,12 +581,12 @@ export default function SimuladorFinanciamento() {
                 <div className="flex items-center gap-2 mb-1">
                   <AlertCircle className="w-4 h-4" style={{ color: C.orange }} />
                   <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.orangeDark }}>
-                    O que muitos simuladores não te contam
+                    O que muitos simuladores não mostram
                   </div>
                 </div>
                 <h3 className="text-xl md:text-2xl font-bold mb-2" style={{ color: C.dark }}>O impacto da TR ao longo do contrato</h3>
                 <p className="text-sm mb-4" style={{ color: '#475569' }}>
-                  A TR <strong>varia mês a mês</strong> conforme a Selic. Ficou zerada em todo o período 2018–2021 (Selic baixa), mas em ciclos de juros altos ela volta — 2015–2016 e 2022–2023 acumularam algo entre 1% e 1,7% a.a. Em {(prazoMeses / 12).toFixed(0)} anos de contrato você quase certamente passa por ciclos onde ela é positiva, mas é difícil prever quando. Pra dar dimensão do impacto acumulado, mostramos dois cenários com <strong>TR média equivalente</strong> ao longo do contrato:
+                  A TR <strong>varia mês a mês</strong> conforme a Selic. Ficou zerada em todo o período 2018–2021 (Selic baixa), mas em ciclos de juros altos ela volta — 2015–2016 e 2022–2023 acumularam algo entre 1% e 1,7% a.a. Em {(prazoMeses / 12).toFixed(0)} anos de contrato você quase certamente passa por ciclos onde ela é positiva, mas é difícil prever quando. Para dar dimensão do impacto acumulado, mostramos dois cenários com <strong>TR média equivalente</strong> ao longo do contrato:
                 </p>
 
                 <div className="overflow-x-auto -mx-5 md:-mx-6 px-5 md:px-6">
@@ -591,7 +616,7 @@ export default function SimuladorFinanciamento() {
                       <tr style={{ backgroundColor: C.orangeBgSoft }}>
                         <td className="py-3 px-3">
                           <div className="font-semibold text-sm" style={{ color: C.dark }}>TR média ~1% a.a.</div>
-                          <div className="text-[11px]" style={{ color: C.textDim }}>cenário stress — Selic alta persistente</div>
+                          <div className="text-[11px]" style={{ color: C.textDim }}>cenário de estresse — Selic alta persistente</div>
                         </td>
                         <td className="py-3 px-3 text-right">
                           <div className="text-sm font-bold tabular-nums" style={{ color: C.orangeDark }}>+{fmt(impStressPriceTotal)}</div>
@@ -731,7 +756,7 @@ export default function SimuladorFinanciamento() {
                       <th className="text-right py-2 px-3 text-[10px] uppercase tracking-wider font-semibold border-l" style={{ color: C.textDim, borderColor: C.border }}>Parcela</th>
                       <th className="text-right py-2 px-3 text-[10px] uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>Juros no ano</th>
                       <th className="text-right py-2 px-3 text-[10px] uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>Saldo no fim</th>
-                      <th className="text-right py-2 px-3 text-[10px] uppercase tracking-wider font-semibold border-l" style={{ color: C.textDim, borderColor: C.border }}>1ª Parcela</th>
+                      <th className="text-right py-2 px-3 text-[10px] uppercase tracking-wider font-semibold border-l" style={{ color: C.textDim, borderColor: C.border }}>1ª parcela</th>
                       <th className="text-right py-2 px-3 text-[10px] uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>Juros no ano</th>
                       <th className="text-right py-2 px-3 text-[10px] uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>Saldo no fim</th>
                     </tr>
@@ -755,7 +780,7 @@ export default function SimuladorFinanciamento() {
               <div className="mt-4 text-[11px] flex items-start gap-1.5" style={{ color: C.textDim }}>
                 <Info className="w-3 h-3 mt-0.5 shrink-0" />
                 <span>
-                  No SAC, a "1ª Parcela" mostra o valor da primeira parcela daquele ano (as demais decrescem mês a mês dentro do mesmo ano).
+                  No SAC, a "1ª parcela" mostra o valor da primeira parcela daquele ano (as demais decrescem mês a mês dentro do mesmo ano).
                 </span>
               </div>
             </div>
@@ -780,7 +805,7 @@ export default function SimuladorFinanciamento() {
                 Quer cotar isso em <span style={{ color: '#FF5713' }}>8 bancos de uma vez</span>?
               </h3>
               <p className="text-sm md:text-base mb-6" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                A gente envia sua simulação pros principais bancos do mercado e traz pra você a oferta com menor parcela, menor custo total e melhores condições — sem você precisar negociar individualmente com cada um.
+                Enviamos sua simulação para os principais bancos do mercado e trazemos para você a oferta com menor parcela, menor custo total e melhores condições — sem você precisar negociar individualmente com cada um.
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
@@ -798,14 +823,14 @@ export default function SimuladorFinanciamento() {
                 <span aria-hidden>→</span>
               </button>
               <div className="text-[11px] mt-3" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                Sem compromisso. Seus dados são usados apenas pra solicitar as cotações.
+                Sem compromisso. Seus dados são usados apenas para solicitar as cotações.
               </div>
             </div>
           </div>
         )}
 
         <div className="text-center text-[11px] mt-8 pb-4 px-4 leading-relaxed" style={{ color: C.textDim }}>
-          Simulação meramente ilustrativa. O cálculo base não inclui TR (variável mês a mês conforme a Selic — veja o cenário de stress acima). Também não considera seguros (MIP/DFI), tarifas administrativas, custos de avaliação e cartório. Valores reais podem variar conforme o banco e a linha de crédito.
+          Simulação meramente ilustrativa. O cálculo base não inclui TR (variável mês a mês conforme a Selic — veja o cenário de estresse acima). Também não considera seguros (MIP/DFI), tarifas administrativas, custos de avaliação e cartório. Valores reais podem variar conforme o banco e a linha de crédito.
         </div>
       </div>
     </div>

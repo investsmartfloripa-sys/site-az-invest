@@ -2,8 +2,9 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { AreaChart, Area, BarChart, Bar, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { Home, Car, Truck, Bike, Key, Building2, TrendingUp, Briefcase, Check, ChevronLeft, Trophy, Info, ArrowRight, Sparkles, Target, AlertCircle, Settings, TrendingDown, Layers, Wallet } from "lucide-react";
+import { saveConsorcioLead } from "./consorcio-lead-action";
 
 const fmt = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n || 0);
 const fmtCents = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n || 0);
@@ -80,7 +81,7 @@ const TIPOS_BEM = {
     indiceDefault: 'media',
     objetivos: [
       { id: 'sair-aluguel', nome: 'Sair do aluguel', desc: 'Parar de pagar aluguel e conquistar o primeiro imóvel', iconeKey: 'key' },
-      { id: 'trocar', nome: 'Trocar de imóvel', desc: 'Upgrade: maior, melhor localização ou novo padrão', iconeKey: 'building' },
+      { id: 'trocar', nome: 'Trocar de imóvel', desc: 'Evoluir de imóvel: maior, melhor localização ou novo padrão', iconeKey: 'building' },
       { id: 'renda', nome: 'Ter renda de aluguel', desc: 'Investir em imóvel para alugar e gerar renda passiva', iconeKey: 'trending' },
     ],
   },
@@ -261,6 +262,8 @@ export default function Simulador() {
   const [leadNome, setLeadNome] = useState('');
   const [leadTel, setLeadTel] = useState('');
   const [leadEnviado, setLeadEnviado] = useState(false);
+  const [leadEnviando, setLeadEnviando] = useState(false);
+  const [leadErro, setLeadErro] = useState('');
 
   const info = tipoBem ? TIPOS_BEM[tipoBem] : null;
   const isImovel = tipoBem === 'imovel';
@@ -293,14 +296,25 @@ export default function Simulador() {
   const fundoReserva = 0.02;
   const taxaCorrecao = TAXAS_CORRECAO[indiceCorrecao];
   const nomeIndice = NOMES_INDICE[indiceCorrecao];
+  const indiceComPreposicao = indiceCorrecao === 'media' ? 'pela média IPCA/INCC (~5,75% a.a.)' : 'pelo índice prefixado de 3% a.a.';
 
   const cdiMensalProj = Math.pow(1 + CDI_PROJECAO, 1/12) - 1;
 
   const saldoTotalPlano = valorBem * (1 + taxaAdm + fundoReserva);
+  // Parcela INICIAL (em valores de hoje) — carta, saldo e parcela são corrigidos anualmente pelo índice do grupo
   const parcelaNormal = prazo > 0 ? saldoTotalPlano / prazo : 0;
   const fatorRedutor = redutor === '25' ? 0.75 : redutor === '50' ? 0.50 : 1;
   const parcelaAtual = parcelaNormal * fatorRedutor;
-  const custoTotalConsorcio = parcelaNormal * prazo;
+  // Custo total NOMINAL projetado: Σ parcela_base × (1 + índice)^floor((m−1)/12)
+  // (correção anual aplicada a cada aniversário do plano, conforme a Lei 11.795/2008)
+  const custoTotalConsorcio = useMemo(() => {
+    if (prazo <= 0) return 0;
+    let total = 0;
+    for (let m = 1; m <= prazo; m++) {
+      total += parcelaNormal * Math.pow(1 + taxaCorrecao, Math.floor((m - 1) / 12));
+    }
+    return total;
+  }, [prazo, parcelaNormal, taxaCorrecao]);
 
   const valorLanceProprio = lanceProprioAtivo ? valorLance : 0;
   const valorLanceEmbutido = lanceEmbutidoAtivo ? valorBem * (embutidoPerc / 100) : 0;
@@ -394,30 +408,44 @@ export default function Simulador() {
   const mostrarParcelaPos = temLance || temRedutor;
 
   const orcamentoTotal = aluguelAtual + invMensal;
-  const sobraConsorcio = orcamentoTotal - parcelaAtual;
-  const orcamentoInsuficiente = sobraConsorcio < 0;
+  // Até a contemplação o cliente paga aluguel E parcela ao mesmo tempo:
+  // o fluxo investível é só invMensal − parcela (frequentemente negativo).
+  const fluxoPreContemplacao = invMensal - parcelaAtual;
+  // Após a contemplação, o aluguel é liberado e passa a somar no fluxo.
+  const fluxoPosContemplacao = orcamentoTotal - parcelaAtual;
+  const orcamentoInsuficiente = fluxoPreContemplacao < 0;
 
   const dadosEvolucao = useMemo(() => {
     if (prazo <= 0 || objetivo !== 'sair-aluguel') return [];
     const anos = Math.ceil(prazo / 12);
     const pontos = [];
+    let saldoConsorcio = 0; // caixa do cenário consórcio (negativo = aporte extra necessário, sem juros)
+    let saldoAluguel = 0;
+    let mesAtual = 0;
     for (let a = 0; a <= anos; a++) {
-      const meses = Math.min(a * 12, prazo);
-      const patAluguel = invMensal > 0 && meses > 0
-        ? invMensal * ((Math.pow(1 + cdiMensalProj, meses) - 1) / cdiMensalProj) : 0;
-      let patConsorcio = 0;
-      if (meses >= mes50 && mes50 > 0) patConsorcio = valorBem * Math.pow(1 + VALORIZACAO_IMOVEL, a);
-      if (sobraConsorcio > 0 && meses > 0) {
-        patConsorcio += sobraConsorcio * ((Math.pow(1 + cdiMensalProj, meses) - 1) / cdiMensalProj);
+      const mesesAlvo = Math.min(a * 12, prazo);
+      while (mesAtual < mesesAlvo) {
+        mesAtual++;
+        // Cenário aluguel: investe invMensal todo mês a CDI
+        saldoAluguel = saldoAluguel * (1 + cdiMensalProj) + invMensal;
+        // Cenário consórcio: paga aluguel + parcela até a contemplação; depois o aluguel é liberado
+        const fluxo = mesAtual <= mes50 ? invMensal - parcelaAtual : aluguelAtual + invMensal - parcelaAtual;
+        if (saldoConsorcio > 0) saldoConsorcio *= 1 + cdiMensalProj;
+        saldoConsorcio += fluxo;
+      }
+      let patConsorcio = saldoConsorcio;
+      // Imóvel entra no patrimônio na contemplação e valoriza a partir DELA (não do mês 0)
+      if (mesesAlvo >= mes50 && mes50 > 0) {
+        patConsorcio += valorBem * Math.pow(1 + VALORIZACAO_IMOVEL, (mesesAlvo - mes50) / 12);
       }
       pontos.push({
         ano: a,
         'Com consórcio': Math.round(patConsorcio),
-        'Continuar no aluguel': Math.round(patAluguel),
+        'Continuar no aluguel': Math.round(saldoAluguel),
       });
     }
     return pontos;
-  }, [prazo, mes50, parcelaAtual, aluguelAtual, invMensal, valorBem, cdiMensalProj, objetivo, sobraConsorcio]);
+  }, [prazo, mes50, parcelaAtual, aluguelAtual, invMensal, valorBem, cdiMensalProj, objetivo]);
 
   const patFimAluguel = dadosEvolucao[dadosEvolucao.length - 1]?.['Continuar no aluguel'] || 0;
   const patFimConsorcio = dadosEvolucao[dadosEvolucao.length - 1]?.['Com consórcio'] || 0;
@@ -438,21 +466,56 @@ export default function Simulador() {
       if (invMensalRenda > 0 && meses > 0) {
         invProprio = invMensalRenda * ((Math.pow(1 + cdiMensalProj, meses) - 1) / cdiMensalProj);
       }
+      // Patrimônio LÍQUIDO = ativos − parcelas pagas (e lance próprio) − saldo devedor remanescente do plano
+      const parcelasPagas = meses <= mes50
+        ? parcelaAtual * meses
+        : parcelaAtual * mes50 + valorLanceProprio + parcelaPosContemplacao * (meses - mes50);
+      const saldoDevedorRestante = Math.max(0,
+        saldoTotalPlano - parcelaAtual * Math.min(meses, mes50)
+        - (meses > mes50 ? valorLanceTotal + parcelaPosContemplacao * (meses - mes50) : 0));
+      const liquido = valorImovel + rendaAcumulada + invProprio - parcelasPagas - saldoDevedorRestante;
       pontos.push({
         ano: a,
         'Valor do imóvel': Math.round(valorImovel),
         'Aluguéis investidos': Math.round(rendaAcumulada),
         'Investimento próprio': Math.round(invProprio),
+        'Patrimônio líquido': Math.round(liquido),
       });
     }
     return pontos;
-  }, [prazo, mes50, aluguelEsperado, valorBem, cdiMensalProj, objetivo, invMensalRenda]);
+  }, [prazo, mes50, aluguelEsperado, valorBem, cdiMensalProj, objetivo, invMensalRenda, parcelaAtual, parcelaPosContemplacao, saldoTotalPlano, valorLanceProprio, valorLanceTotal]);
+
+  const fimRenda = dadosEvolucaoRenda[dadosEvolucaoRenda.length - 1];
+  const ativosRendaFim = (fimRenda?.['Valor do imóvel'] || 0) + (fimRenda?.['Aluguéis investidos'] || 0) + (fimRenda?.['Investimento próprio'] || 0);
+  const liquidoRendaFim = fimRenda?.['Patrimônio líquido'] || 0;
 
   const yieldAluguel = aluguelEsperado > 0 && parcelaAtual > 0 ? (aluguelEsperado / parcelaAtual) * 100 : 0;
   const faturamentoRestante = faturamentoEsperado - parcelaAtual;
 
-  const handleLeadSubmit = () => { if (leadNome && leadTel) setLeadEnviado(true); };
-  const reset = () => { setStep(0); setTipoBem(null); setObjetivo(null); setLeadEnviado(false); setLeadNome(''); setLeadTel(''); };
+  const handleLeadSubmit = async () => {
+    if (!leadNome.trim() || !leadTel.trim() || leadEnviando) return;
+    setLeadErro('');
+    setLeadEnviando(true);
+    try {
+      const fd = new FormData();
+      fd.set('name', leadNome);
+      fd.set('phone', leadTel);
+      if (info) fd.set('tipoBem', info.label);
+      const objNome = info?.objetivos.find(o => o.id === objetivo)?.nome;
+      if (objNome) fd.set('objetivo', objNome);
+      fd.set('valorCarta', String(valorBem));
+      fd.set('prazoMeses', String(prazo));
+      fd.set('parcela', parcelaAtual.toFixed(2));
+      const res = await saveConsorcioLead(fd);
+      if (res.ok) setLeadEnviado(true);
+      else setLeadErro(res.error);
+    } catch {
+      setLeadErro('Não foi possível enviar agora. Tente novamente em instantes.');
+    } finally {
+      setLeadEnviando(false);
+    }
+  };
+  const reset = () => { setStep(0); setTipoBem(null); setObjetivo(null); setLeadEnviado(false); setLeadEnviando(false); setLeadErro(''); setLeadNome(''); setLeadTel(''); };
 
   const toggleStyle = (active) => ({ backgroundColor: active ? C.navy : '#cbd5e1', transition: 'background-color 0.2s' });
   const toggleHandleStyle = (active) => ({ transform: active ? 'translateX(20px)' : 'translateX(2px)', transition: 'transform 0.2s' });
@@ -503,7 +566,7 @@ export default function Simulador() {
               {ADMS.map(a => <AdmLogo key={a.nome} adm={a} />)}
             </div>
             <div className="text-center text-xs mt-4" style={{ color: C.textDim }}>
-              Sem preferência comercial — comparamos e indicamos a melhor opção pro seu perfil.
+              Sem preferência comercial — comparamos e indicamos a melhor opção para o seu perfil.
             </div>
           </div>
         </div>
@@ -524,7 +587,7 @@ export default function Simulador() {
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
               Qual é o seu <span style={{ color: C.navy }}>objetivo</span>?
             </h2>
-            <p style={{ color: C.textDim }}>Isso direciona a análise que vamos fazer pra você.</p>
+            <p style={{ color: C.textDim }}>Isso direciona a análise que vamos fazer para você.</p>
           </div>
           <div className="space-y-3">
             {info.objetivos.map(o => {
@@ -579,7 +642,7 @@ export default function Simulador() {
             {info.label} • {objAtual?.nome}
           </div>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Monte sua simulação</h1>
-          <p className="mt-1" style={{ color: C.textDim }}>Use os controles ou digite os valores diretamente. Atualiza em tempo real.</p>
+          <p className="mt-1" style={{ color: C.textDim }}>Use os controles ou digite os valores diretamente. Os resultados se atualizam em tempo real.</p>
         </div>
 
         {/* INPUTS */}
@@ -655,7 +718,7 @@ export default function Simulador() {
             {(objetivo === 'trocar-carro' || objetivo === 'trocar-moto') && (
               <div>
                 <div className="flex justify-between items-end mb-2">
-                  <label className="text-sm font-medium" style={{ color: '#334155' }}>Valor do {isCarro ? 'carro' : 'moto'} atual (FIPE)</label>
+                  <label className="text-sm font-medium" style={{ color: '#334155' }}>Valor {isCarro ? 'do carro' : 'da moto'} atual (FIPE)</label>
                   <NumField value={valorBemAtual} onChange={(v) => {
                     setValorBemAtual(v);
                     if (v > 0) { setLanceProprioAtivo(true); setValorLance(v); }
@@ -680,7 +743,7 @@ export default function Simulador() {
           <div className="mt-6 pt-6" style={{ borderTop: `1px solid ${C.border}` }}>
             <div className="mb-4">
               <div className="text-sm font-semibold" style={{ color: C.dark }}>Lance</div>
-              <div className="text-xs" style={{ color: C.textDim }}>Ative um ou ambos — somam pra acelerar a contemplação</div>
+              <div className="text-xs" style={{ color: C.textDim }}>Ative um ou ambos — somam para acelerar a contemplação</div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-3">
@@ -691,7 +754,7 @@ export default function Simulador() {
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <div className="text-sm font-semibold" style={{ color: C.dark }}>Recursos próprios</div>
-                    <div className="text-[11px]" style={{ color: C.textDim }}>Dinheiro que você tem pra lance</div>
+                    <div className="text-[11px]" style={{ color: C.textDim }}>Dinheiro que você tem para o lance</div>
                   </div>
                   <button onClick={() => setLanceProprioAtivo(!lanceProprioAtivo)}
                     className="relative w-11 h-6 rounded-full shrink-0" style={toggleStyle(lanceProprioAtivo)}>
@@ -791,7 +854,7 @@ export default function Simulador() {
                 ))}
               </div>
               <div className="text-[11px] mt-2" style={{ color: C.textDim }}>
-                Reduz parcela até a contemplação. Sem lance, parcela volta a subir depois.
+                Reduz a parcela até a contemplação. Sem lance, a parcela volta a subir depois.
               </div>
             </div>
           </div>
@@ -805,7 +868,7 @@ export default function Simulador() {
                   Quero aumentar as chances de contemplação
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: C.textDim }}>
-                  Divide sua carta em cotas menores — aumenta a chance de contemplar ao menos uma cedo
+                  Divide sua carta em cotas menores — aumenta a chance de ser contemplado em ao menos uma cota mais cedo
                 </div>
               </div>
               <button onClick={() => setAumentarChances(!aumentarChances)}
@@ -864,7 +927,7 @@ export default function Simulador() {
           <div className="relative">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: C.textDim }}>
-                {temRedutor ? `Parcela inicial (com redutor ${redutor}%)` : 'Sua parcela mensal'}
+                {temRedutor ? `Parcela inicial (com redutor ${redutor}%)` : 'Sua parcela inicial'}
               </div>
               {temRedutor && (
                 <div className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: C.blueBg, color: C.navy }}>-{redutor}%</div>
@@ -878,7 +941,7 @@ export default function Simulador() {
             </div>
             <div className="text-sm mb-6 flex items-center gap-1.5" style={{ color: C.textDim }}>
               <Info className="w-3 h-3" />
-              Corrigida anualmente pelo {nomeIndice}
+              Valor em moeda de hoje — carta e parcela são corrigidas anualmente {indiceComPreposicao}
               {numCartas > 1 && ` • Soma: ${fmtCents(parcelaAtual)}/mês`}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
@@ -1018,7 +1081,7 @@ export default function Simulador() {
             <div className="mt-3 p-3 rounded-lg flex items-start gap-2" style={{ backgroundColor: C.blueBgSoft, border: `1px solid ${C.blueBg}` }}>
               <Layers className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.navy }} />
               <div className="text-sm" style={{ color: '#334155' }}>
-                Com <strong>{numCartas} cartas</strong>, chance de contemplar ao menos uma em 12 meses sobe pra <strong style={{ color: C.navy }}>{prob12.toFixed(0)}%</strong> (vs. {probIndividual12.toFixed(0)}% com carta única).
+                Com <strong>{numCartas} cartas</strong>, a chance de contemplar ao menos uma em 12 meses sobe para <strong style={{ color: C.navy }}>{prob12.toFixed(0)}%</strong> (vs. {probIndividual12.toFixed(0)}% com carta única).
               </div>
             </div>
           )}
@@ -1032,7 +1095,7 @@ export default function Simulador() {
           </div>
           <h3 className="text-xl font-bold mb-2" style={{ color: C.dark }}>Consórcio vs. Financiamento</h3>
           <p className="text-sm mb-4" style={{ color: '#475569' }}>
-            Comparação no <strong>mesmo prazo de {prazoFinanComparado} meses</strong>. Financiamento exige entrada de 20% ({fmt(entradaFinan)}) e tem taxa de {(taxaFinanAnual * 100).toFixed(1)}% a.a.
+            Comparação no <strong>mesmo prazo de {prazoFinanComparado} meses</strong> e na mesma base nominal: o custo do consórcio já inclui a correção anual {indiceComPreposicao}. Financiamento exige entrada de 20% ({fmt(entradaFinan)}) e tem taxa de {(taxaFinanAnual * 100).toFixed(1)}% a.a.
             {prazoExcedeFinan && <span style={{ color: C.orange }}> Seu prazo de consórcio excede o máximo permitido em financiamento ({prazoMaxFinan}m), então comparamos no teto.</span>}
           </p>
 
@@ -1043,7 +1106,7 @@ export default function Simulador() {
               <AlertCircle className="w-4 h-4" style={{ color: C.orange }} />
             </div>
             <div className="text-sm" style={{ color: '#1e293b' }}>
-              <strong style={{ color: C.orange }}>Pra financiar, você desembolsa {fmt(entradaFinan)} agora.</strong> Esse mesmo valor pode ser usado como <strong>lance no consórcio</strong>, antecipando muito sua contemplação.
+              <strong style={{ color: C.orange }}>Para financiar, você desembolsa {fmt(entradaFinan)} agora.</strong> Esse mesmo valor pode ser usado como <strong>lance no consórcio</strong>, antecipando muito sua contemplação.
             </div>
           </div>
 
@@ -1063,11 +1126,11 @@ export default function Simulador() {
               </div>
               <div className="flex gap-6">
                 <div>
-                  <div className="text-[11px]" style={{ color: C.textDim }}>Parcela</div>
+                  <div className="text-[11px]" style={{ color: C.textDim }}>Parcela inicial</div>
                   <div className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: C.dark }}>{fmtCents(parcelaAtual)}</div>
                 </div>
                 <div>
-                  <div className="text-[11px]" style={{ color: C.textDim }}>Custo total</div>
+                  <div className="text-[11px]" style={{ color: C.textDim }}>Custo total projetado</div>
                   <div className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: C.dark }}>{fmt(custoTotalConsorcio)}</div>
                 </div>
               </div>
@@ -1101,21 +1164,29 @@ export default function Simulador() {
             ))}
           </div>
 
-          {economiaVsMelhor > 0 && (
-            <div className="rounded-xl p-4 flex items-center gap-3"
-              style={{ backgroundColor: C.orangeBg, border: '1px solid #fed7aa' }}>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                style={{ backgroundColor: 'rgba(255,87,19,0.15)' }}>
-                <TrendingUp className="w-5 h-5" style={{ color: C.orange }} />
+          <div className="rounded-xl p-4 flex items-center gap-3"
+            style={{
+              backgroundColor: economiaVsMelhor >= 0 ? C.orangeBg : '#f1f5f9',
+              border: `1px solid ${economiaVsMelhor >= 0 ? '#fed7aa' : C.border}`,
+            }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+              style={{ backgroundColor: economiaVsMelhor >= 0 ? 'rgba(255,87,19,0.15)' : '#e2e8f0' }}>
+              {economiaVsMelhor >= 0
+                ? <TrendingUp className="w-5 h-5" style={{ color: C.orange }} />
+                : <TrendingDown className="w-5 h-5" style={{ color: '#475569' }} />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm" style={{ color: '#475569' }}>
+                {economiaVsMelhor >= 0
+                  ? <>Economia vs. {melhorFinan.tipo} {melhorFinan.prazoM}m (o mais barato dos dois)</>
+                  : <>Diferença vs. {melhorFinan.tipo} {melhorFinan.prazoM}m (o mais barato dos dois) — neste cenário, o consórcio sai mais caro</>}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm" style={{ color: '#475569' }}>
-                  Economia vs. {melhorFinan.tipo} {melhorFinan.prazoM}m (mais barato dos 2)
-                </div>
-                <div className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: C.orange }}>{fmt(economiaVsMelhor)}</div>
+              <div className="text-xl md:text-2xl font-bold tabular-nums"
+                style={{ color: economiaVsMelhor >= 0 ? C.orange : '#334155' }}>
+                {fmt(economiaVsMelhor)}
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* EVOLUÇÃO PATRIMONIAL */}
@@ -1128,8 +1199,11 @@ export default function Simulador() {
             <h3 className="text-xl font-bold mb-2" style={{ color: C.dark }}>Consórcio vs. Continuar no aluguel</h3>
             <p className="text-sm mb-4" style={{ color: '#475569' }}>
               Mesmo orçamento mensal ({fmt(orcamentoTotal)}: {fmt(aluguelAtual)} aluguel + {fmt(invMensal)} investimento).
-              {sobraConsorcio > 0 && ` No consórcio, sobra ${fmt(sobraConsorcio)}/mês pra investir.`}
-              {orcamentoInsuficiente && <span style={{ color: C.orange, fontWeight: 500 }}> A parcela ({fmt(parcelaAtual)}) excede seu orçamento.</span>}
+              {' '}Até a contemplação (mês {mes50}), você paga aluguel e parcela ao mesmo tempo
+              {fluxoPreContemplacao >= 0
+                ? <> — sobra {fmt(fluxoPreContemplacao)}/mês para investir.</>
+                : <span style={{ color: C.orange, fontWeight: 500 }}> — aluguel ({fmt(aluguelAtual)}) + parcela ({fmt(parcelaAtual)}) somam {fmt(aluguelAtual + parcelaAtual)}, ou seja, faltam {fmt(Math.abs(fluxoPreContemplacao))}/mês no seu orçamento.</span>}
+              {' '}Depois da contemplação, o aluguel é liberado e o fluxo mensal passa a {fmt(fluxoPosContemplacao)}.
             </p>
 
             <ChartLegend items={[
@@ -1186,16 +1260,20 @@ export default function Simulador() {
               <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>Construção de patrimônio</div>
             </div>
             <h3 className="text-xl font-bold mb-2" style={{ color: C.dark }}>Seu patrimônio ao longo do tempo</h3>
+            <p className="text-sm mb-4" style={{ color: '#475569' }}>
+              As barras mostram os ativos acumulados; a linha mostra o <strong>patrimônio líquido</strong> — ativos menos as parcelas pagas e o saldo devedor restante do plano.
+            </p>
 
             <ChartLegend items={[
               { color: C.navy, label: 'Valor do imóvel' },
               { color: C.orange, label: 'Aluguéis investidos' },
               ...(invMensalRenda > 0 ? [{ color: C.textMore, label: 'Investimento próprio' }] : []),
+              { color: C.dark, label: 'Patrimônio líquido' },
             ]} />
 
             <div className="rounded-xl p-3 md:p-4 h-72 md:h-80" style={{ backgroundColor: '#f8fafc' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dadosEvolucaoRenda} margin={{ top: 10, right: 10, left: 0, bottom: 25 }}>
+                <ComposedChart data={dadosEvolucaoRenda} margin={{ top: 10, right: 10, left: 0, bottom: 25 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="ano" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 11 }}
                     label={{ value: 'Anos', position: 'insideBottom', offset: -5, fill: '#94a3b8', fontSize: 11 }} />
@@ -1205,7 +1283,8 @@ export default function Simulador() {
                   <Bar dataKey="Valor do imóvel" stackId="a" fill={C.navy} />
                   <Bar dataKey="Aluguéis investidos" stackId="a" fill={C.orange} />
                   {invMensalRenda > 0 && <Bar dataKey="Investimento próprio" stackId="a" fill={C.textMore} radius={[4, 4, 0, 0]} />}
-                </BarChart>
+                  <Line type="monotone" dataKey="Patrimônio líquido" stroke={C.dark} strokeWidth={2.5} dot={false} />
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
 
@@ -1219,9 +1298,10 @@ export default function Simulador() {
                 <div className="text-xl font-bold tabular-nums" style={{ color: C.dark }}>Mês {mes50}</div>
               </div>
               <div className="rounded-xl p-4" style={{ backgroundColor: C.blueBgSoft, border: `1px solid ${C.blueBg}` }}>
-                <div className="text-[11px] uppercase tracking-wider mb-1 font-semibold" style={{ color: C.navy }}>Patrimônio ao fim</div>
-                <div className="text-xl font-bold tabular-nums" style={{ color: C.navy }}>
-                  {fmt((dadosEvolucaoRenda[dadosEvolucaoRenda.length - 1]?.['Valor do imóvel'] || 0) + (dadosEvolucaoRenda[dadosEvolucaoRenda.length - 1]?.['Aluguéis investidos'] || 0) + (dadosEvolucaoRenda[dadosEvolucaoRenda.length - 1]?.['Investimento próprio'] || 0))}
+                <div className="text-[11px] uppercase tracking-wider mb-1 font-semibold" style={{ color: C.navy }}>Patrimônio líquido ao fim</div>
+                <div className="text-xl font-bold tabular-nums" style={{ color: C.navy }}>{fmt(liquidoRendaFim)}</div>
+                <div className="text-[11px] mt-0.5" style={{ color: C.textDim }}>
+                  Ativos de {fmt(ativosRendaFim)} − {fmt(ativosRendaFim - liquidoRendaFim)} desembolsados no plano
                 </div>
               </div>
             </div>
@@ -1255,7 +1335,7 @@ export default function Simulador() {
 
         {objetivo === 'trocar' && (
           <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}` }}>
-            <h3 className="text-xl font-bold mb-2" style={{ color: C.dark }}>Por que consórcio é eficiente pra upgrade</h3>
+            <h3 className="text-xl font-bold mb-2" style={{ color: C.dark }}>Por que o consórcio é eficiente para a troca de imóvel</h3>
             <p className="text-sm leading-relaxed" style={{ color: '#475569' }}>
               Após contemplado, você pode usar o imóvel atual como parte do pagamento (dação) ou vendê-lo, evitando juros altos de financiamento num momento em que já tem patrimônio.
             </p>
@@ -1264,7 +1344,7 @@ export default function Simulador() {
 
         {objetivo === 'primeiro-trocar' && !isMoto && (
           <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}` }}>
-            <h3 className="text-xl font-bold mb-2" style={{ color: C.dark }}>Por que consórcio pra carro faz sentido</h3>
+            <h3 className="text-xl font-bold mb-2" style={{ color: C.dark }}>Por que consórcio para carro faz sentido</h3>
             <p className="text-sm leading-relaxed" style={{ color: '#475569' }}>
               Com taxas de financiamento de veículo acima de 25% a.a., o consórcio é dramaticamente mais barato no custo total. Lance acelera muito a conquista se você já tem recursos guardados.
             </p>
@@ -1273,7 +1353,7 @@ export default function Simulador() {
 
         {objetivo === 'primeiro-trocar' && isMoto && (
           <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}` }}>
-            <h3 className="text-xl font-bold mb-2" style={{ color: C.dark }}>Por que consórcio pra moto vale a pena</h3>
+            <h3 className="text-xl font-bold mb-2" style={{ color: C.dark }}>Por que consórcio para moto vale a pena</h3>
             <p className="text-sm leading-relaxed" style={{ color: '#475569' }}>
               Financiamento de moto chega a 28% a.a. — uma moto de R$ 25k vira R$ 50k+ no fim. Consórcio elimina os juros, e o lance acelera muito porque o ticket baixo facilita lances competitivos.
             </p>
@@ -1308,13 +1388,19 @@ export default function Simulador() {
                   style={{ backgroundColor: '#ffffff', color: C.dark, border: 'none' }}
                   className="rounded-lg px-4 py-3 focus:outline-none placeholder:text-slate-400" />
               </div>
-              <button onClick={handleLeadSubmit} disabled={!leadNome || !leadTel}
+              <button onClick={handleLeadSubmit} disabled={!leadNome || !leadTel || leadEnviando}
                 style={{ backgroundColor: C.dark, color: '#ffffff' }}
                 className="w-full font-bold py-3.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                Receber cotações <ArrowRight className="w-5 h-5" />
+                {leadEnviando ? 'Enviando...' : <>Receber cotações <ArrowRight className="w-5 h-5" /></>}
               </button>
+              {leadErro && (
+                <p className="text-sm mt-3 text-center font-medium rounded-lg px-3 py-2"
+                  style={{ color: '#ffffff', backgroundColor: 'rgba(2,6,23,0.35)' }}>
+                  {leadErro}
+                </p>
+              )}
               <p className="text-[11px] mt-3 text-center" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                Sem compromisso. Seus dados são usados apenas pra enviar as cotações.
+                Sem compromisso. Seus dados são usados apenas para enviar as cotações.
               </p>
             </>
           )}

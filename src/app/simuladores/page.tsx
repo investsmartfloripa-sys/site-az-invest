@@ -6,7 +6,7 @@ import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 export const metadata = {
   title: "Simuladores | AZ Invest",
   description:
-    "Ferramentas para simular juros compostos, reserva de emergencia, aposentadoria e mais.",
+    "Ferramentas para simular juros compostos, aposentadoria e mais.",
 };
 
 export default function SimuladoresPage() {

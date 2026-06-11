@@ -8,7 +8,7 @@ import { Calculator, Trophy, Sparkles, Info, TrendingUp } from "lucide-react";
 const fmt = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n || 0);
 const fmtCompact = (n) => {
   const abs = Math.abs(n);
-  if (abs >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (abs >= 1e6) return `${(n / 1e6).toFixed(1).replace('.', ',')}M`;
   if (abs >= 1e3) return `${(n / 1e3).toFixed(0)}k`;
   return `${n.toFixed(0)}`;
 };
@@ -113,7 +113,7 @@ export default function CalculadoraJurosCompostos() {
   }, [aporteInicial, aporteMensal, periodoMeses, taxaMensal]);
 
   // ===== Dados pro gráfico =====
-  // Empilhamento (de baixo pra cima): Impacto Inflação | Aportado | Rendimento (visual ajustado)
+  // Empilhamento (de baixo pra cima): Impacto da Inflação | Aportado | Rendimento (visual ajustado)
   // Total da pilha = saldo nominal. A inflação corrói visualmente da base, "comendo" o patrimônio.
   // No tooltip, mostramos os valores NOMINAIS de Aportado e Rendimento (cheios), não os visuais.
   const dadosGrafico = useMemo(() =>
@@ -131,7 +131,7 @@ export default function CalculadoraJurosCompostos() {
       }
       return {
         mes: d.mes,
-        'Impacto Inflação': Math.round(impactoInflacao),
+        'Impacto da Inflação': Math.round(impactoInflacao),
         Aportado: Math.round(aportadoVisual),
         Rendimento: Math.round(Math.max(0, rendimentoVisual)),
         _aportadoNominal: Math.round(d.aportado),
@@ -157,7 +157,10 @@ export default function CalculadoraJurosCompostos() {
       const rendaMensal = total * taxaMensal;
       const fatorInfl = Math.pow(1 + inflacaoMensal, mes);
       const totalReal = total / fatorInfl;
-      const rendaMensalReal = rendaMensal / fatorInfl;
+      // Renda real sustentável: taxa REAL de juros (equação de Fisher) aplicada ao patrimônio
+      // deflacionado — quanto se pode sacar por mês preservando o poder de compra do patrimônio.
+      const taxaRealMensal = (1 + taxaMensal) / (1 + inflacaoMensal) - 1;
+      const rendaMensalReal = totalReal * taxaRealMensal;
 
       const conquistas = [];
       if (!superouCapital && rendimento > aportado) {
@@ -189,7 +192,7 @@ export default function CalculadoraJurosCompostos() {
             Calculadora de Juros Compostos
           </div>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 leading-[1.1]">
-            Veja seu dinheiro <span style={{ color: C.navy }}>multiplicar no tempo</span>.
+            Veja seu dinheiro <span style={{ color: C.navy }}>se multiplicar no tempo</span>.
           </h1>
           <p className="text-base max-w-2xl" style={{ color: C.textDim }}>
             Simule aportes mensais, juros compostos e o impacto da inflação ao longo dos anos.
@@ -223,7 +226,7 @@ export default function CalculadoraJurosCompostos() {
                 <NumField value={periodoMeses} onChange={setPeriodoMeses} min={0} max={1200} suffix="meses" />
               </div>
               <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
-                {(periodoMeses / 12).toFixed(periodoMeses % 12 === 0 ? 0 : 1)} {periodoMeses < 24 ? 'ano' : 'anos'}
+                {(periodoMeses / 12).toFixed(periodoMeses % 12 === 0 ? 0 : 1).replace('.', ',')} {periodoMeses === 0 || periodoMeses >= 24 ? 'anos' : 'ano'}
               </div>
             </div>
             <div>
@@ -255,7 +258,7 @@ export default function CalculadoraJurosCompostos() {
           <div className="rounded-2xl p-12 md:p-16 text-center" style={{ backgroundColor: '#f8fafc', border: `1px dashed ${C.border}` }}>
             <Calculator className="w-12 h-12 mx-auto mb-4" style={{ color: C.textMore }} />
             <h3 className="text-lg font-semibold mb-1" style={{ color: C.dark }}>Preencha os valores acima</h3>
-            <p className="text-sm" style={{ color: C.textDim }}>Insira ao menos o período em meses e a taxa de juros pra ver a simulação.</p>
+            <p className="text-sm" style={{ color: C.textDim }}>Insira ao menos o período em meses e a taxa de juros para ver a simulação.</p>
           </div>
         ) : (
         <>
@@ -316,7 +319,7 @@ export default function CalculadoraJurosCompostos() {
             {temInflacao && (
               <div className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded" style={{ backgroundColor: C.orange }} />
-                <span>Impacto Inflação</span>
+                <span>Impacto da Inflação</span>
               </div>
             )}
             <div className="flex items-center gap-1.5">
@@ -349,7 +352,7 @@ export default function CalculadoraJurosCompostos() {
                   }}
                   labelFormatter={(v) => `Mês ${v}`}
                 />
-                {temInflacao && <Bar dataKey="Impacto Inflação" stackId="a" fill={C.orange} />}
+                {temInflacao && <Bar dataKey="Impacto da Inflação" stackId="a" fill={C.orange} />}
                 <Bar dataKey="Aportado" stackId="a" fill={C.textMore} />
                 <Bar dataKey="Rendimento" stackId="a" fill={C.navy} />
               </BarChart>
@@ -358,7 +361,7 @@ export default function CalculadoraJurosCompostos() {
           {temInflacao && (
             <div className="mt-3 text-[11px] flex items-start gap-1.5" style={{ color: C.textDim }}>
               <Info className="w-3 h-3 mt-0.5 shrink-0" />
-              <span>A barra laranja na base mostra quanto do seu patrimônio nominal foi <strong>corroído pela inflação</strong>. Aportado e Rendimento no tooltip aparecem em valores nominais cheios — o que de fato entrou e o que de fato rendeu.</span>
+              <span>A barra laranja na base mostra quanto do seu patrimônio nominal foi <strong>corroído pela inflação</strong>. Aportado e Rendimento na caixa de detalhes (ao passar o mouse) aparecem em valores nominais — o que de fato entrou e o que de fato rendeu.</span>
             </div>
           )}
         </div>
@@ -431,7 +434,7 @@ export default function CalculadoraJurosCompostos() {
           {temInflacao && (
             <div className="mt-4 text-[11px] flex items-start gap-1.5" style={{ color: C.textDim }}>
               <Info className="w-3 h-3 mt-0.5 shrink-0" />
-              <span><strong>Total Real</strong> e <strong>Renda Real</strong> consideram o poder de compra ajustado pela inflação informada.</span>
+              <span><strong>Total Real</strong> é o patrimônio descontada a inflação informada (poder de compra de hoje). <strong>Renda Real</strong> é a renda mensal que você poderia sacar preservando o poder de compra do patrimônio — calculada com a taxa real de juros (juros descontada a inflação) sobre o Total Real.</span>
             </div>
           )}
         </div>

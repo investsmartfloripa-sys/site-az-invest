@@ -115,10 +115,14 @@ const InputCard = ({ label, hint, children }) => (
 );
 
 function calcDia(valor, dias, cdiAno, pctCDI, isentoIOF = false) {
-  const taxaAno = (cdiAno / 100) * (pctCDI / 100);
-  const fatorAno = dias / 365;
-  const montanteBruto = valor * Math.pow(1 + taxaAno, fatorAno);
+  // Convenção B3/CDI: capitalização por dias ÚTEIS na base 252.
+  // Aproximação dias corridos -> dias úteis pela proporção 252/365 (~21 DU em 30 corridos).
+  const diasUteis = Math.max(1, Math.round(dias * (252 / 365)));
+  // % do CDI aplicado sobre a taxa DIÁRIA (convenção de mercado), não sobre a anual.
+  const taxaDiaria = (Math.pow(1 + cdiAno / 100, 1 / 252) - 1) * (pctCDI / 100);
+  const montanteBruto = valor * Math.pow(1 + taxaDiaria, diasUteis);
   const rendimentoBruto = montanteBruto - valor;
+  // IOF e IR seguem apurados por dias CORRIDOS (regra fiscal).
   const iof = isentoIOF ? 0 : rendimentoBruto * getIOFPercent(dias);
   const ir = Math.max(0, (rendimentoBruto - iof) * getIRPercent(dias));
   const liquido = rendimentoBruto - iof - ir;
@@ -131,8 +135,11 @@ export default function SimuladorCompromissadas() {
   const [pctCDB, setPctCDB] = useState(100);
   const [cdiAno, setCdiAno] = useState(13);
   const [mostrarConfig, setMostrarConfig] = useState(false);
+  // Regra geral (Decreto 6.306/2007, art. 32): compromissada PAGA IOF regressivo em resgates < 30 dias.
+  // Isenção só para lastro em debêntures de emissor fora do grupo econômico do banco.
+  const [isentaIOF, setIsentaIOF] = useState(false);
 
-  // Conta remunerada fixa em 10% do CDI (padrão dos bancões)
+  // Conta remunerada fixa em 10% do CDI (padrão dos grandes bancos)
   const pctContaRem = 10;
 
   const podeCalcular = valor > 0 && cdiAno > 0;
@@ -142,7 +149,7 @@ export default function SimuladorCompromissadas() {
     if (!podeCalcular) return [];
     const arr = [];
     for (let d = 1; d <= HORIZONTE; d++) {
-      const compr = calcDia(valor, d, cdiAno, pctCompromissada, true); // compromissada isenta de IOF
+      const compr = calcDia(valor, d, cdiAno, pctCompromissada, isentaIOF); // IOF conforme o lastro (regra geral: paga IOF)
       const cdb = calcDia(valor, d, cdiAno, pctCDB);
       const contaRem = calcDia(valor, d, cdiAno, pctContaRem, true); // conta remunerada isenta de IOF
       arr.push({
@@ -165,7 +172,7 @@ export default function SimuladorCompromissadas() {
       });
     }
     return arr;
-  }, [valor, cdiAno, pctCompromissada, pctCDB, pctContaRem, podeCalcular]);
+  }, [valor, cdiAno, pctCompromissada, pctCDB, pctContaRem, podeCalcular, isentaIOF]);
 
   const diasChave = [1, 2, 3, 5, 7, 10, 15, 20, 25, 30];
 
@@ -204,13 +211,13 @@ export default function SimuladorCompromissadas() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"
             style={{ backgroundColor: C.blueBgSoft, color: C.navy, border: `1px solid ${C.blueBg}` }}>
             <Zap className="w-3.5 h-3.5" />
-            Liquidez curta pra PJ
+            Liquidez curta para PJ
           </div>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 leading-[1.1]">
-            Caixa parado de 1 a 30 dias? <span style={{ color: C.navy }}>Compromissada rende, CDB perde.</span>
+            Caixa parado de 1 a 30 dias? <span style={{ color: C.navy }}>Compare compromissada e CDB dia a dia.</span>
           </h1>
           <p className="text-base max-w-2xl" style={{ color: C.textDim }}>
-            Pra capital de giro que vai e volta em dias, a compromissada (isenta de IOF) bate o CDB em quase todo o curto prazo. Veja exatamente quanto rende cada dia.
+            Para capital de giro que vai e volta em dias, compare compromissada e CDB já com IOF e IR descontados. Veja exatamente quanto rende cada dia.
           </p>
         </div>
 
@@ -235,9 +242,20 @@ export default function SimuladorCompromissadas() {
             <InputCard label="Quanto você quer aplicar" hint="Valor do aporte na operação">
               <NumField value={valor} onChange={setValor} min={0} max={1000000000} prefix="R$" />
             </InputCard>
-            <InputCard label="Compromissada (% do CDI)" hint="Tipicamente 50% a 100% do CDI">
-              <NumFieldDecimal value={pctCompromissada} onChange={setPctCompromissada} min={0} max={200} suffix="% CDI" />
-            </InputCard>
+            <div>
+              <InputCard label="Compromissada (% do CDI)" hint="Tipicamente 50% a 100% do CDI">
+                <NumFieldDecimal value={pctCompromissada} onChange={setPctCompromissada} min={0} max={200} suffix="% CDI" />
+              </InputCard>
+              <label className="flex items-start gap-1.5 text-[11px] mt-1.5 cursor-pointer" style={{ color: C.textDim }}>
+                <input
+                  type="checkbox"
+                  checked={isentaIOF}
+                  onChange={(e) => setIsentaIOF(e.target.checked)}
+                  className="mt-0.5 shrink-0"
+                />
+                <span>Isenta de IOF (lastro em debêntures de emissor fora do grupo do banco)</span>
+              </label>
+            </div>
             <InputCard label="CDB (% do CDI)" hint="Bancos médios chegam a 110%+. Grandes bancos 95–100%">
               <NumFieldDecimal value={pctCDB} onChange={setPctCDB} min={0} max={200} suffix="% CDI" />
             </InputCard>
@@ -258,7 +276,7 @@ export default function SimuladorCompromissadas() {
         {!podeCalcular ? (
           <div className="rounded-2xl p-12 md:p-16 text-center" style={{ backgroundColor: '#f8fafc', border: `1px dashed ${C.border}` }}>
             <Wallet className="w-12 h-12 mx-auto mb-4" style={{ color: C.textMore }} />
-            <h3 className="text-lg font-semibold mb-1" style={{ color: C.dark }}>Preencha o valor pra começar</h3>
+            <h3 className="text-lg font-semibold mb-1" style={{ color: C.dark }}>Preencha o valor para começar</h3>
             <p className="text-sm" style={{ color: C.textDim }}>Informe quanto você quer aplicar.</p>
           </div>
         ) : (
@@ -274,10 +292,10 @@ export default function SimuladorCompromissadas() {
               <h3 className="text-xl font-bold mb-1" style={{ color: C.dark }}>Quanto rende cada um nos primeiros 30 dias</h3>
               <p className="text-sm mb-4" style={{ color: C.textDim }}>
                 {diaCruzamento === null
-                  ? <>Pra prazos curtos até 30 dias, sua compromissada ({pctCompromissada.toString().replace('.', ',')}% CDI, isenta de IOF) <strong>vence o CDB ({pctCDB.toString().replace('.', ',')}% CDI) todos os dias</strong>. Pra capital de giro de PJ, é a escolha óbvia.</>
+                  ? <>Para prazos curtos até 30 dias, sua compromissada ({pctCompromissada.toString().replace('.', ',')}% CDI{isentaIOF ? ', isenta de IOF' : ''}) <strong>vence o CDB ({pctCDB.toString().replace('.', ',')}% CDI) todos os dias</strong>. Para capital de giro de PJ, tende a ser a melhor escolha.</>
                   : diaCruzamento === 1
-                    ? <>Seu CDB ({pctCDB.toString().replace('.', ',')}% CDI) já supera a compromissada ({pctCompromissada.toString().replace('.', ',')}% CDI) desde o dia 1 — a taxa do CDB é alta o suficiente pra absorver o IOF desde o início. Mas confira o FGC do banco emissor.</>
-                    : <>A compromissada (isenta de IOF) vence nos primeiros dias. Mas como o CDB tem taxa maior, ele cresce mais rápido. <strong>A partir do dia {diaCruzamento}, o CDB ultrapassa</strong>. Se o caixa volta antes disso, fica na compromissada.</>}
+                    ? <>Seu CDB ({pctCDB.toString().replace('.', ',')}% CDI) já supera a compromissada ({pctCompromissada.toString().replace('.', ',')}% CDI) desde o dia 1{isentaIOF ? ' — a taxa do CDB é alta o suficiente para absorver o IOF desde o início' : ''}. Mas confira o FGC do banco emissor.</>
+                    : <>A compromissada {isentaIOF ? '(isenta de IOF) ' : ''}vence nos primeiros dias. Mas como o CDB tem taxa maior, ele cresce mais rápido. <strong>A partir do dia {diaCruzamento}, o CDB ultrapassa</strong>. Se o caixa volta antes disso, fica na compromissada.</>}
               </p>
 
               <div style={{ width: '100%', height: 320 }}>
@@ -378,7 +396,7 @@ export default function SimuladorCompromissadas() {
                 <div className="mt-3 rounded-lg p-3 flex items-start gap-2" style={{ backgroundColor: C.greenBg, border: `1px solid #bbf7d0` }}>
                   <TrendingUp className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.green }} />
                   <div className="text-xs" style={{ color: '#14532d' }}>
-                    <strong>Em 30 dias, a compromissada rende {fmtCents(serie[29].comprLiq - serie[29].contaRemLiq)} a mais que a conta remunerada padrão dos bancões.</strong> Em 1 ano ({fmtCents((serie[29].comprLiq - serie[29].contaRemLiq) * 12)}) ou rotacionando o caixa o ano todo, a diferença vira capital de giro extra.
+                    <strong>Em 30 dias, a compromissada rende {fmtCents(serie[29].comprLiq - serie[29].contaRemLiq)} a mais que a conta remunerada padrão dos grandes bancos.</strong> Rotacionando esse caixa ao longo de um ano, a diferença acumulada passa de {fmtCents((serie[29].comprLiq - serie[29].contaRemLiq) * 12)} — capital de giro extra.
                   </div>
                 </div>
               )}
@@ -405,7 +423,7 @@ export default function SimuladorCompromissadas() {
                     </tr>
                     <tr style={{ borderBottom: `2px solid ${C.border}` }}>
                       <th className="text-right py-1.5 px-2 text-[10px] uppercase tracking-wider font-medium" style={{ color: C.textDim, borderLeft: `1px solid ${C.borderSoft}` }}>Bruto</th>
-                      <th className="text-right py-1.5 px-2 text-[10px] uppercase tracking-wider font-medium" style={{ color: C.textDim }}>IR</th>
+                      <th className="text-right py-1.5 px-2 text-[10px] uppercase tracking-wider font-medium" style={{ color: C.textDim }}>{isentaIOF ? 'IR' : 'IOF+IR'}</th>
                       <th className="text-right py-1.5 px-2 text-[10px] uppercase tracking-wider font-medium" style={{ color: C.dark }}>Líquido</th>
                       <th className="text-right py-1.5 px-2 text-[10px] uppercase tracking-wider font-medium" style={{ color: C.textDim, borderLeft: `1px solid ${C.borderSoft}` }}>Bruto</th>
                       <th className="text-right py-1.5 px-2 text-[10px] uppercase tracking-wider font-medium" style={{ color: C.textDim }}>IOF+IR</th>
@@ -426,7 +444,7 @@ export default function SimuladorCompromissadas() {
                             Dia {d} {isCruzamento && <span className="text-[10px] font-medium">(CDB ultrapassa)</span>}
                           </td>
                           <td className="py-2 px-2 text-right tabular-nums text-xs" style={{ color: '#475569', borderLeft: `1px solid ${C.borderSoft}` }}>{fmtCents(row.comprBruto)}</td>
-                          <td className="py-2 px-2 text-right tabular-nums text-xs" style={{ color: C.orangeDark }}>-{fmtCents(row.comprIr)}</td>
+                          <td className="py-2 px-2 text-right tabular-nums text-xs" style={{ color: C.orangeDark }}>-{fmtCents(row.comprIof + row.comprIr)}</td>
                           <td className="py-2 px-2 text-right tabular-nums text-xs font-bold" style={{ color: ganhador === 'compr' ? C.green : C.dark }}>
                             {fmtCents(row.comprLiq)}
                           </td>
@@ -449,7 +467,7 @@ export default function SimuladorCompromissadas() {
               <div className="mt-3 text-[11px] flex items-start gap-1.5" style={{ color: C.textDim }}>
                 <Info className="w-3 h-3 mt-0.5 shrink-0" />
                 <span>
-                  Líquido do ganhador entre compromissada e CDB em cada dia fica em <span style={{ color: C.green }}>verde</span>. A coluna da conta remunerada serve como baseline — o que você ganharia deixando o dinheiro no bancão.
+                  Líquido do ganhador entre compromissada e CDB em cada dia fica em <span style={{ color: C.green }}>verde</span>. A coluna da conta remunerada serve como referência — o que você ganharia deixando o dinheiro no grande banco.
                 </span>
               </div>
             </div>
@@ -459,13 +477,13 @@ export default function SimuladorCompromissadas() {
               <div className="flex items-center gap-2 mb-3">
                 <Info className="w-4 h-4" style={{ color: C.navy }} />
                 <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.navy }}>
-                  Pra você decidir bem
+                  Para você decidir bem
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs" style={{ color: C.navy }}>
                 <div>
-                  <div className="font-semibold mb-1" style={{ color: C.dark }}>Compromissada: isenta de IOF</div>
-                  Por ser uma operação de recompra (não uma aplicação tradicional), compromissadas são <strong>isentas de IOF</strong>. Por isso rendem limpo desde o dia 1.
+                  <div className="font-semibold mb-1" style={{ color: C.dark }}>IOF na compromissada</div>
+                  Pela regra geral, a compromissada paga <strong>IOF regressivo</strong> em resgates antes de 30 dias, como o CDB. A exceção são as operações lastreadas em debêntures de emissor fora do grupo econômico do banco: essas são isentas e rendem sem desconto de IOF desde o primeiro dia.
                 </div>
                 <div>
                   <div className="font-semibold mb-1" style={{ color: C.dark }}>IR regressivo (ambos)</div>
@@ -473,7 +491,7 @@ export default function SimuladorCompromissadas() {
                 </div>
                 <div>
                   <div className="font-semibold mb-1" style={{ color: C.orangeDark }}>⚠ Compromissada não tem FGC</div>
-                  CDB tem cobertura do FGC até R$ 250 mil por CPF/instituição. Compromissada não — a garantia vem dos títulos que lastreiam a operação. Conta isso pra escolher bancos sólidos.
+                  CDB tem cobertura do FGC até R$ 250 mil por CPF/instituição. Compromissada não — a garantia vem dos títulos que lastreiam a operação. Leve isso em conta ao escolher instituições sólidas.
                 </div>
               </div>
             </div>
@@ -489,13 +507,13 @@ export default function SimuladorCompromissadas() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"
                   style={{ backgroundColor: 'rgba(255,255,255,0.12)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}>
                   <PiggyBank className="w-3.5 h-3.5" />
-                  Pronto pra aplicar?
+                  Pronto para aplicar?
                 </div>
                 <h3 className="text-2xl md:text-4xl font-bold mb-3 leading-tight">
-                  Cansado de ver caixa <span style={{ color: '#FF5713' }}>dormindo na conta</span>?
+                  Sua empresa está com caixa <span style={{ color: '#FF5713' }}>dormindo na conta</span>?
                 </h3>
                 <p className="text-sm md:text-base mb-6" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                  Conectamos sua PJ aos bancos parceiros pra você contratar compromissada com taxa negociada — capital de giro rendendo CDI todo dia, com liquidez D+0.
+                  Conectamos sua PJ aos bancos parceiros para você contratar compromissada com taxa negociada — capital de giro rendendo CDI todo dia, com liquidez D+0.
                 </p>
                 <button className="px-6 py-3.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2 transition-transform hover:scale-[1.02]"
                   style={{ backgroundColor: C.orange, color: '#ffffff', boxShadow: '0 8px 24px rgba(255,87,19,0.35)' }}>
@@ -503,7 +521,7 @@ export default function SimuladorCompromissadas() {
                   <span aria-hidden>→</span>
                 </button>
                 <div className="text-[11px] mt-3" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                  Sem compromisso. Análise das melhores opções pra seu caixa.
+                  Sem compromisso. Análise das melhores opções para o seu caixa.
                 </div>
               </div>
             </div>
@@ -511,7 +529,7 @@ export default function SimuladorCompromissadas() {
         )}
 
         <div className="text-center text-[11px] mt-8 pb-4 px-4 leading-relaxed" style={{ color: C.textDim }}>
-          Simulação meramente ilustrativa baseada em CDI de {cdiAno.toString().replace('.', ',')}% a.a. (ajustável no botão acima). Capitalização diária a partir da taxa anual informada. Não considera taxas de administração ou spreads do banco. Valores reais variam conforme proposta da instituição.
+          Simulação meramente ilustrativa baseada em CDI de {cdiAno.toString().replace('.', ',')}% a.a. (ajustável no botão acima). Capitalização em dias úteis na base 252 (convenção do CDI), com o prazo em dias corridos convertido para dias úteis pela proporção 252/365; IOF e IR apurados por dias corridos. IOF da compromissada segue a regra geral, salvo se marcada a opção de isenção (lastro em debêntures de emissor fora do grupo do banco). Não considera taxas de administração ou spreads do banco. Valores reais variam conforme proposta da instituição.
         </div>
       </div>
     </div>

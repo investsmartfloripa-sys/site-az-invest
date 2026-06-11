@@ -239,8 +239,14 @@ export default function SimuladorAposentadoria() {
   const rendimentoFinal = dadosEvolucao.length > 0 ? dadosEvolucao[dadosEvolucao.length - 1].rendimento : 0;
   const saldoFinal = dadosEvolucao.length > 0 ? dadosEvolucao[dadosEvolucao.length - 1].saldo : 0;
 
-  // Renda gerada no ponto da meta (renda mensal perpétua, em valores de hoje)
-  const rendaProjetada = saldoFinal * (modo === 'aporte' ? taxaInformadaMensal : (taxaCalculadaMensal || 0));
+  // Renda gerada no ponto da meta (renda mensal perpétua, em valores de hoje).
+  // Na desacumulação a taxa é sempre a informada pelo usuário — a mesma que converteu
+  // a renda-alvo em patrimônio-meta (linha do patrimonioMeta). A taxa calculada por
+  // bissecção vale só para a fase de acumulação; usá-la aqui contradiz a meta digitada.
+  // Para meta de patrimônio no modo 'taxa' (sem input de taxa), mantém o fallback.
+  const rendaProjetada = saldoFinal * (
+    modo === 'aporte' || tipoMeta === 'renda' ? taxaInformadaMensal : (taxaCalculadaMensal || 0)
+  );
 
   // Equivalências NOMINAIS no futuro (contexto pro cliente)
   const fatorInflacaoFinal = anos > 0 ? Math.pow(1 + inflacaoAno / 100, anos) : 1;
@@ -282,7 +288,7 @@ export default function SimuladorAposentadoria() {
             Defina sua meta. <span style={{ color: C.navy }}>Descubra o caminho.</span>
           </h1>
           <p className="text-base max-w-2xl" style={{ color: C.textDim }}>
-            Em vez de simular um cenário e ver onde você chega, parta da sua meta e descubra o que precisa pra alcançá-la.
+            Em vez de simular um cenário e ver onde você chega, parta da sua meta e descubra o que precisa para alcançá-la.
           </p>
         </div>
 
@@ -330,7 +336,7 @@ export default function SimuladorAposentadoria() {
               <InputCard label="Idade atual" hint={idadesValidas ? `${anos} ${anos === 1 ? 'ano' : 'anos'} até a aposentadoria` : 'Quantos anos você tem hoje'}>
                 <NumField value={idadeAtual} onChange={setIdadeAtual} min={0} max={100} suffix="anos" />
               </InputCard>
-              <InputCard label="Idade da aposentadoria" hint={idadesValidas ? `${meses} meses pra acumular` : 'Quando pretende se aposentar'}>
+              <InputCard label="Idade da aposentadoria" hint={idadesValidas ? `${meses} meses para acumular` : 'Quando pretende se aposentar'}>
                 <NumField value={idadeAposentadoria} onChange={setIdadeAposentadoria} min={0} max={120} suffix="anos" />
               </InputCard>
               <InputCard label="Capital já investido" hint="Quanto você já tem guardado/investido">
@@ -363,7 +369,7 @@ export default function SimuladorAposentadoria() {
                 label={tipoMeta === 'patrimonio' ? 'Quanto quer acumular' : 'Quanto quer receber por mês'}
                 hint={tipoMeta === 'renda' && taxaInformadaMensal > 0
                   ? `Equivale a um patrimônio de ${fmt(patrimonioMeta)} rendendo ${taxaEsperadaAno.toString().replace('.', ',')}% ao ano`
-                  : tipoMeta === 'renda' ? 'Informe a taxa esperada pra calcular o patrimônio equivalente' : 'Valor total que quer ter ao se aposentar'}
+                  : tipoMeta === 'renda' ? 'Informe a taxa esperada para calcular o patrimônio equivalente' : 'Valor total que quer ter ao se aposentar'}
               >
                 <NumField value={valorMeta} onChange={setValorMeta} min={0} max={1000000000} prefix="R$" suffix={tipoMeta === 'renda' ? '/mês' : ''} />
               </InputCard>
@@ -384,7 +390,7 @@ export default function SimuladorAposentadoria() {
                   label="Rentabilidade esperada (a.a.)"
                   hint={taxaEsperadaAno > 0
                     ? `Equivale a ${formatRealAA(taxaEsperadaAno, inflacaoAno)} real (acima da inflação)`
-                    : 'Nominal — taxa bruta do investimento (ex: Selic, CDB, IPCA+X)'}
+                    : 'Nominal — taxa bruta do investimento (ex.: Selic, CDB, IPCA+X)'}
                 >
                   <NumFieldDecimal value={taxaEsperadaAno} onChange={setTaxaEsperadaAno} min={0} max={100} suffix="% a.a." />
                 </InputCard>
@@ -399,14 +405,14 @@ export default function SimuladorAposentadoria() {
               {modo === 'taxa' && tipoMeta === 'renda' && (
                 <InputCard
                   label="Rentabilidade esperada na aposentadoria"
-                  hint="Usada pra calcular o patrimônio necessário pra gerar a renda desejada"
+                  hint="Usada para calcular o patrimônio necessário para gerar a renda desejada"
                 >
                   <NumFieldDecimal value={taxaEsperadaAno} onChange={setTaxaEsperadaAno} min={0} max={100} suffix="% a.a." />
                 </InputCard>
               )}
               <InputCard
                 label="Inflação esperada (a.a.)"
-                hint={`Default 4% (média histórica). Ajuste se quiser.`}
+                hint={`Padrão: 4% a.a. Ajuste se quiser.`}
               >
                 <NumFieldDecimal value={inflacaoAno} onChange={setInflacaoAno} min={0} max={50} suffix="% a.a." />
               </InputCard>
@@ -417,7 +423,7 @@ export default function SimuladorAposentadoria() {
               <Info className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.navy }} />
               <div className="text-xs" style={{ color: C.navy }}>
                 Todos os valores (meta, aporte e patrimônio acumulado) estão <strong>em valores de hoje</strong>.
-                Isso significa que sua meta mantém o poder de compra ajustada pela inflação ao longo do tempo. O simulador trabalha com a <strong>rentabilidade real</strong> (rentabilidade esperada menos inflação) pra garantir isso.
+                Isso significa que sua meta, ajustada pela inflação, mantém o poder de compra ao longo do tempo. O simulador trabalha com a <strong>rentabilidade real</strong> (rentabilidade esperada menos inflação) para garantir isso.
               </div>
             </div>
           </div>
@@ -440,8 +446,8 @@ export default function SimuladorAposentadoria() {
             </h3>
             <p className="text-sm" style={{ color: '#7c2d12' }}>
               {taxaEsperadaAno <= 0
-                ? 'Pra converter renda mensal em patrimônio, precisamos saber qual a rentabilidade esperada do patrimônio na aposentadoria.'
-                : `A taxa informada (${taxaEsperadaAno.toString().replace('.', ',')}% a.a.) está abaixo ou igual à inflação (${inflacaoAno.toString().replace('.', ',')}% a.a.). Pra gerar renda mensal mantendo o poder de compra, a rentabilidade precisa ser superior à inflação.`}
+                ? 'Para converter renda mensal em patrimônio, precisamos saber qual a rentabilidade esperada do patrimônio na aposentadoria.'
+                : `A taxa informada (${taxaEsperadaAno.toString().replace('.', ',')}% a.a.) está abaixo ou igual à inflação (${inflacaoAno.toString().replace('.', ',')}% a.a.). Para gerar renda mensal mantendo o poder de compra, a rentabilidade precisa ser superior à inflação.`}
             </p>
           </div>
         ) : (
@@ -458,7 +464,7 @@ export default function SimuladorAposentadoria() {
                     capitalJaSuficiente ? (
                       <>
                         <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: C.textDim }}>
-                          Pronto pra meta
+                          Pronto para a meta
                         </div>
                         <div className="text-2xl md:text-3xl font-bold leading-tight mb-2" style={{ color: C.navy }}>
                           Seu capital atual já é suficiente
@@ -480,14 +486,14 @@ export default function SimuladorAposentadoria() {
                           <span className="font-normal text-xs ml-1" style={{ color: C.textDim }}>(ajustando anualmente pela inflação)</span>
                         </div>
                         <div className="text-base" style={{ color: C.textDim }}>
-                          durante <strong style={{ color: C.dark }}>{anos} anos</strong> pra atingir {fmt(patrimonioMeta)}
+                          durante <strong style={{ color: C.dark }}>{anos} anos</strong> para atingir {fmt(patrimonioMeta)}
                           {tipoMeta === 'renda' && ` (que renderia ${fmt(valorMeta)}/mês em valores de hoje)`}.
                         </div>
                       </>
                     )
                   ) : (
                     <div className="text-sm" style={{ color: C.textDim }}>
-                      Informe a rentabilidade esperada pra calcular o aporte necessário.
+                      Informe a rentabilidade esperada para calcular o aporte necessário.
                     </div>
                   )
                 ) : (
@@ -508,7 +514,7 @@ export default function SimuladorAposentadoria() {
                     ) : (
                       <>
                         <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: C.textDim }}>
-                          Você precisa render
+                          Sua carteira precisa render
                         </div>
                         <div className="text-4xl md:text-6xl font-bold tabular-nums leading-none mb-2" style={{ color: C.orange }}>
                           {taxaCalculadaNominalAno !== null ? `${taxaCalculadaNominalAno.toFixed(2).replace('.', ',')}% a.a.` : '—'}
@@ -520,14 +526,14 @@ export default function SimuladorAposentadoria() {
                           </div>
                         )}
                         <div className="text-base" style={{ color: C.textDim }}>
-                          aportando <strong style={{ color: C.dark }}>{fmt(aporteMensalDisponivel)}/mês</strong> por <strong style={{ color: C.dark }}>{anos} anos</strong> pra chegar em {fmt(patrimonioMeta)}
+                          aportando <strong style={{ color: C.dark }}>{fmt(aporteMensalDisponivel)}/mês</strong> por <strong style={{ color: C.dark }}>{anos} anos</strong> para chegar em {fmt(patrimonioMeta)}
                           {tipoMeta === 'renda' && ` (que renderia ${fmt(valorMeta)}/mês em valores de hoje)`}.
                         </div>
                         {resultadoIrrealista && (
                           <div className="mt-4 flex items-start gap-2 p-3 rounded-lg" style={{ backgroundColor: C.orangeBg, border: `1px solid #fed7aa` }}>
                             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.orangeDark }} />
                             <div className="text-xs" style={{ color: '#7c2d12' }}>
-                              Essa rentabilidade é difícil de atingir em investimentos tradicionais. CDB, Tesouro Direto e ações brasileiras costumam render entre 8% e 15% a.a. nominal.
+                              Essa rentabilidade é difícil de atingir em investimentos tradicionais. CDB, Tesouro Direto e ações brasileiras costumam render entre 8% e 15% a.a. em termos nominais.
                               Considere aumentar o aporte ou estender o prazo.
                             </div>
                           </div>
@@ -536,7 +542,7 @@ export default function SimuladorAposentadoria() {
                     )
                   ) : (
                     <div className="text-sm" style={{ color: C.textDim }}>
-                      Informe o aporte mensal disponível pra calcular a rentabilidade necessária.
+                      Informe o aporte mensal disponível para calcular a rentabilidade necessária.
                     </div>
                   )
                 )}
@@ -599,12 +605,12 @@ export default function SimuladorAposentadoria() {
                 <div className="flex items-center gap-2 mb-1">
                   <TrendingUp className="w-4 h-4" style={{ color: C.navy }} />
                   <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>
-                    Pra você ter dimensão
+                    Para você ter dimensão
                   </div>
                 </div>
                 <h3 className="text-xl font-bold mb-1" style={{ color: C.dark }}>Equivalência em valores nominais</h3>
                 <p className="text-sm mb-4" style={{ color: C.textDim }}>
-                  Tudo que mostramos acima está em <strong>poder de compra de hoje</strong>. Pra te dar a noção de quanto isso representa em reais nominais daqui a {anos} anos com inflação de {inflacaoAno.toString().replace('.', ',')}% a.a.:
+                  Tudo que mostramos acima está em <strong>poder de compra de hoje</strong>. Para dar a você a noção de quanto isso representa em reais nominais daqui a {anos} anos com inflação de {inflacaoAno.toString().replace('.', ',')}% a.a.:
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -617,7 +623,7 @@ export default function SimuladorAposentadoria() {
                       Em {anos} anos: {fmt(patrimonioMetaNominal)} nominais
                     </div>
                     <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
-                      É o que você precisa ter acumulado em reais "do futuro" pra equivaler a {fmt(patrimonioMeta)} de hoje.
+                      É o que você precisa ter acumulado em reais "do futuro" para equivaler a {fmt(patrimonioMeta)} de hoje.
                     </div>
                   </div>
 
@@ -644,7 +650,7 @@ export default function SimuladorAposentadoria() {
                         Último mês: {fmt(aporteCalculadoUltimoNominal)} nominais
                       </div>
                       <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
-                        Você precisa reajustar seu aporte anualmente pela inflação pra manter o plano.
+                        Você precisa reajustar seu aporte anualmente pela inflação para manter o plano.
                       </div>
                     </div>
                   )}
@@ -659,7 +665,7 @@ export default function SimuladorAposentadoria() {
                         Último mês: {fmt(aporteDisponivelUltimoNominal)} nominais
                       </div>
                       <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
-                        Você precisa reajustar seu aporte anualmente pela inflação pra manter o poder de compra.
+                        Você precisa reajustar seu aporte anualmente pela inflação para manter o poder de compra.
                       </div>
                     </div>
                   )}
@@ -688,7 +694,7 @@ export default function SimuladorAposentadoria() {
                 <div className="flex items-center justify-center flex-wrap gap-4 mb-3 text-xs" style={{ color: '#475569' }}>
                   <div className="flex items-center gap-1.5">
                     <div className="w-3 h-3 rounded" style={{ backgroundColor: C.textMore }} />
-                    <span>Total Aportado</span>
+                    <span>Total aportado</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div className="w-3 h-3 rounded" style={{ backgroundColor: C.navy }} />
@@ -733,7 +739,7 @@ export default function SimuladorAposentadoria() {
                 <div className="mt-3 text-[11px] flex items-start gap-1.5" style={{ color: C.textDim }}>
                   <Info className="w-3 h-3 mt-0.5 shrink-0" />
                   <span>
-                    Todos os valores estão <strong>em poder de compra de hoje</strong>. A área navy é o patrimônio acumulado, a cinza é só o que você aportou — a diferença é o rendimento real (acima da inflação). A linha laranja é sua meta.
+                    Todos os valores estão <strong>em poder de compra de hoje</strong>. A área azul-marinho é o patrimônio acumulado, a cinza é só o que você aportou — a diferença é o rendimento real (acima da inflação). A linha laranja é sua meta.
                   </span>
                 </div>
               </div>

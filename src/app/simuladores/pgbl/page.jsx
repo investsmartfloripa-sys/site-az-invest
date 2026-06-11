@@ -29,19 +29,46 @@ const C = {
 
 // ===== Constantes fiscais (vigentes em 2026) =====
 // Atualize aqui se a Receita reajustar os valores
+// Tabela progressiva ANUAL do IRPF aplicável ao ano-calendário 2026:
+// tabela mensal em vigor desde mai/2025 (MP 1.294/2025 — isenta até R$ 2.428,80/mês),
+// anualizada × 12 (faixa isenta de R$ 29.145,60/ano).
 const TABELA_IR_ANUAL = [
-  { ate: 24511.92, aliquota: 0, deducao: 0 },
-  { ate: 33919.80, aliquota: 0.075, deducao: 1838.39 },
-  { ate: 45012.60, aliquota: 0.15, deducao: 4382.38 },
-  { ate: 55976.16, aliquota: 0.225, deducao: 7758.32 },
-  { ate: Infinity, aliquota: 0.275, deducao: 10557.13 },
+  { ate: 29145.60, aliquota: 0, deducao: 0 },
+  { ate: 33919.80, aliquota: 0.075, deducao: 2185.92 },
+  { ate: 45012.60, aliquota: 0.15, deducao: 4729.92 },
+  { ate: 55976.16, aliquota: 0.225, deducao: 8105.88 },
+  { ate: Infinity, aliquota: 0.275, deducao: 10904.76 },
 ];
 const DEDUCAO_DEPENDENTE = 2275.08;
 const LIMITE_EDUCACAO_PESSOA = 3561.50;
 const LIMITE_DEDUCAO_SIMPLIFICADA = 16754.34;
 const PCT_DEDUCAO_SIMPLIFICADA = 0.20;
 const LIMITE_PGBL_PCT = 0.12;
-const ALIQUOTA_PGBL_REGRESSIVA_MIN = 0.10; // 10% pra prazos > 10 anos
+
+// Redutor da Lei 15.270/2025 (vigente desde 01/01/2026): zera o IR para rendimentos
+// tributáveis até R$ 5.000/mês (R$ 60.000/ano) e reduz parcialmente até R$ 7.350/mês
+// (R$ 88.200/ano). Fórmula mensal da lei: redutor = 978,62 − 0,133145 × rendimento,
+// limitado ao imposto apurado; aqui anualizada × 12.
+const LIMITE_ISENCAO_LEI_15270 = 60000.00; // R$ 5.000/mês × 12
+const TETO_REDUTOR_LEI_15270 = 88200.00;   // R$ 7.350/mês × 12
+function redutorLei15270(rendimentosTributaveis, impostoApurado) {
+  if (impostoApurado <= 0) return 0;
+  if (rendimentosTributaveis <= LIMITE_ISENCAO_LEI_15270) return impostoApurado;
+  if (rendimentosTributaveis >= TETO_REDUTOR_LEI_15270) return 0;
+  const redutor = 11743.44 - 0.133145 * rendimentosTributaveis; // (978,62 − 0,133145 × mensal) × 12
+  return Math.min(Math.max(0, redutor), impostoApurado);
+}
+
+// Tabela regressiva do PGBL (Lei 11.053/2004, art. 1º): a alíquota depende do prazo de
+// acumulação de CADA aporte, não do horizonte total do plano.
+function aliquotaRegressivaPGBL(prazoAnos) {
+  if (prazoAnos > 10) return 0.10;
+  if (prazoAnos > 8) return 0.15;
+  if (prazoAnos > 6) return 0.20;
+  if (prazoAnos > 4) return 0.25;
+  if (prazoAnos > 2) return 0.30;
+  return 0.35;
+}
 
 // Tabela INSS 2026 (CLT) — faixas atualizadas pelo salário mínimo R$ 1.621,00
 function calcINSSAnual(rendaAnual) {
@@ -62,21 +89,29 @@ function calcINSSAnual(rendaAnual) {
   return inssMes * 12;
 }
 
-function calcIR(base) {
+// IR pela tabela progressiva + redutor da Lei 15.270/2025.
+// O redutor é calculado sobre os rendimentos tributáveis TOTAIS (não sobre a base de cálculo),
+// limitado ao imposto apurado pela tabela.
+function calcIR(base, rendimentosTributaveis) {
   if (base <= 0) return 0;
+  let imposto = 0;
   for (const f of TABELA_IR_ANUAL) {
-    if (base <= f.ate) return Math.max(0, base * f.aliquota - f.deducao);
+    if (base <= f.ate) {
+      imposto = Math.max(0, base * f.aliquota - f.deducao);
+      break;
+    }
   }
-  return 0;
+  return Math.max(0, imposto - redutorLei15270(rendimentosTributaveis, imposto));
 }
 
 // Estima IRRF anual: IR sobre a renda considerando só as deduções aplicadas na folha (INSS + dependentes).
-// Usa a tabela ANUAL pra evitar distorções de arredondamento entre tabela mensal × 12 e anual.
+// Usa a tabela ANUAL para evitar distorções de arredondamento entre tabela mensal × 12 e anual.
+// O redutor da Lei 15.270/2025 também vale na retenção mensal (aplicado via calcIR).
 // Saúde/educação/PGBL são apurados só no ajuste anual e geram restituição.
 function calcIRRFAnual(rendaAnual, inssAnual, dependentes) {
   if (rendaAnual <= 0) return 0;
   const base = Math.max(0, rendaAnual - inssAnual - dependentes * DEDUCAO_DEPENDENTE);
-  return calcIR(base);
+  return calcIR(base, rendaAnual);
 }
 
 // ===== Inputs =====
@@ -131,7 +166,7 @@ export default function SimuladorPGBL() {
   const [educDepInput, setEducDepInput] = useState(0);
   const [pgblInput, setPgblInput] = useState(0);
 
-  // Valores convertidos pra ANUAL (todos os cálculos usam anual internamente)
+  // Valores convertidos para ANUAL (todos os cálculos usam anual internamente)
   const renda = rendaInput * fator;
   const inss = inssInput * fator;
   const irrfManual = irrfInput * fator;
@@ -187,17 +222,17 @@ export default function SimuladorPGBL() {
   // Cenário 1: Simplificada
   const deducaoSimpl = Math.min(renda * PCT_DEDUCAO_SIMPLIFICADA, LIMITE_DEDUCAO_SIMPLIFICADA);
   const baseSimpl = Math.max(0, renda - deducaoSimpl);
-  const irSimpl = calcIR(baseSimpl);
+  const irSimpl = calcIR(baseSimpl, renda);
 
   // Cenário 2: Completa sem PGBL
   const deducoesSemPGBL = inss + saude + deducDependentes + deducEducPropria + deducEducDep;
   const baseSemPGBL = Math.max(0, renda - deducoesSemPGBL);
-  const irSemPGBL = calcIR(baseSemPGBL);
+  const irSemPGBL = calcIR(baseSemPGBL, renda);
 
   // Cenário 3: Completa com PGBL
   const deducoesComPGBL = deducoesSemPGBL + pgblDedutivel;
   const baseComPGBL = Math.max(0, renda - deducoesComPGBL);
-  const irComPGBL = calcIR(baseComPGBL);
+  const irComPGBL = calcIR(baseComPGBL, renda);
 
   // IR retido na fonte: usa o valor editável (com cálculo automático no useEffect)
   const irrf = irrfManual;
@@ -210,31 +245,38 @@ export default function SimuladorPGBL() {
   // Economia REAL: comparamos com a SIMPLIFICADA (ponto de partida default da maioria das pessoas).
   // Assim a economia inclui tanto "destravar a Completa" quanto o benefício do PGBL em si.
   const economia = Math.max(0, irSimpl - irComPGBL);
-  // Decomposição: quanto vem só de migrar pra Completa, quanto vem do PGBL em si
+  // Decomposição: quanto vem só de migrar para a Completa, quanto vem do PGBL em si
   const economiaCompleta = Math.max(0, irSimpl - irSemPGBL);
   const economiaPGBL = Math.max(0, irSemPGBL - irComPGBL);
 
-  // Validações pra exibir resultado
+  // Validações para exibir resultado
   const podeCalcular = renda > 0;
   const pgblFazSentido = pgbl > 0 && economia > 0;
 
   // Projeção: economia anual reinvestida no PRÓPRIO PGBL via juros compostos
   // Como é PGBL, no resgate o IR incide sobre o TOTAL (capital + rendimento), não só sobre o rendimento.
-  // Usamos alíquota de 10% (tabela regressiva, mínimo pra prazos > 10 anos).
+  // Tabela regressiva (Lei 11.053/2004): a alíquota é definida pelo prazo de acumulação de CADA aporte
+  // (35% até 2 anos, caindo até 10% acima de 10 anos), não por uma alíquota única do plano.
   const projecao = useMemo(() => {
     if (!pgblFazSentido || anosProjecao <= 0 || rentabAno <= 0) return null;
     const i = rentabAno / 100;
     const n = anosProjecao;
-    // VF = PMT × ((1+i)^n - 1) / i
-    const vf = economia * ((Math.pow(1 + i, n) - 1) / i);
+    // Aportes anuais no fim de cada ano k (anuidade postecipada): o aporte k acumula por (n − k) anos.
+    // VF = Σ PMT × (1+i)^(n−k)  — equivale à fórmula fechada PMT × ((1+i)^n − 1) / i.
+    // IR no resgate = Σ [valor futuro do aporte k] × alíquota(prazo do aporte k).
+    let vf = 0;
+    let irResgate = 0;
+    for (let k = 1; k <= n; k++) {
+      const prazo = n - k;
+      const vfAporte = economia * Math.pow(1 + i, prazo);
+      vf += vfAporte;
+      irResgate += vfAporte * aliquotaRegressivaPGBL(prazo);
+    }
     const aportado = economia * n;
     const rendimento = vf - aportado;
-    // IR no resgate do PGBL: incide sobre o TOTAL acumulado (não só sobre o rendimento).
-    // Alíquota da tabela regressiva: 10% pra prazos > 10 anos, sobe pra prazos menores.
-    const aliquota = n >= 10 ? 0.10 : (n >= 8 ? 0.15 : (n >= 6 ? 0.20 : (n >= 4 ? 0.25 : (n >= 2 ? 0.30 : 0.35))));
-    const irResgate = vf * aliquota;
     const liquido = vf - irResgate;
-    return { vf, aportado, rendimento, irResgate, liquido, aliquota };
+    const aliquotaEfetiva = vf > 0 ? irResgate / vf : 0;
+    return { vf, aportado, rendimento, irResgate, liquido, aliquotaEfetiva };
   }, [pgblFazSentido, economia, anosProjecao, rentabAno]);
 
   return (
@@ -252,7 +294,7 @@ export default function SimuladorPGBL() {
             Quanto você economiza de IR <span style={{ color: C.navy }}>investindo em PGBL?</span>
           </h1>
           <p className="text-base max-w-2xl" style={{ color: C.textDim }}>
-            Veja o impacto da contribuição na declaração completa. Comparamos os 3 cenários — Simplificada, Completa e Completa com PGBL — pra mostrar a economia real.
+            Veja o impacto da contribuição na declaração completa. Comparamos os 3 cenários — Simplificada, Completa e Completa com PGBL — para mostrar a economia real.
           </p>
         </div>
 
@@ -298,7 +340,7 @@ export default function SimuladorPGBL() {
             <InputCard
               label={`INSS pago (${periodo === 'mensal' ? 'mensal' : 'anual'})`}
               hint={inssAutomatico
-                ? <span>Calculado automático pela tabela CLT. <button onClick={() => setInssAutomatico(false)} className="underline" style={{ color: C.navy }}>Editar manual</button></span>
+                ? <span>Calculado automaticamente pela tabela CLT. <button onClick={() => setInssAutomatico(false)} className="underline" style={{ color: C.navy }}>Editar manualmente</button></span>
                 : <button onClick={() => { setInssAutomatico(true); }} className="underline" style={{ color: C.navy }}>Voltar ao automático</button>
               }
             >
@@ -314,7 +356,7 @@ export default function SimuladorPGBL() {
             <InputCard
               label={`IR já retido na fonte (${periodo === 'mensal' ? 'mensal' : 'anual'})`}
               hint={irrfAutomatico
-                ? <span>Estimado pela renda e INSS. <button onClick={() => setIrrfAutomatico(false)} className="underline" style={{ color: C.navy }}>Editar manual</button></span>
+                ? <span>Estimado pela renda e INSS. <button onClick={() => setIrrfAutomatico(false)} className="underline" style={{ color: C.navy }}>Editar manualmente</button></span>
                 : <span>Use o valor do seu informe de rendimentos. <button onClick={() => setIrrfAutomatico(true)} className="underline" style={{ color: C.navy }}>Voltar ao automático</button></span>
               }
             >
@@ -338,7 +380,7 @@ export default function SimuladorPGBL() {
               label="Número de dependentes"
               hint={dependentes > 0 ? `Dedução de ${fmt(deducDependentes)}/ano (${fmtCents(DEDUCAO_DEPENDENTE)}/pessoa)` : `Cada um dá ${fmtCents(DEDUCAO_DEPENDENTE)}/ano de dedução`}
             >
-              <NumField value={dependentes} onChange={setDependentes} min={0} max={20} suffix="pessoas" />
+              <NumField value={dependentes} onChange={setDependentes} min={0} max={20} suffix={dependentes === 1 ? 'pessoa' : 'pessoas'} />
             </InputCard>
 
             <InputCard
@@ -356,7 +398,7 @@ export default function SimuladorPGBL() {
                 ? <span style={{ color: C.orangeDark }}>Limite anual: {fmt(limiteEducDep)} ({fmtCents(LIMITE_EDUCACAO_PESSOA)}/pessoa). Excedente: {fmt(educDepExcedente)}.</span>
                 : dependentes > 0
                   ? `Limite anual: ${fmt(limiteEducDep)} (${fmtCents(LIMITE_EDUCACAO_PESSOA)} por dependente)`
-                  : 'Adicione dependentes pra liberar a dedução'}
+                  : 'Adicione dependentes para liberar a dedução'}
             >
               <NumField value={educDepInput} onChange={setEducDep} min={0} max={1000000} prefix="R$" disabled={dependentes === 0} />
             </InputCard>
@@ -383,7 +425,7 @@ export default function SimuladorPGBL() {
                 <div className="rounded-lg p-3 flex items-start gap-2" style={{ backgroundColor: C.orangeBgSoft, border: `1px solid #fed7aa` }}>
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.orangeDark }} />
                   <div className="text-xs" style={{ color: '#7c2d12' }}>
-                    Você contribuiu <strong>{fmt(pgbl)}</strong>, mas o limite dedutível é <strong>{fmt(limitePGBL)}</strong>. O excedente de {fmt(pgblExcedente)} continua investido, mas <strong>não gera economia de IR</strong>. Considere realocar pra VGBL ou outro investimento.
+                    Você contribuiu <strong>{fmt(pgbl)}</strong>, mas o limite dedutível é <strong>{fmt(limitePGBL)}</strong>. O excedente de {fmt(pgblExcedente)} continua investido, mas <strong>não gera economia de IR</strong>. Considere realocar para um VGBL ou outro investimento.
                   </div>
                 </div>
               )}
@@ -395,9 +437,9 @@ export default function SimuladorPGBL() {
         {!podeCalcular ? (
           <div className="rounded-2xl p-12 md:p-16 text-center" style={{ backgroundColor: '#f8fafc', border: `1px dashed ${C.border}` }}>
             <Wallet className="w-12 h-12 mx-auto mb-4" style={{ color: C.textMore }} />
-            <h3 className="text-lg font-semibold mb-1" style={{ color: C.dark }}>Preencha sua renda anual</h3>
+            <h3 className="text-lg font-semibold mb-1" style={{ color: C.dark }}>Preencha sua renda bruta tributável</h3>
             <p className="text-sm" style={{ color: C.textDim }}>
-              Informe ao menos a renda bruta tributável anual pra ver o cálculo dos 3 cenários.
+              Informe ao menos a renda bruta tributável {periodo === 'mensal' ? 'mensal' : 'anual'} para ver o cálculo dos 3 cenários.
             </p>
           </div>
         ) : (
@@ -422,20 +464,20 @@ export default function SimuladorPGBL() {
                     </div>
                     {economiaCompleta > 0 && (
                       <div className="mt-3 text-xs" style={{ color: '#475569' }}>
-                        Dessa economia: <strong style={{ color: C.dark }}>{fmt(economiaCompleta)}</strong> já vem só de migrar pra declaração Completa, e <strong style={{ color: C.orange }}>{fmt(economiaPGBL)}</strong> vem do PGBL em si.
+                        Dessa economia: <strong style={{ color: C.dark }}>{fmt(economiaCompleta)}</strong> já vem só de migrar para a declaração Completa, e <strong style={{ color: C.orange }}>{fmt(economiaPGBL)}</strong> vem do PGBL em si.
                       </div>
                     )}
                   </>
                 ) : pgbl === 0 ? (
                   <>
                     <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: C.textDim }}>
-                      Pra calcular a economia
+                      Para calcular a economia
                     </div>
                     <div className="text-xl md:text-2xl font-bold mb-2" style={{ color: C.navy }}>
                       Informe quanto pretende contribuir no PGBL
                     </div>
                     <p className="text-sm" style={{ color: C.textDim }}>
-                      Limite dedutível pra você: <strong style={{ color: C.dark }}>{fmt(limitePGBL)}/ano</strong> (12% da renda).
+                      Limite dedutível para você: <strong style={{ color: C.dark }}>{fmt(limitePGBL)}/ano</strong> (12% da renda).
                       Vamos calcular automaticamente quanto isso reduz seu IR.
                     </p>
                   </>
@@ -445,10 +487,10 @@ export default function SimuladorPGBL() {
                       Resultado
                     </div>
                     <div className="text-xl md:text-2xl font-bold mb-2" style={{ color: C.navy }}>
-                      O PGBL não gera economia adicional pra você
+                      O PGBL não gera economia adicional para você
                     </div>
                     <p className="text-sm" style={{ color: C.textDim }}>
-                      Sua renda atual já fica abaixo da faixa de tributação na Simplificada. PGBL faz mais sentido pra quem tem IR a pagar.
+                      Sua renda atual já fica abaixo da faixa de tributação na Simplificada. PGBL faz mais sentido para quem tem IR a pagar.
                     </p>
                   </>
                 )}
@@ -586,9 +628,9 @@ export default function SimuladorPGBL() {
                   {/* Controles */}
                   <div className="grid grid-cols-2 gap-3 mb-4">
                     <InputCard label="Por quantos anos vai reinvestir" hint="O tempo trabalha a seu favor — quanto mais, melhor">
-                      <NumField value={anosProjecao} onChange={setAnosProjecao} min={1} max={50} suffix="anos" />
+                      <NumField value={anosProjecao} onChange={setAnosProjecao} min={1} max={50} suffix={anosProjecao === 1 ? 'ano' : 'anos'} />
                     </InputCard>
-                    <InputCard label="Rentabilidade esperada (a.a.)" hint="Default 10% — média da renda fixa brasileira">
+                    <InputCard label="Rentabilidade esperada (a.a.)" hint="Padrão: 10% a.a. — referência da renda fixa brasileira">
                       <NumField value={rentabAno} onChange={setRentabAno} min={1} max={30} suffix="% a.a." />
                     </InputCard>
                   </div>
@@ -623,7 +665,7 @@ export default function SimuladorPGBL() {
                     </div>
                     <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
                       <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: C.textDim }}>
-                        Líquido após IR no resgate ({(projecao.aliquota * 100).toFixed(0)}%)
+                        Líquido após IR no resgate (alíquota efetiva {(projecao.aliquotaEfetiva * 100).toFixed(1).replace('.', ',')}%)
                       </div>
                       <div className="text-lg font-bold tabular-nums" style={{ color: C.green }}>{fmt(projecao.liquido)}</div>
                       <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
@@ -635,7 +677,7 @@ export default function SimuladorPGBL() {
                   <div className="rounded-lg p-3 flex items-start gap-2" style={{ backgroundColor: C.blueBgSoft, border: `1px solid ${C.blueBg}` }}>
                     <Info className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.navy }} />
                     <div className="text-xs" style={{ color: C.navy }}>
-                      <strong>Importante:</strong> no PGBL, o IR no resgate incide sobre o <strong>total acumulado</strong> (capital + rendimento), não só sobre o rendimento. Usamos a tabela regressiva: <strong>10% se {'>'} 10 anos</strong>, sobe até 35% pra prazos curtos. Por isso o PGBL faz sentido pra longo prazo. Se reinvestir em outro produto (CDB, Tesouro, fundo), o IR é só sobre o rendimento (~15%), o que muda os números.
+                      <strong>Importante:</strong> no PGBL, o IR no resgate incide sobre o <strong>total acumulado</strong> (capital + rendimento), não só sobre o rendimento. Usamos a tabela regressiva da Lei 11.053/2004 <strong>aporte a aporte</strong>: cada contribuição tem seu próprio prazo de acumulação, com alíquota de <strong>35% até 2 anos</strong>, caindo até <strong>10% acima de 10 anos</strong> — a alíquota efetiva mostrada é a média ponderada dos aportes. Por isso o PGBL faz sentido para o longo prazo. Se reinvestir em outro produto (CDB, Tesouro, fundo), o IR é só sobre o rendimento (~15%), o que muda os números.
                     </div>
                   </div>
                 </div>
@@ -647,21 +689,21 @@ export default function SimuladorPGBL() {
               <div className="flex items-center gap-2 mb-3">
                 <Info className="w-4 h-4" style={{ color: C.navy }} />
                 <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.navy }}>
-                  Pra você decidir bem
+                  Para você decidir bem
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs" style={{ color: C.navy }}>
                 <div>
                   <div className="font-semibold mb-1" style={{ color: C.dark }}>Limite de 12% da renda</div>
-                  Só dá pra deduzir até 12% da renda bruta tributável anual. Acima disso, o valor continua investido mas não gera benefício fiscal.
+                  Só é possível deduzir até 12% da renda bruta tributável anual. Acima disso, o valor continua investido mas não gera benefício fiscal.
                 </div>
                 <div>
                   <div className="font-semibold mb-1" style={{ color: C.dark }}>Só vale na Completa</div>
-                  O PGBL só reduz IR pra quem declara pela Completa. Quem usa a Simplificada (ou é isento) deveria considerar o VGBL.
+                  O PGBL só reduz IR para quem declara pela Completa. Quem usa a Simplificada (ou é isento) deveria considerar o VGBL.
                 </div>
                 <div>
                   <div className="font-semibold mb-1" style={{ color: C.dark }}>IR no resgate</div>
-                  No futuro, quando resgatar o PGBL, o IR incide sobre o <strong>total acumulado</strong> (capital + rendimento). A alíquota varia conforme a tabela escolhida (regressiva começa em 35% e cai pra 10% após 10 anos; progressiva acompanha a tabela do IR vigente no resgate).
+                  No futuro, quando resgatar o PGBL, o IR incide sobre o <strong>total acumulado</strong> (capital + rendimento). A alíquota varia conforme a tabela escolhida (a regressiva começa em 35% e cai para 10% nos aportes com mais de 10 anos de acumulação; a progressiva acompanha a tabela do IR vigente no resgate).
                 </div>
               </div>
             </div>
@@ -669,7 +711,7 @@ export default function SimuladorPGBL() {
         )}
 
         <div className="text-center text-[11px] mt-8 pb-4 px-4 leading-relaxed" style={{ color: C.textDim }}>
-          Simulação baseada na tabela do IRPF e do INSS vigentes em 2026 (salário mínimo R$ 1.621,00, teto INSS R$ 8.475,55). A Lei 15.270/2025 criou redutor adicional pra rendas até R$ 88.200/ano que não está modelado aqui — pode reduzir ainda mais o IR pra rendas baixas. Não considera outras deduções específicas (pensão alimentícia judicial, livro-caixa, etc.) nem taxas de carregamento/administração do plano de previdência. Consulte seu contador antes de decisões fiscais relevantes.
+          Simulação baseada nas tabelas do IRPF e do INSS aplicáveis ao ano-calendário 2026: tabela progressiva mensal vigente desde maio/2025 (MP 1.294/2025, isenta até R$ 2.428,80/mês) anualizada, e tabela do INSS de 2026 (salário mínimo R$ 1.621,00, teto INSS R$ 8.475,55). Inclui o redutor da Lei 15.270/2025, que zera o IR para rendimentos tributáveis até R$ 5.000/mês (R$ 60.000/ano) e o reduz parcialmente até R$ 7.350/mês (R$ 88.200/ano). Não considera outras deduções específicas (pensão alimentícia judicial, livro-caixa, etc.) nem taxas de carregamento/administração do plano de previdência. Consulte seu contador antes de decisões fiscais relevantes.
         </div>
       </div>
     </div>

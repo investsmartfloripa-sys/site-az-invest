@@ -156,11 +156,12 @@ export default function SimuladorSucessaoSeguro() {
 
   // Configurações
   const [inflacao, setInflacao] = useState(4);
+  const [juroReal, setJuroReal] = useState(4);
   const [itcmd, setItcmd] = useState(4);
   const [custoProc, setCustoProc] = useState(7);
   const [mostrarConfig, setMostrarConfig] = useState(false);
 
-  // Quando muda UF, atualiza ITCMD pra alíquota máxima daquele estado
+  // Quando muda UF, atualiza ITCMD para a alíquota máxima daquele estado
   useEffect(() => {
     const estado = ITCMD_ESTADOS.find(e => e.uf === uf);
     if (estado) setItcmd(estado.max);
@@ -173,9 +174,13 @@ export default function SimuladorSucessaoSeguro() {
   const resultado = useMemo(() => {
     if (!podeCalcular) return null;
 
-    // Cobertura de renda: renda × meses (premissa: apólice corrige IPCA, capital rende inflação)
+    // Cobertura de renda: valor presente da renda mensal descontada a juro real (anuidade postecipada).
+    // Com juro real de 0%, equivale a renda × meses (cenário ultraconservador).
     const meses = anosProtecao * 12;
-    const coberturaRenda = rendaMensal * meses;
+    const taxaRealMensal = Math.pow(1 + juroReal / 100, 1 / 12) - 1;
+    const coberturaRenda = taxaRealMensal > 0
+      ? rendaMensal * (1 - Math.pow(1 + taxaRealMensal, -meses)) / taxaRealMensal
+      : rendaMensal * meses;
     const rendaFutura = rendaMensal * Math.pow(1 + inflacao / 100, anosProtecao);
 
     // Sucessão
@@ -211,7 +216,7 @@ export default function SimuladorSucessaoSeguro() {
       seguroAdicional,
       prevAdicional,
     };
-  }, [rendaMensal, anosProtecao, idade, outrasDespesas, dividas, custoEducacao, patrimonio, seguroAtual, prevAtual, inflacao, itcmd, custoProc, podeCalcular]);
+  }, [rendaMensal, anosProtecao, idade, outrasDespesas, dividas, custoEducacao, patrimonio, seguroAtual, prevAtual, inflacao, juroReal, itcmd, custoProc, podeCalcular]);
 
   // Pie chart data
   const pieData = useMemo(() => {
@@ -254,7 +259,7 @@ export default function SimuladorSucessaoSeguro() {
             Sucessão e seguro de vida: <span style={{ color: C.navy }}>quanto você precisa e como cobrir</span>?
           </h1>
           <p className="text-base max-w-2xl" style={{ color: C.textDim }}>
-            Calcule o capital total que protege sua família e descubra o mix ideal entre seguro de vida e previdência pra cobrir o que falta — com plano de ação personalizado pela sua idade.
+            Calcule o capital total que protege sua família e descubra o mix ideal entre seguro de vida e previdência para cobrir o que falta — com plano de ação personalizado de acordo com a sua idade.
           </p>
         </div>
 
@@ -270,10 +275,10 @@ export default function SimuladorSucessaoSeguro() {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <InputCard label="Sua idade" hint="Usada pra calibrar o split sugerido entre seguro e previdência">
+              <InputCard label="Sua idade" hint="Usada para calibrar a divisão sugerida entre seguro e previdência">
                 <NumField value={idade} onChange={setIdade} min={0} max={100} suffix="anos" />
               </InputCard>
-              <InputCard label="Renda mensal" hint="Quanto a família precisa por mês pra manter o padrão de vida">
+              <InputCard label="Renda mensal" hint="Quanto a família precisa por mês para manter o padrão de vida">
                 <NumField value={rendaMensal} onChange={setRendaMensal} min={0} max={1000000000} prefix="R$" />
               </InputCard>
               <InputCard label="Anos de proteção da renda" hint="Período em que o seguro vai sustentar a família. Comum: até os filhos terminarem a faculdade">
@@ -297,7 +302,7 @@ export default function SimuladorSucessaoSeguro() {
               <InputCard label="Total de dívidas" hint="Financiamentos, empréstimos, cartão. Saldo devedor hoje">
                 <NumField value={dividas} onChange={setDividas} min={0} max={1000000000} prefix="R$" />
               </InputCard>
-              <InputCard label="Custos com educação" hint="Valor total reservado pra educação dos filhos (faculdade, intercâmbio etc.)">
+              <InputCard label="Custos com educação" hint="Valor total reservado para a educação dos filhos (faculdade, intercâmbio etc.)">
                 <NumField value={custoEducacao} onChange={setCustoEducacao} min={0} max={1000000000} prefix="R$" />
               </InputCard>
             </div>
@@ -341,7 +346,7 @@ export default function SimuladorSucessaoSeguro() {
                 <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
                   {estadoAtual && estadoAtual.min !== estadoAtual.max
                     ? `${estadoAtual.tipo} de ${estadoAtual.min}% a ${estadoAtual.max}%. Usamos a alíquota máxima como referência conservadora — na progressividade marginal a alíquota efetiva fica entre o piso e o teto.`
-                    : `Alíquota ${estadoAtual?.tipo.toLowerCase()} de ${estadoAtual?.max}%.${uf === 'SP' || uf === 'MG' || uf === 'PR' || uf === 'ES' || uf === 'RR' ? ' Estado em transição obrigatória pra progressividade até 2027 (EC 132/2023).' : ''}`}
+                    : `Alíquota ${estadoAtual?.tipo.toLowerCase()} de ${estadoAtual?.max}%.${uf === 'SP' || uf === 'MG' || uf === 'PR' || uf === 'ES' || uf === 'RR' ? ' Estado em transição obrigatória para a progressividade até 2027 (EC 132/2023).' : ''}`}
                 </div>
               </div>
               <InputCard label="Valor patrimonial total" hint="Imóveis, veículos, investimentos, participações — tudo que vai entrar no inventário">
@@ -351,8 +356,11 @@ export default function SimuladorSucessaoSeguro() {
 
             {mostrarConfig && (
               <div className="mt-4 pt-4 grid grid-cols-1 md:grid-cols-3 gap-4" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
-                <InputCard label="Inflação anual" hint="Só pra ilustrar a renda equivalente daqui a alguns anos. Não muda a cobertura.">
+                <InputCard label="Inflação anual" hint="Só para ilustrar a renda equivalente daqui a alguns anos. Não muda a cobertura.">
                   <NumFieldDecimal value={inflacao} onChange={setInflacao} min={0} max={30} suffix="% a.a." />
+                </InputCard>
+                <InputCard label="Juro real do capital" hint="Rendimento real (acima da inflação) do capital indenizado enquanto sustenta a família. Use 0% no cenário ultraconservador.">
+                  <NumFieldDecimal value={juroReal} onChange={setJuroReal} min={0} max={15} suffix="% a.a." />
                 </InputCard>
                 <InputCard label="Alíquota ITCMD" hint="Alíquota efetiva esperada no estado. Pode ser progressiva.">
                   <NumFieldDecimal value={itcmd} onChange={setItcmd} min={0} max={20} suffix="%" />
@@ -390,7 +398,7 @@ export default function SimuladorSucessaoSeguro() {
         {!podeCalcular ? (
           <div className="rounded-2xl p-12 md:p-16 text-center" style={{ backgroundColor: '#f8fafc', border: `1px dashed ${C.border}` }}>
             <Shield className="w-12 h-12 mx-auto mb-4" style={{ color: C.textMore }} />
-            <h3 className="text-lg font-semibold mb-1" style={{ color: C.dark }}>Preencha idade, renda e período pra começar</h3>
+            <h3 className="text-lg font-semibold mb-1" style={{ color: C.dark }}>Preencha idade, renda e período para começar</h3>
             <p className="text-sm" style={{ color: C.textDim }}>São os três campos essenciais. O resto vem depois.</p>
           </div>
         ) : (
@@ -408,7 +416,7 @@ export default function SimuladorSucessaoSeguro() {
                 {fmtCents(resultado.necessidadeTotal)}
               </div>
               <p className="text-sm max-w-2xl" style={{ color: C.textDim }}>
-                Valor que protege sua família por <strong>{anosProtecao} anos</strong> de renda, mais quita dívidas, garante educação dos filhos e cobre os custos da sucessão. A apólice corrige automaticamente pela inflação ao longo do tempo.
+                Valor que protege a renda da sua família por <strong>{anosProtecao} anos</strong>, além de quitar dívidas, garantir a educação dos filhos e cobrir os custos da sucessão. A cobertura de renda é trazida a valor presente com juro real de {juroReal.toString().replace('.', ',')}% a.a. — premissa de que o capital indenizado segue investido enquanto sustenta a família.
               </p>
             </div>
 
@@ -503,7 +511,7 @@ export default function SimuladorSucessaoSeguro() {
                     </div>
                     <div className="text-xs mb-3" style={{ color: C.navy }}>de meta de acumulação em {anosProtecao} anos</div>
                     <p className="text-[11px]" style={{ color: C.navy }}>
-                      Constrói patrimônio em vida. <strong>Não entra no inventário</strong> e vai direto pro beneficiário, sem ITCMD. Ainda tem benefício fiscal no IR.
+                      Constrói patrimônio em vida. <strong>Não entra no inventário</strong> e vai direto para o beneficiário, sem ITCMD. Ainda tem benefício fiscal no IR.
                     </p>
                   </div>
                 </div>
@@ -511,7 +519,7 @@ export default function SimuladorSucessaoSeguro() {
                 {/* Alternativas — só capital/meta, sem precificação */}
                 <div className="pt-5 mb-5" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
                   <div className="text-xs uppercase tracking-wider font-semibold mb-3" style={{ color: C.textDim }}>
-                    Outras formas de cobrir o gap
+                    Outras formas de cobrir o que falta
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="rounded-lg p-3.5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
@@ -525,7 +533,7 @@ export default function SimuladorSucessaoSeguro() {
                       <div className="text-[10px] mb-2" style={{ color: C.textDim }}>de capital em seguro de vida</div>
                       <div className="text-[11px]" style={{ color: '#7c2d12' }}>
                         <strong>A favor:</strong> proteção máxima desde o dia 1.<br/>
-                        <strong>Contra:</strong> não constrói patrimônio, e o prêmio sobe forte com a idade nas renovações.
+                        <strong>Contra:</strong> não constrói patrimônio, e o prêmio sobe fortemente com a idade nas renovações.
                       </div>
                     </div>
                     <div className="rounded-lg p-3.5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
@@ -539,18 +547,18 @@ export default function SimuladorSucessaoSeguro() {
                       <div className="text-[10px] mb-2" style={{ color: C.textDim }}>de meta acumulada em {anosProtecao} anos</div>
                       <div className="text-[11px]" style={{ color: C.navy }}>
                         <strong>A favor:</strong> constrói patrimônio em vida com vantagem fiscal.<br/>
-                        <strong>Contra:</strong> não cobre morte precoce — se acontecer no ano 2, só tem o que acumulou.
+                        <strong>Contra:</strong> não cobre morte precoce — se ocorrer no segundo ano, a família terá apenas o que foi acumulado.
                       </div>
                     </div>
                     <div className="rounded-lg p-3.5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
                       <div className="flex items-center gap-1.5 mb-2">
                         <Wallet className="w-3.5 h-3.5" style={{ color: C.green }} />
-                        <div className="text-xs font-semibold" style={{ color: C.dark }}>Caixa direto pra prev</div>
+                        <div className="text-xs font-semibold" style={{ color: C.dark }}>Aporte único em previdência</div>
                       </div>
                       <div className="text-lg font-bold tabular-nums mb-0.5" style={{ color: C.green }}>
                         {fmt(resultado.gap)}
                       </div>
-                      <div className="text-[10px] mb-2" style={{ color: C.textDim }}>aportado de uma vez na prev</div>
+                      <div className="text-[10px] mb-2" style={{ color: C.textDim }}>aportado de uma vez na previdência</div>
                       <div className="text-[11px]" style={{ color: '#14532d' }}>
                         <strong>A favor:</strong> dispensa seguro, capital já protege desde o dia 1.<br/>
                         <strong>Contra:</strong> exige caixa disponível hoje. Funciona se você já tem o valor líquido.
@@ -559,7 +567,7 @@ export default function SimuladorSucessaoSeguro() {
                   </div>
                 </div>
 
-                {/* Chamada pra especialista */}
+                {/* Chamada para especialista */}
                 <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
                   <Info className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.navy }} />
                   <div className="text-xs" style={{ color: C.dark }}>
@@ -626,11 +634,11 @@ export default function SimuladorSucessaoSeguro() {
               {/* Detalhamento — dois grupos: "vida" e "custo da sucessão" */}
               <div className="mt-5 pt-5" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
 
-                {/* Grupo 1: Pra família continuar a vida */}
+                {/* Grupo 1: Para a família continuar a vida */}
                 <div className="mb-5">
                   <div className="flex items-baseline justify-between gap-2 mb-2.5 flex-wrap">
                     <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: C.navy }}>
-                      Pra família continuar a vida
+                      Para a família continuar a vida
                     </div>
                     <div className="text-sm font-bold tabular-nums" style={{ color: C.navy }}>
                       {fmt(resultado.coberturaRenda + resultado.custoEducacao + resultado.dividas + resultado.outrasDespesas)}
@@ -644,7 +652,7 @@ export default function SimuladorSucessaoSeguro() {
                       </div>
                       <div className="text-base font-bold tabular-nums" style={{ color: C.dark }}>{fmt(resultado.coberturaRenda)}</div>
                       <div className="text-[10px] mt-0.5" style={{ color: C.textDim }}>
-                        {fmt(rendaMensal)}/mês × {anosProtecao * 12} meses. Em {anosProtecao} anos, equivaleria a {fmt(resultado.rendaFutura)}/mês com inflação de {inflacao.toString().replace('.', ',')}% a.a.
+                        {fmt(rendaMensal)}/mês por {anosProtecao * 12} meses, trazidos a valor presente com juro real de {juroReal.toString().replace('.', ',')}% a.a. Em {anosProtecao} anos, equivaleria a {fmt(resultado.rendaFutura)}/mês com inflação de {inflacao.toString().replace('.', ',')}% a.a.
                       </div>
                     </div>
                     <div className="rounded-lg p-3" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
@@ -653,7 +661,7 @@ export default function SimuladorSucessaoSeguro() {
                         <div className="font-semibold" style={{ color: C.green }}>Educação</div>
                       </div>
                       <div className="text-base font-bold tabular-nums" style={{ color: C.dark }}>{fmt(resultado.custoEducacao)}</div>
-                      <div className="text-[10px] mt-0.5" style={{ color: C.textDim }}>Valor reservado pra educação dos filhos</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: C.textDim }}>Valor reservado para a educação dos filhos</div>
                     </div>
                     <div className="rounded-lg p-3" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
                       <div className="flex items-center gap-1.5 mb-1">
@@ -688,7 +696,7 @@ export default function SimuladorSucessaoSeguro() {
                     </div>
                   </div>
                   <p className="text-[11px] mb-3" style={{ color: '#7c2d12' }}>
-                    Esse é o valor que a sua família precisaria desembolsar pra abrir o inventário e receber o patrimônio. Sem caixa pra cobrir, vendem bens correndo ou pegam empréstimo pra pagar.
+                    Esse é o valor que a sua família precisaria desembolsar para abrir o inventário e receber o patrimônio. Sem caixa para cobrir, a família vende bens às pressas ou recorre a empréstimo.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                     <div className="rounded-lg p-3" style={{ backgroundColor: '#ffffff', border: `1px solid #fed7aa` }}>
@@ -729,9 +737,9 @@ export default function SimuladorSucessaoSeguro() {
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.orange }} />
                 <div className="text-xs" style={{ color: '#7c2d12' }}>
                   <strong style={{ color: C.dark }}>
-                    Sem seguro, sua família precisaria de {fmt(resultado.valorItcmd + resultado.valorProc)} em caixa imediato só pra abrir o inventário.
+                    Sem seguro, sua família precisaria de {fmt(resultado.valorItcmd + resultado.valorProc)} em caixa imediato só para abrir o inventário.
                   </strong>
-                  {' '}E ainda viver {anosProtecao} anos sem a sua renda. O seguro de vida e a previdência VGBL resolvem os dois problemas — e o valor pago pra família <strong>não entra no inventário e é isento de ITCMD</strong>.
+                  {' '}E ainda viver {anosProtecao} anos sem a sua renda. O seguro de vida e a previdência VGBL resolvem os dois problemas — e o valor pago para a família <strong>não entra no inventário e é isento de ITCMD</strong>.
                 </div>
               </div>
             </div>
@@ -746,16 +754,16 @@ export default function SimuladorSucessaoSeguro() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs" style={{ color: C.navy }}>
                 <div>
-                  <div className="font-semibold mb-1" style={{ color: C.dark }}>Apólice corrige a inflação</div>
-                  Cobertura de renda = {fmt(rendaMensal)}/mês × {anosProtecao * 12} meses. A apólice é corrigida pelo IPCA e o capital pago rende em CDI/Tesouro IPCA — os dois crescem juntos.
+                  <div className="font-semibold mb-1" style={{ color: C.dark }}>Renda descontada a juro real</div>
+                  Cobertura de renda = valor presente de {fmt(rendaMensal)}/mês por {anosProtecao * 12} meses, descontado a juro real de {juroReal.toString().replace('.', ',')}% a.a. A apólice é corrigida pelo IPCA e o capital indenizado, aplicado em Tesouro IPCA+ ou equivalente, rende acima da inflação — por isso o desconto. Com juro real de 0%, a conta vira renda × meses (cenário ultraconservador).
                 </div>
                 <div>
                   <div className="font-semibold mb-1" style={{ color: C.dark }}>Mix por idade é regra de bolso</div>
-                  O split {(resultado.split.seguro * 100).toFixed(0)}/{(resultado.split.prev * 100).toFixed(0)} é heurística baseada na fase de vida ({resultado.split.label}). Quanto mais jovem, mais seguro; quanto mais maduro, mais previdência (que acumula em vida e não entra no inventário).
+                  A divisão {(resultado.split.seguro * 100).toFixed(0)}/{(resultado.split.prev * 100).toFixed(0)} é uma heurística baseada na fase de vida ({resultado.split.label}). Quanto mais jovem, mais seguro; quanto mais maduro, mais previdência (que acumula em vida e não entra no inventário).
                 </div>
                 <div>
                   <div className="font-semibold mb-1" style={{ color: C.orangeDark }}>⚠ Custos vêm na cotação</div>
-                  Prêmio do seguro varia por idade, saúde, sexo, prazo e seguradora. Aporte de previdência depende do produto (VGBL/PGBL), tabela tributária e taxa de carregamento. Falamos contigo pra fechar os valores reais.
+                  Prêmio do seguro varia por idade, saúde, sexo, prazo e seguradora. Aporte de previdência depende do produto (VGBL/PGBL), tabela tributária e taxa de carregamento. Falamos com você para fechar os valores reais.
                 </div>
               </div>
             </div>
@@ -769,7 +777,7 @@ export default function SimuladorSucessaoSeguro() {
                 </div>
               </div>
               <p className="text-sm mb-4" style={{ color: '#713f12' }}>
-                O cálculo acima usa <strong>os valores e alíquotas de hoje</strong>. Mas seguro de vida é proteção pra um evento que pode acontecer daqui a décadas — e quatro coisas tendem a piorar a conta com o tempo:
+                O cálculo acima usa <strong>os valores e alíquotas de hoje</strong>. Mas seguro de vida é proteção para um evento que pode acontecer daqui a décadas — e quatro coisas tendem a piorar a conta com o tempo:
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs" style={{ color: '#713f12' }}>
                 <div className="rounded-lg p-3" style={{ backgroundColor: '#ffffff', border: `1px solid #fde047` }}>
@@ -784,7 +792,7 @@ export default function SimuladorSucessaoSeguro() {
                     <span className="w-5 h-5 rounded-full inline-flex items-center justify-center text-[10px] font-bold" style={{ backgroundColor: '#fde047', color: '#713f12' }}>2</span>
                     Alíquotas podem subir
                   </div>
-                  Estados como SP, MG e PR ainda têm alíquota fixa de 4–5%, mas vão migrar pra progressividade (até 8%) até 2027. Patrimônios maiores podem ver a tributação <strong>dobrar</strong>.
+                  Estados como SP, MG e PR ainda têm alíquota fixa de 4–5%, mas vão migrar para a progressividade (até 8%) até 2027. Patrimônios maiores podem ver a tributação <strong>dobrar</strong>.
                 </div>
                 <div className="rounded-lg p-3" style={{ backgroundColor: '#ffffff', border: `1px solid #fde047` }}>
                   <div className="font-semibold mb-1.5 flex items-center gap-1.5" style={{ color: '#a16207' }}>
@@ -820,7 +828,7 @@ export default function SimuladorSucessaoSeguro() {
                   Quer saber <span style={{ color: '#FF5713' }}>quanto custa</span> proteger sua família?
                 </h3>
                 <p className="text-sm md:text-base mb-6" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                  Estruturamos seguro de vida e previdência personalizados pra atingir as metas calculadas aqui. Comparamos seguradoras e fundos pra você ter o melhor custo-benefício — sem pagar a mais do que precisa.
+                  Estruturamos seguro de vida e previdência personalizados para atingir as metas calculadas aqui. Comparamos seguradoras e fundos para você ter o melhor custo-benefício — sem pagar mais do que precisa.
                 </p>
                 <button className="px-6 py-3.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2 transition-transform hover:scale-[1.02]"
                   style={{ backgroundColor: C.orange, color: '#ffffff', boxShadow: '0 8px 24px rgba(255,87,19,0.35)' }}>
@@ -828,7 +836,7 @@ export default function SimuladorSucessaoSeguro() {
                   <span aria-hidden>→</span>
                 </button>
                 <div className="text-[11px] mt-3" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                  Sem compromisso. Análise das melhores opções pra sua família.
+                  Sem compromisso. Análise das melhores opções para a sua família.
                 </div>
               </div>
             </div>
@@ -836,7 +844,7 @@ export default function SimuladorSucessaoSeguro() {
         )}
 
         <div className="text-center text-[11px] mt-8 pb-4 px-4 leading-relaxed" style={{ color: C.textDim }}>
-          Simulação meramente ilustrativa. Cobertura de renda calculada como renda × meses, assumindo apólice corrigida pela inflação. ITCMD de {itcmd.toString().replace('.', ',')}% (topo da faixa do {uf}) e custos de inventário em {custoProc.toString().replace('.', ',')}%. Mix entre seguro e previdência é heurística pela idade — caso real considera caixa, perfil tributário, saúde e objetivos específicos. Alíquotas pós EC 132/2023 e LC 227/2026 em transição até 2027. Não substitui orientação tributária, jurídica ou de planejamento financeiro especializada.
+          Simulação meramente ilustrativa. Cobertura de renda calculada como valor presente da renda mensal descontado a juro real de {juroReal.toString().replace('.', ',')}% a.a. (com 0%, equivale a renda × meses), assumindo apólice corrigida pela inflação. ITCMD de {itcmd.toString().replace('.', ',')}% (topo da faixa do {uf}) e custos de inventário em {custoProc.toString().replace('.', ',')}%. Mix entre seguro e previdência é heurística baseada na idade — caso real considera caixa, perfil tributário, saúde e objetivos específicos. Alíquotas pós-EC 132/2023 e LC 227/2026 em transição até 2027. Não substitui orientação tributária, jurídica ou de planejamento financeiro especializada.
         </div>
       </div>
     </div>
