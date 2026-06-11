@@ -3,17 +3,19 @@
 import { addDaysUTC } from "@/lib/format-br";
 
 /**
- * Toggle de janela temporal — pílulas no padrão visual AZ (mesma estética do
- * AzPeriodSelector): 1M/3M/6M/YTD/1A/5A/Máx.
- *
- * API externa PRESERVADA (`value`/`onChange`, `TIME_WINDOW_OPTIONS`,
- * `type TimeWindow`): consumidores existentes (FiiMacroCharts, AcoesValuation)
- * compilam sem mudança e herdam as novas opções/estética. Os ids legados
- * "7d"/"5d" seguem no TIPO por compatibilidade, mas saíram da UI — em série
- * diária o "1D" plotava só 2 pontos (inútil).
+ * @deprecated APOSENTADO (decisão do Borbarox 2026-06-11, §8 do
+ * PADRAO-VISUAL-GRAFICOS.md): todo gráfico de série temporal usa o
+ * `AzPeriodSelector` (pílulas 1M…Máx + "Personalizado" com range de datas)
+ * com corte via `resolvePeriodRange`. Este toggle não tem o "Personalizado"
+ * e corta por `days` aproximados — NÃO use em código novo. Zero consumidores
+ * no site (IbovHero/IfixHero/FiiDetailHero/AcoesValuation/FiiMacroCharts já
+ * migraram); o arquivo só permanece p/ não quebrar eventual branch antiga.
  */
 
-/** Ids aceitos. "7d"/"5d" são legados (fora da UI), mantidos só p/ compatibilidade de tipo. */
+/**
+ * Ids aceitos. "7d"/"5d" são legados (fora da UI), mantidos só p/ compatibilidade de tipo.
+ * @deprecated Use `AzPeriodValue`/`AzPeriodId` de `@/components/painel/charts`.
+ */
 export type TimeWindow = "7d" | "5d" | "30d" | "3m" | "6m" | "ytd" | "1y" | "5y" | "max";
 
 /** Aproximação de YTD p/ consumidores que só leem `days`: dias desde 1º/jan UTC de hoje. */
@@ -28,6 +30,7 @@ function ytdApproxDays(): number {
  * consumidores existentes: YTD é dinâmico (getter) e Máx = Infinity (corte em
  * -Infinity ⇒ série inteira). Para corte EXATO relativo ao fim da série
  * (YTD = 1º/jan do ano do último ponto), prefira `timeWindowStartIso`.
+ * @deprecated Use `resolvePeriodRange` de `@/components/painel/charts`.
  */
 export const TIME_WINDOW_OPTIONS: ReadonlyArray<{ id: TimeWindow; label: string; days: number }> = [
   { id: "30d", label: "1M", days: 30 },
@@ -52,6 +55,7 @@ const LEGACY_DAYS: Partial<Record<TimeWindow, number>> = { "7d": 2, "5d": 9 };
  * Data ISO de INÍCIO (inclusive) da janela, relativa ao ÚLTIMO ponto da série.
  * Trata YTD exato (1º/jan do ano do último ponto) e devolve null p/ "Máx"
  * (sem corte). Aritmética 100% UTC (`addDaysUTC`).
+ * @deprecated Use `resolvePeriodRange` de `@/components/painel/charts`.
  */
 export function timeWindowStartIso(lastIso: string, windowId: TimeWindow): string | null {
   if (windowId === "max") return null;
@@ -68,6 +72,7 @@ type Props = {
   className?: string;
 };
 
+/** @deprecated Use `AzPeriodSelector` de `@/components/painel/charts` (§8 do padrão visual). */
 export function TimeWindowToggle({ value, onChange, className }: Props) {
   return (
     <div

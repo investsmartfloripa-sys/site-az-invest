@@ -259,7 +259,7 @@ export type FiiDetailEntry = {
   hero: FiiDetailHero;
   indicators: FiiDetailIndicators;
   ficha: FiiDetailFicha;
-  /** Série diária de fechamento (~5 anos). Frontend reutiliza TimeWindowToggle. */
+  /** Série diária de fechamento (~5 anos). Frontend recorta via AzPeriodSelector. */
   price_series_daily: Array<{ date: string; close: number }>;
   /** Histórico de dividendos (mais recente primeiro). */
   dividends: FiiDividend[];

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { addMonthsUTC, parseIsoUTC } from "@/lib/format-br";
@@ -10,6 +10,13 @@ import { addMonthsUTC, parseIsoUTC } from "@/lib/format-br";
  * 1M/3M/6M/YTD/1A/5A/Máx + "Personalizado" (dois <input type="date">
  * limitados ao range da série). Estado 100% CONTROLADO por props; opcional
  * espelhar na querystring (`queryKey`) p/ links compartilháveis.
+ *
+ * useSearchParams SÓ roda quando `queryKey` está setado (hook isolado no
+ * subcomponente AzPeriodQueryBridge, montado condicionalmente): no modo
+ * controlado puro o seletor NÃO toca em querystring, então páginas
+ * prerenderizadas estaticamente o usam SEM <Suspense>. Com `queryKey` (ou
+ * `useAzPeriodQueryState`) a exigência de <Suspense> em rota estática
+ * continua valendo.
  *
  * Cortes de data sempre em UTC — ver `resolvePeriodRange`.
  */
@@ -163,11 +170,47 @@ export type AzPeriodSelectorProps = {
   /**
    * Se setado, espelha cada mudança na querystring (replace, scroll:false)
    * com chaves `{queryKey}p`/`{queryKey}de`/`{queryKey}ate`. NÃO use junto
-   * com useAzPeriodQueryState no mesmo chart (dupla escrita).
+   * com useAzPeriodQueryState no mesmo chart (dupla escrita). Só com esta
+   * prop o useSearchParams é montado — em rota estática, exige <Suspense>.
    */
   queryKey?: string;
   className?: string;
 };
+
+/**
+ * Subcomponente que ISOLA o useSearchParams: montado apenas quando
+ * `queryKey` está ativo. Registra no pai (via ref) o writer que espelha o
+ * período na querystring — a escrita continua acontecendo no handler do
+ * clique (mesma semântica de antes), nunca em render/efeito. Assim o modo
+ * controlado puro nunca dispara o requisito de <Suspense> do App Router.
+ */
+function AzPeriodQueryBridge({
+  queryKey,
+  register,
+}: {
+  queryKey: string;
+  register: (writer: ((v: AzPeriodValue) => void) | null) => void;
+}) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const write = useCallback(
+    (v: AzPeriodValue) => {
+      const qs = new URLSearchParams(searchParams.toString());
+      periodToParams(qs, queryKey, v);
+      router.replace(`${pathname}?${qs.toString()}`, { scroll: false });
+    },
+    [queryKey, searchParams, router, pathname],
+  );
+
+  useEffect(() => {
+    register(write);
+    return () => register(null);
+  }, [register, write]);
+
+  return null;
+}
 
 /**
  * Pílulas de período + range personalizado. Sempre controlado: o pai guarda
@@ -182,10 +225,6 @@ export function AzPeriodSelector({
   queryKey,
   className = "",
 }: AzPeriodSelectorProps) {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-
   // Painel custom: aberto quando o valor JÁ é custom (derivado) ou quando o
   // usuário abriu manualmente e ainda não escolheu o range completo.
   const [manualOpen, setManualOpen] = useState(false);
@@ -196,22 +235,21 @@ export function AzPeriodSelector({
   const shownFrom = draft?.from ?? value.from ?? min ?? "";
   const shownTo = draft?.to ?? value.to ?? max ?? "";
 
-  const writeQuery = useCallback(
-    (v: AzPeriodValue) => {
-      if (queryKey == null) return;
-      const qs = new URLSearchParams(searchParams.toString());
-      periodToParams(qs, queryKey, v);
-      router.replace(`${pathname}?${qs.toString()}`, { scroll: false });
+  // Writer da querystring registrado pelo AzPeriodQueryBridge (null sem queryKey).
+  const queryWriterRef = useRef<((v: AzPeriodValue) => void) | null>(null);
+  const registerQueryWriter = useCallback(
+    (writer: ((v: AzPeriodValue) => void) | null) => {
+      queryWriterRef.current = writer;
     },
-    [queryKey, searchParams, router, pathname],
+    [],
   );
 
   const emit = useCallback(
     (v: AzPeriodValue) => {
       onChange(v);
-      writeQuery(v);
+      queryWriterRef.current?.(v);
     },
-    [onChange, writeQuery],
+    [onChange],
   );
 
   const emitCustom = useCallback(
@@ -225,6 +263,9 @@ export function AzPeriodSelector({
 
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
+      {queryKey != null ? (
+        <AzPeriodQueryBridge key={queryKey} queryKey={queryKey} register={registerQueryWriter} />
+      ) : null}
       <div className="flex flex-wrap items-center gap-1">
         {periods.map((p) => (
           <button

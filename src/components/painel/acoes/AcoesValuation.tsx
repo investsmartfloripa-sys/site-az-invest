@@ -15,17 +15,17 @@ import {
 
 import DataStamp from "@/components/painel/DataStamp";
 import {
+  AzPeriodSelector,
+  resolvePeriodRange,
+  type AzPeriodValue,
+} from "@/components/painel/charts";
+import {
   AzTooltip,
   azGridProps,
   azXAxisProps,
   azYAxisProps,
   azZeroLineProps,
 } from "@/components/painel/core";
-import {
-  TIME_WINDOW_OPTIONS,
-  TimeWindowToggle,
-  type TimeWindow,
-} from "@/components/painel/fii/TimeWindowToggle";
 import {
   AZ_BRAND,
   AZ_CHART,
@@ -41,7 +41,6 @@ import {
   fmtPct,
   fmtSignedNum,
   formatAxisDate,
-  parseIsoUTC,
 } from "@/lib/format-br";
 import type { AcoesValuationData, AcoesValuationPoint } from "@/lib/painel-acoes";
 
@@ -60,12 +59,12 @@ type Props = {
 
 type PremiumMode = "ey" | "dy";
 
-function clipByWindow(arr: AcoesValuationPoint[], winId: TimeWindow): AcoesValuationPoint[] {
+// Corte pela janela do AzPeriodSelector — resolvePeriodRange trata os
+// presets E o range custom (from/to) em aritmética 100% UTC (§8 do padrão).
+function clipByPeriod(arr: AcoesValuationPoint[], period: AzPeriodValue): AcoesValuationPoint[] {
   if (!arr.length) return [];
-  const days = TIME_WINDOW_OPTIONS.find((o) => o.id === winId)?.days ?? 365 * 5;
-  const last = parseIsoUTC(arr[arr.length - 1].date);
-  const cutoff = last - days * 86_400_000;
-  return arr.filter((p) => parseIsoUTC(p.date) >= cutoff);
+  const { from, to } = resolvePeriodRange(period, arr[0].date, arr[arr.length - 1].date);
+  return arr.filter((p) => p.date >= from && p.date <= to);
 }
 
 /** Dias corridos entre o 1º e o último ponto plotado (p/ ticks adaptativos do format-br). */
@@ -83,12 +82,18 @@ function zLabel(z: number | null): { text: string; color: string } {
 }
 
 export function AcoesValuation({ data }: Props) {
-  const [plWin, setPlWin] = useState<TimeWindow>("5y");
-  const [premWin, setPremWin] = useState<TimeWindow>("5y");
+  // Seletores §8 controlados (estado local, sem querystring — página estática
+  // dispensa Suspense porque o modo controlado não usa useSearchParams).
+  const [plWin, setPlWin] = useState<AzPeriodValue>({ id: "5y" });
+  const [premWin, setPremWin] = useState<AzPeriodValue>({ id: "5y" });
   const [premMode, setPremMode] = useState<PremiumMode>("ey");
 
-  const plClipped = useMemo(() => clipByWindow(data.series, plWin), [data, plWin]);
-  const premClipped = useMemo(() => clipByWindow(data.series, premWin), [data, premWin]);
+  const plClipped = useMemo(() => clipByPeriod(data.series, plWin), [data, plWin]);
+  const premClipped = useMemo(() => clipByPeriod(data.series, premWin), [data, premWin]);
+
+  // Range disponível da série — limita os inputs do "Personalizado".
+  const seriesMin = data.series[0]?.date;
+  const seriesMax = data.series[data.series.length - 1]?.date;
   const plSpan = useMemo(() => spanDaysOf(plClipped), [plClipped]);
   const premSpan = useMemo(() => spanDaysOf(premClipped), [premClipped]);
 
@@ -116,7 +121,7 @@ export function AcoesValuation({ data }: Props) {
               Histórico com média e bandas de ±1σ/±2σ (z-score)
             </p>
           </div>
-          <TimeWindowToggle value={plWin} onChange={setPlWin} />
+          <AzPeriodSelector value={plWin} onChange={setPlWin} min={seriesMin} max={seriesMax} />
         </header>
 
         <div className="flex flex-wrap items-baseline gap-3 pb-1 text-[11px]">
@@ -235,7 +240,7 @@ export function AcoesValuation({ data }: Props) {
               {yieldLabel} do Ibovespa − juro real da NTN-B ~10a
             </p>
           </div>
-          <TimeWindowToggle value={premWin} onChange={setPremWin} />
+          <AzPeriodSelector value={premWin} onChange={setPremWin} min={seriesMin} max={seriesMax} />
         </header>
 
         {/* Toggle EY / DY */}

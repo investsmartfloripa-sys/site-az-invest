@@ -15,6 +15,11 @@ import {
 
 import DataStamp from "@/components/painel/DataStamp";
 import {
+  AzPeriodSelector,
+  resolvePeriodRange,
+  type AzPeriodValue,
+} from "@/components/painel/charts";
+import {
   AzTooltip,
   azGridProps,
   azTooltipProps,
@@ -22,11 +27,6 @@ import {
   azYAxisProps,
   azZeroLineProps,
 } from "@/components/painel/core";
-import {
-  TIME_WINDOW_OPTIONS,
-  TimeWindowToggle,
-  type TimeWindow,
-} from "@/components/painel/fii/TimeWindowToggle";
 import { AZ_BRAND, AZ_CHART, AZ_SERIES, AZ_TOOLTIP_PROPS, BENCHMARK_COLORS } from "@/lib/az-chart-theme";
 import {
   diffDaysUTC,
@@ -36,7 +36,6 @@ import {
   fmtPct,
   fmtSignedNum,
   formatAxisDate,
-  parseIsoUTC,
 } from "@/lib/format-br";
 import type { FiiMacroChartsData, FiiPvpPoint } from "@/lib/painel-fii";
 
@@ -50,12 +49,19 @@ type Props = {
   data: FiiMacroChartsData;
 };
 
-function clipByWindow<T extends { date: string }>(arr: T[], winId: TimeWindow): T[] {
+// Corte pela janela do AzPeriodSelector — resolvePeriodRange trata os
+// presets E o range custom (from/to) em aritmética 100% UTC (§8 do padrão).
+// `min`/`max` são o range DISPONÍVEL (pode ser a união de duas séries irmãs,
+// como tijolo+papel — garante o mesmo recorte nas duas).
+function clipByPeriod<T extends { date: string }>(
+  arr: T[],
+  period: AzPeriodValue,
+  min: string,
+  max: string,
+): T[] {
   if (!arr.length) return [];
-  const days = TIME_WINDOW_OPTIONS.find((o) => o.id === winId)?.days ?? 365 * 5;
-  const last = parseIsoUTC(arr[arr.length - 1].date);
-  const cutoff = last - days * 86_400_000;
-  return arr.filter((p) => parseIsoUTC(p.date) >= cutoff);
+  const { from, to } = resolvePeriodRange(period, min, max);
+  return arr.filter((p) => p.date >= from && p.date <= to);
 }
 
 /** Dias corridos entre o 1º e o último ponto plotado (p/ ticks adaptativos do format-br). */
@@ -99,16 +105,43 @@ function buildPvpData(tijolo: FiiPvpPoint[], papel: FiiPvpPoint[]): PvpRow[] {
 }
 
 export function FiiMacroCharts({ data }: Props) {
-  const [pvpWin, setPvpWin] = useState<TimeWindow>("5y");
-  const [premWin, setPremWin] = useState<TimeWindow>("5y");
+  // Seletores §8 controlados (estado local, sem querystring — página estática
+  // dispensa Suspense porque o modo controlado não usa useSearchParams).
+  const [pvpWin, setPvpWin] = useState<AzPeriodValue>({ id: "5y" });
+  const [premWin, setPremWin] = useState<AzPeriodValue>({ id: "5y" });
+
+  // Range disponível do P/VP = UNIÃO tijolo+papel (mesmo recorte p/ as duas).
+  const pvpRange = useMemo(() => {
+    const firsts = [data.pvp_history.tijolo[0]?.date, data.pvp_history.papel[0]?.date]
+      .filter((d): d is string => !!d)
+      .sort();
+    const lasts = [
+      data.pvp_history.tijolo[data.pvp_history.tijolo.length - 1]?.date,
+      data.pvp_history.papel[data.pvp_history.papel.length - 1]?.date,
+    ]
+      .filter((d): d is string => !!d)
+      .sort();
+    if (!firsts.length || !lasts.length) return null;
+    return { min: firsts[0], max: lasts[lasts.length - 1] };
+  }, [data]);
 
   const pvpClipped = useMemo(() => {
-    const tj = clipByWindow(data.pvp_history.tijolo, pvpWin);
-    const pp = clipByWindow(data.pvp_history.papel, pvpWin);
+    if (!pvpRange) return [];
+    const tj = clipByPeriod(data.pvp_history.tijolo, pvpWin, pvpRange.min, pvpRange.max);
+    const pp = clipByPeriod(data.pvp_history.papel, pvpWin, pvpRange.min, pvpRange.max);
     return buildPvpData(tj, pp);
-  }, [data, pvpWin]);
+  }, [data, pvpWin, pvpRange]);
 
-  const premioClipped = useMemo(() => clipByWindow(data.premio_history, premWin), [data, premWin]);
+  const premioMin = data.premio_history[0]?.date;
+  const premioMax = data.premio_history[data.premio_history.length - 1]?.date;
+
+  const premioClipped = useMemo(
+    () =>
+      premioMin && premioMax
+        ? clipByPeriod(data.premio_history, premWin, premioMin, premioMax)
+        : [],
+    [data, premWin, premioMin, premioMax],
+  );
   const pvpSpan = useMemo(() => spanDaysOf(pvpClipped), [pvpClipped]);
   const premioSpan = useMemo(() => spanDaysOf(premioClipped), [premioClipped]);
 
@@ -132,7 +165,12 @@ export function FiiMacroCharts({ data }: Props) {
               Mediana + banda P25-P75 dos 25 mais líquidos (cesta recomposta todo mês)
             </p>
           </div>
-          <TimeWindowToggle value={pvpWin} onChange={setPvpWin} />
+          <AzPeriodSelector
+            value={pvpWin}
+            onChange={setPvpWin}
+            min={pvpRange?.min}
+            max={pvpRange?.max}
+          />
         </header>
 
         <div className="flex gap-4 pb-1 text-[11px]">
@@ -269,7 +307,12 @@ export function FiiMacroCharts({ data }: Props) {
               DY 12m mediana top 25 tijolo − yield NTN-B mais longa (TD)
             </p>
           </div>
-          <TimeWindowToggle value={premWin} onChange={setPremWin} />
+          <AzPeriodSelector
+            value={premWin}
+            onChange={setPremWin}
+            min={premioMin}
+            max={premioMax}
+          />
         </header>
 
         <div className="flex flex-wrap gap-4 pb-1 text-[11px]">

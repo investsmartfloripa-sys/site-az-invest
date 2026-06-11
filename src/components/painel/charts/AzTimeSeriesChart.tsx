@@ -1,13 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import {
+  Area,
   Brush,
   CartesianGrid,
+  ComposedChart,
   Legend,
   Line,
-  LineChart,
   ReferenceArea,
+  ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -17,8 +19,9 @@ import {
 
 import { AzTooltip } from "@/components/painel/core/AzTooltip";
 import { azGridProps, azXAxisProps, azYAxisProps, azZeroLineProps } from "@/components/painel/core/azChartDefaults";
-import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS, benchmarkColor, seriesColor } from "@/lib/az-chart-theme";
+import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS, benchmarkColor, seriesColor, variationText } from "@/lib/az-chart-theme";
 import {
+  buildTimeTicks,
   diffDaysUTC,
   fmtBRL,
   fmtDataBR,
@@ -26,7 +29,9 @@ import {
   fmtPct,
   fmtSignedPct,
   formatAxisDate,
+  formatTimeTickLabel,
   isoFromUTC,
+  parseIsoUTC,
 } from "@/lib/format-br";
 import { resolvePeriodRange, type AzPeriodValue } from "./AzPeriodSelector";
 
@@ -34,8 +39,13 @@ import { resolvePeriodRange, type AzPeriodValue } from "./AzPeriodSelector";
  * O componente BASE de série temporal do site — embute todo o
  * PADRAO-VISUAL-GRAFICOS.md: grade sólida, eixos limpos, tooltip navy,
  * domain Y manual com 8% de folga (o Recharts clipa sem isso), ticks de
- * data adaptativos (dd/mm → mmm/aa → aaaa) e cores AZ_SERIES respeitando
- * BENCHMARK_COLORS quando o rótulo casa.
+ * data ANCORADOS em viradas de mês/ano (`buildTimeTicks` — zero labels
+ * duplicados) e cores AZ_SERIES respeitando BENCHMARK_COLORS quando o
+ * rótulo casa.
+ *
+ * `variant="hero"` (opt-in) liga o tratamento premium dos gráficos de
+ * destaque: área com gradiente, último valor em pill navy, máx/mín da
+ * janela anotados, badge de variação e crosshair no hover.
  *
  * Integra com AzPeriodSelector via a prop `period` (controlada pelo pai).
  */
@@ -63,6 +73,16 @@ export type AzUnit = "%" | "R$" | "pts" | "index" | "none";
  * - "pct_acum": variação % acumulada desde o 1º ponto da janela (sempre com sinal).
  */
 export type AzSeriesMode = "raw" | "rebase100" | "pct_acum";
+
+/**
+ * Variante visual do chart:
+ * - "default": linha limpa (comportamento histórico — nada muda p/ quem já usa);
+ * - "hero": tratamento premium p/ gráficos de destaque — 1ª série principal
+ *   vira área com gradiente, último valor ganha dot + pill navy flutuante,
+ *   máx/mín da janela são anotados, badge de variação no canto superior
+ *   direito, cursor crosshair no hover e animação de entrada (~400ms).
+ */
+export type AzChartVariant = "default" | "hero";
 
 /** Linha de referência horizontal (meta, teto de banda...). */
 export type AzRefLine = {
@@ -117,6 +137,18 @@ export type AzTimeSeriesChartProps = {
   forwardFill?: boolean;
   /** Título do eixo Y (ex.: "Taxa (% a.a.)") — renderizado a -90°. */
   yAxisLabel?: string;
+  /**
+   * ADITIVO (default "default" = comportamento atual). Use "hero" nos gráficos
+   * de destaque das páginas (Ibov, IFIX, ativo...): área com gradiente,
+   * último valor em pill, máx/mín anotados, badge de variação e crosshair.
+   */
+  variant?: AzChartVariant;
+  /**
+   * ADITIVO. Força exibir/ocultar a legenda. Default (undefined): automática —
+   * visível quando há 2+ séries (comportamento atual). Passe `false` quando a
+   * página já tem chips/toggles que fazem o papel de legenda.
+   */
+  showLegend?: boolean;
   className?: string;
 };
 
@@ -159,15 +191,31 @@ function buildAxisFmt(mode: AzSeriesMode, unit: AzUnit): (v: number) => string {
   }
 }
 
+/**
+ * Estatísticas da 1ª série principal NA JANELA plotada (valores já
+ * transformados pelo `mode`) — alimentam as anotações do variant "hero".
+ */
+type MainSeriesStats = {
+  lastT: number;
+  lastV: number;
+  maxT: number;
+  maxV: number;
+  minT: number;
+  minV: number;
+  /** Variação % bruta 1º→último ponto plotado (null se base ≤ 0). */
+  windowPct: number | null;
+};
+
 type BuiltChart = {
   rows: ChartRow[];
   yDomain: [number, number];
   spanDays: number;
   hasNegative: boolean;
+  main: MainSeriesStats | null;
 };
 
 function buildChart(
-  all: { s: AzTimeSeries }[],
+  all: { s: AzTimeSeries; isBenchmark: boolean }[],
   period: AzPeriodValue,
   mode: AzSeriesMode,
   forwardFill: boolean,
@@ -188,8 +236,9 @@ function buildChart(
   const byT = new Map<number, ChartRow>();
   let lo = Infinity;
   let hi = -Infinity;
+  let main: MainSeriesStats | null = null;
 
-  for (const { s } of all) {
+  for (const { s, isBenchmark } of all) {
     // Janela ordenada por data (não confia na ordenação do payload).
     const windowed = s.data
       .filter(([d, v]) => d >= from && d <= to && Number.isFinite(v))
@@ -197,6 +246,16 @@ function buildChart(
       .sort((a, b) => (a[0] < b[0] ? -1 : 1));
     if (windowed.length === 0) continue;
     const base = windowed[0][1];
+
+    // 1ª série PRINCIPAL com dados na janela — acumula os extremos plotados
+    // (máx/mín/último, já transformados pelo mode) p/ as anotações do hero.
+    const isMain = !isBenchmark && main === null;
+    let mMaxV = -Infinity;
+    let mMaxT = 0;
+    let mMinV = Infinity;
+    let mMinT = 0;
+    let mLastV = 0;
+    let mLastT = 0;
 
     for (const [d, raw] of windowed) {
       let v = raw;
@@ -214,9 +273,36 @@ function buildChart(
         row = { t } as ChartRow;
         byT.set(t, row);
       }
-      row[s.id] = +v.toFixed(6);
+      const rounded = +v.toFixed(6);
+      row[s.id] = rounded;
       if (v < lo) lo = v;
       if (v > hi) hi = v;
+      if (isMain) {
+        mLastV = rounded;
+        mLastT = t;
+        if (rounded > mMaxV) {
+          mMaxV = rounded;
+          mMaxT = t;
+        }
+        if (rounded < mMinV) {
+          mMinV = rounded;
+          mMinT = t;
+        }
+      }
+    }
+
+    if (isMain && Number.isFinite(mMaxV) && mMaxV !== -Infinity) {
+      const firstRaw = windowed[0][1];
+      const lastRaw = windowed[windowed.length - 1][1];
+      main = {
+        lastT: mLastT,
+        lastV: mLastV,
+        maxT: mMaxT,
+        maxV: mMaxV,
+        minT: mMinT,
+        minV: mMinV,
+        windowPct: firstRaw > 0 ? 100 * (lastRaw / firstRaw - 1) : null,
+      };
     }
   }
 
@@ -247,7 +333,48 @@ function buildChart(
   const lastIso = isoFromUTC(rows[rows.length - 1].t);
   const spanDays = Math.max(1, diffDaysUTC(firstIso, lastIso));
 
-  return { rows, yDomain, spanDays, hasNegative: lo < 0 && hi > 0 };
+  return { rows, yDomain, spanDays, hasNegative: lo < 0 && hi > 0, main };
+}
+
+// ---------------------------------------------------------------------------
+// Anotações do variant "hero"
+// ---------------------------------------------------------------------------
+
+/** Largura estimada da pill (texto 10,5px/600 tabular ≈ 6,3px por caractere + padding). */
+function pillWidth(text: string): number {
+  return Math.round(text.length * 6.3) + 16;
+}
+
+type PillViewBox = { x?: number; y?: number; width?: number; height?: number };
+
+/**
+ * Pill navy flutuante com o último valor — usada como `label` do ReferenceDot
+ * do último ponto (o Recharts injeta o `viewBox` centrado no dot via clone).
+ */
+function AzLastValuePill({ viewBox, text }: { viewBox?: PillViewBox; text: string }) {
+  if (!viewBox || typeof viewBox.x !== "number" || typeof viewBox.y !== "number") return null;
+  const cx = viewBox.x + (viewBox.width ?? 0) / 2;
+  const cy = viewBox.y + (viewBox.height ?? 0) / 2;
+  const w = pillWidth(text);
+  const h = 18;
+  const x = cx + 9;
+  return (
+    <g pointerEvents="none">
+      <rect x={x} y={cy - h / 2} width={w} height={h} rx={h / 2} fill={AZ_BRAND.navy} fillOpacity={0.95} />
+      <text
+        x={x + w / 2}
+        y={cy}
+        dy={3.5}
+        textAnchor="middle"
+        fontSize={10.5}
+        fontWeight={600}
+        fill="#FFFFFF"
+        style={{ fontVariantNumeric: "tabular-nums" }}
+      >
+        {text}
+      </text>
+    </g>
+  );
 }
 
 /**
@@ -277,6 +404,8 @@ export function AzTimeSeriesChart({
   dots = false,
   forwardFill = false,
   yAxisLabel,
+  variant = "default",
+  showLegend,
   className = "",
 }: AzTimeSeriesChartProps) {
   const all = useMemo(
@@ -295,6 +424,23 @@ export function AzTimeSeriesChart({
   const valueFmt = useMemo(() => buildValueFmt(mode, unit), [mode, unit]);
   const axisFmt = useMemo(() => buildAxisFmt(mode, unit), [mode, unit]);
 
+  // Gradiente do hero precisa de id ÚNICO por instância (vários charts na página).
+  const reactId = useId();
+  const gradientId = `az-hero-grad-${reactId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+
+  // Ticks de data ANCORADOS (viradas de mês/ano) — elimina o bug de labels
+  // duplicados ("jul/25 jul/25") em todos os variants.
+  const xTicks = useMemo(() => {
+    if (!built) return undefined;
+    const ticks = buildTimeTicks(
+      built.rows.map((r) => isoFromUTC(r.t)),
+      built.spanDays,
+    )
+      .map((iso) => parseIsoUTC(iso))
+      .filter((t) => Number.isFinite(t));
+    return ticks.length > 0 ? ticks : undefined;
+  }, [built]);
+
   if (!built) {
     return (
       <div className={`flex w-full items-center justify-center ${className}`} style={{ height }}>
@@ -303,15 +449,44 @@ export function AzTimeSeriesChart({
     );
   }
 
-  const { rows, yDomain, spanDays, hasNegative } = built;
+  const { rows, yDomain, spanDays, hasNegative, main } = built;
   const dotRadius = dots === true ? 2.5 : typeof dots === "number" ? dots : 0;
-  const showLegend = all.length > 1;
+  const legendVisible = showLegend ?? all.length > 1;
   const zeroBaseline = mode === "pct_acum" ? 0 : mode === "rebase100" ? 100 : null;
 
+  const isHero = variant === "hero";
+  const mainColor = series.length > 0 ? resolveColor(series[0], 0, false) : AZ_BRAND.azure;
+  // Pill do último valor vive na margem direita — reserva espaço p/ não cortar.
+  const lastLabel = isHero && main ? valueFmt(main.lastV) : "";
+  const marginRight = isHero && main ? Math.max(16, pillWidth(lastLabel) + 13) : 16;
+  // Máx/mín só quando não coincidem com o último ponto (a pill já o destaca)
+  // e a série não é flat (máx === mín seria anotação duplicada sem informação).
+  const showMaxDot = isHero && main != null && main.maxV > main.minV && main.maxT !== main.lastT;
+  const showMinDot = isHero && main != null && main.maxV > main.minV && main.minT !== main.lastT;
+  // Chave estável por janela: re-anima ao trocar período/modo, nunca no hover.
+  const heroAnimKey = `${rows[0]?.t ?? 0}:${rows[rows.length - 1]?.t ?? 0}:${mode}`;
+
   return (
-    <div className={`w-full ${className}`} style={{ height }}>
+    <div className={`relative w-full ${className}`} style={{ height }}>
+      {/* Badge de variação da janela (1º→último ponto plotado da série principal). */}
+      {isHero && main?.windowPct != null ? (
+        <div
+          className="pointer-events-none absolute right-2 top-0 z-10 rounded-full border border-[#132960]/10 bg-white/85 px-2 py-0.5 text-[10px] font-semibold tabular-nums shadow-sm"
+          style={{ color: variationText(main.windowPct) }}
+        >
+          na janela: {fmtSignedPct(main.windowPct, 1)}
+        </div>
+      ) : null}
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={rows} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
+        <ComposedChart data={rows} margin={{ top: 8, right: marginRight, bottom: 4, left: 0 }}>
+          {isHero ? (
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={mainColor} stopOpacity={0.16} />
+                <stop offset="100%" stopColor={mainColor} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+          ) : null}
           <CartesianGrid {...azGridProps()} />
           <XAxis
             {...azXAxisProps()}
@@ -319,7 +494,8 @@ export function AzTimeSeriesChart({
             type="number"
             scale="time"
             domain={["dataMin", "dataMax"]}
-            tickFormatter={(t) => formatAxisDate(isoFromUTC(Number(t)), spanDays)}
+            ticks={xTicks}
+            tickFormatter={(t) => formatTimeTickLabel(isoFromUTC(Number(t)), spanDays)}
             minTickGap={28}
           />
           <YAxis
@@ -383,9 +559,13 @@ export function AzTimeSeriesChart({
                 valueFmt={(v) => valueFmt(v)}
               />
             }
-            cursor={AZ_TOOLTIP_PROPS.cursor}
+            cursor={
+              isHero
+                ? { stroke: AZ_BRAND.navy, strokeOpacity: 0.2, strokeWidth: 1 }
+                : AZ_TOOLTIP_PROPS.cursor
+            }
           />
-          {showLegend ? <Legend wrapperStyle={{ fontSize: 11 }} /> : null}
+          {legendVisible ? <Legend wrapperStyle={{ fontSize: 11 }} /> : null}
 
           {benchmarks.map((s, i) => (
             <Line
@@ -401,19 +581,72 @@ export function AzTimeSeriesChart({
               isAnimationActive={false}
             />
           ))}
-          {series.map((s, i) => (
-            <Line
-              key={s.id}
-              type="monotone"
-              dataKey={s.id}
-              name={s.label}
-              stroke={resolveColor(s, i, false)}
-              strokeWidth={2}
-              dot={dotRadius > 0 ? { r: dotRadius } : false}
-              connectNulls
-              isAnimationActive={false}
+          {series.map((s, i) =>
+            isHero && i === 0 ? (
+              // Hero: série principal vira ÁREA com gradiente sob a linha.
+              <Area
+                key={`${s.id}:${heroAnimKey}`}
+                type="monotone"
+                dataKey={s.id}
+                name={s.label}
+                stroke={mainColor}
+                strokeWidth={2.2}
+                fill={`url(#${gradientId})`}
+                fillOpacity={1}
+                dot={dotRadius > 0 ? { r: dotRadius } : false}
+                activeDot={{ r: 4, stroke: "#FFFFFF", strokeWidth: 1.5 }}
+                connectNulls
+                isAnimationActive
+                animationDuration={400}
+                animationEasing="ease-out"
+              />
+            ) : (
+              <Line
+                key={s.id}
+                type="monotone"
+                dataKey={s.id}
+                name={s.label}
+                stroke={resolveColor(s, i, false)}
+                strokeWidth={2}
+                dot={dotRadius > 0 ? { r: dotRadius } : false}
+                connectNulls
+                isAnimationActive={false}
+              />
+            ),
+          )}
+
+          {/* Anotações do hero: máx/mín da janela + último valor em pill navy. */}
+          {showMaxDot && main ? (
+            <ReferenceDot
+              x={main.maxT}
+              y={main.maxV}
+              r={2.5}
+              fill={AZ_CHART.ticks}
+              stroke="none"
+              label={{ value: axisFmt(main.maxV), position: "top", offset: 6, fontSize: 10, fill: AZ_CHART.ticks }}
             />
-          ))}
+          ) : null}
+          {showMinDot && main ? (
+            <ReferenceDot
+              x={main.minT}
+              y={main.minV}
+              r={2.5}
+              fill={AZ_CHART.ticks}
+              stroke="none"
+              label={{ value: axisFmt(main.minV), position: "bottom", offset: 6, fontSize: 10, fill: AZ_CHART.ticks }}
+            />
+          ) : null}
+          {isHero && main ? (
+            <ReferenceDot
+              x={main.lastT}
+              y={main.lastV}
+              r={3.5}
+              fill={mainColor}
+              stroke="#FFFFFF"
+              strokeWidth={1.5}
+              label={<AzLastValuePill text={lastLabel} />}
+            />
+          ) : null}
 
           {showBrush ? (
             <Brush
@@ -425,7 +658,7 @@ export function AzTimeSeriesChart({
               tickFormatter={(t) => formatAxisDate(isoFromUTC(Number(t)), spanDays)}
             />
           ) : null}
-        </LineChart>
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );

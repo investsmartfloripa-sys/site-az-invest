@@ -186,3 +186,71 @@ export function formatAxisDate(dateIso: string, spanDays: number): string {
   if (spanDays <= 730) return fmtMesCurto(dateIso);
   return String(p.y);
 }
+
+/**
+ * Ticks ANCORADOS de eixo temporal — devolve o array explícito de datas ISO
+ * onde o eixo deve marcar, em vez de deixar o Recharts escolher posições
+ * "bonitas" no meio do mês (que geravam labels repetidos: "jul/25 jul/25").
+ *
+ * Regra por janela (`spanDays` = dias corridos entre 1º e último ponto):
+ * - > 730d  → 1º de janeiro de cada ano (rotule "2026"), com passo p/ ≤ ~10;
+ * - ≤ 730d  → viradas de mês (rotule "mmm/aa"), com passo p/ ≤ ~9 ticks;
+ * - ≤ 180d com menos de 3 viradas de mês na janela (ex.: 1M) → âncora em
+ *   datas REAIS da série (~6 ticks, rotule "dd/mm").
+ *
+ * Sempre rotule com `formatTimeTickLabel` (mesma âncora ⇒ zero labels
+ * repetidos consecutivos). `dates` não precisa vir ordenado nem único.
+ */
+export function buildTimeTicks(dates: string[], spanDays: number): string[] {
+  const sorted = [...new Set(dates)].filter((d) => Number.isFinite(parseIsoUTC(d))).sort();
+  if (sorted.length <= 2) return sorted;
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+
+  // Janela longa: janeiro de cada ano dentro do range.
+  if (spanDays > 730) {
+    const years: string[] = [];
+    for (let y = Number(first.slice(0, 4)); y <= Number(last.slice(0, 4)); y++) {
+      const iso = `${y}-01-01`;
+      if (iso >= first && iso <= last) years.push(iso);
+    }
+    if (years.length === 0) return [first, last];
+    const step = Math.max(1, Math.ceil(years.length / 10));
+    return years.filter((_, i) => i % step === 0);
+  }
+
+  // Viradas de mês dentro do range (inclui o 1º dia se a série começa nele).
+  const monthStarts: string[] = [];
+  let cursor = `${first.slice(0, 7)}-01`;
+  if (cursor < first) cursor = addMonthsUTC(cursor, 1);
+  while (cursor <= last) {
+    monthStarts.push(cursor);
+    cursor = addMonthsUTC(cursor, 1);
+  }
+
+  // Janela curta sem viradas suficientes (1M/3M no limite): ancora em dias
+  // reais da série — dd/mm distintos, sem duplicata possível em ≤180d.
+  if (spanDays <= 180 && monthStarts.length < 3) {
+    const step = Math.max(1, Math.round((sorted.length - 1) / 5));
+    const ticks: string[] = [];
+    for (let i = 0; i < sorted.length; i += step) ticks.push(sorted[i]);
+    return ticks;
+  }
+
+  if (monthStarts.length === 0) return [first, last];
+  const step = Math.max(1, Math.ceil(monthStarts.length / 9));
+  return monthStarts.filter((_, i) => i % step === 0);
+}
+
+/**
+ * Rótulo do tick gerado por `buildTimeTicks`: "2026" em janelas > 730d;
+ * senão "mmm/aa" nas viradas de mês (dia 1) e "dd/mm" nas âncoras diárias
+ * de janela curta. Âncoras distintas ⇒ labels distintos (sem "jul/25 jul/25").
+ */
+export function formatTimeTickLabel(dateIso: string, spanDays: number): string {
+  const p = isoParts(dateIso);
+  if (!p) return dateIso;
+  if (spanDays > 730) return String(p.y);
+  if (p.d === 1) return fmtMesCurto(dateIso);
+  return `${String(p.d).padStart(2, "0")}/${String(p.m).padStart(2, "0")}`;
+}

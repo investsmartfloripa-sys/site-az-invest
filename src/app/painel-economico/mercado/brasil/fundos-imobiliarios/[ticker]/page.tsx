@@ -4,10 +4,13 @@ import type { Metadata } from "next";
 
 import { FiiDetailDividends } from "@/components/painel/fii/FiiDetailDividends";
 import { FiiDetailFicha } from "@/components/painel/fii/FiiDetailFicha";
-import { FiiDetailHero } from "@/components/painel/fii/FiiDetailHero";
+import {
+  FiiDetailHero,
+  type FiiDetailHeroBenchmarks,
+} from "@/components/painel/fii/FiiDetailHero";
 import { FiiDetailIndicators } from "@/components/painel/fii/FiiDetailIndicators";
 import { FiiDetailRelacionados } from "@/components/painel/fii/FiiDetailRelacionados";
-import { getFiiDetail, getFiiDetailWithMeta } from "@/lib/painel-fii";
+import { getFiiDetail, getFiiDetailWithMeta, getFiiIfix, type FiiIfixData } from "@/lib/painel-fii";
 
 type Props = {
   params: Promise<{ ticker: string }>;
@@ -34,12 +37,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // O `getFiiTickers` ainda existe pro caso de voltarmos pro pré-render quando
 // migrar pra um JSON menor (índice + entries on-demand).
 
+/**
+ * Benchmarks do "Comparar com" do hero (IFIX e CDI), ambos do fii_ifix.json
+ * — mesma fonte do IfixHero do Panorama. Fatia NO SERVIDOR ao range da
+ * cotação do FII (nunca manda série além do necessário; o rebase 100 da
+ * janela é feito no chart). Se o JSON falhar, retorna null e os chips somem.
+ */
+function buildHeroBenchmarks(
+  ifixData: FiiIfixData | null,
+  fiiFirstDate: string | undefined,
+): FiiDetailHeroBenchmarks | null {
+  if (!ifixData || ifixData.status !== "ok" || ifixData.series_daily.length < 2) return null;
+  const windowed = fiiFirstDate
+    ? ifixData.series_daily.filter((p) => p.date >= fiiFirstDate)
+    : ifixData.series_daily;
+  const ifix = windowed.flatMap((p) =>
+    Number.isFinite(p.ifix) ? [[p.date, p.ifix] as const] : [],
+  );
+  const cdi = windowed.flatMap((p) =>
+    typeof p.CDI === "number" && Number.isFinite(p.CDI) ? [[p.date, p.CDI] as const] : [],
+  );
+  if (ifix.length < 2 && cdi.length < 2) return null;
+  return { ifix, cdi };
+}
+
 export default async function FiiDetailPage({ params }: Props) {
   const { ticker } = await params;
   const upper = ticker.toUpperCase();
-  const detail = await getFiiDetailWithMeta(upper);
+  const [detail, ifixData] = await Promise.all([getFiiDetailWithMeta(upper), getFiiIfix()]);
   if (!detail) notFound();
   const { entry, generatedAt } = detail;
+  const heroBenchmarks = buildHeroBenchmarks(ifixData, entry.price_series_daily[0]?.date);
 
   return (
     <div className="space-y-6">
@@ -59,7 +87,7 @@ export default async function FiiDetailPage({ params }: Props) {
         </Link>
       </header>
 
-      <FiiDetailHero entry={entry} generatedAt={generatedAt} />
+      <FiiDetailHero entry={entry} generatedAt={generatedAt} benchmarks={heroBenchmarks} />
       <FiiDetailIndicators indicators={entry.indicators} generatedAt={generatedAt} />
       <FiiDetailDividends dividends={entry.dividends} />
       <FiiDetailFicha ticker={entry.ticker} ficha={entry.ficha} />

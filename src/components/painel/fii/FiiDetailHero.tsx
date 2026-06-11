@@ -1,34 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 
 import DataStamp from "@/components/painel/DataStamp";
-import { AzTooltip, azTooltipProps } from "@/components/painel/core/AzTooltip";
-import { azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core/azChartDefaults";
 import {
-  TimeWindowToggle,
-  timeWindowStartIso,
-  type TimeWindow,
-} from "@/components/painel/fii/TimeWindowToggle";
-import { AZ_BRAND, variationText } from "@/lib/az-chart-theme";
-import {
-  diffDaysUTC,
-  fmtBRL,
-  fmtDataBR,
-  fmtNum,
-  fmtPct,
-  fmtSignedPct,
-  formatAxisDate,
-} from "@/lib/format-br";
+  AzPeriodSelector,
+  AzTimeSeriesChart,
+  HeroHeader,
+  type AzPeriodValue,
+  type AzSeriesPoint,
+  type AzTimeSeries,
+} from "@/components/painel/charts";
+import { AZ_BRAND, BENCHMARK_COLORS } from "@/lib/az-chart-theme";
+import { fmtBRL, fmtDataBR, fmtNum, fmtPct } from "@/lib/format-br";
 import type { FiiDetailEntry } from "@/lib/painel-fii";
 
 /** Valores grandes abreviados: R$ 1,23 Bi / R$ 45,60 M (decimais pt-BR via fmtNum). */
@@ -41,25 +25,74 @@ function formatBig(value: number | null | undefined, currency = ""): string {
   return `${prefix}${fmtNum(value, 0)}`;
 }
 
-function clipWindow(series: Array<{ date: string; close: number }>, windowId: TimeWindow) {
-  if (!series.length) return [];
-  const start = timeWindowStartIso(series[series.length - 1].date, windowId);
-  return start ? series.filter((p) => p.date >= start) : series;
-}
+/** Séries de benchmark p/ o "Comparar com" — a página fatia e encaminha. */
+export type FiiDetailHeroBenchmarks = {
+  /** IFIX (escala do índice) já recortado ao range da cotação do FII. */
+  ifix: ReadonlyArray<AzSeriesPoint>;
+  /** CDI acumulado (índice) já recortado. Vazio = chip não aparece. */
+  cdi: ReadonlyArray<AzSeriesPoint>;
+};
 
-type Props = { entry: FiiDetailEntry; generatedAt?: string | null };
+type BenchKey = "IFIX" | "CDI";
 
-export function FiiDetailHero({ entry, generatedAt }: Props) {
-  const [windowId, setWindowId] = useState<TimeWindow>("1y");
-  const clipped = useMemo(() => clipWindow(entry.price_series_daily, windowId), [entry, windowId]);
-  // Janela visível em dias corridos — alimenta o tick adaptativo (dd/mm → mai/26 → 2026).
-  const spanDays = useMemo(
-    () =>
-      clipped.length > 1
-        ? Math.max(1, diffDaysUTC(clipped[0].date, clipped[clipped.length - 1].date))
-        : 1,
-    [clipped],
+// Cores dos chips/linhas de comparação. CDI usa a cor FIXA oficial; IFIX não
+// está no mapa BENCHMARK_COLORS — leva o navy ("índice da casa": neste chart
+// o IBOV nunca aparece, então não há colisão com a convenção navy=IBOV).
+const BENCH_META: Record<BenchKey, { label: string; color: string }> = {
+  IFIX: { label: "IFIX", color: AZ_BRAND.navy },
+  CDI: { label: "CDI", color: BENCHMARK_COLORS.CDI },
+};
+
+type Props = {
+  entry: FiiDetailEntry;
+  generatedAt?: string | null;
+  /** Benchmarks p/ comparação (rebase 100). null/ausente = chips ocultos. */
+  benchmarks?: FiiDetailHeroBenchmarks | null;
+};
+
+export function FiiDetailHero({ entry, generatedAt, benchmarks }: Props) {
+  // Seletor padrão (§8): controlado por estado local, SEM querystring (a rota
+  // é force-dynamic, mas o modo controlado dispensa Suspense de toda forma).
+  const [period, setPeriod] = useState<AzPeriodValue>({ id: "1y" });
+  const [activeBenches, setActiveBenches] = useState<BenchKey[]>([]);
+
+  // Série de cotação no formato do AzTimeSeriesChart (o chart recorta a
+  // janela, incluindo range custom from/to via resolvePeriodRange).
+  const priceSeries = useMemo<AzTimeSeries[]>(
+    () => [
+      {
+        id: "close",
+        label: "Cotação",
+        color: AZ_BRAND.azure,
+        data: entry.price_series_daily.map((p) => [p.date, p.close] as const),
+      },
+    ],
+    [entry],
   );
+
+  // Só oferece o chip quando a série tem pontos suficientes pra plotar.
+  const availableBenches = useMemo<BenchKey[]>(() => {
+    const out: BenchKey[] = [];
+    if ((benchmarks?.ifix.length ?? 0) > 1) out.push("IFIX");
+    if ((benchmarks?.cdi.length ?? 0) > 1) out.push("CDI");
+    return out;
+  }, [benchmarks]);
+
+  const benchSeries = useMemo<AzTimeSeries[]>(
+    () =>
+      activeBenches.flatMap((k) => {
+        const data = k === "IFIX" ? benchmarks?.ifix : benchmarks?.cdi;
+        if (!data || data.length < 2) return [];
+        return [{ id: k, label: BENCH_META[k].label, color: BENCH_META[k].color, data }];
+      }),
+    [activeBenches, benchmarks],
+  );
+
+  const comparing = benchSeries.length > 0;
+
+  // Range disponível da série — limita os inputs do "Personalizado".
+  const seriesMin = entry.price_series_daily[0]?.date;
+  const seriesMax = entry.price_series_daily[entry.price_series_daily.length - 1]?.date;
 
   const hero = entry.hero;
 
@@ -71,6 +104,10 @@ export function FiiDetailHero({ entry, generatedAt }: Props) {
     hero.max_12m != null && hero.min_12m != null && hero.price != null && hero.max_12m > 0
       ? (hero.max_12m - hero.min_12m) / hero.max_12m > 0.5
       : false;
+
+  function toggleBench(k: BenchKey) {
+    setActiveBenches((prev) => (prev.includes(k) ? prev.filter((b) => b !== k) : [...prev, k]));
+  }
 
   return (
     <section
@@ -144,77 +181,83 @@ export function FiiDetailHero({ entry, generatedAt }: Props) {
         />
       </div>
 
-      {/* Cotação + gráfico */}
-      <div className="grid gap-4 md:grid-cols-[minmax(180px,220px),1fr]">
-        <div className="rounded-xl border border-[#132960]/10 bg-zinc-50/40 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Cotação</p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-[#132960]">
-            {hero.price != null ? fmtNum(hero.price, 2) : "—"}
-          </p>
-          {hero.change_pct_1d != null ? (
-            <p
-              className="text-[11px] font-semibold tabular-nums"
-              style={{ color: variationText(hero.change_pct_1d) }}
-            >
-              {fmtSignedPct(hero.change_pct_1d, 2)}
-            </p>
-          ) : null}
-          <dl className="mt-3 space-y-1 text-[11px] text-zinc-600">
-            <div className="flex items-center justify-between">
-              <dt>Máxima 12m</dt>
-              <dd className="font-semibold tabular-nums text-[#132960]">{hero.max_12m != null ? fmtNum(hero.max_12m, 2) : "—"}</dd>
-            </div>
-            <div className="flex items-center justify-between">
-              <dt>Mínima 12m</dt>
-              <dd className="font-semibold tabular-nums text-[#132960]">{hero.min_12m != null ? fmtNum(hero.min_12m, 2) : "—"}</dd>
-            </div>
-          </dl>
-        </div>
+      {/* HEADER §9 da cotação: eyebrow → valor + chip de variação → range 12m */}
+      <HeroHeader
+        eyebrow={`Cotação · ${entry.ticker}`}
+        value={hero.price != null ? fmtNum(hero.price, 2) : "—"}
+        unit="R$"
+        unitBefore
+        changePct={hero.change_pct_1d}
+        range={
+          hero.price != null && hero.min_12m != null && hero.max_12m != null
+            ? {
+                min: hero.min_12m,
+                max: hero.max_12m,
+                current: hero.price,
+                format: (v) => fmtNum(v, 2),
+              }
+            : null
+        }
+      />
 
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              Cotação histórica
-            </p>
-            <TimeWindowToggle value={windowId} onChange={setWindowId} />
-          </div>
-          <div style={{ height: 200 }} className="w-full">
-            {clipped.length < 2 ? (
-              <div className="flex h-full items-center justify-center text-xs italic text-zinc-400">
-                sem dados na janela
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={clipped} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-                  <CartesianGrid {...azGridProps()} />
-                  <XAxis
-                    {...azXAxisProps()}
-                    dataKey="date"
-                    tickFormatter={(d) => formatAxisDate(String(d), spanDays)}
-                    minTickGap={32}
-                  />
-                  <YAxis
-                    {...azYAxisProps()}
-                    domain={["auto", "auto"]}
-                    width={48}
-                    tickFormatter={(v) => (typeof v === "number" ? fmtNum(v, 2) : String(v))}
-                  />
-                  <Tooltip
-                    content={
-                      <AzTooltip
-                        labelFmt={(l) => fmtDataBR(String(l))}
-                        valueFmt={(v) => fmtBRL(v)}
-                        hideDot
-                      />
-                    }
-                    cursor={azTooltipProps().cursor}
-                  />
-                  <Line type="monotone" dataKey="close" name="Cotação" stroke={AZ_BRAND.azure} strokeWidth={2} dot={false} isAnimationActive={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+      {/* Gráfico full-width + seletor padrão + comparação */}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Cotação histórica{comparing ? " · comparativo (base 100)" : ""}
+          </p>
+          <AzPeriodSelector value={period} onChange={setPeriod} min={seriesMin} max={seriesMax} />
         </div>
+        <AzTimeSeriesChart
+          variant="hero"
+          series={priceSeries}
+          benchmarks={benchSeries}
+          mode={comparing ? "rebase100" : "raw"}
+          unit="R$"
+          period={period}
+          height={220}
+          showLegend={false}
+        />
+
+        {/* Comparar com — mesmo padrão visual dos chips do IbovHero/IfixHero */}
+        {availableBenches.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+              Comparar com:
+            </span>
+            {availableBenches.map((k) => {
+              const active = activeBenches.includes(k);
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => toggleBench(k)}
+                  aria-pressed={active}
+                  className={
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition " +
+                    (active
+                      ? "border-transparent text-white shadow-sm"
+                      : "border-[#132960]/15 bg-white text-zinc-600 hover:border-[#132960]/40 hover:text-[#132960]")
+                  }
+                  style={active ? { backgroundColor: BENCH_META[k].color } : undefined}
+                >
+                  <span
+                    aria-hidden
+                    className="inline-block h-2 w-2 rounded-full"
+                    style={{ backgroundColor: active ? "#ffffff" : BENCH_META[k].color }}
+                  />
+                  {BENCH_META[k].label}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+        {comparing ? (
+          <p className="text-[10px] text-zinc-400">
+            Base 100 no primeiro pregão da janela — compara trajetória, não nível. IFIX via XFIX11
+            (proxy) e CDI (BCB SGS 12) acumulado. Não é recomendação.
+          </p>
+        ) : null}
       </div>
       <p className="mt-2 text-right">
         <DataStamp
