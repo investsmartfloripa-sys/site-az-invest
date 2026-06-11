@@ -18,18 +18,11 @@ import DataStamp from "@/components/painel/DataStamp";
 import { AzSegmented } from "@/components/painel/panorama/AzSegmented";
 import type { FxMoversPayload } from "@/components/painel/DynamicFxMoversBar";
 import type { ByPeriodBlock, Row } from "@/components/painel/DynamicReturnsBar";
+import { AZ_CHART } from "@/lib/az-chart-theme";
 
-/** Paleta padrão AZ p/ barras divergentes (ver PADRAO-VISUAL-GRAFICOS.md). */
-export const AZ_CHART = {
-  pos: "#1E8A5C",
-  neg: "#BE3B33",
-  posText: "#166B47",
-  negText: "#9C2B24",
-  zero: "#132960",
-  grid: "#E2E8F0",
-  ticks: "#64748B",
-  labels: "#334155",
-} as const;
+// Re-export de compatibilidade: a fonte única dos tokens agora é
+// src/lib/az-chart-theme.ts — importe de lá em código novo.
+export { AZ_CHART } from "@/lib/az-chart-theme";
 
 type PanoramaByPeriod = { generated_at?: string; by_period?: ByPeriodBlock };
 
