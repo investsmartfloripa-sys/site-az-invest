@@ -14,65 +14,22 @@ import {
 
 import type { TreasuryHistory, TreasuryCategory } from "@/lib/painel-renda-fixa-data";
 import { MarketCard } from "@/components/painel/market/MarketCard";
+import {
+  AzPeriodSelector,
+  resolvePeriodRange,
+  type AzPeriodValue,
+} from "@/components/painel/charts";
+import { AzTooltip, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
+import { AZ_TOOLTIP_PROPS, seriesColor } from "@/lib/az-chart-theme";
+import { diffDaysUTC, fmtDataBR, fmtMesCurto, fmtNum, fmtPct, formatAxisDate } from "@/lib/format-br";
 
 type CategoryKey = "PRE" | "IPCA";
-type Period = "1m" | "3m" | "6m" | "1y" | "3y" | "5y" | "10y" | "20y" | "max";
-
-const PERIODS: Array<{ id: Period; label: string }> = [
-  { id: "1m", label: "1M" },
-  { id: "3m", label: "3M" },
-  { id: "6m", label: "6M" },
-  { id: "1y", label: "1A" },
-  { id: "3y", label: "3A" },
-  { id: "5y", label: "5A" },
-  { id: "10y", label: "10A" },
-  { id: "20y", label: "20A" },
-  { id: "max", label: "Max" },
-];
-
-// Paleta gradiente (mais escuro = mais longo)
-const VENCIMENTO_COLORS = [
-  "#56B4E9", // azul claro
-  "#1F77B4",
-  "#027DFC",
-  "#0066CC",
-  "#003F88",
-  "#00008B", // azul escuro
-  "#000033",
-];
-
-function periodCutoff(period: Period, latest: string): string {
-  const d = new Date(latest + "T00:00:00Z");
-  switch (period) {
-    case "1m": d.setMonth(d.getMonth() - 1); break;
-    case "3m": d.setMonth(d.getMonth() - 3); break;
-    case "6m": d.setMonth(d.getMonth() - 6); break;
-    case "1y": d.setFullYear(d.getFullYear() - 1); break;
-    case "3y": d.setFullYear(d.getFullYear() - 3); break;
-    case "5y": d.setFullYear(d.getFullYear() - 5); break;
-    case "10y": d.setFullYear(d.getFullYear() - 10); break;
-    case "20y": d.setFullYear(d.getFullYear() - 20); break;
-    case "max": return "1900-01-01";
-  }
-  return d.toISOString().slice(0, 10);
-}
-
-function shortDate(d: string): string {
-  const [y, m, day] = d.split("-");
-  return `${day}/${m}/${y.slice(2)}`;
-}
-
-function vencimentoLabel(d: string): string {
-  // "2030-01-01" -> "jan/30"
-  const [y, m] = d.split("-");
-  const months = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-  return `${months[parseInt(m,10)-1]}/${y.slice(2)}`;
-}
 
 function buildChartData(
   category: TreasuryCategory,
   selectedVencimentos: string[],
-  cutoff: string,
+  from: string,
+  to: string,
 ): Array<Record<string, number | string>> {
   if (selectedVencimentos.length === 0) return [];
 
@@ -80,7 +37,7 @@ function buildChartData(
   for (const venc of selectedVencimentos) {
     const series = category.series[venc] ?? [];
     for (const [d] of series) {
-      if (d >= cutoff) dateSet.add(d);
+      if (d >= from && d <= to) dateSet.add(d);
     }
   }
   const dates = Array.from(dateSet).sort();
@@ -108,7 +65,7 @@ type Props = {
 
 export function TreasuryTimeSeries({ data }: Props) {
   const [category, setCategory] = useState<CategoryKey>("PRE");
-  const [period, setPeriod] = useState<Period>("3m");
+  const [period, setPeriod] = useState<AzPeriodValue>({ id: "3m" });
   const [selected, setSelected] = useState<Record<CategoryKey, string[]>>({
     PRE: [],
     IPCA: [],
@@ -131,11 +88,25 @@ export function TreasuryTimeSeries({ data }: Props) {
 
   const activeSelected = selected[category].length > 0 ? selected[category] : defaultSelected;
 
-  const cutoff = data?.last_data_date ? periodCutoff(period, data.last_data_date) : "1900-01-01";
+  // Observação mais antiga entre as séries da categoria (limita o "Personalizado").
+  const seriesMin = useMemo(() => {
+    if (!cat) return "1900-01-01";
+    let min = "";
+    for (const venc of cat.vencimentos) {
+      const first = cat.series[venc]?.[0]?.[0];
+      if (first && (!min || first < min)) min = first;
+    }
+    return min || "1900-01-01";
+  }, [cat]);
+
+  const seriesMax = data?.last_data_date ?? "9999-12-31";
+  // Corte de período 100% UTC (resolvePeriodRange — nada de setMonth local).
+  const range = resolvePeriodRange(period, seriesMin, seriesMax);
+
   const chartData = useMemo(() => {
     if (!cat) return [];
-    return buildChartData(cat, activeSelected, cutoff);
-  }, [cat, activeSelected, cutoff]);
+    return buildChartData(cat, activeSelected, range.from, range.to);
+  }, [cat, activeSelected, range.from, range.to]);
 
   function toggleVencimento(venc: string) {
     setSelected((prev) => {
@@ -151,7 +122,7 @@ export function TreasuryTimeSeries({ data }: Props) {
   // Stats da serie principal (primeiro vencimento selecionado)
   const primaryVenc = activeSelected[0];
   const primarySeries = cat?.series[primaryVenc] ?? [];
-  const inWindow = primarySeries.filter(([d]) => d >= cutoff);
+  const inWindow = primarySeries.filter(([d]) => d >= range.from && d <= range.to);
   const values = inWindow.map(([, v]) => v);
   const currentVal = values.length > 0 ? values[values.length - 1] : null;
   const minVal = values.length > 0 ? Math.min(...values) : null;
@@ -170,6 +141,14 @@ export function TreasuryTimeSeries({ data }: Props) {
       </MarketCard>
     );
   }
+
+  const firstPlotted = chartData[0]?.date;
+  const lastPlotted = chartData[chartData.length - 1]?.date;
+  // Janela visível em dias — controla o formato adaptativo dos ticks de data.
+  const spanDays =
+    typeof firstPlotted === "string" && typeof lastPlotted === "string"
+      ? Math.max(1, diffDaysUTC(firstPlotted, lastPlotted))
+      : 1;
 
   return (
     <MarketCard
@@ -211,20 +190,12 @@ export function TreasuryTimeSeries({ data }: Props) {
         {/* Periodos */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-medium text-zinc-500">Janela:</span>
-          {PERIODS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => setPeriod(p.id)}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                period === p.id
-                  ? "bg-[#132960] text-white"
-                  : "border border-[#132960]/20 bg-white text-[#132960] hover:border-[#027DFC] hover:text-[#027DFC]"
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
+          <AzPeriodSelector
+            value={period}
+            onChange={setPeriod}
+            min={seriesMin}
+            max={data.last_data_date}
+          />
         </div>
 
         {/* Vencimentos disponiveis: separa vivos (em circulacao) de vencidos (historico) */}
@@ -248,7 +219,7 @@ export function TreasuryTimeSeries({ data }: Props) {
                 }`}
                 title={isExpired ? "Vencido — disponível para visualizar série histórica" : undefined}
               >
-                {vencimentoLabel(venc)}
+                {fmtMesCurto(venc)}
               </button>
             );
           };
@@ -280,44 +251,36 @@ export function TreasuryTimeSeries({ data }: Props) {
           <div className="h-[420px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 10, right: 16, bottom: 10, left: 0 }}>
-                <CartesianGrid stroke="#e2e8f0" strokeDasharray="2 4" />
+                <CartesianGrid {...azGridProps()} />
                 <XAxis
+                  {...azXAxisProps()}
                   dataKey="date"
-                  tick={{ fontSize: 11, fill: "#475569" }}
-                  tickFormatter={shortDate}
+                  tickFormatter={(d: string) => formatAxisDate(d, spanDays)}
                   minTickGap={28}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: "#475569" }}
+                  {...azYAxisProps()}
                   domain={["auto", "auto"]}
-                  tickFormatter={(v: number) => `${v.toFixed(1)}%`}
+                  tickFormatter={(v: number) => `${fmtNum(v, 1)}%`}
                   width={56}
                 />
                 <Tooltip
-                  labelFormatter={(label) => shortDate(String(label ?? ""))}
-                  formatter={(value, name) => {
-                    const v = typeof value === "number" ? value : Number(value);
-                    const venc = String(name ?? "");
-                    if (!Number.isFinite(v)) return ["—", vencimentoLabel(venc)];
-                    return [`${v.toFixed(2)}%`, vencimentoLabel(venc)];
-                  }}
-                  contentStyle={{
-                    borderRadius: 8,
-                    border: "1px solid #132960",
-                    fontSize: 12,
-                    padding: "6px 10px",
-                  }}
+                  content={
+                    <AzTooltip
+                      labelFmt={(l) => fmtDataBR(String(l ?? ""))}
+                      valueFmt={(v) => fmtPct(v, 2)}
+                    />
+                  }
+                  cursor={AZ_TOOLTIP_PROPS.cursor}
                 />
-                <Legend
-                  wrapperStyle={{ fontSize: 12 }}
-                  formatter={(value: string) => vencimentoLabel(value)}
-                />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
                 {activeSelected.map((venc, i) => (
                   <Line
                     key={venc}
                     type="monotone"
                     dataKey={venc}
-                    stroke={VENCIMENTO_COLORS[i % VENCIMENTO_COLORS.length]}
+                    name={fmtMesCurto(venc)}
+                    stroke={seriesColor(i)}
                     strokeWidth={1.8}
                     dot={false}
                     isAnimationActive={false}
@@ -331,7 +294,7 @@ export function TreasuryTimeSeries({ data }: Props) {
           {/* Stats lateral */}
           <div className="rounded-xl border border-[#132960]/10 bg-zinc-50/50 p-3 text-sm">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              {category === "PRE" ? "Prefixado" : "IPCA+"} {vencimentoLabel(primaryVenc ?? "")}
+              {category === "PRE" ? "Prefixado" : "IPCA+"} {fmtMesCurto(primaryVenc ?? "")}
             </p>
             <dl className="space-y-2">
               <div className="flex items-center justify-between">

@@ -12,31 +12,34 @@ import {
 } from "recharts";
 
 import DataStamp from "@/components/painel/DataStamp";
+import { AzTooltip, azTooltipProps } from "@/components/painel/core/AzTooltip";
+import { azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core/azChartDefaults";
 import {
-  TIME_WINDOW_OPTIONS,
   TimeWindowToggle,
+  timeWindowStartIso,
   type TimeWindow,
 } from "@/components/painel/fii/TimeWindowToggle";
+import { AZ_BRAND, BENCHMARK_COLORS, variationText } from "@/lib/az-chart-theme";
+import { diffDaysUTC, fmtDataBR, fmtNum, fmtSignedPct, formatAxisDate } from "@/lib/format-br";
 import type { AcoesBenchmarkKey, AcoesIbovData, AcoesIbovPoint } from "@/lib/painel-acoes";
 
 type Props = {
   data: AcoesIbovData;
 };
 
+// Benchmarks na cor FIXA oficial (mesma série = mesma cor no site inteiro).
 const BENCH_META: Record<AcoesBenchmarkKey, { label: string; color: string }> = {
-  CDI: { label: "CDI", color: "#16A34A" },
-  SP500: { label: "S&P 500", color: "#EAB308" },
-  USDBRL: { label: "USD/BRL", color: "#7E22CE" },
+  CDI: { label: "CDI", color: BENCHMARK_COLORS.CDI },
+  SP500: { label: "S&P 500", color: BENCHMARK_COLORS["S&P 500"] },
+  USDBRL: { label: "USD/BRL", color: BENCHMARK_COLORS["USD/BRL"] },
 };
 
-const IBOV_COLOR = "#132960"; // azul profundo AZ Invest
+const IBOV_COLOR = AZ_BRAND.azure; // série principal do hero — azul AZ
 
 function clipWindow(series: AcoesIbovPoint[], windowId: TimeWindow): AcoesIbovPoint[] {
   if (!series.length) return [];
-  const days = TIME_WINDOW_OPTIONS.find((o) => o.id === windowId)?.days ?? 365;
-  const last = new Date(series[series.length - 1].date + "T00:00:00Z").getTime();
-  const cutoff = last - days * 86_400_000;
-  return series.filter((p) => new Date(p.date + "T00:00:00Z").getTime() >= cutoff);
+  const start = timeWindowStartIso(series[series.length - 1].date, windowId);
+  return start ? series.filter((p) => p.date >= start) : series;
 }
 
 /** Renormaliza Ibov + benchmarks selecionados para base 100 do 1º ponto da janela. */
@@ -64,14 +67,6 @@ function renormalize(
   });
 }
 
-function formatAxisDate(d: string, span: TimeWindow): string {
-  const dt = new Date(d + "T00:00:00Z");
-  if (span === "7d" || span === "5d" || span === "30d") {
-    return dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" });
-  }
-  return dt.toLocaleDateString("pt-BR", { month: "2-digit", year: "2-digit", timeZone: "UTC" });
-}
-
 export function IbovHero({ data }: Props) {
   const [windowId, setWindowId] = useState<TimeWindow>("1y");
   const [activeBenches, setActiveBenches] = useState<AcoesBenchmarkKey[]>([]);
@@ -82,9 +77,16 @@ export function IbovHero({ data }: Props) {
     () => renormalize(clipped, activeBenches, showAbsoluteIbov),
     [clipped, activeBenches, showAbsoluteIbov],
   );
+  // Janela visível em dias corridos — alimenta o tick adaptativo (dd/mm → mai/26 → 2026).
+  const spanDays = useMemo(
+    () =>
+      clipped.length > 1
+        ? Math.max(1, diffDaysUTC(clipped[0].date, clipped[clipped.length - 1].date))
+        : 1,
+    [clipped],
+  );
 
   const hero = data.hero;
-  const positive = (hero?.change_pct_1d ?? 0) >= 0;
 
   function toggleBench(k: AcoesBenchmarkKey) {
     setActiveBenches((prev) => (prev.includes(k) ? prev.filter((b) => b !== k) : [...prev, k]));
@@ -102,16 +104,15 @@ export function IbovHero({ data }: Props) {
             <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Ibovespa</p>
             {hero?.change_pct_1d != null ? (
               <span
-                className={`text-[11px] font-semibold ${positive ? "text-[#16A34A]" : "text-[#DC2626]"}`}
+                className="text-[11px] font-semibold tabular-nums"
+                style={{ color: variationText(hero.change_pct_1d) }}
               >
-                {positive ? "▲" : "▼"} {Math.abs(hero.change_pct_1d).toFixed(2)}%
+                {fmtSignedPct(hero.change_pct_1d, 2)}
               </span>
             ) : null}
           </div>
           <p className="mt-1 text-2xl font-semibold tabular-nums text-[#132960]">
-            {hero
-              ? hero.last_value.toLocaleString("pt-BR", { maximumFractionDigits: 0 })
-              : "—"}{" "}
+            {hero ? fmtNum(hero.last_value, 0) : "—"}{" "}
             <span className="text-sm font-normal text-zinc-500">pts</span>
           </p>
           {hero ? (
@@ -119,25 +120,18 @@ export function IbovHero({ data }: Props) {
               <div className="flex items-center justify-between">
                 <dt>Máx 12m</dt>
                 <dd className="font-semibold tabular-nums text-[#132960]">
-                  {hero.max_12m.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}
+                  {fmtNum(hero.max_12m, 0)}
                 </dd>
               </div>
               <div className="flex items-center justify-between">
                 <dt>Mín 12m</dt>
                 <dd className="font-semibold tabular-nums text-[#132960]">
-                  {hero.min_12m.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}
+                  {fmtNum(hero.min_12m, 0)}
                 </dd>
               </div>
               <div className="flex items-center justify-between pt-1 text-[10px] text-zinc-400">
                 <dt>Atualizado</dt>
-                <dd>
-                  {new Date(hero.last_date + "T00:00:00Z").toLocaleDateString("pt-BR", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "2-digit",
-                    timeZone: "UTC",
-                  })}
-                </dd>
+                <dd>{fmtDataBR(hero.last_date)}</dd>
               </div>
             </dl>
           ) : null}
@@ -160,44 +154,31 @@ export function IbovHero({ data }: Props) {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-                  <CartesianGrid strokeDasharray="2 4" stroke="#E4E4E7" />
+                  <CartesianGrid {...azGridProps()} />
                   <XAxis
+                    {...azXAxisProps()}
                     dataKey="date"
-                    tickFormatter={(d) => formatAxisDate(String(d), windowId)}
-                    tick={{ fontSize: 10, fill: "#71717A" }}
+                    tickFormatter={(d) => formatAxisDate(String(d), spanDays)}
                     minTickGap={32}
                   />
                   <YAxis
-                    tick={{ fontSize: 10, fill: "#71717A" }}
+                    {...azYAxisProps()}
                     domain={["auto", "auto"]}
                     width={48}
-                    tickFormatter={(v) =>
-                      typeof v === "number"
-                        ? v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })
-                        : String(v)
-                    }
+                    tickFormatter={(v) => (typeof v === "number" ? fmtNum(v, 0) : String(v))}
                   />
                   <Tooltip
-                    contentStyle={{ fontSize: 11, padding: "6px 10px", borderRadius: 6 }}
-                    labelFormatter={(d) =>
-                      new Date(String(d) + "T00:00:00Z").toLocaleDateString("pt-BR", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        timeZone: "UTC",
-                      })
+                    content={
+                      <AzTooltip
+                        labelFmt={(l) => fmtDataBR(String(l))}
+                        valueFmt={(v, name) =>
+                          name === "Ibovespa" && showAbsoluteIbov
+                            ? `${fmtNum(v, 0)} pts`
+                            : fmtNum(v, 2)
+                        }
+                      />
                     }
-                    formatter={(v, name) => {
-                      const num = typeof v === "number" ? v : Number(v);
-                      if (!Number.isFinite(num)) return ["—", name];
-                      const isAbs = name === "Ibovespa" && showAbsoluteIbov;
-                      return [
-                        isAbs
-                          ? num.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) + " pts"
-                          : num.toFixed(2),
-                        name,
-                      ];
-                    }}
+                    cursor={azTooltipProps().cursor}
                   />
                   <Line
                     type="monotone"

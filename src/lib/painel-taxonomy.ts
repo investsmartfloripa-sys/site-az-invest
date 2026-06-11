@@ -38,11 +38,12 @@ const mercadoBrasil: CategoryDef[] = [
     sourceHint: "Tesouro, B3, ANBIMA",
   },
   {
+    // Página própria: src/app/painel-economico/mercado/brasil/cambio/page.tsx
     slug: "cambio",
     label: "Câmbio",
-    description: "Moedas, fluxo e variações relativas do real.",
+    description: "Dólar (USD/BRL, 5 anos), cruzes do real (EUR/BRL, GBP/BRL), DXY e moedas contra o dólar.",
     frequency: "tempo-real",
-    sourceHint: "BCB, provedores FX",
+    sourceHint: "Yahoo Finance, pipeline AZ (fx_top_movers + histórico 5a)",
   },
   {
     slug: "fundos-imobiliarios",
@@ -55,11 +56,12 @@ const mercadoBrasil: CategoryDef[] = [
 
 const mercadoGlobal: CategoryDef[] = [
   {
+    // Página própria: src/app/painel-economico/mercado/global/indices-globais/page.tsx
     slug: "indices-globais",
     label: "Índices globais",
-    description: "Principais bolsas e performance por região.",
+    description: "Bolsas desenvolvidas × emergentes: retornos por período e comparativo histórico rebase 100.",
     frequency: "tempo-real",
-    sourceHint: "Yahoo Finance, bolsas globais",
+    sourceHint: "Yahoo Finance (16 índices intradiários + histórico 5a)",
   },
   {
     slug: "juros-globais",
@@ -69,11 +71,12 @@ const mercadoGlobal: CategoryDef[] = [
     sourceHint: "FRED, tesouros internacionais",
   },
   {
+    // Página própria: src/app/painel-economico/mercado/global/commodities/page.tsx
     slug: "commodities",
     label: "Commodities",
-    description: "Energia, metais e agro com leitura de tendência.",
+    description: "Energia, metais e agro: retornos por período em USD/BRL e histórico comparativo dos futuros.",
     frequency: "tempo-real",
-    sourceHint: "Yahoo Finance, bolsas de commodities",
+    sourceHint: "Yahoo Finance (17 futuros front-month + histórico 5a)",
   },
 ];
 

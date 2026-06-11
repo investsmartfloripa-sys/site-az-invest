@@ -8,7 +8,6 @@ import { TickerSparkline } from "@/components/painel/market/TickerSparkline";
 import {
   classLabel,
   formatBigNumber,
-  formatPct,
   formatPctFromRatio,
   formatRatio,
   getMarketCatalog,
@@ -18,6 +17,8 @@ import {
   type CatalogAsset,
   type FundamentalsInfo,
 } from "@/lib/painel-market-data";
+import { variationText } from "@/lib/az-chart-theme";
+import { fmtSignedPct } from "@/lib/format-br";
 
 type Props = { params: Promise<{ ticker: string }> };
 
@@ -167,18 +168,23 @@ export default async function AtivoPage({ params }: Props) {
             <p className="text-4xl font-semibold tabular-nums text-[#132960]">
               {last != null ? `${asset.currency === "BRL" ? "R$ " : "US$ "}${last.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` : "—"}
             </p>
-            <p className={`mt-1 text-sm font-semibold ${positive ? "text-[#16A34A]" : "text-[#DC2626]"}`}>
-              {dayChange != null ? `${positive ? "▲" : "▼"} ${formatPct(dayChange)} hoje` : "—"}
+            <p
+              className={`mt-1 text-sm font-semibold ${dayChange == null ? "text-zinc-400" : ""}`}
+              style={dayChange != null ? { color: variationText(dayChange) } : undefined}
+            >
+              {dayChange != null ? `${fmtSignedPct(dayChange, 2)} hoje` : "—"}
             </p>
             <dl className="mt-4 grid grid-cols-2 gap-2 text-xs">
               {(["1w", "1m", "3m", "ytd", "1y", "5y"] as const).map((p) => {
                 const val = latestRow?.returns[p];
-                const pos = (val ?? 0) >= 0;
                 return (
                   <div key={p} className="flex items-center justify-between rounded-lg border border-[#132960]/10 px-2 py-1.5">
                     <span className="text-zinc-500 uppercase">{p}</span>
-                    <span className={`tabular-nums font-semibold ${pos ? "text-[#16A34A]" : "text-[#DC2626]"}`}>
-                      {formatPct(val)}
+                    <span
+                      className={`tabular-nums font-semibold ${val == null ? "text-zinc-400" : ""}`}
+                      style={val != null ? { color: variationText(val) } : undefined}
+                    >
+                      {fmtSignedPct(val, 2)}
                     </span>
                   </div>
                 );
@@ -249,7 +255,6 @@ export default async function AtivoPage({ params }: Props) {
           <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {peers.map((p) => {
               const r = latest?.tickers[p.ticker]?.returns["1y"];
-              const pos = (r ?? 0) >= 0;
               return (
                 <li key={p.ticker}>
                   <Link
@@ -258,8 +263,11 @@ export default async function AtivoPage({ params }: Props) {
                   >
                     <p className="text-sm font-semibold text-[#132960]">{p.name}</p>
                     <p className="text-[10px] uppercase text-zinc-500">{p.ticker}</p>
-                    <p className={`mt-1 text-xs font-semibold tabular-nums ${pos ? "text-[#16A34A]" : "text-[#DC2626]"}`}>
-                      1A: {formatPct(r)}
+                    <p
+                      className={`mt-1 text-xs font-semibold tabular-nums ${r == null ? "text-zinc-400" : ""}`}
+                      style={r != null ? { color: variationText(r) } : undefined}
+                    >
+                      1A: {fmtSignedPct(r, 2)}
                     </p>
                   </Link>
                 </li>

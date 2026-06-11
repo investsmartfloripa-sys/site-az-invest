@@ -24,7 +24,7 @@ type Props = {
  *
  * Mantem o mesmo perfil de StaticChartCard:
  *  - rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm (no wrapper externo)
- *  - h2 text-lg font-semibold text-[#027DFC] (titulo)
+ *  - h2 text-lg font-semibold text-[#132960] (titulo navy — azure fica p/ links/CTAs/tab ativa)
  *  - badge pill cinza
  *  - subtitle text-sm text-zinc-600
  */
@@ -48,7 +48,7 @@ export function MarketCard({
       <header className="flex flex-wrap items-start justify-between gap-3 px-4 pt-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="truncate text-lg font-semibold text-[#027DFC]">{title}</h2>
+            <h2 className="truncate text-lg font-semibold text-[#132960]">{title}</h2>
             {badge ? (
               <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
                 {badge}

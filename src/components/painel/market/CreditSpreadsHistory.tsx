@@ -14,40 +14,24 @@ import {
 
 import type { CreditClass, CreditSpreadsHistory as CreditSpreadsData } from "@/lib/painel-renda-fixa-data";
 import { MarketCard } from "@/components/painel/market/MarketCard";
+import {
+  AzPeriodSelector,
+  resolvePeriodRange,
+  type AzPeriodValue,
+} from "@/components/painel/charts";
+import { AzTooltip, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
+import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
+import { diffDaysUTC, fmtDataBR, fmtNum, fmtPct, formatAxisDate } from "@/lib/format-br";
 
 type ClassKey = "DI" | "IPCA";
-type Period = "1m" | "3m" | "6m" | "max";
 
-const PERIODS: Array<{ id: Period; label: string }> = [
-  { id: "1m", label: "1M" },
-  { id: "3m", label: "3M" },
-  { id: "6m", label: "6M" },
-  { id: "max", label: "Max" },
-];
-
-function periodCutoff(period: Period, latest: string): string {
-  const d = new Date(latest + "T00:00:00Z");
-  switch (period) {
-    case "1m": d.setMonth(d.getMonth() - 1); break;
-    case "3m": d.setMonth(d.getMonth() - 3); break;
-    case "6m": d.setMonth(d.getMonth() - 6); break;
-    case "max": return "1900-01-01";
-  }
-  return d.toISOString().slice(0, 10);
-}
-
-function shortDate(d: string): string {
-  const [y, m, day] = d.split("-");
-  return `${day}/${m}/${y.slice(2)}`;
-}
-
-function buildChartData(c: CreditClass, cutoff: string) {
+function buildChartData(c: CreditClass, from: string, to: string) {
   // Index por data
   const byDate: Record<string, { median?: number; p25?: number; p75?: number; n?: number }> = {};
-  for (const [d, v] of c.series.median) if (d >= cutoff) (byDate[d] ??= {}).median = v;
-  for (const [d, v] of c.series.p25) if (d >= cutoff) (byDate[d] ??= {}).p25 = v;
-  for (const [d, v] of c.series.p75) if (d >= cutoff) (byDate[d] ??= {}).p75 = v;
-  for (const [d, v] of c.series.n) if (d >= cutoff) (byDate[d] ??= {}).n = v;
+  for (const [d, v] of c.series.median) if (d >= from && d <= to) (byDate[d] ??= {}).median = v;
+  for (const [d, v] of c.series.p25) if (d >= from && d <= to) (byDate[d] ??= {}).p25 = v;
+  for (const [d, v] of c.series.p75) if (d >= from && d <= to) (byDate[d] ??= {}).p75 = v;
+  for (const [d, v] of c.series.n) if (d >= from && d <= to) (byDate[d] ??= {}).n = v;
   const dates = Object.keys(byDate).sort();
   return dates.map((d) => ({
     date: d,
@@ -64,11 +48,18 @@ type Props = { data: CreditSpreadsData | null };
 
 export function CreditSpreadsHistory({ data }: Props) {
   const [klass, setKlass] = useState<ClassKey>("DI");
-  const [period, setPeriod] = useState<Period>("3m");
+  const [period, setPeriod] = useState<AzPeriodValue>({ id: "3m" });
 
   const c = data?.classes[klass];
-  const cutoff = data?.last_data_date ? periodCutoff(period, data.last_data_date) : "1900-01-01";
-  const chartData = useMemo(() => (c ? buildChartData(c, cutoff) : []), [c, cutoff]);
+  // Observação mais antiga da mediana (limita o "Personalizado").
+  const seriesMin = c?.series.median[0]?.[0] ?? "1900-01-01";
+  const seriesMax = data?.last_data_date ?? "9999-12-31";
+  // Corte de período 100% UTC (resolvePeriodRange — nada de setMonth local).
+  const range = resolvePeriodRange(period, seriesMin, seriesMax);
+  const chartData = useMemo(
+    () => (c ? buildChartData(c, range.from, range.to) : []),
+    [c, range.from, range.to],
+  );
 
   if (!data || !c) {
     return (
@@ -87,6 +78,14 @@ export function CreditSpreadsHistory({ data }: Props) {
   const medianVal =
     values.length > 0 ? [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)] : null;
   const latestN = chartData.length > 0 ? chartData[chartData.length - 1].n : null;
+
+  // Janela visível em dias — controla o formato adaptativo dos ticks de data.
+  const firstPlotted = chartData[0]?.date;
+  const lastPlotted = chartData[chartData.length - 1]?.date;
+  const spanDays =
+    typeof firstPlotted === "string" && typeof lastPlotted === "string"
+      ? Math.max(1, diffDaysUTC(firstPlotted, lastPlotted))
+      : 1;
 
   // Buckets de distribuicao (% papeis com spread negativo, 0-100bps, >100bps)
   const lastPctNeg = c.series.pct_neg?.[c.series.pct_neg.length - 1]?.[1] ?? null;
@@ -141,79 +140,67 @@ export function CreditSpreadsHistory({ data }: Props) {
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-medium text-zinc-500">Janela:</span>
-          {PERIODS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => setPeriod(p.id)}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                period === p.id
-                  ? "bg-[#132960] text-white"
-                  : "border border-[#132960]/20 bg-white text-[#132960] hover:border-[#027DFC] hover:text-[#027DFC]"
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
+          <AzPeriodSelector
+            value={period}
+            onChange={setPeriod}
+            min={seriesMin}
+            max={data.last_data_date}
+            periods={["1m", "3m", "6m", "max"]}
+          />
         </div>
 
         <div className="grid gap-3 lg:grid-cols-[1fr_220px]">
           <div className="h-[380px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 10, right: 16, bottom: 10, left: 0 }}>
-                <CartesianGrid stroke="#e2e8f0" strokeDasharray="2 4" />
+                <CartesianGrid {...azGridProps()} />
                 <XAxis
+                  {...azXAxisProps()}
                   dataKey="date"
-                  tick={{ fontSize: 11, fill: "#475569" }}
-                  tickFormatter={shortDate}
+                  tickFormatter={(d: string) => formatAxisDate(d, spanDays)}
                   minTickGap={28}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: "#475569" }}
+                  {...azYAxisProps()}
                   domain={["auto", "auto"]}
-                  tickFormatter={(v: number) => `${v.toFixed(1)}%`}
+                  tickFormatter={(v: number) => `${fmtNum(v, 1)}%`}
                   width={56}
                 />
                 <Tooltip
-                  labelFormatter={(label) => shortDate(String(label ?? ""))}
-                  formatter={(value, name) => {
-                    const v = typeof value === "number" ? value : Number(value);
-                    if (!Number.isFinite(v)) return ["—", String(name)];
-                    if (name === "median") return [`${v.toFixed(2)}%`, "Mediana"];
-                    if (name === "p25") return [`${v.toFixed(2)}%`, "P25"];
-                    if (name === "p75") return [`${v.toFixed(2)}%`, "P75"];
-                    return [`${v.toFixed(2)}`, String(name)];
-                  }}
-                  contentStyle={{
-                    borderRadius: 8,
-                    border: "1px solid #132960",
-                    fontSize: 12,
-                    padding: "6px 10px",
-                  }}
+                  content={
+                    <AzTooltip
+                      labelFmt={(l) => fmtDataBR(String(l ?? ""))}
+                      valueFmt={(v) => fmtPct(v, 2)}
+                    />
+                  }
+                  cursor={AZ_TOOLTIP_PROPS.cursor}
                 />
-                {/* Banda P25-P75 (area) */}
+                {/* Banda P25-P75 (area) — fora do tooltip (P25/P75 já aparecem como linhas) */}
                 <Area
                   type="monotone"
                   dataKey="band"
                   stroke="none"
-                  fill="#027DFC"
+                  fill={AZ_BRAND.azure}
                   fillOpacity={0.15}
                   isAnimationActive={false}
+                  tooltipType="none"
                 />
                 {/* Linha da mediana */}
                 <Line
                   type="monotone"
                   dataKey="median"
-                  stroke="#027DFC"
+                  name="Mediana"
+                  stroke={AZ_BRAND.azure}
                   strokeWidth={2}
                   dot={false}
                   isAnimationActive={false}
                 />
-                {/* Linhas finas p25 e p75 */}
+                {/* Linhas finas p25 e p75 (quartis — neutros, sem semântica de bom/ruim) */}
                 <Line
                   type="monotone"
                   dataKey="p25"
-                  stroke="#16A34A"
+                  name="P25"
+                  stroke={AZ_CHART.ticks}
                   strokeWidth={1}
                   strokeDasharray="3 3"
                   dot={false}
@@ -222,7 +209,8 @@ export function CreditSpreadsHistory({ data }: Props) {
                 <Line
                   type="monotone"
                   dataKey="p75"
-                  stroke="#DC2626"
+                  name="P75"
+                  stroke={AZ_CHART.ticks}
                   strokeWidth={1}
                   strokeDasharray="3 3"
                   dot={false}
@@ -240,7 +228,7 @@ export function CreditSpreadsHistory({ data }: Props) {
               <div className="flex items-center justify-between">
                 <dt className="text-zinc-600">Mediana atual</dt>
                 <dd className="text-lg font-semibold tabular-nums text-[#132960]">
-                  {currentVal != null ? `${currentVal.toFixed(2)}%` : "—"}
+                  {fmtPct(currentVal, 2)}
                 </dd>
               </div>
               <div className="flex items-center justify-between border-t border-zinc-200 pt-2">
@@ -248,25 +236,25 @@ export function CreditSpreadsHistory({ data }: Props) {
                   Média ponderada (PU)
                 </dt>
                 <dd className="font-semibold tabular-nums text-[#027DFC]">
-                  {lastWeighted != null ? `${lastWeighted.toFixed(2)}%` : "—"}
+                  {fmtPct(lastWeighted, 2)}
                 </dd>
               </div>
               <div className="flex items-center justify-between">
                 <dt className="text-zinc-600">Mediana janela</dt>
                 <dd className="font-semibold tabular-nums text-[#132960]">
-                  {medianVal != null ? `${medianVal.toFixed(2)}%` : "—"}
+                  {fmtPct(medianVal, 2)}
                 </dd>
               </div>
               <div className="flex items-center justify-between">
                 <dt className="text-zinc-600">Mín na janela</dt>
-                <dd className="tabular-nums text-[#16A34A]">
-                  {minVal != null ? `${minVal.toFixed(2)}%` : "—"}
+                <dd className="tabular-nums text-[#166B47]">
+                  {fmtPct(minVal, 2)}
                 </dd>
               </div>
               <div className="flex items-center justify-between">
                 <dt className="text-zinc-600">Máx na janela</dt>
-                <dd className="tabular-nums text-[#DC2626]">
-                  {maxVal != null ? `${maxVal.toFixed(2)}%` : "—"}
+                <dd className="tabular-nums text-[#9C2B24]">
+                  {fmtPct(maxVal, 2)}
                 </dd>
               </div>
               <div className="flex items-center justify-between border-t border-zinc-200 pt-2 text-[11px]">
@@ -287,43 +275,43 @@ export function CreditSpreadsHistory({ data }: Props) {
               Distribuição do spread no último dia · {latestN ?? "—"} papéis
             </p>
             <div className="grid grid-cols-3 gap-3 text-sm">
-              <div className="rounded-lg border border-[#16A34A]/30 bg-[#16A34A]/5 p-2">
+              <div className="rounded-lg border border-[#1E8A5C]/30 bg-[#1E8A5C]/5 p-2">
                 <p className="text-xs text-zinc-600">Spread &lt; 0 (abaixo da NTN-B)</p>
-                <p className="mt-1 text-lg font-semibold tabular-nums text-[#16A34A]">
-                  {lastPctNeg!.toFixed(1)}%
+                <p className="mt-1 text-lg font-semibold tabular-nums text-[#166B47]">
+                  {fmtPct(lastPctNeg, 1)}
                 </p>
                 <p className="text-[10px] italic text-zinc-500">Papéis premium / fluxo institucional</p>
               </div>
               <div className="rounded-lg border border-[#027DFC]/30 bg-[#027DFC]/5 p-2">
                 <p className="text-xs text-zinc-600">Spread 0 a 100 bps</p>
                 <p className="mt-1 text-lg font-semibold tabular-nums text-[#027DFC]">
-                  {lastPctMid!.toFixed(1)}%
+                  {fmtPct(lastPctMid, 1)}
                 </p>
                 <p className="text-[10px] italic text-zinc-500">High-grade típico</p>
               </div>
-              <div className="rounded-lg border border-[#DC2626]/30 bg-[#DC2626]/5 p-2">
+              <div className="rounded-lg border border-[#BE3B33]/30 bg-[#BE3B33]/5 p-2">
                 <p className="text-xs text-zinc-600">Spread ≥ 100 bps (1%)</p>
-                <p className="mt-1 text-lg font-semibold tabular-nums text-[#DC2626]">
-                  {lastPctHigh!.toFixed(1)}%
+                <p className="mt-1 text-lg font-semibold tabular-nums text-[#9C2B24]">
+                  {fmtPct(lastPctHigh, 1)}
                 </p>
                 <p className="text-[10px] italic text-zinc-500">Risco / setores estressados</p>
               </div>
             </div>
             <div className="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-zinc-100">
               <div
-                className="bg-[#16A34A]"
+                className="bg-[#1E8A5C]"
                 style={{ width: `${lastPctNeg}%` }}
-                title={`Spread negativo: ${lastPctNeg!.toFixed(1)}%`}
+                title={`Spread negativo: ${fmtPct(lastPctNeg, 1)}`}
               />
               <div
                 className="bg-[#027DFC]"
                 style={{ width: `${lastPctMid}%` }}
-                title={`Spread 0-100 bps: ${lastPctMid!.toFixed(1)}%`}
+                title={`Spread 0-100 bps: ${fmtPct(lastPctMid, 1)}`}
               />
               <div
-                className="bg-[#DC2626]"
+                className="bg-[#BE3B33]"
                 style={{ width: `${lastPctHigh}%` }}
-                title={`Spread ≥100 bps: ${lastPctHigh!.toFixed(1)}%`}
+                title={`Spread ≥100 bps: ${fmtPct(lastPctHigh, 1)}`}
               />
             </div>
           </div>

@@ -2,50 +2,36 @@
 
 import { useMemo, useState } from "react";
 import {
+  Brush,
   CartesianGrid,
+  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
-  Legend,
 } from "recharts";
 
-import type { CatalogAsset, MarketHistoryFull, TickerSeries } from "@/lib/painel-market-data";
+import type { CatalogAsset, MarketHistoryFull } from "@/lib/painel-market-data";
 import { MarketCard } from "@/components/painel/market/MarketCard";
 import { TickerPicker } from "@/components/painel/market/TickerPicker";
+import {
+  AzPeriodSelector,
+  resolvePeriodRange,
+  useAzPeriodQueryState,
+} from "@/components/painel/charts";
+import { AzTooltip, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
+import { AZ_BRAND, AZ_SERIES, AZ_TOOLTIP_PROPS, benchmarkColor } from "@/lib/az-chart-theme";
+import { diffDaysUTC, fmtDataBR, fmtNum, fmtSignedPct, formatAxisDate } from "@/lib/format-br";
 
-type Period = "1m" | "3m" | "6m" | "ytd" | "1y" | "5y" | "max";
 type ScaleMode = "rebase" | "pct" | "raw" | "log";
-
-const PERIODS: Array<{ id: Period; label: string }> = [
-  { id: "1m", label: "1M" },
-  { id: "3m", label: "3M" },
-  { id: "6m", label: "6M" },
-  { id: "ytd", label: "YTD" },
-  { id: "1y", label: "1A" },
-  { id: "5y", label: "5A" },
-  { id: "max", label: "Max" },
-];
 
 const SCALE_MODES: Array<{ id: ScaleMode; label: string; hint: string }> = [
   { id: "rebase", label: "Rebase 100", hint: "Todos partem de 100 na data inicial" },
   { id: "pct", label: "% acumul.", hint: "Variação % acumulada" },
   { id: "raw", label: "Preço", hint: "Preço bruto (escalas diferentes)" },
   { id: "log", label: "Log", hint: "Eixo Y em escala logarítmica" },
-];
-
-/** Paleta categórica institucional (até 8 séries simultâneas). */
-const COLORS = [
-  "#027DFC", // AZ azul
-  "#F97316", // laranja
-  "#16A34A", // verde
-  "#DC2626", // vermelho
-  "#7C3AED", // roxo
-  "#0891B2", // ciano
-  "#CA8A04", // amarelo terra
-  "#0F172A", // grafite (último — vira o "principal" se for o foco)
 ];
 
 const PRESETS: Array<{ name: string; tickers: string[] }> = [
@@ -66,60 +52,28 @@ type Props = {
   initial?: string[];
 };
 
-function periodCutoffDate(period: Period, latestDateIso: string): string {
-  // latestDateIso eh "YYYY-MM-DD". Calcula data de corte conforme o periodo.
-  const last = new Date(latestDateIso + "T00:00:00Z");
-  const d = new Date(last);
-  switch (period) {
-    case "1m":
-      d.setMonth(d.getMonth() - 1);
-      break;
-    case "3m":
-      d.setMonth(d.getMonth() - 3);
-      break;
-    case "6m":
-      d.setMonth(d.getMonth() - 6);
-      break;
-    case "ytd":
-      return `${last.getUTCFullYear()}-01-01`;
-    case "1y":
-      d.setFullYear(d.getFullYear() - 1);
-      break;
-    case "5y":
-      d.setFullYear(d.getFullYear() - 5);
-      break;
-    case "max":
-      return "1900-01-01";
-  }
-  return d.toISOString().slice(0, 10);
-}
-
 function buildChartData(
   full: MarketHistoryFull,
   tickers: string[],
-  period: Period,
+  from: string,
+  to: string,
   scale: ScaleMode,
 ): Array<Record<string, number | string>> {
   if (tickers.length === 0) return [];
 
   // Datas de cada ticker
   const seriesByTicker: Record<string, Array<[string, number]>> = {};
-  let globalLast = "1900-01-01";
   for (const t of tickers) {
     const s = full.tickers[t];
     if (!s) continue;
     seriesByTicker[t] = s.series_daily;
-    const last = s.series_daily[s.series_daily.length - 1]?.[0];
-    if (last && last > globalLast) globalLast = last;
   }
   if (Object.keys(seriesByTicker).length === 0) return [];
-
-  const cutoff = periodCutoffDate(period, globalLast);
 
   // Para rebase/pct, achamos o primeiro valor de cada ticker dentro do periodo.
   const baseByTicker: Record<string, number> = {};
   for (const [ticker, series] of Object.entries(seriesByTicker)) {
-    const firstInWindow = series.find(([d]) => d >= cutoff);
+    const firstInWindow = series.find(([d]) => d >= from && d <= to);
     if (firstInWindow) baseByTicker[ticker] = firstInWindow[1];
   }
 
@@ -127,7 +81,7 @@ function buildChartData(
   const dateSet = new Set<string>();
   for (const series of Object.values(seriesByTicker)) {
     for (const [d] of series) {
-      if (d >= cutoff) dateSet.add(d);
+      if (d >= from && d <= to) dateSet.add(d);
     }
   }
   const dates = Array.from(dateSet).sort();
@@ -168,19 +122,9 @@ function buildChartData(
   return rows;
 }
 
-function tickerColor(idx: number): string {
-  return COLORS[idx % COLORS.length];
-}
-
-function shortDate(d: string): string {
-  // YYYY-MM-DD -> DD/MM/YY
-  const [y, m, day] = d.split("-");
-  return `${day}/${m}/${y.slice(2)}`;
-}
-
 export function HistoricoChart({ full, catalog, initial }: Props) {
   const [selected, setSelected] = useState<string[]>(initial && initial.length > 0 ? initial : ["^BVSP", "^GSPC", "BRL=X"]);
-  const [period, setPeriod] = useState<Period>("1y");
+  const [period, setPeriod] = useAzPeriodQueryState("hist-", { id: "1y" });
   const [scale, setScale] = useState<ScaleMode>("rebase");
 
   const tickerToAsset = useMemo(() => {
@@ -189,16 +133,56 @@ export function HistoricoChart({ full, catalog, initial }: Props) {
     return m;
   }, [catalog]);
 
-  const chartData = useMemo(() => {
-    if (!full) return [];
-    return buildChartData(full, selected, period, scale);
-  }, [full, selected, period, scale]);
+  // Range disponível (união das séries selecionadas) — limita o "Personalizado".
+  const seriesRange = useMemo(() => {
+    if (!full) return null;
+    let min = "";
+    let max = "";
+    for (const t of selected) {
+      const s = full.tickers[t];
+      if (!s || s.series_daily.length === 0) continue;
+      const first = s.series_daily[0]?.[0];
+      const last = s.series_daily[s.series_daily.length - 1]?.[0];
+      if (first && (!min || first < min)) min = first;
+      if (last && (!max || last > max)) max = last;
+    }
+    return min && max ? { min, max } : null;
+  }, [full, selected]);
 
-  const yDomain: [number | "auto", number | "auto"] = useMemo(() => {
-    if (scale === "log") return ["auto", "auto"];
-    if (scale === "rebase" || scale === "pct") return ["auto", "auto"];
-    return ["auto", "auto"];
-  }, [scale]);
+  // Corte de período 100% UTC (resolvePeriodRange — nada de setMonth local).
+  const range = useMemo(() => {
+    if (!seriesRange) return null;
+    return resolvePeriodRange(period, seriesRange.min, seriesRange.max);
+  }, [period, seriesRange]);
+
+  const chartData = useMemo(() => {
+    if (!full || !range) return [];
+    return buildChartData(full, selected, range.from, range.to, scale);
+  }, [full, selected, range, scale]);
+
+  // Cores: benchmarks com cor FIXA do site (IBOV navy, S&P 500 violeta,
+  // USD/BRL verde...); demais ciclam AZ_SERIES pulando cores já usadas.
+  const colorByTicker = useMemo(() => {
+    const used = new Set<string>();
+    const map: Record<string, string> = {};
+    for (const t of selected) {
+      const bench = benchmarkColor(t) ?? benchmarkColor(tickerToAsset[t]?.name ?? "");
+      if (bench && !used.has(bench)) {
+        map[t] = bench;
+        used.add(bench);
+      }
+    }
+    let i = 0;
+    for (const t of selected) {
+      if (map[t]) continue;
+      while (i < AZ_SERIES.length && used.has(AZ_SERIES[i % AZ_SERIES.length])) i++;
+      const c = AZ_SERIES[i % AZ_SERIES.length];
+      map[t] = c;
+      used.add(c);
+      i++;
+    }
+    return map;
+  }, [selected, tickerToAsset]);
 
   function applyPreset(tickers: string[]) {
     setSelected(tickers.filter((t) => full?.tickers[t]));
@@ -214,7 +198,20 @@ export function HistoricoChart({ full, catalog, initial }: Props) {
     );
   }
 
+  const firstPlottedDate = chartData[0]?.date ?? null;
   const lastPlottedDate = chartData[chartData.length - 1]?.date ?? null;
+  // Janela visível em dias — controla o formato adaptativo dos ticks de data.
+  const spanDays =
+    typeof firstPlottedDate === "string" && typeof lastPlottedDate === "string"
+      ? Math.max(1, diffDaysUTC(firstPlottedDate, lastPlottedDate))
+      : 1;
+  const showBrush = spanDays > 366;
+
+  const fmtValue = (v: number): string => {
+    if (scale === "rebase") return fmtNum(v, 2);
+    if (scale === "pct") return fmtSignedPct(v, 2);
+    return fmtNum(v, Math.abs(v) < 10 ? 4 : 2);
+  };
 
   return (
     <MarketCard
@@ -226,22 +223,12 @@ export function HistoricoChart({ full, catalog, initial }: Props) {
       stampGiro={full.generated_at}
       stampDado={typeof lastPlottedDate === "string" ? lastPlottedDate : null}
       toolbar={
-        <div className="flex flex-wrap items-center gap-2">
-          {PERIODS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => setPeriod(p.id)}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                period === p.id
-                  ? "bg-[#027DFC] text-white"
-                  : "border border-[#132960]/20 bg-white text-[#132960] hover:border-[#027DFC] hover:text-[#027DFC]"
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+        <AzPeriodSelector
+          value={period}
+          onChange={setPeriod}
+          min={seriesRange?.min}
+          max={seriesRange?.max}
+        />
       }
     >
       <div className="space-y-3">
@@ -288,62 +275,57 @@ export function HistoricoChart({ full, catalog, initial }: Props) {
         <div className="h-[420px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 10, right: 16, bottom: 10, left: 0 }}>
-              <CartesianGrid stroke="#e2e8f0" strokeDasharray="2 4" />
+              <CartesianGrid {...azGridProps()} />
               <XAxis
+                {...azXAxisProps()}
                 dataKey="date"
-                tick={{ fontSize: 11, fill: "#475569" }}
-                tickFormatter={shortDate}
+                tickFormatter={(d: string) => formatAxisDate(d, spanDays)}
                 minTickGap={28}
               />
               <YAxis
-                tick={{ fontSize: 11, fill: "#475569" }}
-                domain={yDomain}
+                {...azYAxisProps()}
+                domain={["auto", "auto"]}
                 scale={scale === "log" ? "log" : "auto"}
                 tickFormatter={(v: number) => {
-                  if (scale === "rebase") return v.toFixed(0);
-                  if (scale === "pct") return `${v.toFixed(0)}%`;
-                  return v.toFixed(2);
+                  if (scale === "rebase") return fmtNum(v, 0);
+                  if (scale === "pct") return `${fmtNum(v, 0)}%`;
+                  return fmtNum(v, 2);
                 }}
                 width={56}
               />
               <Tooltip
-                labelFormatter={(label) => shortDate(String(label ?? ""))}
-                formatter={(value, name) => {
-                  const v = typeof value === "number" ? value : Number(value);
-                  const nm = String(name ?? "");
-                  const asset = tickerToAsset[nm];
-                  const displayName = asset ? asset.name : nm;
-                  if (Number.isNaN(v)) return ["—", displayName];
-                  if (scale === "rebase") return [v.toFixed(2), displayName];
-                  if (scale === "pct") return [`${v.toFixed(2)}%`, displayName];
-                  return [v.toFixed(4), displayName];
-                }}
-                contentStyle={{
-                  borderRadius: 8,
-                  border: "1px solid #132960",
-                  fontSize: 12,
-                  padding: "6px 10px",
-                }}
+                content={
+                  <AzTooltip
+                    labelFmt={(l) => fmtDataBR(String(l ?? ""))}
+                    valueFmt={(v) => fmtValue(v)}
+                  />
+                }
+                cursor={AZ_TOOLTIP_PROPS.cursor}
               />
-              <Legend
-                wrapperStyle={{ fontSize: 12 }}
-                formatter={(value: string) => {
-                  const asset = tickerToAsset[value];
-                  return asset ? asset.name : value;
-                }}
-              />
-              {selected.map((t, i) => (
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              {selected.map((t) => (
                 <Line
                   key={t}
                   type="monotone"
                   dataKey={t}
-                  stroke={tickerColor(i)}
+                  name={tickerToAsset[t]?.name ?? t}
+                  stroke={colorByTicker[t]}
                   strokeWidth={1.8}
                   dot={false}
                   isAnimationActive={false}
                   connectNulls
                 />
               ))}
+              {showBrush ? (
+                <Brush
+                  dataKey="date"
+                  height={26}
+                  stroke={AZ_BRAND.azure}
+                  fill="#eef2f8"
+                  travellerWidth={8}
+                  tickFormatter={(d) => formatAxisDate(String(d), spanDays)}
+                />
+              ) : null}
             </LineChart>
           </ResponsiveContainer>
         </div>

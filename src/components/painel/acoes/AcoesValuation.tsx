@@ -15,19 +15,44 @@ import {
 
 import DataStamp from "@/components/painel/DataStamp";
 import {
+  AzTooltip,
+  azGridProps,
+  azXAxisProps,
+  azYAxisProps,
+  azZeroLineProps,
+} from "@/components/painel/core";
+import {
   TIME_WINDOW_OPTIONS,
   TimeWindowToggle,
   type TimeWindow,
 } from "@/components/painel/fii/TimeWindowToggle";
+import {
+  AZ_BRAND,
+  AZ_CHART,
+  AZ_TOOLTIP_PROPS,
+  BENCHMARK_COLORS,
+  variationText,
+} from "@/lib/az-chart-theme";
+import {
+  diffDaysUTC,
+  fmtDataBR,
+  fmtMesCurto,
+  fmtNum,
+  fmtPct,
+  fmtSignedNum,
+  formatAxisDate,
+  parseIsoUTC,
+} from "@/lib/format-br";
 import type { AcoesValuationData, AcoesValuationPoint } from "@/lib/painel-acoes";
 
-const PL_COLOR = "#132960"; // azul profundo
-const MEAN_COLOR = "#71717A"; // cinza (média)
-const BAND1_COLOR = "#027DFC"; // azure (±1σ)
-const EY_COLOR = "#027DFC"; // azure (earnings yield)
-const DY_COLOR = "#16A34A"; // verde (dividend yield)
-const NTNB_COLOR = "#7E22CE"; // roxo (NTN-B)
-const PREMIO_COLOR = "#FF5713"; // rust (prêmio)
+// Paleta 100% do tema AZ (az-chart-theme) — nenhum hex local.
+const PL_COLOR = AZ_BRAND.navy; // série principal do card de P/L
+const MEAN_COLOR = AZ_CHART.ticks; // linha da média (referência discreta)
+const BAND_COLOR = AZ_BRAND.azure; // preenchimento das bandas ±1σ/±2σ
+const EY_COLOR = AZ_BRAND.azure; // earnings yield = 1ª série (azul AZ)
+const DY_COLOR = AZ_CHART.pos; // dividend yield (verde-mar AA)
+const NTNB_COLOR = BENCHMARK_COLORS["NTN-B"]; // ocre — cor FIXA do benchmark no site inteiro
+const PREMIO_COLOR = AZ_BRAND.rust; // prêmio = série derivada em destaque
 
 type Props = {
   data: AcoesValuationData;
@@ -38,25 +63,23 @@ type PremiumMode = "ey" | "dy";
 function clipByWindow(arr: AcoesValuationPoint[], winId: TimeWindow): AcoesValuationPoint[] {
   if (!arr.length) return [];
   const days = TIME_WINDOW_OPTIONS.find((o) => o.id === winId)?.days ?? 365 * 5;
-  const last = new Date(arr[arr.length - 1].date + "T00:00:00Z").getTime();
+  const last = parseIsoUTC(arr[arr.length - 1].date);
   const cutoff = last - days * 86_400_000;
-  return arr.filter((p) => new Date(p.date + "T00:00:00Z").getTime() >= cutoff);
+  return arr.filter((p) => parseIsoUTC(p.date) >= cutoff);
 }
 
-function formatAxisDate(d: string, span: TimeWindow): string {
-  const dt = new Date(d + "T00:00:00Z");
-  if (span === "7d" || span === "5d" || span === "30d") {
-    return dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" });
-  }
-  return dt.toLocaleDateString("pt-BR", { month: "2-digit", year: "2-digit", timeZone: "UTC" });
+/** Dias corridos entre o 1º e o último ponto plotado (p/ ticks adaptativos do format-br). */
+function spanDaysOf(arr: AcoesValuationPoint[]): number {
+  if (arr.length < 2) return 1;
+  return Math.max(1, diffDaysUTC(arr[0].date, arr[arr.length - 1].date));
 }
 
-/** Leitura qualitativa do z-score do P/L atual. */
+/** Leitura qualitativa do z-score do P/L atual (cores AA do tema AZ). */
 function zLabel(z: number | null): { text: string; color: string } {
-  if (z == null) return { text: "—", color: "#71717A" };
-  if (z >= 1) return { text: `caro (${z >= 0 ? "+" : ""}${z.toFixed(2)}σ)`, color: "#DC2626" };
-  if (z <= -1) return { text: `barato (${z.toFixed(2)}σ)`, color: "#16A34A" };
-  return { text: `na média (${z >= 0 ? "+" : ""}${z.toFixed(2)}σ)`, color: "#A16207" };
+  if (z == null) return { text: "—", color: AZ_CHART.ticks };
+  if (z >= 1) return { text: `caro (${fmtSignedNum(z, 2)}σ)`, color: AZ_CHART.negText };
+  if (z <= -1) return { text: `barato (${fmtSignedNum(z, 2)}σ)`, color: AZ_CHART.posText };
+  return { text: `na média (${fmtSignedNum(z, 2)}σ)`, color: AZ_CHART.neutral };
 }
 
 export function AcoesValuation({ data }: Props) {
@@ -66,6 +89,8 @@ export function AcoesValuation({ data }: Props) {
 
   const plClipped = useMemo(() => clipByWindow(data.series, plWin), [data, plWin]);
   const premClipped = useMemo(() => clipByWindow(data.series, premWin), [data, premWin]);
+  const plSpan = useMemo(() => spanDaysOf(plClipped), [plClipped]);
+  const premSpan = useMemo(() => spanDaysOf(premClipped), [premClipped]);
 
   const s = data.pl_stats;
   const cur = data.current;
@@ -98,7 +123,7 @@ export function AcoesValuation({ data }: Props) {
           <span className="inline-flex items-baseline gap-1.5">
             <span className="text-zinc-600">P/L atual</span>
             <strong className="text-lg text-[#132960] tabular-nums">
-              {cur ? cur.pl.toFixed(1) : "—"}
+              {cur ? fmtNum(cur.pl, 1) : "—"}
             </strong>
           </span>
           <span className="inline-flex items-baseline gap-1">
@@ -107,7 +132,7 @@ export function AcoesValuation({ data }: Props) {
           </span>
           {s ? (
             <span className="text-zinc-400">
-              média {s.mean.toFixed(1)} · σ {s.sd.toFixed(1)}
+              média {fmtNum(s.mean, 1)} · σ {fmtNum(s.sd, 1)}
             </span>
           ) : null}
         </div>
@@ -120,33 +145,35 @@ export function AcoesValuation({ data }: Props) {
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={plClipped} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="2 4" stroke="#E4E4E7" />
+                <CartesianGrid {...azGridProps()} />
                 <XAxis
+                  {...azXAxisProps()}
                   dataKey="date"
-                  tickFormatter={(d) => formatAxisDate(String(d), plWin)}
-                  tick={{ fontSize: 10, fill: "#71717A" }}
+                  tickFormatter={(d) => formatAxisDate(String(d), plSpan)}
                   minTickGap={32}
                 />
                 <YAxis
-                  tick={{ fontSize: 10, fill: "#71717A" }}
+                  {...azYAxisProps()}
                   domain={["auto", "auto"]}
                   width={36}
-                  tickFormatter={(v) => (typeof v === "number" ? v.toFixed(0) : String(v))}
+                  tickFormatter={(v) => fmtNum(Number(v), 0)}
                 />
-                {/* Bandas: ±2σ (clara) e ±1σ (um pouco mais forte) */}
+                {/* Bandas ±2σ (clara) e ±1σ (um pouco mais forte) — valores constantes
+                    vindos do JSON (pl_stats), então ReferenceArea É a forma nativa
+                    (Area com dataKey=[low,high] só faz sentido p/ banda que varia no tempo). */}
                 {s ? (
                   <>
                     <ReferenceArea
                       y1={s.minus2}
                       y2={s.plus2}
-                      fill={BAND1_COLOR}
+                      fill={BAND_COLOR}
                       fillOpacity={0.05}
                       ifOverflow="extendDomain"
                     />
                     <ReferenceArea
                       y1={s.minus1}
                       y2={s.plus1}
-                      fill={BAND1_COLOR}
+                      fill={BAND_COLOR}
                       fillOpacity={0.1}
                       ifOverflow="extendDomain"
                     />
@@ -161,18 +188,13 @@ export function AcoesValuation({ data }: Props) {
                   </>
                 ) : null}
                 <Tooltip
-                  contentStyle={{ fontSize: 11, padding: "6px 10px", borderRadius: 6 }}
-                  labelFormatter={(d) =>
-                    new Date(String(d) + "T00:00:00Z").toLocaleDateString("pt-BR", {
-                      month: "long",
-                      year: "numeric",
-                      timeZone: "UTC",
-                    })
+                  content={
+                    <AzTooltip
+                      labelFmt={(l) => fmtDataBR(String(l))}
+                      valueFmt={(v) => fmtNum(v, 1)}
+                    />
                   }
-                  formatter={(v) => {
-                    const n = typeof v === "number" ? v : Number(v);
-                    return [Number.isFinite(n) ? n.toFixed(1) : "—", "P/L"];
-                  }}
+                  cursor={AZ_TOOLTIP_PROPS.cursor}
                 />
                 <Line
                   type="monotone"
@@ -190,9 +212,9 @@ export function AcoesValuation({ data }: Props) {
         <p className="mt-2 text-[10px] text-zinc-400">
           P/L bottom-up: 1 / Σ(peso·earnings yield) dos papéis do Ibovespa (pesos B3, EPS TTM e
           preço via yfinance). Bandas = média ± 1σ e ± 2σ da janela. Série inicia em{" "}
-          {data.series[0]?.date?.slice(0, 7) ?? "—"} (limite do histórico de lucros) e cresce a cada
-          dia. {data.n_constituents} papéis, cobertura {data.coverage_weight_pct ?? "—"}% do índice.
-          Não é recomendação.
+          {data.series[0]?.date ? fmtMesCurto(data.series[0].date) : "—"} (limite do histórico de
+          lucros) e cresce a cada dia. {data.n_constituents} papéis, cobertura{" "}
+          {data.coverage_weight_pct ?? "—"}% do índice. Não é recomendação.
         </p>
         <p className="mt-2 text-right">
           <DataStamp
@@ -250,23 +272,22 @@ export function AcoesValuation({ data }: Props) {
             <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: yieldColor }} />
             <span className="text-zinc-600">{premMode === "ey" ? "Earnings yield" : "Dividend yield"}</span>
             {curYield != null ? (
-              <strong className="text-[#132960] tabular-nums">{curYield.toFixed(2)}%</strong>
+              <strong className="text-[#132960] tabular-nums">{fmtPct(curYield, 2)}</strong>
             ) : null}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: NTNB_COLOR }} />
             <span className="text-zinc-600">NTN-B 10a</span>
             {cur?.ntnb_pct != null ? (
-              <strong className="text-[#132960] tabular-nums">{cur.ntnb_pct.toFixed(2)}%</strong>
+              <strong className="text-[#132960] tabular-nums">{fmtPct(cur.ntnb_pct, 2)}</strong>
             ) : null}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: PREMIO_COLOR }} />
             <span className="text-zinc-600">Prêmio</span>
             {curPrem != null ? (
-              <strong className="tabular-nums" style={{ color: curPrem >= 0 ? "#16A34A" : "#DC2626" }}>
-                {curPrem >= 0 ? "+" : ""}
-                {curPrem.toFixed(2)} pp
+              <strong className="tabular-nums" style={{ color: variationText(curPrem) }}>
+                {fmtSignedNum(curPrem, 2)} pp
               </strong>
             ) : null}
           </span>
@@ -279,49 +300,36 @@ export function AcoesValuation({ data }: Props) {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
+              {/* EIXO ÚNICO: yield (%), NTN-B (%) e prêmio (pp) são a MESMA régua
+                  aditiva (prêmio = yield − NTN-B), então o duplo eixo anterior só
+                  distorcia a comparação. O zero ganha a linha navy padrão. */}
               <ComposedChart data={premClipped} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="2 4" stroke="#E4E4E7" />
+                <CartesianGrid {...azGridProps()} />
                 <XAxis
+                  {...azXAxisProps()}
                   dataKey="date"
-                  tickFormatter={(d) => formatAxisDate(String(d), premWin)}
-                  tick={{ fontSize: 10, fill: "#71717A" }}
+                  tickFormatter={(d) => formatAxisDate(String(d), premSpan)}
                   minTickGap={32}
                 />
                 <YAxis
-                  yAxisId="left"
-                  tick={{ fontSize: 10, fill: "#71717A" }}
+                  {...azYAxisProps()}
                   domain={["auto", "auto"]}
-                  width={42}
-                  tickFormatter={(v) => `${typeof v === "number" ? v.toFixed(1) : v}%`}
+                  width={44}
+                  tickFormatter={(v) => `${fmtNum(Number(v), 0)}%`}
                 />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  tick={{ fontSize: 10, fill: PREMIO_COLOR }}
-                  domain={["auto", "auto"]}
-                  width={48}
-                  tickFormatter={(v) => `${typeof v === "number" ? (v >= 0 ? "+" : "") + v.toFixed(1) : v}`}
-                />
-                <ReferenceLine yAxisId="right" y={0} stroke={PREMIO_COLOR} strokeOpacity={0.3} strokeDasharray="3 3" />
+                <ReferenceLine {...azZeroLineProps("y")} ifOverflow="extendDomain" />
                 <Tooltip
-                  contentStyle={{ fontSize: 11, padding: "6px 10px", borderRadius: 6 }}
-                  labelFormatter={(d) =>
-                    new Date(String(d) + "T00:00:00Z").toLocaleDateString("pt-BR", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      timeZone: "UTC",
-                    })
+                  content={
+                    <AzTooltip
+                      labelFmt={(l) => fmtDataBR(String(l))}
+                      valueFmt={(v, name) =>
+                        name === "Prêmio" ? `${fmtSignedNum(v, 2)} pp` : fmtPct(v, 2)
+                      }
+                    />
                   }
-                  formatter={(v, name) => {
-                    const n = typeof v === "number" ? v : Number(v);
-                    if (!Number.isFinite(n)) return ["—", name];
-                    const suffix = name === "Prêmio" ? " pp" : "%";
-                    return [(name === "Prêmio" && n >= 0 ? "+" : "") + n.toFixed(2) + suffix, name];
-                  }}
+                  cursor={AZ_TOOLTIP_PROPS.cursor}
                 />
                 <Line
-                  yAxisId="left"
                   type="monotone"
                   dataKey={yieldKey}
                   name={premMode === "ey" ? "Earnings yield" : "Dividend yield"}
@@ -332,7 +340,6 @@ export function AcoesValuation({ data }: Props) {
                   connectNulls
                 />
                 <Line
-                  yAxisId="left"
                   type="monotone"
                   dataKey="ntnb_pct"
                   name="NTN-B 10a"
@@ -343,7 +350,6 @@ export function AcoesValuation({ data }: Props) {
                   connectNulls
                 />
                 <Line
-                  yAxisId="right"
                   type="monotone"
                   dataKey={premKey}
                   name="Prêmio"
@@ -359,10 +365,10 @@ export function AcoesValuation({ data }: Props) {
           )}
         </div>
         <p className="mt-2 text-[10px] text-zinc-400">
-          Prêmio (eixo direito) = yield da bolsa − NTN-B real ~10a (curva IPCA ANBIMA, interpolada).
-          Earnings/dividend yield são nominais e a NTN-B é real — é o gauge usual de "quanto a bolsa
-          paga acima do juro real". Acima de 0 = bolsa mais atrativa que o juro real; abaixo = mais
-          cara. Não é recomendação.
+          Prêmio (linha tracejada) = yield da bolsa − NTN-B real ~10a (curva IPCA ANBIMA,
+          interpolada), em pontos percentuais na mesma escala do eixo. Earnings/dividend yield são
+          nominais e a NTN-B é real — é o gauge usual de "quanto a bolsa paga acima do juro real".
+          Acima de 0 = bolsa mais atrativa que o juro real; abaixo = mais cara. Não é recomendação.
         </p>
         <p className="mt-2 text-right">
           <DataStamp

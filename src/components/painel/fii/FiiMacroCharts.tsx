@@ -3,11 +3,10 @@
 import { useMemo, useState } from "react";
 import {
   Area,
-  Bar,
   CartesianGrid,
   ComposedChart,
-  Legend,
   Line,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -16,20 +15,36 @@ import {
 
 import DataStamp from "@/components/painel/DataStamp";
 import {
+  AzTooltip,
+  azGridProps,
+  azTooltipProps,
+  azXAxisProps,
+  azYAxisProps,
+  azZeroLineProps,
+} from "@/components/painel/core";
+import {
   TIME_WINDOW_OPTIONS,
   TimeWindowToggle,
   type TimeWindow,
 } from "@/components/painel/fii/TimeWindowToggle";
-import type {
-  FiiMacroChartsData,
-  FiiPremioPoint,
-  FiiPvpPoint,
-} from "@/lib/painel-fii";
+import { AZ_BRAND, AZ_CHART, AZ_SERIES, AZ_TOOLTIP_PROPS, BENCHMARK_COLORS } from "@/lib/az-chart-theme";
+import {
+  diffDaysUTC,
+  fmtDataBR,
+  fmtMesLongo,
+  fmtNum,
+  fmtPct,
+  fmtSignedNum,
+  formatAxisDate,
+  parseIsoUTC,
+} from "@/lib/format-br";
+import type { FiiMacroChartsData, FiiPvpPoint } from "@/lib/painel-fii";
 
-const TIJOLO_COLOR = "#A16207"; // âmbar (representa tijolo físico)
-const PAPEL_COLOR = "#0EA5E9"; // azul claro (representa papel/CRI)
-const NTNB_COLOR = "#7E22CE"; // roxo
-const PREMIO_COLOR = "#16A34A"; // verde
+// Paleta 100% do tema AZ (az-chart-theme) — nenhum hex local.
+const TIJOLO_COLOR = AZ_SERIES[0]; // azul AZ — 1ª série categórica
+const PAPEL_COLOR = AZ_SERIES[1]; // navy — 2ª série categórica
+const NTNB_COLOR = BENCHMARK_COLORS["NTN-B"]; // ocre — cor FIXA do benchmark no site inteiro
+const PREMIO_COLOR = AZ_BRAND.rust; // prêmio = série derivada em destaque
 
 type Props = {
   data: FiiMacroChartsData;
@@ -38,54 +53,49 @@ type Props = {
 function clipByWindow<T extends { date: string }>(arr: T[], winId: TimeWindow): T[] {
   if (!arr.length) return [];
   const days = TIME_WINDOW_OPTIONS.find((o) => o.id === winId)?.days ?? 365 * 5;
-  const last = new Date(arr[arr.length - 1].date + "T00:00:00Z").getTime();
+  const last = parseIsoUTC(arr[arr.length - 1].date);
   const cutoff = last - days * 86_400_000;
-  return arr.filter((p) => new Date(p.date + "T00:00:00Z").getTime() >= cutoff);
+  return arr.filter((p) => parseIsoUTC(p.date) >= cutoff);
 }
 
-function formatAxisDate(d: string, span: TimeWindow): string {
-  const dt = new Date(d + "T00:00:00Z");
-  if (span === "7d" || span === "5d" || span === "30d") {
-    return dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" });
-  }
-  return dt.toLocaleDateString("pt-BR", { month: "2-digit", year: "2-digit", timeZone: "UTC" });
+/** Dias corridos entre o 1º e o último ponto plotado (p/ ticks adaptativos do format-br). */
+function spanDaysOf(arr: ReadonlyArray<{ date: string }>): number {
+  if (arr.length < 2) return 1;
+  return Math.max(1, diffDaysUTC(arr[0].date, arr[arr.length - 1].date));
 }
 
-// Merge tijolo + papel. Adiciona colunas auxiliares pra renderizar Area entre P25 e P75
-// (Recharts não suporta "Area between" direto — usa stacked Area com base = p25 e
-// altura = p75 - p25, transparente em cima da base).
-function buildPvpData(tijolo: FiiPvpPoint[], papel: FiiPvpPoint[]) {
-  const byDate: Record<string, Record<string, number | null>> = {};
+type PvpRow = {
+  date: string;
+  tijolo_median: number | null;
+  /** Banda P25–P75 nativa do Recharts 3: Area com dataKey=[low, high]. */
+  tijolo_band: [number, number] | null;
+  papel_median: number | null;
+  papel_band: [number, number] | null;
+};
+
+// Merge tijolo + papel por data. A banda P25–P75 vira o par [low, high] que a
+// Area do Recharts 3 plota nativamente — sem o antigo stack-hack base+altura.
+function buildPvpData(tijolo: FiiPvpPoint[], papel: FiiPvpPoint[]): PvpRow[] {
+  const byDate = new Map<string, PvpRow>();
+  const rowFor = (date: string): PvpRow => {
+    let r = byDate.get(date);
+    if (!r) {
+      r = { date, tijolo_median: null, tijolo_band: null, papel_median: null, papel_band: null };
+      byDate.set(date, r);
+    }
+    return r;
+  };
   for (const p of tijolo) {
-    const p25 = p.p25 ?? null;
-    const p75 = p.p75 ?? null;
-    byDate[p.date] = {
-      ...(byDate[p.date] || {}),
-      tijolo_median: p.median,
-      tijolo_p25: p25,
-      tijolo_p75: p75,
-      tijolo_band_base: p25,
-      tijolo_band_height: p25 != null && p75 != null ? p75 - p25 : null,
-      // Desvio vs paridade (em %): -10 = P/VP 0,90; +5 = P/VP 1,05
-      tijolo_dev_pct: (p.median - 1) * 100,
-    };
+    const r = rowFor(p.date);
+    r.tijolo_median = p.median;
+    r.tijolo_band = p.p25 != null && p.p75 != null ? [p.p25, p.p75] : null;
   }
   for (const p of papel) {
-    const p25 = p.p25 ?? null;
-    const p75 = p.p75 ?? null;
-    byDate[p.date] = {
-      ...(byDate[p.date] || {}),
-      papel_median: p.median,
-      papel_p25: p25,
-      papel_p75: p75,
-      papel_band_base: p25,
-      papel_band_height: p25 != null && p75 != null ? p75 - p25 : null,
-      papel_dev_pct: (p.median - 1) * 100,
-    };
+    const r = rowFor(p.date);
+    r.papel_median = p.median;
+    r.papel_band = p.p25 != null && p.p75 != null ? [p.p25, p.p75] : null;
   }
-  return Object.entries(byDate)
-    .map(([date, vals]) => ({ date, ...vals }))
-    .sort((a, b) => (a.date > b.date ? 1 : -1));
+  return [...byDate.values()].sort((a, b) => (a.date > b.date ? 1 : -1));
 }
 
 export function FiiMacroCharts({ data }: Props) {
@@ -99,6 +109,8 @@ export function FiiMacroCharts({ data }: Props) {
   }, [data, pvpWin]);
 
   const premioClipped = useMemo(() => clipByWindow(data.premio_history, premWin), [data, premWin]);
+  const pvpSpan = useMemo(() => spanDaysOf(pvpClipped), [pvpClipped]);
+  const premioSpan = useMemo(() => spanDaysOf(premioClipped), [premioClipped]);
 
   const latestPremio = data.premio_history[data.premio_history.length - 1];
   const latestPvpTj = data.pvp_history.tijolo[data.pvp_history.tijolo.length - 1];
@@ -128,14 +140,14 @@ export function FiiMacroCharts({ data }: Props) {
             <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: TIJOLO_COLOR }} />
             <span className="text-zinc-600">Tijolo</span>
             {latestPvpTj ? (
-              <strong className="text-[#132960] tabular-nums">{latestPvpTj.median.toFixed(2)}</strong>
+              <strong className="text-[#132960] tabular-nums">{fmtNum(latestPvpTj.median, 2)}</strong>
             ) : null}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: PAPEL_COLOR }} />
             <span className="text-zinc-600">Papel</span>
             {latestPvpPp ? (
-              <strong className="text-[#132960] tabular-nums">{latestPvpPp.median.toFixed(2)}</strong>
+              <strong className="text-[#132960] tabular-nums">{fmtNum(latestPvpPp.median, 2)}</strong>
             ) : null}
           </span>
         </div>
@@ -147,113 +159,69 @@ export function FiiMacroCharts({ data }: Props) {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
+              {/* EIXO ÚNICO em P/VP: o eixo direito anterior (barras de "desvio %
+                  vs paridade") era transformação 1-a-1 da própria mediana — info
+                  duplicada com régua própria. A linha de paridade em 1,00 dá a
+                  mesma leitura (acima = ágio, abaixo = deságio) sem duplo eixo. */}
               <ComposedChart data={pvpClipped} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="2 4" stroke="#E4E4E7" />
+                <CartesianGrid {...azGridProps()} />
                 <XAxis
+                  {...azXAxisProps()}
                   dataKey="date"
-                  tickFormatter={(d) => formatAxisDate(String(d), pvpWin)}
-                  tick={{ fontSize: 10, fill: "#71717A" }}
+                  tickFormatter={(d) => formatAxisDate(String(d), pvpSpan)}
                   minTickGap={32}
                 />
-                {/* Eixo esquerdo: P/VP absoluto (linhas e bandas) */}
                 <YAxis
-                  yAxisId="left"
-                  tick={{ fontSize: 10, fill: "#71717A" }}
+                  {...azYAxisProps()}
                   domain={["auto", "auto"]}
-                  tickFormatter={(v) => (typeof v === "number" ? v.toFixed(2) : String(v))}
-                  width={42}
+                  tickFormatter={(v) => fmtNum(Number(v), 2)}
+                  width={44}
                 />
-                {/* Eixo direito: desvio % vs paridade 1,00 (barras) */}
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  tick={{ fontSize: 10, fill: "#71717A" }}
-                  domain={["auto", "auto"]}
-                  tickFormatter={(v) => `${typeof v === "number" ? (v >= 0 ? "+" : "") + v.toFixed(0) : v}%`}
-                  width={42}
+                <ReferenceLine
+                  y={1}
+                  stroke={AZ_CHART.zero}
+                  strokeOpacity={AZ_CHART.zeroOpacity}
+                  strokeWidth={1.5}
+                  ifOverflow="extendDomain"
+                  label={{ value: "paridade (1,00)", position: "insideBottomRight", fontSize: 9, fill: AZ_CHART.ticks }}
                 />
                 <Tooltip
-                  contentStyle={{ fontSize: 11, padding: "6px 10px", borderRadius: 6 }}
-                  labelFormatter={(d) =>
-                    new Date(String(d) + "T00:00:00Z").toLocaleDateString("pt-BR", {
-                      month: "long",
-                      year: "numeric",
-                      timeZone: "UTC",
-                    })
-                  }
-                  formatter={(v, name) => {
-                    const n = typeof v === "number" ? v : Number(v);
-                    if (!Number.isFinite(n)) return ["—", name];
-                    return [n.toFixed(3), name];
+                  {...azTooltipProps()}
+                  labelFormatter={(d) => fmtMesLongo(String(d ?? ""))}
+                  formatter={(value, name) => {
+                    // Bandas chegam como [low, high]; só campos com sentido p/ o
+                    // leitor entram (os auxiliares *_band_base/_height morreram).
+                    if (Array.isArray(value)) {
+                      const lo = Number(value[0]);
+                      const hi = Number(value[1]);
+                      if (!Number.isFinite(lo) || !Number.isFinite(hi)) return ["—", name];
+                      return [`${fmtNum(lo, 2)} – ${fmtNum(hi, 2)}`, name];
+                    }
+                    const n = typeof value === "number" ? value : Number(value);
+                    return [Number.isFinite(n) ? fmtNum(n, 2) : "—", name];
                   }}
                 />
-                {/* Barras de desvio vs paridade (eixo Y direito).
-                    Cor escura quando deságio (P/VP<1), clara quando ágio (P/VP>1). */}
-                <Bar
-                  yAxisId="right"
-                  dataKey="tijolo_dev_pct"
-                  fill={TIJOLO_COLOR}
-                  fillOpacity={0.35}
-                  name="Tijolo (% vs paridade)"
-                  isAnimationActive={false}
-                />
-                <Bar
-                  yAxisId="right"
-                  dataKey="papel_dev_pct"
-                  fill={PAPEL_COLOR}
-                  fillOpacity={0.35}
-                  name="Papel (% vs paridade)"
-                  isAnimationActive={false}
-                />
-                {/* Banda P25-P75 tijolo: base invisível + altura sombreada (stack) */}
+                {/* Bandas P25–P75 nativas (Recharts 3: Area com dataKey=[low, high]) */}
                 <Area
-                  yAxisId="left"
                   type="monotone"
-                  dataKey="tijolo_band_base"
-                  stackId="tj"
-                  stroke="none"
-                  fill="transparent"
-                  fillOpacity={0}
-                  isAnimationActive={false}
-                  legendType="none"
-                />
-                <Area
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="tijolo_band_height"
-                  stackId="tj"
+                  dataKey="tijolo_band"
+                  name="Tijolo P25–P75"
                   stroke="none"
                   fill={TIJOLO_COLOR}
                   fillOpacity={0.12}
-                  name="Tijolo P25-P75"
                   isAnimationActive={false}
                 />
-                {/* Banda P25-P75 papel: idem */}
                 <Area
-                  yAxisId="left"
                   type="monotone"
-                  dataKey="papel_band_base"
-                  stackId="pp"
-                  stroke="none"
-                  fill="transparent"
-                  fillOpacity={0}
-                  isAnimationActive={false}
-                  legendType="none"
-                />
-                <Area
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="papel_band_height"
-                  stackId="pp"
+                  dataKey="papel_band"
+                  name="Papel P25–P75"
                   stroke="none"
                   fill={PAPEL_COLOR}
                   fillOpacity={0.12}
-                  name="Papel P25-P75"
                   isAnimationActive={false}
                 />
                 {/* Medianas (linhas cheias) */}
                 <Line
-                  yAxisId="left"
                   type="monotone"
                   dataKey="tijolo_median"
                   stroke={TIJOLO_COLOR}
@@ -263,7 +231,6 @@ export function FiiMacroCharts({ data }: Props) {
                   isAnimationActive={false}
                 />
                 <Line
-                  yAxisId="left"
                   type="monotone"
                   dataKey="papel_median"
                   stroke={PAPEL_COLOR}
@@ -279,9 +246,9 @@ export function FiiMacroCharts({ data }: Props) {
         <p className="mt-2 text-[10px] text-zinc-400">
           <strong>Tijolo</strong> = Logística, Lajes, Shoppings, Renda urbana, Residencial,
           Hospitalar, Hotelaria, Educacional, Agro, Varejo. <strong>Papel</strong> = CRI.
-          Linhas = mediana. Áreas sombreadas = quartis P25-P75 mensais. <strong>Barras
-          (eixo direito)</strong> = desvio % vs paridade (P/VP = 1,00). Acima de 0%, ágio;
-          abaixo, deságio. P/VP = preço / VP por cota (CVM Informe Mensal). Não é recomendação.
+          Linhas = mediana; faixas sombreadas = quartis P25-P75 mensais. A linha navy marca a
+          paridade (P/VP = 1,00): mediana acima dela = ágio, abaixo = deságio. P/VP = preço / VP
+          por cota (CVM Informe Mensal). Não é recomendação.
         </p>
         <p className="mt-2 text-right">
           <DataStamp
@@ -310,14 +277,14 @@ export function FiiMacroCharts({ data }: Props) {
             <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: TIJOLO_COLOR }} />
             <span className="text-zinc-600">DY tijolo</span>
             {latestPremio ? (
-              <strong className="text-[#132960] tabular-nums">{latestPremio.dy_tijolo_pct.toFixed(2)}%</strong>
+              <strong className="text-[#132960] tabular-nums">{fmtPct(latestPremio.dy_tijolo_pct, 2)}</strong>
             ) : null}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: NTNB_COLOR }} />
             <span className="text-zinc-600">NTN-B</span>
             {latestPremio ? (
-              <strong className="text-[#132960] tabular-nums">{latestPremio.ntnb_yield_pct.toFixed(2)}%</strong>
+              <strong className="text-[#132960] tabular-nums">{fmtPct(latestPremio.ntnb_yield_pct, 2)}</strong>
             ) : null}
             {latestPremio?.ntnb_venc ? (
               <span className="text-[10px] text-zinc-400">(venc {latestPremio.ntnb_venc})</span>
@@ -327,7 +294,7 @@ export function FiiMacroCharts({ data }: Props) {
             <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: PREMIO_COLOR }} />
             <span className="text-zinc-600">Prêmio</span>
             {latestPremio ? (
-              <strong className="text-[#132960] tabular-nums">{latestPremio.premio_pp.toFixed(2)} pp</strong>
+              <strong className="text-[#132960] tabular-nums">{fmtSignedNum(latestPremio.premio_pp, 2)} pp</strong>
             ) : null}
           </span>
         </div>
@@ -339,50 +306,36 @@ export function FiiMacroCharts({ data }: Props) {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
+              {/* EIXO ÚNICO: DY (%), NTN-B (%) e prêmio (pp) são a MESMA régua
+                  aditiva (prêmio = DY − NTN-B), então o eixo direito anterior só
+                  desalinhava a leitura. O zero ganha a linha navy padrão. */}
               <ComposedChart data={premioClipped} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="2 4" stroke="#E4E4E7" />
+                <CartesianGrid {...azGridProps()} />
                 <XAxis
+                  {...azXAxisProps()}
                   dataKey="date"
-                  tickFormatter={(d) => formatAxisDate(String(d), premWin)}
-                  tick={{ fontSize: 10, fill: "#71717A" }}
+                  tickFormatter={(d) => formatAxisDate(String(d), premioSpan)}
                   minTickGap={32}
                 />
-                {/* Eixo esquerdo: DY tijolo e NTN-B em % */}
                 <YAxis
-                  yAxisId="left"
-                  tick={{ fontSize: 10, fill: "#71717A" }}
+                  {...azYAxisProps()}
                   domain={["auto", "auto"]}
-                  tickFormatter={(v) => `${typeof v === "number" ? v.toFixed(1) : v}%`}
-                  width={42}
+                  tickFormatter={(v) => `${fmtNum(Number(v), 0)}%`}
+                  width={44}
                 />
-                {/* Eixo direito: Prêmio em pp (escala separada pra não esmagar) */}
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  tick={{ fontSize: 10, fill: PREMIO_COLOR }}
-                  domain={["auto", "auto"]}
-                  tickFormatter={(v) => `${typeof v === "number" ? v.toFixed(1) : v} pp`}
-                  width={48}
-                />
+                <ReferenceLine {...azZeroLineProps("y")} ifOverflow="extendDomain" />
                 <Tooltip
-                  contentStyle={{ fontSize: 11, padding: "6px 10px", borderRadius: 6 }}
-                  labelFormatter={(d) =>
-                    new Date(String(d) + "T00:00:00Z").toLocaleDateString("pt-BR", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      timeZone: "UTC",
-                    })
+                  content={
+                    <AzTooltip
+                      labelFmt={(l) => fmtDataBR(String(l))}
+                      valueFmt={(v, name) =>
+                        name === "Prêmio" ? `${fmtSignedNum(v, 2)} pp` : fmtPct(v, 2)
+                      }
+                    />
                   }
-                  formatter={(v, name) => {
-                    const n = typeof v === "number" ? v : Number(v);
-                    if (!Number.isFinite(n)) return ["—", name];
-                    const suffix = name === "Prêmio (pp)" ? " pp" : "%";
-                    return [n.toFixed(2) + suffix, name];
-                  }}
+                  cursor={AZ_TOOLTIP_PROPS.cursor}
                 />
                 <Line
-                  yAxisId="left"
                   type="monotone"
                   dataKey="dy_tijolo_pct"
                   stroke={TIJOLO_COLOR}
@@ -392,7 +345,6 @@ export function FiiMacroCharts({ data }: Props) {
                   isAnimationActive={false}
                 />
                 <Line
-                  yAxisId="left"
                   type="monotone"
                   dataKey="ntnb_yield_pct"
                   stroke={NTNB_COLOR}
@@ -402,14 +354,13 @@ export function FiiMacroCharts({ data }: Props) {
                   isAnimationActive={false}
                 />
                 <Line
-                  yAxisId="right"
                   type="monotone"
                   dataKey="premio_pp"
                   stroke={PREMIO_COLOR}
                   strokeWidth={2}
                   strokeDasharray="3 2"
                   dot={false}
-                  name="Prêmio (pp)"
+                  name="Prêmio"
                   isAnimationActive={false}
                 />
               </ComposedChart>
@@ -419,9 +370,10 @@ export function FiiMacroCharts({ data }: Props) {
         <p className="mt-2 text-[10px] text-zinc-400">
           DY 12m = soma dividendos 12m / preço atual por FII (yfinance), mediana dos top 25 tijolo.
           NTN-B = yield real Taxa Compra (Tesouro Direto) do título IPCA+ sem cupom mais longo de
-          cada dia (vencimento muda ao longo do tempo — hoje 2050, antes 2045). Eixo direito = Prêmio
-          em pp. Indicador histórico — <strong>não é recomendação</strong>. FII tem risco de cota,
-          vacância e crédito que NTN-B não tem.
+          cada dia (vencimento muda ao longo do tempo — hoje 2050, antes 2045). Prêmio (linha
+          tracejada) = DY − NTN-B, em pontos percentuais na mesma escala do eixo. Indicador
+          histórico — <strong>não é recomendação</strong>. FII tem risco de cota, vacância e
+          crédito que NTN-B não tem.
         </p>
         <p className="mt-2 text-right">
           <DataStamp giro={data.generated_at} dado={latestPremio?.date ?? null} />

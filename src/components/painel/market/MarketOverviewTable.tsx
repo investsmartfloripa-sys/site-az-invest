@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import type { AssetClass, CatalogAsset, MarketHistoryLatest, ReturnPeriods } from "@/lib/painel-market-data";
-import { classLabel, formatPct } from "@/lib/painel-market-data";
+import { classLabel } from "@/lib/painel-market-data";
 import { MarketCard } from "@/components/painel/market/MarketCard";
+import { variationText } from "@/lib/az-chart-theme";
+import { fmtSignedPct } from "@/lib/format-br";
 
 type Props = {
   catalog: CatalogAsset[];
@@ -24,12 +26,6 @@ const PERIOD_COLS: Array<{ key: keyof ReturnPeriods; label: string }> = [
   { key: "5y",  label: "5A" },
 ];
 
-function returnColor(v: number | null | undefined): string {
-  if (v == null) return "text-zinc-400";
-  if (v > 0.05) return "text-[#16A34A]";
-  if (v < -0.05) return "text-[#DC2626]";
-  return "text-zinc-500";
-}
 
 export function MarketOverviewTable({ catalog, latest }: Props) {
   const [klassFilter, setKlassFilter] = useState<AssetClass | "all">("all");
@@ -206,14 +202,18 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
                       "—"
                     )}
                   </td>
-                  {PERIOD_COLS.map((p) => (
-                    <td
-                      key={p.key}
-                      className={`px-2 py-1.5 text-right font-semibold ${returnColor(row?.returns[p.key])}`}
-                    >
-                      {formatPct(row?.returns[p.key])}
-                    </td>
-                  ))}
+                  {PERIOD_COLS.map((p) => {
+                    const v = row?.returns[p.key];
+                    return (
+                      <td
+                        key={p.key}
+                        className={`px-2 py-1.5 text-right font-semibold ${v == null ? "text-zinc-400" : ""}`}
+                        style={v != null ? { color: variationText(v) } : undefined}
+                      >
+                        {fmtSignedPct(v, 2)}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
               {sorted.length === 0 ? (
