@@ -1,7 +1,7 @@
 /**
  * Loaders das páginas de mercado "global + câmbio" do Painel Econômico:
  *  - /painel-economico/mercado/global/commodities
- *  - /painel-economico/mercado/brasil/cambio
+ *  - /painel-economico/mercado/global/moedas (absorveu /mercado/brasil/cambio)
  *  - /painel-economico/mercado/global/indices-globais
  *
  * Duas famílias de fonte no Vercel Blob:
@@ -108,6 +108,25 @@ export type FxTopMoversPayload = {
   source?: string;
   top?: Partial<Record<FxMoversPeriodKey, { asof?: string; up?: FxMoverRow[]; down?: FxMoverRow[] }>>;
 };
+
+// ---------------------------------------------------------------------------
+// Utilidades de data
+// ---------------------------------------------------------------------------
+
+/**
+ * Data de HOJE em Brasília como ISO "YYYY-MM-DD" (en-CA formata exatamente
+ * assim). Usada p/ honestidade da manchete dos índices globais: se o
+ * fechamento mais recente for anterior a hoje, a prosa diz "no último
+ * fechamento". Com ISR de 1h o desvio máximo é de uma hora — aceitável.
+ */
+export function hojeIsoBrasilia(agora: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(agora);
+}
 
 // ---------------------------------------------------------------------------
 // Fetchers
@@ -267,4 +286,90 @@ export async function getHistorySlice(
   }
 
   return { generatedAt: full.generated_at ?? null, lastDataDate, series };
+}
+
+// ---------------------------------------------------------------------------
+// Universo de moedas (/mercado/global/moedas)
+// ---------------------------------------------------------------------------
+
+/**
+ * CONVENÇÃO DE SINAL (crítica — vale p/ toda a página de moedas):
+ * todo retorno exibido é o retorno DA MOEDA contra o dólar — positivo = a
+ * moeda se VALORIZOU frente ao USD. Quando o par Yahoo tem o USD na base
+ * (USD/JPY, USD/BRL...; `usdBase: true`), o retorno do PAR é invertido
+ * geometricamente (preço_inicial/preço_final − 1) antes de exibir.
+ * É a mesma convenção do fx_top_movers.json (change_pct = moeda vs USD).
+ */
+export type FxGroup = "majors" | "emergentes";
+
+export type FxPairDef = {
+  /** Símbolo Yahoo no market_history_full ("JPY=X" = USD/JPY; "EURUSD=X" = EUR/USD). */
+  ticker: string;
+  /** Par na convenção de mercado, p/ exibir a cotação ("USD/JPY"). */
+  pair: string;
+  /** Código ISO da moeda (lado não-USD). */
+  code: string;
+  /** Nome pt-BR da moeda. */
+  name: string;
+  group: FxGroup;
+  /** true = USD é a BASE do par (alta do par = moeda local mais fraca). */
+  usdBase: boolean;
+};
+
+/** Moedas acompanhadas contra o USD (majors G10 + nórdicas, emergentes incl. BRL). */
+export const FX_PAIRS: FxPairDef[] = [
+  // Majors (G10 + nórdicas)
+  { ticker: "EURUSD=X", pair: "EUR/USD", code: "EUR", name: "Euro", group: "majors", usdBase: false },
+  { ticker: "JPY=X", pair: "USD/JPY", code: "JPY", name: "Iene japonês", group: "majors", usdBase: true },
+  { ticker: "GBPUSD=X", pair: "GBP/USD", code: "GBP", name: "Libra esterlina", group: "majors", usdBase: false },
+  { ticker: "CHF=X", pair: "USD/CHF", code: "CHF", name: "Franco suíço", group: "majors", usdBase: true },
+  { ticker: "AUDUSD=X", pair: "AUD/USD", code: "AUD", name: "Dólar australiano", group: "majors", usdBase: false },
+  { ticker: "CAD=X", pair: "USD/CAD", code: "CAD", name: "Dólar canadense", group: "majors", usdBase: true },
+  { ticker: "NZDUSD=X", pair: "NZD/USD", code: "NZD", name: "Dólar neozelandês", group: "majors", usdBase: false },
+  { ticker: "SEK=X", pair: "USD/SEK", code: "SEK", name: "Coroa sueca", group: "majors", usdBase: true },
+  { ticker: "NOK=X", pair: "USD/NOK", code: "NOK", name: "Coroa norueguesa", group: "majors", usdBase: true },
+  // Emergentes (o real entra aqui — é o seu peer group)
+  { ticker: "BRL=X", pair: "USD/BRL", code: "BRL", name: "Real brasileiro", group: "emergentes", usdBase: true },
+  { ticker: "MXN=X", pair: "USD/MXN", code: "MXN", name: "Peso mexicano", group: "emergentes", usdBase: true },
+  { ticker: "ARS=X", pair: "USD/ARS", code: "ARS", name: "Peso argentino", group: "emergentes", usdBase: true },
+  { ticker: "CLP=X", pair: "USD/CLP", code: "CLP", name: "Peso chileno", group: "emergentes", usdBase: true },
+  { ticker: "COP=X", pair: "USD/COP", code: "COP", name: "Peso colombiano", group: "emergentes", usdBase: true },
+  { ticker: "ZAR=X", pair: "USD/ZAR", code: "ZAR", name: "Rand sul-africano", group: "emergentes", usdBase: true },
+  { ticker: "TRY=X", pair: "USD/TRY", code: "TRY", name: "Lira turca", group: "emergentes", usdBase: true },
+  { ticker: "INR=X", pair: "USD/INR", code: "INR", name: "Rupia indiana", group: "emergentes", usdBase: true },
+  { ticker: "CNY=X", pair: "USD/CNY", code: "CNY", name: "Yuan chinês", group: "emergentes", usdBase: true },
+  { ticker: "PLN=X", pair: "USD/PLN", code: "PLN", name: "Zloty polonês", group: "emergentes", usdBase: true },
+  { ticker: "HUF=X", pair: "USD/HUF", code: "HUF", name: "Florim húngaro", group: "emergentes", usdBase: true },
+  { ticker: "IDR=X", pair: "USD/IDR", code: "IDR", name: "Rupia indonésia", group: "emergentes", usdBase: true },
+  { ticker: "KRW=X", pair: "USD/KRW", code: "KRW", name: "Won sul-coreano", group: "emergentes", usdBase: true },
+];
+
+/**
+ * Janela → nº de pregões (mesmos shifts do build_fx_top_movers.py:
+ * 1/5/21/63/252) — retornos daqui e do fx_top_movers ficam comparáveis.
+ */
+export const FX_SHIFT_BY_PERIOD: Record<PanoramaPeriodKey, number> = {
+  "1d": 1,
+  "1wk": 5,
+  "1mo": 21,
+  "3mo": 63,
+  "1y": 252,
+};
+
+/**
+ * Retorno % DA MOEDA contra o USD em uma janela de `shift` pregões, a partir
+ * da série diária do PAR. Aplica a convenção de sinal: par com USD na base é
+ * invertido (1/preço) antes do retorno. null se a série não alcança a janela.
+ */
+export function fxCurrencyReturnPct(
+  data: ReadonlyArray<readonly [string, number]> | undefined,
+  shift: number,
+  usdBase: boolean,
+): number | null {
+  if (!data || data.length <= shift) return null;
+  const last = data[data.length - 1][1];
+  const prev = data[data.length - 1 - shift][1];
+  if (!Number.isFinite(last) || !Number.isFinite(prev) || last <= 0 || prev <= 0) return null;
+  // usdBase: retorno da moeda = (1/last)/(1/prev) − 1 = prev/last − 1.
+  return (usdBase ? prev / last - 1 : last / prev - 1) * 100;
 }
