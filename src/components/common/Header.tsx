@@ -5,7 +5,7 @@ import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-[#132960]/10 bg-[#132960]/90 text-[#E8E7E5] backdrop-blur-md">
+    <header className="sticky top-0 z-50 bg-[#132960] text-[#E8E7E5] shadow-[0_2px_12px_rgba(19,41,96,0.25)]">
       <div className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} items-center justify-between gap-4 px-4 py-4 md:px-8`}>
         <Link href="/" className="block">
           <Image

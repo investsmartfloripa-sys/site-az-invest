@@ -20,7 +20,7 @@ export function NavLinks() {
   }, [pathname]);
 
   return (
-    <nav aria-label="Navegação principal" className="border-t border-white/10 bg-[#0e1f49]/85">
+    <nav aria-label="Navegação principal" className="border-t border-white/10 bg-[#0e1f49]">
       <div className={`mx-auto w-full ${SITE_MAIN_MAX_WIDTH_CLASS} px-4 md:px-8`}>
         {/* Mobile: barra com hambúrguer */}
         <div className="flex items-center justify-between py-2 md:hidden">
