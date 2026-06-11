@@ -5,6 +5,7 @@ import { approvePostAction, rejectPostAction } from "@/lib/workspace/review-acti
 import { canReviewPosts } from "@/lib/workspace/permissions";
 import { redirect } from "next/navigation";
 import { POST_STATUS_LABELS } from "@/lib/workspace/posts";
+import { SubmitButton } from "@/components/workspace/SubmitButton";
 
 export default async function RevisaoPage() {
   const session = await requireSession();
@@ -51,12 +52,9 @@ export default async function RevisaoPage() {
             <div className="mt-4 flex flex-wrap gap-2">
               <form action={approvePostAction}>
                 <input type="hidden" name="id" value={post.id} />
-                <button
-                  type="submit"
-                  className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
-                >
+                <SubmitButton className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500">
                   Aprovar e publicar
-                </button>
+                </SubmitButton>
               </form>
               <form action={rejectPostAction} className="flex flex-wrap items-end gap-2">
                 <input type="hidden" name="id" value={post.id} />
@@ -66,12 +64,9 @@ export default async function RevisaoPage() {
                   placeholder="Motivo da devolução"
                   className="rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm text-[#132960] outline-none focus:border-[#027DFC]"
                 />
-                <button
-                  type="submit"
-                  className="rounded-md border border-red-400 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-                >
+                <SubmitButton className="rounded-md border border-red-400 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50">
                   Devolver
-                </button>
+                </SubmitButton>
               </form>
             </div>
           </article>

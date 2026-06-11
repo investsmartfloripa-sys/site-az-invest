@@ -21,6 +21,7 @@ import {
   SpecialtyEditor,
 } from "@/components/workspace/AuthorListEditor";
 import { PhotoField } from "@/components/workspace/PhotoField";
+import { SubmitButton } from "@/components/workspace/SubmitButton";
 
 async function updateAuthorAction(formData: FormData) {
   "use server";
@@ -109,15 +110,13 @@ const inputClass =
 
 type PageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ ok?: string }>;
 };
 
-export default async function EditAuthorPage({ params, searchParams }: PageProps) {
+export default async function EditAuthorPage({ params }: PageProps) {
   const session = await requireSession();
   if (!canManageAllAuthors(session)) redirect("/area-restrita/dashboard");
 
   const { id } = await params;
-  const { ok } = await searchParams;
   const numericId = Number(id);
   if (!Number.isInteger(numericId)) notFound();
 
@@ -141,12 +140,6 @@ export default async function EditAuthorPage({ params, searchParams }: PageProps
           Voltar
         </Link>
       </div>
-
-      {ok ? (
-        <p className="mb-4 rounded-md bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
-          Salvo com sucesso.
-        </p>
-      ) : null}
 
       <form action={updateAuthorAction} className="space-y-6">
         <input type="hidden" name="id" value={author.id} />
@@ -208,9 +201,9 @@ export default async function EditAuthorPage({ params, searchParams }: PageProps
           <EducationEditor initial={education} hiddenName="educationJson" />
         </section>
 
-        <button type="submit" className="rounded-md bg-[#027DFC] px-4 py-2 text-sm font-semibold text-white">
+        <SubmitButton className="rounded-md bg-[#027DFC] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0268d4]">
           Salvar
-        </button>
+        </SubmitButton>
       </form>
     </div>
   );

@@ -10,18 +10,15 @@ import {
   toggleActiveAction,
 } from "@/lib/workspace/user-actions";
 import { PASSWORD_MIN_LENGTH } from "@/lib/workspace/password-policy";
+import { SubmitButton } from "@/components/workspace/SubmitButton";
+import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
 
 const inputClass =
   "mt-1 w-full rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm text-[#132960] outline-none focus:border-[#027DFC]";
 
-export default async function UsuariosPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
+export default async function UsuariosPage() {
   const session = await requireSession();
   if (!isAdmin(session.role)) redirect("/area-restrita/dashboard");
-  const params = await searchParams;
 
   const [users, authors] = await Promise.all([
     prisma.user.findMany({
@@ -35,12 +32,6 @@ export default async function UsuariosPage({
     <div>
       <h1 className="text-2xl font-semibold text-[#132960]">Usuários</h1>
       <p className="text-sm text-[#132960]/60">Admin, equipe (STAFF) e autores (AUTHOR).</p>
-
-      {params.error === "password" ? (
-        <p className="mt-4 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-600">
-          Senha rejeitada: use pelo menos {PASSWORD_MIN_LENGTH} caracteres.
-        </p>
-      ) : null}
 
       <section className="mt-6 rounded-lg border border-[#132960]/12 bg-white p-5 shadow-sm">
         <h2 className="text-lg font-semibold text-[#132960]">Novo usuário</h2>
@@ -80,9 +71,9 @@ export default async function UsuariosPage({
             </select>
           </label>
           <div className="md:col-span-2">
-            <button type="submit" className="rounded-md bg-[#027DFC] px-4 py-2 text-sm font-semibold text-white">
+            <SubmitButton className="rounded-md bg-[#027DFC] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0268d4]">
               Criar
-            </button>
+            </SubmitButton>
           </div>
         </form>
       </section>
@@ -132,13 +123,12 @@ export default async function UsuariosPage({
                         </option>
                       ))}
                     </select>
-                    <button
-                      type="submit"
+                    <SubmitButton
                       disabled={isSelf}
                       className="rounded border border-[#132960]/25 px-2 py-2 text-xs text-[#132960]/80 hover:bg-[#132960]/5 disabled:opacity-40"
                     >
                       Salvar
-                    </button>
+                    </SubmitButton>
                   </form>
                   <form action={resetPasswordAction} className="flex items-end gap-1">
                     <input type="hidden" name="id" value={user.id} />
@@ -149,29 +139,29 @@ export default async function UsuariosPage({
                       placeholder={`Nova senha (mín. ${PASSWORD_MIN_LENGTH})`}
                       className="w-28 rounded border border-[#132960]/20 bg-white px-2 py-1 text-xs text-[#132960] outline-none focus:border-[#027DFC]"
                     />
-                    <button type="submit" className="rounded border border-[#132960]/25 px-2 py-1 text-xs text-[#132960]/80 hover:bg-[#132960]/5">
+                    <SubmitButton className="rounded border border-[#132960]/25 px-2 py-1 text-xs text-[#132960]/80 hover:bg-[#132960]/5">
                       Reset
-                    </button>
+                    </SubmitButton>
                   </form>
                   <form action={toggleActiveAction}>
                     <input type="hidden" name="id" value={user.id} />
-                    <button
-                      type="submit"
+                    <SubmitButton
                       disabled={isSelf}
                       className="rounded border border-[#132960]/25 px-2 py-1 text-xs text-[#132960]/80 hover:bg-[#132960]/5 disabled:opacity-40"
                     >
                       {user.active ? "Desativar" : "Ativar"}
-                    </button>
+                    </SubmitButton>
                   </form>
                   <form action={deleteUserAction}>
                     <input type="hidden" name="id" value={user.id} />
-                    <button
-                      type="submit"
+                    <ConfirmDialog
+                      title="Excluir usuário"
+                      description={`O acesso de ${user.name || user.email} ao workspace será removido em definitivo. Textos publicados e o perfil de autor vinculado não são apagados.`}
+                      confirmLabel="Excluir usuário"
+                      triggerLabel="Excluir"
                       disabled={isSelf}
-                      className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-40"
-                    >
-                      Excluir
-                    </button>
+                      triggerClassName="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    />
                   </form>
                 </div>
               </div>

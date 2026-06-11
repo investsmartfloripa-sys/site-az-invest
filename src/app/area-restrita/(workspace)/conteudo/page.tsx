@@ -3,14 +3,9 @@ import { requireSession } from "@/lib/auth";
 import { listPostsForSession } from "@/lib/workspace/post-queries";
 import { POST_STATUS_LABELS, statusBadgeClass } from "@/lib/workspace/posts";
 
-export default async function ConteudoPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ submitted?: string; error?: string }>;
-}) {
+export default async function ConteudoPage() {
   const session = await requireSession();
   const posts = await listPostsForSession(session);
-  const params = await searchParams;
 
   return (
     <div>
@@ -26,12 +21,6 @@ export default async function ConteudoPage({
           Novo texto
         </Link>
       </div>
-
-      {params.submitted ? (
-        <p className="mt-4 rounded-md bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
-          Texto enviado para revisão. O admin será notificado.
-        </p>
-      ) : null}
 
       <div className="mt-6 overflow-hidden rounded-lg border border-[#132960]/12 bg-white shadow-sm">
         <table className="w-full text-left text-sm">

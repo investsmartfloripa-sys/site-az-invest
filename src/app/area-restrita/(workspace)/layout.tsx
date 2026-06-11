@@ -1,6 +1,15 @@
+import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { WorkspaceShell, type WorkspaceNavItem } from "@/components/workspace/WorkspaceShell";
+import { Toaster } from "sonner";
+import {
+  SIDEBAR_COOKIE_NAME,
+  WorkspaceShell,
+  type WorkspaceNavItem,
+} from "@/components/workspace/WorkspaceShell";
+import { FeedbackToaster } from "@/components/workspace/FeedbackToaster";
 import { destroySession, requireSession, type SessionUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import {
   canManageAllAuthors,
   canManageUsers,
@@ -14,35 +23,40 @@ async function logoutAction() {
   redirect("/area-restrita/login");
 }
 
-function navForSession(session: SessionUser): WorkspaceNavItem[] {
+function navForSession(session: SessionUser, pendingReviewCount: number): WorkspaceNavItem[] {
   const items: WorkspaceNavItem[] = [
-    { href: "/area-restrita/dashboard", label: "Dashboard" },
-    { href: "/area-restrita/conteudo", label: "Conteúdo" },
+    { href: "/area-restrita/dashboard", label: "Dashboard", icon: "dashboard" },
+    { href: "/area-restrita/conteudo", label: "Conteúdo", icon: "conteudo" },
   ];
 
   if (canReviewPosts(session)) {
-    items.push({ href: "/area-restrita/revisao", label: "Revisão" });
+    items.push({
+      href: "/area-restrita/revisao",
+      label: "Revisão",
+      icon: "revisao",
+      badge: pendingReviewCount,
+    });
   }
 
   if (session.role === "AUTHOR") {
-    items.push({ href: "/area-restrita/perfil", label: "Meu perfil" });
+    items.push({ href: "/area-restrita/perfil", label: "Meu perfil", icon: "perfil" });
   }
 
   if (canManageAllAuthors(session)) {
-    items.push({ href: "/area-restrita/autores", label: "Autores" });
+    items.push({ href: "/area-restrita/autores", label: "Autores", icon: "autores" });
   }
 
   items.push(
-    { href: "/area-restrita/leads", label: "Leads" },
-    { href: "/area-restrita/metricas", label: "Métricas" },
+    { href: "/area-restrita/leads", label: "Leads", icon: "leads" },
+    { href: "/area-restrita/metricas", label: "Métricas", icon: "metricas" },
   );
 
   if (canViewDataHealth(session)) {
-    items.push({ href: "/area-restrita/dados", label: "Saúde dos dados" });
+    items.push({ href: "/area-restrita/dados", label: "Saúde dos dados", icon: "dados" });
   }
 
   if (canManageUsers(session)) {
-    items.push({ href: "/area-restrita/usuarios", label: "Usuários" });
+    items.push({ href: "/area-restrita/usuarios", label: "Usuários", icon: "usuarios" });
   }
 
   return items;
@@ -57,14 +71,37 @@ export default async function WorkspaceLayout({
   const roleLabel =
     session.role === "ADMIN" ? "Admin" : session.role === "STAFF" ? "Equipe" : "Autor";
 
+  // Estado da sidebar lido no server para o rail não piscar no primeiro paint.
+  const cookieStore = await cookies();
+  const sidebarCollapsed = cookieStore.get(SIDEBAR_COOKIE_NAME)?.value === "1";
+
+  // Badge numérico de "Revisão" (textos aguardando aprovação).
+  const pendingReviewCount = canReviewPosts(session)
+    ? await prisma.post.count({ where: { status: "PENDING_REVIEW" } })
+    : 0;
+
   return (
     <WorkspaceShell
-      nav={navForSession(session)}
+      nav={navForSession(session, pendingReviewCount)}
       roleLabel={roleLabel}
       email={session.email}
+      name={session.name}
+      profileHref={session.role === "AUTHOR" ? "/area-restrita/perfil" : null}
+      defaultCollapsed={sidebarCollapsed}
       logoutAction={logoutAction}
     >
       {children}
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        toastOptions={{
+          style: { borderRadius: "12px" },
+        }}
+      />
+      <Suspense fallback={null}>
+        <FeedbackToaster />
+      </Suspense>
     </WorkspaceShell>
   );
 }

@@ -14,12 +14,9 @@ import {
   SpecialtyEditor,
 } from "@/components/workspace/AuthorListEditor";
 import { PhotoField } from "@/components/workspace/PhotoField";
+import { SubmitButton } from "@/components/workspace/SubmitButton";
 
-export default async function PerfilPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
-}) {
+export default async function PerfilPage() {
   const session = await requireSession();
   if (session.role !== "AUTHOR") redirect("/area-restrita/dashboard");
   if (!session.authorId) {
@@ -37,7 +34,6 @@ export default async function PerfilPage({
   const author = await prisma.author.findUnique({ where: { id: session.authorId } });
   if (!author) notFound();
 
-  const params = await searchParams;
   const experiences = parseExperiences(author.experiencesJson);
   const education = parseEducation(author.educationJson);
   const specialties = parseSpecialties(author.specialtiesJson);
@@ -51,12 +47,6 @@ export default async function PerfilPage({
           /nosso-time/{author.slug}
         </Link>
       </p>
-
-      {params.ok ? (
-        <p className="mt-4 rounded-md bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
-          Perfil atualizado.
-        </p>
-      ) : null}
 
       <form action={updateOwnProfileAction} className="mt-6 space-y-6">
         <section className="space-y-3 rounded-lg border border-[#132960]/12 bg-white p-5 shadow-sm">
@@ -152,12 +142,9 @@ export default async function PerfilPage({
           <EducationEditor initial={education} hiddenName="educationJson" />
         </section>
 
-        <button
-          type="submit"
-          className="rounded-md bg-[#027DFC] px-4 py-2 text-sm font-semibold text-white"
-        >
+        <SubmitButton className="rounded-md bg-[#027DFC] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0268d4]">
           Salvar perfil
-        </button>
+        </SubmitButton>
       </form>
     </div>
   );

@@ -7,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
 import { canManageAllAuthors } from "@/lib/workspace/permissions";
 import { PhotoField } from "@/components/workspace/PhotoField";
+import { SubmitButton } from "@/components/workspace/SubmitButton";
+import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
 
 async function createAuthorAction(formData: FormData) {
   "use server";
@@ -109,9 +111,9 @@ export default async function AutoresPage() {
             <textarea name="bio" rows={3} className={inputClass} />
           </label>
           <div className="md:col-span-2">
-            <button type="submit" className="rounded-md bg-[#027DFC] px-4 py-2 text-sm font-semibold text-white">
+            <SubmitButton className="rounded-md bg-[#027DFC] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0268d4]">
               Cadastrar
-            </button>
+            </SubmitButton>
           </div>
         </form>
       </section>
@@ -146,9 +148,13 @@ export default async function AutoresPage() {
                 </Link>
                 <form action={deleteAuthorAction}>
                   <input type="hidden" name="id" value={author.id} />
-                  <button type="submit" className="text-xs text-red-600 hover:underline">
-                    Excluir
-                  </button>
+                  <ConfirmDialog
+                    title="Excluir autor"
+                    description={`O perfil de ${author.name} sai do site (Nosso time) em definitivo e os ${author._count.posts} texto(s) dele ficam sem autor vinculado. ${author.workspaceUser ? "Atenção: existe um login de workspace vinculado a este perfil." : ""}`}
+                    confirmLabel="Excluir autor"
+                    triggerLabel="Excluir"
+                    triggerClassName="text-xs text-red-600 hover:underline"
+                  />
                 </form>
               </div>
             </div>

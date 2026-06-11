@@ -2,6 +2,8 @@ import Link from "next/link";
 import { blogPostCategoryOptions } from "@/data/blog-categories";
 import { WorkspaceEditor } from "@/components/workspace/WorkspaceEditor";
 import { PhotoField } from "@/components/workspace/PhotoField";
+import { SubmitButton } from "@/components/workspace/SubmitButton";
+import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
 import {
   deletePostAction,
   publishPostDirectAction,
@@ -136,38 +138,37 @@ export function PostEditorForm({
       ) : null}
 
       <div className="flex flex-wrap gap-2">
-        <button
-          type="submit"
+        <SubmitButton
+          formAction={savePostDraftAction}
           disabled={isLockedForAuthor}
-          className="rounded-md bg-[#027DFC] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0268d4] disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-md bg-[#027DFC] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0268d4] disabled:opacity-50"
         >
           Salvar rascunho
-        </button>
+        </SubmitButton>
         {post ? (
           <>
-            <button
-              type="submit"
+            <SubmitButton
               formAction={submitPostForReviewAction}
-              className="rounded-md border border-amber-700/40 px-4 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-700/10"
+              className="rounded-md border border-amber-700/40 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-700/10"
             >
               Enviar para revisão
-            </button>
+            </SubmitButton>
             {canPublishDirectly(session) ? (
-              <button
-                type="submit"
+              <SubmitButton
                 formAction={publishPostDirectAction}
-                className="rounded-md border border-[#166B47]/40 px-4 py-2 text-sm font-semibold text-[#166B47] hover:bg-[#166B47]/10"
+                className="rounded-md border border-[#166B47]/40 px-4 py-2 text-sm font-semibold text-[#166B47] transition hover:bg-[#166B47]/10"
               >
                 Publicar direto
-              </button>
+              </SubmitButton>
             ) : null}
-            <button
-              type="submit"
+            <ConfirmDialog
+              title="Excluir texto"
+              description={`"${post.title}" será apagado em definitivo e sai do blog imediatamente. Esta ação não pode ser desfeita.`}
+              confirmLabel="Excluir texto"
+              triggerLabel="Excluir"
               formAction={deletePostAction}
-              className="rounded-md border border-[#9C2B24]/40 px-4 py-2 text-sm text-[#9C2B24] hover:bg-[#9C2B24]/10"
-            >
-              Excluir
-            </button>
+              triggerClassName="rounded-md border border-[#9C2B24]/40 px-4 py-2 text-sm text-[#9C2B24] transition hover:bg-[#9C2B24]/10"
+            />
             {post.status === "APPROVED" ? (
               <Link
                 href={`/blog/${post.slug}`}

@@ -3,12 +3,7 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { refreshDataSourceSnapshots } from "@/lib/data-health";
-import {
-  CADENCE_LABEL,
-  DATA_SOURCES,
-  PAINEIS,
-  type DataSourceDef,
-} from "@/lib/data-manifest";
+import { CADENCE_LABEL, DATA_SOURCES, PAINEIS } from "@/lib/data-manifest";
 import { formatDadoLabel, formatGiroMinuto, relativeAge } from "@/lib/data-stamp";
 import { canViewDataHealth } from "@/lib/workspace/permissions";
 
