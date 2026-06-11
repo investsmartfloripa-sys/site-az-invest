@@ -23,6 +23,7 @@ import type {
   FamiliasEstruturaSocialData,
   SeriePonto,
   ComposicaoPctPonto,
+  IpcaFaixaPonto,
 } from "@/lib/painel-familias";
 import DataStamp from "@/components/painel/DataStamp";
 import { lastSeriesDate } from "@/lib/data-stamp";
@@ -480,7 +481,7 @@ function BlocoB({ endividamento }: { endividamento: FamiliasEndividamentoData })
       <ChartCard
         title="Composição do estoque de crédito PF (últimos 24 meses)"
         subtitle="Onde mora a dívida da família média — % do saldo total da pessoa física por modalidade"
-        footer="Fonte: BCB SGS 20631 + 20632 + 20680/20689/20695/20697/20712. 'Outras' = residual."
+        footer="Fonte: BCB SGS — saldos PF: 20541 (total), 20612/20579/20590/20581/20574/20573/20609. 'Outras' = residual."
         stampGiro={endividamento.gerado_em}
         stampDado={lastSeriesDate(endividamento.bloco_estoque.composicao_pct)}
         height={340}
@@ -498,6 +499,8 @@ function BlocoB({ endividamento }: { endividamento: FamiliasEndividamentoData })
             <Bar dataKey="cartao_pct" name="Cartão" stackId="estoque" fill={COR_CARTAO} />
             <Bar dataKey="veiculos_pct" name="Veículos" stackId="estoque" fill={COR_VEIC} />
             <Bar dataKey="credito_pessoal_pct" name="Crédito pessoal n/ consig" stackId="estoque" fill={COR_PESSOAL} />
+            <Bar dataKey="cheque_especial_pct" name="Cheque especial" stackId="estoque" fill={COR_ROSA} />
+            <Bar dataKey="rural_pct" name="Crédito rural" stackId="estoque" fill={COR_TEAL} />
             <Bar dataKey="outras_pct" name="Outras (residual)" stackId="estoque" fill={COR_OUTRAS} />
           </ComposedChart>
         </ResponsiveContainer>
@@ -661,8 +664,25 @@ function BlocoD({ estruturaSocial }: { estruturaSocial: FamiliasEstruturaSocialD
     [estruturaSocial.bloco_transferencias_sociais.serie]);
   const d4Data = useMemo(() => estruturaSocial.bloco_gini.serie || [],
     [estruturaSocial.bloco_gini.serie]);
-  const d5Data = useMemo(() => lastN(estruturaSocial.bloco_ipca_faixa_renda.serie || [], 60),
-    [estruturaSocial.bloco_ipca_faixa_renda.serie]);
+  // D5: a série crua DIMAC_INF* é variação MENSAL (% a.m.) — o gráfico mostra o
+  // acumulado em índice (base 100 = jul/2006), calculado no builder (serie_indice).
+  const d5Data = useMemo(() => {
+    const bloco = estruturaSocial.bloco_ipca_faixa_renda;
+    if (bloco.serie_indice?.length) return bloco.serie_indice;
+    // Fallback para JSON antigo (sem serie_indice): acumula a variação mensal aqui.
+    const keys = ["muito_baixa", "baixa", "media_baixa", "media", "media_alta", "alta"] as const;
+    const acc: Partial<Record<(typeof keys)[number], number>> = {};
+    return (bloco.serie || []).map((p) => {
+      const out: IpcaFaixaPonto = { data: p.data };
+      for (const k of keys) {
+        const v = p[k];
+        if (v == null) continue;
+        acc[k] = acc[k] == null ? 100 : (acc[k] as number) * (1 + v / 100);
+        out[k] = acc[k];
+      }
+      return out;
+    });
+  }, [estruturaSocial.bloco_ipca_faixa_renda]);
 
   return (
     <section className="space-y-4">
@@ -673,8 +693,8 @@ function BlocoD({ estruturaSocial }: { estruturaSocial: FamiliasEstruturaSocialD
 
       <ChartCard
         title="Concentração de renda — quem fica com quanto"
-        subtitle="% da renda domiciliar capturada pelos 10% mais ricos, 50% intermediários e 40% mais pobres (PNAD anual)"
-        footer="Fonte: Ipeadata PNADS_BOTTOM40 + PNADS_MIDDLE50 (IBGE/PNAD); TOP10 = 100 - BOTTOM40 - MIDDLE50."
+        subtitle="% da massa de rendimento domiciliar per capita capturada pelos 10% mais ricos, 50% intermediários e 40% mais pobres (PNADC anual)"
+        footer="Fonte: IBGE/SIDRA tabela 7530 var 10826 (PNAD Contínua Anual) — classes acumuladas; top10 = 100 − classe 'até P90'."
         stampGiro={estruturaSocial.gerado_em}
         stampDado={lastSeriesDate(estruturaSocial.bloco_concentracao_renda.serie, "ano")}
         height={340}
@@ -760,8 +780,8 @@ function BlocoD({ estruturaSocial }: { estruturaSocial: FamiliasEstruturaSocialD
 
       <ChartCard
         title="IPCA por faixa de renda — quem sente mais a inflação?"
-        subtitle="Indicador IPEA: variação mensal da cesta de consumo de 6 faixas de renda (base jul/2006=1)"
-        footer="Fonte: Ipeadata DIMAC_INF1..6 (IPEA Carta de Conjuntura — Indicador IPEA de Inflação por Faixa de Renda)."
+        subtitle="Indicador IPEA: inflação acumulada da cesta de consumo de 6 faixas de renda — índice base 100 = jul/2006"
+        footer="Fonte: Ipeadata DIMAC_INF1..6 (IPEA Carta de Conjuntura — variação % a.m., acumulada em índice pelo pipeline)."
         stampGiro={estruturaSocial.gerado_em}
         stampDado={lastSeriesDate(estruturaSocial.bloco_ipca_faixa_renda.serie)}
         height={320}
@@ -771,9 +791,9 @@ function BlocoD({ estruturaSocial }: { estruturaSocial: FamiliasEstruturaSocialD
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis dataKey="data" tick={{ fontSize: 10 }} tickFormatter={(v) => fmtMes(v as string)}
               interval={Math.max(0, Math.floor(d5Data.length / 10))} />
-            <YAxis tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 11 }} domain={["auto", "auto"]} />
             <Tooltip labelFormatter={(label) => fmtMes(label as string)}
-              formatter={(v: any, name: any) => [fmtBR(v as number, 4), name as string]} />
+              formatter={(v: any, name: any) => [fmtBR(v as number, 1), name as string]} />
             <Legend wrapperStyle={{ fontSize: 11 }} />
             <Line type="monotone" dataKey="muito_baixa" name="Renda muito baixa" stroke={COR_NEGATIVO} strokeWidth={1.5} dot={false} />
             <Line type="monotone" dataKey="baixa" name="Renda baixa" stroke={COR_LARANJA} strokeWidth={1.5} dot={false} />

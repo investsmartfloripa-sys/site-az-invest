@@ -18,14 +18,17 @@ Consome séries do BCB SGS (RNDBF — Relatório de Estabilidade Financeira / Si
   - 21127: cartão de crédito rotativo
   - 21128: cartão de crédito parcelado
   - 21129: cartão de crédito total
-- Saldo da carteira PF (composição estoque, R$ milhões):
-  - 20631: recursos livres total
-  - 20632: recursos direcionados total
-  - 20680: financiamento imobiliário total
-  - 20689: financiamento de veículos
-  - 20695: cartão de crédito total
-  - 20697: consignado total
-  - 20712: crédito pessoal não-consignado
+- Saldo da carteira PF (composição estoque, R$ milhões — séries de SALDO, não concessões):
+  - 20541: saldo total PF (livres + direcionados)
+  - 20570: recursos livres PF
+  - 20606: recursos direcionados PF
+  - 20612: financiamento imobiliário PF
+  - 20581: aquisição de veículos
+  - 20590: cartão de crédito total
+  - 20579: crédito pessoal consignado total
+  - 20574: crédito pessoal não-consignado
+  - 20573: cheque especial
+  - 20609: crédito rural PF
 
 Gera `data-pipeline/out/familias_endividamento.json` e upload pra `data/familias_endividamento.json`.
 
@@ -76,14 +79,20 @@ INADIMPLENCIA = {
 }
 
 # Composição do estoque PF (R$ milhões — ordens de grandeza diferentes; usar %)
+# ATENÇÃO: usar séries de SALDO (estoque). Os códigos antigos (20631/20680/...) eram
+# de CONCESSÕES (fluxo mensal) e produziam residual ~96% no gráfico de composição.
+# Códigos validados no catálogo dadosabertos.bcb.gov.br (identidade 20570+20606=20541).
 ESTOQUE_PF = {
-    "livres_total": 20631,
-    "direcionado_total": 20632,
-    "habitacional": 20680,
-    "veiculos": 20689,
-    "cartao": 20695,
-    "consignado": 20697,
-    "credito_pessoal_nao_consig": 20712,
+    "saldo_total": 20541,                 # saldo total PF (livres + direcionados)
+    "livres_total": 20570,                # recursos livres PF
+    "direcionado_total": 20606,           # recursos direcionados PF
+    "habitacional": 20612,                # financiamento imobiliário PF
+    "veiculos": 20581,                    # aquisição de veículos
+    "cartao": 20590,                      # cartão de crédito total
+    "consignado": 20579,                  # crédito pessoal consignado total
+    "credito_pessoal_nao_consig": 20574,  # crédito pessoal não-consignado
+    "cheque_especial": 20573,             # cheque especial
+    "rural": 20609,                       # crédito rural PF
 }
 
 
@@ -219,10 +228,10 @@ def main() -> None:
         except Exception as e:
             print(f"  [merge] WARN: {e}", file=sys.stderr)
 
-    def merge_block(novo: dict[str, dict[str, float | None]], path: list[str]) -> dict[str, list[dict]]:
+    def merge_block(novo: dict[str, dict[str, float | None]], path: list[str], *, use_prev: bool = True) -> dict[str, list[dict]]:
         """Merge cada série dentro de um bloco, retornando lista de pontos por chave."""
         bloco_prev: dict[str, dict] = {}
-        if prev_payload:
+        if prev_payload and use_prev:
             cur = prev_payload
             for p in path:
                 cur = (cur or {}).get(p, {}) if isinstance(cur, dict) else {}
@@ -244,13 +253,16 @@ def main() -> None:
     endiv_block = merge_block(endiv, ["bloco_endividamento"])
     compr_block = merge_block(compr, ["bloco_comprometimento"])
     inad_block = merge_block(inad, ["bloco_inadimplencia"])
-    estoque_block = merge_block(estoque, ["bloco_estoque"])
+    # use_prev=False: o Blob anterior guardava CONCESSÕES (códigos errados) sob as
+    # mesmas chaves — preservar aquele histórico misturaria fluxo com saldo.
+    estoque_block = merge_block(estoque, ["bloco_estoque"], use_prev=False)
 
     # ---- Compõe percentuais do estoque (livres × direcionados × por modalidade) ----
     # Composição percentual mês-a-mês: cada modalidade / saldo total PF (livres + direcionados)
     def get_serie_atual(b: dict, k: str) -> dict[str, float]:
         return {p["mes"]: p["valor"] for p in b["series_pontos"].get(k, []) if p["valor"] is not None}
 
+    saldo_total = get_serie_atual(estoque_block, "saldo_total")
     livres = get_serie_atual(estoque_block, "livres_total")
     direc = get_serie_atual(estoque_block, "direcionado_total")
     habit = get_serie_atual(estoque_block, "habitacional")
@@ -258,21 +270,30 @@ def main() -> None:
     cart = get_serie_atual(estoque_block, "cartao")
     cons = get_serie_atual(estoque_block, "consignado")
     cred_n_consig = get_serie_atual(estoque_block, "credito_pessoal_nao_consig")
+    cheque = get_serie_atual(estoque_block, "cheque_especial")
+    rural = get_serie_atual(estoque_block, "rural")
 
     composicao_pct: list[dict[str, Any]] = []
-    chaves_compostas = sorted(set(livres.keys()) & set(direc.keys()))
+    chaves_compostas = sorted(saldo_total.keys())
+    max_diff_identidade = 0.0
     for m in chaves_compostas:
-        total = livres[m] + direc[m]
+        total = saldo_total[m]
         if total <= 0:
             continue
+        # Sanity: identidade livres + direcionados = total (pega código errado / revisão assimétrica)
+        if m in livres and m in direc:
+            diff = abs((livres[m] + direc[m]) - total) / total * 100.0
+            max_diff_identidade = max(max_diff_identidade, diff)
         # Modalidades específicas (somente as que conhecemos do estoque)
         h = habit.get(m, 0.0) or 0.0
         v = veic.get(m, 0.0) or 0.0
         c = cart.get(m, 0.0) or 0.0
         co = cons.get(m, 0.0) or 0.0
         cn = cred_n_consig.get(m, 0.0) or 0.0
+        ch = cheque.get(m, 0.0) or 0.0
+        ru = rural.get(m, 0.0) or 0.0
         # outras = total - soma das modalidades conhecidas (positivo)
-        outras = total - (h + v + c + co + cn)
+        outras = total - (h + v + c + co + cn + ch + ru)
         if outras < 0:
             outras = 0.0
         composicao_pct.append({
@@ -283,8 +304,30 @@ def main() -> None:
             "cartao_pct": (c / total) * 100.0,
             "veiculos_pct": (v / total) * 100.0,
             "credito_pessoal_pct": (cn / total) * 100.0,
+            "cheque_especial_pct": (ch / total) * 100.0,
+            "rural_pct": (ru / total) * 100.0,
             "outras_pct": (outras / total) * 100.0,
         })
+
+    # ---- Sanity checks do estoque (falham o build em vez de publicar gráfico quebrado) ----
+    if not composicao_pct:
+        print("[sanity] FAIL: composição do estoque PF vazia (séries SGS de saldo não retornaram dados)", file=sys.stderr)
+        sys.exit(4)
+    residual_ultimo = composicao_pct[-1]["outras_pct"]
+    if residual_ultimo > 12.0:
+        print(
+            f"[sanity] FAIL: residual 'outras' da composição do estoque = {residual_ultimo:.1f}% (> 12%) — "
+            "provável código SGS errado (esperado ~6% com séries de saldo)",
+            file=sys.stderr,
+        )
+        sys.exit(4)
+    if max_diff_identidade > 0.5:
+        print(
+            f"[sanity] FAIL: identidade livres+direcionados=total violada (diff máx {max_diff_identidade:.2f}% > 0,5%)",
+            file=sys.stderr,
+        )
+        sys.exit(4)
+    print(f"  [sanity] residual 'outras' (último mês): {residual_ultimo:.2f}% | diff identidade máx: {max_diff_identidade:.3f}%")
 
     # ---- Hero KPIs ----
     k_end, v_end = last_with_value(endiv["total"])
@@ -337,7 +380,7 @@ def main() -> None:
         },
     }
 
-    out_file.write_text(json.dumps(payload, ensure_ascii=False))
+    out_file.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     size_kb = out_file.stat().st_size / 1024
     print(f"\n✓ Gerado {out_file} ({size_kb:.1f} KB)")
     print(f"  Hero endividamento: {v_end:.2f}% renda 12m ({k_end})" if v_end else "  Hero endividamento: -")

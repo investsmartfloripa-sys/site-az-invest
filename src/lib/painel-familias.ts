@@ -43,6 +43,9 @@ export type ComposicaoPctPonto = {
   cartao_pct: number;
   veiculos_pct: number;
   credito_pessoal_pct: number;
+  // Presentes a partir da correção dos códigos SGS de saldo (20573/20609)
+  cheque_especial_pct?: number;
+  rural_pct?: number;
   outras_pct: number;
 };
 
@@ -313,9 +316,13 @@ export type FamiliasEstruturaSocialData = {
     fonte: string;
   };
   bloco_ipca_faixa_renda: {
+    /** Variação mensal crua (% a.m. — unidade original Ipeadata DIMAC_INF*). */
     serie: IpcaFaixaPonto[];
+    /** Acumulado em índice, base 100 = primeiro mês (jul/2006). Ausente em JSONs antigos. */
+    serie_indice?: IpcaFaixaPonto[];
     faixas: Record<string, string>;
     fonte: string;
+    nota?: string;
   };
   metadata: {
     fonte: string;

@@ -107,10 +107,19 @@ def sidra_fetch(tabela: int, path: str) -> list[dict]:
     return [{header.get(k, k): v for k, v in item.items()} for item in data[1:]]
 
 
-def carrega_renda_total(periodos: int = 24) -> list[dict]:
+def _periodo_path(periodos: int) -> str:
+    """Trecho /p/ da URL SIDRA: 0 ou negativo = tudo disponível; N>0 = últimos N períodos.
+
+    ATENÇÃO: nas tabelas 6390/6389 o período é o TRIMESTRE MÓVEL mensal — 'last 30'
+    significa 30 MESES (~2,5 anos), não 30 trimestres. A série completa começa em 2012-03.
+    """
+    return "all" if periodos <= 0 else f"last%20{periodos}"
+
+
+def carrega_renda_total(periodos: int = 0) -> list[dict]:
     """Tabela 6390: rendimento médio (real e nominal) trimestre móvel."""
     vars_csv = ",".join(VARS_6390.keys())
-    rows = sidra_fetch(6390, f"/n1/all/v/{vars_csv}/p/last%20{periodos}")
+    rows = sidra_fetch(6390, f"/n1/all/v/{vars_csv}/p/{_periodo_path(periodos)}")
     por_trim: dict[str, dict] = {}
     for r in rows:
         var_cod = r.get("Variável (Código)")
@@ -123,10 +132,10 @@ def carrega_renda_total(periodos: int = 24) -> list[dict]:
     return [v for _, v in sorted(por_trim.items())]
 
 
-def carrega_renda_posicao(periodos: int = 24) -> list[dict]:
+def carrega_renda_posicao(periodos: int = 0) -> list[dict]:
     """Tabela 6389: rendimento médio real por posição na ocupação (var 5932, class 11913)."""
     cats_csv = ",".join(POSICAO_CATS_6389.keys())
-    rows = sidra_fetch(6389, f"/n1/all/v/5932/p/last%20{periodos}/c11913/{cats_csv}")
+    rows = sidra_fetch(6389, f"/n1/all/v/5932/p/{_periodo_path(periodos)}/c11913/{cats_csv}")
     por_trim: dict[str, dict] = {}
     # Tenta achar a coluna correta (varia entre 'Posição na ocupação...' diferentes labels)
     for r in rows:
@@ -199,7 +208,12 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Build do JSON Painel Famílias — Renda")
     ap.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
     ap.add_argument("--upload", action="store_true")
-    ap.add_argument("--periodos", type=int, default=30, help="Quantos trimestres puxar do SIDRA (default 30 ≈ 7.5 anos)")
+    ap.add_argument(
+        "--periodos", type=int, default=0,
+        help="Quantos períodos (meses de trimestre móvel) puxar do SIDRA. "
+             "0 = tudo disponível (desde 2012-03, ~170 períodos). "
+             "Nota: a tabela é de trimestre MÓVEL mensal — 30 = 30 meses, não 30 trimestres.",
+    )
     ap.add_argument("--no-merge", action="store_true")
     args = ap.parse_args()
 
@@ -287,7 +301,7 @@ def main() -> None:
         },
     }
 
-    out_file.write_text(json.dumps(payload, ensure_ascii=False))
+    out_file.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     size_kb = out_file.stat().st_size / 1024
     print(f"\nGerado {out_file} ({size_kb:.1f} KB)")
     if renda_real_kpi.get("valor"):

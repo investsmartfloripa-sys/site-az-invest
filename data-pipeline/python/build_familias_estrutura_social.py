@@ -112,6 +112,35 @@ def ipea_mensal_nac(serid):
     return out
 
 
+def sidra_concentracao():
+    """SIDRA 7530 (PNADC anual, var 10826): distribuicao da massa de rendimento mensal real
+    domiciliar per capita por classes ACUMULADAS de percentual das pessoas.
+
+    cat 49275 = 'ate o P40' -> bottom40 direto; cat 49280 = 'ate o P90' ->
+    top10 = 100 - P90 e middle50 = P90 - P40.
+    Substitui os codigos Ipeadata PNADS_BOTTOM40/MIDDLE50, que retornam 0 pontos na API.
+    """
+    url = f"{SIDRA_BASE}/t/7530/n1/all/v/10826/p/all/c1042/49275,49280"
+    print(f"  [SIDRA 7530 concentracao]")
+    try: data = _get(url).json()
+    except Exception as e:
+        print(f"  [SIDRA 7530] FAIL: {e}", file=sys.stderr); return {}
+    if not data: return {}
+    header = data[0]
+    out = {}
+    for item in data[1:]:
+        row = {header.get(k,k): v for k,v in item.items()}
+        ano = (row.get("Ano (Codigo)") or row.get("Ano (Código)") or row.get("Ano") or "")[:4]
+        cat = None
+        for k in row:
+            if "Classes acumuladas" in k and ("Código" in k or "Codigo" in k):
+                cat = str(row[k]); break
+        val = _to_float(row.get("Valor"))
+        if not ano or cat not in ("49275", "49280") or val is None: continue
+        out.setdefault(ano, {})["p40" if cat == "49275" else "p90"] = val
+    return out
+
+
 def sidra_gini():
     url = f"{SIDRA_BASE}/t/7435/n1/all/v/10681/p/all"
     print(f"  [SIDRA Gini]")
@@ -130,13 +159,14 @@ def sidra_gini():
     return out
 
 
-def build_conc(b40, m50):
+def build_conc(conc):
+    """conc: {ano: {'p40': massa ate P40, 'p90': massa ate P90}} (SIDRA 7530)."""
     out = []
-    for ano in sorted(set(b40.keys()) & set(m50.keys())):
-        b = b40[ano]; m = m50[ano]
-        if b is None or m is None: continue
-        out.append({"ano": ano, "bottom40": round(b,2), "middle50": round(m,2),
-                    "top10": round(100.0 - b - m, 2)})
+    for ano in sorted(conc.keys()):
+        p40 = conc[ano].get("p40"); p90 = conc[ano].get("p90")
+        if p40 is None or p90 is None: continue
+        out.append({"ano": ano, "bottom40": round(p40,2), "middle50": round(p90 - p40,2),
+                    "top10": round(100.0 - p90, 2)})
     return out
 
 
@@ -182,6 +212,35 @@ def build_ipca(faixas):
     return out
 
 
+def build_ipca_indice(faixas):
+    """Acumula a variacao MENSAL (DIMAC_INF* tem unidade '% a.m.' no metadado Ipeadata)
+    em indice base 100 no primeiro mes disponivel de cada faixa (jul/2006).
+
+    O dado cru NAO e indice — plota-lo como nivel era a transformacao errada do D5.
+    """
+    indices = {}
+    for code, label in FAIXAS_IPCA.items():
+        d = faixas.get(code, {})
+        acc = None
+        serie = {}
+        for ym in sorted(d.keys()):
+            v = d[ym]
+            if v is None: continue
+            acc = 100.0 if acc is None else acc * (1.0 + v / 100.0)
+            serie[ym] = acc
+        indices[label] = serie
+    todos = set()
+    for s in indices.values(): todos |= set(s.keys())
+    out = []
+    for ym in sorted(todos):
+        p = {"data": ym}
+        for label, serie in indices.items():
+            v = serie.get(ym)
+            if v is not None: p[label] = round(v, 2)
+        if len(p) > 1: out.append(p)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
@@ -191,9 +250,8 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / "familias_estrutura_social.json"
 
-    print("== Concentracao renda (PNADS_BOTTOM40 / MIDDLE50) ==")
-    b40 = ipea_serie_anual("PNADS_BOTTOM40")
-    m50 = ipea_serie_anual("PNADS_MIDDLE50")
+    print("== Concentracao renda (SIDRA 7530 — massa por classes acumuladas) ==")
+    conc = sidra_concentracao()
 
     print("== Pobreza (PNADS_PERCPOBRE300/420/830 + PNADCA_POPPCC215/365) ==")
     p300 = ipea_serie_anual("PNADS_PERCPOBRE300")
@@ -214,13 +272,23 @@ def main():
     print("== IPCA por faixa (DIMAC_INF1..6) ==")
     faixas = {code: ipea_mensal_nac(code) for code in FAIXAS_IPCA}
 
-    s_conc = build_conc(b40, m50)
+    s_conc = build_conc(conc)
     s_pobr = build_pobreza(p300, p420, p830, a215, a365)
     s_tran = build_transf(pbf, bpc_pes, bpc_val)
     s_gini = build_gini(gini)
     s_ipca = build_ipca(faixas)
+    s_ipca_idx = build_ipca_indice(faixas)
 
     print(f"\n  conc={len(s_conc)} pobr={len(s_pobr)} tran={len(s_tran)} gini={len(s_gini)} ipca={len(s_ipca)}")
+
+    # Sanity: serie vazia nao pode virar card vazio no ar (foi o modo de falha do D1
+    # com os codigos Ipeadata PNADS_* inexistentes).
+    if not s_conc:
+        print("[sanity] FAIL: concentracao de renda (SIDRA 7530) retornou 0 pontos", file=sys.stderr)
+        sys.exit(4)
+    if not s_ipca_idx:
+        print("[sanity] FAIL: indice IPCA por faixa de renda retornou 0 pontos", file=sys.stderr)
+        sys.exit(4)
 
     def last(s, k):
         for p in reversed(s):
@@ -250,19 +318,22 @@ def main():
         "fonte_principal": "Ipeadata + SIDRA IBGE",
         "hero": hero,
         "bloco_concentracao_renda": {"serie": s_conc,
-            "fonte": "Ipeadata PNADS_BOTTOM40 + MIDDLE50; TOP10 derivado"},
+            "fonte": "IBGE/SIDRA 7530 var 10826 (PNADC anual) — massa de rendimento domiciliar "
+                     "per capita por classes acumuladas; bottom40 = ate P40, top10 = 100 - ate P90"},
         "bloco_pobreza": {"serie": s_pobr,
             "fonte": "Ipeadata PNADS_PERCPOBRE300/420/830 + PNADCA_POPPCC215/365"},
         "bloco_transferencias_sociais": {"serie": s_tran,
             "fonte": "Ipeadata VAL_PBF12 + VAL_BPC + PES_BPC (MDS, agregados Brasil)"},
         "bloco_gini": {"serie": s_gini, "fonte": "SIDRA 7435 var 10681 (PNAD Continua Anual)"},
-        "bloco_ipca_faixa_renda": {"serie": s_ipca, "faixas": FAIXAS_IPCA,
-            "fonte": "Ipeadata DIMAC_INF1..6 (IPEA Carta de Conjuntura)"},
+        "bloco_ipca_faixa_renda": {"serie": s_ipca, "serie_indice": s_ipca_idx, "faixas": FAIXAS_IPCA,
+            "fonte": "Ipeadata DIMAC_INF1..6 (IPEA Carta de Conjuntura)",
+            "nota": "serie = variacao mensal crua (% a.m., unidade original do Ipeadata); "
+                    "serie_indice = acumulado em indice base 100 no primeiro mes (jul/2006)."},
         "metadata": {"fonte": "Ipeadata (PNADS, PNADCA, MDS), IBGE/SIDRA, IPEA",
             "defasagem_publicacao": "anual (PNAD/Gini); mensal com 1-2 meses (BPC/PBF/IPCA-faixa)."},
     }
 
-    out_file.write_text(json.dumps(payload, ensure_ascii=False))
+    out_file.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     print(f"\nGerado {out_file} ({out_file.stat().st_size/1024:.1f} KB)")
     if top10: print(f"  TOP 10%: {top10:.1f}% renda ({ano_top})")
     if p830_v: print(f"  pobreza US$8.30: {p830_v:.1f}% ({ano_pob})")
