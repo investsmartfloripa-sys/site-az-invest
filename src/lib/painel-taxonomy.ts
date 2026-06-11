@@ -25,7 +25,7 @@ export type TrailDef = {
 const mercadoBrasil: CategoryDef[] = [
   {
     slug: "renda-variavel",
-    label: "Renda variável",
+    label: "Ibovespa",
     description: "Ibovespa, valuation da bolsa (P/L histórico com bandas e prêmio vs NTN-B) e screener de ações.",
     frequency: "diario",
     sourceHint: "B3, yfinance, CVM, BCB, ANBIMA",
