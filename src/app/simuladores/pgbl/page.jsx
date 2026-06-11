@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
 import { Wallet, Briefcase, TrendingDown, Info, AlertCircle, PiggyBank, FileText, Trophy } from "lucide-react";
+import { CATEGORIAS } from "@/data/simuladores";
+
+// Categoria do simulador (accent visual — não altera nenhum cálculo)
+const CAT = CATEGORIAS.aposentadoria;
 
 // ===== Helpers =====
 const fmt = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n || 0);
@@ -280,15 +285,20 @@ export default function SimuladorPGBL() {
   }, [pgblFazSentido, economia, anosProjecao, rentabAno]);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#ffffff', color: C.dark }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#ffffff', color: C.dark, borderTop: `4px solid ${CAT.cor}` }}>
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
 
         {/* HEADER */}
         <div className="mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"
-            style={{ backgroundColor: C.blueBgSoft, color: C.navy, border: `1px solid ${C.blueBg}` }}>
+          <div className="mb-4">
+            <Link href="/simuladores" className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: C.textDim }}>
+              <span aria-hidden>←</span> Todos os simuladores
+            </Link>
+          </div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4"
+            style={{ backgroundColor: `${CAT.cor}14`, color: CAT.cor, border: `1px solid ${CAT.cor}33` }}>
             <PiggyBank className="w-3.5 h-3.5" />
-            Simulador de PGBL
+            {CAT.nome}
           </div>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 leading-[1.1]">
             Quanto você economiza de IR <span style={{ color: C.navy }}>investindo em PGBL?</span>

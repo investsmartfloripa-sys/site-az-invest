@@ -2,9 +2,14 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
 import { AreaChart, Area, BarChart, Bar, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { Home, Car, Truck, Bike, Key, Building2, TrendingUp, Briefcase, Check, ChevronLeft, Trophy, Info, ArrowRight, Sparkles, Target, AlertCircle, Settings, TrendingDown, Layers, Wallet } from "lucide-react";
 import { saveConsorcioLead } from "./consorcio-lead-action";
+import { CATEGORIAS } from "@/data/simuladores";
+
+// Categoria do simulador (accent visual — não altera nenhum cálculo)
+const CAT = CATEGORIAS.credito;
 
 const fmt = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n || 0);
 const fmtCents = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n || 0);
@@ -528,16 +533,21 @@ export default function Simulador() {
   // ===== STEP 0 =====
   if (step === 0) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: '#ffffff', color: C.dark }}>
+      <div className="min-h-screen" style={{ backgroundColor: '#ffffff', color: C.dark, borderTop: `4px solid ${CAT.cor}` }}>
         <div className="max-w-6xl mx-auto px-6 py-12 md:py-20">
+          <div className="mb-6">
+            <Link href="/simuladores" className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: C.textDim }}>
+              <span aria-hidden>←</span> Todos os simuladores
+            </Link>
+          </div>
           <div className="mb-12 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-6"
-              style={{ backgroundColor: C.blueBgSoft, color: C.navy, border: `1px solid ${C.blueBg}` }}>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-6"
+              style={{ backgroundColor: `${CAT.cor}14`, color: CAT.cor, border: `1px solid ${CAT.cor}33` }}>
               <Sparkles className="w-3.5 h-3.5" />
-              Simulador de Consórcio
+              {CAT.nome}
             </div>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.1]">
-              Conquiste seu bem <span style={{ color: C.navy }}>sem pagar juros</span>.
+              Consórcio ou financiamento? <span style={{ color: C.navy }}>Compare com números honestos</span>.
             </h1>
             <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: C.textDim }}>
               Simule em segundos, compare com financiamento e descubra o caminho mais inteligente para o seu próximo bem.
@@ -577,7 +587,7 @@ export default function Simulador() {
   // ===== STEP 1 =====
   if (step === 1) {
     return (
-      <div className="min-h-screen p-6" style={{ backgroundColor: '#ffffff', color: C.dark }}>
+      <div className="min-h-screen p-6" style={{ backgroundColor: '#ffffff', color: C.dark, borderTop: `4px solid ${CAT.cor}` }}>
         <div className="max-w-3xl mx-auto py-8">
           <button onClick={() => setStep(0)} className="inline-flex items-center gap-2 mb-8 text-sm" style={{ color: C.textDim }}>
             <ChevronLeft className="w-4 h-4" /> Voltar
@@ -626,7 +636,7 @@ export default function Simulador() {
   const isWorkObj = false;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f1f5f9', color: C.dark }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#f1f5f9', color: C.dark, borderTop: `4px solid ${CAT.cor}` }}>
       <div className="max-w-5xl mx-auto p-4 md:p-6">
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => setStep(1)} className="inline-flex items-center gap-2 text-sm" style={{ color: C.textDim }}>

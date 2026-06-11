@@ -1,8 +1,13 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Calculator, Trophy, Sparkles, Info, TrendingUp } from "lucide-react";
+import { CATEGORIAS } from "@/data/simuladores";
+
+// Categoria do simulador (accent visual — não altera nenhum cálculo)
+const CAT = CATEGORIAS.investir;
 
 // ===== Helpers =====
 const fmt = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n || 0);
@@ -181,15 +186,20 @@ export default function CalculadoraJurosCompostos() {
   const rendimentoFinal = totalFinal.saldo - totalFinal.aportado;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#ffffff', color: C.dark }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#ffffff', color: C.dark, borderTop: `4px solid ${CAT.cor}` }}>
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
 
         {/* HEADER */}
         <div className="mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"
-            style={{ backgroundColor: C.blueBgSoft, color: C.navy, border: `1px solid ${C.blueBg}` }}>
+          <div className="mb-4">
+            <Link href="/simuladores" className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: C.textDim }}>
+              <span aria-hidden>←</span> Todos os simuladores
+            </Link>
+          </div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4"
+            style={{ backgroundColor: `${CAT.cor}14`, color: CAT.cor, border: `1px solid ${CAT.cor}33` }}>
             <Calculator className="w-3.5 h-3.5" />
-            Calculadora de Juros Compostos
+            {CAT.nome}
           </div>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 leading-[1.1]">
             Veja seu dinheiro <span style={{ color: C.navy }}>se multiplicar no tempo</span>.
