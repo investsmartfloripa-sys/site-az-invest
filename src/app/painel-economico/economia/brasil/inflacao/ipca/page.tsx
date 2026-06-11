@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
-import { IpcaDashboard } from "@/components/painel/inflacao/IpcaDashboard";
+import { IpcaDashboardV2 } from "@/components/painel/inflacao/IpcaDashboardV2";
 import { loadIpcaData } from "@/lib/painel-ipca";
 
 export const metadata: Metadata = {
   title: "Inflação — IPCA — AZ Invest",
   description:
-    "Scrutínio dos dados do IPCA: contribuição por grupo, núcleos do BC, difusão, expectativas Focus e maiores influências do mês. Atualizado mensalmente via IBGE/SIDRA e BCB.",
+    "IPCA esmiuçado: contribuição por grupo encadeada no 12m oficial, núcleos do BC, difusão com régua histórica, sazonalidade, expectativas Focus e tabela completa de influências. Atualizado via IBGE/SIDRA e BCB.",
 };
 
-export const dynamic = "force-dynamic";
+// ISR puro: o dado é mensal; force-dynamic anularia o revalidate (plano de economia, P2).
 export const revalidate = 3600;
 
 export default async function PainelIpcaPage() {
@@ -23,5 +24,10 @@ export default async function PainelIpcaPage() {
     );
   }
 
-  return <IpcaDashboard data={data} />;
+  return (
+    // Suspense exigido pelo useSearchParams (AzPeriodSelector) em rota prerenderizada
+    <Suspense fallback={<div className="h-[60vh] animate-pulse rounded-2xl bg-zinc-100" />}>
+      <IpcaDashboardV2 data={data} />
+    </Suspense>
+  );
 }

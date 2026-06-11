@@ -85,7 +85,10 @@ export default async function IndicesGlobaisPage() {
           </p>
         </header>
         {valuation ? (
-          <ValuationEuaSection data={valuation} />
+          // Suspense exigido pelo useSearchParams dos seletores em rota prerenderizada
+          <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-white/60" />}>
+            <ValuationEuaSection data={valuation} />
+          </Suspense>
         ) : (
           <PipelinePendingCard
             blobPaths={["data/global_valuation.json"]}
