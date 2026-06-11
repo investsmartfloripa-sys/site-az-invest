@@ -5,6 +5,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ComposedChart,
   Legend,
   Line,
@@ -201,7 +202,7 @@ export function PmcDashboard({ data }: { data: AtividadePmcData }) {
             />
             <Bar dataKey="gap" radius={[2, 2, 0, 0]}>
               {gapData.map((d, i) => (
-                <rect key={i} fill={(typeof d.gap === "number" ? d.gap : 0) >= 0 ? COR_POSITIVO : COR_NEGATIVO} />
+                <Cell key={i} fill={(typeof d.gap === "number" ? d.gap : 0) >= 0 ? COR_POSITIVO : COR_NEGATIVO} />
               ))}
             </Bar>
           </BarChart>

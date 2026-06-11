@@ -66,7 +66,7 @@ const STAT_GROUPS: Array<{ label: string; rows: Array<[string, keyof Fundamental
     label: "Dividendos",
     rows: [
       ["Dividend Yield",     "dividendYield",             "pct"],
-      ["DY 5 anos médio",    "fiveYearAvgDividendYield",  "ratio"],
+      ["DY 5 anos médio",    "fiveYearAvgDividendYield",  "pct"],
       ["Payout",             "payoutRatio",               "pct"],
     ],
   },
@@ -253,7 +253,7 @@ export default async function AtivoPage({ params }: Props) {
               return (
                 <li key={p.ticker}>
                   <Link
-                    href={`/painel-economico/mercado/ativo/${encodeURIComponent(p.name)}`}
+                    href={`/painel-economico/mercado/ativo/${encodeURIComponent(p.ticker)}`}
                     className="block rounded-xl border border-[#132960]/10 bg-white p-3 hover:border-[#027DFC]"
                   >
                     <p className="text-sm font-semibold text-[#132960]">{p.name}</p>

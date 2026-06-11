@@ -26,11 +26,13 @@ import pandas as pd
 # Importa o catalogo
 sys.path.append(str(Path(__file__).parent))
 from market_catalog import CATALOG, all_tickers  # noqa: E402
+from shared.blob_download import download_json  # noqa: E402
 from shared.blob_upload import maybe_upload_json  # noqa: E402
 
 
 DEFAULT_LOOKBACK_YEARS = 5
 DEFAULT_BATCH_SIZE = 30  # tickers por chamada de yf.download (evita 429)
+MIN_COVERAGE = 0.8  # abaixo disso o run e considerado parcial (429 etc.)
 
 
 def _ensure_series(df: pd.DataFrame, ticker: str) -> Optional[pd.Series]:
@@ -228,6 +230,43 @@ def build_market_history(lookback_years: int = DEFAULT_LOOKBACK_YEARS,
     return {"latest": latest, "full": full}
 
 
+def merge_blob_fallback(latest: Dict[str, Any], full: Dict[str, Any]) -> None:
+    """Preserva tickers ja publicados no Blob quando o run atual falhou neles.
+
+    Um run parcial (batches 429 do Yahoo) nao pode sobrescrever o historico
+    completo no Blob. Merge por ticker: serie nova prevalece; tickers ausentes
+    neste run mantem a serie antiga do Blob. Recalcula metadados de cobertura.
+    Aplica a protecao aos DOIS payloads (latest e full) de forma coerente.
+    """
+    run_count = len(latest.get("tickers") or {})
+
+    preserved_latest = 0
+    prev_latest = download_json("data/market_history_latest.json")
+    if isinstance(prev_latest, dict) and isinstance(prev_latest.get("tickers"), dict):
+        for t, info in prev_latest["tickers"].items():
+            if t not in latest["tickers"]:
+                latest["tickers"][t] = info
+                preserved_latest += 1
+
+    preserved_full = 0
+    prev_full = download_json("data/market_history_full.json")
+    if isinstance(prev_full, dict) and isinstance(prev_full.get("tickers"), dict):
+        for t, info in prev_full["tickers"].items():
+            if t not in full["tickers"]:
+                full["tickers"][t] = info
+                preserved_full += 1
+
+    latest["total_tickers_loaded"] = len(latest["tickers"])
+    if latest["tickers"]:
+        latest["status"] = "ok"
+    if full["tickers"]:
+        full["status"] = "ok"
+    print(
+        f"[INFO] merge com Blob: {run_count} tickers deste run; "
+        f"{preserved_latest} preservados do Blob (latest), {preserved_full} (full)"
+    )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Build market history JSON (latest + full)")
     ap.add_argument("--lookback-years", type=int, default=DEFAULT_LOOKBACK_YEARS)
@@ -242,6 +281,19 @@ def main() -> int:
     result = build_market_history(lookback_years=args.lookback_years, batch_size=args.batch_size)
     latest, full = result["latest"], result["full"]
 
+    attempted = int(latest.get("total_tickers_attempted") or 0)
+    loaded_run = int(latest.get("total_tickers_loaded") or 0)
+    coverage = (loaded_run / attempted) if attempted else 0.0
+
+    if coverage < MIN_COVERAGE:
+        print(
+            f"[WARN] cobertura baixa: {loaded_run}/{attempted} tickers ({coverage:.0%}) "
+            f"— tentando preservar series do Blob",
+            file=sys.stderr,
+        )
+        merge_blob_fallback(latest, full)
+        coverage = (int(latest.get("total_tickers_loaded") or 0) / attempted) if attempted else 0.0
+
     latest_path = out_dir / "market_history_latest.json"
     full_path = out_dir / "market_history_full.json"
 
@@ -251,11 +303,20 @@ def main() -> int:
     print(f"[INFO] Gerado {latest_path} ({latest_path.stat().st_size} bytes)")
     print(f"[INFO] Gerado {full_path} ({full_path.stat().st_size} bytes)")
 
+    upload_aborted = False
     if args.upload:
-        maybe_upload_json(latest_path, "data/market_history_latest.json")
-        maybe_upload_json(full_path, "data/market_history_full.json")
+        if latest["status"] != "ok" or coverage < MIN_COVERAGE:
+            upload_aborted = True
+            print(
+                f"[WARN] upload abortado (status={latest['status']}, cobertura={coverage:.0%} "
+                f"< {MIN_COVERAGE:.0%} mesmo apos merge) — preservando dado existente no Blob",
+                file=sys.stderr,
+            )
+        else:
+            maybe_upload_json(latest_path, "data/market_history_latest.json")
+            maybe_upload_json(full_path, "data/market_history_full.json")
 
-    return 0 if latest["status"] == "ok" else 2
+    return 0 if (latest["status"] == "ok" and not upload_aborted) else 2
 
 
 if __name__ == "__main__":

@@ -9,13 +9,19 @@ import {
   resetPasswordAction,
   toggleActiveAction,
 } from "@/lib/workspace/user-actions";
+import { PASSWORD_MIN_LENGTH } from "@/lib/workspace/password-policy";
 
 const inputClass =
   "mt-1 w-full rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm text-[#132960] outline-none focus:border-[#027DFC]";
 
-export default async function UsuariosPage() {
+export default async function UsuariosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   const session = await requireSession();
   if (!isAdmin(session.role)) redirect("/area-restrita/dashboard");
+  const params = await searchParams;
 
   const [users, authors] = await Promise.all([
     prisma.user.findMany({
@@ -29,6 +35,12 @@ export default async function UsuariosPage() {
     <div>
       <h1 className="text-2xl font-semibold text-[#132960]">Usuários</h1>
       <p className="text-sm text-[#132960]/60">Admin, equipe (STAFF) e autores (AUTHOR).</p>
+
+      {params.error === "password" ? (
+        <p className="mt-4 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-600">
+          Senha rejeitada: use pelo menos {PASSWORD_MIN_LENGTH} caracteres.
+        </p>
+      ) : null}
 
       <section className="mt-6 rounded-lg border border-[#132960]/12 bg-white p-5 shadow-sm">
         <h2 className="text-lg font-semibold text-[#132960]">Novo usuário</h2>
@@ -45,8 +57,8 @@ export default async function UsuariosPage() {
             <input name="name" className={inputClass} />
           </label>
           <label className="text-sm text-[#132960]/65">
-            Senha (opcional)
-            <input name="password" type="password" className={inputClass} />
+            Senha (opcional, mínimo {PASSWORD_MIN_LENGTH} caracteres)
+            <input name="password" type="password" minLength={PASSWORD_MIN_LENGTH} className={inputClass} />
           </label>
           <label className="text-sm text-[#132960]/65">
             Papel
@@ -133,7 +145,8 @@ export default async function UsuariosPage() {
                     <input
                       name="password"
                       type="password"
-                      placeholder="Nova senha"
+                      minLength={PASSWORD_MIN_LENGTH}
+                      placeholder={`Nova senha (mín. ${PASSWORD_MIN_LENGTH})`}
                       className="w-28 rounded border border-[#132960]/20 bg-white px-2 py-1 text-xs text-[#132960] outline-none focus:border-[#027DFC]"
                     />
                     <button type="submit" className="rounded border border-[#132960]/25 px-2 py-1 text-xs text-[#132960]/80 hover:bg-[#132960]/5">

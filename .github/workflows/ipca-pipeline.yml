@@ -32,8 +32,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r data-pipeline/python/requirements.txt
 
+      # continue-on-error em cada build: falha do IPCA (ex. SIDRA fora do ar)
+      # não pode derrubar o IGP-M em cascata (mesmo padrão do visao-geral-pipeline).
       - name: Build IPCA JSON e upload pro Blob
         run: python data-pipeline/python/build_ipca.py --upload
+        continue-on-error: true
 
       - name: Build IGP-M JSON e upload pro Blob
         run: python data-pipeline/python/build_igpm.py --upload
+        continue-on-error: true

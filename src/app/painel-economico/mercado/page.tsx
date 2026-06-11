@@ -60,7 +60,7 @@ function HeroCard({
         )}
       </div>
       <Link
-        href={`/painel-economico/mercado/ativo/${encodeURIComponent(latest?.name ?? ticker)}`}
+        href={`/painel-economico/mercado/ativo/${encodeURIComponent(ticker)}`}
         className="mt-2 inline-block text-[11px] font-semibold text-[#027DFC] hover:underline"
       >
         Abrir ativo →

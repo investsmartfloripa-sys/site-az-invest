@@ -1,9 +1,11 @@
 import bcrypt from "bcryptjs";
 import Image from "next/image";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSession, destroySession, getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 async function logoutAction() {
   "use server";
@@ -16,6 +18,14 @@ async function loginAction(formData: FormData) {
   const rawLogin = String(formData.get("login") || "").trim();
   const password = String(formData.get("password") || "");
   const next = String(formData.get("next") || "").trim();
+
+  // Rate limit best-effort contra brute force: 5 tentativas/minuto por IP+login
+  // (janela deslizante em memória — vale por instância serverless e zera em
+  // cold start; ver src/lib/rate-limit.ts). Erro genérico de propósito.
+  const ip = getClientIp(await headers());
+  if (!rateLimit(`login:${ip}:${rawLogin.toLowerCase()}`, 5, 60_000)) {
+    redirect("/area-restrita/login?error=invalid_credentials");
+  }
 
   let user = await prisma.user.findUnique({ where: { email: rawLogin } });
   if (!user && rawLogin !== rawLogin.toLowerCase()) {

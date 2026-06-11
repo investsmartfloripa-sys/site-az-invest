@@ -25,7 +25,9 @@ npm run db:seed-posts
 npm run dev
 ```
 
-3. Abra `http://localhost:3000`. Login admin padrao: `Borbarox` / `041291` em `/area-restrita/login` (titulo **AZ Workspace**).
+3. Abra `http://localhost:3000`. O login admin e criado pelo seed `db:seed-master`, que exige
+   `MASTER_LOGIN` e `MASTER_PASSWORD` definidos no ambiente (nunca commitar credenciais).
+   A tela de login fica em `/area-restrita/login` (titulo **AZ Workspace**).
 
 ## Deploy na Vercel
 

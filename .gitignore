@@ -54,3 +54,7 @@ data-pipeline/out-local/
 
 # arquivos temporarios de commit
 .commit-msg.tmp
+
+# saidas de tsc redirecionadas (debug local)
+.tsc-out.txt
+.tsc-err.txt

@@ -28,6 +28,12 @@ export function PostEditorForm({
   const authorOptions = isAuthor
     ? authors.filter((a) => a.id === session.authorId)
     : authors;
+  // Post legado: tem `content` (markdown) mas nunca foi salvo pelo editor TipTap
+  // (sem contentHtml). Não dá para hidratar o editor sem perder formatação, então
+  // o editor abre vazio e o servidor bloqueia salvamentos que reduziriam o texto.
+  const isLegacyPost = Boolean(post && !post.contentHtml && post.content);
+  // AUTHOR não edita post publicado — a equipe editorial precisa abrir revisão.
+  const isLockedForAuthor = Boolean(isAuthor && post?.status === "APPROVED");
 
   return (
     <form action={savePostDraftAction} className="space-y-5">
@@ -105,10 +111,15 @@ export function PostEditorForm({
 
       <div>
         <p className="mb-2 text-sm text-[#132960]/65">Conteúdo</p>
-        <WorkspaceEditor
-          name="contentHtml"
-          initialHtml={post?.contentHtml || (post?.content ? `<p>${post.content.slice(0, 200)}…</p>` : "")}
-        />
+        {isLegacyPost ? (
+          <p className="mb-2 rounded-md border border-amber-700/30 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            Post legado precisa de migração: o conteúdo original (markdown) não pode ser
+            carregado neste editor. Para evitar perda de dados, salvar com o editor vazio ou
+            com texto bem menor que o original será bloqueado — cole o conteúdo completo no
+            editor para migrar o post.
+          </p>
+        ) : null}
+        <WorkspaceEditor name="contentHtml" initialHtml={post?.contentHtml || ""} />
       </div>
 
       {post ? (
@@ -118,10 +129,17 @@ export function PostEditorForm({
         </p>
       ) : null}
 
+      {isLockedForAuthor ? (
+        <p className="rounded-md border border-[#9C2B24]/30 bg-[#9C2B24]/5 px-3 py-2 text-sm text-[#9C2B24]">
+          Post publicado — peça à equipe editorial para abrir uma revisão.
+        </p>
+      ) : null}
+
       <div className="flex flex-wrap gap-2">
         <button
           type="submit"
-          className="rounded-md bg-[#027DFC] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0268d4]"
+          disabled={isLockedForAuthor}
+          className="rounded-md bg-[#027DFC] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0268d4] disabled:cursor-not-allowed disabled:opacity-50"
         >
           Salvar rascunho
         </button>
@@ -130,7 +148,7 @@ export function PostEditorForm({
             <button
               type="submit"
               formAction={submitPostForReviewAction}
-              className="rounded-md border border-amber-500/50 px-4 py-2 text-sm font-semibold text-amber-200 hover:bg-amber-500/10"
+              className="rounded-md border border-amber-700/40 px-4 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-700/10"
             >
               Enviar para revisão
             </button>
@@ -138,7 +156,7 @@ export function PostEditorForm({
               <button
                 type="submit"
                 formAction={publishPostDirectAction}
-                className="rounded-md border border-emerald-500/50 px-4 py-2 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/10"
+                className="rounded-md border border-[#166B47]/40 px-4 py-2 text-sm font-semibold text-[#166B47] hover:bg-[#166B47]/10"
               >
                 Publicar direto
               </button>
@@ -146,7 +164,7 @@ export function PostEditorForm({
             <button
               type="submit"
               formAction={deletePostAction}
-              className="rounded-md border border-red-500/40 px-4 py-2 text-sm text-red-300 hover:bg-red-500/10"
+              className="rounded-md border border-[#9C2B24]/40 px-4 py-2 text-sm text-[#9C2B24] hover:bg-[#9C2B24]/10"
             >
               Excluir
             </button>

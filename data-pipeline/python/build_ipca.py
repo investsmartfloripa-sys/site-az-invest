@@ -323,7 +323,10 @@ def main() -> None:
     inf = maiores_influencias(7060, ipca_cheio["mes_recente"], "63", "66")
     top_altas = inf[:10]
     top_quedas = inf[-10:][::-1]
-    print(f"  {len(inf)} subitens; top alta: {top_altas[0]['subitem']} ({top_altas[0]['contrib_pp']} p.p.)")
+    if top_altas:
+        print(f"  {len(inf)} subitens; top alta: {top_altas[0]['subitem']} ({top_altas[0]['contrib_pp']} p.p.)")
+    else:
+        print("  [WARN] SIDRA sem subitens para o mês — maiores_influencias publicado com listas vazias", file=sys.stderr)
 
     out: dict[str, Any] = {
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),

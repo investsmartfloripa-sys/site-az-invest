@@ -58,8 +58,11 @@ def build_asset_returns_unified() -> Path:
             else {"fx_ticker": "BRL=X", "fx_usd_brl_return_pct": None}
         )
         by_period[p] = {"period": p, "fx": fx_meta, "data": rows}
+    has_data = any(by_period[p]["data"] for p in by_period)
+    if not has_data:
+        print("[WARN] asset_returns sem dados em nenhum período (yfinance falhou?)", file=sys.stderr)
     payload = {
-        "status": "ok",
+        "status": "ok" if has_data else "error",
         "generated_at": pd.Timestamp.utcnow().isoformat(),
         "title": "Retornos dos Ativos (%)",
         "chart_type": "horizontal_bar",
@@ -80,8 +83,11 @@ def build_world_indices_unified() -> Path:
     by_period: dict = {}
     for p in PERIODS:
         by_period[p] = {"period": p, "data": compute_world_indices_returns(period=p)}
+    has_data = any(by_period[p]["data"] for p in by_period)
+    if not has_data:
+        print("[WARN] world_indices sem dados em nenhum período (yfinance falhou?)", file=sys.stderr)
     payload = {
-        "status": "ok",
+        "status": "ok" if has_data else "error",
         "generated_at": pd.Timestamp.utcnow().isoformat(),
         "title": "Retornos Índices Globais (%)",
         "chart_type": "horizontal_bar",
@@ -103,8 +109,11 @@ def build_commodities_unified() -> Path:
     for p in PERIODS:
         data = compute_commodity_returns(p)
         by_period[p] = {"period": p, "data": data}
+    has_data = any(by_period[p]["data"] for p in by_period)
+    if not has_data:
+        print("[WARN] commodities sem dados em nenhum período (yfinance falhou?)", file=sys.stderr)
     payload = {
-        "status": "ok",
+        "status": "ok" if has_data else "error",
         "generated_at": pd.Timestamp.now(tz="UTC").isoformat(),
         "title": "Índice de Commodities",
         "chart_type": "horizontal_bar",
@@ -206,6 +215,37 @@ def run_fx_top_movers() -> Path:
     return path
 
 
+def _payload_has_min_data(path: Path) -> bool:
+    """Valida dados mínimos antes do upload — nunca sobrescrever dado bom no Blob
+    com payload vazio (ex.: yfinance fora do ar)."""
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"[WARN] não foi possível ler {path.name}: {e}", file=sys.stderr)
+        return False
+    if payload.get("status") != "ok":
+        return False
+    by_period = payload.get("by_period")
+    if not isinstance(by_period, dict):
+        # payloads sem by_period (ex.: fx_top_movers) validam só pelo status
+        return True
+    for entry in by_period.values():
+        if not isinstance(entry, dict):
+            continue
+        data = entry.get("data")
+        if isinstance(data, list) and data:
+            return True
+        # br_sector: data é dict {"top10": [...], "bottom10": [...]}
+        if isinstance(data, dict) and (data.get("top10") or data.get("bottom10")):
+            return True
+        # sector_baskets: views {"top10": [...], "bottom10": [...]}
+        for view_key in ("view_brl", "view_usd"):
+            view = entry.get(view_key)
+            if isinstance(view, dict) and (view.get("top10") or view.get("bottom10")):
+                return True
+    return False
+
+
 def main() -> int:
     print(f"Output dir: {OUT}")
     paths: list[Path] = []
@@ -228,14 +268,20 @@ def main() -> int:
         "br_sector_baskets_panorama.json": "data/br_sector_baskets_panorama.json",
         "fx_top_movers.json": "data/fx_top_movers.json",
     }
+    had_empty = False
     for p in paths:
         blob_key = mapping.get(p.name)
-        if blob_key:
-            try:
-                maybe_upload_json(p, blob_key)
-            except Exception as e:
-                print(f"[WARN] upload {p.name}: {e}", file=sys.stderr)
-    return 0
+        if not blob_key:
+            continue
+        if not _payload_has_min_data(p):
+            print(f"[WARN] payload vazio — preservando dado existente no Blob: {p.name}", file=sys.stderr)
+            had_empty = True
+            continue
+        try:
+            maybe_upload_json(p, blob_key)
+        except Exception as e:
+            print(f"[WARN] upload {p.name}: {e}", file=sys.stderr)
+    return 2 if had_empty else 0
 
 
 if __name__ == "__main__":

@@ -42,7 +42,9 @@ type Props = {
   data: MarketFundamentals | null;
 };
 
-function getField(t: TickerFundamentals, key: SortKey): number | string | null {
+type TickerRow = TickerFundamentals & { ticker: string };
+
+function getField(t: TickerRow, key: SortKey): number | string | null {
   const info = t.info;
   switch (key) {
     case "ticker":     return t.name;
@@ -60,12 +62,12 @@ function getField(t: TickerFundamentals, key: SortKey): number | string | null {
   }
 }
 
-function renderCell(t: TickerFundamentals, key: SortKey) {
+function renderCell(t: TickerRow, key: SortKey) {
   const info = t.info;
   switch (key) {
     case "ticker":
       return (
-        <Link href={`/painel-economico/mercado/ativo/${encodeURIComponent(t.name)}`} className="block min-w-0">
+        <Link href={`/painel-economico/mercado/ativo/${encodeURIComponent(t.ticker)}`} className="block min-w-0">
           <span className="block truncate font-semibold text-[#132960] hover:text-[#027DFC]">
             {t.name}
           </span>
@@ -109,9 +111,9 @@ export function FundamentalsTable({ data }: Props) {
   const [sortBy, setSortBy] = useState<SortKey>("marketCap");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
-  const rows = useMemo<TickerFundamentals[]>(() => {
+  const rows = useMemo<TickerRow[]>(() => {
     if (!data) return [];
-    return Object.entries(data.tickers).map(([_, v]) => v);
+    return Object.entries(data.tickers).map(([ticker, v]) => ({ ...v, ticker }));
   }, [data]);
 
   const filtered = useMemo(() => {
@@ -269,7 +271,7 @@ export function FundamentalsTable({ data }: Props) {
               <tbody className="divide-y divide-zinc-100">
                 {sorted.map((row, idx) => (
                   <tr
-                    key={row.name}
+                    key={row.ticker}
                     className={`tabular-nums ${idx % 2 === 0 ? "bg-white" : "bg-zinc-50/40"} hover:bg-[#ebf4ff]`}
                   >
                     {COLUMNS.map((col) => (

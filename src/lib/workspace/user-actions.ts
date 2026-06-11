@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { sendInviteEmail } from "@/lib/workspace/emails";
 import { writeAuditLog } from "@/lib/workspace/audit";
 import { slugify } from "@/lib/slugify";
+import { assertPasswordPolicy } from "@/lib/workspace/password-policy";
 
 export async function createUserAction(formData: FormData) {
   const session = await requireSession();
@@ -23,6 +24,10 @@ export async function createUserAction(formData: FormData) {
   const authorId = authorIdRaw ? Number(authorIdRaw) : null;
 
   if (!email) return;
+  // Senha em branco = convite por e-mail; quando digitada, precisa cumprir a política.
+  if (password.length > 0 && assertPasswordPolicy(password)) {
+    redirect("/area-restrita/usuarios?error=password");
+  }
   const finalRole: UserRole = ["ADMIN", "AUTHOR", "STAFF"].includes(role) ? role : "AUTHOR";
 
   const existing = await prisma.user.findUnique({ where: { email } });
@@ -93,6 +98,9 @@ export async function resetPasswordAction(formData: FormData) {
   const id = Number(formData.get("id"));
   const password = String(formData.get("password") || "");
   if (!Number.isInteger(id) || password.length === 0) return;
+  if (assertPasswordPolicy(password)) {
+    redirect("/area-restrita/usuarios?error=password");
+  }
 
   const passwordHash = await bcrypt.hash(password, 12);
   await prisma.user.update({

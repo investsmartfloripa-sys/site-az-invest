@@ -79,8 +79,15 @@ def _coerce(value: Any, key: str) -> Any:
             return None
     if key in NUMERIC_4DEC_PCT:
         try:
-            # yfinance retorna ratios como decimal (0.045 = 4.5%); manter como ratio (frontend formata)
-            return round(float(value), 4)
+            v = float(value)
+            # Contrato deste JSON: TODO campo de NUMERIC_4DEC_PCT eh RATIO (0.045 = 4.5%).
+            # yfinance >= 0.2.50 passou a retornar dividendYield em PORCENTAGEM (9.42 = 9.42%),
+            # e fiveYearAvgDividendYield sempre foi porcentagem — normalizar ambos para ratio.
+            if key in ("dividendYield", "fiveYearAvgDividendYield"):
+                v = v / 100.0
+                if v > 0.30:
+                    print(f"[WARN] {key}={v:.4f} (>30% a.a.) — escala suspeita, verificar yfinance", file=sys.stderr)
+            return round(v, 4)
         except (TypeError, ValueError):
             return None
     return value

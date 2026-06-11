@@ -547,6 +547,19 @@ def main():
     size = out_file.stat().st_size
     print(f"\n  -> {out_file} ({size / 1024:.1f} KB)")
 
+    # Series essenciais: um dia ruim do api.bcb.gov.br nao pode zerar DBGG/DLSP
+    # no ar. Se alguma estiver vazia, recusa o upload (exit != 0; o retry diario
+    # do workflow cuida do resto) e o dado bom continua no Blob.
+    essenciais = {"dbgg": sgs["dbgg"], "dlsp_total": sgs["dlsp_total"]}
+    vazias = [nome for nome, serie in essenciais.items() if not serie]
+    if vazias:
+        print(
+            f"[ERROR] series essenciais vazias ({', '.join(vazias)}) — upload abortado "
+            f"para preservar o dado existente no Blob",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     if args.upload:
         maybe_upload_json(out_file, BLOB_PATH)
 

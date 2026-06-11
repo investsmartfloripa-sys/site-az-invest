@@ -33,8 +33,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r data-pipeline/python/requirements.txt
 
+      # continue-on-error em cada build: falha do fiscal (ex. BCB SGS fora do ar)
+      # não pode derrubar o termômetro em cascata (mesmo padrão do visao-geral-pipeline).
       - name: Build Fiscal clássicos + upload Blob
         run: python data-pipeline/python/build_fiscal.py --upload
+        continue-on-error: true
 
       - name: Build Termômetro Fiscal + upload Blob
         run: python data-pipeline/python/build_fiscal_termometro.py --upload
+        continue-on-error: true

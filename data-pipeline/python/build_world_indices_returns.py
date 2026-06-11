@@ -151,8 +151,11 @@ def main():
 
     data = compute_world_indices_returns(period=args.period)
 
+    if not data:
+        print("[WARN] payload vazio (yfinance falhou?) — status=error para o upload não sobrescrever dado bom no Blob", file=sys.stderr)
+
     output = {
-        "status": "ok",
+        "status": "ok" if data else "error",
         "generated_at": pd.Timestamp.utcnow().isoformat(),
         "period": args.period,
         "data": data,

@@ -186,7 +186,7 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
                 >
                   <td className="px-2 py-1.5">
                     <Link
-                      href={`/painel-economico/mercado/ativo/${encodeURIComponent(asset.name)}`}
+                      href={`/painel-economico/mercado/ativo/${encodeURIComponent(asset.ticker)}`}
                       className="block"
                     >
                       <span className="block font-semibold text-[#132960] hover:text-[#027DFC]">{asset.name}</span>

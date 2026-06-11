@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { activateAccountAction } from "@/lib/workspace/auth-actions";
+import { PASSWORD_MIN_LENGTH } from "@/lib/workspace/password-policy";
 
 export default async function AtivarContaPage({
   searchParams,
@@ -32,10 +33,11 @@ export default async function AtivarContaPage({
             name="password"
             type="password"
             required
-            minLength={4}
+            minLength={PASSWORD_MIN_LENGTH}
             placeholder="Nova senha"
             className="h-11 w-full rounded-md border border-[#132960]/20 bg-white px-3 text-sm text-[#132960] outline-none focus:border-[#027DFC]"
           />
+          <p className="text-xs text-[#132960]/55">Mínimo de {PASSWORD_MIN_LENGTH} caracteres.</p>
           <button type="submit" className="h-11 w-full rounded-md bg-[#027DFC] text-sm font-semibold text-white hover:bg-[#0268d4]">
             Ativar
           </button>

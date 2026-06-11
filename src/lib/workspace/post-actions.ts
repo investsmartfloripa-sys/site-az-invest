@@ -85,11 +85,27 @@ export async function savePostDraftAction(formData: FormData) {
     const post = await prisma.post.findUnique({ where: { id } });
     if (!post || !canEditPost(session, post)) redirect("/area-restrita/conteudo");
 
+    // AUTHOR não edita post publicado (APPROVED): a equipe editorial precisa
+    // abrir uma revisão. ADMIN/STAFF seguem editando normalmente.
+    if (session.role === "AUTHOR" && post.status === "APPROVED") {
+      redirect(`/area-restrita/conteudo/${id}?error=published`);
+    }
+
+    // Proteção contra perda de dados em post legado (tem `content` markdown,
+    // mas nunca foi salvo pelo editor TipTap — sem contentHtml). O editor abre
+    // vazio nesses casos; se o conteúdo enviado for menor que 50% do original,
+    // bloqueia o salvamento em vez de sobrescrever o texto.
+    const originalContent = post.content.trim();
+    const isLegacyPost = !post.contentHtml && originalContent.length > 0;
+    if (isLegacyPost && content.length < originalContent.length * 0.5) {
+      redirect(`/area-restrita/conteudo/${id}?error=legacy`);
+    }
+
     await prisma.post.update({
       where: { id },
       data: {
         title: input.title,
-        slug: input.slug ? slugify(input.slug) : post.slug,
+        slug: input.slug ? await uniqueSlug(input.slug, post.id) : post.slug,
         category: input.category,
         excerpt: input.excerpt || null,
         content,

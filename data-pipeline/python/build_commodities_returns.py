@@ -153,8 +153,11 @@ def main():
 
     data = compute_returns(args.period)
 
+    if not data:
+        print("[WARN] payload vazio (yfinance falhou?) — status=error para o upload não sobrescrever dado bom no Blob", file=sys.stderr)
+
     payload = {
-        "status": "ok",
+        "status": "ok" if data else "error",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "period": args.period,
         "data": data,

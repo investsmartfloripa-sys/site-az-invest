@@ -35,6 +35,8 @@ jobs:
 
       - name: Python panorama JSON
         run: python data-pipeline/python/run_panorama_builds.py
+        # exit 2 = payload vazio preservado no Blob; nao pode derrubar os steps R seguintes
+        continue-on-error: true
 
       - name: Setup R
         uses: r-lib/actions/setup-r@v2

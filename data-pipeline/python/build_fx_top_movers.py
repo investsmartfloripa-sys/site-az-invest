@@ -232,6 +232,23 @@ def main() -> int:
 
     df, warnings = _build_prices_df(INSTRUMENTS, period=args.period)
 
+    if df.empty:
+        # Falha total do Yahoo: sem este guard, df.groupby("ticker") lança KeyError
+        # antes do caminho de status "error". Gera payload de erro explícito;
+        # quem publica no Blob (run_panorama_builds) ignora payloads status != ok,
+        # então o dado bom existente é preservado.
+        print("[WARN] nenhum dado de FX retornado — payload status=error, sem upload destrutivo", file=sys.stderr)
+        payload_err: Dict = {
+            "status": "error",
+            "generated_at": pd.Timestamp.utcnow().isoformat(),
+            "source": "yfinance",
+            "period": args.period,
+            "warnings": warnings,
+            "top": {},
+        }
+        out.write_text(json.dumps(payload_err, ensure_ascii=False, indent=2), encoding="utf-8")
+        return 2
+
     payload: Dict = {
         "status": "ok" if not df.empty else "error",
         "generated_at": pd.Timestamp.utcnow().isoformat(),

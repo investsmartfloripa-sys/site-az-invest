@@ -103,7 +103,7 @@ async function main() {
   );
 
   console.log(
-    "[site-check] Credenciais padrao (seed): login Borbarox / senha 041291 — ver README.",
+    "[site-check] Credenciais do admin: no gestor de senhas (nunca em arquivos do repo).",
   );
   console.log(
     "[site-check] Pos-login: /area-restrita/dashboard deve carregar sem error.tsx.",
