@@ -75,6 +75,7 @@ export const DATA_SOURCES: DataSourceDef[] = [
   { key: "fx_top_movers", label: "Câmbio (top movers)", blobPath: "data/fx_top_movers.json", workflowName: "data-pipeline.yml", cadence: "15min", painel: "panorama" },
   { key: "svg_selic_implicita", label: "SVG Selic implícita (R)", blobPath: "charts/static/selic_implicita.svg", kind: "svg", workflowName: "data-pipeline.yml", cadence: "15min", painel: "panorama" },
   { key: "svg_juros_treasury_us", label: "SVG Treasury EUA (R)", blobPath: "charts/static/juros_treasury_us.svg", kind: "svg", workflowName: "data-pipeline.yml", cadence: "15min", painel: "panorama" },
+  { key: "svg_fed_implicita", label: "SVG Fed implícita (R)", blobPath: "charts/static/fed_implicita.svg", kind: "svg", workflowName: "data-pipeline.yml", cadence: "15min", painel: "panorama" },
 
   // ── Renda variável (acoes-pipeline.yml, dias úteis 22:45/00:45 UTC) ────────
   { key: "acoes_ibov", label: "Ibovespa (hero)", blobPath: "data/acoes_ibov.json", workflowName: "acoes-pipeline.yml", cadence: "diario-util", painel: "renda-variavel" },
@@ -142,6 +143,7 @@ export const DATA_SOURCES: DataSourceDef[] = [
   // ── Contas externas (contas-externas-pipeline.yml, diário 23:30 UTC) ───────
   { key: "contas_externas", label: "Balanço de pagamentos (BPM6)", blobPath: "data/contas_externas.json", workflowName: "contas-externas-pipeline.yml", cadence: "diario", painel: "contas-externas" },
   { key: "contas_externas_comex", label: "Comex Stat (SECEX)", blobPath: "data/contas_externas_comex.json", workflowName: "contas-externas-pipeline.yml", cadence: "diario", painel: "contas-externas", dataDateField: "periodo_3m.to" },
+  { key: "cambio_macro", label: "Câmbio econômico (REER, paridade de juros)", blobPath: "data/cambio_macro.json", workflowName: "contas-externas-pipeline.yml", cadence: "diario", painel: "contas-externas", pagePath: "/painel-economico/economia/brasil/contas-externas/cambio", dataDateField: "ultima_referencia_mensal" },
 
   // ── Famílias (familias-pipeline.yml, diário 23:30 UTC) ─────────────────────
   { key: "familias_renda", label: "Renda das famílias", blobPath: "data/familias_renda.json", workflowName: "familias-pipeline.yml", cadence: "diario", painel: "familias" },

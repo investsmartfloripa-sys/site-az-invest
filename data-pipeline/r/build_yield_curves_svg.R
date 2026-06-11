@@ -1,4 +1,4 @@
-# Curvas Prefixado e IPCA+ (D-90, D-30, Recente) como SVG.
+# Curvas Prefixado e IPCA+ (D-90, D-30) como SVG.
 #
 # Fonte unica: TaxaSwap B3 (download direto do TS{YYMMDD}.ex_)
 #   - T1APR para curva PRE (Prefixado, taxa nominal)
@@ -7,6 +7,11 @@
 #
 # Curva e' interpolada nos vencimentos-padrao dos titulos do Tesouro Direto.
 # Coluna mais recente sempre por ultimo (direita) tanto na tabela quanto na legenda.
+#
+# NOTA (jun/2026): a serie "Recente" (ultimo pregao = D-1) foi REMOVIDA daqui.
+# No painel do front, esse corte virou redundante com o "Ajuste D-1" (preto
+# tracejado) e o "Agora" (live B3), ambos do proprio JurosLiveBlock. Mantemos
+# somente D-90 e D-30 como cortes historicos do pipeline.
 
 suppressPackageStartupMessages({
   library(dplyr)
@@ -157,25 +162,30 @@ build_snapshot <- function(anchor_date, label_prefix, taswap_code, target_vencs)
 requested_refdate <- as.Date(with_tz(Sys.time(), tzone = "America/Sao_Paulo"))
 message("Refdate solicitado: ", format(requested_refdate))
 
-# Ordem: D-90 (mais antigo) -> D-30 -> Recente (mais novo, ultima coluna)
+# Ordem: D-90 (mais antigo) -> D-30 (mais recente, ultima coluna).
+# A serie "Recente" (D-1) saiu: no front ela e' coberta por "Agora"/"Ajuste D-1".
+# ref_today continua ancorado no ultimo pregao disponivel (so p/ metadados/lag).
 build_set <- function(taswap_code, target_vencs, slug) {
   d90    <- build_snapshot(requested_refdate - days(90), "D-90", taswap_code, target_vencs)
   d30    <- build_snapshot(requested_refdate - days(30), "D-30", taswap_code, target_vencs)
   recent <- build_snapshot(requested_refdate,            "Recente", taswap_code, target_vencs)
-  snaps <- Filter(Negate(is.null), list(d90, d30, recent))
+  snaps <- Filter(Negate(is.null), list(d90, d30))
   if (!length(snaps)) {
     message(sprintf("AVISO: sem dados para %s", slug)); return(NULL)
   }
   long_df <- bind_rows(lapply(snaps, `[[`, "rows")) |>
     mutate(snapshot_label = factor(snapshot_label, levels = unique(snapshot_label)))
-  list(long_df = long_df, ref_today = if (!is.null(recent)) recent$refdate else NA)
+  ref_today <- if (!is.null(recent)) recent$refdate
+               else if (!is.null(d30)) d30$refdate
+               else NA
+  list(long_df = long_df, ref_today = ref_today)
 }
 
 ## ---------- Cores e plot ----------
-## D-90 (mais antigo / mais claro) -> D-30 (medio) -> Recente (preto, mais recente)
+## D-90 (mais antigo / mais claro) -> D-30 (mais recente / mais escuro).
 
-cores_pre  <- c(`D-90` = "#56B4E9", `D-30` = "#00008B", Recente = "#000000")
-cores_ipca <- c(`D-90` = "#F8766D", `D-30` = "#8B0000", Recente = "#000000")
+cores_pre  <- c(`D-90` = "#56B4E9", `D-30` = "#00008B")
+cores_ipca <- c(`D-90` = "#F8766D", `D-30` = "#8B0000")
 
 plot_curves <- function(long_df, pal) {
   label_map <- long_df |> distinct(curve_key, snapshot_label) |>

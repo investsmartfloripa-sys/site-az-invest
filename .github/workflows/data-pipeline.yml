@@ -72,5 +72,9 @@ jobs:
         run: Rscript data-pipeline/r/build_selic_implicita.R
         continue-on-error: true
 
+      - name: R Fed implicita SVG
+        run: Rscript data-pipeline/r/build_fed_implicita.R
+        continue-on-error: true
+
       - name: Upload SVGs to Blob
         run: python data-pipeline/python/upload_static_charts.py

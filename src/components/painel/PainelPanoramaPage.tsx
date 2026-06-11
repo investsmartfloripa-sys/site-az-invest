@@ -5,6 +5,7 @@ import {
   type CurveCut,
   type CurveCutSet,
   type CutLabels,
+  type FedMeeting,
   type SelicMeeting,
   type TreasuryTenor,
 } from "@/components/painel/panorama/JurosLiveBlock";
@@ -112,6 +113,29 @@ function extractSelicMeetings(data: PanoramaData): SelicMeeting[] {
   const kD30 = keyOf("D-30");
   const kD90 = keyOf("D-90");
   const out: SelicMeeting[] = [];
+  for (const row of table?.rows ?? []) {
+    const first = String(Object.values(row)[0] ?? "");
+    const m = first.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!m) continue;
+    out.push({
+      date: `${m[3]}-${m[2]}-${m[1]}`,
+      recent: kRecent ? parseNumber(row[kRecent]) : null,
+      d30: kD30 ? parseNumber(row[kD30]) : null,
+      d90: kD90 ? parseNumber(row[kD90]) : null,
+    });
+  }
+  return out;
+}
+
+/** Reunioes FOMC + cortes da Fed implicita do pipeline (charts/tables/fed_implicita.json). */
+function extractFedMeetings(data: PanoramaData): FedMeeting[] {
+  const table = data.tableFed.data;
+  const cols = table?.columns ?? [];
+  const keyOf = (prefix: string) => cols.find((c) => c.key.startsWith(prefix))?.key;
+  const kRecent = keyOf("Recente") ?? keyOf("Hoje");
+  const kD30 = keyOf("D-30");
+  const kD90 = keyOf("D-90");
+  const out: FedMeeting[] = [];
   for (const row of table?.rows ?? []) {
     const first = String(Object.values(row)[0] ?? "");
     const m = first.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
@@ -244,6 +268,7 @@ export async function PainelPanoramaPage() {
   const ipcaCuts = extractCurveCutSet(data.tableIpca.data);
   const selicMeetings = extractSelicMeetings(data);
   const treasuryTenors = extractTreasury(data);
+  const fedMeetings = extractFedMeetings(data);
 
   /** Key da coluna do JSON ja vem com a data de referencia: "D-30 (05/05/2026)". */
   const colLabel = (cols: { key: string }[] | undefined, prefix: string): string | undefined =>
@@ -262,6 +287,11 @@ export async function PainelPanoramaPage() {
     recent: colLabel(data.tableSelic.data?.columns, "Recente") ?? colLabel(data.tableSelic.data?.columns, "Hoje"),
     d30: colLabel(data.tableSelic.data?.columns, "D-30"),
     d90: colLabel(data.tableSelic.data?.columns, "D-90"),
+  };
+  const fedLabels: CutLabels = {
+    recent: colLabel(data.tableFed.data?.columns, "Recente") ?? colLabel(data.tableFed.data?.columns, "Hoje"),
+    d30: colLabel(data.tableFed.data?.columns, "D-30"),
+    d90: colLabel(data.tableFed.data?.columns, "D-90"),
   };
   const treasuryLabels: CutLabels = {
     recent: colLabel(data.tableTreasury.data?.columns, "Recente") ?? colLabel(data.tableTreasury.data?.columns, "Hoje"),
@@ -409,10 +439,12 @@ export async function PainelPanoramaPage() {
         ipcaCuts={ipcaCuts}
         selicMeetings={selicMeetings}
         treasuryTenors={treasuryTenors}
+        fedMeetings={fedMeetings}
         preLabels={preLabels}
         ipcaLabels={ipcaLabels}
         selicLabels={selicLabels}
         treasuryLabels={treasuryLabels}
+        fedLabels={fedLabels}
       />
 
       <section id="analises" className="space-y-4">

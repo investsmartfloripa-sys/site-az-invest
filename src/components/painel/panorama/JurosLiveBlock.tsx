@@ -24,31 +24,49 @@ const REFRESH_MS = 60_000;
 
 /**
  * Paletas POR GRAFICO — exatamente as dos scripts R do pipeline
- * (build_yield_curves_svg.R, build_selic_implicita.R, build_treasury_us_svg.R).
- * A serie "ao vivo" (DI/DAP, que nao existia nos SVGs) usa o azul AZ #027DFC.
+ * (build_yield_curves_svg.R, build_selic_implicita.R, build_treasury_us_svg.R,
+ * build_fed_implicita.R).
+ *
+ * Series das curvas pre/IPCA+ (jun/2026):
+ *   - "Agora" (live DI/DAP da B3) = PRETO solido + dots.
+ *   - "Ajuste D-1" (ajuste do pregao anterior, B3) = PRETO tracejado.
+ *   - "Recente" foi REMOVIDA (era redundante com o Ajuste D-1, ambos ~= ultimo
+ *     pregao). Restam D-30 e D-90 como cortes historicos do pipeline R.
  */
-const LIVE_COLOR = "#027DFC";
+const LIVE_COLOR = "#000000";
 
-const PAL_PRE = { recent: "#000000", d30: "#00008B", d90: "#56B4E9" } as const;
-const PAL_IPCA = { recent: "#000000", d30: "#8B0000", d90: "#F8766D" } as const;
+const PAL_PRE = { d30: "#00008B", d90: "#56B4E9" } as const;
+const PAL_IPCA = { d30: "#8B0000", d90: "#F8766D" } as const;
 const PAL_SELIC = { recent: "#000000", d30: "#2E74C9", d90: "#56B4E9", meeting: "#ff5713", meetingLabel: "#0078fd" } as const;
 const PAL_TREASURY = { recent: "#000000", d30: "#0B6B2E", d90: "#2BBF5E", d365: "#8BE28F" } as const;
+const PAL_FED = { recent: "#000000", d30: "#6f6f6f", d90: "#0078fd", meeting: "#ff5713" } as const;
 
 const GRID = "#E2E8F0";
 const TICKS = "#64748B";
 
-type TabId = "pre" | "ipca" | "selic" | "treasury";
+/** Abas do bloco brasileiro (B3). Treasury saiu p/ bloco proprio. */
+type TabId = "pre" | "ipca" | "selic";
+/** Sub-abas do bloco EUA (Treasury & Fed). */
+type UsTabId = "treasury" | "fed";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "pre", label: "Curva pré" },
   { id: "ipca", label: "Curva IPCA+" },
   { id: "selic", label: "Selic implícita" },
-  { id: "treasury", label: "Treasury EUA" },
+];
+
+const US_TABS: { id: UsTabId; label: string }[] = [
+  { id: "treasury", label: "Curva Treasury" },
+  { id: "fed", label: "Fed implícita" },
 ];
 
 export type CurveCut = { maturity: string; rate: number };
 
-/** Cortes da curva de titulos do pipeline (TaxaSwap, D-1). */
+/**
+ * Cortes da curva de titulos do pipeline (TaxaSwap, D-1).
+ * `recent` ficou opcional/legado: o pipeline R nao gera mais esse corte para as
+ * curvas pre/IPCA+ (coberto por "Agora"/"Ajuste D-1" do live B3).
+ */
 export type CurveCutSet = {
   recent?: CurveCut[];
   d30?: CurveCut[];
@@ -57,6 +75,14 @@ export type CurveCutSet = {
 
 export type SelicMeeting = {
   /** Data da reuniao COPOM (ISO). */
+  date: string;
+  d90: number | null;
+  d30: number | null;
+  recent: number | null;
+};
+
+export type FedMeeting = {
+  /** Data da reuniao FOMC (ISO). */
   date: string;
   d90: number | null;
   d30: number | null;
@@ -88,18 +114,20 @@ type Props = {
   selicMeetings?: SelicMeeting[];
   /** Curva Treasury por tenor (cortes do pipeline FRED). */
   treasuryTenors?: TreasuryTenor[];
+  /** Fed implicita por reuniao FOMC — cortes do pipeline R (aproximacao via Treasury). */
+  fedMeetings?: FedMeeting[];
   /** Datas de referencia p/ legenda (ex.: "D-30 (05/05/2026)"), por tab. */
   preLabels?: CutLabels;
   ipcaLabels?: CutLabels;
   selicLabels?: CutLabels;
   treasuryLabels?: CutLabels;
+  fedLabels?: CutLabels;
 };
 
 type ChartPoint = {
   t: number;
   agora?: number | null;
   d1?: number | null;
-  recent?: number | null;
   d30?: number | null;
   d90?: number | null;
 };
@@ -132,13 +160,13 @@ function liquidContracts(contracts: LiveContract[], showAll: boolean): LiveContr
   return withRate.filter((c) => /F\d{2}$/.test(c.symbol) || c.trades > 2000);
 }
 
-type ShowState = { agora: boolean; d1: boolean; recent: boolean; d30: boolean; d90: boolean };
+type ShowState = { agora: boolean; d1: boolean; d30: boolean; d90: boolean };
 
 /** Janela [min,max] de vencimentos da base de titulos (TaxaSwap). */
 function cutBounds(cuts: CurveCutSet): { min: number; max: number } | null {
   let min = Infinity;
   let max = -Infinity;
-  for (const serie of [cuts.recent, cuts.d30, cuts.d90]) {
+  for (const serie of [cuts.d30, cuts.d90]) {
     for (const c of serie ?? []) {
       const t = Date.parse(c.maturity);
       if (!Number.isFinite(t)) continue;
@@ -195,7 +223,7 @@ function buildCurveChart(
     }
   }
 
-  const addCut = (key: "recent" | "d30" | "d90", cut?: CurveCut[]) => {
+  const addCut = (key: "d30" | "d90", cut?: CurveCut[]) => {
     for (const c of cut ?? []) {
       const t = Date.parse(c.maturity);
       if (!Number.isFinite(t)) continue;
@@ -203,7 +231,6 @@ function buildCurveChart(
       see(c.rate);
     }
   };
-  if (show.recent) addCut("recent", cuts.recent);
   if (show.d30) addCut("d30", cuts.d30);
   if (show.d90) addCut("d90", cuts.d90);
 
@@ -238,21 +265,241 @@ function useIsNarrow(): boolean {
   return narrow;
 }
 
+type FedChartPoint = { t: number; recent: number | null; d30: number | null; d90: number | null };
+
+/**
+ * Bloco PROPRIO de juros dos EUA (separado das abas brasileiras da B3).
+ * Duas sub-abas: "Curva Treasury" (por prazo, FRED) e "Fed implícita"
+ * (forward meeting-to-meeting entre reunioes do FOMC — mesmo modelo da Selic
+ * implícita, porem via Treasury, logo uma APROXIMACAO; ver nota no rodape).
+ */
+function UsRatesBlock({
+  treasuryTenors,
+  fedMeetings,
+  fedChart,
+  treasuryLabels,
+  fedLabels,
+  isNarrow,
+}: {
+  treasuryTenors: TreasuryTenor[];
+  fedMeetings: FedMeeting[];
+  fedChart: FedChartPoint[];
+  treasuryLabels: CutLabels;
+  fedLabels: CutLabels;
+  isNarrow: boolean;
+}) {
+  const [usTab, setUsTab] = useState<UsTabId>("treasury");
+  const hasFed = fedMeetings.length > 0;
+  // Se a Fed implícita nao tiver dados (placeholder), nao oferece a sub-aba.
+  const tabs = hasFed ? US_TABS : US_TABS.filter((t) => t.id === "treasury");
+  const tab = !hasFed ? "treasury" : usTab;
+
+  return (
+    <section
+      id="juros-eua"
+      aria-label="Juros EUA"
+      className="overflow-hidden rounded-2xl border border-[#132960]/15 bg-white shadow-sm"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0B6B2E] px-4 py-3 md:px-5">
+        <h2 className="text-base font-semibold text-white md:text-lg">Juros EUA — Treasury &amp; Fed</h2>
+        <p className="text-[11px] text-[#bfe6cb]">Fonte: FRED (Treasury) · D-1</p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1 border-b border-zinc-100 px-4 pt-3 md:px-5">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setUsTab(t.id)}
+            className={`rounded-t-lg border-b-2 px-3 py-2 text-xs font-semibold transition md:text-sm ${
+              tab === t.id
+                ? "border-[#0B6B2E] text-[#0B6B2E]"
+                : "border-transparent text-zinc-500 hover:text-[#132960]"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid gap-5 p-4 md:p-5 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
+        <div className="min-w-0">
+          <div className="h-[300px] w-full md:h-[340px]">
+            {tab === "fed" ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={fedChart} margin={{ top: 18, right: 16, bottom: 4, left: 0 }}>
+                  <CartesianGrid stroke={GRID} strokeWidth={1} />
+                  {fedMeetings.map((m, idx) => {
+                    const t = Date.parse(m.date);
+                    if (!Number.isFinite(t)) return null;
+                    const showLabel = !isNarrow || idx % 2 === 0;
+                    return (
+                      <ReferenceLine
+                        key={m.date}
+                        x={t}
+                        stroke={PAL_FED.meeting}
+                        strokeDasharray="4 4"
+                        strokeWidth={1.2}
+                        label={
+                          showLabel
+                            ? {
+                                value: dateLabelBR(m.date).slice(0, 5),
+                                position: "top",
+                                fontSize: isNarrow ? 8 : 9,
+                                fontWeight: 700,
+                                fill: "#000000",
+                              }
+                            : undefined
+                        }
+                      />
+                    );
+                  })}
+                  <XAxis
+                    dataKey="t"
+                    type="number"
+                    scale="time"
+                    domain={["dataMin", "dataMax"]}
+                    tickFormatter={(t) => tsLabel(Number(t))}
+                    tick={{ fontSize: 10, fill: TICKS }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: TICKS }}
+                    width={52}
+                    domain={["auto", "auto"]}
+                    tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
+                    axisLine={false}
+                    tickLine={false}
+                    label={{ value: "Taxa (% a.a.)", angle: -90, position: "insideLeft", fontSize: 10, fill: TICKS }}
+                  />
+                  <Tooltip
+                    labelFormatter={(t) => `Reunião ${dateLabelBR(new Date(Number(t)).toISOString().slice(0, 10))}`}
+                    formatter={(v, name) => [fmtRate(typeof v === "number" ? v : Number(v)), String(name)]}
+                    contentStyle={tooltipStyle}
+                    itemStyle={{ color: "#fff" }}
+                    labelStyle={{ color: "#94A3B8", fontWeight: 600 }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="stepAfter" dataKey="d90" name={fedLabels.d90 ?? "D-90"} stroke={PAL_FED.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="stepAfter" dataKey="d30" name={fedLabels.d30 ?? "D-30"} stroke={PAL_FED.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="stepAfter" dataKey="recent" name={fedLabels.recent ?? "Recente (D-1)"} stroke={PAL_FED.recent} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={treasuryTenors} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
+                  <CartesianGrid stroke={GRID} strokeWidth={1} />
+                  <XAxis
+                    dataKey="tenor"
+                    type="number"
+                    domain={[0, "dataMax"]}
+                    tickFormatter={(v) => `${v}a`}
+                    tick={{ fontSize: 10, fill: TICKS }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: TICKS }}
+                    width={52}
+                    domain={["auto", "auto"]}
+                    tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
+                    axisLine={false}
+                    tickLine={false}
+                    label={{ value: "Taxa (% a.a.)", angle: -90, position: "insideLeft", fontSize: 10, fill: TICKS }}
+                  />
+                  <Tooltip
+                    labelFormatter={(t) => `${t} ano${Number(t) > 1 ? "s" : ""}`}
+                    formatter={(v, name) => [fmtRate(typeof v === "number" ? v : Number(v)), String(name)]}
+                    contentStyle={tooltipStyle}
+                    itemStyle={{ color: "#fff" }}
+                    labelStyle={{ color: "#94A3B8", fontWeight: 600 }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey="d365" name={treasuryLabels.d365 ?? "D-365"} stroke={PAL_TREASURY.d365} strokeWidth={1.5} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="monotone" dataKey="d90" name={treasuryLabels.d90 ?? "D-90"} stroke={PAL_TREASURY.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="monotone" dataKey="d30" name={treasuryLabels.d30 ?? "D-30"} stroke={PAL_TREASURY.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                  <Line type="monotone" dataKey="recent" name={treasuryLabels.recent ?? "Recente (D-1)"} stroke={PAL_TREASURY.recent} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+          <p className="mt-2 text-[11px] text-zinc-500">
+            {tab === "fed"
+              ? "Fed implícita por reunião do FOMC — mesmo modelo forward da Selic implícita, porém via curva curta de Treasury (FRED: 1m–2a). Como o Treasury embute prêmio de prazo (≠ OIS/Fed Funds futures), é uma aproximação da trajetória implícita do Fed, não a precificação exata do mercado de Fed Funds."
+              : "Curva Treasury EUA por prazo (FRED, D-1) — yields nominais por maturidade, cortes recente/D-30/D-90/D-365."}
+          </p>
+        </div>
+
+        <div className="min-w-0 overflow-x-auto">
+          {tab === "fed" ? (
+            <table className="min-w-full text-xs">
+              <thead>
+                <tr className="border-b border-zinc-200 text-[10px] uppercase tracking-wider text-zinc-500">
+                  <th className="py-2 pr-2 text-left font-semibold">Reunião</th>
+                  <th className={thClass}>D-90</th>
+                  <th className={thClass}>D-30</th>
+                  <th className={thClass}>Recente</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {fedMeetings.map((m) => (
+                  <tr key={m.date}>
+                    <td className="py-1.5 pr-2 font-semibold text-[#132960]">{dateLabelBR(m.date)}</td>
+                    <td className={`${tdClass} text-zinc-400`}>{fmtRate(m.d90)}</td>
+                    <td className={`${tdClass} text-zinc-500`}>{fmtRate(m.d30)}</td>
+                    <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(m.recent)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <table className="min-w-full text-xs">
+              <thead>
+                <tr className="border-b border-zinc-200 text-[10px] uppercase tracking-wider text-zinc-500">
+                  <th className="py-2 pr-2 text-left font-semibold">Prazo</th>
+                  <th className={thClass}>D-365</th>
+                  <th className={thClass}>D-90</th>
+                  <th className={thClass}>D-30</th>
+                  <th className={thClass}>Recente</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {treasuryTenors.map((t) => (
+                  <tr key={t.tenor}>
+                    <td className="py-1.5 pr-2 font-semibold text-[#132960]">{t.tenor}a</td>
+                    <td className={`${tdClass} text-zinc-300`}>{fmtRate(t.d365)}</td>
+                    <td className={`${tdClass} text-zinc-400`}>{fmtRate(t.d90)}</td>
+                    <td className={`${tdClass} text-zinc-500`}>{fmtRate(t.d30)}</td>
+                    <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(t.recent)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function JurosLiveBlock({
   preCuts = {},
   ipcaCuts = {},
   selicMeetings = [],
   treasuryTenors = [],
+  fedMeetings = [],
   preLabels = {},
   ipcaLabels = {},
   selicLabels = {},
   treasuryLabels = {},
+  fedLabels = {},
 }: Props) {
   const isNarrow = useIsNarrow();
   const [tab, setTab] = useState<TabId>("pre");
   const [showAll, setShowAll] = useState(false);
   // Todas as series ligadas por default — quem quiser enxugar, desliga.
-  const [show, setShow] = useState<ShowState>({ agora: true, d1: true, recent: true, d30: true, d90: true });
+  const [show, setShow] = useState<ShowState>({ agora: true, d1: true, d30: true, d90: true });
   const [di, setDi] = useState<LiveCurve | null>(null);
   const [dap, setDap] = useState<LiveCurve | null>(null);
   const [error, setError] = useState(false);
@@ -305,9 +552,21 @@ export function JurosLiveBlock({
     [selicMeetings],
   );
 
+  const fedChart = useMemo(
+    () =>
+      fedMeetings.map((m) => ({
+        t: Date.parse(m.date),
+        recent: m.recent,
+        d30: m.d30,
+        d90: m.d90,
+      })),
+    [fedMeetings],
+  );
+
   // Tabela das tabs de curva: UNIAO dos vencimentos — linhas dos titulos
-  // (D-90/D-30/Recente) + vencimentos do live sem titulo correspondente.
+  // (D-90/D-30) + vencimentos do live (Agora) sem titulo correspondente.
   // Live casa com a linha do titulo quando os vencimentos distam <= 25 dias.
+  // "Recente" saiu: o ultimo pregao agora aparece como "Agora"/"Ajuste D-1".
   const isCurve = tab === "pre" || tab === "ipca";
   const activeCuts = tab === "ipca" ? ipcaCuts : preCuts;
   const curveRows = useMemo(() => {
@@ -317,19 +576,18 @@ export function JurosLiveBlock({
       maturity: string;
       d90: number | null;
       d30: number | null;
-      recent: number | null;
       agora: number | null;
     };
     const map = new Map<number, CurveRow>();
     const upsert = (t: number, maturity: string): CurveRow => {
       let r = map.get(t);
       if (!r) {
-        r = { t, maturity, d90: null, d30: null, recent: null, agora: null };
+        r = { t, maturity, d90: null, d30: null, agora: null };
         map.set(t, r);
       }
       return r;
     };
-    const put = (key: "d90" | "d30" | "recent", cut?: CurveCut[]) => {
+    const put = (key: "d90" | "d30", cut?: CurveCut[]) => {
       for (const c of cut ?? []) {
         const t = Date.parse(c.maturity);
         if (!Number.isFinite(t)) continue;
@@ -338,7 +596,6 @@ export function JurosLiveBlock({
     };
     put("d90", activeCuts.d90);
     put("d30", activeCuts.d30);
-    put("recent", activeCuts.recent);
 
     const MAX_GAP = 25 * 86_400_000;
     const liveArr = tab === "ipca" ? dapLiquid : diLiquid;
@@ -392,10 +649,11 @@ export function JurosLiveBlock({
   const labels = tab === "ipca" ? ipcaLabels : preLabels;
   const cuts = tab === "ipca" ? ipcaCuts : preCuts;
 
+  // "Agora" (live, preto) e "Ajuste D-1" (preto tracejado) lideram a legenda;
+  // "Recente" foi removida. Restam os cortes historicos D-30 / D-90.
   const cutToggles: { key: keyof ShowState; label: string; color: string; available: boolean }[] = [
     { key: "agora", label: "Agora", color: LIVE_COLOR, available: true },
-    { key: "d1", label: "Ajuste D-1", color: "#9CA3AF", available: true },
-    { key: "recent", label: "Recente", color: pal.recent, available: (cuts.recent?.length ?? 0) > 0 },
+    { key: "d1", label: "Ajuste D-1", color: "#000000", available: true },
     { key: "d30", label: "D-30", color: pal.d30, available: (cuts.d30?.length ?? 0) > 0 },
     { key: "d90", label: "D-90", color: pal.d90, available: (cuts.d90?.length ?? 0) > 0 },
   ];
@@ -404,6 +662,7 @@ export function JurosLiveBlock({
   const chart = tab === "ipca" ? ipcaChart : preChart;
 
   return (
+    <div className="space-y-6">
     <section
       id="juros"
       aria-label="Renda fixa intraday"
@@ -549,42 +808,6 @@ export function JurosLiveBlock({
                   <Line type="stepAfter" dataKey="recent" name={selicLabels.recent ?? "Recente (D-1)"} stroke={PAL_SELIC.recent} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
-            ) : tab === "treasury" ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={treasuryTenors} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
-                  <CartesianGrid stroke={GRID} strokeWidth={1} />
-                  <XAxis
-                    dataKey="tenor"
-                    type="number"
-                    domain={[0, "dataMax"]}
-                    tickFormatter={(v) => `${v}a`}
-                    tick={{ fontSize: 10, fill: TICKS }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 10, fill: TICKS }}
-                    width={52}
-                    domain={["auto", "auto"]}
-                    tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
-                    axisLine={false}
-                    tickLine={false}
-                    label={{ value: "Taxa (% a.a.)", angle: -90, position: "insideLeft", fontSize: 10, fill: TICKS }}
-                  />
-                  <Tooltip
-                    labelFormatter={(t) => `${t} ano${Number(t) > 1 ? "s" : ""}`}
-                    formatter={(v, name) => [fmtRate(typeof v === "number" ? v : Number(v)), String(name)]}
-                    contentStyle={tooltipStyle}
-                    itemStyle={{ color: "#fff" }}
-                    labelStyle={{ color: "#94A3B8", fontWeight: 600 }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="d365" name={treasuryLabels.d365 ?? "D-365"} stroke={PAL_TREASURY.d365} strokeWidth={1.5} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
-                  <Line type="monotone" dataKey="d90" name={treasuryLabels.d90 ?? "D-90"} stroke={PAL_TREASURY.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
-                  <Line type="monotone" dataKey="d30" name={treasuryLabels.d30 ?? "D-30"} stroke={PAL_TREASURY.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
-                  <Line type="monotone" dataKey="recent" name={treasuryLabels.recent ?? "Recente (D-1)"} stroke={PAL_TREASURY.recent} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
-                </LineChart>
-              </ResponsiveContainer>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chart.points} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
@@ -622,14 +845,11 @@ export function JurosLiveBlock({
                   {show.d30 ? (
                     <Line type="monotone" dataKey="d30" name={labels.d30 ?? "D-30"} stroke={pal.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   ) : null}
-                  {show.recent ? (
-                    <Line type="monotone" dataKey="recent" name={labels.recent ?? "Recente (D-1)"} stroke={pal.recent} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
-                  ) : null}
                   {show.agora && show.d1 ? (
-                    <Line type="monotone" dataKey="d1" name="Ajuste D-1 (B3)" stroke="#9CA3AF" strokeWidth={1.4} strokeDasharray="5 3" dot={false} connectNulls isAnimationActive={false} />
+                    <Line type="monotone" dataKey="d1" name="Ajuste D-1 (B3)" stroke="#000000" strokeWidth={1.6} strokeDasharray="6 4" dot={false} connectNulls isAnimationActive={false} />
                   ) : null}
                   {show.agora ? (
-                    <Line type="monotone" dataKey="agora" name={liveName} stroke={LIVE_COLOR} strokeWidth={2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                    <Line type="monotone" dataKey="agora" name={liveName} stroke={LIVE_COLOR} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
                   ) : null}
                 </LineChart>
               </ResponsiveContainer>
@@ -638,11 +858,9 @@ export function JurosLiveBlock({
           <p className="mt-2 text-[11px] text-zinc-500">
             {tab === "selic"
               ? "Selic implícita por reunião COPOM — modelo forward do pipeline AZ (B3 PRE, D-1), mesmos valores da trilha de política monetária."
-              : tab === "treasury"
-                ? "Curva Treasury EUA por prazo (FRED, D-1) — mesma paleta do gráfico original."
-                : tab === "ipca"
-                  ? "Recente/D-30/D-90: títulos IPCA+ (cupom limpo NTN-B, TaxaSwap B3, D-1) — as mesmas curvas do gráfico original. “Agora”: futuros DAP da B3 (~15 min), instrumento irmão do cupom de IPCA."
-                  : "Recente/D-30/D-90: títulos prefixados (TaxaSwap B3, D-1) — as mesmas curvas do gráfico original. “Agora”: futuros DI1 da B3 (~15 min), instrumento irmão do prefixado."}
+              : tab === "ipca"
+                ? "D-30/D-90: títulos IPCA+ (cupom limpo NTN-B, TaxaSwap B3) em janelas anteriores. “Agora” (preto): futuros DAP da B3 (~15 min); “Ajuste D-1” (preto tracejado): ajuste do pregão anterior."
+                : "D-30/D-90: títulos prefixados (TaxaSwap B3) em janelas anteriores. “Agora” (preto): futuros DI1 da B3 (~15 min); “Ajuste D-1” (preto tracejado): ajuste do pregão anterior."}
           </p>
         </div>
 
@@ -668,29 +886,6 @@ export function JurosLiveBlock({
                 ))}
               </tbody>
             </table>
-          ) : tab === "treasury" ? (
-            <table className="min-w-full text-xs">
-              <thead>
-                <tr className="border-b border-zinc-200 text-[10px] uppercase tracking-wider text-zinc-500">
-                  <th className="py-2 pr-2 text-left font-semibold">Prazo</th>
-                  <th className={thClass}>D-365</th>
-                  <th className={thClass}>D-90</th>
-                  <th className={thClass}>D-30</th>
-                  <th className={thClass}>Recente</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100">
-                {treasuryTenors.map((t) => (
-                  <tr key={t.tenor}>
-                    <td className="py-1.5 pr-2 font-semibold text-[#132960]">{t.tenor}a</td>
-                    <td className={`${tdClass} text-zinc-300`}>{fmtRate(t.d365)}</td>
-                    <td className={`${tdClass} text-zinc-400`}>{fmtRate(t.d90)}</td>
-                    <td className={`${tdClass} text-zinc-500`}>{fmtRate(t.d30)}</td>
-                    <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(t.recent)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           ) : (
             <>
               <table className="min-w-full text-xs">
@@ -699,7 +894,6 @@ export function JurosLiveBlock({
                     <th className="py-2 pr-2 text-left font-semibold">Venc.</th>
                     <th className={thClass}>D-90</th>
                     <th className={thClass}>D-30</th>
-                    <th className={thClass}>Recente</th>
                     <th className={thClass}>Agora</th>
                   </tr>
                 </thead>
@@ -709,20 +903,29 @@ export function JurosLiveBlock({
                       <td className="py-1.5 pr-2 font-semibold text-[#132960]">{maturityLabel(r.maturity)}</td>
                       <td className={`${tdClass} text-zinc-400`}>{fmtRate(r.d90)}</td>
                       <td className={`${tdClass} text-zinc-500`}>{fmtRate(r.d30)}</td>
-                      <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(r.recent)}</td>
-                      <td className={`${tdClass} font-semibold text-[#027DFC]`}>{fmtRate(r.agora)}</td>
+                      <td className={`${tdClass} font-semibold text-[#000000]`}>{fmtRate(r.agora)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
               <p className="mt-2 text-[11px] text-zinc-400">
-                D-90/D-30/Recente: títulos (TaxaSwap B3, D-1). Agora: futuro {tab === "ipca" ? "DAP" : "DI1"} de
-                vencimento mais próximo (B3 ~15 min).
+                D-90/D-30: títulos (TaxaSwap B3) em janelas anteriores. Agora: futuro{" "}
+                {tab === "ipca" ? "DAP" : "DI1"} de vencimento mais próximo (B3 ~15 min).
               </p>
             </>
           )}
         </div>
       </div>
     </section>
+
+    <UsRatesBlock
+      treasuryTenors={treasuryTenors}
+      fedMeetings={fedMeetings}
+      fedChart={fedChart}
+      treasuryLabels={treasuryLabels}
+      fedLabels={fedLabels}
+      isNarrow={isNarrow}
+    />
+    </div>
   );
 }

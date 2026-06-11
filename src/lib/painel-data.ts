@@ -36,6 +36,7 @@ export type PanoramaData = {
   tableIpca: BlobWidgetPayload<StaticChartTablePayload>;
   tableSelic: BlobWidgetPayload<StaticChartTablePayload>;
   tableTreasury: BlobWidgetPayload<StaticChartTablePayload>;
+  tableFed: BlobWidgetPayload<StaticChartTablePayload>;
 };
 
 async function fetchBlobJson<T>(path: string): Promise<T | null> {
@@ -74,11 +75,12 @@ export async function getPanoramaData(): Promise<PanoramaData> {
     fetchBlobJson<SectorBrPayload>("data/br_sector_baskets_panorama.json"),
   ]);
 
-  const [tablePrefixado, tableIpca, tableSelic, tableTreasury] = await Promise.all([
+  const [tablePrefixado, tableIpca, tableSelic, tableTreasury, tableFed] = await Promise.all([
     fetchBlobJson<StaticChartTablePayload>("charts/tables/juros_prefixado.json"),
     fetchBlobJson<StaticChartTablePayload>("charts/tables/juros_ipca.json"),
     fetchBlobJson<StaticChartTablePayload>("charts/tables/selic_implicita.json"),
     fetchBlobJson<StaticChartTablePayload>("charts/tables/juros_treasury_us.json"),
+    fetchBlobJson<StaticChartTablePayload>("charts/tables/fed_implicita.json"),
   ]);
 
   return {
@@ -127,6 +129,7 @@ export async function getPanoramaData(): Promise<PanoramaData> {
     tableIpca: createWidget("curve_ipca", "Curva IPCA+", "Tesouro", "diario", tableIpca?.generated_at, tableIpca),
     tableSelic: createWidget("selic_implicita", "Selic implícita", "B3 PRE", "diario", tableSelic?.generated_at, tableSelic),
     tableTreasury: createWidget("treasury_us", "Curva Treasury EUA", "FRED", "diario", tableTreasury?.generated_at, tableTreasury),
+    tableFed: createWidget("fed_implicita", "Fed implícita", "FRED (Treasury)", "diario", tableFed?.generated_at, tableFed),
   };
 }
 
