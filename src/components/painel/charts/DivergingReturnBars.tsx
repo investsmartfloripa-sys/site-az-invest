@@ -81,7 +81,7 @@ export function DivergingReturnBars({
             {...azXAxisProps()}
             type="number"
             domain={xDomain ?? ["auto", "auto"]}
-            tickFormatter={(v) => `${Number(v)}%`}
+            tickFormatter={(v) => fmtSignedPct(Number(v), Math.abs(Number(v)) < 1 ? 1 : 0)}
             tickCount={5}
           />
           <YAxis
