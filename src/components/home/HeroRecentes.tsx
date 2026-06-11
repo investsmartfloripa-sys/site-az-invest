@@ -19,7 +19,7 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
   const others = posts.slice(1, 3);
 
   return (
-    <section className="space-y-4">
+    <section className="az-reveal space-y-4">
       <div className="flex items-end justify-between gap-4">
         <h1 className="text-4xl text-[#027DFC]">Artigos</h1>
         <Link
@@ -36,6 +36,8 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
             alt={main.title}
             width={1024}
             height={666}
+            priority
+            sizes="(min-width: 768px) 66vw, 100vw"
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-black/10" />

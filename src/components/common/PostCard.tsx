@@ -27,7 +27,7 @@ function initials(name: string) {
 
 export function PostCard({ post }: { post: PostCardData }) {
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-[#132960]/15 bg-white transition hover:shadow-md">
+    <article className="az-hover-lift flex h-full flex-col overflow-hidden rounded-2xl border border-[#132960]/15 bg-white shadow-sm hover:shadow-md">
       <Link href={`/blog/${post.slug}`} className="block">
         <div className="relative aspect-[16/9] w-full overflow-hidden">
           <Image

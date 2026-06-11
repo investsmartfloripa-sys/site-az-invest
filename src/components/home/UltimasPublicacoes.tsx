@@ -16,7 +16,7 @@ export function UltimasPublicacoes({ posts }: { posts: PostCardData[] }) {
   if (posts.length === 0) return null;
 
   return (
-    <section className="space-y-4">
+    <section className="az-reveal space-y-4">
       <div className="flex items-end justify-between gap-4">
         <h2 className="text-4xl text-[#027DFC]">Últimas publicações</h2>
         <Link
@@ -30,7 +30,7 @@ export function UltimasPublicacoes({ posts }: { posts: PostCardData[] }) {
         {posts.map((post) => (
           <li
             key={post.id}
-            className="grid gap-3 overflow-hidden rounded-2xl border border-[#132960]/15 bg-white p-3 md:grid-cols-[200px_1fr] md:items-center"
+            className="az-hover-lift grid gap-3 overflow-hidden rounded-2xl border border-[#132960]/15 bg-white p-3 shadow-sm hover:shadow-md md:grid-cols-[200px_1fr] md:items-center"
           >
             <Link
               href={`/blog/${post.slug}`}

@@ -44,10 +44,14 @@ export default async function Home() {
     <div className="min-h-screen text-[#132960]">
       <Header />
       <main
-        className={`az-shell mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} flex-col gap-12 px-4 py-6 md:px-8 md:py-8`}
+        id="conteudo"
+        className={`az-shell az-hero-bg mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} flex-col gap-12 px-4 py-6 md:px-8 md:py-8`}
       >
         <HeroRecentes posts={hero} />
-        <DestaquesDaSemana />
+        {/* DestaquesDaSemana é compartilhado com /conteudo; o reveal fica no wrapper. */}
+        <div className="az-reveal">
+          <DestaquesDaSemana />
+        </div>
         {maisLidos.length > 0 ? <MaisLidos posts={maisLidos} /> : null}
         <UltimasPublicacoes posts={restantes} />
         <VideosSection />

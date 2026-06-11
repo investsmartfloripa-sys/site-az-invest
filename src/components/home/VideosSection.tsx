@@ -14,7 +14,7 @@ export async function VideosSection() {
   const showcaseVideos = (longs.length > 0 ? longs : videos).slice(0, 7);
 
   return (
-    <section className="space-y-6">
+    <section className="az-reveal space-y-6">
       <div className="flex items-end justify-between gap-3">
         <h2 className="text-4xl text-[#027DFC]">Vídeos</h2>
         <Link

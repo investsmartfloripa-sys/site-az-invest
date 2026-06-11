@@ -9,7 +9,13 @@ import {
   WhatsappIcon,
 } from "@/components/common/SocialIcons";
 
-const socials = [
+type SocialEntry = {
+  label: string;
+  href: string | null;
+  Icon: typeof InstagramIcon;
+};
+
+const socials: SocialEntry[] = [
   {
     label: "Instagram",
     href: "https://www.instagram.com/azinvestoficial",
@@ -37,6 +43,11 @@ const socials = [
   },
 ];
 
+/** Apenas redes com link real — evita renderizar âncoras mortas (LinkedIn/TikTok sem URL). */
+const activeSocials = socials.filter(
+  (social): social is SocialEntry & { href: string } => Boolean(social.href),
+);
+
 export function Footer() {
   return (
     <footer className="bg-[#132960] text-[#E8E7E5]">
@@ -57,12 +68,12 @@ export function Footer() {
               Economia, mercado e educação financeira para investir com clareza.
             </p>
             <div className="mt-4 flex justify-center gap-3 sm:justify-start">
-              {socials.map(({ label, href, Icon }) => (
+              {activeSocials.map(({ label, href, Icon }) => (
                 <a
                   key={label}
-                  href={href ?? undefined}
-                  target={href ? "_blank" : undefined}
-                  rel={href ? "noopener noreferrer" : undefined}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 text-white transition hover:border-[#027DFC] hover:text-[#027DFC]"
                 >

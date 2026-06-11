@@ -1,11 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { navItems } from "@/data/home";
+import { NavLinks } from "@/components/common/NavLinks";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
-export async function Header() {
+export function Header() {
   return (
-    <header className="border-b border-[#132960]/10 bg-[#132960] text-[#E8E7E5]">
+    <header className="sticky top-0 z-50 border-b border-[#132960]/10 bg-[#132960]/90 text-[#E8E7E5] backdrop-blur-md">
       <div className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} items-center justify-between gap-4 px-4 py-4 md:px-8`}>
         <Link href="/" className="block">
           <Image
@@ -28,19 +28,7 @@ export async function Header() {
         </div>
       </div>
 
-      <nav className="border-t border-white/10 bg-[#0e1f49]">
-        <div className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} items-center gap-6 overflow-x-auto px-4 py-3 text-xs font-semibold uppercase tracking-wider md:px-8`}>
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="whitespace-nowrap text-white/80 transition-colors hover:text-[#027DFC]"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </nav>
+      <NavLinks />
 
       <div className="h-1 bg-[#027DFC]" />
     </header>

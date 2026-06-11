@@ -7,7 +7,7 @@ export function CommunityCallout() {
   const hasLink = Boolean(url);
 
   return (
-    <section aria-label="Comunidade AZ Invest no WhatsApp">
+    <section aria-label="Comunidade AZ Invest no WhatsApp" className="az-reveal">
       {/*
         Desktop / tablet (>= md): banner-imagem clicável, mantendo o layout do design.
         O bloco inteiro vira o CTA; o usuário pode tocar em qualquer ponto (inclusive
