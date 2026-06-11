@@ -287,22 +287,22 @@ export function ContasExternasDashboard({
 
   // ---- Bloco D (Comex) ----
   const catExp = useMemo<CategoriaPonto[]>(
-    () => (comex?.categorias_export_3m ?? []).slice().sort((a, b) => b.valor_us_bi - a.valor_us_bi),
+    () => (comex?.categorias_export_12m ?? []).slice().sort((a, b) => b.valor_us_bi - a.valor_us_bi),
     [comex],
   );
   const catImp = useMemo<CategoriaPonto[]>(
-    () => (comex?.categorias_import_3m ?? []).slice().sort((a, b) => b.valor_us_bi - a.valor_us_bi),
+    () => (comex?.categorias_import_12m ?? []).slice().sort((a, b) => b.valor_us_bi - a.valor_us_bi),
     [comex],
   );
-  const topNcmExp = useMemo<NcmPonto[]>(() => (comex?.top_ncm_export_3m ?? []).slice(0, 12), [comex]);
-  const topNcmImp = useMemo<NcmPonto[]>(() => (comex?.top_ncm_import_3m ?? []).slice(0, 12), [comex]);
-  const topDest = useMemo<PaisPonto[]>(() => (comex?.top_destinos_3m ?? []).slice(0, 10), [comex]);
-  const topOrig = useMemo<PaisPonto[]>(() => (comex?.top_origens_3m ?? []).slice(0, 10), [comex]);
+  const topNcmExp = useMemo<NcmPonto[]>(() => (comex?.top_ncm_export_12m ?? []).slice(0, 12), [comex]);
+  const topNcmImp = useMemo<NcmPonto[]>(() => (comex?.top_ncm_import_12m ?? []).slice(0, 12), [comex]);
+  const topDest = useMemo<PaisPonto[]>(() => (comex?.top_destinos_12m ?? []).slice(0, 10), [comex]);
+  const topOrig = useMemo<PaisPonto[]>(() => (comex?.top_origens_12m ?? []).slice(0, 10), [comex]);
 
   // Séries por seção: renomeia chaves longas pra labels curtos
   const secaoExp12m = useMemo(() => {
     if (!comex) return [];
-    return comex.secao_export_12m.map(p => {
+    return (comex.secao_export_24m ?? []).map(p => {
       const out: Record<string, number | string> = { mes: p.mes as string };
       for (const k of Object.keys(p)) {
         if (k === "mes") continue;
@@ -314,7 +314,7 @@ export function ContasExternasDashboard({
   }, [comex]);
   const secaoImp12m = useMemo(() => {
     if (!comex) return [];
-    return comex.secao_import_12m.map(p => {
+    return (comex.secao_import_24m ?? []).map(p => {
       const out: Record<string, number | string> = { mes: p.mes as string };
       for (const k of Object.keys(p)) {
         if (k === "mes") continue;
@@ -325,8 +325,8 @@ export function ContasExternasDashboard({
     });
   }, [comex]);
 
-  const secKeysExp = comex ? [...comex.secao_export_top6.map(secaoLabel), "Outros"] : [];
-  const secKeysImp = comex ? [...comex.secao_import_top6.map(secaoLabel), "Outros"] : [];
+  const secKeysExp = comex ? [...(comex.secao_export_top6 ?? []).map(secaoLabel), "Outros"] : [];
+  const secKeysImp = comex ? [...(comex.secao_import_top6 ?? []).map(secaoLabel), "Outros"] : [];
 
   return (
     <div className="space-y-6">
@@ -343,7 +343,7 @@ export function ContasExternasDashboard({
           )}
           {comex && (
             <>
-              {" · "}Comex {comex.periodo_3m.from} a {comex.periodo_3m.to}
+              {" · "}Comex {comex.periodo_12m.from} a {comex.periodo_12m.to}
             </>
           )}
         </p>
@@ -387,7 +387,7 @@ export function ContasExternasDashboard({
         <ChartCard
           title="Saldo do Brasil com o resto do mundo (% PIB)"
           subtitle="Transações correntes — barras anuais desde 2000 (12m no ano corrente)"
-          footer="Fonte: BCB SGS 22701 / 4380 (PIB acum 12m em US$). * ano corrente em janela móvel de 12m."
+          footer="Fonte: BCB SGS 22701 / 4192 (PIB acum 12m em US$). * ano corrente em janela móvel de 12m."
           stampGiro={data.gerado_em}
           stampDado={ultima_referencia_mensal}
           height={300}
@@ -415,7 +415,7 @@ export function ContasExternasDashboard({
           <ChartCard
             title="De onde vem o saldo (24m mensais)"
             subtitle="Decomposição em US$ bilhões"
-            footer="Fonte: BCB SGS 22707 (bens) + 22719 (serviços) + 22740 (renda primária) + resíduo (renda secundária)."
+            footer="Fonte: BCB SGS 22707 (bens) + 22719 (serviços) + 22800 (renda primária) + 22838 (renda secundária: remessas e doações — o Brasil é recebedor líquido)."
             stampGiro={data.gerado_em}
             stampDado={lastSeriesDate(bloco_a.decomposicao_mensal_36m)}
             height={300}
@@ -434,7 +434,7 @@ export function ContasExternasDashboard({
                 <Bar dataKey="bens" name="Bens" stackId="bp" fill={COR_POSITIVO} />
                 <Bar dataKey="servicos" name="Serviços" stackId="bp" fill="#f59e0b" />
                 <Bar dataKey="renda_primaria" name="Lucros e juros" stackId="bp" fill={COR_NEGATIVO} />
-                <Bar dataKey="renda_secundaria" name="Doações/remessas" stackId="bp" fill="#6366f1" />
+                <Bar dataKey="renda_secundaria" name="Renda secundária" stackId="bp" fill="#6366f1" />
                 <Line
                   type="monotone"
                   dataKey="saldo_total"
@@ -482,11 +482,11 @@ export function ContasExternasDashboard({
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <ChartCard
-              title="O que o Brasil exportou (últimos 3 meses)"
+              title="O que o Brasil exportou (últimos 12 meses)"
               subtitle="Principais categorias em US$ bilhões"
-              footer={`Fonte: SECEX/MDIC Comex Stat. Período: ${comex.periodo_3m.from} a ${comex.periodo_3m.to}. Categorias agregadas por prefixo NCM.`}
+              footer={`Fonte: SECEX/MDIC Comex Stat. Período: ${comex.periodo_12m.from} a ${comex.periodo_12m.to}. Categorias agregadas por prefixo NCM.`}
               stampGiro={comex.gerado_em}
-              stampDado={comex.periodo_3m.to}
+              stampDado={comex.periodo_12m.to}
               height={Math.max(280, catExp.length * 26)}
             >
               <HorizontalRankingBar
@@ -499,11 +499,11 @@ export function ContasExternasDashboard({
             </ChartCard>
 
             <ChartCard
-              title="O que o Brasil importou (últimos 3 meses)"
+              title="O que o Brasil importou (últimos 12 meses)"
               subtitle="Principais categorias em US$ bilhões"
-              footer={`Fonte: SECEX/MDIC Comex Stat. Período: ${comex.periodo_3m.from} a ${comex.periodo_3m.to}.`}
+              footer={`Fonte: SECEX/MDIC Comex Stat. Período: ${comex.periodo_12m.from} a ${comex.periodo_12m.to}.`}
               stampGiro={comex.gerado_em}
-              stampDado={comex.periodo_3m.to}
+              stampDado={comex.periodo_12m.to}
               height={Math.max(280, catImp.length * 26)}
             >
               <HorizontalRankingBar
@@ -522,7 +522,7 @@ export function ContasExternasDashboard({
               subtitle="Detalhamento por código NCM"
               footer="Fonte: SECEX/MDIC Comex Stat — NCM (Nomenclatura Comum do Mercosul)."
               stampGiro={comex.gerado_em}
-              stampDado={comex.periodo_3m.to}
+              stampDado={comex.periodo_12m.to}
               height={Math.max(280, topNcmExp.length * 26)}
             >
               <HorizontalRankingBar
@@ -542,7 +542,7 @@ export function ContasExternasDashboard({
               subtitle="Detalhamento por código NCM"
               footer="Fonte: SECEX/MDIC Comex Stat."
               stampGiro={comex.gerado_em}
-              stampDado={comex.periodo_3m.to}
+              stampDado={comex.periodo_12m.to}
               height={Math.max(280, topNcmImp.length * 26)}
             >
               <HorizontalRankingBar
@@ -564,7 +564,7 @@ export function ContasExternasDashboard({
               subtitle="Top 10 destinos das exportações"
               footer="Fonte: SECEX/MDIC Comex Stat."
               stampGiro={comex.gerado_em}
-              stampDado={comex.periodo_3m.to}
+              stampDado={comex.periodo_12m.to}
               height={Math.max(280, topDest.length * 26)}
             >
               <HorizontalRankingBar
@@ -581,7 +581,7 @@ export function ContasExternasDashboard({
               subtitle="Top 10 origens das importações"
               footer="Fonte: SECEX/MDIC Comex Stat."
               stampGiro={comex.gerado_em}
-              stampDado={comex.periodo_3m.to}
+              stampDado={comex.periodo_12m.to}
               height={Math.max(280, topOrig.length * 26)}
             >
               <HorizontalRankingBar

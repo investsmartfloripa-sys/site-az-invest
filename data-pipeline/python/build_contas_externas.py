@@ -2,12 +2,13 @@
 
 Baixa séries do BCB SGS:
 - Balanço de Pagamentos — Transações Correntes (22701) e componentes (22707 bens,
-  22711 exportações bens, 22719 serviços líquido, 22740 renda primária).
+  22711 exportações bens, 22719 serviços líquido, 22800 renda primária,
+  22838 renda secundária).
 - Investimento Direto no País (22885 líquido, 22886 ingressos), com decomposição
   (22888 participação, 22891 part. exc. reinvestimento, 22892 reinvestimento).
 - Investimento brasileiro no exterior (22865 líquido).
 - Reservas internacionais (3546 mensal, 13982 liquidez diária).
-- PIB 12m em US$ (4380) para denominador de % PIB.
+- PIB acumulado 12m em US$ milhões (4192) para denominador de % PIB.
 
 Gera `data-pipeline/out/contas_externas.json` e upload pra `data/contas_externas.json`.
 
@@ -40,7 +41,8 @@ SERIES_MENSAIS = {
     "bens_saldo": 22707,                # Balança comercial - saldo
     "bens_export": 22711,               # Exportações de bens
     "servicos_liquido": 22719,          # Serviços - líquido
-    "renda_primaria_saldo": 22740,      # Renda primária - saldo
+    "renda_primaria_saldo": 22800,      # Renda primária - saldo (receita 22801, despesa 22802)
+    "renda_secundaria_saldo": 22838,    # Renda secundária - saldo (fecha identidade BPM6 vs 22701)
     # Investimento Direto no País — US$ milhões mensais (passivos)
     "idp_liquido": 22885,               # IDP - líquido
     "idp_ingressos": 22886,             # IDP - ingressos
@@ -51,8 +53,9 @@ SERIES_MENSAIS = {
     "ide_liquido": 22865,               # IDE - líquido
     # Reservas mensais
     "reservas_mensal": 3546,            # Reservas internacionais total mensal (US$ milhões)
-    # PIB acumulado 12m (US$ milhões) — denominador
-    "pib_12m": 4380,
+    # PIB acumulado 12m (US$ milhões) — denominador de % PIB
+    # (4192 = PIB 12m em US$ mi; NUNCA usar 4380, que é PIB MENSAL em R$ milhões)
+    "pib_12m": 4192,
 }
 
 SERIES_DIARIAS = {
@@ -226,24 +229,45 @@ def main() -> None:
             # import_bp = exp - saldo (sinal convencional)
             bens_import[k] = e - s
 
-    # Decomposição da TC: bens + serviços + renda primária + residual (≈ renda secundária)
+    # Decomposição da TC: as 4 séries vêm EXPLÍCITAS do SGS (nenhuma por resíduo).
+    # O resíduo da identidade BPM6 (TC = bens + serviços + renda prim. + renda sec.)
+    # é usado apenas como auditoria: se passar da tolerância, print [WARN] informativo.
+    IDENTIDADE_TOL_USD_MI = 100.0  # tolerância absoluta (US$ milhões)
     tc_decomposto: dict[str, dict[str, float | None]] = {}
+    identidade_violacoes: list[tuple[str, float]] = []
+    identidade_meses_ok = 0
     for k in mensais["tc_saldo"]:
         tc_val = mensais["tc_saldo"].get(k)
         bens = bens_saldo.get(k)
         servicos = mensais["servicos_liquido"].get(k)
         renda_prim = mensais["renda_primaria_saldo"].get(k)
-        if any(v is None for v in [tc_val, bens, servicos, renda_prim]):
-            residual = None
-        else:
-            residual = tc_val - bens - servicos - renda_prim
+        renda_sec = mensais["renda_secundaria_saldo"].get(k)
+        if not any(v is None for v in [tc_val, bens, servicos, renda_prim, renda_sec]):
+            residuo = tc_val - bens - servicos - renda_prim - renda_sec
+            if abs(residuo) > IDENTIDADE_TOL_USD_MI:
+                identidade_violacoes.append((k, residuo))
+            else:
+                identidade_meses_ok += 1
         tc_decomposto[k] = {
             "saldo_total": tc_val,
             "bens": bens,
             "servicos": servicos,
             "renda_primaria": renda_prim,
-            "renda_secundaria": residual,
+            "renda_secundaria": renda_sec,
         }
+
+    # Auditoria da identidade BPM6 (informativa — não aborta o build)
+    if identidade_violacoes:
+        pior = max(identidade_violacoes, key=lambda t: abs(t[1]))
+        print(
+            f"[WARN] identidade BPM6 (TC = bens+serviços+renda prim.+renda sec.) "
+            f"fora da tolerância de US$ {IDENTIDADE_TOL_USD_MI:.0f} mi em "
+            f"{len(identidade_violacoes)} mes(es); pior caso {pior[0]}: resíduo "
+            f"US$ {pior[1]:+.1f} mi",
+            file=sys.stderr,
+        )
+    else:
+        print(f"[OK] identidade BPM6 fecha em {identidade_meses_ok} meses (tolerância US$ {IDENTIDADE_TOL_USD_MI:.0f} mi)")
 
     # IDP decomposição: participação no capital exc reinv + reinvestimento + intercompanhia (residual)
     idp_decomposto: dict[str, dict[str, float | None]] = {}
@@ -446,9 +470,9 @@ def main() -> None:
         except Exception as e:
             print(f"  [merge] WARN: {e}", file=sys.stderr)
 
-    out_file.write_text(json.dumps(payload, ensure_ascii=False))
+    out_file.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     size_kb = out_file.stat().st_size / 1024
-    print(f"\n✓ Gerado {out_file} ({size_kb:.1f} KB)")
+    print(f"\n[OK] Gerado {out_file} ({size_kb:.1f} KB)")
     print(f"  Hero TC: {v_tc:.2f}% do PIB ({k_tc})" if v_tc else "  Hero TC: -")
     print(f"  Hero IDP: {v_idp:.2f}% do PIB ({k_idp})" if v_idp else "  Hero IDP: -")
     print(f"  Reservas: US$ {reservas_recente/1000:.1f} bi ({k_div})" if reservas_recente else "  Reservas: -")

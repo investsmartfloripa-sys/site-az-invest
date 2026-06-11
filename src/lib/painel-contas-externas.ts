@@ -110,15 +110,15 @@ export type SecaoSeriePonto = Record<string, number | string>;
 export type ContasExternasComexData = {
   gerado_em: string;
   fonte_principal: string;
-  periodo_3m: { from: string; to: string };
-  top_ncm_export_3m: NcmPonto[];
-  top_ncm_import_3m: NcmPonto[];
-  categorias_export_3m: CategoriaPonto[];
-  categorias_import_3m: CategoriaPonto[];
-  top_destinos_3m: PaisPonto[];
-  top_origens_3m: PaisPonto[];
-  secao_export_12m: SecaoSeriePonto[];
-  secao_import_12m: SecaoSeriePonto[];
+  periodo_12m: { from: string; to: string };
+  top_ncm_export_12m: NcmPonto[];
+  top_ncm_import_12m: NcmPonto[];
+  categorias_export_12m: CategoriaPonto[];
+  categorias_import_12m: CategoriaPonto[];
+  top_destinos_12m: PaisPonto[];
+  top_origens_12m: PaisPonto[];
+  secao_export_24m: SecaoSeriePonto[];
+  secao_import_24m: SecaoSeriePonto[];
   secao_export_top6: string[];
   secao_import_top6: string[];
   metadata: { fonte: string; endpoint: string; nota: string };
@@ -154,7 +154,14 @@ export async function loadContasExternasComex(): Promise<ContasExternasComexData
       console.error(`[contas-externas-comex] fetch ${url}: ${res.status}`);
       return null;
     }
-    return (await res.json()) as ContasExternasComexData;
+    const data = (await res.json()) as ContasExternasComexData;
+    // Guarda de shape: se o builder mudar o contrato, o bloco Comex some
+    // graciosamente em vez de derrubar a página com 500 no SSR.
+    if (!data?.periodo_12m?.from || !Array.isArray(data.top_ncm_export_12m)) {
+      console.error("[contas-externas-comex] payload em shape inesperado — bloco Comex desativado");
+      return null;
+    }
+    return data;
   } catch (e) {
     console.error(`[contas-externas-comex] fetch ${url}:`, e);
     return null;
