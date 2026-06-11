@@ -94,7 +94,12 @@ export function PainelSectionShell({ children }: Props) {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <div ref={navRef} className="sticky top-0 z-40 border-b border-white/10 bg-[#1E293B] shadow-md">
+      {/* Gruda logo abaixo do header global (altura publicada em --az-header-h pelo HeaderMeasure) */}
+      <div
+        ref={navRef}
+        className="sticky z-40 border-b border-white/10 bg-[#1E293B] shadow-md"
+        style={{ top: "var(--az-header-h, 0px)" }}
+      >
         <div className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} items-center gap-6 px-4 text-xs font-semibold uppercase tracking-wider md:px-8`}>
           <span className="hidden whitespace-nowrap py-3 text-white/40 sm:block">Painel econômico</span>
 

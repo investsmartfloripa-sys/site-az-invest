@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { HeaderMeasure } from "@/components/common/HeaderMeasure";
 import { NavLinks } from "@/components/common/NavLinks";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
@@ -31,6 +32,7 @@ export function Header() {
       <NavLinks />
 
       <div className="h-1 bg-[#027DFC]" />
+      <HeaderMeasure />
     </header>
   );
 }
