@@ -80,19 +80,13 @@ export function IbovHero({ data }: Props) {
       aria-label="Ibovespa — Panorama"
       className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-6"
     >
-      {/* HEADER §9: eyebrow → valor grande + chip de variação → range bar 12m */}
+      {/* HEADER §9: eyebrow → valor grande + chip de variação (range bar omitida no hero de índice — máx/mín já aparecem no gráfico) */}
       {hero ? (
         <HeroHeader
           eyebrow="Ibovespa"
           value={fmtNum(hero.last_value, 0)}
           unit="pts"
           changePct={hero.change_pct_1d}
-          range={{
-            min: hero.min_12m,
-            max: hero.max_12m,
-            current: hero.last_value,
-            format: (v) => fmtNum(v, 0),
-          }}
         />
       ) : (
         <HeroHeader eyebrow="Ibovespa" value="—" unit="pts" />
