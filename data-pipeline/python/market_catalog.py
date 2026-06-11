@@ -37,6 +37,9 @@ CATALOG: List[Dict[str, str]] = [
     # ---------------------------------------------------------------------
     # FX (moedas vs BRL e cross-rates)
     # ---------------------------------------------------------------------
+    # Convencao Yahoo: "XXX=X" eh atalho de "USDXXX=X" (par USD/XXX, USD na
+    # base). Pares com USD no contador usam a forma longa ("EURUSD=X").
+    # NAO adicionar "USDJPY=X" etc. — duplicaria os "JPY=X" ja existentes.
     {"ticker": "BRL=X",   "name": "USD/BRL",  "klass": "fx", "sector": "Cambio", "country": "BR",     "currency": "BRL"},
     {"ticker": "EURBRL=X","name": "EUR/BRL",  "klass": "fx", "sector": "Cambio", "country": "BR",     "currency": "BRL"},
     {"ticker": "GBPBRL=X","name": "GBP/BRL",  "klass": "fx", "sector": "Cambio", "country": "BR",     "currency": "BRL"},
@@ -46,6 +49,26 @@ CATALOG: List[Dict[str, str]] = [
     {"ticker": "JPY=X",   "name": "USD/JPY",  "klass": "fx", "sector": "Cambio", "country": "GLOBAL", "currency": "USD"},
     {"ticker": "EURUSD=X","name": "EUR/USD",  "klass": "fx", "sector": "Cambio", "country": "GLOBAL", "currency": "USD"},
     {"ticker": "DX-Y.NYB","name": "DXY",      "klass": "fx", "sector": "Cambio", "country": "US",     "currency": "USD"},
+    # --- Moedas do mundo (2026-06-11, p/ a area Mercado > Global > Moedas) ---
+    # Majors (G10) — EURUSD=X e JPY=X ja existem acima.
+    {"ticker": "GBPUSD=X","name": "GBP/USD",  "klass": "fx", "sector": "FX Majors",     "country": "GLOBAL", "currency": "USD"},
+    {"ticker": "CHF=X",   "name": "USD/CHF",  "klass": "fx", "sector": "FX Majors",     "country": "GLOBAL", "currency": "USD"},
+    {"ticker": "AUDUSD=X","name": "AUD/USD",  "klass": "fx", "sector": "FX Majors",     "country": "GLOBAL", "currency": "USD"},
+    {"ticker": "CAD=X",   "name": "USD/CAD",  "klass": "fx", "sector": "FX Majors",     "country": "GLOBAL", "currency": "USD"},
+    {"ticker": "NZDUSD=X","name": "NZD/USD",  "klass": "fx", "sector": "FX Majors",     "country": "GLOBAL", "currency": "USD"},
+    # Nordicas (desenvolvidas — entram no bloco Majors do painel)
+    {"ticker": "SEK=X",   "name": "USD/SEK",  "klass": "fx", "sector": "FX Majors",     "country": "GLOBAL", "currency": "USD"},
+    {"ticker": "NOK=X",   "name": "USD/NOK",  "klass": "fx", "sector": "FX Majors",     "country": "GLOBAL", "currency": "USD"},
+    # Emergentes vs USD — ARS=X, MXN=X e CNY=X ja existem acima.
+    {"ticker": "CLP=X",   "name": "USD/CLP",  "klass": "fx", "sector": "FX Emergentes", "country": "GLOBAL", "currency": "USD"},
+    {"ticker": "COP=X",   "name": "USD/COP",  "klass": "fx", "sector": "FX Emergentes", "country": "GLOBAL", "currency": "USD"},
+    {"ticker": "ZAR=X",   "name": "USD/ZAR",  "klass": "fx", "sector": "FX Emergentes", "country": "GLOBAL", "currency": "USD"},
+    {"ticker": "TRY=X",   "name": "USD/TRY",  "klass": "fx", "sector": "FX Emergentes", "country": "GLOBAL", "currency": "USD"},
+    {"ticker": "INR=X",   "name": "USD/INR",  "klass": "fx", "sector": "FX Emergentes", "country": "GLOBAL", "currency": "USD"},
+    {"ticker": "PLN=X",   "name": "USD/PLN",  "klass": "fx", "sector": "FX Emergentes", "country": "GLOBAL", "currency": "USD"},
+    {"ticker": "HUF=X",   "name": "USD/HUF",  "klass": "fx", "sector": "FX Emergentes", "country": "GLOBAL", "currency": "USD"},
+    {"ticker": "IDR=X",   "name": "USD/IDR",  "klass": "fx", "sector": "FX Emergentes", "country": "GLOBAL", "currency": "USD"},
+    {"ticker": "KRW=X",   "name": "USD/KRW",  "klass": "fx", "sector": "FX Emergentes", "country": "GLOBAL", "currency": "USD"},
 
     # ---------------------------------------------------------------------
     # Commodities (futuros)

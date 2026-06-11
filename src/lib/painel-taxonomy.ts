@@ -38,10 +38,13 @@ const mercadoBrasil: CategoryDef[] = [
     sourceHint: "Tesouro, B3, ANBIMA",
   },
   {
-    // Página própria: src/app/painel-economico/mercado/brasil/cambio/page.tsx
+    // Absorvida pela área Moedas (Global): a rota
+    // src/app/painel-economico/mercado/brasil/cambio/page.tsx faz redirect
+    // permanente p/ /painel-economico/mercado/global/moedas. A entrada fica
+    // no menu Brasil p/ quem procura "Câmbio" — o clique cai na página nova.
     slug: "cambio",
     label: "Câmbio",
-    description: "Dólar (USD/BRL, 5 anos), cruzes do real (EUR/BRL, GBP/BRL), DXY e moedas contra o dólar.",
+    description: "Agora em Global → Moedas: dólar (USD/BRL), cruzes do real e as moedas do mundo contra o USD.",
     frequency: "tempo-real",
     sourceHint: "Yahoo Finance, pipeline AZ (fx_top_movers + histórico 5a)",
   },
@@ -62,6 +65,16 @@ const mercadoGlobal: CategoryDef[] = [
     description: "Bolsas desenvolvidas × emergentes: retornos por período e comparativo histórico rebase 100.",
     frequency: "tempo-real",
     sourceHint: "Yahoo Finance (16 índices intradiários + histórico 5a)",
+  },
+  {
+    // Página própria: src/app/painel-economico/mercado/global/moedas/page.tsx
+    // (absorveu a antiga /mercado/brasil/cambio, que hoje só redireciona)
+    slug: "moedas",
+    label: "Moedas",
+    description:
+      "Moedas do mundo contra o dólar: ranking majors × emergentes por janela, DXY e o bloco do real (USD/BRL, cruzes e ranking emergente).",
+    frequency: "tempo-real",
+    sourceHint: "Yahoo Finance, pipeline AZ (fx_top_movers + histórico 5a)",
   },
   {
     slug: "juros-globais",
