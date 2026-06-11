@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { IndicesGlobaisDashboard } from "@/components/painel/indices-globais/IndicesGlobaisDashboard";
+import { ValuationEuaSection } from "@/components/painel/indices-globais/ValuationEuaSection";
 import { PipelinePendingCard } from "@/components/painel/PipelinePendingCard";
 import {
   EMPTY_HISTORY_SLICE,
+  getGlobalValuation,
   getHistorySlice,
   getWorldIndicesReturnsPanorama,
 } from "@/lib/painel-mercado-global";
@@ -31,9 +33,10 @@ const HISTORY_TICKERS = [
 ];
 
 export default async function IndicesGlobaisPage() {
-  const [panorama, history] = await Promise.all([
+  const [panorama, history, valuation] = await Promise.all([
     getWorldIndicesReturnsPanorama(),
     getHistorySlice(HISTORY_TICKERS).catch(() => EMPTY_HISTORY_SLICE),
+    getGlobalValuation(),
   ]);
 
   const nothingLoaded = !panorama && history.series.length === 0;
@@ -63,6 +66,33 @@ export default async function IndicesGlobaisPage() {
           <IndicesGlobaisDashboard panorama={panorama} history={history} />
         </Suspense>
       )}
+
+      {/* Valuation EUA — régua longa do mercado americano (Buffett, CAPE, SPY) */}
+      <section className="space-y-3">
+        <header className="space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
+            Valuation EUA
+          </p>
+          <h2 className="text-xl font-semibold text-[#132960]">
+            O mercado americano está caro ou barato?
+          </h2>
+          <p className="max-w-3xl text-sm text-zinc-600">
+            Três réguas clássicas, da mais curta à mais longa: o <strong>P/L corrente</strong> do
+            S&amp;P 500 (via SPY), o <strong>CAPE de Shiller</strong> (lucros reais de 10 anos) e o{" "}
+            <strong>indicador Buffett</strong> (valor da bolsa contra o tamanho da economia). Cada
+            série traz a própria média histórica e a banda de ±1 desvio — a pergunta certa não é o
+            número absoluto, e sim a distância da média.
+          </p>
+        </header>
+        {valuation ? (
+          <ValuationEuaSection data={valuation} />
+        ) : (
+          <PipelinePendingCard
+            blobPaths={["data/global_valuation.json"]}
+            workflow="market-data.yml"
+          />
+        )}
+      </section>
 
       <section className="rounded-2xl border border-[#132960]/10 bg-zinc-50/50 p-4 text-xs text-zinc-600">
         <p className="font-semibold uppercase tracking-wide text-zinc-500">Notas metodológicas</p>

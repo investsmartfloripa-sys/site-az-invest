@@ -68,6 +68,15 @@ jobs:
             --upload
         continue-on-error: true
 
+      # Depende do step de fundamentos (snapshot SPY lido do market_fundamentals.json
+      # recem-publicado no Blob); FRED_API_KEY opcional (sem ela usa fredgraph.csv).
+      - name: Valuation global EUA (Buffett, CAPE Shiller, SPY)
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: |
+          python data-pipeline/python/build_global_valuation.py --upload
+        continue-on-error: true
+
       - name: ANBIMA TPF - historico curva juros (Pre + IPCA+)
         run: |
           python data-pipeline/python/build_anbima_tpf.py \
@@ -93,5 +102,6 @@ jobs:
             data-pipeline/out/market_*.json
             data-pipeline/out/treasury_history.json
             data-pipeline/out/credit_spreads_history.json
+            data-pipeline/out/global_valuation.json
           if-no-files-found: warn
           retention-days: 7

@@ -1,10 +1,11 @@
 export const dynamic = "force-dynamic";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { MarketCard } from "@/components/painel/market/MarketCard";
-import { TickerSparkline } from "@/components/painel/market/TickerSparkline";
+import { AtivoHeroChart, type AtivoHeroBenchmark } from "@/components/painel/market/AtivoHeroChart";
 import {
   classLabel,
   formatBigNumber,
@@ -14,9 +15,12 @@ import {
   getMarketFundamentals,
   getMarketHistoryFull,
   getMarketHistoryLatest,
+  type AssetClass,
   type CatalogAsset,
   type FundamentalsInfo,
+  type MarketHistoryFull,
 } from "@/lib/painel-market-data";
+import type { AzUnit } from "@/components/painel/charts";
 import { variationText } from "@/lib/az-chart-theme";
 import { fmtSignedPct } from "@/lib/format-br";
 
@@ -30,6 +34,62 @@ function findCatalogAsset(catalog: CatalogAsset[], slug: string): CatalogAsset |
     catalog.find((a) => a.name.toLowerCase() === decoded.toLowerCase()) ??
     null
   );
+}
+
+/**
+ * Benchmark de comparação por CLASSE de ativo (a pergunta que o leitor faz:
+ * "bati o índice da minha classe?"). Tickers conferidos no catálogo do
+ * pipeline (data-pipeline/python/market_catalog.py → market_history_full):
+ * ^BVSP, ^GSPC, DX-Y.NYB (DXY), GC=F e BTC-USD estão todos no histórico.
+ * Labels casam com BENCHMARK_COLORS (cor fixa) quando existe a convenção.
+ */
+const BENCHMARK_BY_CLASS: Record<AssetClass, { ticker: string; label: string }> = {
+  br_acoes: { ticker: "^BVSP", label: "Ibovespa" },
+  br_etf: { ticker: "^BVSP", label: "Ibovespa" },
+  br_fii: { ticker: "^BVSP", label: "Ibovespa" },
+  us_acoes: { ticker: "^GSPC", label: "S&P 500" },
+  us_etf: { ticker: "^GSPC", label: "S&P 500" },
+  indice: { ticker: "^GSPC", label: "S&P 500" },
+  fx: { ticker: "DX-Y.NYB", label: "DXY" },
+  commodity: { ticker: "GC=F", label: "Ouro" },
+  cripto: { ticker: "BTC-USD", label: "Bitcoin" },
+};
+
+/** Quando o próprio ativo É o benchmark da classe, oferece o alternativo óbvio. */
+const BENCHMARK_ALT: Record<string, { ticker: string; label: string }> = {
+  "^BVSP": { ticker: "^GSPC", label: "S&P 500" },
+  "^GSPC": { ticker: "^BVSP", label: "Ibovespa" },
+  "DX-Y.NYB": { ticker: "BRL=X", label: "USD/BRL" },
+  "GC=F": { ticker: "DX-Y.NYB", label: "DXY" },
+  "BTC-USD": { ticker: "ETH-USD", label: "Ethereum" },
+};
+
+/**
+ * Resolve o benchmark da classe e FATIA a série no servidor (recorta ao range
+ * do ativo — nunca manda o JSON inteiro pro client). Fallback: se o benchmark
+ * escolhido não está no histórico, cai pro ^GSPC; se nada, null (sem toggle).
+ */
+function pickBenchmark(
+  asset: CatalogAsset,
+  full: MarketHistoryFull | null,
+  assetFirstDate: string | undefined,
+): AtivoHeroBenchmark | null {
+  let cand = BENCHMARK_BY_CLASS[asset.klass] ?? null;
+  if (cand && cand.ticker === asset.ticker) cand = BENCHMARK_ALT[asset.ticker] ?? null;
+  if (!cand) return null;
+
+  let series = full?.tickers[cand.ticker]?.series_daily ?? [];
+  if (series.length < 2 && cand.ticker !== "^GSPC" && asset.ticker !== "^GSPC") {
+    cand = { ticker: "^GSPC", label: "S&P 500" };
+    series = full?.tickers["^GSPC"]?.series_daily ?? [];
+  }
+  if (series.length < 2) return null;
+
+  // Recorta o benchmark p/ começar junto com o ativo: o "Máx" da janela é o
+  // máximo do ATIVO, não dos 5 anos do índice.
+  const sliced = assetFirstDate ? series.filter(([d]) => d >= assetFirstDate) : series;
+  if (sliced.length < 2) return null;
+  return { ticker: cand.ticker, label: cand.label, series: sliced };
 }
 
 const STAT_GROUPS: Array<{ label: string; rows: Array<[string, keyof FundamentalsInfo, "ratio" | "pct" | "big" | "raw"]> }> = [
@@ -111,15 +171,31 @@ export default async function AtivoPage({ params }: Props) {
   const tk = asset.ticker;
   const assetCurrency = asset.currency;
   const latestRow = latest?.tickers[tk] ?? null;
+  // Série COMPLETA disponível (até 5 anos) — alimenta o hero chart.
   const series = full?.tickers[tk]?.series_daily ?? [];
-  // Pega 1y de série (~252 pregões) pro sparkline
+  // Último 1y (~252 pregões) só p/ o range de 52 semanas.
   const series1y = series.slice(Math.max(0, series.length - 252));
   const fund = fundamentals?.tickers[tk] ?? null;
   const info = fund?.info ?? null;
 
   const last = latestRow?.last_close ?? null;
   const dayChange = latestRow?.returns["1d"] ?? null;
-  const positive = (dayChange ?? 0) >= 0;
+
+  // Benchmark da classe, já fatiado no servidor (nunca o JSON inteiro).
+  const benchmark = pickBenchmark(asset, full, series[0]?.[0]);
+  // Unidade do eixo no modo raw: índices em pontos-índice; BRL em R$; resto número puro.
+  const heroUnit: AzUnit = asset.klass === "indice" ? "index" : assetCurrency === "BRL" ? "R$" : "none";
+
+  // Range 52 semanas a partir da própria série (fallback: .info do Yahoo).
+  const closes1y = series1y.map(([, v]) => v).filter((v) => Number.isFinite(v));
+  const low52 = closes1y.length > 0 ? Math.min(...closes1y) : info?.fiftyTwoWeekLow ?? null;
+  const high52 = closes1y.length > 0 ? Math.max(...closes1y) : info?.fiftyTwoWeekHigh ?? null;
+  const range52Pct =
+    last != null && low52 != null && high52 != null && high52 > low52
+      ? Math.min(100, Math.max(0, ((last - low52) / (high52 - low52)) * 100))
+      : null;
+  const fmtPrice = (v: number) =>
+    `${assetCurrency === "BRL" ? "R$ " : "US$ "}${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
 
   // Peers do mesmo setor (mesma klass, mesmo sector)
   const peers = catalog
@@ -190,23 +266,55 @@ export default async function AtivoPage({ params }: Props) {
                 );
               })}
             </dl>
+
+            {/* Range 52 semanas: mín—máx com marcador da cotação atual */}
+            {range52Pct != null && low52 != null && high52 != null ? (
+              <div className="mt-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                  Range 52 semanas
+                </p>
+                <div
+                  className="relative mt-2 h-1.5 rounded-full bg-gradient-to-r from-[#BE3B33]/25 via-zinc-200 to-[#1E8A5C]/25"
+                  role="img"
+                  aria-label={`Cotação atual a ${range52Pct.toFixed(0)}% do caminho entre a mínima e a máxima de 52 semanas`}
+                >
+                  <span
+                    aria-hidden
+                    className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#027DFC] shadow-md"
+                    style={{ left: `${range52Pct}%` }}
+                  />
+                </div>
+                <div className="mt-1.5 flex items-baseline justify-between text-[10px] tabular-nums text-zinc-500">
+                  <span>
+                    mín <span className="font-semibold text-[#132960]">{fmtPrice(low52)}</span>
+                  </span>
+                  <span>
+                    máx <span className="font-semibold text-[#132960]">{fmtPrice(high52)}</span>
+                  </span>
+                </div>
+              </div>
+            ) : null}
           </div>
         </MarketCard>
 
-        <MarketCard
-          title="Histórico 1 ano"
-          subtitle="Preço bruto (close ajustado)"
-          stampGiro={full?.generated_at ?? null}
-          stampDado={series1y[series1y.length - 1]?.[0] ?? null}
-        >
-          {series1y.length > 1 ? (
-            <TickerSparkline series={series1y} positive={positive} height={180} />
-          ) : (
-            <div className="py-10 text-center text-sm text-zinc-500">
-              Sem série histórica disponível para este ativo.
-            </div>
-          )}
-        </MarketCard>
+        {/*
+          O AzPeriodSelector (dentro do AtivoHeroChart) chama useSearchParams().
+          Esta página é force-dynamic, então o Next 16 não EXIGE <Suspense>
+          (o build só falha em rotas prerenderizadas estaticamente), mas
+          seguimos a convenção do repo (índices-globais/câmbio/commodities) e
+          envolvemos mesmo assim; o seletor roda controlado por estado local,
+          sem querystring.
+        */}
+        <Suspense fallback={<div className="min-h-[380px] animate-pulse rounded-2xl bg-white/60" />}>
+          <AtivoHeroChart
+            name={asset.name}
+            series={series}
+            unit={heroUnit}
+            benchmark={benchmark}
+            stampGiro={full?.generated_at ?? null}
+            stampDado={series[series.length - 1]?.[0] ?? null}
+          />
+        </Suspense>
       </div>
 
       {/* Stats */}

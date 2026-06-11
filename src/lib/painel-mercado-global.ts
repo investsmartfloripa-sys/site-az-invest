@@ -140,6 +140,82 @@ export async function getFxTopMovers(): Promise<FxTopMoversPayload | null> {
 }
 
 // ---------------------------------------------------------------------------
+// Valuation EUA (data/global_valuation.json — market-data.yml, diário útil)
+// ---------------------------------------------------------------------------
+
+/** Estatísticas média ± 1σ de uma série de valuation (mesmo formato do pl_stats do Ibov). */
+export type GlobalValuationStats = {
+  mean: number;
+  sd: number;
+  minus1: number;
+  plus1: number;
+  current_z: number | null;
+  n_points: number;
+};
+
+export type BuffettBlock = {
+  current?: { date: string; ratio_pct: number } | null;
+  stats?: GlobalValuationStats | null;
+  /** [["YYYY-MM-DD", % do PIB], ...] — trimestral (Z.1 do Fed). */
+  series?: Array<[string, number]>;
+  numerator_series?: string;
+  denominator_series?: string;
+  frequency?: string;
+  /** true = build mais recente falhou e o bloco preserva o último dado bom. */
+  stale?: boolean;
+  source?: string;
+  note?: string;
+};
+
+export type CapeBlock = {
+  current?: { date: string; value: number } | null;
+  stats?: GlobalValuationStats | null;
+  /** [["YYYY-MM-01", CAPE], ...] — mensal desde ~1881 (Shiller/Yale). */
+  series?: Array<[string, number]>;
+  stale?: boolean;
+  source?: string;
+};
+
+export type SpyValuationPoint = {
+  date: string;
+  trailing_pe: number | null;
+  forward_pe: number | null;
+  /** Em % (0,98 = 0,98% a.a.). */
+  dy_pct: number | null;
+};
+
+export type SpyBlock = {
+  current?: {
+    date: string;
+    trailing_pe: number | null;
+    forward_pe: number | null;
+    dividend_yield_pct: number | null;
+  } | null;
+  /** Série acumulada de snapshots diários (cresce 1 ponto por dia útil). */
+  series?: SpyValuationPoint[];
+  stale?: boolean;
+  source?: string;
+};
+
+export type GlobalValuationPayload = {
+  status?: string;
+  generated_at?: string;
+  schema_version?: number;
+  buffett?: BuffettBlock | null;
+  cape?: CapeBlock | null;
+  spy?: SpyBlock | null;
+};
+
+/**
+ * Valuation EUA (indicador Buffett, CAPE Shiller e múltiplos do SPY).
+ * null enquanto o pipeline não publicar o blob (ou em falha de fetch) —
+ * a página degrada com PipelinePendingCard.
+ */
+export async function getGlobalValuation(): Promise<GlobalValuationPayload | null> {
+  return fetchPanoramaJson<GlobalValuationPayload>("data/global_valuation.json");
+}
+
+// ---------------------------------------------------------------------------
 // Recorte do histórico de 5 anos (market_history_full.json)
 // ---------------------------------------------------------------------------
 

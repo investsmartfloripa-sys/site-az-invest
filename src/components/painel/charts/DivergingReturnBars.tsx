@@ -46,6 +46,19 @@ export type DivergingReturnBarsProps = {
   yAxisWidth?: number;
   /** Casas decimais do rótulo na ponta. Default 1. */
   labelDec?: number;
+  /**
+   * Formata rótulo da ponta E tooltip — p/ unidades ≠ "%" (ex.: contribuições
+   * em p.p. no painel de inflação). Default: fmtSignedPct.
+   */
+  valueFmt?: (v: number) => string;
+  /** Formata os ticks do eixo X (acompanha valueFmt). Default: fmtSignedPct. */
+  axisFmt?: (v: number) => string;
+  /**
+   * Cor de cada barra pela direção. Default: variationFill (verde sobe /
+   * vermelho cai). Painéis de inflação INVERTEM a semântica (alta = vermelho,
+   * queda = azul) — exceção documentada no PADRAO-VISUAL-GRAFICOS.md.
+   */
+  fillFor?: (v: number) => string;
   className?: string;
 };
 
@@ -58,11 +71,20 @@ export function DivergingReturnBars({
   xDomain,
   yAxisWidth = 128,
   labelDec = 1,
+  valueFmt,
+  axisFmt,
+  fillFor,
   className = "",
 }: DivergingReturnBarsProps) {
   if (rows.length === 0) {
     return <p className="py-6 text-center text-sm text-zinc-400">Sem dados para este período.</p>;
   }
+
+  const fmtLabel = valueFmt ?? ((v: number) => fmtSignedPct(v, labelDec));
+  const fmtTooltip = valueFmt ?? ((v: number) => fmtSignedPct(v, 2));
+  const fmtAxis =
+    axisFmt ?? ((v: number) => fmtSignedPct(v, Math.abs(v) < 1 ? 1 : 0));
+  const fill = fillFor ?? variationFill;
 
   const data = rows.map((r) => ({ name: truncate(r.label), value: r.value }));
   const height = 28 * data.length + 56;
@@ -81,7 +103,7 @@ export function DivergingReturnBars({
             {...azXAxisProps()}
             type="number"
             domain={xDomain ?? ["auto", "auto"]}
-            tickFormatter={(v) => fmtSignedPct(Number(v), Math.abs(Number(v)) < 1 ? 1 : 0)}
+            tickFormatter={(v) => fmtAxis(Number(v))}
             tickCount={5}
           />
           <YAxis
@@ -95,19 +117,19 @@ export function DivergingReturnBars({
           />
           <ReferenceLine {...azZeroLineProps("x")} />
           <Tooltip
-            content={<AzTooltip hideDot valueFmt={(v) => fmtSignedPct(v, 2)} />}
+            content={<AzTooltip hideDot valueFmt={(v) => fmtTooltip(v)} />}
             cursor={AZ_TOOLTIP_PROPS.cursor}
           />
           <Bar dataKey="value" radius={[0, 3, 3, 0]} maxBarSize={16} isAnimationActive={false}>
             {data.map((e, i) => (
-              <Cell key={`${e.name}-${i}`} fill={variationFill(e.value)} />
+              <Cell key={`${e.name}-${i}`} fill={fill(e.value)} />
             ))}
             <LabelList
               dataKey="value"
               position="right"
               formatter={(v) => {
                 const n = typeof v === "number" ? v : Number(v);
-                return Number.isFinite(n) ? fmtSignedPct(n, labelDec) : "";
+                return Number.isFinite(n) ? fmtLabel(n) : "";
               }}
               style={{ fontSize: 10.5, fill: "#475569", fontVariantNumeric: "tabular-nums" }}
             />

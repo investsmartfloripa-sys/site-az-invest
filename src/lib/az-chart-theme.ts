@@ -86,6 +86,13 @@ export function seriesColor(index: number): string {
 }
 
 /**
+ * 9ª cor p/ gráficos EMPILHADOS com 9 categorias simultâneas (ex.: grupos do
+ * IPCA). Fica FORA do ciclo de `seriesColor` de propósito — incluí-la na
+ * AZ_SERIES mudaria a cor de séries existentes no site inteiro.
+ */
+export const AZ_SERIES_EXTRA = "#DB2777"; // rosa
+
+/**
  * Mapa FIXO benchmark → cor: a mesma série usa a mesma cor no site inteiro.
  * Resolva pelo `benchmarkColor(label)` (normaliza aliases tipo "Ibovespa").
  */
