@@ -51,6 +51,10 @@ function navForSession(session: SessionUser, pendingReviewCount: number): Worksp
     { href: "/area-restrita/metricas", label: "Métricas", icon: "metricas" },
   );
 
+  if (canManageAllAuthors(session)) {
+    items.push({ href: "/area-restrita/atividade", label: "Atividade", icon: "atividade" });
+  }
+
   if (canViewDataHealth(session)) {
     items.push({ href: "/area-restrita/dados", label: "Saúde dos dados", icon: "dados" });
   }

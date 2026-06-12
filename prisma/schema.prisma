@@ -179,6 +179,23 @@ model DataSourceSnapshot {
   checkedAt      DateTime  @default(now())
 }
 
+/// Anotação de CRM sobre leads existentes (AuthorWhatsappClick, FiiLead,
+/// ConsorcioLead, AuthorLead). Tabela única e aditiva — evita alterar as 4
+/// tabelas de captura e mantém a migration sem risco para produção.
+model LeadStatus {
+  id        Int      @id @default(autoincrement())
+  leadTipo  String // "whatsapp" | "fii" | "consorcio" | "form"
+  leadId    Int
+  status    String   @default("novo") // novo | contactado | convertido | descartado
+  nota      String?
+  updatedBy Int?
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([leadTipo, leadId])
+  @@index([status])
+}
+
 model AuditLog {
   id        Int      @id @default(autoincrement())
   userId    Int?

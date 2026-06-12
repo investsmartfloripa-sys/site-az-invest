@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Database,
   FileText,
+  History,
   Inbox,
   LayoutDashboard,
   LogOut,
@@ -32,6 +33,7 @@ const NAV_ICONS = {
   autores: Users,
   leads: Inbox,
   metricas: ChartColumn,
+  atividade: History,
   dados: Database,
   usuarios: Shield,
 } as const;
@@ -57,6 +59,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   autores: "Autores",
   leads: "Leads",
   metricas: "Métricas",
+  atividade: "Atividade",
   dados: "Saúde dos dados",
   usuarios: "Usuários",
   perfil: "Meu perfil",
