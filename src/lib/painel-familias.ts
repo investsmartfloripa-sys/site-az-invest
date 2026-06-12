@@ -53,6 +53,7 @@ export type ComposicaoPctPonto = {
 // Tipos — Endividamento (B)
 // ---------------------------------------------------------------------------
 export type FamiliasEndividamentoData = {
+  schema_version?: number;
   gerado_em: string;
   fonte_principal: string;
   ultima_referencia_mensal: string | null;
@@ -78,6 +79,13 @@ export type FamiliasEndividamentoData = {
     series_pontos: Record<string, SeriePonto[]>;
     composicao_pct: ComposicaoPctPonto[];
     codigos_sgs: Record<string, number>;
+  };
+  /** v2: A QUE PREÇO a família deve — taxas médias % a.a. (pf_total, livres_total,
+   * consignado_total, pessoal_nao_consignado, veiculos) + selic_media_aa. */
+  bloco_juros?: {
+    series_pontos: Record<string, SeriePonto[]>;
+    codigos_sgs: Record<string, number>;
+    _nota?: string;
   };
   metadata: {
     fonte: string;
@@ -182,9 +190,12 @@ export type FipezapPonto = {
   data: string;
   indice: number;
   var_pct_aa: number | null;
+  /** v2: IPCA acum. 12m (SGS 13522) — a distância p/ var_pct_aa é a valorização REAL. */
+  ipca_12m?: number | null;
 };
 
 export type FamiliasPoderCompraData = {
+  schema_version?: number;
   gerado_em: string;
   mes_recente: string | null;
   fonte_principal: string;
@@ -209,10 +220,15 @@ export type FamiliasPoderCompraData = {
     serie: CestaPonto[];
     horas_mes_referencia: number;
     fonte: string;
+    /** v2: painel fixo de capitais (códigos IBGE) usado na média. */
+    painel_capitais?: string[];
+    nota_v2?: string;
   };
   bloco_cambio_ptax: {
     serie: CambioPonto[];
     fonte: string;
+    /** v2: régua do gráfico/KPI cambial. */
+    media_20a_sm_usd_ptax?: number | null;
   };
   bloco_ppc: {
     serie: PpcPonto[];
@@ -257,6 +273,9 @@ export type TransferenciaPonto = {
   pbf_valor_milhoes?: number;
   bpc_valor_milhoes?: number;
   bpc_pessoas?: number;
+  /** v2: R$ constantes (deflator INPC composto, base = último mês com INPC). */
+  pbf_valor_real_milhoes?: number | null;
+  bpc_valor_real_milhoes?: number | null;
 };
 
 export type GiniPonto = { ano: string; valor: number };
@@ -269,9 +288,12 @@ export type IpcaFaixaPonto = {
   media?: number;
   media_alta?: number;
   alta?: number;
+  /** v2 (só em serie_12m): muito_baixa − alta, em p.p. — a resposta de "quem sente mais?". */
+  spread_pp?: number;
 };
 
 export type FamiliasEstruturaSocialData = {
+  schema_version?: number;
   gerado_em: string;
   ano_recente: string | null;
   mes_recente_mensal: string | null;

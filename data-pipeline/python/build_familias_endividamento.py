@@ -61,6 +61,23 @@ ENDIVIDAMENTO = {
     "sem_habitacional": 29038,     # exceto habitacional
 }
 
+# v2 — A QUE PREÇO a família deve: taxas médias de juros PF (% a.a.) + Selic.
+# Códigos VALIDADOS no catálogo dadosabertos + sanity de magnitude (abr/2026):
+# 20716=39,0 | 20740=63,0 | 20745=23,9 | 20742=125,1 | 20749=26,6 | 4189=14,4.
+# Rotativo (~430% a.a.) fica FORA do gráfico por escala — citado em nota.
+JUROS_PF = {
+    "pf_total": 20716,             # PF total (livres + direcionados)
+    "livres_total": 20740,         # PF recursos livres — total
+    "consignado_total": 20745,     # crédito pessoal consignado — total
+    "pessoal_nao_consignado": 20742,
+    "veiculos": 20749,             # aquisição de veículos
+    "selic_media_aa": 4189,        # Selic acumulada no mês anualizada (base 252)
+}
+JUROS_SANITY = {  # faixas largas — pega código trocado sem falso alarme
+    "pf_total": (15, 90), "livres_total": (25, 120), "consignado_total": (12, 45),
+    "pessoal_nao_consignado": (40, 250), "veiculos": (12, 60), "selic_media_aa": (1, 30),
+}
+
 COMPROMETIMENTO = {
     "servico_divida": 29034,       # total = juros + amortizacao (com ajuste sazonal)
     "juros": 29033,                # parcela de juros
@@ -216,6 +233,19 @@ def main() -> None:
         estoque[k] = sgs_serie(c)
         time.sleep(0.4)
 
+    print("== SGS — Juros PF (v2) ==")
+    juros_pf: dict[str, dict[str, float | None]] = {}
+    for k, c in JUROS_PF.items():
+        juros_pf[k] = sgs_serie(c)
+        # sanity de magnitude no último valor — pega código trocado ANTES de publicar
+        vals = [v for v in juros_pf[k].values() if v is not None]
+        if vals:
+            lo, hi = JUROS_SANITY[k]
+            if not (lo <= vals[-1] <= hi):
+                print(f"  [ERROR] juros {k} (SGS {c}) = {vals[-1]} fora da faixa [{lo},{hi}] — descartando série", file=sys.stderr)
+                juros_pf[k] = {}
+        time.sleep(0.4)
+
     # ---- Merge incremental contra Blob (registra revisões) ----
     prev_payload = None
     if not args.no_merge:
@@ -253,6 +283,7 @@ def main() -> None:
     endiv_block = merge_block(endiv, ["bloco_endividamento"])
     compr_block = merge_block(compr, ["bloco_comprometimento"])
     inad_block = merge_block(inad, ["bloco_inadimplencia"])
+    juros_block = merge_block(juros_pf, ["bloco_juros"])
     # use_prev=False: o Blob anterior guardava CONCESSÕES (códigos errados) sob as
     # mesmas chaves — preservar aquele histórico misturaria fluxo com saldo.
     estoque_block = merge_block(estoque, ["bloco_estoque"], use_prev=False)
@@ -344,6 +375,7 @@ def main() -> None:
 
     # ---- Output ----
     payload = {
+        "schema_version": 2,
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "fonte_principal": "Banco Central do Brasil — SGS (RNDBF)",
         "ultima_referencia_mensal": k_end,
@@ -362,6 +394,13 @@ def main() -> None:
             "series_raw": inad_block["series_raw"],
             "series_pontos": inad_block["series_pontos"],
             "codigos_sgs": INADIMPLENCIA,
+        },
+        # ── v2: a que preço a família deve (taxas médias % a.a. + Selic) ──
+        "bloco_juros": {
+            "series_raw": juros_block["series_raw"],
+            "series_pontos": juros_block["series_pontos"],
+            "codigos_sgs": JUROS_PF,
+            "_nota": "Taxas médias de juros das operações de crédito PF (% a.a., BCB SGS) + Selic acumulada no mês anualizada (4189). Rotativo (~430% a.a.) fica fora do gráfico por escala — taxa mais alta do SFN por construção (saldo pequeno e residual).",
         },
         "bloco_estoque": {
             "series_raw": estoque_block["series_raw"],

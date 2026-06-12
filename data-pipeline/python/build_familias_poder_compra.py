@@ -87,14 +87,19 @@ def ipea_serie_mensal(serid):
     return out
 
 
-def ipea_cesta_basica_media_capitais(serid="CESBTOTAL", min_cobertura=20):
+def ipea_cesta_basica_media_capitais(serid="CESBTOTAL", desde="2010-01", presenca_min=0.9):
+    """v2: PAINEL FIXO de capitais. A cobertura do DIEESE oscilou (27 capitais só em
+    2015-18 e 2025+; ~17 no resto) — a média com min_cobertura=20 produzia uma série
+    de 46 pontos com um BURACO de ~6,5 anos que o eixo do gráfico emendava em linha
+    contínua (desinformação silenciosa). O painel = capitais presentes em >=90% dos
+    meses desde 2010; a média mensal exige o painel quase completo (>=90% dele)."""
     url = f"{IPEA_BASE}(SERCODIGO='{serid}')"
-    print(f"  [IPEA {serid} agreg capitais]")
+    print(f"  [IPEA {serid} painel fixo de capitais]")
     try: rows = _get(url, timeout=120).json().get("value", [])
     except Exception as e:
         print(f"  [IPEA {serid}] FAIL: {e}", file=sys.stderr)
-        return {}
-    soma = defaultdict(float); contagem = defaultdict(int)
+        return {}, []
+    por_capital = defaultdict(dict)
     for r in rows:
         ter = str(r.get("TERCODIGO") or "")
         if ter not in CAPITAIS_CODIGOS: continue
@@ -104,13 +109,24 @@ def ipea_cesta_basica_media_capitais(serid="CESBTOTAL", min_cobertura=20):
         try: v = float(v_raw)
         except: continue
         ym = _ym(d_raw[:10])
-        soma[ym] += v
-        contagem[ym] += 1
+        if ym >= desde[:7]:
+            por_capital[ter][ym] = v
+    if not por_capital:
+        return {}, []
+    meses_todos = sorted(set().union(*[set(d.keys()) for d in por_capital.values()]))
+    n_meses = len(meses_todos)
+    painel = [t for t, d in por_capital.items() if len(d) >= presenca_min * n_meses]
+    if len(painel) < 5:
+        print(f"  [IPEA {serid}] WARN: painel fixo com só {len(painel)} capitais — série descartada", file=sys.stderr)
+        return {}, painel
+    minimo_mes = max(1, int(0.9 * len(painel)))
     out = {}
-    for ym, s in soma.items():
-        if contagem[ym] >= min_cobertura:
-            out[ym] = round(s / contagem[ym], 2)
-    return out
+    for ym in meses_todos:
+        vals = [por_capital[t][ym] for t in painel if ym in por_capital[t]]
+        if len(vals) >= minimo_mes:
+            out[ym] = round(sum(vals) / len(vals), 2)
+    print(f"  painel: {len(painel)} capitais | {len(out)} meses contínuos")
+    return out, painel
 
 
 def carrega_renda_pnad(out_dir):
@@ -199,10 +215,11 @@ def main():
 
     sm_nominal = sgs_serie_mensal(1619)
     ptax_media = sgs_serie_mensal(3697)
-    cesta = ipea_cesta_basica_media_capitais("CESBTOTAL")
+    cesta, painel_capitais = ipea_cesta_basica_media_capitais("CESBTOTAL")
     sm_usd_ppc = ipea_serie_mensal("GAC12_SALMINDOL12")
     ppc_taxa = ipea_serie_mensal("GAC12_PPCTAXAC12")
     fipezap = ipea_serie_mensal("FIPE12_VENBR12")
+    ipca_12m = sgs_serie_mensal(13522)  # v2: IPCA acum 12m — par do FipeZap (valorização REAL)
     renda_pnad = carrega_renda_pnad(out_dir)
 
     serie_cesta = build_serie_cesta(cesta, sm_nominal)
@@ -210,8 +227,16 @@ def main():
     serie_ppc = build_serie_ppc(sm_usd_ppc, ppc_taxa)
     serie_renda_usd = build_serie_renda_usd(renda_pnad, ptax_media)
     serie_fipezap = build_serie_fipezap(fipezap)
+    # v2: IPCA 12m na própria linha do FipeZap (distância entre as curvas = valorização real)
+    for p in serie_fipezap:
+        v = ipca_12m.get(p["data"])
+        p["ipca_12m"] = round(v, 2) if v is not None else None
 
-    print(f"\n  cesta={len(serie_cesta)} cambio={len(serie_cambio)} ppc={len(serie_ppc)} renda_usd={len(serie_renda_usd)} fipezap={len(serie_fipezap)}")
+    # v2: régua do KPI/gráfico cambial — média de 20 anos da série SM em US$ PTAX
+    vals_20a = [p["sm_usd_ptax"] for p in serie_cambio[-240:] if p.get("sm_usd_ptax") is not None]
+    media_20a_ptax = round(sum(vals_20a) / len(vals_20a), 2) if vals_20a else None
+
+    print(f"\n  cesta={len(serie_cesta)} cambio={len(serie_cambio)} ppc={len(serie_ppc)} renda_usd={len(serie_renda_usd)} fipezap={len(serie_fipezap)} | media 20a PTAX: {media_20a_ptax}")
 
     def last_pt(s, k):
         for p in reversed(s):
@@ -237,16 +262,25 @@ def main():
     }
 
     payload = {
+        "schema_version": 2,
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "mes_recente": cm_dt,
         "fonte_principal": "BCB SGS + Ipeadata",
         "hero": hero,
         "bloco_cesta_basica": {"serie": serie_cesta, "horas_mes_referencia": HORAS_MES_PADRAO,
-                                "fonte": "Ipeadata CESBTOTAL (DIEESE media 27 capitais)"},
-        "bloco_cambio_ptax": {"serie": serie_cambio, "fonte": "BCB SGS 1619 / 3697"},
+                                "painel_capitais": painel_capitais,
+                                "fonte": "Ipeadata CESBTOTAL (DIEESE) — média simples de PAINEL FIXO de capitais",
+                                "nota_v2": "Painel fixo (capitais com >=90% de presença desde 2010) — a cobertura "
+                                           "DIEESE oscilou e a média de todas produzia série com buraco de ~6,5 anos. "
+                                           "Cálculo sobre SM BRUTO/220h — difere do indicador DIEESE oficial (SM líquido)."},
+        "bloco_cambio_ptax": {"serie": serie_cambio, "media_20a_sm_usd_ptax": media_20a_ptax,
+                               "fonte": "BCB SGS 1619 / 3697"},
         "bloco_ppc": {"serie": serie_ppc, "fonte": "Ipeadata GAC12_SALMINDOL12 + GAC12_PPCTAXAC12"},
         "bloco_renda_media_usd": {"serie": serie_renda_usd, "fonte": "PNAD / SGS 3697"},
-        "bloco_fipezap": {"serie": serie_fipezap, "fonte": "Ipeadata FIPE12_VENBR12"},
+        "bloco_fipezap": {"serie": serie_fipezap,
+                           "fonte": "Ipeadata FIPE12_VENBR12 + BCB SGS 13522 (IPCA 12m)",
+                           "nota_v2": "var_pct_aa vs ipca_12m no mesmo eixo: a distância entre as linhas é a "
+                                      "valorização REAL dos imóveis (de ~2014 a 2020 o preço real CAIU)."},
         "metadata": {"fonte": "BCB SGS, Ipeadata", "defasagem_publicacao": "1 mes (SGS); 30-60 dias (Ipeadata)."},
     }
 

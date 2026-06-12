@@ -212,6 +212,76 @@ def build_ipca(faixas):
     return out
 
 
+def sgs_mensal(cod):
+    """BCB SGS — série mensal {YYYY-MM: valor} (usada p/ o deflator INPC, SGS 188)."""
+    url = f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.{cod}/dados?formato=json"
+    print(f"  [SGS {cod}]")
+    try:
+        rows = _get(url, timeout=90).json()
+    except Exception as e:
+        print(f"  [SGS {cod}] FAIL: {e}", file=sys.stderr)
+        return {}
+    out = {}
+    for r in rows:
+        try:
+            d, m, y = r["data"].split("/")
+            out[f"{y}-{m}"] = float(r["valor"])
+        except (KeyError, ValueError):
+            continue
+    return out
+
+
+def build_ipca_12m(faixas):
+    """v2: acumulado 12 MESES por faixa — composto Π(1+v/100)−1 rolling, nunca soma.
+    Responde 'quem sente mais a inflação agora?'; a variação mensal crua em 6 linhas
+    era espaguete de ruído. Inclui o SPREAD muito_baixa−alta (a resposta da pergunta)."""
+    series = {}
+    for code, nome in FAIXAS_IPCA.items():
+        d = faixas.get(code) or {}
+        meses = sorted(m for m, v in d.items() if v is not None)
+        acum = {}
+        for i in range(11, len(meses)):
+            janela = meses[i - 11 : i + 1]
+            fator = 1.0
+            for mm in janela:
+                fator *= 1 + d[mm] / 100
+            acum[meses[i]] = round((fator - 1) * 100, 2)
+        series[nome] = acum
+    todos = sorted(set().union(*[set(s.keys()) for s in series.values()])) if series else []
+    out = []
+    for m in todos:
+        p = {"data": m}
+        for nome, s in series.items():
+            if s.get(m) is not None:
+                p[nome] = s[m]
+        if p.get("muito_baixa") is not None and p.get("alta") is not None:
+            p["spread_pp"] = round(p["muito_baixa"] - p["alta"], 2)
+        if len(p) > 1:
+            out.append(p)
+    return out
+
+
+def aplica_transferencias_reais(s_tran, inpc_mensal):
+    """v2: PBF/BPC em R$ CONSTANTES (INPC composto, base = último mês com INPC).
+    INPC é o deflator canônico p/ benefícios de famílias de baixa renda (cesta 1-5 SM;
+    o BPC é indexado ao SM, corrigido por INPC). Nominal por 5 anos era só inflação."""
+    idx = 100.0
+    indice = {}
+    for m in sorted(m for m, v in inpc_mensal.items() if v is not None):
+        idx *= 1 + inpc_mensal[m] / 100
+        indice[m] = idx
+    if not indice:
+        return s_tran
+    base = indice[sorted(indice.keys())[-1]]
+    indice = {m: v / base * 100 for m, v in indice.items()}
+    for p in s_tran:
+        i = indice.get(p["data"], 100.0)
+        for campo in ("pbf_valor_milhoes", "bpc_valor_milhoes"):
+            v = p.get(campo)
+            p[campo.replace("_milhoes", "_real_milhoes")] = round(v / i * 100, 1) if (v is not None and i) else None
+    return s_tran
+
+
 def build_ipca_indice(faixas):
     """Acumula a variacao MENSAL (DIMAC_INF* tem unidade '% a.m.' no metadado Ipeadata)
     em indice base 100 no primeiro mes disponivel de cada faixa (jul/2006).
@@ -279,7 +349,13 @@ def main():
     s_ipca = build_ipca(faixas)
     s_ipca_idx = build_ipca_indice(faixas)
 
-    print(f"\n  conc={len(s_conc)} pobr={len(s_pobr)} tran={len(s_tran)} gini={len(s_gini)} ipca={len(s_ipca)}")
+    # ── v2: acumulado 12m por faixa (com spread) + transferências em R$ reais (INPC) ──
+    s_ipca_12m = build_ipca_12m(faixas)
+    print("== INPC (SGS 188) p/ deflacionar transferencias ==")
+    inpc = sgs_mensal(188)
+    s_tran = aplica_transferencias_reais(s_tran, inpc)
+
+    print(f"\n  conc={len(s_conc)} pobr={len(s_pobr)} tran={len(s_tran)} gini={len(s_gini)} ipca={len(s_ipca)} ipca12m={len(s_ipca_12m)}")
 
     # Sanity: serie vazia nao pode virar card vazio no ar (foi o modo de falha do D1
     # com os codigos Ipeadata PNADS_* inexistentes).
@@ -312,6 +388,7 @@ def main():
     }
 
     payload = {
+        "schema_version": 2,
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "ano_recente": ano_pob or ano_gini,
         "mes_recente_mensal": dt_pbf,
@@ -323,12 +400,16 @@ def main():
         "bloco_pobreza": {"serie": s_pobr,
             "fonte": "Ipeadata PNADS_PERCPOBRE300/420/830 + PNADCA_POPPCC215/365"},
         "bloco_transferencias_sociais": {"serie": s_tran,
-            "fonte": "Ipeadata VAL_PBF12 + VAL_BPC + PES_BPC (MDS, agregados Brasil)"},
+            "fonte": "Ipeadata VAL_PBF12 + VAL_BPC + PES_BPC (MDS, agregados Brasil)",
+            "nota_v2": "pbf_valor_real_milhoes/bpc_valor_real_milhoes = R$ constantes do ultimo mes "
+                       "com INPC (SGS 188, composto) — INPC e o deflator canonico de beneficios de baixa renda."},
         "bloco_gini": {"serie": s_gini, "fonte": "SIDRA 7435 var 10681 (PNAD Continua Anual)"},
-        "bloco_ipca_faixa_renda": {"serie": s_ipca, "serie_indice": s_ipca_idx, "faixas": FAIXAS_IPCA,
+        "bloco_ipca_faixa_renda": {"serie": s_ipca, "serie_indice": s_ipca_idx, "serie_12m": s_ipca_12m,
+            "faixas": FAIXAS_IPCA,
             "fonte": "Ipeadata DIMAC_INF1..6 (IPEA Carta de Conjuntura)",
             "nota": "serie = variacao mensal crua (% a.m., unidade original do Ipeadata); "
-                    "serie_indice = acumulado em indice base 100 no primeiro mes (jul/2006)."},
+                    "serie_indice = acumulado em indice base 100 no primeiro mes (jul/2006); "
+                    "serie_12m (v2) = acumulado 12 meses COMPOSTO por faixa + spread_pp (muito_baixa - alta)."},
         "metadata": {"fonte": "Ipeadata (PNADS, PNADCA, MDS), IBGE/SIDRA, IPEA",
             "defasagem_publicacao": "anual (PNAD/Gini); mensal com 1-2 meses (BPC/PBF/IPCA-faixa)."},
     }
