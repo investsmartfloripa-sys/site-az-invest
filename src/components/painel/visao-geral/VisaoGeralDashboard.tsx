@@ -5,20 +5,19 @@ import { useState } from "react";
 import type { VisaoGeralPayload } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
 
-import { BlocoACicloAtual } from "./BlocoA_CicloAtual";
 import { BlocoBAntecedentes } from "./BlocoB_Antecedentes";
-import { BlocoCConfianca } from "./BlocoC_Confianca";
 import { BlocoDHardData } from "./BlocoD_HardData";
-import { BlocoECondicoesFinanceiras } from "./BlocoE_CondicoesFinanceiras";
 import { FraseManchete } from "./FraseManchete";
 import { HeroKpis } from "./HeroKpis";
-import { TermometroSintese } from "./TermometroSintese";
 import { CardProbitAz } from "./CardProbitAz";
+import { CardIbcBrCodace } from "./CardIbcBrCodace";
+import { CardHiatoLeque } from "./CardHiatoLeque";
+import { RelogioCicloCard } from "./RelogioCicloCard";
 
 type Vista = "geral" | "antecedentes" | "coincidentes";
 
 const TABS: { value: Vista; label: string; descr: string }[] = [
-  { value: "geral", label: "1. Geral", descr: "Ensemble de 4 modelos causais de probabilidade de recessão (Diffusion, Gap Hamilton, Probit Fin, Probit AZ Misto)" },
+  { value: "geral", label: "1. Geral", descr: "Ensemble de 4 modelos causais de probabilidade de recessão (Difusão, Gap HP, Probit Financeiro, Probit AZ Misto), IBC-Br com cronologia CODACE, hiato e relógio do ciclo" },
   { value: "antecedentes", label: "2. Antecedentes", descr: "Séries que lideram o PIB em 3-12 meses: OCDE CLI, sondagens FGV/CNI, PIM duráveis/capital, slope DI, Ibov real, EMBI+, Selic real, concessões reais, FENABRAVE" },
   { value: "coincidentes", label: "3. Coincidentes", descr: "Séries que movem com o PIB: quartet TCB (PIM-PF produção, PMC vendas, PNAD emprego), IBC-Br, EPE, ANP, papelão, aço, ANFAVEA, PMS serviços" },
 ];
@@ -28,7 +27,7 @@ function FichaTecnica({ payload }: { payload: VisaoGeralPayload }) {
     { bloco: "IBC-Br (atividade)", mes: payload.ibcbr?.mes_recente, fonte: "BCB SGS 24363 / 24364", url: "https://dadosabertos.bcb.gov.br/dataset/24363-indice-de-atividade-economica-do-banco-central---ibc-br" },
     { bloco: "CODACE cronologia", mes: null, fonte: "FGV-IBRE - CODACE", url: "https://portalibre.fgv.br/codace-cronologia" },
     { bloco: "Hiato HP+Hamilton", mes: payload.hiato?.mes_recente, fonte: "Cálculo próprio sobre IBC-Br", url: "https://www.bcb.gov.br/" },
-    { bloco: "Probabilidade de recessão", mes: payload.probitAz?.mes_recente, fonte: "4 modelos causais: Diffusion + Gap Hamilton 2018 + Probit Fin + Probit AZ Misto", url: "https://blogdoibre.fgv.br/" },
+    { bloco: "Probabilidade de recessão", mes: payload.probitAz?.mes_recente, fonte: "4 modelos causais: Difusão + Gap HP + Probit Financeiro + Probit AZ Misto", url: "https://blogdoibre.fgv.br/" },
     { bloco: "OECD CLI Brasil", mes: payload.oecdCli?.mes_recente, fonte: "DBnomics - OECD MEI_CLI BR (em rodapé, defasagem >12m)", url: "https://db.nomics.world/" },
     { bloco: "FGV confianças", mes: null, fonte: "BCB SGS 21859-21866 (ICE/ICI/ICOM/ICS/ICST/ICA/ICC)", url: "https://portalibre.fgv.br/" },
     { bloco: "CNI (ICEI)", mes: null, fonte: "BCB SGS 7341-7343", url: "https://www.portaldaindustria.com.br/" },
@@ -77,7 +76,7 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
           <h1 className="text-2xl font-bold text-[#132960]">Termômetro do Ciclo Brasileiro</h1>
           {(() => {
             const stamps = [
-              payload.recessao?.gerado_em,
+              payload.probitAz?.gerado_em,
               payload.ibcbr?.gerado_em,
               payload.icf?.gerado_em,
               payload.atividadePim?.gerado_em,
@@ -93,7 +92,7 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
             );
           })()}
         </div>
-        <p className="text-sm text-zinc-600">Síntese prospectiva da atividade econômica brasileira. Combina indicadores antecedentes, hard data físico e condições financeiras com cinco modelos diferentes de probabilidade de recessão.</p>
+        <p className="text-sm text-zinc-600">Síntese prospectiva da atividade econômica brasileira. Combina indicadores antecedentes, hard data físico e condições financeiras com quatro modelos de probabilidade de recessão.</p>
       </header>
 
       <FraseManchete payload={payload} />
@@ -128,13 +127,16 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
         {vista === "geral" && (
           <div className="space-y-6">
             <CardProbitAz data={payload.probitAz} codace={codaceMensal} />
+            <CardIbcBrCodace ibcbr={payload.ibcbr} hiato={payload.hiato} codace={codaceMensal} />
+            <CardHiatoLeque serie={payload.hiato?.serie ?? []} codace={codaceMensal} />
+            <RelogioCicloCard hiato={payload.hiato} />
           </div>
         )}
         {vista === "antecedentes" && (
           <BlocoBAntecedentes oecdCli={payload.oecdCli} fgvAntecedentes={payload.fgvAntecedentes} codace={codaceMensal} icf={payload.icf} credito={payload.credito} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} fgvConfianca={payload.fgvConfianca} cni={payload.cni} antecedentesFin={payload.antecedentesFin} />
         )}
         {vista === "coincidentes" && (
-          <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} atividadePmc={payload.atividadePmc} empregoPnad={payload.empregoPnad} atividadePms={payload.atividadePms} ibcbr={payload.ibcbr} pnadRenda={payload.pnadRenda} hiato={payload.hiato} codace={codaceMensal} />
+          <BlocoDHardData anfavea={payload.anfavea} anp={payload.anp} epe={payload.epe} hardData={payload.hardData} ipeadata={payload.ipeadata} atividadePim={payload.atividadePim} atividadePmc={payload.atividadePmc} empregoPnad={payload.empregoPnad} atividadePms={payload.atividadePms} ibcbr={payload.ibcbr} pnadRenda={payload.pnadRenda} codace={codaceMensal} />
         )}
       </div>
 

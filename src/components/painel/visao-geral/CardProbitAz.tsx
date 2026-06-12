@@ -1,10 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { CartesianGrid, Line, LineChart, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import type { CodaceFaixa, ProbitAzData } from "@/lib/painel-visao-geral";
-import { formatMes } from "@/lib/painel-visao-geral";
+import {
+  Area,
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  ReferenceArea,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import type { CodaceFaixa, ProbitAzContribuicao, ProbitAzData, ProbitAzLabelPt } from "@/lib/painel-visao-geral";
+import { formatMes, resumoProbabilidade } from "@/lib/painel-visao-geral";
 import DataStamp from "@/components/painel/DataStamp";
+
+import { rotuloFaixaCodace } from "./codace-rotulos";
 
 type Modelo = {
   key: string;
@@ -25,7 +37,7 @@ function medianaEstatistica(vs: number[]): number | null {
   return ord.length % 2 === 0 ? (ord[m - 1] + ord[m]) / 2 : ord[m];
 }
 
-// Gauge semicircular SVG (speedometer Hamilton 2011) - Loop 33 #6
+// Gauge semicircular SVG (speedometer) — thresholds 65/35 de Chauvet-Hamilton (2006)
 function GaugeSpeedometer({ valor, label }: { valor: number; label: string }) {
   // valor 0-1, semicirculo de -90 (esquerda) a +90 (direita) - 180 total
   const v = Math.max(0, Math.min(1, valor));
@@ -85,7 +97,7 @@ function GaugeSpeedometer({ valor, label }: { valor: number; label: string }) {
       {/* Sombra do gauge (fundo cinza claro) */}
       <path d={arcPath(0, 180, rOut + 2, rIn - 2)} fill="#f4f4f5" />
 
-      {/* 3 faixas Hamilton 2011 */}
+      {/* 3 faixas — thresholds 65/35 (Chauvet-Hamilton 2006) */}
       <path d={arcPath(0, 63, rOut, rIn)} fill="#10B981" />
       <path d={arcPath(63, 117, rOut, rIn)} fill="#F59E0B" />
       <path d={arcPath(117, 180, rOut, rIn)} fill="#DC2626" />
@@ -124,6 +136,89 @@ function GaugeSpeedometer({ valor, label }: { valor: number; label: string }) {
   );
 }
 
+// Tabela técnica completa (códigos crus, betas) — sempre atrás de <details>
+function TabelaTecnicaContribuicoes({ contribs }: { contribs: ProbitAzContribuicao[] }) {
+  return (
+    <table className="mt-2 w-full text-[10px]">
+      <thead>
+        <tr className="border-b border-zinc-200 text-zinc-500">
+          <th className="text-left py-1">Série (código)</th>
+          <th className="text-right">Coef.</th>
+          <th className="text-right">Valor (desvios)</th>
+          <th className="text-right">Contribuição</th>
+        </tr>
+      </thead>
+      <tbody>
+        {contribs.map((c, i) => (
+          <tr key={i} className="border-b border-zinc-100">
+            <td className="py-1 font-mono text-[9px]">{c.feature}</td>
+            <td className="text-right">{c.beta.toFixed(2)}</td>
+            <td className="text-right">{c.x_std.toFixed(2)}</td>
+            <td className="text-right font-semibold" style={{ color: c.contrib_z >= 0 ? "#DC2626" : "#10B981" }}>
+              {c.contrib_z >= 0 ? "+" : ""}{c.contrib_z.toFixed(2)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+// Barras horizontais divergentes agrupadas por grupo econômico (labels_pt do JSON)
+function ContribuicoesPorGrupo({
+  contribs,
+  labels,
+}: {
+  contribs: ProbitAzContribuicao[];
+  labels: Record<string, ProbitAzLabelPt>;
+}) {
+  const maxAbs = Math.max(0.01, ...contribs.map((c) => Math.abs(c.contrib_z)));
+  const grupos = new Map<string, { rotulo: string; contrib: number }[]>();
+  for (const c of contribs) {
+    const lab = labels[c.feature];
+    const grupo = lab?.grupo ?? "Outros";
+    const rotulo = lab?.rotulo ?? c.feature;
+    const arr = grupos.get(grupo) ?? [];
+    arr.push({ rotulo, contrib: c.contrib_z });
+    grupos.set(grupo, arr);
+  }
+  return (
+    <div className="mt-2 space-y-3">
+      {Array.from(grupos.entries()).map(([grupo, itens]) => (
+        <div key={grupo}>
+          <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{grupo}</div>
+          <div className="mt-1 space-y-1">
+            {itens.map((item, i) => {
+              const pct = Math.round((Math.abs(item.contrib) / maxAbs) * 100);
+              const positivo = item.contrib >= 0;
+              return (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="w-44 shrink-0 truncate text-[10px] text-zinc-700" title={item.rotulo}>{item.rotulo}</span>
+                  <div className="flex h-3 flex-1 items-center">
+                    <div className="flex w-1/2 justify-end">
+                      {!positivo && <div className="h-2 rounded-l bg-emerald-500/80" style={{ width: `${pct}%` }} />}
+                    </div>
+                    <div className="h-3 w-px bg-zinc-300" />
+                    <div className="w-1/2">
+                      {positivo && <div className="h-2 rounded-r bg-rose-500/80" style={{ width: `${pct}%` }} />}
+                    </div>
+                  </div>
+                  <span className="w-12 shrink-0 text-right text-[10px] font-semibold" style={{ color: positivo ? "#DC2626" : "#10B981" }}>
+                    {positivo ? "+" : ""}{item.contrib.toFixed(2)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      <p className="text-[9px] text-zinc-400">
+        Barras para a direita (vermelho) elevam a probabilidade de recessão; para a esquerda (verde), reduzem.
+      </p>
+    </div>
+  );
+}
+
 export function CardProbitAz({
   data,
   codace = [],
@@ -131,8 +226,6 @@ export function CardProbitAz({
   data: ProbitAzData | null;
   codace?: CodaceFaixa[];
 }) {
-  const [showContribs, setShowContribs] = useState(false);
-
   if (!data || !data.serie || data.serie.length === 0) {
     return (
       <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
@@ -142,26 +235,29 @@ export function CardProbitAz({
     );
   }
 
+  // FONTE ÚNICA: probabilidades.mediana / sinal_principal do JSON
+  const resumo = resumoProbabilidade(data);
   const ultimaAz = data.probabilidades;
   const diffusion = ultimaAz?.diffusion ?? null;
   const gapHp = ultimaAz?.gap_hp ?? null;
   const probitFin = ultimaAz?.probit_fin ?? null;
   const probAz = ultimaAz?.probit_az ?? null;
 
-  const valores = [diffusion, gapHp, probitFin, probAz].filter((v): v is number => v !== null && v !== undefined);
-  const mediana = medianaEstatistica(valores);
-  const corMediana = corPara(mediana);
-  const nModelos = valores.length;
+  const corPrincipal = corPara(resumo.valor);
+
+  // Credencial honesta: AUC só quando o pipeline publica backtest OOS de verdade
+  const aucOos = typeof data.metadata?.auc_backtest_OOS === "number" ? data.metadata.auc_backtest_OOS : null;
+  const aucNota = typeof data.metadata?.auc_nota === "string" ? data.metadata.auc_nota : null;
 
   const serieFinal = (data.serie ?? []).map((p) => {
     const vs = [p.diffusion, p.gap_hp, p.probit_fin, p.probit_az].filter((v): v is number => typeof v === "number");
+    const minV = vs.length > 0 ? Math.min(...vs) : null;
+    const maxV = vs.length > 0 ? Math.max(...vs) : null;
     return {
       mes: p.mes,
       diffusion: p.diffusion ?? undefined,
-      gap_hp: p.gap_hp ?? undefined,
-      probit_fin: p.probit_fin ?? undefined,
-      probit_az: p.probit_az ?? undefined,
-      mediana: medianaEstatistica(vs),
+      banda: minV !== null && maxV !== null ? ([minV, maxV] as [number, number]) : null,
+      mediana: typeof p.mediana === "number" ? p.mediana : medianaEstatistica(vs),
     };
   });
 
@@ -172,41 +268,62 @@ export function CardProbitAz({
   const corHist = estadoHist === "ALERTA" ? "#DC2626" : estadoHist === "ESTÁVEL" ? "#10B981" : "#F59E0B";
 
   const modelos: Modelo[] = [
-    { key: "diffusion", label: "Diffusion", color: "#F59E0B", valor: diffusion },
-    { key: "gap_hp", label: "Gap Hamilton 2018", color: "#10B981", valor: gapHp },
+    { key: "diffusion", label: "Difusão de coincidentes", color: "#F59E0B", valor: diffusion },
+    { key: "gap_hp", label: "Gap HP", color: "#10B981", valor: gapHp },
     { key: "probit_fin", label: "Probit Financeiro", color: "#3B82F6", valor: probitFin },
     { key: "probit_az", label: "Probit Misto AZ", color: "#DC2626", valor: probAz },
   ];
 
   const hachuraStart = "2020-06";
+  const primeiroMes = serieFinal[0]?.mes ?? "2003-01";
   const ultimoMes = serieFinal[serieFinal.length - 1]?.mes ?? "2026-12";
+  const faixasVisiveis = codace.filter((f) => f.vale >= primeiroMes);
+
+  const gaugeLabel = resumo.usaFallback
+    ? `Probit AZ · ${formatMes(resumo.mes ?? "")}`
+    : `Mediana de ${resumo.nModelos} de 4 modelos · ${formatMes(resumo.mes ?? "")}`;
 
   return (
-    <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm border-l-4" style={{ borderLeftColor: corMediana }}>
+    <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm border-l-4" style={{ borderLeftColor: corPrincipal }}>
       {/* Header */}
       <div className="mb-3 flex items-start justify-between gap-3 flex-wrap">
         <div className="flex-1 min-w-[200px]">
           <h3 className="text-base font-bold text-[#132960]">
-            Termômetro de recessão — ensemble de {nModelos} modelos causais
+            Termômetro de recessão — mediana de {resumo.nModelos} de 4 modelos causais
           </h3>
           <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">
-            Mediana de 4 metodologias (Moore 1950, Hamilton 2018, Estrella-Mishkin 1998, Issler-Vahid 2006). Backtest causal OOS 1996-2026: AUC <strong>0.86</strong>.
-            <span className="ml-1 text-amber-700">⚠ MS-AR Hamilton 1989 aguardando statsmodels carregar.</span>
+            Quatro metodologias da literatura (Moore 1950, Hamilton 2018, Estrella-Mishkin 1998, Issler-Vahid 2006).{" "}
+            {aucOos !== null ? (
+              <>Backtest fora da amostra: AUC <strong>{aucOos.toFixed(2)}</strong>.</>
+            ) : (
+              <span title={aucNota ?? undefined}>Backtest formal em construção — sem credencial de acerto até validação fora da amostra.</span>
+            )}
           </p>
         </div>
         <div className="text-right">
           <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded" style={{ backgroundColor: corHist + "22", color: corHist }}>
             HISTERESE: {estadoHist}
           </span>
-          <div className="text-[9px] text-zinc-400 mt-1">Hamilton 2011 · 65/35 · 2m persist.</div>
+          <div className="text-[9px] text-zinc-400 mt-1">Chauvet-Hamilton (2006) · 65/35 · 2m persist.</div>
         </div>
       </div>
+
+      {/* Aviso de fallback: mediana indisponível (n<3) — exibe probit_az isolado, nunca apaga */}
+      {resumo.usaFallback && (
+        <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] text-amber-800">
+          ⚠ <strong>{resumo.nModelos} de 4 modelos disponíveis</strong> — mediana indisponível nesta rodada; exibindo o Probit AZ isolado.
+        </div>
+      )}
 
       {/* GRID 2 colunas: Gauge à esquerda + Fan chart à direita */}
       <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4 items-start">
         {/* Coluna esquerda: Gauge */}
         <div className="flex flex-col items-center bg-zinc-50 rounded-lg p-3 border border-zinc-100">
-          {mediana !== null && <GaugeSpeedometer valor={mediana} label={`Mediana · ${formatMes(ultimaAz?.mes ?? "")}`} />}
+          {resumo.valor !== null && resumo.valor !== undefined ? (
+            <GaugeSpeedometer valor={resumo.valor} label={gaugeLabel} />
+          ) : (
+            <p className="py-10 text-center text-xs text-zinc-400">Nenhum modelo disponível nesta rodada — aguardando pipeline.</p>
+          )}
           <div className="mt-2 grid grid-cols-2 gap-1.5 w-full">
             {modelos.map((m) => (
               <div key={m.key} className="rounded border bg-white px-2 py-1 border-l-[3px]" style={{ borderLeftColor: m.color }}>
@@ -221,10 +338,10 @@ export function CardProbitAz({
           </div>
         </div>
 
-        {/* Coluna direita: Fan chart com modelos individuais + mediana */}
+        {/* Coluna direita: Fan chart — mediana grossa + banda mín–máx dos modelos */}
         <div className="min-w-0">
           <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={serieFinal} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+            <ComposedChart data={serieFinal} margin={{ top: 14, right: 8, bottom: 0, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis
                 dataKey="mes"
@@ -233,19 +350,40 @@ export function CardProbitAz({
                 minTickGap={36}
               />
               <YAxis tick={{ fontSize: 9 }} domain={[0, 1]} tickFormatter={(v) => `${Math.round(v * 100)}%`} />
-              <Tooltip formatter={(v: unknown) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "—")} labelFormatter={(l: unknown) => formatMes(String(l ?? ""))} />
+              <Tooltip
+                formatter={(v: unknown) => {
+                  if (typeof v === "number") return `${Math.round(v * 100)}%`;
+                  if (Array.isArray(v)) return v.map((x) => (typeof x === "number" ? `${Math.round(x * 100)}%` : "—")).join(" a ");
+                  return "—";
+                }}
+                labelFormatter={(l: unknown) => formatMes(String(l ?? ""))}
+              />
               <ReferenceLine y={0.65} stroke="#DC2626" strokeDasharray="4 4" opacity={0.4} />
               <ReferenceLine y={0.35} stroke="#10B981" strokeDasharray="4 4" opacity={0.4} />
-              {codace.map((f, i) => (
-                <ReferenceArea key={`cod-${i}`} x1={f.pico} x2={f.vale} fill="#9CA3AF" fillOpacity={0.22} />
+              {faixasVisiveis.map((f, i) => (
+                <ReferenceArea
+                  key={`cod-${i}`}
+                  x1={f.pico > primeiroMes ? f.pico : primeiroMes}
+                  x2={f.vale}
+                  fill="#9CA3AF"
+                  fillOpacity={0.22}
+                  label={{ value: rotuloFaixaCodace(f.pico), position: "insideTop", fontSize: 8, fill: "#6B7280" }}
+                />
               ))}
               <ReferenceArea x1={hachuraStart} x2={ultimoMes} fill="#9CA3AF" fillOpacity={0.06} strokeOpacity={0} />
-              <Line type="monotone" dataKey="diffusion" stroke="#F59E0B" strokeWidth={0.8} dot={false} connectNulls opacity={0.5} />
-              <Line type="monotone" dataKey="gap_hp" stroke="#10B981" strokeWidth={0.8} dot={false} connectNulls opacity={0.5} />
-              <Line type="monotone" dataKey="probit_fin" stroke="#3B82F6" strokeWidth={0.8} dot={false} connectNulls opacity={0.5} />
-              <Line type="monotone" dataKey="probit_az" stroke="#DC2626" strokeWidth={0.9} dot={false} connectNulls opacity={0.6} />
-              <Line type="monotone" dataKey="mediana" stroke="#132960" strokeWidth={2.4} dot={false} connectNulls />
-            </LineChart>
+              <Area
+                type="monotone"
+                dataKey="banda"
+                stroke="none"
+                fill="#132960"
+                fillOpacity={0.14}
+                name="Faixa mín–máx dos modelos"
+                connectNulls
+                isAnimationActive={false}
+              />
+              <Line type="monotone" dataKey="diffusion" stroke="#F59E0B" strokeWidth={0.9} dot={false} connectNulls opacity={0.6} name="% de coincidentes em queda (janela 4m)" />
+              <Line type="monotone" dataKey="mediana" stroke="#132960" strokeWidth={2.4} dot={false} connectNulls name="Mediana" />
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       </div>
@@ -253,7 +391,9 @@ export function CardProbitAz({
       <div className="mt-3 flex items-center gap-2 text-[9px] text-zinc-500 flex-wrap">
         <span className="inline-flex items-center gap-1"><span className="w-3 h-[2px]" style={{ backgroundColor: "#132960" }}></span><strong className="text-zinc-700">Mediana</strong></span>
         <span>·</span>
-        <span>linhas finas = 4 modelos individuais</span>
+        <span>sombra azul = faixa mín–máx dos modelos</span>
+        <span>·</span>
+        <span className="inline-flex items-center gap-1"><span className="w-3 h-[2px]" style={{ backgroundColor: "#F59E0B" }}></span>% de coincidentes em queda (janela 4m)</span>
         <span>·</span>
         <span>faixas cinza = recessões CODACE oficiais</span>
         <span>·</span>
@@ -261,44 +401,37 @@ export function CardProbitAz({
       </div>
 
       {data.contribuicoes_top15 && data.contribuicoes_top15.length > 0 && (
-        <>
-          <button
-            onClick={() => setShowContribs((o) => !o)}
-            className="w-full text-left text-[10px] text-[#132960] hover:underline flex items-center gap-1 mt-2"
-          >
-            <span>{showContribs ? "▼" : "▶"}</span>
-            <span>Top 15 features do Probit AZ (β · x_std) em {formatMes(ultimaAz?.mes ?? "")}</span>
-          </button>
-          {showContribs && (
-            <table className="mt-2 w-full text-[10px]">
-              <thead>
-                <tr className="border-b border-zinc-200 text-zinc-500">
-                  <th className="text-left py-1">Feature</th>
-                  <th className="text-right">β</th>
-                  <th className="text-right">x (std)</th>
-                  <th className="text-right">β·x</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.contribuicoes_top15.slice(0, 10).map((c, i) => (
-                  <tr key={i} className="border-b border-zinc-100">
-                    <td className="py-1 font-mono text-[9px]">{c.feature}</td>
-                    <td className="text-right">{c.beta.toFixed(2)}</td>
-                    <td className="text-right">{c.x_std.toFixed(2)}</td>
-                    <td className="text-right font-semibold" style={{ color: c.contrib_z >= 0 ? "#DC2626" : "#10B981" }}>
-                      {c.contrib_z >= 0 ? "+" : ""}{c.contrib_z.toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="mt-3 border-t border-zinc-100 pt-3">
+          <h4 className="text-xs font-semibold text-zinc-800">
+            O que puxa o Probit AZ em {formatMes(ultimaAz?.mes ?? "")}
+          </h4>
+          {data.labels_pt && Object.keys(data.labels_pt).length > 0 ? (
+            <>
+              <ContribuicoesPorGrupo contribs={data.contribuicoes_top15} labels={data.labels_pt} />
+              <details className="mt-2">
+                <summary className="cursor-pointer text-[10px] text-[#132960] hover:underline">
+                  Tabela técnica completa (códigos das séries e coeficientes)
+                </summary>
+                <TabelaTecnicaContribuicoes contribs={data.contribuicoes_top15} />
+              </details>
+            </>
+          ) : (
+            <details className="mt-1">
+              <summary className="cursor-pointer text-[10px] text-[#132960] hover:underline">
+                Detalhamento técnico das contribuições (códigos das séries)
+              </summary>
+              <p className="mt-1 text-[9px] text-zinc-400">
+                Rótulos em português em preparação no pipeline; abaixo, os códigos crus das séries.
+              </p>
+              <TabelaTecnicaContribuicoes contribs={data.contribuicoes_top15} />
+            </details>
           )}
-        </>
+        </div>
       )}
 
       <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <p className="text-[9px] text-zinc-500 leading-tight">
-          <strong>Refs:</strong> Moore 1950 (Diffusion) · Hodrick-Prescott 1997 / Ravn-Uhlig 2002 + Hamilton 2018 (Gap) · Estrella-Mishkin 1998 + Wright 2006 + Mendonça-Galvão-Lima 2018 (Probit Fin) · Issler-Vahid 2006 (Probit AZ) · Bates-Granger 1969 (ensembles) · Hamilton 2011 (histerese 65/35).
+          <strong>Refs:</strong> Moore 1950 (Diffusion) · Hodrick-Prescott 1997 / Ravn-Uhlig 2002 + Hamilton 2018 (Gap) · Estrella-Mishkin 1998 + Wright 2006 + Mendonça-Galvão-Lima 2018 (Probit Fin) · Issler-Vahid 2006 (Probit AZ) · Bates-Granger 1969 (ensembles) · Chauvet-Hamilton 2006 (histerese 65/35).
         </p>
         <DataStamp giro={data.gerado_em} dado={serieFinal[serieFinal.length - 1]?.mes} />
       </div>

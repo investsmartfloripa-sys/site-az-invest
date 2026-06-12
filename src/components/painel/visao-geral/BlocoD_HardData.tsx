@@ -1,13 +1,12 @@
 "use client";
 
-import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from "recharts";
 
-import type { AnfaveaData, AnpData, AtividadePimData, AtividadePmcData, AtividadePmsData, CodaceFaixa, EmpregoPnadData, EpeData, HardDataData, HiatoData, IbcBrData, IpeadataData, PnadRendaData } from "@/lib/painel-visao-geral";
-import { formatMes } from "@/lib/painel-visao-geral";
+import type { AnfaveaData, AnpData, AtividadePimData, AtividadePmcData, AtividadePmsData, CodaceFaixa, EmpregoPnadData, EmpregoPnadPonto, EpeData, HardDataData, IbcBrData, IpeadataData, PnadRendaData } from "@/lib/painel-visao-geral";
+import { formatMes, formatPct } from "@/lib/painel-visao-geral";
 import DataStamp from "@/components/painel/DataStamp";
 
 import { ExploradorSeries, type SerieExplorador } from "./ExploradorSeries";
-import { CardHiatoLeque } from "./BlocoA_CicloAtual";
 
 export function BlocoDHardData({
   anfavea,
@@ -21,7 +20,6 @@ export function BlocoDHardData({
   atividadePms,
   ibcbr,
   pnadRenda,
-  hiato,
   codace = [],
 }: {
   anfavea: AnfaveaData | null;
@@ -35,12 +33,26 @@ export function BlocoDHardData({
   atividadePms: AtividadePmsData | null;
   ibcbr: IbcBrData | null;
   pnadRenda: PnadRendaData | null;
-  hiato?: HiatoData | null;
   codace?: CodaceFaixa[];
 }) {
   const pimSerie = atividadePim?.geral?.serie ?? [];
   const pimUlt = pimSerie[pimSerie.length - 1];
   const pimYoy = pimUlt?.var_yoy ?? null;
+
+  // PIM: mm3 derivada do indice_sa no front -> ritmo trimestral (mm3/mm3 t-3, não anualizado)
+  const pimMm3: (number | null)[] = pimSerie.map((_, i) => {
+    if (i < 2) return null;
+    const vals = [pimSerie[i].indice_sa, pimSerie[i - 1].indice_sa, pimSerie[i - 2].indice_sa];
+    if (vals.some((v) => v === null || v === undefined)) return null;
+    return (vals as number[]).reduce((a, b) => a + b, 0) / 3;
+  });
+  const pimDados = pimSerie.map((p, i) => {
+    const atual = pimMm3[i];
+    const ant = i >= 3 ? pimMm3[i - 3] : null;
+    const ritmo = atual !== null && ant !== null && ant !== 0 ? +(((atual / ant) - 1) * 100).toFixed(2) : null;
+    return { mes: p.mes, mom: p.var_mom_sa, ritmo, yoy: p.var_yoy };
+  });
+  const pimRitmoUlt = [...pimDados].reverse().find((p) => p.ritmo !== null)?.ritmo ?? null;
 
   const series: SerieExplorador[] = [];
 
@@ -89,19 +101,31 @@ export function BlocoDHardData({
       data: ser.map((p) => ({ mes: p.mes, v: p.ampliado_volume_var_yoy })),
     });
   }
-  // PNAD - taxa de desocupacao (employment leg, trimestral)
+  // PNAD - taxa de desocupacao (employment leg, trimestral) — indicador DEFASADO (lagging)
   if (empregoPnad?.taxas?.serie?.length) {
     const ser = empregoPnad.taxas.serie;
+    const taxaDesoc = (p: EmpregoPnadPonto): number | null => {
+      // prioriza a série dessazonalizada quando o pipeline a publica
+      if (p.desocupacao_sa !== null && p.desocupacao_sa !== undefined) return p.desocupacao_sa;
+      const ns = p["Taxa de desocupação"];
+      return ns !== null && ns !== undefined ? ns : null;
+    };
+    const temSa = ser.some((p) => p.desocupacao_sa !== null && p.desocupacao_sa !== undefined);
     const u = ser[ser.length - 1];
+    const vAtual = taxaDesoc(u);
+    const u4 = ser.length >= 5 ? ser[ser.length - 5] : undefined; // 4 trimestres atrás
+    const vAnoAtras = u4 ? taxaDesoc(u4) : null;
+    const varAaPp = vAtual !== null && vAnoAtras !== null ? vAtual - vAnoAtras : null;
     series.push({
       id: "pnad-desoc",
       titulo: "Desocupação PNAD-C (IBGE)",
-      subtitulo: "Taxa trimestral — employment leg quartet TCB",
+      subtitulo: `Taxa ${temSa ? "dessazonalizada" : "trimestral"}${varAaPp !== null ? ` · var. a/a ${varAaPp >= 0 ? "+" : ""}${varAaPp.toFixed(1)}pp` : ""} — employment leg quartet TCB. Emprego confirma o ciclo com atraso, não o antecipa.`,
+      badge: "defasado (lagging)",
       cor: "#F59E0B",
-      valorAtual: (u as unknown as Record<string, number | null | undefined>)?.["Taxa de desocupação"],
+      valorAtual: vAtual,
       mesAtual: u?.trim,
       unidade: "%",
-      data: ser.map((p) => ({ mes: p.trim, v: (p as unknown as Record<string, number | null | undefined>)["Taxa de desocupação"] })),
+      data: ser.map((p) => ({ mes: p.trim, v: taxaDesoc(p) })),
     });
   }
   // IPEADATA: papelao + aco (sem FENABRAVE - movida para Antecedentes - IACE-FGV duraveis)
@@ -216,9 +240,6 @@ export function BlocoDHardData({
         <h2 className="text-xl font-bold text-[#132960]">Coincidentes — séries puras</h2>
         <p className="mt-1 text-xs text-zinc-600">Séries que se movem junto com o PIB no presente. Quartet TCB clássico (Stock-Watson 1989 / Duarte-Issler-Spacov 2004 / ICCE-FGV): Produção (PIM-PF) + Vendas (PMC) + Emprego (PNAD-C) + Renda. Complementado pelos componentes oficiais ICCE-FGV: ABPO papelão e EPE energia industrial. Demais hard data (ANFAVEA, ANP, Aço) são coincidentes setoriais. Clique no card para trocar a série do gráfico.</p>
       </header>
-      {hiato?.serie && hiato.serie.length > 0 && (
-        <CardHiatoLeque serie={hiato.serie} codace={codace} />
-      )}
 
       {atividadePim && pimSerie.length > 0 && (
         <div className="rounded-2xl border-2 border-[#132960]/25 bg-gradient-to-br from-white to-zinc-50 p-5 shadow-sm">
@@ -228,23 +249,29 @@ export function BlocoDHardData({
                 <h3 className="text-base font-semibold text-zinc-900">PIM-PF: produção industrial (IBGE)</h3>
                 <span className="rounded bg-[#132960] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">Benchmark oficial IBGE</span>
               </div>
-              <p className="mt-1 text-xs text-zinc-500">Coincidente oficial via SIDRA (base 2022=100).</p>
+              <p className="mt-1 text-xs text-zinc-500">Coincidente oficial via SIDRA (base 2022=100). Barras = m/m dessaz; linha grossa = ritmo trimestral (mm3/mm3 t-3, derivado do índice SA); linha fina = a/a (contexto).</p>
             </div>
             <div className="text-right">
-              <div className={`text-3xl font-bold ${pimYoy === null || pimYoy === undefined ? "text-zinc-400" : pimYoy >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{pimYoy !== null && pimYoy !== undefined ? `${pimYoy >= 0 ? "+" : ""}${pimYoy.toFixed(1)}%` : "—"}</div>
-              <div className="text-[10px] text-zinc-500">a/a, {formatMes(pimUlt?.mes)}</div>
+              <div className={`text-3xl font-bold ${pimRitmoUlt === null ? "text-zinc-400" : pimRitmoUlt >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{pimRitmoUlt !== null ? formatPct(pimRitmoUlt) : "—"}</div>
+              <div className="text-[10px] text-zinc-500">ritmo trimestral (3m/3m dessaz), {formatMes(pimUlt?.mes)}</div>
+              {pimYoy !== null && pimYoy !== undefined && (
+                <div className="text-[10px] text-zinc-500">a/a: {formatPct(pimYoy)}</div>
+              )}
             </div>
           </div>
-          <div className="mt-3 h-[180px]">
+          <div className="mt-3 h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={pimSerie.slice(-60)} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
+              <ComposedChart data={pimDados.slice(-60)} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
                 <CartesianGrid stroke="#eee" strokeDasharray="3 3" />
                 <XAxis dataKey="mes" tick={{ fontSize: 9 }} interval={Math.max(1, Math.floor(60 / 8))} />
                 <YAxis tick={{ fontSize: 9 }} tickFormatter={(v: number) => `${v.toFixed(0)}%`} />
                 <Tooltip formatter={(v: unknown) => (typeof v === "number" ? `${v.toFixed(1)}%` : "—")} labelFormatter={(l: unknown) => formatMes(String(l ?? ""))} />
+                <Legend wrapperStyle={{ fontSize: 10 }} />
                 <ReferenceLine y={0} stroke="#000" strokeDasharray="2 4" />
-                <Line type="monotone" dataKey="var_yoy" stroke="#132960" strokeWidth={1.8} dot={false} name="PIM-PF a/a" connectNulls />
-              </LineChart>
+                <Bar dataKey="mom" fill="#94A3B8" name="m/m dessaz" />
+                <Line type="monotone" dataKey="yoy" stroke="#9CA3AF" strokeWidth={1} strokeDasharray="4 3" dot={false} name="a/a (contexto)" connectNulls />
+                <Line type="monotone" dataKey="ritmo" stroke="#132960" strokeWidth={2.2} dot={false} name="ritmo trimestral (3m/3m)" connectNulls />
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
           <p className="mt-2"><DataStamp giro={atividadePim.gerado_em} dado={pimUlt?.mes} /></p>

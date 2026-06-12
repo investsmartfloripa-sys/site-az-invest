@@ -14,7 +14,8 @@ import {
 } from "recharts";
 
 import type { AntecedentesFinData, AtividadePimData, CniData, CodaceFaixa, CreditoData, FgvConfiancaData, IcfData, IpeadataData, OecdCliData, FgvAntecedentesData } from "@/lib/painel-visao-geral";
-import { CardSelicReal, CardConcessoes } from "./BlocoE_CondicoesFinanceiras";
+import { CardIcf } from "./CardIcf";
+import { CardCreditoPib } from "./CardCreditoPib";
 import { ExploradorSeries, type SerieExplorador } from "./ExploradorSeries";
 import { formatMes } from "@/lib/painel-visao-geral";
 import DataStamp from "@/components/painel/DataStamp";
@@ -471,6 +472,20 @@ export function BlocoBAntecedentes({
         <p className="mt-1 text-xs text-zinc-500">
           Próximos (via APIs BCB SGS/Olinda + IBGE SIDRA + IPEADATA): IACE FGV oficial, slope DI 10a-2a, Ibov real 6m, EMBI+ Brasil, Focus PIB 12m-ahead, IIE-Br FGV, spread crédito PJ, CAGED saldo MoM dessaz, inadimplência PJ.
         </p>
+      </div>
+
+      {/* Condições financeiras (custo do dinheiro e alavancagem — funcionalmente leading) */}
+      <div className="space-y-5 border-t border-zinc-200 pt-5">
+        <header>
+          <h2 className="text-xl font-bold text-[#132960]">Condições financeiras</h2>
+          <p className="mt-1 text-xs text-zinc-600">
+            Custo do dinheiro e dinâmica de alavancagem do ciclo. ICF próprio (Hatzius 50/25/25: Selic real, Ibov, REER) e
+            crédito ampliado/PIB. Selic real ex-ante e concessões reais 12m aparecem no explorador acima (são funcionalmente
+            antecedentes).
+          </p>
+        </header>
+        <CardIcf data={icf} />
+        <CardCreditoPib data={credito} />
       </div>
     </section>
   );

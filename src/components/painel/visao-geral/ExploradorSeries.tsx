@@ -32,6 +32,8 @@ export type SerieExplorador = {
   data: SeriePonto[];
   // refLine (opcional): linha de referencia horizontal (ex: 0 para YoY, 100 para indice base)
   refLine?: number;
+  // badge (opcional): selo curto ao lado do título (ex: "defasado (lagging)")
+  badge?: string;
 };
 
 export function ExploradorSeries({
@@ -163,9 +165,14 @@ export function ExploradorSeries({
         </div>
         <div className="mb-2 flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="h-2.5 w-2.5 rounded-full" style={{ background: selecionada.cor }} />
               <h4 className="text-sm font-bold text-zinc-900">{selecionada.titulo}</h4>
+              {selecionada.badge && (
+                <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-zinc-600">
+                  {selecionada.badge}
+                </span>
+              )}
             </div>
             {selecionada.subtitulo && <p className="mt-0.5 text-[11px] text-zinc-500">{selecionada.subtitulo}</p>}
           </div>

@@ -160,6 +160,8 @@ export type HiatoPonto = {
   indice_sa: NumOrNull;
   gap_hp_pct: NumOrNull;
   gap_hamilton_pct: NumOrNull;
+  // v2 do pipeline: terceiro método (tendência quadrática). Opcional — degrade gracioso.
+  gap_quadratico_pct?: NumOrNull;
   gap_min_pct: NumOrNull;
   gap_max_pct: NumOrNull;
   gap_mediana_pct: NumOrNull;
@@ -196,38 +198,6 @@ export type IcfData = {
   metadata: MetaCommon;
 };
 
-export type RecessaoPonto = {
-  mes: string;
-  msdfm: NumOrNull;
-  probit_financeiro: NumOrNull;
-  gap_threshold: NumOrNull;
-  diffusion: NumOrNull;
-  bry_boschan: NumOrNull;
-  mediana: NumOrNull;
-  mediana_parcial?: NumOrNull;
-  media?: NumOrNull;
-  min_val?: NumOrNull;
-  max_val?: NumOrNull;
-  n_modelos: number;
-  n_acima_50: number;
-  sensiveis_presentes?: number;
-  // Flag: true quando probit_financeiro do mes mais recente eh carry-forward
-  // (replicado da ultima observacao real porque pipeline nao gerou valor novo)
-  probit_carry?: boolean;
-  carry_forward_modelos?: string[];
-  sinalizacao: "verde" | "amarelo" | "vermelho" | "indeterminado";
-};
-
-export type RecessaoData = {
-  gerado_em: string;
-  freshness_status: Freshness;
-  mes_recente: string | null;
-  serie: RecessaoPonto[];
-  inputs: ContaInputs;
-  min_start_date: string;
-  metadata: MetaCommon & { modelos: Record<string, string>; consolidacao?: string };
-};
-
 export type IbcBrPonto = {
   mes: string;
   indice_sa: NumOrNull;
@@ -237,6 +207,10 @@ export type IbcBrPonto = {
   var_3m: NumOrNull;
   indice_sa_mm3: NumOrNull;
   var_yoy_mm3: NumOrNull;
+  // v2 do pipeline: ritmo trimestral mm3/mm3 t-3, NÃO anualizado (convenção BCB RI). Opcional.
+  var_ritmo_trimestral?: NumOrNull;
+  // mm3/mm3 t-3 anualizado (SAAR). Opcional.
+  var_3m3m_saar?: NumOrNull;
 };
 
 export type IbcBrData = {
@@ -284,32 +258,6 @@ export type CniData = {
   icei_atual?: SeriePonto[];
   icei_expectativas?: SeriePonto[];
   inec: SeriePonto[];
-  inputs?: ContaInputs;
-  min_start_date?: string;
-  metadata: MetaCommon;
-};
-
-export type PmiPonto = {
-  mes: string;
-  manufatura?: NumOrNull;
-  servicos?: NumOrNull;
-  composto?: NumOrNull;
-};
-
-export type PmiData = {
-  gerado_em: string;
-  freshness_status: Freshness;
-  serie: PmiPonto[];
-  inputs?: ContaInputs;
-  min_start_date?: string;
-  metadata: MetaCommon;
-};
-
-export type FecomercioData = {
-  gerado_em: string;
-  freshness_status: Freshness;
-  icec: SeriePonto[];
-  icf: SeriePonto[];
   inputs?: ContaInputs;
   min_start_date?: string;
   metadata: MetaCommon;
@@ -390,6 +338,8 @@ export type EmpregoPnadPonto = {
   "Taxa de participação na força de trabalho"?: NumOrNull;
   "Taxa de informalidade"?: NumOrNull;
   "Taxa composta de subutilização"?: NumOrNull;
+  // Taxa de desocupação dessazonalizada (série desde 2012). Opcional — degrade gracioso.
+  desocupacao_sa?: NumOrNull;
 };
 export type EmpregoPnadData = {
   gerado_em: string;
@@ -454,6 +404,17 @@ export type EmbiPonto = { mes: string; embi_bps: NumOrNull };
 export type PnadRendaPonto = { trim: string; rendimento_real_brl: NumOrNull; var_yoy_pct?: NumOrNull };
 export type ProbitAzPonto = { mes: string; diffusion?: NumOrNull; gap_hp?: NumOrNull; probit_fin?: NumOrNull; probit_az?: NumOrNull; mediana?: NumOrNull };
 export type ProbitAzContribuicao = { feature: string; beta: number; x_std: number; contrib_z: number };
+// v2 do pipeline: rótulo pt-BR + grupo econômico por código de feature. Opcional — degrade gracioso.
+export type ProbitAzLabelPt = { rotulo: string; grupo: string };
+export type ProbitAzMetadata = {
+  // null = backtest formal ainda em construção (não exibir credencial)
+  auc_backtest_OOS?: number | null;
+  auc_nota?: string;
+  modelos_base?: string[];
+  obs_treino?: number;
+  n_series_panel?: number;
+  [k: string]: unknown;
+};
 export type ProbitAzData = {
   gerado_em: string;
   mes_recente: string | null;
@@ -461,8 +422,48 @@ export type ProbitAzData = {
   sinal_principal?: NumOrNull;
   serie?: ProbitAzPonto[];
   contribuicoes_top15?: ProbitAzContribuicao[];
-  metadata?: Record<string, unknown>;
+  labels_pt?: Record<string, ProbitAzLabelPt>;
+  metadata?: ProbitAzMetadata;
 };
+
+// ---------------------------------------------------------------------------
+// FONTE ÚNICA de probabilidade de recessão (consome probabilidades.mediana /
+// sinal_principal do JSON — não recalcula mediana no front).
+// Fallback explícito: mediana null (n<3 modelos) -> probit_az isolado com aviso.
+// ---------------------------------------------------------------------------
+export type ProbitResumo = {
+  // valor a exibir, escala 0-1 (mediana do JSON ou fallback probit_az isolado)
+  valor: NumOrNull;
+  // mediana do JSON (null quando pipeline não conseguiu calcular, n<3)
+  mediana: NumOrNull;
+  // true quando exibindo o probit_az isolado por falta de mediana
+  usaFallback: boolean;
+  // quantos dos 4 modelos têm valor no mês corrente
+  nModelos: number;
+  nAcima50: number;
+  mes: string | null;
+};
+
+export function resumoProbabilidade(data: ProbitAzData | null): ProbitResumo {
+  const probs = data?.probabilidades;
+  const valores = probs
+    ? [probs.diffusion, probs.gap_hp, probs.probit_fin, probs.probit_az].filter((v): v is number => typeof v === "number")
+    : [];
+  const nModelos = valores.length;
+  const nAcima50 = valores.filter((v) => v >= 0.5).length;
+  const mes = probs?.mes ?? data?.mes_recente ?? null;
+  const mediana = typeof probs?.mediana === "number" ? probs.mediana : null;
+  if (mediana !== null) {
+    return { valor: mediana, mediana, usaFallback: false, nModelos, nAcima50, mes };
+  }
+  const fallback =
+    typeof probs?.probit_az === "number"
+      ? probs.probit_az
+      : typeof data?.sinal_principal === "number"
+        ? data.sinal_principal
+        : null;
+  return { valor: fallback, mediana: null, usaFallback: fallback !== null, nModelos, nAcima50, mes };
+}
 
 export type PnadRendaData = {
   gerado_em: string;
@@ -487,12 +488,9 @@ export type VisaoGeralPayload = {
   codace: CodaceData | null;
   hiato: HiatoData | null;
   icf: IcfData | null;
-  recessao: RecessaoData | null;
   fgvAntecedentes: FgvAntecedentesData | null;
   fgvConfianca: FgvConfiancaData | null;
   cni: CniData | null;
-  pmi: PmiData | null;
-  fecomercio: FecomercioData | null;
   hardData: HardDataData | null;
   ipeadata: IpeadataData | null;
   atividadePim: AtividadePimData | null;
@@ -528,12 +526,9 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     codace,
     hiato,
     icf,
-    recessao,
     fgvAntecedentes,
     fgvConfianca,
     cni,
-    pmi,
-    fecomercio,
     hardData,
     ipeadata,
     atividadePim,
@@ -554,12 +549,9 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     fetchJson<CodaceData>("data/visao_geral_codace.json"),
     fetchJson<HiatoData>("data/visao_geral_hiato.json"),
     fetchJson<IcfData>("data/visao_geral_icf.json"),
-    fetchJson<RecessaoData>("data/visao_geral_recessao.json"),
     fetchJson<FgvAntecedentesData>("data/visao_geral_fgv_antecedentes.json"),
     fetchJson<FgvConfiancaData>("data/visao_geral_fgv_confianca.json"),
     fetchJson<CniData>("data/visao_geral_cni.json"),
-    fetchJson<PmiData>("data/visao_geral_pmi.json"),
-    fetchJson<FecomercioData>("data/visao_geral_fecomercio.json"),
     fetchJson<HardDataData>("data/visao_geral_hard_data.json"),
     fetchJson<IpeadataData>("data/visao_geral_ipeadata.json"),
     fetchJson<AtividadePimData>("data/atividade_pim.json"),
@@ -571,7 +563,7 @@ export async function loadVisaoGeralPayload(): Promise<VisaoGeralPayload> {
     fetchJson<PnadRendaData>("data/visao_geral_pnad_renda.json"),
     fetchJson<ProbitAzData>("data/visao_geral_probit_az.json"),
   ]);
-  return { ibcbr, oecdCli, credito, anp, anfavea, epe, codace, hiato, icf, recessao, fgvAntecedentes, fgvConfianca, cni, pmi, fecomercio, hardData, ipeadata, atividadePim, focusPib, atividadePmc, empregoPnad, atividadePms, antecedentesFin, pnadRenda, probitAz };
+  return { ibcbr, oecdCli, credito, anp, anfavea, epe, codace, hiato, icf, fgvAntecedentes, fgvConfianca, cni, hardData, ipeadata, atividadePim, focusPib, atividadePmc, empregoPnad, atividadePms, antecedentesFin, pnadRenda, probitAz };
 }
 
 // Extrai a mediana mais recente do Focus PIB para o ano corrente
@@ -603,13 +595,6 @@ export function formatMes(mes: string | null | undefined): string {
   return (meses[Number.parseInt(m, 10) - 1] ?? m) + "/" + ano;
 }
 
-export function sinalizacaoCor(s: RecessaoPonto["sinalizacao"]): { bg: string; text: string; label: string } {
-  if (s === "vermelho") return { bg: "bg-red-100", text: "text-red-700", label: "Alerta de recessão" };
-  if (s === "amarelo") return { bg: "bg-amber-100", text: "text-amber-700", label: "Sinal de risco" };
-  if (s === "indeterminado") return { bg: "bg-zinc-100", text: "text-zinc-600", label: "Sinal incompleto (precisa 4+ modelos)" };
-  return { bg: "bg-emerald-100", text: "text-emerald-700", label: "Normal" };
-}
-
 export function ultimaObs<T extends { mes: string }>(serie: T[] | undefined): T | null {
   if (!serie || serie.length === 0) return null;
   return serie[serie.length - 1];
@@ -621,40 +606,35 @@ export function fraseManchete(payload: VisaoGeralPayload): string {
   const ice = ultimaObs(payload.fgvConfianca?.ice);
   const pim = (payload.atividadePim?.geral?.serie ?? []).slice(-1)[0];
 
-  // FONTE CANONICA UNICA: probit_az.json - Loop 33
-  const probAzProb = payload.probitAz?.probabilidades;
-  const valoresProbit = probAzProb ? [probAzProb.diffusion, probAzProb.gap_hp, probAzProb.probit_fin, probAzProb.probit_az].filter((v): v is number => typeof v === "number") : [];
-  // Mediana estatistica (media dos 2 centrais em array par)
-  const ordenados = valoresProbit.slice().sort((a, b) => a - b);
-  const m = Math.floor(ordenados.length / 2);
-  const medianaProbit = ordenados.length === 0 ? null : ordenados.length % 2 === 0 ? (ordenados[m - 1] + ordenados[m]) / 2 : ordenados[m];
-  const medianaRecPct = medianaProbit !== null ? medianaProbit * 100 : null;
+  // FONTE ÚNICA: probabilidades.mediana / sinal_principal do JSON (resumoProbabilidade)
+  const prob = resumoProbabilidade(payload.probitAz);
+  const probPct = prob.valor !== null && prob.valor !== undefined ? prob.valor * 100 : null;
 
-  // Coleta sinais
-  const atividadeCai = ibc?.var_mom !== null && ibc?.var_mom !== undefined && ibc.var_mom < -0.1;
-  const atividadeSobe = ibc?.var_mom !== null && ibc?.var_mom !== undefined && ibc.var_mom > 0.2;
+  // Coleta sinais — ritmo trimestral (3m/3m dessaz) é a leitura primária de atividade;
+  // banda neutra centrada no potencial (+0,5% t/t ±0,5pp), não em zero.
+  const ritmo = ibc?.var_ritmo_trimestral ?? null;
+  const atividadeCai = ritmo !== null && ritmo !== undefined ? ritmo < 0 : ibc?.var_mom !== null && ibc?.var_mom !== undefined && ibc.var_mom < -0.1;
+  const atividadeSobe = ritmo !== null && ritmo !== undefined ? ritmo > 1 : ibc?.var_mom !== null && ibc?.var_mom !== undefined && ibc.var_mom > 0.2;
   const selicAlta = icf?.selic_real_ex_ante_pct !== null && icf?.selic_real_ex_ante_pct !== undefined && icf.selic_real_ex_ante_pct > 6;
   const sondAlta = ice?.valor !== null && ice?.valor !== undefined && ice.valor > 100;
   const sondBaixa = ice?.valor !== null && ice?.valor !== undefined && ice.valor < 90;
-  const medianaRec = medianaRecPct;
-  const alerta = medianaRec !== null && medianaRec >= 65;
-  const cautela = medianaRec !== null && medianaRec >= 35 && medianaRec < 65;
-  const recSemModelos = valoresProbit.length < 2;
+  const alerta = probPct !== null && probPct >= 65;
+  const cautela = probPct !== null && probPct >= 35 && probPct < 65;
 
   // Veredito honesto reconciliando conflitos
   let veredito: string;
-  if (recSemModelos) {
-    veredito = "Sinal incompleto — cobertura de modelos insuficiente.";
+  if (probPct === null) {
+    veredito = "Sinal indisponível — modelos de probabilidade de recessão aguardando pipeline.";
   } else if (alerta) {
-    veredito = "Alerta: múltiplos modelos sinalizam risco de recessão.";
+    veredito = "Alerta: os modelos sinalizam risco elevado de recessão.";
   } else if (atividadeCai && selicAlta && sondAlta) {
     veredito = "Cenário ambíguo: política monetária restritiva e atividade hesitante, mas expectativas FGV ainda otimistas.";
   } else if (atividadeCai && sondBaixa) {
     veredito = "Atenção: atividade negativa e confiança em deterioração.";
   } else if (cautela) {
-    veredito = "Cautela: probabilidade de recessão acima de 30% (mediana de modelos).";
+    veredito = "Cautela: probabilidade de recessão em zona intermediária (35-65%).";
   } else if (atividadeSobe && sondAlta) {
-    veredito = "Expansão sustentada: atividade positiva e confiança em terreno otimista.";
+    veredito = "Expansão sustentada: atividade acima do potencial e confiança em terreno otimista.";
   } else if (atividadeCai) {
     veredito = "Atividade desacelerando, mas modelos sem alerta de recessão.";
   } else {
@@ -663,16 +643,22 @@ export function fraseManchete(payload: VisaoGeralPayload): string {
 
   // Detalhamento (descreve sinais individuais, sem afirmar narrativa)
   const detalhes: string[] = [];
-  if (ibc?.mes && ibc.var_mom !== null && ibc.var_mom !== undefined) {
+  if (ibc?.mes && ritmo !== null && ritmo !== undefined) {
+    const verbo = ritmo > 1 ? "acima do potencial" : ritmo < 0 ? "em contração" : "próximo do potencial";
+    detalhes.push("Em " + formatMes(ibc.mes) + " o ritmo trimestral da atividade foi de " + formatPct(ritmo) + " (3m/3m dessaz., IBC-Br) — " + verbo + ".");
+  } else if (ibc?.mes && ibc.var_mom !== null && ibc.var_mom !== undefined) {
     const verbo = Math.abs(ibc.var_mom) < 0.05 ? "ficou estável" : ibc.var_mom > 0 ? "cresceu" : "caiu";
     detalhes.push("Em " + formatMes(ibc.mes) + " a atividade " + verbo + " " + formatPct(ibc.var_mom) + " (IBC-Br dessaz.).");
   }
-  if (medianaRec !== null) {
-    const nAcima50 = valoresProbit.filter(v => v >= 0.5).length;
-    detalhes.push("Mediana dos modelos: " + medianaRec.toFixed(0) + "% de probabilidade de recessão (" + nAcima50 + "/" + valoresProbit.length + " > 50%, backtest causal AUC 0.86).");
+  if (probPct !== null) {
+    if (prob.usaFallback) {
+      detalhes.push("Probabilidade de recessão em " + probPct.toFixed(0) + "% pelo Probit AZ — " + prob.nModelos + " de 4 modelos disponíveis; mediana indisponível. Backtest formal em construção.");
+    } else {
+      detalhes.push("Mediana de " + prob.nModelos + " de 4 modelos: " + probPct.toFixed(0) + "% de probabilidade de recessão (" + prob.nAcima50 + "/" + prob.nModelos + " acima de 50%). Backtest formal em construção.");
+    }
   }
   if (icf?.selic_real_ex_ante_pct !== null && icf?.selic_real_ex_ante_pct !== undefined) {
-    detalhes.push("Selic real ex-ante em " + icf.selic_real_ex_ante_pct.toFixed(1) + "% — " + (icf.selic_real_ex_ante_pct > 6 ? "fortemente restritiva" : icf.selic_real_ex_ante_pct > 3 ? "restritiva" : "neutra") + ".");
+    detalhes.push("Juro real ex-ante em " + icf.selic_real_ex_ante_pct.toFixed(1) + "% — " + (icf.selic_real_ex_ante_pct > 6 ? "fortemente restritivo" : icf.selic_real_ex_ante_pct > 3 ? "restritivo" : "neutro") + ".");
   }
   if (ice?.valor !== null && ice?.valor !== undefined) {
     detalhes.push("Confiança empresarial ICE FGV em " + ice.valor.toFixed(1) + " (" + (ice.valor > 100 ? "otimismo" : ice.valor < 90 ? "pessimismo" : "neutra") + ").");

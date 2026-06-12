@@ -1,27 +1,21 @@
 import type { VisaoGeralPayload } from "@/lib/painel-visao-geral";
-import { fraseManchete } from "@/lib/painel-visao-geral";
+import { fraseManchete, resumoProbabilidade } from "@/lib/painel-visao-geral";
 
-// Loop 33: fonte canonica unica - probit_az.json
+// FONTE ÚNICA de probabilidade: probabilidades.mediana / sinal_principal do JSON
+// (resumoProbabilidade), compartilhada com HeroKpis e CardProbitAz.
 function vereditoProbitAz(payload: VisaoGeralPayload): string {
-  const probAz = payload.probitAz?.probabilidades;
-  if (!probAz) return "Sinal indisponivel - pipeline Probit AZ aguardando dados.";
-
-  const valores = [probAz.diffusion, probAz.gap_hp, probAz.probit_fin, probAz.probit_az]
-    .filter((v): v is number => typeof v === "number");
-
-  if (valores.length === 0) return "Sinal indisponivel - todos os modelos retornaram null.";
-  if (valores.length < 2) return "Sinal incompleto - menos de 2 modelos com dados.";
-
-  // Mediana estatistica
-  const ord = valores.slice().sort((a, b) => a - b);
-  const m = Math.floor(ord.length / 2);
-  const mediana = ord.length % 2 === 0 ? (ord[m - 1] + ord[m]) / 2 : ord[m];
-  const medianaPct = mediana * 100;
-
-  // Hamilton 2011 thresholds
-  if (medianaPct >= 65) return `ALERTA - mediana dos ${valores.length} modelos em ${medianaPct.toFixed(0)}% sinaliza recessao.`;
-  if (medianaPct >= 35) return `Atencao - mediana dos ${valores.length} modelos em ${medianaPct.toFixed(0)}% (zona de risco moderado).`;
-  return `Ciclo em expansao - mediana dos ${valores.length} modelos em ${medianaPct.toFixed(0)}% (regime estavel).`;
+  const prob = resumoProbabilidade(payload.probitAz);
+  if (prob.valor === null || prob.valor === undefined) {
+    return "Sinal indisponível — modelos de recessão aguardando pipeline.";
+  }
+  const pct = prob.valor * 100;
+  if (prob.usaFallback) {
+    return `Probit AZ em ${pct.toFixed(0)}% — ${prob.nModelos} de 4 modelos disponíveis; mediana indisponível nesta rodada.`;
+  }
+  // Thresholds 65/35 (Chauvet-Hamilton 2006)
+  if (pct >= 65) return `ALERTA — mediana de ${prob.nModelos} de 4 modelos em ${pct.toFixed(0)}% sinaliza recessão.`;
+  if (pct >= 35) return `Atenção — mediana de ${prob.nModelos} de 4 modelos em ${pct.toFixed(0)}% (zona de risco moderado).`;
+  return `Ciclo em expansão — mediana de ${prob.nModelos} de 4 modelos em ${pct.toFixed(0)}% (regime estável).`;
 }
 
 export function FraseManchete({ payload }: { payload: VisaoGeralPayload }) {

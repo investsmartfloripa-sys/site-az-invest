@@ -1,7 +1,7 @@
 "use client";
 
 import type { VisaoGeralPayload } from "@/lib/painel-visao-geral";
-import { formatPct, formatMes, ultimaObs, focusPibAnoCorrente } from "@/lib/painel-visao-geral";
+import { formatPct, formatMes, ultimaObs, resumoProbabilidade } from "@/lib/painel-visao-geral";
 
 function KpiCard({
   titulo,
@@ -11,9 +11,8 @@ function KpiCard({
   variacao,
   cor,
   mes,
-  destaque,
-  fullHeight,
-  compact,
+  selo,
+  hint,
 }: {
   titulo: string;
   tecnico: string;
@@ -22,9 +21,8 @@ function KpiCard({
   variacao?: string;
   cor: "verde" | "amarelo" | "vermelho" | "neutro";
   mes?: string | null;
-  destaque?: boolean;
-  fullHeight?: boolean;
-  compact?: boolean;
+  selo?: { texto: string; classe: string };
+  hint?: string;
 }) {
   // Reducao saturacao (loop 13): fundo branco em todos, cor apenas na borda esquerda
   const corClass = {
@@ -39,24 +37,25 @@ function KpiCard({
     vermelho: "bg-rose-500",
     neutro: "bg-zinc-300",
   }[cor];
-  const valorSize = destaque && fullHeight ? "text-6xl md:text-7xl" : destaque ? "text-4xl md:text-5xl" : compact ? "text-2xl" : "text-3xl";
-  const padding = destaque ? "p-6" : compact ? "p-3" : "p-5";
-  const ringExtra = destaque ? "ring-2 ring-[#132960]/10" : "";
-  const heightClass = fullHeight ? "flex flex-col w-full" : "";
   return (
-    <div className={`rounded-2xl ${corClass} ${padding} shadow-sm ${ringExtra} ${heightClass}`}>
+    <div className={`rounded-2xl ${corClass} p-3 shadow-sm`} title={hint}>
       <div className="flex items-start justify-between gap-2">
         <div>
-          <div className={`font-semibold text-zinc-900 ${fullHeight ? "text-base" : compact ? "text-xs" : "text-sm"}`}>{titulo}</div>
-          <div className={`uppercase tracking-wide text-zinc-500 ${fullHeight ? "text-xs" : "text-[10px]"}`}>{tecnico}</div>
+          <div className="text-xs font-semibold text-zinc-900">{titulo}</div>
+          <div className="text-[10px] uppercase tracking-wide text-zinc-500">{tecnico}</div>
         </div>
         <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${dot}`} />
       </div>
-      <div className={`${fullHeight ? "flex-1 flex items-center justify-center" : compact ? "mt-1.5" : "mt-3"}`}>
-        <div className={`${valorSize} font-bold text-zinc-900 leading-none`}>{valor}</div>
+      <div className="mt-1.5 flex items-baseline gap-2 flex-wrap">
+        <div className="text-2xl font-bold leading-none text-zinc-900">{valor}</div>
+        {selo && (
+          <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${selo.classe}`}>
+            {selo.texto}
+          </span>
+        )}
       </div>
-      {subtitulo && <div className={`text-zinc-600 ${fullHeight ? "text-sm mt-2 text-center" : compact ? "mt-1 text-[10px] leading-tight" : "mt-1 text-xs"}`}>{subtitulo}</div>}
-      <div className={`flex items-center justify-between text-[10px] text-zinc-500 ${compact ? "mt-1" : "mt-2"}`}>
+      {subtitulo && <div className="mt-1 text-[10px] leading-tight text-zinc-600">{subtitulo}</div>}
+      <div className="mt-1 flex items-center justify-between text-[10px] text-zinc-500">
         <span>{mes ? `Ref. ${formatMes(mes)}` : ""}</span>
         {variacao && <span className="font-medium">{variacao}</span>}
       </div>
@@ -65,125 +64,132 @@ function KpiCard({
 }
 
 export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
-  // KPI 1 - Atividade mensal (IBC-Br m/m dessaz)
+  // KPI 1 - Risco de recessão (FONTE ÚNICA: probabilidades.mediana / sinal_principal do JSON)
+  const prob = resumoProbabilidade(payload.probitAz);
+  const probPct = prob.valor !== null && prob.valor !== undefined ? prob.valor * 100 : null;
+  const kpiProbCor: "verde" | "amarelo" | "vermelho" | "neutro" =
+    probPct === null ? "neutro" : probPct >= 65 ? "vermelho" : probPct >= 35 ? "amarelo" : "verde";
+  const kpiProbTecnico = prob.usaFallback
+    ? "Probit AZ isolado"
+    : probPct === null
+      ? "Modelos causais"
+      : `Mediana de ${prob.nModelos} de 4 modelos`;
+  const kpiProbSubtitulo =
+    probPct === null
+      ? "Nenhum modelo disponível nesta rodada — aguardando pipeline."
+      : prob.usaFallback
+        ? `${prob.nModelos} de 4 modelos disponíveis — mediana indisponível. Backtest formal em construção.`
+        : `${prob.nAcima50} de ${prob.nModelos} acima de 50% · backtest formal em construção`;
+
+  // KPI 2 - Atividade: ritmo trimestral do IBC-Br (3m/3m dessaz, convenção BCB RI)
   const ibc = ultimaObs(payload.ibcbr?.serie);
-  const kpi1 = ibc?.var_mom ?? null;
-  const kpi1Cor: "verde" | "amarelo" | "vermelho" | "neutro" =
-    kpi1 === null ? "neutro" : kpi1 > 0 ? "verde" : kpi1 < -0.3 ? "vermelho" : "amarelo";
-
-  // KPI 2 - Probabilidade de recessão (FONTE CANONICA: probit_az.json - Loop 31)
-  // Mediana estatisticamente correta de 4 modelos causais (Diffusion + Gap Hamilton + Probit Fin + Probit AZ)
-  const probAz = payload.probitAz?.probabilidades;
-  const valoresProbit = probAz ? [probAz.diffusion, probAz.gap_hp, probAz.probit_fin, probAz.probit_az].filter((v): v is number => typeof v === "number") : [];
-  const kpi2Calc: number | null = (() => {
-    if (valoresProbit.length === 0) return null;
-    const ord = valoresProbit.slice().sort((a, b) => a - b);
-    const m = Math.floor(ord.length / 2);
-    return ord.length % 2 === 0 ? (ord[m - 1] + ord[m]) / 2 : ord[m];
-  })();
-  // kpi2 em escala 0-1; multiplicar por 100 para exibir
-  const kpi2 = kpi2Calc !== null ? kpi2Calc * 100 : null;
-  const nModelosProbit = valoresProbit.length;
-  const amostraInsuficiente = nModelosProbit === 0;
-  const kpi2Cor: "verde" | "amarelo" | "vermelho" | "neutro" =
-    kpi2Calc === null ? "neutro" : kpi2Calc >= 0.65 ? "vermelho" : kpi2Calc >= 0.35 ? "amarelo" : "verde";
-
-  // KPI 3 - Confiança Empresarial FGV (ICE) - antes era OECD CLI (stale dez/2023)
-  const ice = ultimaObs(payload.fgvConfianca?.ice);
-  const kpi3 = ice?.valor ?? null;
-  const kpi3Cor: "verde" | "amarelo" | "vermelho" | "neutro" =
-    kpi3 === null ? "neutro" : kpi3 > 100 ? "verde" : kpi3 < 90 ? "vermelho" : "amarelo";
-
-  // KPI 4 - ICF (z-score) -> regime
-  const icf = ultimaObs(payload.icf?.serie);
-  const kpi4 = icf?.icf_zscore ?? null;
-  const kpi4Cor: "verde" | "amarelo" | "vermelho" | "neutro" =
-    icf === null
+  const ritmo = ibc?.var_ritmo_trimestral ?? null;
+  const temRitmo = ritmo !== null && ritmo !== undefined;
+  const atividadeValor = temRitmo ? ritmo : ibc?.var_mom ?? null;
+  // Banda neutra de cor centrada no potencial (+0,5% t/t ±0,5pp), NÃO em zero
+  const atividadeCor: "verde" | "amarelo" | "vermelho" | "neutro" = !temRitmo
+    ? atividadeValor === null
       ? "neutro"
-      : icf.regime === "estimulativo"
+      : atividadeValor > 0
         ? "verde"
-        : icf.regime === "restritivo"
+        : atividadeValor < -0.3
           ? "vermelho"
-          : "amarelo";
+          : "amarelo"
+    : ritmo > 1
+      ? "verde"
+      : ritmo < 0
+        ? "vermelho"
+        : "amarelo";
+  const secundarios: string[] = [];
+  if (ibc?.var_mom !== null && ibc?.var_mom !== undefined) secundarios.push(`m/m ${formatPct(ibc.var_mom)}`);
+  if (ibc?.var_yoy_mm3 !== null && ibc?.var_yoy_mm3 !== undefined) secundarios.push(`a/a mm3 ${formatPct(ibc.var_yoy_mm3)}`);
 
-  // Tecnico/Valor/Subtitulo - Loop 31: fonte unica probit_az.json
-  const nAcima50 = valoresProbit.filter((v) => v >= 0.5).length;
-  const kpi2Tecnico = amostraInsuficiente
-    ? "Aguardando pipeline"
-    : `Mediana ${nModelosProbit} modelos causais`;
-  const kpi2Valor = amostraInsuficiente
-    ? "n/d"
-    : kpi2 === null
-      ? "—"
-      : `${kpi2.toFixed(0)}%`;
-  const kpi2Subtitulo = amostraInsuficiente
-    ? "Modelos aguardando próxima rodada do pipeline."
-    : `${nAcima50} acima de 50% · ${nModelosProbit}/4 rodaram · backtest OOS AUC 0.86`;
-
-  // Calcular hiato uma vez
+  // KPI 3 - Hiato: faixa mín–máx + mediana (nunca número único)
   const hiatoUltimo = ultimaObs(payload.hiato?.serie);
-  const hiatoValor = hiatoUltimo
-    ? `${(((hiatoUltimo.gap_hp_pct ?? 0) + (hiatoUltimo.gap_hamilton_pct ?? 0)) / 2).toFixed(2)}%`
-    : "—";
+  const gapMediana = hiatoUltimo?.gap_mediana_pct ?? null;
+  const gapMin = hiatoUltimo?.gap_min_pct ?? null;
+  const gapMax = hiatoUltimo?.gap_max_pct ?? null;
+  const temFaixa = gapMin !== null && gapMin !== undefined && gapMax !== null && gapMax !== undefined;
+  const hiatoValor = gapMediana !== null && gapMediana !== undefined ? formatPct(gapMediana, 1) : "—";
+  const hiatoSubtitulo = temFaixa
+    ? `entre ${formatPct(gapMin, 1)} e ${formatPct(gapMax, 1)} — métodos divergem; mostramos a faixa.`
+    : "Acima de 0 = aquecimento; abaixo = ociosidade.";
 
-  // Focus PIB ano corrente (mediana mais recente)
-  const focusPib = focusPibAnoCorrente(payload.focusPib);
+  // KPI 4 - Confiança Empresarial FGV (ICE)
+  const ice = ultimaObs(payload.fgvConfianca?.ice);
+  const kpiIce = ice?.valor ?? null;
+  const kpiIceCor: "verde" | "amarelo" | "vermelho" | "neutro" =
+    kpiIce === null ? "neutro" : kpiIce > 100 ? "verde" : kpiIce < 90 ? "vermelho" : "amarelo";
+
+  // KPI 5 - Condições financeiras: juro real ex-ante como número principal; z-score só no hint
+  const icf = ultimaObs(payload.icf?.serie);
+  const selicReal = icf?.selic_real_ex_ante_pct ?? null;
+  const regime = icf?.regime ?? null;
+  const icfCor: "verde" | "amarelo" | "vermelho" | "neutro" =
+    regime === null ? "neutro" : regime === "estimulativo" ? "verde" : regime === "restritivo" ? "vermelho" : "amarelo";
+  const seloRegime =
+    regime === null
+      ? undefined
+      : regime === "estimulativo"
+        ? { texto: "estimulativo", classe: "bg-emerald-100 text-emerald-700" }
+        : regime === "restritivo"
+          ? { texto: "restritivo", classe: "bg-rose-100 text-rose-700" }
+          : { texto: "neutro", classe: "bg-amber-100 text-amber-700" };
+  const icfHint =
+    icf?.icf_zscore !== null && icf?.icf_zscore !== undefined
+      ? `ICF z-score: ${icf.icf_zscore.toFixed(2)} (Selic real invertida + Ibov 6m + REER)`
+      : undefined;
 
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <KpiCard
-          titulo="Atividade mensal"
-          tecnico="IBC-Br m/m + Focus PIB"
-          valor={formatPct(kpi1)}
-          subtitulo={
-            focusPib
-              ? `Focus PIB ${focusPib.ano}: ${focusPib.mediana.toFixed(1)}%`
-              : "Proxy mensal do PIB calculada pelo BCB."
-          }
-          variacao={ibc?.var_yoy !== null && ibc?.var_yoy !== undefined ? `12m: ${formatPct(ibc.var_yoy)}` : undefined}
-          cor={kpi1Cor}
-          mes={ibc?.mes}
-          compact
-        />
-        <KpiCard
-          titulo="Hiato do produto"
-          tecnico="Mediana HP+Hamilton"
-          valor={hiatoValor}
-          subtitulo="Acima de 0 = aquecimento; abaixo = ociosidade."
-          cor="neutro"
-          mes={payload.hiato?.mes_recente}
-          compact
-        />
-        <KpiCard
-          titulo="Confiança Empresarial FGV"
-          tecnico="ICE (FGV-IBRE via SGS)"
-          valor={kpi3 === null ? "—" : kpi3.toFixed(1)}
-          subtitulo="100 = neutro. Acima = otimismo, abaixo = pessimismo."
-          cor={kpi3Cor}
-          mes={ice?.mes}
-          compact
-        />
-        <KpiCard
-          titulo="Condições financeiras"
-          tecnico="ICF próprio (z-score)"
-          valor={kpi4 === null ? "—" : kpi4.toFixed(2)}
-          subtitulo={
-            icf
-              ? icf.regime === "estimulativo"
-                ? "Estimulativas — facilitam atividade"
-                : icf.regime === "restritivo"
-                  ? "Restritivas — apertam atividade"
-                  : "Neutras"
-              : "Selic real + Ibov 6m + REER (z-scores)."
-          }
-          cor={kpi4Cor}
-          mes={icf?.mes}
-          compact
-        />
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+      <KpiCard
+        titulo="Risco de recessão"
+        tecnico={kpiProbTecnico}
+        valor={probPct === null ? "n/d" : `${probPct.toFixed(0)}%`}
+        subtitulo={kpiProbSubtitulo}
+        cor={kpiProbCor}
+        mes={prob.mes}
+      />
+      <KpiCard
+        titulo="Atividade"
+        tecnico={temRitmo ? "ritmo trimestral (3m/3m dessaz)" : "IBC-Br m/m dessaz"}
+        valor={formatPct(atividadeValor)}
+        subtitulo={
+          temRitmo
+            ? "Banda neutra: 0% a +1% t/t (potencial +0,5% ±0,5pp)."
+            : "Proxy mensal do PIB calculada pelo BCB."
+        }
+        variacao={secundarios.length > 0 ? secundarios.join(" · ") : undefined}
+        cor={atividadeCor}
+        mes={ibc?.mes}
+      />
+      <KpiCard
+        titulo="Hiato do produto"
+        tecnico="Mediana de 3 métodos"
+        valor={hiatoValor}
+        selo={temFaixa ? { texto: "entre mín e máx", classe: "bg-zinc-100 text-zinc-600" } : undefined}
+        subtitulo={hiatoSubtitulo}
+        cor="neutro"
+        mes={payload.hiato?.mes_recente}
+      />
+      <KpiCard
+        titulo="Confiança Empresarial FGV"
+        tecnico="ICE (FGV-IBRE via SGS)"
+        valor={kpiIce === null ? "—" : kpiIce.toFixed(1)}
+        subtitulo="100 = neutro. Acima = otimismo, abaixo = pessimismo."
+        cor={kpiIceCor}
+        mes={ice?.mes}
+      />
+      <KpiCard
+        titulo="Condições financeiras"
+        tecnico="Juro real ex-ante"
+        valor={selicReal === null || selicReal === undefined ? "—" : `${selicReal.toFixed(1)}%`}
+        subtitulo="Selic meta menos IPCA esperado 12m (Focus, suavizada)."
+        cor={icfCor}
+        mes={icf?.mes}
+        selo={seloRegime}
+        hint={icfHint}
+      />
     </div>
   );
-}
-
-function sinalizacaoToCor(s: "verde" | "amarelo" | "vermelho"): "verde" | "amarelo" | "vermelho" {
-  return s;
 }
