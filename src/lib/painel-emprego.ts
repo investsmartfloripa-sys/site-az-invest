@@ -19,12 +19,21 @@ export type PnadTaxaPonto = Record<string, number | null | string> & { trim: str
 export type PnadComposicaoPonto = Record<string, number | null | string> & { trim: string };
 export type PnadSetorPonto = Record<string, number | null | string> & { trim: string };
 
+/** v2: massa de rendimento real do TRABALHO (SIDRA 6392, trimestre móvel, já deflacionada pelo IBGE). */
+export type PnadMassaPonto = { mes: string; massa_real_mi: number | null; massa_yoy_pct: number | null };
+
 export type PnadData = {
+  /** v2 também adiciona: "Nível da ocupação" e `desocupacao_sa` (STL própria) nos rows de taxas;
+   * "Empregado privado c/ carteira" e "s/ carteira" na composição. */
+  schema_version?: number;
   gerado_em: string;
   trim_recente: string;
   taxas: { serie: PnadTaxaPonto[]; indicadores: string[] };
   composicao: { serie: PnadComposicaoPonto[]; categorias: string[] };
   setor: { serie: PnadSetorPonto[]; categorias: string[] };
+  massa_rendimento?: { _nota: string; serie: PnadMassaPonto[] };
+  /** v2: ocupados no setor privado com/sem carteira (mil pessoas, SIDRA 4097). */
+  carteira?: { _nota: string; serie: { trim: string; com_carteira_mil?: number | null; sem_carteira_mil?: number | null }[] };
   metadata: { fonte: string; nota: string };
 };
 
@@ -37,9 +46,13 @@ export type CagedTotalPonto = {
   admissoes: number | null;
   demissoes: number | null;
   saldo_mm12: number | null;
+  /** v2: saldo dessazonalizado (STL própria, robusta a 2020) e seu momentum MM3. */
+  saldo_sa?: number | null;
+  saldo_sa_mm3?: number | null;
 };
 
 export type CagedTotalData = {
+  schema_version?: number;
   gerado_em: string;
   mes_recente: string;
   serie: CagedTotalPonto[];
@@ -58,11 +71,30 @@ export type CagedQuebraPonto = {
   diferencial: number | null;
   saldo_por_setor_ibge: Record<string, number>;
   saldo_por_faixa_salario: Record<string, number>;
+  // ── v2 ──
+  /** Fluxo BRUTO de admissões por faixa (share válido — saldo não comporta share). */
+  admissoes_por_faixa?: Record<string, number>;
+  /** Proxy do quits rate (tipomovimentação 40); null em meses ainda não reprocessados. */
+  desligamentos_a_pedido?: number | null;
+  pct_desligamentos_a_pedido?: number | null;
+  /** Salários em R$ do mês-base do IPCA (deflator SGS 433 desde 2019 — série inteira). */
+  salario_adm_real?: number | null;
+  salario_dem_real?: number | null;
+  salario_adm_real_yoy_pct?: number | null;
+  /** Medianas (robustas à cauda de outliers de declaração) — só nos meses reprocessados pós-v2. */
+  salario_mediana_admissao?: number | null;
+  salario_mediana_demissao?: number | null;
+  salario_mediana_adm_real?: number | null;
+  salario_mediana_dem_real?: number | null;
+  salario_mediana_adm_real_yoy_pct?: number | null;
 };
 
 export type CagedQuebrasData = {
+  schema_version?: number;
   gerado_em: string;
   mes_recente: string;
+  /** v2: mês-base do deflator (salários reais expressos em R$ deste mês). */
+  deflator_base_mes?: string | null;
   serie: CagedQuebraPonto[];
   metadata: { fonte: string; nota: string; cnae_para_setor: Record<string, string> };
 };
@@ -155,6 +187,9 @@ export function agrupa5(faixas11: Record<string, number>): Record<string, number
   const g: Record<string, number> = { "≤ 1 SM": 0, "1-2 SM": 0, "2-3 SM": 0, "3-5 SM": 0, "> 5 SM": 0 };
   for (const [k, v] of Object.entries(faixas11)) {
     const idx = parseInt(k, 10);
+    // "00" = salário NÃO INFORMADO — fora da agregação (antes caía em "≤ 1 SM" e os
+    // totais divergiam da vista de 11 faixas, que já omitia o bucket).
+    if (idx === 0 || Number.isNaN(idx)) continue;
     if (idx <= 2) g["≤ 1 SM"] += v;
     else if (idx <= 4) g["1-2 SM"] += v;
     else if (idx <= 5) g["2-3 SM"] += v;

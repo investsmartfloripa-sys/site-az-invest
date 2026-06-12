@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
 
 import { CagedDashboard } from "@/components/painel/emprego/CagedDashboard";
+import { CagedDashboardV2 } from "@/components/painel/emprego/v2/caged/CagedDashboardV2";
+import { loadAtividadeCodace } from "@/lib/painel-atividade";
 import { loadCagedFull } from "@/lib/painel-emprego";
 
 export const metadata: Metadata = {
   title: "Emprego — CAGED — AZ Invest",
   description:
-    "Escrutínio dos dados do Novo CAGED (MTE): saldo mensal de admissões e demissões, quebra por faixa salarial e setor IBGE, salário médio de admissão e demissão. Atualizado mensalmente.",
+    "Leitura narrativa do Novo CAGED (MTE): saldo dessazonalizado e momentum do mercado formal, acumulado do ano, fluxos de admissões e desligamentos, salário real de admissão e abertura por setor e faixa salarial. Atualizado mensalmente.",
 };
 
 export const dynamic = "force-dynamic";
 export const revalidate = 21600; // 6h
 
 export default async function PainelCagedPage() {
-  const { total, quebras, ipca } = await loadCagedFull();
+  const [{ total, quebras, ipca }, codace] = await Promise.all([loadCagedFull(), loadAtividadeCodace()]);
 
   if (!total) {
     return (
@@ -23,5 +25,13 @@ export default async function PainelCagedPage() {
     );
   }
 
-  return <CagedDashboard total={total} quebras={quebras} ipca={ipca} />;
+  // Gate v2: exige schema_version ≥ 2 E o campo saldo_sa (STL própria) na
+  // observação mais recente — senão cai no dashboard antigo (que ainda usa o
+  // IPCA client-side como deflator; no v2 o salário real vem do builder).
+  const ultimo = total.serie[total.serie.length - 1];
+  if (!total.schema_version || total.schema_version < 2 || ultimo?.saldo_sa === undefined) {
+    return <CagedDashboard total={total} quebras={quebras} ipca={ipca} />;
+  }
+
+  return <CagedDashboardV2 total={total} quebras={quebras} codace={codace} />;
 }

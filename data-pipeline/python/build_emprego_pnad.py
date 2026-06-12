@@ -104,24 +104,24 @@ def _periodo_path(periodos: int) -> str:
 
 
 def carrega_taxas(periodos: int = 0) -> list[dict]:
-    """Carrega 3 tabelas SIDRA de taxas e devolve série única por trimestre.
+    """Carrega as tabelas SIDRA de taxas e devolve série única por trimestre.
 
-    v2: a 6461 também traz o "Nível da ocupação" (% da PIA) na MESMA chamada —
-    par da participação p/ responder 'o desemprego caiu pelo motivo certo?'.
+    v2: o "Nível da ocupação" (ocupados/PIA, % — par da participação p/ responder
+    'o desemprego caiu pelo motivo certo?') vem da tabela 4093, variável 4097.
     """
     por_trim: dict[str, dict] = {}
     fetches = [
-        (4099, VARS_4099, False),
-        (6461, VARS_6461, True),  # aceita também 'Nível da ocupação' por nome
-        (8529, VARS_8529, False),
+        (4099, VARS_4099),
+        (6461, VARS_6461),
+        (8529, VARS_8529),
+        (4093, {"4097": "Nível da ocupação"}),  # v2
     ]
-    for tabela, vars_map, aceita_nivel in fetches:
-        rows = sidra_fetch(tabela, f"/n1/all/v/all{_periodo_path(periodos)}")
+    for tabela, vars_map in fetches:
+        ids = ",".join(vars_map.keys()) if tabela == 4093 else "all"
+        rows = sidra_fetch(tabela, f"/n1/all/v/{ids}{_periodo_path(periodos)}")
         for r in rows:
             cod = r["Variável (Código)"]
             chave = vars_map.get(cod)
-            if chave is None and aceita_nivel and "nível da ocupação" in str(r.get("Variável", "")).lower():
-                chave = "Nível da ocupação"
             if chave is None:
                 continue
             trim = _parse_trim(r["Trimestre (Código)"])
