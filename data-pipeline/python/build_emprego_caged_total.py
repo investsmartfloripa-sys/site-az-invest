@@ -106,13 +106,42 @@ def main() -> None:
         janela = [x["saldo"] for x in serie[max(0, i - 11) : i + 1] if x["saldo"] is not None]
         item["saldo_mm12"] = round(sum(janela) / len(janela), 0) if len(janela) >= 12 else None
 
+    # ── v2: dessazonalização PRÓPRIA via STL (robust=True trata os outliers de 2020;
+    # não existe SA oficial do CAGED). MM3 da série SA = momentum canônico de research —
+    # a MM12 atrasa viradas em ~6 meses. Fluxo → decomposição aditiva (STL é aditiva).
+    for item in serie:
+        item["saldo_sa"] = None
+        item["saldo_sa_mm3"] = None
+    saldo_vals = [x["saldo"] for x in serie]
+    if all(v is not None for v in saldo_vals) and len(saldo_vals) >= 36:
+        try:
+            import pandas as pd
+            from statsmodels.tsa.seasonal import STL
+
+            idx = pd.period_range(serie[0]["mes"], periods=len(serie), freq="M").to_timestamp()
+            s = pd.Series([float(v) for v in saldo_vals], index=idx)
+            res = STL(s, period=12, robust=True).fit()
+            sa = s - res.seasonal
+            for i, item in enumerate(serie):
+                item["saldo_sa"] = round(float(sa.iloc[i]), 0)
+            for i, item in enumerate(serie):
+                if i >= 2:
+                    jan = [serie[j]["saldo_sa"] for j in range(i - 2, i + 1)]
+                    item["saldo_sa_mm3"] = round(sum(jan) / 3, 0)
+            print(f"  [v2] STL ok | saldo_sa: {serie[-1]['saldo_sa']:+,.0f} | mm3 SA: {serie[-1]['saldo_sa_mm3']:+,.0f}")
+        except Exception as e:
+            print(f"  [WARN] STL indisponível ({e}) — saldo_sa fica nulo nesta rodada", file=sys.stderr)
+    else:
+        print("  [WARN] série com buracos ou curta demais p/ STL — saldo_sa nulo", file=sys.stderr)
+
     out = {
+        "schema_version": 2,
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "mes_recente": serie[-1]["mes"],
         "serie": serie,
         "metadata": {
             "fonte": "IPEADATA — séries CAGED12_SALDON12 / _ADMISN12 / _DESLIGN12 (saldo consolidado MTE com revisões)",
-            "nota": "Saldo nacional do Novo CAGED desde jan/2020. IPEADATA capta o consolidado oficial após revisões via CAGEDFOR/CAGEDEXC.",
+            "nota": "Saldo nacional do Novo CAGED desde jan/2020. IPEADATA capta o consolidado oficial após revisões via CAGEDFOR/CAGEDEXC. saldo_sa/saldo_sa_mm3 (v2): dessazonalização PRÓPRIA (STL robusta, modelo aditivo) — não existe SA oficial do CAGED; divergências vs números SA de terceiros são esperadas.",
         },
     }
 

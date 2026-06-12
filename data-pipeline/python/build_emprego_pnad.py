@@ -98,28 +98,41 @@ def sidra_fetch(tabela: int, path: str) -> list[dict]:
     return [{header.get(k, k): v for k, v in item.items()} for item in data[1:]]
 
 
-def carrega_taxas(periodos: int = 24) -> list[dict]:
-    """Carrega 3 tabelas SIDRA de taxas e devolve série única por trimestre."""
+def _periodo_path(periodos: int) -> str:
+    """periodos <= 0 → série completa (/p/all); senão últimos N trimestres."""
+    return "/p/all" if periodos <= 0 else f"/p/last%20{periodos}"
+
+
+def carrega_taxas(periodos: int = 0) -> list[dict]:
+    """Carrega 3 tabelas SIDRA de taxas e devolve série única por trimestre.
+
+    v2: a 6461 também traz o "Nível da ocupação" (% da PIA) na MESMA chamada —
+    par da participação p/ responder 'o desemprego caiu pelo motivo certo?'.
+    """
     por_trim: dict[str, dict] = {}
     fetches = [
-        (4099, VARS_4099, "/n1/all/v/all/p/last%20{N}"),
-        (6461, VARS_6461, "/n1/all/v/all/p/last%20{N}"),
-        (8529, VARS_8529, "/n1/all/v/all/p/last%20{N}"),
+        (4099, VARS_4099, False),
+        (6461, VARS_6461, True),  # aceita também 'Nível da ocupação' por nome
+        (8529, VARS_8529, False),
     ]
-    for tabela, vars_map, path_tpl in fetches:
-        rows = sidra_fetch(tabela, path_tpl.replace("{N}", str(periodos)))
+    for tabela, vars_map, aceita_nivel in fetches:
+        rows = sidra_fetch(tabela, f"/n1/all/v/all{_periodo_path(periodos)}")
         for r in rows:
             cod = r["Variável (Código)"]
-            if cod not in vars_map:
+            chave = vars_map.get(cod)
+            if chave is None and aceita_nivel and "nível da ocupação" in str(r.get("Variável", "")).lower():
+                chave = "Nível da ocupação"
+            if chave is None:
                 continue
             trim = _parse_trim(r["Trimestre (Código)"])
-            por_trim.setdefault(trim, {})[vars_map[cod]] = _to_float(r["Valor"])
+            por_trim.setdefault(trim, {})[chave] = _to_float(r["Valor"])
     return [{"trim": t, **v} for t, v in sorted(por_trim.items())]
 
 
-def carrega_composicao(periodos: int = 24) -> list[dict]:
-    """Tabela 4096: distribuição % por posição na ocupação."""
-    rows = sidra_fetch(4096, f"/n1/all/v/all/p/last%20{periodos}/c12029/all")
+def carrega_composicao(periodos: int = 0) -> list[dict]:
+    """Tabela 4096: distribuição % por posição na ocupação (4 posições genéricas —
+    o recorte de carteira NÃO existe nesta tabela; vive na 4097, ver carrega_carteira)."""
+    rows = sidra_fetch(4096, f"/n1/all/v/all{_periodo_path(periodos)}/c12029/all")
     por_trim: dict[str, dict] = {}
     for r in rows:
         if r.get("Variável (Código)") != "4108":  # distribuição percentual
@@ -132,9 +145,34 @@ def carrega_composicao(periodos: int = 24) -> list[dict]:
     return [{"trim": t, **v} for t, v in sorted(por_trim.items())]
 
 
-def carrega_setor(periodos: int = 24) -> list[dict]:
+def carrega_carteira(periodos: int = 0) -> list[dict]:
+    """Tabela 4097 (v2): ocupados em MIL PESSOAS por categoria do emprego — o recorte
+    de QUALIDADE da ocupação (privado com × sem carteira)."""
+    rows = sidra_fetch(4097, f"/n1/all/v/all{_periodo_path(periodos)}/c11913/all")
+    por_trim: dict[str, dict] = {}
+    for r in rows:
+        nome_var = str(r.get("Variável", "")).lower()
+        if not nome_var.startswith("pessoas de 14"):
+            continue  # pula "Coeficiente de variação - ..."
+        nome_cat = ""
+        for k, v in r.items():
+            if "categoria do emprego" in k.lower() and "digo" not in k:
+                nome_cat = str(v).lower()
+                break
+        if "setor privado" in nome_cat and "com carteira" in nome_cat:
+            chave = "com_carteira_mil"
+        elif "setor privado" in nome_cat and "sem carteira" in nome_cat:
+            chave = "sem_carteira_mil"
+        else:
+            continue
+        trim = _parse_trim(r["Trimestre (Código)"])
+        por_trim.setdefault(trim, {})[chave] = _to_float(r["Valor"])
+    return [{"trim": t, **v} for t, v in sorted(por_trim.items())]
+
+
+def carrega_setor(periodos: int = 0) -> list[dict]:
     """Tabela 5434: pessoas ocupadas (mil pessoas) por grupamento de atividade."""
-    rows = sidra_fetch(5434, f"/n1/all/v/all/p/last%20{periodos}/c888/all")
+    rows = sidra_fetch(5434, f"/n1/all/v/all{_periodo_path(periodos)}/c888/all")
     por_trim: dict[str, dict] = {}
     for r in rows:
         if r.get("Variável (Código)") != "4090":  # mil pessoas
@@ -147,11 +185,67 @@ def carrega_setor(periodos: int = 24) -> list[dict]:
     return [{"trim": t, **v} for t, v in sorted(por_trim.items())]
 
 
+def carrega_massa() -> list[dict]:
+    """Tabela 6392 (v2): massa de rendimento mensal REAL habitual — trimestre MÓVEL.
+
+    Já vem deflacionada pelo IBGE (não re-deflacionar). É a massa do TRABALHO —
+    não confundir com 'massa ampliada' (que inclui transferências; não temos)."""
+    rows = sidra_fetch(6392, "/n1/all/v/all/p/all")
+    serie: dict[str, float | None] = {}
+    for r in rows:
+        nome_var = str(r.get("Variável", "")).lower()
+        # startswith exclui as variantes "Coeficiente de variação - Massa..." e
+        # "Variação percentual/absoluta - Massa..." (que sobrescreviam com lixo)
+        if not nome_var.startswith("massa de rendimento") or "real" not in nome_var or "habitual" not in nome_var:
+            continue
+        # chave do período no trimestre móvel: 'Trimestre Móvel (Código)' = YYYYMM
+        cod = None
+        for k, v in r.items():
+            if "Trimestre Móvel (Código)" in k:
+                cod = str(v)
+                break
+        if not cod or len(cod) != 6:
+            continue
+        serie[f"{cod[:4]}-{cod[4:]}"] = _to_float(r["Valor"])
+    out = [{"mes": m, "massa_real_mi": v} for m, v in sorted(serie.items())]
+    # YoY no builder (derivada canônica)
+    vmap = {r["mes"]: r["massa_real_mi"] for r in out}
+    for r in out:
+        y, m = r["mes"].split("-")
+        ant = vmap.get(f"{int(y) - 1}-{m}")
+        r["massa_yoy_pct"] = round((r["massa_real_mi"] / ant - 1) * 100, 2) if (r["massa_real_mi"] and ant) else None
+    return out
+
+
+def dessazonaliza_desocupacao(taxas_serie: list[dict]) -> bool:
+    """v2: STL trimestral (period=4, robust) na desocupação — só se a série não tiver
+    buracos internos (STL não aceita NaN; o hiato pandêmico afeta OUTRAS tabelas)."""
+    vals = [r.get("Taxa de desocupação") for r in taxas_serie]
+    if len(vals) < 16 or any(v is None for v in vals):
+        print("  [WARN] desocupação com buracos/curta — SA própria omitida", file=sys.stderr)
+        return False
+    try:
+        import pandas as pd
+        from statsmodels.tsa.seasonal import STL
+
+        s = pd.Series([float(v) for v in vals])
+        res = STL(s, period=4, robust=True).fit()
+        sa = s - res.seasonal
+        for i, r in enumerate(taxas_serie):
+            r["desocupacao_sa"] = round(float(sa.iloc[i]), 2)
+        print(f"  [v2] desocupação SA (STL): última {taxas_serie[-1]['desocupacao_sa']}%")
+        return True
+    except Exception as e:
+        print(f"  [WARN] STL indisponível ({e}) — desocupacao_sa omitida", file=sys.stderr)
+        return False
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Build do JSON do Painel Emprego — PNAD")
     ap.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR), help="Diretório de saída (default: data-pipeline/out)")
     ap.add_argument("--upload", action="store_true", help="Após gerar, fazer upload pro Vercel Blob")
-    ap.add_argument("--periodos", type=int, default=24, help="Quantos trimestres puxar do SIDRA (default 24)")
+    ap.add_argument("--periodos", type=int, default=0,
+                    help="Quantos trimestres puxar do SIDRA (default 0 = série completa desde 2012)")
     args = ap.parse_args()
 
     out_dir = Path(args.out_dir).resolve()
@@ -166,15 +260,35 @@ def main() -> None:
     comp_serie = carrega_composicao(args.periodos)
     print(f"  {len(comp_serie)} trimestres")
 
+    print("== PNAD: Carteira (4097, v2) ==")
+    try:
+        carteira_serie = carrega_carteira(args.periodos)
+        print(f"  {len(carteira_serie)} trimestres, último: {carteira_serie[-1] if carteira_serie else 'NENHUM'}")
+    except Exception as e:
+        print(f"  [WARN] carteira indisponível ({e})", file=sys.stderr)
+        carteira_serie = []
+
     print("== PNAD: Setor (5434) ==")
     setor_serie = carrega_setor(args.periodos)
     print(f"  {len(setor_serie)} trimestres")
+
+    print("== PNAD: Massa de rendimento real (6392, v2) ==")
+    try:
+        massa_serie = carrega_massa()
+        print(f"  {len(massa_serie)} meses (trimestre móvel), último: {massa_serie[-1] if massa_serie else 'NENHUM'}")
+    except Exception as e:
+        print(f"  [WARN] massa indisponível ({e})", file=sys.stderr)
+        massa_serie = []
 
     if not taxas_serie:
         print("ERRO: série PNAD vazia, abortando sem upload", file=sys.stderr)
         sys.exit(2)
 
+    # v2: desocupação dessazonalizada (STL própria) — campo desocupacao_sa nos rows de taxas
+    dessazonaliza_desocupacao(taxas_serie)
+
     out = {
+        "schema_version": 2,
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "trim_recente": taxas_serie[-1]["trim"],
         "taxas": {
@@ -185,13 +299,27 @@ def main() -> None:
             "serie": comp_serie,
             "categorias": list(POSICAO_CATS.values()),
         },
+        "carteira": {
+            "_nota": "SIDRA 4097 — ocupados no setor privado (exclusive domésticos) com/sem carteira, em mil pessoas. Recorte de qualidade da ocupação.",
+            "serie": carteira_serie,
+        },
         "setor": {
             "serie": setor_serie,
             "categorias": list(SETOR_CATS.values()),
         },
+        # ── v2 ──
+        "massa_rendimento": {
+            "_nota": "SIDRA 6392 — massa de rendimento mensal REAL habitual do TRABALHO, trimestre MÓVEL, já deflacionada pelo IBGE (não re-deflacionar). Não é a 'massa ampliada' (que inclui transferências).",
+            "serie": massa_serie,
+        },
         "metadata": {
-            "fonte": "IBGE/SIDRA — PNAD Contínua Trimestral (tabelas 4099, 6461, 8529, 4096, 5434)",
-            "nota": "Indicadores trimestrais nacionais. Hiato 2T2020-1T2022 em algumas tabelas (suspensão pandêmica).",
+            "fonte": "IBGE/SIDRA — PNAD Contínua Trimestral (tabelas 4099, 6461, 8529, 4096, 5434, 6392)",
+            "nota": (
+                "Indicadores trimestrais nacionais desde 1T2012. Hiato 2T2020-1T2022 em algumas tabelas (suspensão pandêmica). "
+                "Informalidade (8529) só existe desde 4T2015. 'Nível da ocupação' e participação são % da PIA (mesma escala). "
+                "desocupacao_sa (v2): dessazonalização PRÓPRIA (STL robusta) — não há SA oficial; rotular como estimativa da casa. "
+                "Rendimento/massa (6392) é trimestre MÓVEL — janela amostral diferente das taxas (trimestre calendário)."
+            ),
         },
     }
 

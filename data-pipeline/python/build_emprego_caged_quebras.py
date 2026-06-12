@@ -56,13 +56,15 @@ FTP_BASE = "/pdet/microdados/NOVO CAGED"
 
 
 def _scratch_dir() -> Path:
-    """Pasta de trabalho temporária — prefere /dev/shm (RAM), fallback /tmp."""
+    """Pasta de trabalho temporária — prefere /dev/shm (RAM, CI Linux); fallback
+    tempfile.gettempdir() (portável — '/tmp' hardcoded quebrava no Windows)."""
+    import tempfile
     shm = Path("/dev/shm")
     if shm.exists() and os.access(shm, os.W_OK):
         d = shm / "caged_quebras_build"
     else:
-        d = Path("/tmp/caged_quebras_build")
-    d.mkdir(exist_ok=True)
+        d = Path(tempfile.gettempdir()) / "caged_quebras_build"
+    d.mkdir(parents=True, exist_ok=True)
     return d
 
 
@@ -139,20 +141,39 @@ def baixa_e_extrai(ano: int, mes: int, scratch: Path) -> Path | None:
 
 
 def agrega_microdado(txt: Path, ano: int) -> dict:
-    """Lê o CAGEDMOV em chunks com pandas e devolve agregação por faixa salarial e setor."""
+    """Lê o CAGEDMOV em chunks com pandas e devolve agregação por faixa salarial e setor.
+
+    v2 (aditivo): admissoes_por_faixa (fluxo bruto — share válido, ao contrário do
+    saldo) e desligamentos A PEDIDO (tipomovimentação 40 — proxy do quits rate,
+    termômetro de mercado aquecido)."""
     t0 = time.time()
     sm = SM_POR_ANO.get(ano, SM_POR_ANO[max(SM_POR_ANO)])
 
+    # usecols dinâmico: tipomovimentação pode não existir em algum layout antigo
+    cols_head = list(pd.read_csv(txt, sep=";", nrows=0, encoding="utf-8").columns)
+    tem_tipo = "tipomovimentação" in cols_head
+    usecols = ["seção", "saldomovimentação", "salário"] + (["tipomovimentação"] if tem_tipo else [])
+    dtypes: dict[str, Any] = {"seção": str, "saldomovimentação": "Int8"}
+    if tem_tipo:
+        dtypes["tipomovimentação"] = "Int16"
+
     total_adm = total_dem = total_linhas = 0
+    desligamentos_a_pedido = 0
     saldo_setor: dict[str, int] = {s: 0 for s in {"Agropecuária", "Indústria geral", "Construção", "Comércio", "Serviços"}}
     saldo_faixa: dict[str, int] = {f"{i:02d}": 0 for i in range(0, 13)}
+    adm_faixa: dict[str, int] = {f"{i:02d}": 0 for i in range(0, 13)}
     sum_sal_adm = n_sal_adm = 0
     sum_sal_dem = n_sal_dem = 0
+    # v2: teto de sanidade p/ a MÉDIA (salários de declaração errada — bilhões — explodem
+    # a média de um mês inteiro, como em abr/2026) + listas p/ MEDIANA (robusta à cauda)
+    teto_sal = 120 * sm  # ~R$ 180k/mês: acima disso é erro de declaração
+    sal_adm_chunks: list = []
+    sal_dem_chunks: list = []
 
     for chunk in pd.read_csv(
         txt, sep=";", chunksize=500_000, encoding="utf-8",
-        dtype={"seção": str, "saldomovimentação": "Int8"},
-        usecols=["seção", "saldomovimentação", "salário"],
+        dtype=dtypes,
+        usecols=usecols,
     ):
         total_linhas += len(chunk)
         chunk["sal"] = pd.to_numeric(chunk["salário"].astype(str).str.replace(",", ".", regex=False), errors="coerce")
@@ -163,18 +184,25 @@ def agrega_microdado(txt: Path, ano: int) -> dict:
         adm = (s == 1); dem = (s == -1)
         total_adm += int(adm.sum())
         total_dem += int(dem.sum())
+        if tem_tipo:
+            # 40 = desligamento a pedido (layout Novo CAGED)
+            desligamentos_a_pedido += int((dem & (chunk["tipomovimentação"] == 40)).sum())
 
         for setor, sub in chunk.groupby("st"):
             if setor in saldo_setor:
                 saldo_setor[setor] += int(sub["saldomovimentação"].sum())
         for fx, sub in chunk.groupby("fxv"):
             saldo_faixa[fx] = saldo_faixa.get(fx, 0) + int(sub["saldomovimentação"].sum())
+        for fx, sub in chunk.loc[adm].groupby("fxv"):
+            adm_faixa[fx] = adm_faixa.get(fx, 0) + int(len(sub))
 
-        v = chunk["sal"].notna() & (chunk["sal"] > 0)
+        v = chunk["sal"].notna() & (chunk["sal"] > 0) & (chunk["sal"] <= teto_sal)
         sum_sal_adm += float(chunk.loc[adm & v, "sal"].sum())
         n_sal_adm += int((adm & v).sum())
         sum_sal_dem += float(chunk.loc[dem & v, "sal"].sum())
         n_sal_dem += int((dem & v).sum())
+        sal_adm_chunks.append(chunk.loc[adm & v, "sal"].to_numpy(dtype="float32"))
+        sal_dem_chunks.append(chunk.loc[dem & v, "sal"].to_numpy(dtype="float32"))
 
     txt.unlink()
     dt = time.time() - t0
@@ -182,6 +210,11 @@ def agrega_microdado(txt: Path, ano: int) -> dict:
 
     sal_med_adm = round(sum_sal_adm / n_sal_adm, 2) if n_sal_adm else None
     sal_med_dem = round(sum_sal_dem / n_sal_dem, 2) if n_sal_dem else None
+    import numpy as np
+    arr_adm = np.concatenate(sal_adm_chunks) if sal_adm_chunks else np.array([])
+    arr_dem = np.concatenate(sal_dem_chunks) if sal_dem_chunks else np.array([])
+    sal_mediana_adm = round(float(np.median(arr_adm)), 2) if arr_adm.size else None
+    sal_mediana_dem = round(float(np.median(arr_dem)), 2) if arr_dem.size else None
     return {
         "total_linhas": total_linhas,
         "total_admissoes": total_adm,
@@ -193,7 +226,86 @@ def agrega_microdado(txt: Path, ano: int) -> dict:
         "diferencial": round(sal_med_adm - sal_med_dem, 2) if (sal_med_adm and sal_med_dem) else None,
         "saldo_por_setor_ibge": saldo_setor,
         "saldo_por_faixa_salario": saldo_faixa,
+        # ── v2 ──
+        "admissoes_por_faixa": adm_faixa,
+        "desligamentos_a_pedido": desligamentos_a_pedido if tem_tipo else None,
+        "pct_desligamentos_a_pedido": (
+            round(desligamentos_a_pedido / total_dem * 100, 1) if (tem_tipo and total_dem) else None
+        ),
+        "salario_mediana_admissao": sal_mediana_adm,
+        "salario_mediana_demissao": sal_mediana_dem,
     }
+
+
+def deflator_ipca_433() -> tuple[dict[str, float], str | None]:
+    """SGS 433 (IPCA var % mensal) desde 2019, composto e NORMALIZADO p/ o último
+    mês = 100 — deflaciona salários 'a preços de hoje'. Resolve o furo do deflator
+    de 24 meses do ipca.json (que truncava silenciosamente o toggle Real)."""
+    import requests
+    try:
+        r = requests.get(
+            "https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados?formato=json&dataInicial=01/01/2019",
+            timeout=60, headers={"User-Agent": "az-invest-emprego-quebras/0.2"},
+        )
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        print(f"  [WARN] SGS 433 indisponível ({e}) — campos reais ficam nulos", file=sys.stderr)
+        return {}, None
+    idx = 100.0
+    bruto: dict[str, float] = {}
+    for row in data:
+        try:
+            d, m, y = row["data"].split("/")
+            v = float(row["valor"])
+        except (KeyError, ValueError):
+            continue
+        idx *= 1 + v / 100
+        bruto[f"{y}-{m}"] = idx
+    if not bruto:
+        return {}, None
+    base_mes = sorted(bruto.keys())[-1]
+    base = bruto[base_mes]
+    return {k: v / base * 100 for k, v in bruto.items()}, base_mes
+
+
+def aplica_salario_real(serie: list[dict], defl: dict[str, float], base_mes: str | None) -> None:
+    """v2: salário real (R$ do mês-base do IPCA) + YoY real da admissão, sobre a série
+    INTEIRA (inclusive meses herdados do Blob — não exige reprocessar microdado).
+    Mês mais novo que o IPCA disponível usa o último índice (≈ nominal) — fallback declarado."""
+    if not defl:
+        for item in serie:
+            item.setdefault("salario_adm_real", None)
+            item.setdefault("salario_dem_real", None)
+            item.setdefault("salario_adm_real_yoy_pct", None)
+        return
+    ult_idx = defl[sorted(defl.keys())[-1]]
+    reais: dict[str, float] = {}
+    reais_mediana: dict[str, float] = {}
+    campos = (
+        ("salario_medio_admissao", "salario_adm_real"),
+        ("salario_medio_demissao", "salario_dem_real"),
+        ("salario_mediana_admissao", "salario_mediana_adm_real"),
+        ("salario_mediana_demissao", "salario_mediana_dem_real"),
+    )
+    for item in serie:
+        idx = defl.get(item["mes"], ult_idx)
+        for campo, alvo in campos:
+            v = item.get(campo)
+            item[alvo] = round(v / idx * 100, 2) if (v is not None and idx) else None
+        if item.get("salario_adm_real") is not None:
+            reais[item["mes"]] = item["salario_adm_real"]
+        if item.get("salario_mediana_adm_real") is not None:
+            reais_mediana[item["mes"]] = item["salario_mediana_adm_real"]
+    for item in serie:
+        y, m = item["mes"].split("-")
+        ant = reais.get(f"{int(y) - 1}-{m}")
+        atual = item.get("salario_adm_real")
+        item["salario_adm_real_yoy_pct"] = round((atual / ant - 1) * 100, 2) if (atual and ant) else None
+        ant_md = reais_mediana.get(f"{int(y) - 1}-{m}")
+        atual_md = item.get("salario_mediana_adm_real")
+        item["salario_mediana_adm_real_yoy_pct"] = round((atual_md / ant_md - 1) * 100, 2) if (atual_md and ant_md) else None
+    print(f"  [v2] salário real aplicado (base IPCA: {base_mes})")
 
 
 def carrega_blob_anterior() -> dict | None:
@@ -303,15 +415,25 @@ def main() -> None:
         print("ERRO: nenhum mês processado e sem dado anterior, abortando", file=sys.stderr)
         sys.exit(2)
 
+    # ── v2: salário REAL sobre a série inteira (deflator dedicado SGS 433 desde 2019) ──
+    defl, base_mes = deflator_ipca_433()
+    aplica_salario_real(serie, defl, base_mes)
+
     out = {
+        "schema_version": 2,
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "mes_recente": serie[-1]["mes"],
+        "deflator_base_mes": base_mes,
         "serie": serie,
         "metadata": {
-            "fonte": "MTE/PDET — microdados Novo CAGED (FTP), agregação local",
+            "fonte": "MTE/PDET — microdados Novo CAGED (FTP), agregação local; deflator IPCA SGS 433",
             "nota": (
                 "Distribuições por faixa salarial/setor e salário médio refletem APENAS declarações no prazo "
-                "do mês de referência (~40-50% do saldo oficial). Para saldo absoluto use emprego_caged_total.json."
+                "do mês de referência (~40-50% do saldo oficial). Para saldo absoluto use emprego_caged_total.json. "
+                "v2: salario_adm_real/_dem_real em R$ do mês-base do IPCA (deflator_base_mes); salário de admissão "
+                "é proxy SEM controle de composição (o mix setorial muda mês a mês — o BCB usa versão ajustada no RI). "
+                "admissoes_por_faixa = fluxo bruto (share válido); desligamentos a pedido (tipo 40) = proxy do quits rate. "
+                "Faixa '00' = salário não informado (excluir de agregações por faixa, reportar como nota)."
             ),
             "cnae_para_setor": SECAO_PARA_SETOR,
         },
