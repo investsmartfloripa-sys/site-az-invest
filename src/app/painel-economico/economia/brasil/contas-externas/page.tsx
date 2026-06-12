@@ -2,19 +2,25 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ContasExternasDashboard } from "@/components/painel/contas-externas/ContasExternasDashboard";
+import { ContasExternasDashboardV2 } from "@/components/painel/contas-externas/v2/ContasExternasDashboardV2";
 import { loadContasExternas, loadContasExternasComex } from "@/lib/painel-contas-externas";
+import { loadAtividadeCodace } from "@/lib/painel-atividade";
 
 export const metadata: Metadata = {
   title: "Contas Externas — AZ Invest",
   description:
-    "Balanço de pagamentos, investimento direto, reservas internacionais e comércio exterior por produto e destino. Dados BCB (BPM6) e SECEX/MDIC (Comex Stat), atualização automática diária.",
+    "Balanço de pagamentos do Brasil em acumulado de 12 meses: conta corrente em % do PIB, decomposição em bens, serviços e rendas, cobertura do déficit pelo IDP, reservas em meses de importação e a pauta de comércio por produto e destino. Dados BCB (BPM6) e SECEX/MDIC (Comex Stat), atualização automática diária.",
 };
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export default async function PainelContasExternasPage() {
-  const [data, comex] = await Promise.all([loadContasExternas(), loadContasExternasComex()]);
+  const [data, comex, codace] = await Promise.all([
+    loadContasExternas(),
+    loadContasExternasComex(),
+    loadAtividadeCodace(),
+  ]);
 
   if (!data) {
     return (
@@ -23,6 +29,11 @@ export default async function PainelContasExternasPage() {
       </div>
     );
   }
+
+  // Gate v2: o dashboard narrativo exige o JSON do builder v2 (acumulados 12m).
+  // Sem schema_version >= 2 (ou sem o bloco-chave), serve o dashboard antigo.
+  const v2Pronto =
+    !!data.schema_version && data.schema_version >= 2 && !!data.bloco_a.decomposicao_12m?.length;
 
   return (
     <div className="space-y-6">
@@ -51,7 +62,11 @@ export default async function PainelContasExternasPage() {
         </div>
       </Link>
 
-      <ContasExternasDashboard data={data} comex={comex} />
+      {v2Pronto ? (
+        <ContasExternasDashboardV2 data={data} comex={comex} codace={codace} />
+      ) : (
+        <ContasExternasDashboard data={data} comex={comex} />
+      )}
     </div>
   );
 }

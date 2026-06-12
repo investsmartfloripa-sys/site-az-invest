@@ -342,6 +342,8 @@ export type FamiliasEstruturaSocialData = {
     serie: IpcaFaixaPonto[];
     /** Acumulado em índice, base 100 = primeiro mês (jul/2006). Ausente em JSONs antigos. */
     serie_indice?: IpcaFaixaPonto[];
+    /** v2: acumulado 12m COMPOSTO por faixa + spread_pp (muito_baixa − alta). */
+    serie_12m?: IpcaFaixaPonto[];
     faixas: Record<string, string>;
     fonte: string;
     nota?: string;
