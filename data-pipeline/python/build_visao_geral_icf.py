@@ -11,9 +11,13 @@ Como nem todas as séries têm fonte estável aberta (EMBI+ tem rate limit),
 o pipeline é tolerante: se algum componente faltar, recalcula sobre os
 disponíveis e registra `n_componentes` no JSON. Para garantir robustez na
 Onda 1, usamos majoritariamente BCB SGS:
-  - Selic meta (432) e IPCA Focus 12m (lido do JSON fiscal já existente)
+  - Selic meta (432) menos Focus IPCA 12 meses à frente SUAVIZADA
+    (Olinda `ExpectativasMercadoInflacao12Meses`, mediana com Suavizada='S').
+    Fallback (só se Olinda falhar): Focus ano-calendário do JSON fiscal,
+    depois IPCA realizado 12m (ex-post).
   - REER SGS 11752
-  - Ibov via SGS 7 (índice fechamento mensal)
+  - Ibov via Yahoo ^BVSP mensal (SGS 7 descontinuado em 2019; SGS 24369 é
+    PNAD desocupação, não Ibovespa)
   - Slope DI: lido do JSON do panorama (renda-fixa) se disponível;
     fallback: usar Selic real ex-ante e remover slope da composição.
 
@@ -37,24 +41,40 @@ DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/visao_geral_icf.json"
 UA = {"User-Agent": "Mozilla/5.0", "Accept": "*/*"}
 
-SGS_URL = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{cod}/dados?formato=json&dataInicial=01/01/2000"
+SGS_URL = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{cod}/dados?formato=json&dataInicial={ini}"
 
-# Códigos SGS
+# Códigos SGS (mensais — buscados em request único)
 SERIES = {
-    "selic_meta": 432,        # Meta Selic % a.a.
-    "selic_efetiva": 4189,    # Selic efetiva anualizada
+    "selic_efetiva": 4189,    # Selic efetiva acumulada no mês anualizada (fallback da meta)
     "reer": 11752,            # Câmbio efetivo real (índice)
-    "ibov": 24369,  # SGS 24369 - Ibovespa fechamento mensal (substitui 7 descontinuado)                # Ibovespa fechamento mensal
-    "ipca_12m": 13522,        # IPCA acumulado 12m (proxy quando Focus IPCA 12m não estiver disponível)
-    "selic_360d": 4189,       # Swap pré-DI 360d - usada para slope DI
+    "ipca_12m": 13522,        # IPCA acumulado 12m (último fallback do Focus 12m)
 }
+
+# Selic meta (432) é DIÁRIA: o SGS limita janela a 10 anos por request (HTTP 406)
+# — baixar em blocos.
+SERIE_SELIC_META = 432
+
+# Ibovespa: SGS 7 foi descontinuado em set/2019 e SGS 24369 NÃO é Ibovespa
+# (é PNAD-C desocupação). Fonte: Yahoo ^BVSP mensal — mesmo endpoint usado em
+# build_visao_geral_probit_az.py.
+YAHOO_BVSP_URL = "https://query1.finance.yahoo.com/v8/finance/chart/%5EBVSP?range=max&interval=1mo"
 
 INPUTS = {
-    "selic_meta": "1986-06",
+    "selic_meta": "1999-03",
     "reer": "1994-07",
-    "ibov": "1990-01",
-    "ipca_12m": "1980-01",
+    "ibov": "1993-05",
+    "focus_ipca_12m": "2001-11",
 }
+
+# Focus IPCA 12 meses à frente, mediana SUAVIZADA — mesmo endpoint Olinda
+# usado em build_visao_geral_probit_az.py (ExpectativasMercadoInflacao12Meses).
+OLINDA_IPCA_12M_URL = (
+    "https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/"
+    "ExpectativasMercadoInflacao12Meses"
+    "?$filter=Indicador%20eq%20%27IPCA%27%20and%20Suavizada%20eq%20%27S%27"
+    "%20and%20baseCalculo%20eq%200"
+    "&$select=Data,Mediana&$format=json&$top=30000"
+)
 
 
 def _get(url: str, *, timeout: int = 60, retries: int = 3, sleep: float = 3.0) -> requests.Response:
@@ -77,9 +97,22 @@ def _parse_sgs_date(s: str) -> str:
     return s
 
 
-def sgs_mensal(cod: int) -> dict[str, float]:
-    r = _get(SGS_URL.format(cod=cod))
-    data = r.json()
+def sgs_mensal(cod: int, ini: str = "01/01/2000", fim: str | None = None) -> dict[str, float]:
+    url = SGS_URL.format(cod=cod, ini=ini)
+    if fim:
+        url += f"&dataFinal={fim}"
+    data = None
+    last: Exception | None = None
+    for _ in range(3):  # SGS às vezes devolve 200 com corpo não-JSON sob throttle
+        try:
+            r = _get(url)
+            data = r.json()
+            break
+        except Exception as e:
+            last = e
+            time.sleep(5)
+    if data is None:
+        raise RuntimeError(f"SGS {cod}: {last}")
     out: dict[str, float] = {}
     for row in data:
         m = _parse_sgs_date(row["data"])
@@ -90,8 +123,69 @@ def sgs_mensal(cod: int) -> dict[str, float]:
     return out
 
 
+def sgs_mensal_diaria_chunked(cod: int, ano_inicio: int = 2000) -> dict[str, float]:
+    """Série DIÁRIA do SGS em blocos de ≤10 anos (janela maior devolve HTTP 406).
+
+    Agrega para mensal mantendo o último valor de cada mês.
+    """
+    out: dict[str, float] = {}
+    ano_fim_total = datetime.now(timezone.utc).year
+    ano = ano_inicio
+    while ano <= ano_fim_total:
+        fim = min(ano + 8, ano_fim_total)
+        out.update(sgs_mensal(cod, ini=f"01/01/{ano}", fim=f"31/12/{fim}"))
+        ano = fim + 1
+        time.sleep(0.5)
+    return out
+
+
+def carregar_ibov_yahoo() -> dict[str, float]:
+    """Ibovespa fechamento mensal via Yahoo Finance (^BVSP)."""
+    r = _get(YAHOO_BVSP_URL)
+    d = r.json().get("chart", {}).get("result", [{}])[0]
+    ts = d.get("timestamp", [])
+    cl = d.get("indicators", {}).get("quote", [{}])[0].get("close", [])
+    out: dict[str, float] = {}
+    for t, v in zip(ts, cl):
+        if v is None:
+            continue
+        out[datetime.fromtimestamp(t, tz=timezone.utc).strftime("%Y-%m")] = float(v)
+    return out
+
+
+def carregar_focus_ipca_12m_olinda() -> dict[str, float] | None:
+    """Expectativa Focus IPCA 12 meses à frente (mediana suavizada) via Olinda.
+
+    Endpoint `ExpectativasMercadoInflacao12Meses` com Suavizada='S' e
+    baseCalculo=0 — verdadeira expectativa ex-ante 12m, em vez do Focus do
+    ano-calendário. Agrega usando a última observação diária de cada mês.
+    Retorna None se a chamada falhar ou vier curta demais.
+    """
+    try:
+        r = _get(OLINDA_IPCA_12M_URL, timeout=90)
+        data = r.json().get("value", [])
+    except Exception as e:
+        print(f"  [WARN] Olinda Focus IPCA 12m falhou: {e}", file=sys.stderr)
+        return None
+    por_mes: dict[str, tuple[str, float]] = {}
+    for p in data:
+        try:
+            d = str(p["Data"])[:10]
+            v = float(p["Mediana"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        mes = d[:7]
+        prev = por_mes.get(mes)
+        if prev is None or d > prev[0]:
+            por_mes[mes] = (d, v)
+    if len(por_mes) < 24:
+        print(f"  [WARN] Olinda Focus IPCA 12m retornou poucas obs ({len(por_mes)})", file=sys.stderr)
+        return None
+    return {m: v for m, (_, v) in sorted(por_mes.items())}
+
+
 def carregar_focus_ipca_12m_se_disponivel() -> dict[str, float] | None:
-    """Tenta carregar Focus IPCA 12m do JSON do fiscal (já tem expectativas)."""
+    """FALLBACK legado: Focus do ano-calendário no JSON fiscal (frequentemente ex-post)."""
     sys.path.insert(0, str(HERE))
     from shared.blob_download import download_json
 
@@ -157,20 +251,43 @@ def main() -> None:
         try:
             series[key] = sgs_mensal(cod)
             print(f"  [SGS {cod}] {len(series[key])} obs")
-            time.sleep(0.3)
+            time.sleep(0.5)
         except Exception as e:
             print(f"  FALHA {key}: {e}", file=sys.stderr)
             series[key] = {}
 
-    focus_12m = carregar_focus_ipca_12m_se_disponivel()
-    if focus_12m and len(focus_12m) >= 24:
-        print(f"  [Focus IPCA 12m] {len(focus_12m)} obs (do JSON fiscal)")
+    try:
+        series["selic_meta"] = sgs_mensal_diaria_chunked(SERIE_SELIC_META)
+        print(f"  [SGS {SERIE_SELIC_META} em blocos] {len(series['selic_meta'])} obs")
+    except Exception as e:
+        print(f"  FALHA selic_meta: {e} — usando Selic efetiva (4189)", file=sys.stderr)
+        series["selic_meta"] = {}
+
+    try:
+        series["ibov"] = carregar_ibov_yahoo()
+        print(f"  [Yahoo ^BVSP] {len(series['ibov'])} obs")
+    except Exception as e:
+        print(f"  [WARN] Ibov Yahoo falhou: {e} — componente Ibov fora desta build", file=sys.stderr)
+        series["ibov"] = {}
+
+    # Fonte primária: Olinda — Focus IPCA 12 meses à frente, mediana suavizada (ex-ante de verdade).
+    focus_12m = carregar_focus_ipca_12m_olinda()
+    fonte_focus = "olinda_focus_ipca_12m_suavizada"
+    if focus_12m:
+        print(f"  [Focus IPCA 12m Olinda suavizada] {len(focus_12m)} meses")
     else:
-        if focus_12m:
-            print(f"  Focus 12m com apenas {len(focus_12m)} obs (esparso), usando IPCA realizado 12m como proxy")
+        print("  [WARN] Olinda indisponível — fallback para método legado (Focus ano-calendário / IPCA realizado)", file=sys.stderr)
+        focus_12m = carregar_focus_ipca_12m_se_disponivel()
+        if focus_12m and len(focus_12m) >= 24:
+            fonte_focus = "fallback_focus_ano_calendario"
+            print(f"  [Focus IPCA ano-calendário] {len(focus_12m)} obs (do JSON fiscal)")
         else:
-            print("  Focus 12m indisponível, usando IPCA realizado 12m como proxy")
-        focus_12m = None
+            if focus_12m:
+                print(f"  [WARN] Focus ano-calendário com apenas {len(focus_12m)} obs (esparso), usando IPCA realizado 12m como proxy", file=sys.stderr)
+            else:
+                print("  [WARN] Focus ano-calendário indisponível, usando IPCA realizado 12m como proxy (EX-POST)", file=sys.stderr)
+            focus_12m = None
+            fonte_focus = "fallback_ipca_realizado_12m"
 
     # Selic real ex-ante: usa selic_meta se OK, fallback para selic_efetiva (4189)
     selic = series.get("selic_meta", {}) or series.get("selic_efetiva", {})
@@ -246,14 +363,16 @@ def main() -> None:
 
     payload = {
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "schema_version": 2,
         "freshness_status": "fresh",
         "mes_recente": serie_out[-1]["mes"] if serie_out else None,
         "serie": serie_out,
         "inputs": INPUTS,
         "min_start_date": max(INPUTS.values()),
         "metadata": {
-            "fonte": "Cálculo próprio. Componentes: Selic meta (SGS 432) menos IPCA Focus 12m (do JSON fiscal) ou IPCA realizado 12m (13522), retorno 6m do Ibovespa mensal (SGS 7), REER (SGS 11752). EMBI+ e slope DI ficam para v2 (sem fontes públicas estáveis no momento).",
-            "nota": "ICF é a média dos z-scores dos componentes. Regime: z > 1 = estimulativo; z < -1 = restritivo. Quanto mais componentes, mais robusto.",
+            "fonte": "Cálculo próprio. Componentes: Selic meta (SGS 432, diária em blocos; fallback Selic efetiva 4189) menos expectativa Focus IPCA 12 meses à frente suavizada (Olinda ExpectativasMercadoInflacao12Meses, mediana), retorno 6m do Ibovespa mensal (Yahoo ^BVSP — SGS 7 descontinuado), REER (SGS 11752). Fallback do Focus (só se Olinda falhar): Focus ano-calendário do JSON fiscal e, em último caso, IPCA realizado 12m (SGS 13522, ex-post). EMBI+ e slope DI ficam para v2 (sem fontes públicas estáveis no momento).",
+            "fonte_focus_ipca": fonte_focus,
+            "nota": "ICF é a média ponderada dos z-scores dos componentes (Selic real ex-ante 50%, Ibov 6m 25%, REER 25%). Regime: z > 1 = estimulativo; z < -1 = restritivo. Quanto mais componentes, mais robusto.",
         },
     }
     out_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")

@@ -64,10 +64,100 @@ CATALOGO = [
     ("IPEADATA", "CNC12_IIECAJ12", "level"),
 ]
 
+# Fallback local — usado SÓ se o download da cronologia CODACE do Blob falhar.
 RECESSOES = [
     ("1998-01", "1998-12"), ("2001-02", "2001-09"), ("2002-11", "2003-06"),
     ("2008-09", "2009-01"), ("2014-03", "2016-10"), ("2019-11", "2020-04"),
 ]
+
+CODACE_BLOB_PATH = "data/visao_geral_codace.json"
+
+
+def carregar_recessoes_codace():
+    """Cronologia mensal CODACE (pico→vale) do Blob — mesma fonte do resto do site.
+
+    Retorna (faixas, fonte). Com fonte == 'codace_blob_mensal', cada faixa é
+    (pico, vale): a recessão começa no mês SEGUINTE ao pico e termina no vale
+    (inclusive), conforme convenção CODACE/NBER. Fallback: lista local RECESSOES
+    (interpretada como já-em-recessão no mês inicial).
+    """
+    try:
+        sys.path.insert(0, str(HERE))
+        from shared.blob_download import download_json
+        payload = download_json(CODACE_BLOB_PATH)
+        mensal = (payload or {}).get("mensal") or []
+        faixas = [(p["pico"], p["vale"]) for p in mensal if p.get("pico") and p.get("vale")]
+        if len(faixas) >= 5:
+            return faixas, "codace_blob_mensal"
+        print(f"  [WARN] CODACE Blob veio curto/ausente ({len(faixas)} faixas)", file=sys.stderr)
+    except Exception as e:
+        print(f"  [WARN] CODACE Blob falhou: {e}", file=sys.stderr)
+    print("  [WARN] usando lista local de recessoes (fallback)", file=sys.stderr)
+    return RECESSOES, "fallback_local"
+
+
+# Rotulos PT por serie do CATALOGO (+ modelos base). Grupos permitidos:
+# juros, credito, confianca, atividade, externo, emprego.
+LABELS_PT_BASE = {
+    "M_diffusion": ("Índice de difusão (modelo base)", "atividade"),
+    "M_gap_hp": ("Hiato do produto — prob. recessão (modelo base)", "atividade"),
+    "M_probit_fin": ("Probit financeiro (modelo base)", "juros"),
+    "bcb_sgs_4189": ("Juro pré-DI 180 dias", "juros"),
+    "bcb_sgs_11757": ("Câmbio efetivo real (REER)", "externo"),
+    "yfinance_^BVSP": ("Ibovespa", "confianca"),
+    "bcb_sgs_3697": ("Câmbio USD/BRL", "externo"),
+    "ipeadata_JPM366_EMBI366": ("Risco-país EMBI+ Brasil", "externo"),
+    "bcb_sgs_20783": ("Spread de crédito PJ", "credito"),
+    "bcb_sgs_20784": ("Spread de crédito PF", "credito"),
+    "bcb_sgs_21082": ("Inadimplência PJ 90 dias", "credito"),
+    "bcb_sgs_21084": ("Inadimplência PF 90 dias", "credito"),
+    "bcb_sgs_21859": ("Confiança empresarial FGV (ICE)", "confianca"),
+    "bcb_sgs_21861": ("Confiança do comércio FGV (ICOM)", "confianca"),
+    "bcb_sgs_21862": ("Confiança da construção FGV (ICST)", "confianca"),
+    "bcb_sgs_21864": ("Confiança do consumidor FGV (ICC)", "confianca"),
+    "bcb_sgs_21865": ("Confiança do agro FGV (ICA)", "confianca"),
+    "bcb_sgs_8174": ("CNI ICEI — condições atuais", "confianca"),
+    "bcb_sgs_8175": ("CNI ICEI — confiança da indústria", "confianca"),
+    "bcb_sgs_4393": ("Confiança do consumidor Fecomércio-SP", "confianca"),
+    "bcb_sgs_24364": ("Atividade IBC-Br", "atividade"),
+    "bcb_sgs_1453": ("Consumo industrial de energia elétrica", "atividade"),
+    "ipeadata_ABPO12_PAPEL12": ("Expedição de papelão ondulado (ABPO)", "atividade"),
+    "bcb_sgs_20620": ("Carteira de crédito PF", "credito"),
+    "bcb_sgs_20622": ("Carteira de crédito PJ", "credito"),
+    "bcb_sgs_433": ("IPCA mensal", "juros"),
+    "bcb_sgs_1635": ("IPCA-15", "juros"),
+    "bcb_sgs_27791": ("Agregado monetário M1", "credito"),
+    "bcb_sgs_27814": ("Base monetária", "credito"),
+    "bcb_sgs_189": ("IGP-M", "juros"),
+    "fred_DGS10": ("Treasury EUA 10 anos", "externo"),
+    "fred_DGS3MO": ("Treasury EUA 3 meses", "externo"),
+    "fred_VIXCLS": ("VIX — volatilidade S&P 500", "externo"),
+    "fred_DCOILWTICO": ("Petróleo WTI", "externo"),
+    "ocde_fred_BSCICP03BRM665S": ("OCDE — confiança empresarial Brasil", "confianca"),
+    "ocde_fred_BSCICP03USM665S": ("OCDE — confiança empresarial EUA", "externo"),
+    "bcb_olinda_Focus_IPCA_12m": ("Focus IPCA 12 meses (expectativa)", "juros"),
+    "bcb_olinda_Focus_PIB_anual": ("Focus PIB anual (expectativa)", "atividade"),
+    "bcb_olinda_Focus_Selic_fim": ("Focus Selic fim de ano (expectativa)", "juros"),
+    "ipeadata_CAGED12_SALDONAJU12": ("CAGED — saldo de empregos (novo, c/ ajuste)", "emprego"),
+    "ipeadata_CNC12_IIECAJ12": ("CNC — intenção de investimento do comércio", "confianca"),
+}
+
+_SUFIXOS_PT = {"_yoy": " (a/a)", "_d12": " (Δ 12m)", "_lvl": " (nível)"}
+
+
+def montar_labels_pt(feat_cols):
+    """Mapa código→{rotulo, grupo} pra TODAS as features (cobre o top15)."""
+    out = {}
+    for col in feat_cols:
+        base, sufixo = col, ""
+        for s, txt in _SUFIXOS_PT.items():
+            if col.endswith(s):
+                base = col[: -len(s)]
+                sufixo = txt
+                break
+        rotulo, grupo = LABELS_PT_BASE.get(base, (base, "atividade"))
+        out[col] = {"rotulo": rotulo + sufixo, "grupo": grupo}
+    return out
 
 
 def to_mensal(df, freq="diaria"):
@@ -264,11 +354,17 @@ def main():
     panel_imp = pd.DataFrame(X_imp * std.values + mean.values, index=panel.index, columns=panel.columns)
     print(f"  Imputacao OK ({int(panel.isna().sum().sum())} pontos)")
 
-    # 4. Label
+    # 4. Label — cronologia CODACE mensal do Blob (pico→vale); fallback lista local
+    faixas_recessao, fonte_label = carregar_recessoes_codace()
+    print(f"  Label de recessao: {fonte_label} ({len(faixas_recessao)} faixas)")
     idx = pd.date_range("1996-01-01", panel.index[-1], freq="MS")
     label = pd.Series(0, index=idx)
-    for s, e in RECESSOES:
-        label.loc[(label.index >= s) & (label.index <= e)] = 1
+    for s, e in faixas_recessao:
+        ini = pd.Period(s, freq="M")
+        if fonte_label == "codace_blob_mensal":
+            ini += 1  # pico = último mês de expansão; recessão começa no mês seguinte
+        fim = pd.Period(e, freq="M")
+        label.loc[(label.index >= ini.to_timestamp()) & (label.index <= fim.to_timestamp())] = 1
 
     # 5. 3 modelos base
     HARD = [k for k in ["bcb_sgs_24364","bcb_sgs_1453","bcb_sgs_20620","bcb_sgs_20622","ipeadata_ABPO12_PAPEL12","ipeadata_JPM366_EMBI366","yfinance_^BVSP"] if k in panel_imp.columns]
@@ -392,26 +488,29 @@ def main():
     last_obs = serie_out[-1] if serie_out else {}
     payload = {
         "gerado_em": datetime.now(timezone.utc).isoformat(),
+        "schema_version": 2,
         "freshness_status": "fresh",
         "mes_recente": last_obs.get("mes"),
         "probabilidades": last_obs,
         "sinal_principal": last_obs.get("mediana") if isinstance(last_obs, dict) else None,
         "serie": serie_out,
         "contribuicoes_top15": contrib,
+        "labels_pt": montar_labels_pt(feat_cols),
         "metadata": {
             "modelos_base": ["Diffusion (Burns-Mitchell 1946)", "Gap HP (Stock-Watson 1989)", "Probit Financeiro (Estrella-Mishkin 1998)"],
             "probit_az": f"Probit Ridge L2 sobre {len(feat_cols)} features ({len(base_outputs.columns)} modelos base lag 1m + {len(X_features.columns)} antecedentes brutas)",
-            "label": "CODACE 1980-2020 + FGV-IBRE Trece-Considera 2024 (mensal 2020-2023)",
+            "label": f"Cronologia CODACE mensal (pico→vale, recessão começa no mês seguinte ao pico) lida do Blob {CODACE_BLOB_PATH} — fonte usada nesta build: {fonte_label}",
             "imputacao": "Bayesian Ridge IterativeImputer (~Schneider 2001 EM regularizado)",
             "obs_treino": int(len(X)),
             "n_series_panel": int(len(series_dict)),
-            "auc_backtest_OOS": 0.95,
-            "brier_OOS": 0.042,
+            "auc_backtest_OOS": None,
+            "brier_OOS": None,
+            "auc_nota": "backtest OOS ainda não implementado — exibição condicionada ao cálculo real",
             "papers": ["Issler-Vahid 2006", "Stock-Watson 1989", "BCB WP 587 (Costa-Ferreira-Gaglianone-Guillén-Issler-Rodrigues 2023)"],
         },
     }
     out = out_dir / "visao_geral_probit_az.json"
-    out.write_text(json.dumps(payload, ensure_ascii=False, indent=2))
+    out.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"  Saved: {out}")
 
     if args.upload:

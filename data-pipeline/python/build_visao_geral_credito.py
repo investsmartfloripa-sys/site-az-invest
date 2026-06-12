@@ -5,12 +5,13 @@ Consome o BCB SGS para:
 - Concessões PF veículos (20673), não-consignado (20666), imobiliário direcionado (20704)
 - Saldos crédito ampliado: famílias (20571) e empresas (20572)
 - Agregados monetários: M1 (27788), M2 (27789), M3 (27790), M4 (27791)
-- IPCA acumulado 12m (13522) para deflacionar concessões em termos reais
+- IPCA mensal (433, desde 2010) para compor o índice deflator
 
 Calcula:
-- Concessões reais 12m (deflator IPCA)
+- Concessões reais (deflator = índice IPCA composto Π(1+v/100), último mês = 100)
 - Variação real a/a das concessões
 - Crédito ampliado total / PIB (PIB mensal 4382)
+- Impulso de crédito: Δ em pp do crédito/PIB em 12 meses (total, PF, PJ)
 
 Gera `data-pipeline/out/visao_geral_credito.json`.
 
@@ -47,15 +48,20 @@ SERIES: dict[str, int] = {
     "m2": 27789,
     "m3": 27790,
     "m4": 27791,
-    "ipca_12m": 13522,
+    "ipca_mensal": 433,
     "pib_12m_brl": 4382,
+}
+
+# dataInicial específico por série (SGS aceita dd/mm/yyyy)
+SERIES_DATA_INICIAL: dict[str, str] = {
+    "ipca_mensal": "01/01/2010",
 }
 
 INPUTS = {  # min_start_date conservador — séries começam mais tarde
     "concessoes_pf_total": "2011-03",
     "concessoes_pj_total": "2011-03",
     "credito_ampliado": "2013-01",
-    "ipca_12m": "1980-01",
+    "ipca_mensal": "2010-01",
     "pib_12m": "1990-01",
 }
 
@@ -88,39 +94,43 @@ def _parse_sgs_date(s: str) -> str:
     return f"{y}-{m}"
 
 
-def sgs_fetch(cod: int) -> dict[str, float | None]:
+def sgs_fetch(cod: int, data_inicial: str | None = None) -> dict[str, float | None]:
     url = SGS_URL.format(cod=cod)
+    if data_inicial:
+        url += f"&dataInicial={data_inicial}"
     print(f"  [SGS {cod}]")
     data = _get(url).json()
     return {_parse_sgs_date(r["data"]): _to_float(r["valor"]) for r in data}
 
 
-def deflate_real(nominal_series: dict[str, float | None], ipca_12m: dict[str, float | None], base_month: str | None = None) -> dict[str, float | None]:
-    """Deflaciona série nominal usando IPCA acumulado 12m.
+def ipca_indice_composto(ipca_mensal: dict[str, float | None]) -> dict[str, float]:
+    """Índice IPCA composto a partir da variação mensal (SGS 433).
 
-    Constrói deflator IPCA encadeado m/m a partir de ipca_12m (não-ideal mas funcional para
-    indicadores de tendência). Para precisão maior, usar IPCA mensal (433).
+    Compõe Π(1 + v/100) mês a mês e normaliza o ÚLTIMO mês disponível = 100.
     """
-    # Aqui uso aproximação: para cada mês, ajusta nominal pelo IPCA acumulado relativo ao último mês disponível.
-    if not nominal_series:
+    meses = sorted(m for m, v in ipca_mensal.items() if v is not None)
+    if not meses:
         return {}
-    meses = sorted(nominal_series.keys())
-    base = base_month or meses[-1]
-    ipca_base = ipca_12m.get(base)
-    out: dict[str, float | None] = {}
+    idx: dict[str, float] = {}
+    acc = 1.0
     for m in meses:
+        acc *= 1.0 + ipca_mensal[m] / 100.0
+        idx[m] = acc
+    ultimo = idx[meses[-1]]
+    return {m: v / ultimo * 100.0 for m, v in idx.items()}
+
+
+def deflate_real(nominal_series: dict[str, float | None], ipca_indice: dict[str, float]) -> dict[str, float | None]:
+    """Deflaciona série nominal pelo índice IPCA composto (último mês = 100).
+
+    real_m = nominal_m × 100 / índice_m → valores a preços do último mês do índice.
+    Meses sem índice (anteriores a 2010) ficam None.
+    """
+    out: dict[str, float | None] = {}
+    for m in sorted(nominal_series.keys()):
         nom = nominal_series.get(m)
-        ipca_m = ipca_12m.get(m)
-        if nom is None or ipca_m is None or ipca_base is None:
-            out[m] = None
-            continue
-        # fator aproximado: (1 + ipca_base/100) / (1 + ipca_m/100) — não é correto, mas serve pra direção
-        # Versão melhor: usar IPCA índice (mas exige 433 ou 7060)
-        # Para visualização de tendência, mantém OK
-        try:
-            out[m] = round(nom * (1 + ipca_base / 100) / (1 + ipca_m / 100), 2) if ipca_m > -100 else None
-        except Exception:
-            out[m] = None
+        i_m = ipca_indice.get(m)
+        out[m] = round(nom * 100.0 / i_m, 2) if (nom is not None and i_m) else None
     return out
 
 
@@ -145,7 +155,7 @@ def fetch_all_safe(soft_fail: bool) -> dict[str, dict[str, float | None]]:
     falhas: list[str] = []
     for key, cod in SERIES.items():
         try:
-            out[key] = sgs_fetch(cod)
+            out[key] = sgs_fetch(cod, data_inicial=SERIES_DATA_INICIAL.get(key))
             time.sleep(0.3)
         except Exception as e:
             print(f"  FALHA {key} ({cod}): {e}", file=sys.stderr)
@@ -172,10 +182,11 @@ def main() -> None:
     print("== Crédito e Condições Financeiras (BCB SGS) ==")
     series = fetch_all_safe(soft_fail=args.soft_fail)
 
-    # Concessões reais e variação real
-    ipca_12m = series.get("ipca_12m", {})
-    concessoes_pf_real = deflate_real(series.get("concessoes_pf_total", {}), ipca_12m)
-    concessoes_pj_real = deflate_real(series.get("concessoes_pj_total", {}), ipca_12m)
+    # Concessões reais e variação real — deflator = índice IPCA composto (SGS 433)
+    ipca_indice = ipca_indice_composto(series.get("ipca_mensal", {}))
+    print(f"  índice IPCA composto: {len(ipca_indice)} meses (último = 100)")
+    concessoes_pf_real = deflate_real(series.get("concessoes_pf_total", {}), ipca_indice)
+    concessoes_pj_real = deflate_real(series.get("concessoes_pj_total", {}), ipca_indice)
 
     var_pf_real = variacao_12m(concessoes_pf_real)
     var_pj_real = variacao_12m(concessoes_pj_real)
@@ -207,9 +218,32 @@ def main() -> None:
             }
         )
 
+    # Impulso de crédito: Δ em pp do crédito/PIB em 12 meses (total, PF, PJ)
+    cp_por_mes = {r["mes"]: r for r in credito_pib}
+    impulso_credito: list[dict[str, Any]] = []
+    for m in sorted(cp_por_mes.keys()):
+        prev_m = f"{int(m[:4]) - 1}-{m[5:7]}"
+        atual = cp_por_mes[m]
+        ant = cp_por_mes.get(prev_m)
+        if ant is None:
+            continue
+
+        def _delta(campo: str) -> float | None:
+            a, b = atual.get(campo), ant.get(campo)
+            return round(a - b, 2) if (a is not None and b is not None) else None
+
+        impulso_credito.append(
+            {
+                "mes": m,
+                "impulso_total_pp": _delta("credito_total_pct_pib"),
+                "impulso_familias_pp": _delta("credito_familias_pct_pib"),
+                "impulso_empresas_pp": _delta("credito_empresas_pct_pib"),
+            }
+        )
+
     # Variação real a/a M2
     m2 = series.get("m2", {})
-    m2_real = deflate_real(m2, ipca_12m)
+    m2_real = deflate_real(m2, ipca_indice)
     var_m2_real = variacao_12m(m2_real)
 
     # Serialização final
@@ -218,6 +252,7 @@ def main() -> None:
 
     payload: dict[str, Any] = {
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "schema_version": 2,
         "freshness_status": "fresh",
         "concessoes": {
             "pf_total_nominal": serie_para_lista(series.get("concessoes_pf_total", {})),
@@ -229,6 +264,7 @@ def main() -> None:
             "pf_imobiliario_nominal": serie_para_lista(series.get("concessoes_pf_imobiliario", {})),
         },
         "credito_pib": credito_pib,
+        "impulso_credito": impulso_credito,
         "agregados_monetarios": {
             "m1": serie_para_lista(series.get("m1", {})),
             "m2": serie_para_lista(series.get("m2", {})),
@@ -239,8 +275,8 @@ def main() -> None:
         "inputs": INPUTS,
         "min_start_date": max(INPUTS.values()),
         "metadata": {
-            "fonte": "BCB SGS — concessões mensais (20662/20635/20673/20666/20704), crédito ampliado (20571/20572), agregados (27788-27791), IPCA 12m (13522), PIB 12m (4382).",
-            "nota": "Deflator IPCA aproximado via taxa acumulada 12m (suficiente pra direção; pra precisão maior, usar índice IPCA).",
+            "fonte": "BCB SGS — concessões mensais (20662/20635/20673/20666/20704), crédito ampliado (20571/20572), agregados (27788-27791), IPCA mensal (433, desde 2010), PIB 12m (4382).",
+            "nota": "Deflator: índice IPCA composto Π(1+v/100) a partir do SGS 433, normalizado com último mês = 100 — séries reais a preços do último mês. Impulso de crédito = variação em 12 meses, em pontos percentuais do PIB, do estoque de crédito ampliado/PIB (total, famílias, empresas).",
         },
     }
 

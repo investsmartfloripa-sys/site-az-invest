@@ -1,13 +1,15 @@
-"""Build do JSON do Painel Visão Geral — bloco Hiato do Produto (HP + Hamilton).
+"""Build do JSON do Painel Visão Geral — bloco Hiato do Produto (HP + Hamilton + quadrática).
 
 Consome o JSON do IBC-Br já no Blob (`data/atividade_ibcbr.json`) e calcula
-o hiato do produto por dois métodos:
+o hiato do produto por três métodos:
 
 - **HP (Hodrick-Prescott)**: λ=129600 para dados mensais (regra padrão).
 - **Hamilton (2018)**: regressão de IBC-Br_{t+h} em IBC-Br_{t}, IBC-Br_{t-1},
   IBC-Br_{t-2}, IBC-Br_{t-3} com h=24 (mensal). Resíduo é o hiato.
+- **Tendência linear-quadrática**: MQO de log(y) em [1, t, t²];
+  gap = (log(y) − fit) × 100.
 
-Saída: série mensal com ambos os métodos + faixa min/max (leque) e mediana.
+Saída: série mensal com os três métodos + faixa min/max (leque) e mediana.
 
 INPUTS = {ibcbr: '2003-01'} — começa quando IBC-Br começa.
 """
@@ -140,6 +142,40 @@ def hamilton_filter(y: list[float], h: int = 24, p: int = 4) -> list[float | Non
     return out
 
 
+def quadratic_trend_gap(log_y: list[float]) -> list[float | None]:
+    """Tendência determinística linear-quadrática sobre o log do índice SA.
+
+    Ajusta log(y) = a + b·t + c·t² por MQO sobre a amostra completa;
+    gap = (log(y) − fit) × 100 (mesmo formato dos demais métodos).
+    """
+    n = len(log_y)
+    if n < 12:
+        return [None] * n
+    try:
+        import numpy as np
+    except ImportError:
+        return [None] * n
+    t = np.arange(n, dtype=float)
+    X = np.column_stack([np.ones(n), t, t * t])
+    y_arr = np.array(log_y, dtype=float)
+    try:
+        beta, *_ = np.linalg.lstsq(X, y_arr, rcond=None)
+    except np.linalg.LinAlgError:
+        return [None] * n
+    fit = X @ beta
+    return [float(v) for v in (y_arr - fit) * 100.0]
+
+
+def _mediana(vals: list[float]) -> float | None:
+    """Mediana estatística correta: com n par, média dos dois centrais."""
+    if not vals:
+        return None
+    vo = sorted(vals)
+    n = len(vo)
+    m = n // 2
+    return (vo[m - 1] + vo[m]) / 2.0 if n % 2 == 0 else vo[m]
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Build do JSON Painel Visão Geral — Hiato HP + Hamilton")
     ap.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
@@ -151,7 +187,7 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / "visao_geral_hiato.json"
 
-    print("== Hiato do Produto (HP + Hamilton sobre IBC-Br) ==")
+    print("== Hiato do Produto (HP + Hamilton + quadrática sobre IBC-Br) ==")
 
     try:
         serie_ibcbr = fetch_ibcbr_serie()
@@ -186,19 +222,23 @@ def main() -> None:
     ciclo_hamilton = hamilton_filter(log_y, h=24, p=4)
     gap_hamilton = [(c * 100) if c is not None else None for c in ciclo_hamilton]
 
+    gap_quadratico = quadratic_trend_gap(log_y)
+
     # Constrói série mensal
     serie_out = []
     for i, mes in enumerate(meses):
         gh = gap_hp[i]
         gm = gap_hamilton[i]
-        valores_validos = [v for v in (gh, gm) if v is not None]
-        mediana = (sorted(valores_validos)[len(valores_validos) // 2] if valores_validos else None)
+        gq = gap_quadratico[i]
+        valores_validos = [v for v in (gh, gm, gq) if v is not None]
+        mediana = _mediana(valores_validos)
         serie_out.append(
             {
                 "mes": mes,
                 "indice_sa": valores[i],
                 "gap_hp_pct": round(gh, 3) if gh is not None else None,
                 "gap_hamilton_pct": round(gm, 3) if gm is not None else None,
+                "gap_quadratico_pct": round(gq, 3) if gq is not None else None,
                 "gap_min_pct": round(min(valores_validos), 3) if valores_validos else None,
                 "gap_max_pct": round(max(valores_validos), 3) if valores_validos else None,
                 "gap_mediana_pct": round(mediana, 3) if mediana is not None else None,
@@ -207,6 +247,7 @@ def main() -> None:
 
     payload = {
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "schema_version": 2,
         "freshness_status": "fresh",
         "mes_recente": meses[-1] if meses else None,
         "serie": serie_out,
@@ -216,15 +257,16 @@ def main() -> None:
             "fonte": "Cálculo próprio sobre IBC-Br dessazonalizado (BCB SGS 24364, lido do Blob).",
             "metodos": {
                 "hp": "Filtro Hodrick-Prescott (1997) com λ=129600 (regra padrão para dados mensais).",
-                "hamilton": "Filtro de Hamilton (2018) com h=24 meses, p=4 lags. Resíduo da regressão de y_{t+h} em lags de y_t.",
+                "hamilton": "Filtro de Hamilton (2018) com h=24 meses, p=4 lags. Resíduo da regressão de y_{t+h} em lags de y_t. Quast & Wolters (2020) documentam viés/defasagem do filtro de Hamilton na ponta — por isso não exibir isolado.",
+                "quadratica": "Tendência determinística linear-quadrática: MQO de log(y) em [1, t, t²]; gap = (log(y) − fit) × 100.",
             },
-            "nota": "Gap em log * 100 ≈ % vs tendência. Mostrar leque (min/max) e mediana, não um único método — divergência é a história. HP tem viés de fim de amostra; Hamilton tem defasagem de 24m e pode discordar.",
+            "nota": "Gap em log * 100 ≈ % vs tendência. Mostrar leque (min/max) e mediana dos 3 métodos, não um único — divergência é a história. HP tem viés de fim de amostra; Hamilton tem defasagem de 24m (Quast-Wolters 2020); tendência quadrática é sensível à janela amostral. Mediana com n par = média dos dois centrais.",
         },
     }
 
     out_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"JSON {out_file} ({out_file.stat().st_size / 1024:.1f} KB)")
-    print(f"  Último gap HP={serie_out[-1]['gap_hp_pct']}%, Hamilton={serie_out[-1]['gap_hamilton_pct']}%, mediana={serie_out[-1]['gap_mediana_pct']}%")
+    print(f"  Último gap HP={serie_out[-1]['gap_hp_pct']}%, Hamilton={serie_out[-1]['gap_hamilton_pct']}%, quadrático={serie_out[-1]['gap_quadratico_pct']}%, mediana={serie_out[-1]['gap_mediana_pct']}%")
 
     if args.upload:
         sys.path.insert(0, str(HERE))
