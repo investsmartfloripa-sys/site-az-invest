@@ -10,7 +10,7 @@ import { Section } from "./FiscalShell";
 type Defaults = {
   debt_pct_receita: number;       // % (ex: 435)
   debt_pct_pib: number;           // % (ex: 80)
-  custo_medio_aa: number;         // % a.a. (ex: 9.33)
+  custo_medio_aa: number;         // % a.a. — taxa implicita da DLSP (ex: 12.9)
   pib_real_yoy: number;           // % a.a. (ex: 1.83)
   ipca_12m: number;               // % a.a. (ex: 4.39)
   primario_pct_pib: number;       // % PIB (ex: -1.0). + = superavit
@@ -97,13 +97,15 @@ function projetar(d: {
   return traj;
 }
 
-// Calcula primario que estabiliza divida (Blanchard)
+// Calcula primario (superavit) que estabiliza divida (Blanchard).
+// Sinal alinhado ao pipeline (fiscal-classicos v2): p* = (i - g) * Divida / (1 + g).
+// Positivo quando i > g — precisa de superavit para estabilizar.
 function primarioEstabilizador(d: Defaults): number {
   const i = d.custo_medio_aa / 100;
   const g = (d.pib_real_yoy + d.ipca_12m) / 100;
   const debt_pct_pib = d.debt_pct_pib;
-  // pd_pct_pib = (g - i) * debt_pct_pib / (1 + g)
-  return ((g - i) * debt_pct_pib) / (1 + g);
+  // pd_pct_pib = (i - g) * debt_pct_pib / (1 + g)
+  return ((i - g) * debt_pct_pib) / (1 + g);
 }
 
 function Slider({ label, value, onChange, min, max, step, unit, hint, defaultValue }: {
@@ -232,7 +234,7 @@ export function SimuladorTrajetoria({ defaults }: { defaults: Defaults }) {
             onChange={setCusto}
             min={4} max={16} step={0.1} unit="% a.a."
             defaultValue={defaults.custo_medio_aa}
-            hint="Juros nominais 12m / DBGG. Atual: dados live do Tesouro + BCB."
+            hint="Taxa implicita da DLSP (juros nominais 12m / DLSP media). Atual: dados live do BCB."
           />
           <Slider
             label="Crescimento real do PIB"

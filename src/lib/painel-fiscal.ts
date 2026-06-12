@@ -37,7 +37,31 @@ export type DestaqueRecente =
   | null;
 
 // === fiscal-classicos.json ===
+
+/** v2: r implícita da DLSP × g nominal — perímetro único (consolidado), calculado SÓ no pipeline. */
+export type SustentabilidadePonto = {
+  data: string;
+  r_aa_pct: number;
+  g_aa_pct: number;
+  r_menos_g_pp: number;
+  primario_estabilizador_pct_pib: number | null;
+  primario_realizado_sp_pct_pib: number | null;
+  dlsp_pct_pib: number | null;
+};
+
+/** v2: por que a dívida (DLSP) subiu — decomposição anual com sinal p/ empilhar. */
+export type DecomposicaoDlspAno = {
+  ano: string;
+  delta_pp: number;
+  juros_pp: number;
+  primario_pp: number;
+  efeito_crescimento_pp: number;
+  residuo_pp: number;
+  dlsp_fim_pct_pib: number;
+};
+
 export type FiscalClassicosData = {
+  schema_version?: number;
   gerado_em: string;
   mes_recente: string | null;
   pib_nominal_12m_brl_milhoes: number | null;
@@ -105,6 +129,8 @@ export type FiscalClassicosData = {
     cambio_pct: PontoMensal[];
     tr_pct?: PontoMensal[];
     outros_pct?: PontoMensal[];
+    /** v2 (SGS 12001): a fatia de índices de preços que faltava — o stack fecha em ~100%. */
+    indices_precos_pct?: PontoMensal[];
   };
   credito_economia?: {
     credito_total_pct_pib: PontoMensal[];
@@ -121,6 +147,32 @@ export type FiscalClassicosData = {
   metas_ldo?: {
     _fonte: string;
     anos: Record<string, { centro: number; banda_inf: number; banda_sup: number }>;
+  };
+  // === v2 ===
+  sustentabilidade?: { _perimetro: string; serie: SustentabilidadePonto[] };
+  decomposicao_dlsp?: { _nota: string; anos: DecomposicaoDlspAno[] };
+  receita_familias?: {
+    _nota: string;
+    administrada_rfb_12m_pct_pib: PontoMensalPct[];
+    incentivos_fiscais_12m_pct_pib: PontoMensalPct[];
+    rgps_12m_pct_pib: PontoMensalPct[];
+    nao_administrada_12m_pct_pib: PontoMensalPct[];
+    dividendos_concessoes_12m_pct_pib: PontoMensalPct[];
+  };
+  despesa_rubricas_v2?: {
+    _nota: string;
+    demais_obrigatorias_12m_pct_pib: PontoMensalPct[];
+    obrig_controle_fluxo_12m_pct_pib: PontoMensalPct[];
+  };
+  arcabouco?: {
+    _nota: string;
+    corredor: { piso_pct: number; teto_pct: number };
+    despesa_real_12m_yoy_pct: PontoPibYoY[];
+    receita_real_12m_yoy_pct: PontoPibYoY[];
+  };
+  acompanhamento_meta?: {
+    _nota: string;
+    primario_central_ytd_brl_mm: Record<string, { mes: number; acum_brl_mm: number }[]>;
   };
   destaques: Record<string, DestaqueRecente>;
 };
@@ -173,6 +225,7 @@ export type ScoreSemaforo = {
 };
 
 export type FiscalTermometroData = {
+  schema_version?: number;
   gerado_em: string;
   fonte_base: string | null;
   score_semaforo?: ScoreSemaforo;

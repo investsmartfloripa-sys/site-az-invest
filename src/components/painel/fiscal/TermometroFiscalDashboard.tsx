@@ -48,11 +48,11 @@ const GLOSSARIO_SIGLAS: Record<string, string> = {
 const DERIVADOS: Record<string, { formula: string }> = {
   dbgg_pct_receita: { formula: "DBGG (R$) ÷ Receita líquida 12m do Tesouro" },
   divida_total_economia_pct_pib: { formula: "DBGG + crédito ao setor privado (BCB SGS 20622)" },
-  custo_medio_aa_pct: { formula: "Juros nominais 12m ÷ DBGG (anualizado)" },
-  primario_estabilizador_pct_pib: { formula: "(g − i) × DBGG / (1 + g) — equação de Blanchard" },
-  r_menos_g_pp: { formula: "Taxa nominal efetiva da dívida − Crescimento nominal (g = PIB real + IPCA)" },
+  custo_medio_aa_pct: { formula: "Juros nominais 12m ÷ DLSP média — taxa implícita da DLSP (convenção BCB)" },
+  primario_estabilizador_pct_pib: { formula: "(i − g) × Dívida / (1 + g) — equação de Blanchard: superávit que estabiliza a dívida" },
+  r_menos_g_pp: { formula: "Taxa implícita da DLSP (r) − crescimento nominal do PIB 12m YoY (g)" },
   selic_real_ex_post_pct: { formula: "((1 + Selic) ÷ (1 + IPCA 12m)) − 1" },
-  lever_juros_delta_pp: { formula: "Diferença entre custo médio da dívida e o i* que estabiliza Dívida/Receita" },
+  lever_juros_delta_pp: { formula: "Diferença entre a taxa implícita da DLSP e o i* que estabiliza Dívida/Receita" },
   lever_inflacao_delta_pp: { formula: "Inflação adicional necessária para o crescimento nominal cobrir o gap" },
   lever_corte_despesa_pct: { formula: "(despesa atual − despesa alvo Blanchard) ÷ despesa atual" },
   lever_aumento_receita_pct: { formula: "Aumento da receita necessária para zerar gap fiscal estrutural" },
@@ -375,8 +375,16 @@ function MatrizDalio({ matriz, eixoX, labelY, labelX, sufY = "%", sufX = "%", de
 // ============================================================================
 // LeverCard (mantido)
 // ============================================================================
-function LeverCard({ numero, titulo, descricao, atual, alvo, delta, sufix, baseLabel, viavel }:
-  { numero: number; titulo: string; descricao: string; atual: number | undefined; alvo: number | undefined; delta?: number; sufix: string; baseLabel: string; viavel?: "alta" | "media" | "baixa" }) {
+// Viabilidade derivada por regra simples (heurística AZ — antes era literal fixo):
+// ajuste necessário ≤ 2 pp (juros/inflação) ou corte/aumento ≤ 5% (despesa/receita) → "media" (Possível);
+// acima desses limites → "baixa" (Difícil). Avalia a magnitude do ajuste, não o mérito político.
+function viabilidadeLever(ajuste: number | null | undefined, limite: number): "media" | "baixa" {
+  if (ajuste == null) return "baixa";
+  return Math.abs(ajuste) <= limite ? "media" : "baixa";
+}
+
+function LeverCard({ numero, titulo, descricao, atual, alvo, delta, deltaTexto, sufix, baseLabel, viavel }:
+  { numero: number; titulo: string; descricao: string; atual: number | undefined; alvo: number | undefined; delta?: number; deltaTexto?: string; sufix: string; baseLabel: string; viavel?: "alta" | "media" | "baixa" }) {
   const viabilidadeBg = viavel === "baixa" ? "bg-rose-100 border-rose-300" : viavel === "media" ? "bg-amber-100 border-amber-300" : "bg-emerald-100 border-emerald-300";
   const viabilidadeTxt = viavel === "baixa" ? "Difícil" : viavel === "media" ? "Possível" : "Plausível";
   return (
@@ -404,7 +412,7 @@ function LeverCard({ numero, titulo, descricao, atual, alvo, delta, sufix, baseL
       </div>
       <div className="mt-2 text-[10px] text-zinc-500">Base: {baseLabel}</div>
       {delta != null && (
-        <div className="mt-1 text-xs text-zinc-700">Ajuste: <strong className="text-[#132960]">{fmtPP(delta)}</strong></div>
+        <div className="mt-1 text-xs text-zinc-700">Ajuste: <strong className="text-[#132960]">{deltaTexto ?? fmtPP(delta)}</strong></div>
       )}
     </div>
   );
@@ -420,6 +428,21 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
   const indicadores = data.indicadores_semaforo;
   const categorias = data.categorias_ordem ?? [];
 
+  // Números do payload interpolados na prosa (antes hardcoded — o painel atualiza diariamente).
+  const debtVsReceitaTxt = data.premissas.debt_pct_receita != null
+    ? `${(data.premissas.debt_pct_receita / 100).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}×`
+    : "—";
+  const gapRG = lev?.gap_atual_pp ?? null;
+  const gapRGTxt = gapRG != null
+    ? `${gapRG >= 0 ? "+" : ""}${gapRG.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} pp`
+    : "—";
+  // Lever 4: atual = receita líquida % PIB; necessário = atual × (1 + aumento%).
+  const aumentoReceitaPct = lev?.lever_aumento_receita?.aumento_pct_da_receita ?? null;
+  const receitaAtualPctPib = foto.receita.receita_liquida_pct_pib;
+  const receitaAlvoPctPib = receitaAtualPctPib != null && aumentoReceitaPct != null
+    ? receitaAtualPctPib * (1 + aumentoReceitaPct / 100)
+    : undefined;
+
   return (
     <div className="space-y-6">
       <CardHeader
@@ -431,11 +454,11 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs">
             <div className="mb-1 font-bold text-[#132960]">Por que Dívida/Receita?</div>
-            <p className="text-zinc-700">Dalio usa receita do governo no denominador (não PIB) porque é a fonte real de pagamento. Brasil: dívida = <strong>4,3× a receita líquida</strong> do gov central.</p>
+            <p className="text-zinc-700">Dalio usa receita do governo no denominador (não PIB) porque é a fonte real de pagamento. Brasil: dívida = <strong>{debtVsReceitaTxt} a receita líquida</strong> do gov central.</p>
           </div>
           <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs">
             <div className="mb-1 font-bold text-[#132960]">O que é &quot;estabilizar&quot;?</div>
-            <p className="text-zinc-700">Dívida/Receita para de crescer (não diminui). É o mínimo para evitar bola de neve. Hoje r−g = <strong>+3,1pp</strong>, dívida cresce mesmo com primário neutro.</p>
+            <p className="text-zinc-700">Dívida/Receita para de crescer (não diminui). É o mínimo para evitar bola de neve. Hoje r−g = <strong>{gapRGTxt}</strong>{gapRG != null && gapRG > 0 ? ", dívida cresce mesmo com primário neutro." : "."}</p>
           </div>
           <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs">
             <div className="mb-1 font-bold text-[#132960]">Os 4 Levers (alavancas)</div>
@@ -453,9 +476,12 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
       {indicadores && categorias.length > 0 && (
         <Section
           titulo="Indicadores Dalio semaforizados"
-          hint="20 indicadores em 5 categorias. Faixas verde / atenção / crítico / break baseadas em casos históricos descritos no livro (Reino Unido 1976, Japão pós-1990, Argentina 2001, EUA pós-2008). Ponto Brasil (▶) destacado na régua à direita de cada card."
+          hint={`${Object.keys(indicadores).length} indicadores em ${categorias.length} categorias. Ponto Brasil (▶) destacado na régua à direita de cada card.`}
         >
           <SemaforoPorCategoria indicadores={indicadores} categorias={categorias} />
+          <p className="mt-2 text-[10px] text-zinc-500">
+            Faixas calibradas pela AZ a partir dos casos históricos do livro (Reino Unido 1976, Japão pós-1990, Argentina 2001, EUA pós-2008) — não são números do livro.
+          </p>
           <p className="mt-2"><DataStamp giro={data.gerado_em} dado={data.fonte_base} /></p>
         </Section>
       )}
@@ -502,25 +528,32 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
               <LeverCard numero={1} titulo="Baixar juros"
                 descricao="Taxa nominal efetiva da dívida que estabilizaria Dívida/Receita."
                 atual={lev.lever_juros.i_atual_aa} alvo={lev.lever_juros.i_estavel_aa} delta={lev.lever_juros.delta_pp}
-                sufix="% a.a." baseLabel="custo médio efetivo da DPF" viavel="baixa" />
+                sufix="% a.a." baseLabel="taxa implícita da DLSP (a.a.)"
+                viavel={viabilidadeLever(lev.lever_juros.delta_pp, 2)} />
             )}
             {lev.lever_inflacao && (
               <LeverCard numero={2} titulo="Mais inflação"
                 descricao="Inflação que subiria crescimento nominal o suficiente para erodir a dívida."
                 atual={lev.lever_inflacao.inflacao_atual_aa} alvo={lev.lever_inflacao.inflacao_estavel_aa} delta={lev.lever_inflacao.delta_pp}
-                sufix="% a.a." baseLabel="IPCA 12m" viavel="baixa" />
+                sufix="% a.a." baseLabel="IPCA 12m"
+                viavel={viabilidadeLever(lev.lever_inflacao.delta_pp, 2)} />
             )}
             {lev.lever_corte_despesa && (
               <LeverCard numero={3} titulo="Cortar despesa"
                 descricao="Corte na despesa primária total para fechar o gap consistente com r−g atual."
                 atual={lev.lever_corte_despesa.despesa_atual_pct_receita} alvo={lev.lever_corte_despesa.despesa_alvo_pct_receita} delta={lev.lever_corte_despesa.corte_pct_da_despesa}
-                sufix="% Receita" baseLabel="despesa primária / Receita líquida" viavel="baixa" />
+                sufix="% Receita" baseLabel="despesa primária / Receita líquida"
+                viavel={viabilidadeLever(lev.lever_corte_despesa.corte_pct_da_despesa, 5)} />
             )}
             {lev.lever_aumento_receita && (
               <LeverCard numero={4} titulo="Aumentar receita"
                 descricao="Aumento da receita líquida (mantendo despesa) para estabilizar Dívida/Receita."
-                atual={0} alvo={lev.lever_aumento_receita.aumento_pct_da_receita} delta={lev.lever_aumento_receita.aumento_pct_da_receita}
-                sufix="%" baseLabel="ajuste sobre receita atual" viavel="baixa" />
+                atual={receitaAtualPctPib ?? undefined} alvo={receitaAlvoPctPib} delta={aumentoReceitaPct ?? undefined}
+                deltaTexto={aumentoReceitaPct != null
+                  ? `${aumentoReceitaPct >= 0 ? "+" : ""}${aumentoReceitaPct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% de arrecadação`
+                  : undefined}
+                sufix="% PIB" baseLabel="receita líquida / PIB"
+                viavel={viabilidadeLever(aumentoReceitaPct, 5)} />
             )}
           </div>
           <div className="mt-3 rounded-lg border-l-4 border-rose-500 bg-rose-50 p-3 text-xs text-rose-900">
@@ -538,8 +571,8 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
             <ul className="ml-4 mt-1 list-disc space-y-0.5">
               <li>Dívida/Receita = {fmt(data.premissas.debt_pct_receita, 0, "%")} (DBGG ÷ Receita líquida Tesouro 12m)</li>
               <li>Déficit primário = {fmt(data.premissas.primary_deficit_pct_receita, 1, "%")} da receita</li>
-              <li>i = {fmt(data.premissas.i_nominal_aa, 2, "%")} a.a. (juros 12m ÷ DBGG)</li>
-              <li>g = {fmt(data.premissas.g_nominal_aa, 2, "%")} a.a. (PIB real + IPCA 12m)</li>
+              <li>i = {fmt(data.premissas.i_nominal_aa, 2, "%")} a.a. (taxa implícita da DLSP: juros nominais 12m ÷ DLSP média)</li>
+              <li>g = {fmt(data.premissas.g_nominal_aa, 2, "%")} a.a. (PIB nominal 12m YoY)</li>
             </ul>
           </div>
           <p>{data.metodologia}</p>
