@@ -14,6 +14,8 @@ type SubmitButtonProps = {
   formAction?: (formData: FormData) => void | Promise<void>;
   className?: string;
   disabled?: boolean;
+  /** Disparado no clique, antes do submit (ex.: limpar dirty-state do editor). */
+  onClick?: () => void;
 };
 
 /**
@@ -25,6 +27,7 @@ export function SubmitButton({
   formAction,
   className = "",
   disabled = false,
+  onClick,
 }: SubmitButtonProps) {
   const { pending, action } = useFormStatus();
   const isThisPending = pending && (formAction ? action === formAction : true);
@@ -33,6 +36,7 @@ export function SubmitButton({
     <button
       type="submit"
       formAction={formAction}
+      onClick={onClick}
       disabled={disabled || pending}
       aria-busy={isThisPending}
       className={`inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}

@@ -156,6 +156,67 @@ export async function savePostDraftAction(formData: FormData) {
   redirect(`/area-restrita/conteudo/${id}`);
 }
 
+export type AutosaveResult =
+  | { ok: true; id: number; savedAt: string }
+  | { ok: false; reason: "invalid" | "author" | "forbidden" | "locked" | "legacy" | "error" };
+
+/**
+ * Variante leve do "Salvar rascunho" para o autosave do editor: persiste o
+ * conteúdo em segundo plano e RETORNA JSON em vez de fazer redirect/revalidate.
+ *
+ * Por que separada de savePostDraftAction:
+ *  - savePostDraftAction usa redirect() (que lança) e revalidatePath — ótimo
+ *    para o clique manual, mas navegaria a página a cada autosave.
+ *  - aqui só atualizamos campos de rascunho; sem mexer em status, slug, autor,
+ *    título ou categoria (esses ficam no salvamento manual), evitando efeitos
+ *    colaterais inesperados enquanto o usuário só digita.
+ *
+ * Respeita os MESMOS bloqueios do salvamento manual: permissão de edição,
+ * AUTHOR não autosalva post APPROVED, e a proteção anti-truncamento de post
+ * legado (nunca sobrescreve o conteúdo original com algo bem menor).
+ */
+export async function autosavePostDraftAction(
+  id: number,
+  contentHtml: string,
+): Promise<AutosaveResult> {
+  const session = await requireSession();
+
+  if (!Number.isInteger(id) || id <= 0) return { ok: false, reason: "invalid" };
+
+  const post = await prisma.post.findUnique({ where: { id } });
+  if (!post) return { ok: false, reason: "invalid" };
+  if (!canEditPost(session, post)) return { ok: false, reason: "forbidden" };
+
+  // AUTHOR não edita (nem autosalva) post publicado — equipe editorial abre revisão.
+  if (session.role === "AUTHOR" && post.status === "APPROVED") {
+    return { ok: false, reason: "locked" };
+  }
+
+  const { content, contentHtml: cleanHtml } = await prepareContent(contentHtml || "<p></p>");
+
+  // Proteção anti-truncamento de post legado (sem contentHtml, mas com markdown
+  // original): não deixa o autosave sobrescrever o texto original com algo menor.
+  const originalContent = post.content.trim();
+  const isLegacyPost = !post.contentHtml && originalContent.length > 0;
+  if (isLegacyPost && content.length < originalContent.length * 0.5) {
+    return { ok: false, reason: "legacy" };
+  }
+
+  try {
+    // Autosave é frequente (debounce ~3s): NÃO grava audit log a cada salvamento
+    // para não poluir a trilha. O salvamento manual continua sendo auditado.
+    const updated = await prisma.post.update({
+      where: { id },
+      data: { content, contentHtml: cleanHtml },
+      select: { updatedAt: true },
+    });
+
+    return { ok: true, id, savedAt: updated.updatedAt.toISOString() };
+  } catch {
+    return { ok: false, reason: "error" };
+  }
+}
+
 export async function submitPostForReviewAction(formData: FormData) {
   const session = await requireSession();
   const id = Number(formData.get("id"));
