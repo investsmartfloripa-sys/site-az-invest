@@ -60,6 +60,8 @@ export type IbcBrPonto = {
   var_yoy_mm3: NumOrNull;
   /** v2: mm3 do índice SA vs mm3 três meses antes, anualizada (3m/3m SAAR). */
   var_3m3m_saar?: NumOrNull;
+  /** v2: a mesma razão SEM anualizar — "ritmo trimestral" (convenção BCB RI/IBGE). */
+  var_ritmo_trimestral?: NumOrNull;
 };
 
 export type AtividadeIbcBrData = {

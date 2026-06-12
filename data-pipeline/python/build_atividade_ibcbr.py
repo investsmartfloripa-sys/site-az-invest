@@ -107,10 +107,13 @@ def main():
         item["var_yoy_mm3"] = round(sum(jan)/len(jan), 2) if len(jan) == 3 else None
 
     # 3m/3m SAAR (v2): mm3 do índice SA vs mm3 três meses antes, anualizado
+    # var_ritmo_trimestral (v2): a MESMA razão SEM anualizar — convenção BCB RI/IBGE
+    # ("ritmo trimestral"); é o momentum canônico p/ headline (var_3m ponta-a-ponta é ruído)
     for i, item in enumerate(serie):
         mm3 = item.get("indice_sa_mm3")
         mm3_prev = serie[i-3].get("indice_sa_mm3") if i >= 3 else None
         item["var_3m3m_saar"] = round(((mm3/mm3_prev)**4 - 1)*100, 2) if (mm3 and mm3_prev) else None
+        item["var_ritmo_trimestral"] = round((mm3/mm3_prev - 1)*100, 2) if (mm3 and mm3_prev) else None
 
     # Heatmap mensal: ano × mês, índice SA
     heatmap = {}  # ano -> [12 valores]

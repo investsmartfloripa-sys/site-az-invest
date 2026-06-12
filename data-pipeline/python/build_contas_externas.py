@@ -10,6 +10,18 @@ Baixa séries do BCB SGS:
 - Reservas internacionais (3546 mensal, 13982 liquidez diária).
 - PIB acumulado 12m em US$ milhões (4192) para denominador de % PIB.
 
+Schema v2 (ADITIVO — campos v1 intactos):
+- bloco_a.decomposicao_12m / balanca_12m: acumulados 12m (US$ bi) sobre a série
+  completa, janela de saída desde 2005.
+- bloco_b.cobertura_idp / idp_decomposicao_12m: % PIB com sinal e decomposição
+  do IDP 12m (intercompanhia = 22885 − participação total 22888).
+- bloco_servicos.serie_12m: transportes 22728, viagens 22740, telecom/informática
+  22776, propriedade intelectual 22779, demais = residual de 22719.
+- bloco_renda.serie_12m: lucros/dividendos IDP 22812, reinvestidos 22815,
+  salários 22803, juros e demais = residual de 22806; total = 22800.
+- bloco_c.reservas_mensal (3546) e meses_importacao_serie (despesa de serviços
+  22721 no conceito bens+serviços).
+
 Gera `data-pipeline/out/contas_externas.json` e upload pra `data/contas_externas.json`.
 
 Cron diário (defasagem ~25 dias úteis pra publicação BCB). Merge incremental
@@ -51,6 +63,17 @@ SERIES_MENSAIS = {
     "idp_part_exc_reinv": 22891,        # IDP - Participação exc reinvestimento
     # Investimento brasileiro no exterior
     "ide_liquido": 22865,               # IDE - líquido
+    # Serviços — componentes (saldos mensais, US$ milhões) [v2]
+    "serv_transportes": 22728,          # Serviços - Transportes - saldo
+    "serv_viagens": 22740,              # Serviços - Viagens - saldo
+    "serv_telecom_informatica": 22776,  # Serviços - Telecom, computação e informação - saldo
+    "serv_propriedade_intelectual": 22779,  # Serviços - Propriedade intelectual - saldo
+    "serv_despesas_total": 22721,       # Serviços - despesa TOTAL (p/ meses de importação bens+serviços)
+    # Renda primária — componentes (US$ milhões) [v2]
+    "renda_salarios": 22803,            # Renda primária - Salários - saldo
+    "renda_invest_saldo": 22806,        # Renda primária - Renda de investimento - saldo
+    "renda_lucros_dividendos_idp": 22812,  # Renda de inv. direto - Lucros e dividendos - saldo
+    "renda_lucros_reinvestidos": 22815,    # Renda de inv. direto - Lucros reinvestidos - saldo
     # Reservas mensais
     "reservas_mensal": 3546,            # Reservas internacionais total mensal (US$ milhões)
     # PIB acumulado 12m (US$ milhões) — denominador de % PIB
@@ -165,6 +188,27 @@ def pct_pib(num: dict[str, float | None], pib_12m: dict[str, float | None]) -> d
     return out
 
 
+def _bi(v: float | None, nd: int = 3) -> float | None:
+    """US$ milhões → US$ bilhões, arredondado (None-safe)."""
+    return round(v / 1000.0, nd) if v is not None else None
+
+
+def _round(v: float | None, nd: int = 2) -> float | None:
+    return round(v, nd) if v is not None else None
+
+
+def _ultimo_valor(serie: dict[str, float | None]) -> tuple[str | None, float | None]:
+    """Última (data, valor) não-nula da série; (None, None) se vazia."""
+    ks = [k for k in sorted(serie.keys()) if serie.get(k) is not None]
+    if not ks:
+        return None, None
+    return ks[-1], serie[ks[-1]]
+
+
+def _serie_vazia(serie: dict[str, float | None]) -> bool:
+    return not any(v is not None for v in serie.values())
+
+
 # ----------------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------------
@@ -192,6 +236,42 @@ def main() -> None:
         # Últimos 5 anos via intervalo de data (limite de ultimos/N é 20)
         diarias[chave] = sgs_serie(code, desde_dias=1825)
         time.sleep(0.4)
+
+    # ---- Blob anterior (merge incremental / preservação de séries) ----
+    prev: dict[str, Any] | None = None
+    if not args.no_merge:
+        try:
+            sys.path.insert(0, str(HERE))
+            from shared.blob_download import download_json
+            prev = download_json(BLOB_PATH)
+            if prev:
+                print(f"  [merge] Blob anterior gerado_em {prev.get('gerado_em')}")
+        except Exception as e:
+            print(f"  [merge] WARN: {e}", file=sys.stderr)
+
+    # Robustez: se reservas vierem vazias do SGS, reaproveita as séries
+    # correspondentes do Blob anterior (hero não pode regredir pra None).
+    if _serie_vazia(diarias["reservas_liquidez"]) and prev:
+        prev_diaria = (prev.get("bloco_c") or {}).get("reservas_diaria") or []
+        restaurada = {
+            p["data"]: p["reservas_us_bi"] * 1000.0  # bi → mi (unidade interna)
+            for p in prev_diaria
+            if p.get("data") and p.get("reservas_us_bi") is not None
+        }
+        if restaurada:
+            diarias["reservas_liquidez"] = restaurada
+            print(f"  [preserva] reservas_liquidez (13982) vazia no SGS — reaproveitados {len(restaurada)} pontos do Blob anterior")
+
+    if _serie_vazia(mensais["reservas_mensal"]) and prev:
+        prev_mensal = (prev.get("bloco_c") or {}).get("reservas_mensal") or []
+        restaurada_m = {
+            p["mes"]: p["reservas_us_bi"] * 1000.0  # bi → mi (unidade interna)
+            for p in prev_mensal
+            if p.get("mes") and p.get("reservas_us_bi") is not None
+        }
+        if restaurada_m:
+            mensais["reservas_mensal"] = restaurada_m
+            print(f"  [preserva] reservas_mensal (3546) vazia no SGS — reaproveitados {len(restaurada_m)} pontos do Blob anterior")
 
     # ---- Cálculos derivados ----
     pib_12m = mensais["pib_12m"]
@@ -327,6 +407,15 @@ def main() -> None:
         },
     }
 
+    # Robustez: hero nunca regride pra None se o Blob anterior tinha valor
+    if prev:
+        prev_hero = prev.get("hero") or {}
+        for kpi, atual in hero.items():
+            antes = prev_hero.get(kpi) or {}
+            if atual.get("valor") is None and antes.get("valor") is not None:
+                hero[kpi] = {**atual, "data": antes.get("data"), "valor": antes.get("valor")}
+                print(f"  [preserva] hero.{kpi} sem valor novo — mantido valor do Blob anterior ({antes.get('data')})")
+
     # ---- Bloco A: Saldo TC histórico ----
     # Anos completos a partir de 2000 (somatório do ano civil)
     tc_anual: dict[str, float | None] = {}
@@ -429,8 +518,233 @@ def main() -> None:
             continue
         reservas_serie.append({"data": d, "reservas_us_bi": v / 1000.0})
 
+    # ========================================================================
+    # Schema v2 — acumulados 12m sobre a série completa (não o recorte 36m)
+    # ========================================================================
+    V2_JANELA_INICIO = "2005-01-01"
+
+    # ---- v2 bloco_a.decomposicao_12m: TC decomposta, acumulado 12m, US$ bi ----
+    bens_12m = acum_12m(bens_saldo)                              # 22707
+    servicos_12m = acum_12m(mensais["servicos_liquido"])         # 22719
+    renda_prim_12m = acum_12m(mensais["renda_primaria_saldo"])   # 22800
+    renda_sec_12m = acum_12m(mensais["renda_secundaria_saldo"])  # 22838
+    decomposicao_12m_serie: list[dict[str, Any]] = []
+    for k in sorted(bens_12m.keys()):
+        if k < V2_JANELA_INICIO:
+            continue
+        b, s, rp, rs = bens_12m.get(k), servicos_12m.get(k), renda_prim_12m.get(k), renda_sec_12m.get(k)
+        if any(v is None for v in (b, s, rp, rs)):
+            continue
+        decomposicao_12m_serie.append({
+            "mes": k,
+            "bens": _bi(b),
+            "servicos": _bi(s),
+            "renda_primaria": _bi(rp),
+            "renda_secundaria": _bi(rs),
+            # total = soma das 4 (identidade BPM6 vs 22701 já auditada nos mensais)
+            "total": _bi(b + s + rp + rs),
+        })
+
+    # ---- v2 bloco_a.balanca_12m: exportações/importações/saldo 12m, US$ bi ----
+    bens_export_12m = acum_12m(bens_export)  # 22711
+    balanca_12m_serie: list[dict[str, Any]] = []
+    for k in sorted(bens_export_12m.keys()):
+        if k < V2_JANELA_INICIO:
+            continue
+        e, i, s = bens_export_12m.get(k), bens_import_12m.get(k), bens_12m.get(k)
+        if any(v is None for v in (e, i, s)):
+            continue
+        balanca_12m_serie.append({
+            "mes": k,
+            "exportacoes": _bi(e),
+            "importacoes": _bi(-i),  # mesma convenção visual do bloco 36m: importação negativa
+            "saldo": _bi(s),
+        })
+
+    # ---- v2 bloco_b.cobertura_idp: % PIB com sinal + cobertura do déficit ----
+    cobertura_idp_serie: list[dict[str, Any]] = []
+    for k in sorted(tc_12m.keys()):
+        if k < V2_JANELA_INICIO:
+            continue
+        tc_p = tc_pct_pib.get(k)   # COM SINAL — nunca clipar em zero
+        idp_p = idp_pct_pib.get(k)
+        if tc_p is None or idp_p is None:
+            continue
+        tc_v = tc_12m.get(k)
+        idp_v = idp_12m.get(k)
+        if tc_v is not None and idp_v is not None and tc_v < 0:
+            cob = (idp_v / abs(tc_v)) * 100.0
+        else:
+            cob = None  # superávit em TC: conceito não se aplica (front anota "superávit")
+        cobertura_idp_serie.append({
+            "mes": k,
+            "idp_pct_pib": _round(idp_p, 2),
+            "tc_pct_pib": _round(tc_p, 2),
+            "cobertura_pct": _round(cob, 1),
+        })
+
+    # ---- v2 bloco_b.idp_decomposicao_12m: IDP 12m decomposto, US$ bi ----
+    idp_part_total_12m = acum_12m(mensais["idp_participacao_capital"])  # 22888 (já baixado; agora usado)
+    idp_part_exc_12m = acum_12m(mensais["idp_part_exc_reinv"])          # 22891
+    idp_reinv_12m = acum_12m(mensais["idp_reinvestimento"])             # 22892
+    IDP_PART_TOL_USD_MI = 200.0
+    idp_part_violacoes: list[tuple[str, float]] = []
+    idp_12m_serie: list[dict[str, Any]] = []
+    for k in sorted(idp_12m.keys()):
+        if k < V2_JANELA_INICIO:
+            continue
+        total = idp_12m.get(k)
+        part_total = idp_part_total_12m.get(k)
+        part_exc = idp_part_exc_12m.get(k)
+        reinv = idp_reinv_12m.get(k)
+        if any(v is None for v in (total, part_total, part_exc, reinv)):
+            continue
+        residuo_part = part_total - (part_exc + reinv)
+        if abs(residuo_part) > IDP_PART_TOL_USD_MI:
+            idp_part_violacoes.append((k, residuo_part))
+        idp_12m_serie.append({
+            "mes": k,
+            "participacao": _bi(part_exc),
+            "reinvestimento": _bi(reinv),
+            # intercompanhia = IDP líquido (22885) − participação TOTAL (22888)
+            "intercompanhia": _bi(total - part_total),
+            "total": _bi(total),
+        })
+    if idp_part_violacoes:
+        pior = max(idp_part_violacoes, key=lambda t: abs(t[1]))
+        print(
+            f"[WARN] IDP 12m: |22888 − (22891 + 22892)| > US$ {IDP_PART_TOL_USD_MI:.0f} mi em "
+            f"{len(idp_part_violacoes)} mes(es); pior caso {pior[0]}: resíduo US$ {pior[1]:+.1f} mi",
+            file=sys.stderr,
+        )
+    else:
+        print(f"[OK] IDP 12m: participação total (22888) fecha com 22891 + 22892 (tolerância US$ {IDP_PART_TOL_USD_MI:.0f} mi)")
+
+    # ---- v2 bloco_servicos.serie_12m: decomposição dos serviços, US$ bi ----
+    SERV_COMPONENTES = {
+        "transportes": "serv_transportes",                          # 22728
+        "viagens": "serv_viagens",                                  # 22740
+        "telecom_informatica": "serv_telecom_informatica",          # 22776
+        "propriedade_intelectual": "serv_propriedade_intelectual",  # 22779
+    }
+    SERV_SANITY_MIN_USD_MI, SERV_SANITY_MAX_USD_MI = -4000.0, 1000.0
+    serv_comp_mensal: dict[str, dict[str, float | None]] = {}
+    for nome, chave in SERV_COMPONENTES.items():
+        serie = mensais[chave]
+        k_ult, v_ult = _ultimo_valor(serie)
+        if v_ult is None or not (SERV_SANITY_MIN_USD_MI <= v_ult <= SERV_SANITY_MAX_USD_MI):
+            print(
+                f"[ERROR] serviços/{nome} (SGS {SERIES_MENSAIS[chave]}): último mensal "
+                f"{v_ult} ({k_ult}) fora de [{SERV_SANITY_MIN_USD_MI:.0f}, {SERV_SANITY_MAX_USD_MI:.0f}] "
+                f"US$ mi — série descartada (vai pro residual 'demais')",
+                file=sys.stderr,
+            )
+            serv_comp_mensal[nome] = {}
+        else:
+            serv_comp_mensal[nome] = serie
+    serv_ativos = [nome for nome in SERV_COMPONENTES if serv_comp_mensal[nome]]
+    serv_comp_12m = {nome: acum_12m(serv_comp_mensal[nome]) for nome in serv_ativos}
+    servicos_12m_serie: list[dict[str, Any]] = []
+    for k in sorted(servicos_12m.keys()):
+        if k < V2_JANELA_INICIO:
+            continue
+        total = servicos_12m.get(k)
+        if total is None:
+            continue
+        comps = {nome: serv_comp_12m[nome].get(k) for nome in serv_ativos}
+        validos = [v for v in comps.values() if v is not None]
+        demais = total - sum(validos) if len(validos) == len(serv_ativos) else None
+        servicos_12m_serie.append({
+            "mes": k,
+            "transportes": _bi(comps.get("transportes")),
+            "viagens": _bi(comps.get("viagens")),
+            "telecom_informatica": _bi(comps.get("telecom_informatica")),
+            "propriedade_intelectual": _bi(comps.get("propriedade_intelectual")),
+            "demais": _bi(demais),
+            "total": _bi(total),
+        })
+
+    # ---- v2 bloco_renda.serie_12m: decomposição da renda primária, US$ bi ----
+    # Auditoria mensal: salários (22803) + renda de investimento (22806) ≈ total (22800)
+    RENDA_TOL_USD_MI = 50.0
+    renda_violacoes: list[tuple[str, float]] = []
+    for k in sorted(mensais["renda_primaria_saldo"].keys()):
+        t = mensais["renda_primaria_saldo"].get(k)
+        sal = mensais["renda_salarios"].get(k)
+        rinv = mensais["renda_invest_saldo"].get(k)
+        if any(v is None for v in (t, sal, rinv)):
+            continue
+        residuo = sal + rinv - t
+        if abs(residuo) > RENDA_TOL_USD_MI:
+            renda_violacoes.append((k, residuo))
+    if renda_violacoes:
+        pior = max(renda_violacoes, key=lambda t: abs(t[1]))
+        print(
+            f"[WARN] renda primária: |22803 + 22806 − 22800| > US$ {RENDA_TOL_USD_MI:.0f} mi em "
+            f"{len(renda_violacoes)} mes(es); pior caso {pior[0]}: resíduo US$ {pior[1]:+.1f} mi",
+            file=sys.stderr,
+        )
+    else:
+        print(f"[OK] renda primária: 22803 + 22806 fecha com 22800 (tolerância US$ {RENDA_TOL_USD_MI:.0f} mi)")
+
+    renda_ld_12m = acum_12m(mensais["renda_lucros_dividendos_idp"])  # 22812
+    renda_lr_12m = acum_12m(mensais["renda_lucros_reinvestidos"])    # 22815
+    renda_sal_12m = acum_12m(mensais["renda_salarios"])              # 22803
+    renda_rinv_12m = acum_12m(mensais["renda_invest_saldo"])         # 22806
+    renda_12m_serie: list[dict[str, Any]] = []
+    for k in sorted(renda_prim_12m.keys()):
+        if k < V2_JANELA_INICIO:
+            continue
+        total = renda_prim_12m.get(k)
+        ld = renda_ld_12m.get(k)
+        lr = renda_lr_12m.get(k)
+        sal = renda_sal_12m.get(k)
+        rinv = renda_rinv_12m.get(k)
+        if any(v is None for v in (total, ld, lr, sal, rinv)):
+            continue
+        renda_12m_serie.append({
+            "mes": k,
+            "lucros_dividendos_idp": _bi(ld),
+            "lucros_reinvestidos": _bi(lr),
+            # juros e demais rendas de investimento = 22806 − (22812 + 22815)
+            "juros_e_demais": _bi(rinv - (ld + lr)),
+            "salarios": _bi(sal),
+            "total": _bi(total),
+        })
+
+    # ---- v2 bloco_c.reservas_mensal: SGS 3546 (série completa), US$ bi ----
+    reservas_mensal_serie: list[dict[str, Any]] = []
+    for k in sorted(mensais["reservas_mensal"].keys()):
+        v = mensais["reservas_mensal"].get(k)
+        if v is None:
+            continue
+        reservas_mensal_serie.append({"mes": k, "reservas_us_bi": _bi(v)})
+
+    # ---- v2 bloco_c.meses_importacao_serie ----
+    # meses_bens = reservas ÷ (importação de bens 12m ÷ 12)
+    # meses_bens_servicos = reservas ÷ ((import bens 12m + despesa de serviços 12m) ÷ 12)
+    serv_desp_12m = acum_12m(mensais["serv_despesas_total"])  # 22721 (despesa, sinal positivo)
+    meses_importacao_serie: list[dict[str, Any]] = []
+    for k in sorted(mensais["reservas_mensal"].keys()):
+        res = mensais["reservas_mensal"].get(k)
+        imp12 = bens_import_12m.get(k)
+        if res is None or imp12 is None or imp12 <= 0:
+            continue
+        meses_bens = res / (imp12 / 12.0)
+        sd12 = serv_desp_12m.get(k)
+        if sd12 is not None and (imp12 + sd12) > 0:
+            meses_bens_serv = res / ((imp12 + sd12) / 12.0)
+        else:
+            meses_bens_serv = None
+        meses_importacao_serie.append({
+            "mes": k,
+            "meses_bens": _round(meses_bens, 2),
+            "meses_bens_servicos": _round(meses_bens_serv, 2),
+        })
+
     # ---- Output ----
     payload = {
+        "schema_version": 2,
         "gerado_em": datetime.now(timezone.utc).isoformat(),
         "fonte_principal": "Banco Central do Brasil — Estatísticas do Setor Externo (BPM6)",
         "ultima_referencia_mensal": k_tc,
@@ -440,14 +754,44 @@ def main() -> None:
             "saldo_anual": tc_anual_pct,
             "decomposicao_mensal_36m": bp_decomp_24m,
             "balanca_comercial_36m": balanca_24m,
+            # v2 — acumulados 12m sobre a série completa, desde 2005, US$ bi
+            "decomposicao_12m": decomposicao_12m_serie,
+            "balanca_12m": balanca_12m_serie,
         },
         "bloco_b": {
             "idp_vs_tc_pct_pib": idp_vs_tc,
             "idp_decomposicao_36m": idp_decomp_24m,
+            # v2
+            "cobertura_idp": cobertura_idp_serie,
+            "idp_decomposicao_12m": idp_12m_serie,
         },
         "bloco_c": {
             "reservas_diaria": reservas_serie,
             "meses_importacao_recente": meses_importacao,
+            # v2
+            "reservas_mensal": reservas_mensal_serie,
+            "meses_importacao_serie": meses_importacao_serie,
+        },
+        # v2
+        "bloco_servicos": {
+            "serie_12m": servicos_12m_serie,
+            "_nota": (
+                "Saldos acumulados 12m em US$ bi. Componentes: transportes (SGS 22728), "
+                "viagens (22740), telecom/computação/informação (22776), propriedade "
+                "intelectual (22779). 'demais' é residual = total de serviços (22719) − "
+                "soma dos componentes listados (inclui p.ex. serviços financeiros, "
+                "aluguel de equipamentos e demais serviços empresariais)."
+            ),
+        },
+        "bloco_renda": {
+            "serie_12m": renda_12m_serie,
+            "_nota": (
+                "Saldos acumulados 12m em US$ bi. Componentes: lucros e dividendos de "
+                "investimento direto (SGS 22812), lucros reinvestidos (22815), salários "
+                "(22803). 'juros_e_demais' = renda de investimento (22806) − (22812 + "
+                "22815), i.e. juros de portfólio/outros investimentos e demais rendas. "
+                "Total = renda primária (22800)."
+            ),
         },
         "metadata": {
             "fonte": "BCB SGS / BPM6",
@@ -457,18 +801,8 @@ def main() -> None:
         },
     }
 
-    # ---- Merge incremental (preserva histórico) ----
-    if not args.no_merge:
-        try:
-            sys.path.insert(0, str(HERE))
-            from shared.blob_download import download_json
-            prev = download_json(BLOB_PATH)
-            if prev:
-                print(f"  [merge] Blob anterior gerado_em {prev.get('gerado_em')}")
-                # Não há janelas de retenção problemáticas aqui; apenas mantemos
-                # gerado_em mais recente e o conjunto novo é autoritativo.
-        except Exception as e:
-            print(f"  [merge] WARN: {e}", file=sys.stderr)
+    # (merge incremental: o Blob anterior já foi baixado no início do build e
+    #  usado para preservar reservas/hero; o conjunto novo é autoritativo.)
 
     out_file.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     size_kb = out_file.stat().st_size / 1024

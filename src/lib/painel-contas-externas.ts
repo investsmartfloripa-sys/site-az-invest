@@ -70,7 +70,63 @@ export type ReservasPonto = {
   reservas_us_bi: number;
 };
 
+// ── v2 (acumulados 12m sobre a série completa + decomposições com códigos validados) ──
+
+/** Acumulado 12m em US$ bi: bens+serviços+rendas = total (identidade auditada no builder). */
+export type Bp12mPonto = {
+  mes: string;
+  bens: NumOrNull;
+  servicos: NumOrNull;
+  renda_primaria: NumOrNull;
+  renda_secundaria: NumOrNull;
+  total: NumOrNull;
+};
+
+export type Balanca12mPonto = { mes: string; exportacoes: NumOrNull; importacoes: NumOrNull; saldo: NumOrNull };
+
+/** Cobertura do déficit pelo IDP: cobertura_pct = null quando a TC está superavitária. */
+export type CoberturaIdpPonto = {
+  mes: string;
+  idp_pct_pib: NumOrNull;
+  tc_pct_pib: NumOrNull;
+  cobertura_pct: NumOrNull;
+};
+
+export type Idp12mPonto = {
+  mes: string;
+  participacao: NumOrNull;
+  reinvestimento: NumOrNull;
+  intercompanhia: NumOrNull;
+  total: NumOrNull;
+};
+
+/** Serviços 12m (saldos US$ bi): transportes 22728, viagens 22740, telecom/informática 22776,
+ * propriedade intelectual 22779; demais = residual auditado do total 22719. */
+export type Servicos12mPonto = {
+  mes: string;
+  transportes: NumOrNull;
+  viagens: NumOrNull;
+  telecom_informatica: NumOrNull;
+  propriedade_intelectual: NumOrNull;
+  demais: NumOrNull;
+  total: NumOrNull;
+};
+
+/** Renda primária 12m: lucros/dividendos IDP 22812, reinvestidos 22815, salários 22803;
+ * juros_e_demais = residual auditado de 22806; total = 22800. */
+export type Renda12mPonto = {
+  mes: string;
+  lucros_dividendos_idp: NumOrNull;
+  lucros_reinvestidos: NumOrNull;
+  juros_e_demais: NumOrNull;
+  salarios: NumOrNull;
+  total: NumOrNull;
+};
+
+export type MesesImportacaoPonto = { mes: string; meses_bens: NumOrNull; meses_bens_servicos: NumOrNull };
+
 export type ContasExternasData = {
+  schema_version?: number;
   gerado_em: string;
   fonte_principal: string;
   ultima_referencia_mensal: string | null;
@@ -80,15 +136,27 @@ export type ContasExternasData = {
     saldo_anual: SaldoAnualPonto[];
     decomposicao_mensal_36m: BpDecomposicaoPonto[];
     balanca_comercial_36m: BalancaComercialPonto[];
+    /** v2 */
+    decomposicao_12m?: Bp12mPonto[];
+    balanca_12m?: Balanca12mPonto[];
   };
   bloco_b: {
     idp_vs_tc_pct_pib: IdpVsTcPonto[];
     idp_decomposicao_36m: IdpDecomposicaoPonto[];
+    /** v2 */
+    cobertura_idp?: CoberturaIdpPonto[];
+    idp_decomposicao_12m?: Idp12mPonto[];
   };
   bloco_c: {
     reservas_diaria: ReservasPonto[];
     meses_importacao_recente: NumOrNull;
+    /** v2 */
+    reservas_mensal?: { mes: string; reservas_us_bi: NumOrNull }[];
+    meses_importacao_serie?: MesesImportacaoPonto[];
   };
+  /** v2 */
+  bloco_servicos?: { serie_12m: Servicos12mPonto[]; _nota?: string };
+  bloco_renda?: { serie_12m: Renda12mPonto[]; _nota?: string };
   metadata: {
     fonte: string;
     nota: string;
