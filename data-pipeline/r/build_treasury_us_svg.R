@@ -114,6 +114,73 @@ fetch_series <- function(series_id, api_key) {
   )
 }
 
+## ---------- D+0: par yield do MESMO dia util (home.treasury.gov) ----------
+## O FRED so publica D-1; o Tesouro EUA publica a "Daily Treasury Par Yield Curve
+## Rates" no proprio dia util (~15:30-18:00 ET). CSV simples, estavel, sem auth.
+## Confirmado em 2026-06-11: HTTP 200, ~9s, ultima linha = data corrente.
+## Falha => retorna NULL e o grafico segue so com os cortes do FRED (D-1/D-30/...).
+
+treasury_par_url <- function(year) {
+  sprintf(
+    paste0(
+      "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/",
+      "daily-treasury-rates.csv/%d/all?type=daily_treasury_yield_curve",
+      "&field_tdr_date_value=%d&page&_format=csv"
+    ),
+    year, year
+  )
+}
+
+# Mapeia tenor (anos) -> nome da coluna no CSV do Tesouro EUA.
+treasury_par_col_for_tenor <- c(
+  "1" = "1 Yr", "2" = "2 Yr", "3" = "3 Yr", "5" = "5 Yr",
+  "7" = "7 Yr", "10" = "10 Yr", "20" = "20 Yr", "30" = "30 Yr"
+)
+
+fetch_treasury_par_latest <- function() {
+  year <- as.integer(format(Sys.Date(), "%Y"))
+  urls <- unique(c(treasury_par_url(year), treasury_par_url(year - 1)))
+  for (u in urls) {
+    df <- tryCatch(
+      {
+        req <- request(u) |>
+          req_timeout(60) |>
+          req_perform()
+        payload <- resp_body_string(req)
+        con <- textConnection(payload)
+        on.exit(close(con), add = TRUE)
+        read.csv(con, stringsAsFactors = FALSE, check.names = FALSE)
+      },
+      error = function(e) {
+        message("WARN Treasury par CSV: ", conditionMessage(e))
+        NULL
+      }
+    )
+    if (is.null(df) || !nrow(df) || !("Date" %in% names(df))) next
+    df$.__d <- suppressWarnings(as.Date(df$Date, format = "%m/%d/%Y"))
+    df <- df[!is.na(df$.__d), , drop = FALSE]
+    if (!nrow(df)) next
+    row <- df[which.max(df$.__d), , drop = FALSE]
+    return(list(date = as.Date(row$.__d[[1]]), row = row))
+  }
+  NULL
+}
+
+par_curve_to_long <- function(par, tenors, label_prefix) {
+  if (is.null(par)) return(tibble())
+  row <- par$row
+  yv <- vapply(as.character(tenors), function(ty) {
+    col <- treasury_par_col_for_tenor[[ty]]
+    if (is.null(col) || !(col %in% names(row))) return(NA_real_)
+    suppressWarnings(as.numeric(row[[col]][1]))
+  }, numeric(1))
+  tibble(
+    tenor = tenors,
+    yield = yv,
+    snapshot = sprintf("%s (%s)", label_prefix, format(par$date, "%d/%m/%Y"))
+  ) |> filter(!is.na(yield))
+}
+
 dfs <- lapply(series_cols, function(s) {
   fetch_series(s, fred_key)
 })
@@ -159,11 +226,22 @@ row_30 <- get_snapshot(last_date - 30)
 row_90 <- get_snapshot(last_date - 90)
 row_365 <- get_snapshot(last_date - 365)
 
+# D+0: par yield do mesmo dia util (Tesouro EUA). So entra se a data for MAIS
+# recente que o D-1 do FRED (senao seria redundante).
+par_d0 <- fetch_treasury_par_latest()
+has_d0 <- !is.null(par_d0) &&
+  (nrow(row_today) == 0 || as.Date(par_d0$date) > as.Date(row_today$date[[1]]))
+if (!is.null(par_d0) && !has_d0) {
+  message("Treasury D+0 ignorado (nao e mais recente que o FRED D-1).")
+}
+
+# Rotulo do FRED vira "D-1" (defasagem de 1 dia util da fonte).
 curves <- bind_rows(
   curve_to_long(row_365, snap_label("D-365", row_365)),
   curve_to_long(row_90, snap_label("D-90", row_90)),
   curve_to_long(row_30, snap_label("D-30", row_30)),
-  curve_to_long(row_today, snap_label("Recente", row_today))
+  curve_to_long(row_today, snap_label("D-1", row_today)),
+  if (has_d0) par_curve_to_long(par_d0, tenor_years, "D+0") else tibble()
 )
 
 if (!nrow(curves)) {
@@ -173,14 +251,28 @@ if (!nrow(curves)) {
 
 snap_order <- unique(curves$snapshot)
 curves$snapshot <- factor(curves$snapshot, levels = snap_order)
-greens <- colorRampPalette(c("#8BE28F", "#2BBF5E", "#0B6B2E", "#000000"))(length(snap_order))
+# Gradiente temporal verde (PADRAO-VISUAL-GRAFICOS.md §2): o ATUAL e sempre preto;
+# quanto mais antigo, mais claro. A rampa preto->verde-claro acompanha a ordem
+# (mais recente por ultimo), entao a ultima serie (D+0, ou D-1 sem D+0) fica preta.
+greens <- colorRampPalette(c("#C7F0CB", "#8BE28F", "#2BBF5E", "#0B6B2E", "#000000"))(length(snap_order))
 names(greens) <- snap_order
+# Espessura: a serie atual mais grossa que os cortes.
+current_label <- snap_order[length(snap_order)]
+lw_values <- setNames(ifelse(snap_order == current_label, 1.25, 0.85), snap_order)
 
-p <- ggplot(curves, aes(x = tenor, y = yield, color = snapshot, group = snapshot)) +
-  geom_line(linewidth = 0.9) +
+# Folga no eixo Y (mesma ideia do AzTimeSeriesChart): ~9% abaixo / ~8% acima.
+y_lo <- min(curves$yield, na.rm = TRUE)
+y_hi <- max(curves$yield, na.rm = TRUE)
+y_rng <- y_hi - y_lo
+if (!is.finite(y_rng) || y_rng <= 0) y_rng <- 0.5
+
+p <- ggplot(curves, aes(x = tenor, y = yield, color = snapshot, linewidth = snapshot, group = snapshot)) +
+  geom_line() +
   geom_point(size = 2) +
   scale_x_continuous(breaks = tenor_years) +
-  scale_color_manual(values = greens) +
+  scale_color_manual(values = greens, breaks = snap_order) +
+  scale_linewidth_manual(values = lw_values, breaks = snap_order, guide = "none") +
+  coord_cartesian(ylim = c(y_lo - 0.09 * y_rng, y_hi + 0.08 * y_rng)) +
   labs(
     x = "Maturidade (anos)",
     y = "Yield (%)",

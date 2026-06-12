@@ -38,8 +38,14 @@ const LIVE_COLOR = "#000000";
 const PAL_PRE = { d30: "#00008B", d90: "#56B4E9" } as const;
 const PAL_IPCA = { d30: "#8B0000", d90: "#F8766D" } as const;
 const PAL_SELIC = { recent: "#000000", d30: "#2E74C9", d90: "#56B4E9", meeting: "#ff5713", meetingLabel: "#0078fd" } as const;
-const PAL_TREASURY = { recent: "#000000", d30: "#0B6B2E", d90: "#2BBF5E", d365: "#8BE28F" } as const;
-const PAL_FED = { recent: "#000000", d30: "#6f6f6f", d90: "#0078fd", meeting: "#ff5713" } as const;
+// Treasury EUA — gradiente temporal verde (PADRAO-VISUAL-GRAFICOS.md §2).
+// Regra: o ATUAL e sempre preto. Com D+0 (Tesouro EUA, par yield) como serie
+// mais recente, o preto migra p/ d0; D-1 (fechamento FRED) assume o verde mais
+// escuro e os cortes ficam progressivamente mais claros.
+const PAL_TREASURY = { d0: "#000000", recent: "#0B6B2E", d30: "#2BBF5E", d90: "#8BE28F", d365: "#C7F0CB" } as const;
+// Fed implicita — mesma familia verde do Treasury ao lado (antes era preto/cinza/azul
+// copiados da Selic BR). Com D+0 disponivel, o preto vai p/ d0 e os cortes seguem o ramp.
+const PAL_FED = { d0: "#000000", recent: "#0B6B2E", d30: "#2BBF5E", d90: "#8BE28F", meeting: "#ff5713" } as const;
 
 const GRID = "#E2E8F0";
 const TICKS = "#64748B";
@@ -87,6 +93,8 @@ export type FedMeeting = {
   d90: number | null;
   d30: number | null;
   recent: number | null;
+  /** D+0: curva do MESMO dia util (Tesouro EUA, par yield). Opcional. */
+  d0?: number | null;
 };
 
 export type TreasuryTenor = {
@@ -95,10 +103,13 @@ export type TreasuryTenor = {
   d90: number | null;
   d30: number | null;
   recent: number | null;
+  /** D+0: par yield do MESMO dia util (home.treasury.gov). Opcional. */
+  d0?: number | null;
 };
 
 /** Rotulos com data de referencia de cada corte (keys das colunas do JSON). */
 export type CutLabels = {
+  d0?: string;
   recent?: string;
   d30?: string;
   d90?: string;
@@ -265,7 +276,28 @@ function useIsNarrow(): boolean {
   return narrow;
 }
 
-type FedChartPoint = { t: number; recent: number | null; d30: number | null; d90: number | null };
+type FedChartPoint = { t: number; d0: number | null; recent: number | null; d30: number | null; d90: number | null };
+
+/**
+ * Domain do eixo Y com folga (mesma logica do AzTimeSeriesChart / buildCurveChart):
+ * piso = min - ~9% do range, teto = max + ~8% do range. Evita o degrau inferior
+ * encostar no eixo X. Aceita varias series; ignora null/NaN.
+ */
+function paddedYDomain(values: (number | null | undefined)[]): [number, number] | undefined {
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const v of values) {
+    if (v != null && Number.isFinite(v)) {
+      if (v < lo) lo = v;
+      if (v > hi) hi = v;
+    }
+  }
+  if (!Number.isFinite(lo) || !Number.isFinite(hi)) return undefined;
+  const range = hi - lo;
+  const padLo = Math.max(0.05, range * 0.09);
+  const padHi = Math.max(0.05, range * 0.08);
+  return [Math.floor((lo - padLo) * 10) / 10, Math.ceil((hi + padHi) * 10) / 10];
+}
 
 /**
  * Bloco PROPRIO de juros dos EUA (separado das abas brasileiras da B3).
@@ -290,6 +322,18 @@ function UsRatesBlock({
 }) {
   const [usTab, setUsTab] = useState<UsTabId>("treasury");
   const hasFed = fedMeetings.length > 0;
+  // D+0 so existe quando o pipeline conseguiu puxar a curva do mesmo dia (Tesouro EUA).
+  const hasTreasuryD0 = treasuryTenors.some((t) => t.d0 != null);
+  const hasFedD0 = fedMeetings.some((m) => m.d0 != null);
+  // Domain do eixo Y com folga p/ a Fed implicita (degraus nao colam na linha X).
+  const fedYDomain = useMemo(
+    () => paddedYDomain(fedChart.flatMap((p) => [p.d0, p.recent, p.d30, p.d90])),
+    [fedChart],
+  );
+  const treasuryYDomain = useMemo(
+    () => paddedYDomain(treasuryTenors.flatMap((t) => [t.d0, t.recent, t.d30, t.d90, t.d365])),
+    [treasuryTenors],
+  );
   // Se a Fed implícita nao tiver dados (placeholder), nao oferece a sub-aba.
   const tabs = hasFed ? US_TABS : US_TABS.filter((t) => t.id === "treasury");
   const tab = !hasFed ? "treasury" : usTab;
@@ -367,7 +411,7 @@ function UsRatesBlock({
                   <YAxis
                     tick={{ fontSize: 10, fill: TICKS }}
                     width={52}
-                    domain={["auto", "auto"]}
+                    domain={fedYDomain ?? ["auto", "auto"]}
                     tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
                     axisLine={false}
                     tickLine={false}
@@ -383,7 +427,19 @@ function UsRatesBlock({
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <Line type="stepAfter" dataKey="d90" name={fedLabels.d90 ?? "D-90"} stroke={PAL_FED.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   <Line type="stepAfter" dataKey="d30" name={fedLabels.d30 ?? "D-30"} stroke={PAL_FED.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
-                  <Line type="stepAfter" dataKey="recent" name={fedLabels.recent ?? "Recente (D-1)"} stroke={PAL_FED.recent} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                  <Line
+                    type="stepAfter"
+                    dataKey="recent"
+                    name={fedLabels.recent ?? "D-1"}
+                    stroke={PAL_FED.recent}
+                    strokeWidth={hasFedD0 ? 1.8 : 2.2}
+                    dot={{ r: hasFedD0 ? 2 : 2.5 }}
+                    connectNulls
+                    isAnimationActive={false}
+                  />
+                  {hasFedD0 ? (
+                    <Line type="stepAfter" dataKey="d0" name={fedLabels.d0 ?? "D+0"} stroke={PAL_FED.d0} strokeWidth={2.4} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                  ) : null}
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -402,7 +458,7 @@ function UsRatesBlock({
                   <YAxis
                     tick={{ fontSize: 10, fill: TICKS }}
                     width={52}
-                    domain={["auto", "auto"]}
+                    domain={treasuryYDomain ?? ["auto", "auto"]}
                     tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
                     axisLine={false}
                     tickLine={false}
@@ -419,15 +475,31 @@ function UsRatesBlock({
                   <Line type="monotone" dataKey="d365" name={treasuryLabels.d365 ?? "D-365"} stroke={PAL_TREASURY.d365} strokeWidth={1.5} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   <Line type="monotone" dataKey="d90" name={treasuryLabels.d90 ?? "D-90"} stroke={PAL_TREASURY.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   <Line type="monotone" dataKey="d30" name={treasuryLabels.d30 ?? "D-30"} stroke={PAL_TREASURY.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
-                  <Line type="monotone" dataKey="recent" name={treasuryLabels.recent ?? "Recente (D-1)"} stroke={PAL_TREASURY.recent} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                  <Line
+                    type="monotone"
+                    dataKey="recent"
+                    name={treasuryLabels.recent ?? "D-1"}
+                    stroke={PAL_TREASURY.recent}
+                    strokeWidth={hasTreasuryD0 ? 1.8 : 2.2}
+                    dot={{ r: hasTreasuryD0 ? 2 : 2.5 }}
+                    connectNulls
+                    isAnimationActive={false}
+                  />
+                  {hasTreasuryD0 ? (
+                    <Line type="monotone" dataKey="d0" name={treasuryLabels.d0 ?? "D+0"} stroke={PAL_TREASURY.d0} strokeWidth={2.4} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                  ) : null}
                 </LineChart>
               </ResponsiveContainer>
             )}
           </div>
           <p className="mt-2 text-[11px] text-zinc-500">
             {tab === "fed"
-              ? "Fed implícita por reunião do FOMC — mesmo modelo forward da Selic implícita, porém via curva curta de Treasury (FRED: 1m–2a). Como o Treasury embute prêmio de prazo (≠ OIS/Fed Funds futures), é uma aproximação da trajetória implícita do Fed, não a precificação exata do mercado de Fed Funds."
-              : "Curva Treasury EUA por prazo (FRED, D-1) — yields nominais por maturidade, cortes recente/D-30/D-90/D-365."}
+              ? hasFedD0
+                ? "Fed implícita por reunião do FOMC — mesmo modelo forward da Selic implícita, via curva curta de Treasury. D+0: Tesouro EUA (par yield do mesmo dia útil); cortes D-1/D-30/D-90: FRED. Como o Treasury embute prêmio de prazo (≠ OIS/Fed Funds futures), é uma aproximação da trajetória implícita do Fed, não a precificação exata do mercado de Fed Funds."
+                : "Fed implícita por reunião do FOMC — mesmo modelo forward da Selic implícita, porém via curva curta de Treasury (FRED: 1m–2a). Como o Treasury embute prêmio de prazo (≠ OIS/Fed Funds futures), é uma aproximação da trajetória implícita do Fed, não a precificação exata do mercado de Fed Funds."
+              : hasTreasuryD0
+                ? "Curva Treasury EUA por prazo — yields nominais por maturidade. D+0: Tesouro EUA (par yield do mesmo dia útil); cortes D-1/D-30/D-90/D-365: FRED."
+                : "Curva Treasury EUA por prazo (FRED, D-1) — yields nominais por maturidade, cortes D-1/D-30/D-90/D-365."}
           </p>
         </div>
 
@@ -439,7 +511,8 @@ function UsRatesBlock({
                   <th className="py-2 pr-2 text-left font-semibold">Reunião</th>
                   <th className={thClass}>D-90</th>
                   <th className={thClass}>D-30</th>
-                  <th className={thClass}>Recente</th>
+                  <th className={thClass}>D-1</th>
+                  {hasFedD0 ? <th className={thClass}>D+0</th> : null}
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -448,7 +521,8 @@ function UsRatesBlock({
                     <td className="py-1.5 pr-2 font-semibold text-[#132960]">{dateLabelBR(m.date)}</td>
                     <td className={`${tdClass} text-zinc-400`}>{fmtRate(m.d90)}</td>
                     <td className={`${tdClass} text-zinc-500`}>{fmtRate(m.d30)}</td>
-                    <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(m.recent)}</td>
+                    <td className={`${tdClass} ${hasFedD0 ? "text-zinc-600" : "font-semibold text-[#132960]"}`}>{fmtRate(m.recent)}</td>
+                    {hasFedD0 ? <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(m.d0)}</td> : null}
                   </tr>
                 ))}
               </tbody>
@@ -461,7 +535,8 @@ function UsRatesBlock({
                   <th className={thClass}>D-365</th>
                   <th className={thClass}>D-90</th>
                   <th className={thClass}>D-30</th>
-                  <th className={thClass}>Recente</th>
+                  <th className={thClass}>D-1</th>
+                  {hasTreasuryD0 ? <th className={thClass}>D+0</th> : null}
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -471,7 +546,8 @@ function UsRatesBlock({
                     <td className={`${tdClass} text-zinc-300`}>{fmtRate(t.d365)}</td>
                     <td className={`${tdClass} text-zinc-400`}>{fmtRate(t.d90)}</td>
                     <td className={`${tdClass} text-zinc-500`}>{fmtRate(t.d30)}</td>
-                    <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(t.recent)}</td>
+                    <td className={`${tdClass} ${hasTreasuryD0 ? "text-zinc-600" : "font-semibold text-[#132960]"}`}>{fmtRate(t.recent)}</td>
+                    {hasTreasuryD0 ? <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(t.d0)}</td> : null}
                   </tr>
                 ))}
               </tbody>
@@ -556,6 +632,7 @@ export function JurosLiveBlock({
     () =>
       fedMeetings.map((m) => ({
         t: Date.parse(m.date),
+        d0: m.d0 ?? null,
         recent: m.recent,
         d30: m.d30,
         d90: m.d90,

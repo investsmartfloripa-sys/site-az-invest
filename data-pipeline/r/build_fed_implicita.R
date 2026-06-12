@@ -152,6 +152,75 @@ fetch_series <- function(series_id, api_key) {
   )
 }
 
+## ---------- D+0: curva curta de par yield do MESMO dia (home.treasury.gov) -----
+## O FRED so publica D-1. O Tesouro EUA publica a par yield curve no proprio dia
+## util (~15:30-18:00 ET). Usamos os tenores curtos (1m/3m/6m/1a/2a) p/ montar uma
+## Fed implicita D+0 — mesmo modelo forward, porem com a curva do dia corrente.
+## Falha => NULL e seguimos so com FRED (D-1/D-30/D-90).
+
+treasury_par_url <- function(year) {
+  sprintf(
+    paste0(
+      "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/",
+      "daily-treasury-rates.csv/%d/all?type=daily_treasury_yield_curve",
+      "&field_tdr_date_value=%d&page&_format=csv"
+    ),
+    year, year
+  )
+}
+
+# Mapeia serie FRED curta -> coluna do CSV do Tesouro EUA (mesmos prazos).
+treasury_par_col_for_series <- c(
+  "DGS1MO" = "1 Mo", "DGS3MO" = "3 Mo", "DGS6MO" = "6 Mo",
+  "DGS1" = "1 Yr", "DGS2" = "2 Yr"
+)
+
+fetch_treasury_par_latest <- function() {
+  year <- as.integer(format(Sys.Date(), "%Y"))
+  urls <- unique(c(treasury_par_url(year), treasury_par_url(year - 1)))
+  for (u in urls) {
+    df <- tryCatch(
+      {
+        req <- request(u) |>
+          req_timeout(60) |>
+          req_perform()
+        payload <- resp_body_string(req)
+        con <- textConnection(payload)
+        on.exit(close(con), add = TRUE)
+        read.csv(con, stringsAsFactors = FALSE, check.names = FALSE)
+      },
+      error = function(e) {
+        message("WARN Treasury par CSV: ", conditionMessage(e))
+        NULL
+      }
+    )
+    if (is.null(df) || !nrow(df) || !("Date" %in% names(df))) next
+    df$.__d <- suppressWarnings(as.Date(df$Date, format = "%m/%d/%Y"))
+    df <- df[!is.na(df$.__d), , drop = FALSE]
+    if (!nrow(df)) next
+    row <- df[which.max(df$.__d), , drop = FALSE]
+    return(list(date = as.Date(row$.__d[[1]]), row = row))
+  }
+  NULL
+}
+
+# Constroi uma "linha-snapshot" no MESMO formato de get_snapshot()/df_wide a
+# partir da par yield D+0 (colunas DGS* preenchidas com os yields do Tesouro EUA).
+par_to_snapshot_row <- function(par) {
+  if (is.null(par)) return(NULL)
+  row <- par$row
+  vals <- lapply(short_series, function(s) {
+    col <- treasury_par_col_for_series[[s]]
+    if (is.null(col) || !(col %in% names(row))) return(NA_real_)
+    suppressWarnings(as.numeric(row[[col]][1]))
+  })
+  names(vals) <- short_series
+  if (all(vapply(vals, function(v) is.na(v), logical(1)))) return(NULL)
+  out <- tibble(date = as.Date(par$date))
+  for (s in short_series) out[[s]] <- vals[[s]]
+  out
+}
+
 dfs <- lapply(short_series, function(s) fetch_series(s, fred_key))
 df_all <- bind_rows(dfs)
 if (!nrow(df_all)) {
@@ -279,6 +348,14 @@ if (is.null(row_today)) {
   quit(save = "no", status = 0)
 }
 
+# D+0: snapshot da curva do mesmo dia util (Tesouro EUA), se mais recente que D-1.
+par_d0 <- fetch_treasury_par_latest()
+row_d0 <- par_to_snapshot_row(par_d0)
+has_d0 <- !is.null(row_d0) && as.Date(row_d0$date[[1]]) > as.Date(row_today$date[[1]])
+if (!is.null(row_d0) && !has_d0) {
+  message("Fed D+0 ignorado (curva do Tesouro nao e mais recente que o FRED D-1).")
+}
+
 compute_series_data <- function(row, label_prefix) {
   if (is.null(row) || !nrow(row)) return(NULL)
   curve <- snapshot_curve(row)
@@ -299,12 +376,14 @@ compute_series_data <- function(row, label_prefix) {
     select(grid_date, curve, fwd, fwd_raw, fwd_025_up, ref_snap)
 }
 
-# Ordem: D-90 (mais antigo) -> D-30 -> Recente (mais recente, ultima coluna).
+# Ordem: D-90 (mais antigo) -> D-30 -> D-1 (FRED) -> D+0 (Tesouro EUA, mais recente).
 series_specs <- list(
   list(row = row_90, label = "D-90"),
   list(row = row_30, label = "D-30"),
-  list(row = row_today, label = "Recente")
+  list(row = row_today, label = "D-1"),
+  if (has_d0) list(row = row_d0, label = "D+0") else NULL
 )
+series_specs <- Filter(Negate(is.null), series_specs)
 parts <- Filter(Negate(is.null), lapply(series_specs, function(s) compute_series_data(s$row, s$label)))
 df_plot <- bind_rows(parts) |> mutate(grid_date = as.Date(grid_date))
 
@@ -316,11 +395,14 @@ if (!nrow(df_plot)) {
 ref_today <- as.Date(row_today$date[[1]])
 ref_30 <- if (!is.null(row_30)) as.Date(row_30$date[[1]]) else NA
 ref_90 <- if (!is.null(row_90)) as.Date(row_90$date[[1]]) else NA
+ref_d0 <- if (has_d0) as.Date(row_d0$date[[1]]) else NA
 
+# Ordem do mais antigo p/ o mais recente (D+0 por ultimo, quando existe).
 curve_order <- c(
   if (!is.null(row_90)) sprintf("D-90 (%s)", format(ref_90, "%d/%m/%Y")) else NULL,
   if (!is.null(row_30)) sprintf("D-30 (%s)", format(ref_30, "%d/%m/%Y")) else NULL,
-  sprintf("Recente (%s)", format(ref_today, "%d/%m/%Y"))
+  sprintf("D-1 (%s)", format(ref_today, "%d/%m/%Y")),
+  if (has_d0) sprintf("D+0 (%s)", format(ref_d0, "%d/%m/%Y")) else NULL
 )
 curve_order <- intersect(curve_order, unique(as.character(df_plot$curve)))
 df_plot <- df_plot |> mutate(curve = factor(curve, levels = curve_order))
@@ -328,25 +410,27 @@ df_plot <- df_plot |> mutate(curve = factor(curve, levels = curve_order))
 vlines <- sort(unique(fomc_in_window))
 vdf <- data.frame(x = as.Date(vlines))
 
+y_bot <- min(df_plot$fwd, na.rm = TRUE)
 y_top <- max(df_plot$fwd, na.rm = TRUE)
 y_rng <- diff(range(df_plot$fwd, na.rm = TRUE))
 if (!is.finite(y_rng) || y_rng <= 0) y_rng <- 0.0025
 y_lab <- y_top + 0.06 * y_rng
 
-pal <- c(
-  "Recente" = "#000000",
-  "D-30" = "#6f6f6f",
-  "D-90" = "#0078fd"
-)
+# Gradiente temporal verde (PADRAO-VISUAL-GRAFICOS.md §2), coerente com a Curva
+# Treasury ao lado. Regra: o ATUAL e sempre preto; quanto mais antigo, mais claro.
+# current_label = ultima serie de curve_order (D+0 se existir, senao D-1).
+current_label <- curve_order[length(curve_order)]
 pick_color <- function(curve_name) {
+  if (identical(curve_name, current_label)) return("#000000") # serie atual: preto
   nm <- tolower(curve_name)
-  if (grepl("^(recente|hoje)", nm)) return(pal[["Recente"]])
-  if (grepl("^d-30|^30d", nm)) return(pal[["D-30"]])
-  if (grepl("^d-90|^90d", nm)) return(pal[["D-90"]])
+  if (grepl("^d\\+0", nm)) return("#000000")
+  if (grepl("^d-1", nm)) return("#0B6B2E")  # verde escuro
+  if (grepl("^d-30|^30d", nm)) return("#2BBF5E") # verde medio
+  if (grepl("^d-90|^90d", nm)) return("#8BE28F") # verde claro
   "#000000"
 }
 color_values <- setNames(vapply(as.character(curve_order), pick_color, character(1)), as.character(curve_order))
-line_values <- setNames(ifelse(grepl("^(Recente|Hoje)", curve_order), 1.15, 0.95), as.character(curve_order))
+line_values <- setNames(ifelse(curve_order == current_label, 1.15, 0.95), as.character(curve_order))
 
 # Estende o ultimo degrau de cada curva ate chart_end (geom_step nao desenha
 # apos o ultimo ponto). df_plot, sem o fantasma, alimenta tabela/JSON.
@@ -386,7 +470,9 @@ p <- ggplot(df_chart, aes(x = grid_date, y = fwd, color = curve, linewidth = cur
   ) +
   coord_cartesian(
     xlim = c(chart_start, chart_end),
-    ylim = c(NA, y_lab + 0.02 * y_rng)
+    # Folga inferior (~9% do range) p/ o degrau de baixo nao colar na linha X;
+    # teto deixa espaco p/ os rotulos de data das reunioes (y_lab).
+    ylim = c(y_bot - 0.09 * y_rng, y_lab + 0.02 * y_rng)
   ) +
   labs(
     x = "Data",
@@ -413,6 +499,8 @@ output <- list(
     "exata do mercado de Fed Funds (OIS/FF futures)."
   ),
   source_series = paste(short_series, collapse = ","),
+  d0_source = if (has_d0) "home.treasury.gov (par yield, mesmo dia util)" else NA_character_,
+  ref_d0 = if (has_d0) as.character(ref_d0) else NA_character_,
   ref_today = as.character(ref_today),
   ref_30d = if (!is.na(ref_30)) as.character(ref_30) else NA_character_,
   ref_90d = if (!is.na(ref_90)) as.character(ref_90) else NA_character_,

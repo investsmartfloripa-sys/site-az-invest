@@ -132,7 +132,10 @@ function extractFedMeetings(data: PanoramaData): FedMeeting[] {
   const table = data.tableFed.data;
   const cols = table?.columns ?? [];
   const keyOf = (prefix: string) => cols.find((c) => c.key.startsWith(prefix))?.key;
-  const kRecent = keyOf("Recente") ?? keyOf("Hoje");
+  // "D-1" = fechamento FRED (defasagem de 1 dia util). "Recente"/"Hoje" mantidos
+  // como fallback p/ blobs antigos ate o pipeline R rerodar com o novo rotulo.
+  const kRecent = keyOf("D-1") ?? keyOf("Recente") ?? keyOf("Hoje");
+  const kD0 = keyOf("D+0"); // curva do mesmo dia util (Tesouro EUA), quando disponivel
   const kD30 = keyOf("D-30");
   const kD90 = keyOf("D-90");
   const out: FedMeeting[] = [];
@@ -143,6 +146,7 @@ function extractFedMeetings(data: PanoramaData): FedMeeting[] {
     out.push({
       date: `${m[3]}-${m[2]}-${m[1]}`,
       recent: kRecent ? parseNumber(row[kRecent]) : null,
+      d0: kD0 ? parseNumber(row[kD0]) : null,
       d30: kD30 ? parseNumber(row[kD30]) : null,
       d90: kD90 ? parseNumber(row[kD90]) : null,
     });
@@ -155,7 +159,10 @@ function extractTreasury(data: PanoramaData): TreasuryTenor[] {
   const table = data.tableTreasury.data;
   const cols = table?.columns ?? [];
   const keyOf = (prefix: string) => cols.find((c) => c.key.startsWith(prefix))?.key;
-  const kRecent = keyOf("Recente") ?? keyOf("Hoje");
+  // "D-1" = fechamento FRED (defasagem de 1 dia util). "Recente"/"Hoje" mantidos
+  // como fallback p/ blobs antigos ate o pipeline R rerodar com o novo rotulo.
+  const kRecent = keyOf("D-1") ?? keyOf("Recente") ?? keyOf("Hoje");
+  const kD0 = keyOf("D+0"); // par yield do mesmo dia util (home.treasury.gov)
   const kD30 = keyOf("D-30");
   const kD90 = keyOf("D-90");
   const kD365 = keyOf("D-365");
@@ -166,6 +173,7 @@ function extractTreasury(data: PanoramaData): TreasuryTenor[] {
     out.push({
       tenor,
       recent: kRecent ? parseNumber(row[kRecent]) : null,
+      d0: kD0 ? parseNumber(row[kD0]) : null,
       d30: kD30 ? parseNumber(row[kD30]) : null,
       d90: kD90 ? parseNumber(row[kD90]) : null,
       d365: kD365 ? parseNumber(row[kD365]) : null,
@@ -289,12 +297,20 @@ export async function PainelPanoramaPage() {
     d90: colLabel(data.tableSelic.data?.columns, "D-90"),
   };
   const fedLabels: CutLabels = {
-    recent: colLabel(data.tableFed.data?.columns, "Recente") ?? colLabel(data.tableFed.data?.columns, "Hoje"),
+    d0: colLabel(data.tableFed.data?.columns, "D+0"),
+    recent:
+      colLabel(data.tableFed.data?.columns, "D-1") ??
+      colLabel(data.tableFed.data?.columns, "Recente") ??
+      colLabel(data.tableFed.data?.columns, "Hoje"),
     d30: colLabel(data.tableFed.data?.columns, "D-30"),
     d90: colLabel(data.tableFed.data?.columns, "D-90"),
   };
   const treasuryLabels: CutLabels = {
-    recent: colLabel(data.tableTreasury.data?.columns, "Recente") ?? colLabel(data.tableTreasury.data?.columns, "Hoje"),
+    d0: colLabel(data.tableTreasury.data?.columns, "D+0"),
+    recent:
+      colLabel(data.tableTreasury.data?.columns, "D-1") ??
+      colLabel(data.tableTreasury.data?.columns, "Recente") ??
+      colLabel(data.tableTreasury.data?.columns, "Hoje"),
     d30: colLabel(data.tableTreasury.data?.columns, "D-30"),
     d90: colLabel(data.tableTreasury.data?.columns, "D-90"),
     d365: colLabel(data.tableTreasury.data?.columns, "D-365"),
@@ -308,10 +324,16 @@ export async function PainelPanoramaPage() {
 
   const tbill = treasuryTenors.find((t) => t.tenor === 1) ?? null;
   const t10 = treasuryTenors.find((t) => t.tenor === 10) ?? null;
+  // Valor "atual" do KPI = D+0 (mesmo dia, Tesouro EUA) quando disponivel; senao D-1 (FRED).
+  const treasuryNow = (t: TreasuryTenor | null): number | null => (t == null ? null : t.d0 ?? t.recent);
+  const hasUsD0 = treasuryTenors.some((t) => t.d0 != null);
+  const tbillNow = treasuryNow(tbill);
+  const t10Now = treasuryNow(t10);
   const tbillDeltaBps =
-    tbill?.recent != null && tbill?.d30 != null ? Math.round((tbill.recent - tbill.d30) * 100) : null;
+    tbillNow != null && tbill?.d30 != null ? Math.round((tbillNow - tbill.d30) * 100) : null;
   const t10DeltaBps =
-    t10?.recent != null && t10?.d30 != null ? Math.round((t10.recent - t10.d30) * 100) : null;
+    t10Now != null && t10?.d30 != null ? Math.round((t10Now - t10.d30) * 100) : null;
+  const usRatesSub = hasUsD0 ? "vs D-30 · Tesouro EUA D+0" : "vs D-30 · FRED D-1";
 
   const bpsChange = (bps: number | null): string | null =>
     bps == null ? null : `${bps > 0 ? "+" : bps < 0 ? "−" : ""}${Math.abs(bps)} bps`;
@@ -372,18 +394,18 @@ export async function PainelPanoramaPage() {
     {
       id: "tbill",
       label: "Treasury 1 ano",
-      value: tbill ? fmtPct(tbill.recent) : "—",
+      value: tbillNow != null ? fmtPct(tbillNow) : "—",
       change: bpsChange(tbillDeltaBps),
       direction: bpsDirection(tbillDeltaBps),
-      sub: "vs D-30 · FRED D-1",
+      sub: usRatesSub,
     },
     {
       id: "t10",
       label: "Treasury 10 anos",
-      value: t10 ? fmtPct(t10.recent) : "—",
+      value: t10Now != null ? fmtPct(t10Now) : "—",
       change: bpsChange(t10DeltaBps),
       direction: bpsDirection(t10DeltaBps),
-      sub: "vs D-30 · FRED D-1",
+      sub: usRatesSub,
     },
   ];
 
