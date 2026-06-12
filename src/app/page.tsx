@@ -36,8 +36,9 @@ export default async function Home() {
 
   const mapped = posts.map(mapPost);
 
-  const hero = mapped.slice(0, 3);
-  const restantes = mapped.slice(3);
+  // Hero "Artigos": 1 destaque + 3 cards na coluna direita (preenche a altura sem buraco).
+  const hero = mapped.slice(0, 4);
+  const restantes = mapped.slice(4);
 
   return (
     <div className="min-h-screen text-[#132960]">

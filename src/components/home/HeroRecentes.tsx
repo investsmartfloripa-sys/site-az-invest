@@ -16,7 +16,7 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
   }
 
   const main = posts[0];
-  const others = posts.slice(1, 3);
+  const others = posts.slice(1, 4);
 
   return (
     <section className="az-reveal space-y-4">
@@ -62,15 +62,16 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
             </p>
           </div>
         </article>
-        <div className="space-y-3">
+        {/* Coluna direita: cards com flex-1 — esticam para preencher exatamente a altura do destaque. */}
+        <div className="flex flex-col gap-3">
           {others.map((post) => (
-            <article key={post.id} className="relative overflow-hidden rounded-2xl">
+            <article key={post.id} className="relative min-h-36 flex-1 overflow-hidden rounded-2xl">
               <Image
                 src={post.image}
                 alt={post.title}
-                width={1024}
-                height={666}
-                className="h-44 w-full object-cover md:h-[177px]"
+                fill
+                sizes="(min-width: 768px) 33vw, 100vw"
+                className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-black/10" />
               <div className="absolute bottom-0 left-0 p-3 text-white">
@@ -79,7 +80,7 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
                 >
                   {formatPostCategoryLabel(post.category)}
                 </span>
-                <h3 className="mt-1 text-2xl leading-tight">
+                <h3 className="mt-1 text-xl leading-tight">
                   <Link href={`/blog/${post.slug}`}>{post.title}</Link>
                 </h3>
                 <p className="mt-1 text-[10px]">
