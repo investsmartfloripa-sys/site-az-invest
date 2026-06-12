@@ -65,7 +65,7 @@ THRESHOLDS = {
         "unidade": "%",
         "direcao": "maior_pior",
         "verde": 200, "amarelo": 350, "vermelho": 500, "break": 700,
-        "narrativa": "Métrica Dalio (Debt/Income). Dívida em proporção da receita líquida do gov central.",
+        "narrativa": "Métrica Dalio (Debt/Income). NOTA DE PERÍMETRO: DBGG é do governo GERAL e a receita é do governo CENTRAL — proxy conservadora (infla a razão vs o Debt/Revenue do livro, que usa dívida e receita do mesmo ente).",
     },
     "credito_total_pct_pib": {
         "titulo": "Crédito total / PIB",
@@ -101,12 +101,12 @@ THRESHOLDS = {
         "narrativa": "Métrica Dalio. Quanto da receita anual é consumida só pra pagar juros. Acima de 30% = zona de alerta.",
     },
     "custo_medio_aa_pct": {
-        "titulo": "Custo médio da dívida (a.a.)",
+        "titulo": "Taxa implícita da DLSP (a.a.)",
         "categoria": "Capacidade",
         "unidade": "%",
         "direcao": "maior_pior",
         "verde": 5, "amarelo": 8, "vermelho": 11, "break": 14,
-        "narrativa": "Juros 12m / DBGG (anualizado). Custo efetivo do estoque, distinto da Selic over.",
+        "narrativa": "Juros nominais 12m ÷ DLSP média 12m — convenção BCB, perímetro ÚNICO (setor público consolidado). Custo efetivo do estoque, distinto da Selic over.",
     },
     "primario_estabilizador_pct_pib": {
         "titulo": "Primário p/ estabilizar (% PIB)",
@@ -142,13 +142,13 @@ THRESHOLDS = {
         "narrativa": "Dívida em câmbio explode em desvalorizações. Brasil tem virtude estrutural (~1-3%); Argentina 2001 tinha >60%.",
     },
     # === D. STRESS EXTERNO & MONETARIO ===
-    "reer_index": {
-        "titulo": "REER (índice)",
+    "reer_var_12m_pct": {
+        "titulo": "REER — variação 12m",
         "categoria": "Stress",
-        "unidade": "",
-        "direcao": "maior_melhor",
-        "verde": 110, "amarelo": 100, "vermelho": 90, "break": 80,
-        "narrativa": "Câmbio real efetivo. Queda persistente sinaliza fuga da moeda — precede crises fiscais/cambiais.",
+        "unidade": "%",
+        "direcao": "maior_pior",
+        "verde": 5, "amarelo": 10, "vermelho": 20, "break": 30,
+        "narrativa": "Variação 12m do câmbio real efetivo (na série do BCB, ALTA = DEPRECIAÇÃO real do BRL). O sinal Dalio é a depreciação real PERSISTENTE — fuga da moeda; o nível do índice tem base arbitrária e não semaforiza.",
     },
     "selic_real_ex_post_pct": {
         "titulo": "Selic real ex-post (a.a.)",
@@ -386,8 +386,16 @@ def main():
     # Credito economia
     credito_total_pct_pib = last_value(cl.get("credito_economia", {}).get("credito_total_pct_pib"))
 
-    # Reer
-    reer_recente = last_value(cl["stress"]["reer_index"])
+    # Reer — variação 12m (na 11752, ALTA = depreciação real; o nível tem base arbitrária)
+    reer_serie = cl["stress"]["reer_index"]
+    reer_var_12m = None
+    reer_map = {r["data"]: r["valor"] for r in reer_serie if r.get("valor") is not None}
+    for data in sorted(reer_map.keys(), reverse=True):
+        y, m = data.split("-")
+        ant = f"{int(y) - 1}-{m}"
+        if reer_map.get(ant):
+            reer_var_12m = round((reer_map[data] / reer_map[ant] - 1) * 100, 2)
+            break
 
     # Defaults / fallbacks
     if pib_real_yoy_pct is None: pib_real_yoy_pct = 2.0
@@ -396,17 +404,28 @@ def main():
 
     debt_pct_receita = (dbgg_pct_pib / receita_pct_pib * 100) if (dbgg_pct_pib and receita_pct_pib) else None
     pd_pct_receita = -primario_pct_receita if primario_pct_receita is not None else None
-    i_nominal = (juros_central_pct_pib / dbgg_pct_pib) if (juros_central_pct_pib and dbgg_pct_pib) else 0.10
-    g_nominal = (pib_real_yoy_pct + ipca_12m_pct) / 100
-    gap_pp = (i_nominal - g_nominal) * 100
+
+    # r, g, r−g e primário estabilizador: CONSUMIR do fiscal-classicos v2 (fórmula
+    # única, perímetro consolidado: taxa implícita da DLSP × PIB nominal 12m YoY).
+    # Fallback (classicos v1): aproximações antigas — com g composto, não somado.
+    sust = (cl.get("sustentabilidade") or {}).get("serie") or []
+    sust_ult = sust[-1] if sust else None
+    if sust_ult:
+        i_nominal = sust_ult["r_aa_pct"] / 100
+        g_nominal = sust_ult["g_aa_pct"] / 100
+        gap_pp = sust_ult["r_menos_g_pp"]
+        primario_estab_pct_pib = sust_ult["primario_estabilizador_pct_pib"]
+    else:
+        print("[WARN] classicos sem bloco v2 'sustentabilidade' — usando aproximações de fallback", file=sys.stderr)
+        i_nominal = (juros_central_pct_pib / dbgg_pct_pib) if (juros_central_pct_pib and dbgg_pct_pib) else 0.10
+        g_nominal = (1 + pib_real_yoy_pct / 100) * (1 + ipca_12m_pct / 100) - 1
+        gap_pp = (i_nominal - g_nominal) * 100
+        primario_estab_pct_pib = None
+        if dbgg_pct_pib and gap_pp is not None:
+            primario_estab_pct_pib = (gap_pp / 100) * (dbgg_pct_pib / 100) * 100 / (1 + g_nominal)
 
     # Dívida total economia = DBGG + crédito total
     divida_total_pct_pib = (dbgg_pct_pib + credito_total_pct_pib) if (dbgg_pct_pib and credito_total_pct_pib) else None
-
-    # Primário estabilizador (% PIB) — Blanchard simplificado
-    primario_estab_pct_pib = None
-    if dbgg_pct_pib and gap_pp is not None:
-        primario_estab_pct_pib = (gap_pp / 100) * (dbgg_pct_pib / 100) * 100 / (1 + g_nominal)
 
     # Levers
     levers = None
@@ -438,7 +457,7 @@ def main():
         "pct_prefixado": pct_prefix,
         "pct_cambio": pct_cambio,
         # Stress
-        "reer_index": reer_recente,
+        "reer_var_12m_pct": reer_var_12m,
         "selic_real_ex_post_pct": selic_real,
         "r_menos_g_pp": gap_pp,
         "primario_realizado_pct_pib": primario_central_pct_pib,
@@ -494,6 +513,7 @@ def main():
     }
 
     payload = {
+        "schema_version": 2,
         "gerado_em": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "fonte_base": cl.get("mes_recente"),
         "foto_brasil": foto,
@@ -549,8 +569,12 @@ def main():
         },
         "metodologia": (
             "Termometro Fiscal baseado em 'How Countries Go Broke' (Ray Dalio, 2025). "
-            "20 indicadores semaforizados em 5 categorias (Carga, Capacidade, Estrutura, Stress, Levers) com thresholds verde/amarelo/vermelho/break. "
-            "Plus: equacao iterativa Debt(t+1)/Income(t+1) = [Debt(t)*(1+i) + Primary_Deficit(t)] / [Income(t)*(1+g)], "
+            "20 indicadores semaforizados em 5 categorias (Carga, Capacidade, Estrutura, Stress, Levers) — "
+            "FAIXAS CALIBRADAS PELA AZ a partir dos casos historicos do livro, nao numeros do livro. "
+            "r, g, r-g e primario estabilizador vem do bloco 'sustentabilidade' do fiscal-classicos v2 "
+            "(taxa implicita da DLSP x PIB nominal 12m YoY, perimetro unico do setor publico consolidado) — "
+            "calculados UMA vez no pipeline; nenhum componente do front recalcula. "
+            "Equacao iterativa Debt(t+1)/Income(t+1) = [Debt(t)*(1+i) + Primary_Deficit(t)] / [Income(t)*(1+g)], "
             "matrizes Debt-to-Income apos 10 anos variando deficit e gap (i-g), e os 4 Levers calculados isoladamente. "
             "Variaveis em tempo real: BCB SGS, Tesouro RTN, IBGE."
         ),
