@@ -9,7 +9,6 @@ export const metadata: Metadata = {
     "Câmbio real (REER do BCB e bilateral USD/BRL deflacionado), paridade de juros Selic−Fed Funds e o scorecard da UIP na prática. Dados BCB/SGS e FRED, atualização automática diária.",
 };
 
-export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export default async function PainelCambioEconomicoPage() {

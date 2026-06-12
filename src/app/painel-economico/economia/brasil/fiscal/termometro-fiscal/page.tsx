@@ -10,7 +10,6 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 300;
-export const dynamic = "force-dynamic";  // evita prerender que crasha quando JSON do Blob indisponivel em build time
 
 export default async function PainelTermometroFiscalPage() {
   const data = await loadFiscalTermometro();

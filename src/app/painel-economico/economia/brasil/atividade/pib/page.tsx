@@ -10,7 +10,6 @@ export const metadata: Metadata = {
     "Produto Interno Bruto trimestral (IBGE Contas Nacionais): contribuições ao crescimento por ótica da oferta e da demanda, carrego estatístico, IBC-Br como prévia mensal, expectativas Focus e PIB per capita.",
 };
 
-export const dynamic = "force-dynamic";
 export const revalidate = 86400;
 
 export default async function PainelAtividadePibPage() {

@@ -5,11 +5,15 @@ import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { UltimasPublicacoes } from "@/components/home/UltimasPublicacoes";
 import { VideosSection } from "@/components/home/VideosSection";
 import { DestaquesDaSemana } from "@/components/conteudo/DestaquesDaSemana";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { findPosts, mapPost } from "@/lib/posts";
 import { publishedPostWhere } from "@/lib/workspace/posts";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
+import { getSiteUrl } from "@/lib/site-url";
 
-export const dynamic = "force-dynamic";
+// ISR: publicar/despublicar post chama revalidatePath("/") (workspace), e o
+// fallback de 5 min cobre o resto. Sem force-dynamic — ele anulava o cache.
+export const revalidate = 300;
 
 export const metadata = {
   title: "Investimentos de A a Z - Economia, mercado e educação financeira",
@@ -26,15 +30,23 @@ export const metadata = {
 };
 
 export default async function Home() {
-  const posts = await findPosts({
-    where: publishedPostWhere,
-    // Ordena pela data de PUBLICAÇÃO (posts antigos sem publishedAt caem para o fim
-    // do critério e o desempate é a criação) — publicar um rascunho antigo o traz ao topo.
-    orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
-    take: 21,
-  });
+  // Guard para o prerender de build: se o banco estiver indisponível a home
+  // degrada para listas vazias em vez de derrubar o build (ISR refaz depois).
+  let mapped: ReturnType<typeof mapPost>[] = [];
+  try {
+    const posts = await findPosts({
+      where: publishedPostWhere,
+      // Ordena pela data de PUBLICAÇÃO (posts antigos sem publishedAt caem para o fim
+      // do critério e o desempate é a criação) — publicar um rascunho antigo o traz ao topo.
+      orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+      take: 21,
+    });
+    mapped = posts.map(mapPost);
+  } catch (err) {
+    console.error("[Home] findPosts falhou; seguindo sem posts", err);
+  }
 
-  const mapped = posts.map(mapPost);
+  const siteUrl = getSiteUrl();
 
   // Hero "Artigos": 1 destaque + 3 cards na coluna direita (preenche a altura sem buraco).
   const hero = mapped.slice(0, 4);
@@ -42,6 +54,29 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen text-[#132960]">
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "@id": `${siteUrl}/#organization`,
+            name: "AZ Invest",
+            alternateName: "Investimentos de A a Z",
+            url: siteUrl,
+            logo: `${siteUrl}/logo-az.png`,
+            sameAs: ["https://www.youtube.com/@azinvestoficial"],
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "@id": `${siteUrl}/#website`,
+            name: "Investimentos de A a Z",
+            url: siteUrl,
+            publisher: { "@id": `${siteUrl}/#organization` },
+            inLanguage: "pt-BR",
+          },
+        ]}
+      />
       <Header />
       <main
         id="conteudo"

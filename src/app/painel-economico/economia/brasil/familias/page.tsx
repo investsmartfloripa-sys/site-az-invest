@@ -12,7 +12,6 @@ export const metadata: Metadata = {
     "Renda real do trabalho, massa de salários, endividamento e juros, poder de compra e estrutura social das famílias brasileiras — leitura narrativa com dados BCB SGS, IBGE PNAD Contínua e Ipeadata, atualizados automaticamente todos os dias.",
 };
 
-export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export default async function PainelFamiliasPage() {

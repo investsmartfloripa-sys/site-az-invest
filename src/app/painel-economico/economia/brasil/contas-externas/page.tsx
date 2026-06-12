@@ -12,7 +12,6 @@ export const metadata: Metadata = {
     "Balanço de pagamentos do Brasil em acumulado de 12 meses: conta corrente em % do PIB, decomposição em bens, serviços e rendas, cobertura do déficit pelo IDP, reservas em meses de importação e a pauta de comércio por produto e destino. Dados BCB (BPM6) e SECEX/MDIC (Comex Stat), atualização automática diária.",
 };
 
-export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export default async function PainelContasExternasPage() {

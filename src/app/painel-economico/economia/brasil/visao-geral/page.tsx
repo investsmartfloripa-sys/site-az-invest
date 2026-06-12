@@ -7,7 +7,6 @@ export const metadata: Metadata = {
     "Síntese executiva consolidada com leitura unificada do cenário brasileiro. Em construção.",
 };
 
-export const dynamic = "force-dynamic";
 
 export default function VisaoGeralBrasilPlaceholder() {
   return (

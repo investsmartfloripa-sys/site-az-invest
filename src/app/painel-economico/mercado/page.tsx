@@ -69,7 +69,8 @@ function HeroCard({
   );
 }
 
-export const dynamic = "force-dynamic";
+// ISR: dados vêm do Blob com loaders guardados (degradam para null); ver plano AVALIACAO-GERAL §6.
+export const revalidate = 3600;
 
 export default async function MercadoOverviewPage() {
   const [catalog, latest, full] = await Promise.all([

@@ -9,7 +9,8 @@ export const metadata = {
     "Compare a evolução de ações, ETFs, índices, FX, commodities e cripto em janelas de 1 mês a 5 anos com rebase 100.",
 };
 
-export const dynamic = "force-dynamic";
+// ISR: dados vêm do Blob com loaders guardados (degradam para null); ver plano AVALIACAO-GERAL §6.
+export const revalidate = 3600;
 
 export default async function HistoricoPage() {
   const [catalog, full] = await Promise.all([getMarketCatalog(), getMarketHistoryFull()]);

@@ -1,4 +1,5 @@
-export const dynamic = "force-dynamic";
+// ISR: dados vêm do Blob com loaders guardados (degradam para null); ver plano AVALIACAO-GERAL §6.
+export const revalidate = 3600;
 
 import { Suspense } from "react";
 import Link from "next/link";
@@ -299,11 +300,10 @@ export default async function AtivoPage({ params }: Props) {
 
         {/*
           O AzPeriodSelector (dentro do AtivoHeroChart) chama useSearchParams().
-          Esta página é force-dynamic, então o Next 16 não EXIGE <Suspense>
-          (o build só falha em rotas prerenderizadas estaticamente), mas
-          seguimos a convenção do repo (índices-globais/câmbio/commodities) e
-          envolvemos mesmo assim; o seletor roda controlado por estado local,
-          sem querystring.
+          Esta página é ISR (revalidate), então o <Suspense> é OBRIGATÓRIO —
+          sem ele o build falha em rotas prerenderizadas estaticamente. Também
+          é a convenção do repo (índices-globais/câmbio/commodities); o seletor
+          roda controlado por estado local, sem querystring.
         */}
         <Suspense fallback={<div className="min-h-[380px] animate-pulse rounded-2xl bg-white/60" />}>
           <AtivoHeroChart

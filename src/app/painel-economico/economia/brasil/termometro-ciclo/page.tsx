@@ -11,7 +11,6 @@ export const metadata: Metadata = {
     "Termômetro do ciclo econômico brasileiro: 5 modelos de probabilidade de recessão (MS-AR, probit, gap HP, diffusion, Bry-Boschan), indicadores antecedentes FGV, hard data físico (ANFAVEA, EPE, ANP, PIM-PF IBGE) e cronologia oficial CODACE.",
 };
 
-export const dynamic = "force-dynamic";
 
 export default async function TermometroCicloPage() {
   const payload = await loadVisaoGeralPayload();

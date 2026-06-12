@@ -10,7 +10,6 @@ export const metadata: Metadata = {
     "Pesquisa Industrial Mensal — Produção Física do IBGE: nível da produção contra o pico histórico, ciclo por categoria de uso, extrativa × transformação, insumos da construção como sinal antecedente do PIB, difusão por atividades e recessões CODACE sombreadas.",
 };
 
-export const dynamic = "force-dynamic";
 export const revalidate = 86400;
 
 export default async function PainelAtividadePimPage() {

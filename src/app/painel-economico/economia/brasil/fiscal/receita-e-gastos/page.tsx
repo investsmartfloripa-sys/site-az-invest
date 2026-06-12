@@ -11,7 +11,6 @@ export const metadata: Metadata = {
     "Tesoura receita × despesa do governo central, primário vs meta LDO e estabilizador da dívida, famílias de receita, rubricas de despesa, arcabouço fiscal e resultado nominal decomposto. Fonte: STN/RTN + BCB.",
 };
 
-export const dynamic = "force-dynamic";
 export const revalidate = 300;
 
 export default async function PainelReceitaGastosPage() {

@@ -18,7 +18,8 @@ type Props = {
 // Render dinâmico — o JSON de detalhes pesa ~4,6 MB e o cache ISR estava
 // servindo páginas vazias pra tickers que não foram pré-renderizados no build.
 // SSR puro garante que cada request vê o JSON atualizado no Blob.
-export const dynamic = "force-dynamic";
+// ISR: dados vêm do Blob com loaders guardados (degradam para null); ver plano AVALIACAO-GERAL §6.
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { ticker } = await params;
@@ -104,9 +105,9 @@ export default async function FiiDetailPage({ params }: Props) {
 
         {/*
           O AzPeriodSelector (dentro do AtivoHeroChart) chama useSearchParams().
-          A rota é force-dynamic — o Next 16 não exige <Suspense> —, mas
-          seguimos a convenção do repo (página de ativo, índices, câmbio) e
-          envolvemos mesmo assim; o seletor roda controlado por estado local.
+          A rota é ISR (revalidate) — o <Suspense> é obrigatório no prerender —
+          e também é a convenção do repo (página de ativo, índices, câmbio);
+          o seletor roda controlado por estado local.
         */}
         <Suspense fallback={<div className="min-h-[380px] animate-pulse rounded-2xl bg-white/60" />}>
           <AtivoHeroChart

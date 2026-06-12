@@ -12,7 +12,9 @@ import {
 import { prisma } from "@/lib/prisma";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
-export const dynamic = "force-dynamic";
+// ISR: alterações de perfil chamam revalidatePath("/nosso-time") (workspace);
+// o fallback de 1h cobre o resto. Sem force-dynamic.
+export const revalidate = 3600;
 
 export const metadata = {
   title: "Nosso time | AZ Invest",
@@ -29,11 +31,23 @@ function initials(name: string) {
     .join("");
 }
 
-export default async function NossoTimePage() {
-  const authors = await prisma.author.findMany({
+type AuthorWithCount = Awaited<ReturnType<typeof findAuthors>>[number];
+
+function findAuthors() {
+  return prisma.author.findMany({
     orderBy: { createdAt: "asc" },
     include: { _count: { select: { posts: { where: { status: "APPROVED", published: true } } } } },
   });
+}
+
+export default async function NossoTimePage() {
+  // Guard para o prerender de build: banco indisponível degrada para lista vazia.
+  let authors: AuthorWithCount[] = [];
+  try {
+    authors = await findAuthors();
+  } catch (err) {
+    console.error("[NossoTime] findMany falhou; seguindo sem autores", err);
+  }
 
   return (
     <div className="min-h-screen text-[#132960]">

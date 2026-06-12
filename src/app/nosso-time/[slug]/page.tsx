@@ -1,13 +1,31 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { AuthorHero } from "@/components/assessor/AuthorHero";
 import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { PostCard } from "@/components/common/PostCard";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { parseSpecialties } from "@/lib/authors";
 import { prisma } from "@/lib/prisma";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
+import { getSiteUrl } from "@/lib/site-url";
 
-export const dynamic = "force-dynamic";
+// ISR: edição de perfil chama revalidatePath("/nosso-time/[slug]") (workspace);
+// o fallback de 1h cobre o resto. Sem force-dynamic.
+export const revalidate = 3600;
+
+// React.cache: generateMetadata e a página compartilham a mesma consulta no request.
+const getAuthor = cache(async (slug: string) =>
+  prisma.author.findUnique({
+    where: { slug },
+    include: {
+      posts: {
+        where: { published: true },
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  }),
+);
 
 const FALLBACK_IMAGE = "/capa-padrao.svg";
 
@@ -65,12 +83,13 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const author = await prisma.author.findUnique({ where: { slug } });
+  const author = await getAuthor(slug);
   if (!author) return { title: "Autor nao encontrado | AZ Invest" };
   return {
     title: `${author.name} | AZ Invest`,
     description:
       author.bio ?? author.headline ?? `Artigos publicados por ${author.name}`,
+    alternates: { canonical: `/nosso-time/${author.slug}` },
   };
 }
 
@@ -80,15 +99,7 @@ export default async function AuthorPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const author = await prisma.author.findUnique({
-    where: { slug },
-    include: {
-      posts: {
-        where: { published: true },
-        orderBy: { createdAt: "desc" },
-      },
-    },
-  });
+  const author = await getAuthor(slug);
 
   if (!author) notFound();
 
@@ -112,9 +123,34 @@ export default async function AuthorPage({
   }));
 
   const firstName = author.name.split(" ")[0];
+  const siteUrl = getSiteUrl();
 
   return (
     <div className="min-h-screen text-[#132960]">
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Person",
+            name: author.name,
+            url: `${siteUrl}/nosso-time/${author.slug}`,
+            ...(author.photo ? { image: author.photo } : {}),
+            ...(author.role ? { jobTitle: author.role } : {}),
+            ...(author.bio ? { description: author.bio } : {}),
+            worksFor: { "@type": "Organization", name: "AZ Invest", url: siteUrl },
+            sameAs: [author.linkedin, author.instagram].filter(Boolean),
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Início", item: siteUrl },
+              { "@type": "ListItem", position: 2, name: "Nosso time", item: `${siteUrl}/nosso-time` },
+              { "@type": "ListItem", position: 3, name: author.name, item: `${siteUrl}/nosso-time/${author.slug}` },
+            ],
+          },
+        ]}
+      />
       <Header />
 
       <AuthorHero

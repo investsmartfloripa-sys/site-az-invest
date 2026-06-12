@@ -10,7 +10,6 @@ export const metadata: Metadata = {
     "Pesquisa Mensal de Serviços do IBGE: volume e receita do maior setor da economia, nível vs pré-pandemia (fev/2020 = 100), turismo, transporte de cargas × passageiros e abertura por 20 segmentos e 29 atividades.",
 };
 
-export const dynamic = "force-dynamic";
 export const revalidate = 86400;
 
 export default async function PainelAtividadePmsPage() {

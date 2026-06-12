@@ -11,7 +11,6 @@ export const metadata: Metadata = {
     "Mercado de trabalho amplo (IBGE/PNAD Contínua): desocupação com leitura dessazonalizada, participação e nível de ocupação, subutilização e informalidade, qualidade do vínculo (com/sem carteira), setores que criam ocupação e massa real de rendimentos. Atualizado trimestralmente.",
 };
 
-export const dynamic = "force-dynamic";
 export const revalidate = 21600; // 6h
 
 export default async function PainelPnadPage() {

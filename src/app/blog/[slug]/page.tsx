@@ -1,3 +1,4 @@
+import { cache } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -5,11 +6,27 @@ import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { PostMarkdownBody } from "@/components/blog/PostMarkdownBody";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { formatPostCategoryLabel, getPostCategorySoftPillClasses } from "@/data/blog-categories";
 import { addCommentAction } from "@/lib/comment-actions";
 import { prisma } from "@/lib/prisma";
+import { getSiteUrl } from "@/lib/site-url";
 
-export const dynamic = "force-dynamic";
+// ISR: novo comentário chama revalidatePath("/blog/[slug]") (comment-actions)
+// e edições se resolvem no fallback de 5 min. Sem force-dynamic.
+export const revalidate = 300;
+
+// React.cache: generateMetadata e a página compartilham a MESMA consulta
+// dentro de um request (antes eram duas idas ao banco por acesso).
+const getPost = cache(async (slug: string) =>
+  prisma.post.findUnique({
+    where: { slug },
+    include: {
+      author: true,
+      comments: { orderBy: { createdAt: "desc" }, take: 100 },
+    },
+  }),
+);
 
 export async function generateMetadata({
   params,
@@ -17,11 +34,25 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = await prisma.post.findUnique({ where: { slug } });
+  const post = await getPost(slug);
   if (!post) return { title: "Artigo não encontrado | AZ Invest" };
   return {
     title: `${post.title} | AZ Invest`,
     description: post.excerpt ?? undefined,
+    alternates: { canonical: `/blog/${post.slug}` },
+    openGraph: {
+      type: "article",
+      url: `/blog/${post.slug}`,
+      title: post.title,
+      description: post.excerpt ?? undefined,
+      ...(post.coverImage ? { images: [{ url: post.coverImage, alt: post.title }] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.excerpt ?? undefined,
+      ...(post.coverImage ? { images: [post.coverImage] } : {}),
+    },
   };
 }
 
@@ -40,20 +71,53 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = await prisma.post.findUnique({
-    where: { slug },
-    include: {
-      author: true,
-      comments: { orderBy: { createdAt: "desc" }, take: 100 },
-    },
-  });
+  const post = await getPost(slug);
 
   if (!post || post.status !== "APPROVED") {
     notFound();
   }
 
+  const siteUrl = getSiteUrl();
+
   return (
     <div className="min-h-screen text-[#132960]">
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: post.title,
+            description: post.excerpt ?? undefined,
+            datePublished: (post.publishedAt ?? post.createdAt).toISOString(),
+            dateModified: post.updatedAt.toISOString(),
+            mainEntityOfPage: `${siteUrl}/blog/${post.slug}`,
+            inLanguage: "pt-BR",
+            ...(post.coverImage ? { image: post.coverImage } : {}),
+            author: post.author
+              ? {
+                  "@type": "Person",
+                  name: post.author.name,
+                  url: `${siteUrl}/nosso-time/${post.author.slug}`,
+                }
+              : { "@type": "Person", name: post.authorName },
+            publisher: {
+              "@type": "Organization",
+              name: "AZ Invest",
+              url: siteUrl,
+              logo: { "@type": "ImageObject", url: `${siteUrl}/logo-az.png` },
+            },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Início", item: siteUrl },
+              { "@type": "ListItem", position: 2, name: "Artigos", item: `${siteUrl}/blog` },
+              { "@type": "ListItem", position: 3, name: post.title, item: `${siteUrl}/blog/${post.slug}` },
+            ],
+          },
+        ]}
+      />
       <Header />
       <main className="mx-auto w-full max-w-[60rem] px-4 py-8 md:px-8">
         <Link href="/blog" className="text-sm text-[#027DFC] hover:underline">

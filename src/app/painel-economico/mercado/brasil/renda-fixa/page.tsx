@@ -10,7 +10,8 @@ export const metadata = {
     "Curvas históricas de juros dos títulos públicos (Pré e IPCA+) por data de vencimento, e spreads de crédito privado via ANBIMA.",
 };
 
-export const dynamic = "force-dynamic";
+// ISR: dados vêm do Blob com loaders guardados (degradam para null); ver plano AVALIACAO-GERAL §6.
+export const revalidate = 3600;
 
 export default async function RendaFixaPage() {
   const { treasury, credit } = await getRendaFixaData();

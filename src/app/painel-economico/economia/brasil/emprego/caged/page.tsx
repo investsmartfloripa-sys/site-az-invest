@@ -11,7 +11,6 @@ export const metadata: Metadata = {
     "Leitura narrativa do Novo CAGED (MTE): saldo dessazonalizado e momentum do mercado formal, acumulado do ano, fluxos de admissões e desligamentos, salário real de admissão e abertura por setor e faixa salarial. Atualizado mensalmente.",
 };
 
-export const dynamic = "force-dynamic";
 export const revalidate = 21600; // 6h
 
 export default async function PainelCagedPage() {

@@ -10,7 +10,6 @@ export const metadata: Metadata = {
     "Pesquisa Mensal de Comércio: o varejo restrito e ampliado contra o nível pré-pandemia, a inflação embutida nas vendas (deflator implícito), o momentum na margem e a abertura por atividade.",
 };
 
-export const dynamic = "force-dynamic";
 export const revalidate = 86400;
 
 export default async function PainelAtividadePmcPage() {

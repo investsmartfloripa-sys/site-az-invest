@@ -10,7 +10,8 @@ export const metadata = {
     "Screener de fundamentos e mediana setorial: P/L, P/VP, EV/EBITDA, ROE, dividend yield. Compare ações BR e EUA.",
 };
 
-export const dynamic = "force-dynamic";
+// ISR: dados vêm do Blob com loaders guardados (degradam para null); ver plano AVALIACAO-GERAL §6.
+export const revalidate = 3600;
 
 export default async function FundamentosPage() {
   const data = await getMarketFundamentals();

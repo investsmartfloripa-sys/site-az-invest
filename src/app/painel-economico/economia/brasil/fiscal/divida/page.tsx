@@ -11,7 +11,6 @@ export const metadata: Metadata = {
     "Trajetoria da divida bruta (DBGG) e liquida (DLSP), dinamica r-g, decomposicao anual e composicao da DPMFi por indexador. Fonte: BCB SGS + pipeline fiscal AZ.",
 };
 
-export const dynamic = "force-dynamic";
 export const revalidate = 300;
 
 export default async function PainelDividaPage() {
