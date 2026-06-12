@@ -60,6 +60,11 @@ export type AzTimeSeries = {
   /** Nome exibido na legenda/tooltip (ex.: "IBOV", "CDI"). */
   label: string;
   color?: string;
+  /**
+   * Interpolação da linha — default "monotone". Use "stepAfter" p/ séries de
+   * frequência menor sobrepostas a mensais (ex.: PIB trimestral × IBC-Br).
+   */
+  type?: "monotone" | "stepAfter";
   data: ReadonlyArray<AzSeriesPoint>;
 };
 
@@ -103,6 +108,22 @@ export type AzRefArea = {
   opacity?: number;
 };
 
+/**
+ * Faixa de referência VERTICAL (ex.: recessões CODACE sombreadas). Datas ISO.
+ * A faixa é CLIPADA à janela visível: se começa antes do 1º ponto plotado (ou
+ * termina depois do último), os limites são ajustados; faixas inteiramente fora
+ * da janela são omitidas — em janelas curtas (ex.: 36m pós-2022) é esperado que
+ * nenhuma apareça.
+ */
+export type AzXRefArea = {
+  x1: string;
+  x2: string;
+  label?: string;
+  color?: string;
+  /** Opacidade do preenchimento — default 0.07. */
+  opacity?: number;
+};
+
 export type AzTimeSeriesChartProps = {
   /** Séries principais (linha cheia, strokeWidth 2). */
   series: AzTimeSeries[];
@@ -125,6 +146,8 @@ export type AzTimeSeriesChartProps = {
   refLines?: AzRefLine[];
   /** Faixas de referência (ex.: banda da meta). */
   refAreas?: AzRefArea[];
+  /** Faixas VERTICAIS (ex.: recessões CODACE) — clipadas à janela visível. */
+  xRefAreas?: AzXRefArea[];
   /** Reservado: empilhamento NÃO suportado neste componente (use gráfico de área dedicado). */
   stacked?: false;
   /** Dots nos vértices: true (r=2.5) ou raio custom. Default false (séries diárias densas). */
@@ -404,6 +427,7 @@ export function AzTimeSeriesChart({
   benchmarks = [],
   refLines = [],
   refAreas = [],
+  xRefAreas = [],
   dots = false,
   forwardFill = false,
   yAxisLabel,
@@ -454,6 +478,18 @@ export function AzTimeSeriesChart({
   }
 
   const { rows, yDomain, spanDays, hasNegative, main } = built;
+
+  // Faixas verticais clipadas à janela plotada (faixa fora da janela é omitida).
+  const firstT = rows[0].t;
+  const lastT = rows[rows.length - 1].t;
+  const xAreasVisiveis = xRefAreas
+    .map((a) => ({
+      ...a,
+      t1: Date.parse(`${a.x1}T00:00:00Z`),
+      t2: Date.parse(`${a.x2}T00:00:00Z`),
+    }))
+    .filter((a) => Number.isFinite(a.t1) && Number.isFinite(a.t2) && a.t2 >= firstT && a.t1 <= lastT)
+    .map((a) => ({ ...a, t1: Math.max(a.t1, firstT), t2: Math.min(a.t2, lastT) }));
   const dotRadius = dots === true ? 2.5 : typeof dots === "number" ? dots : 0;
   const legendVisible = showLegend ?? all.length > 1;
   const zeroBaseline = mode === "pct_acum" ? 0 : mode === "rebase100" ? 100 : null;
@@ -513,6 +549,22 @@ export function AzTimeSeriesChart({
                 : undefined
             }
           />
+
+          {xAreasVisiveis.map((a, i) => (
+            <ReferenceArea
+              key={`xarea-${i}`}
+              x1={a.t1}
+              x2={a.t2}
+              fill={a.color ?? AZ_CHART.ticks}
+              fillOpacity={a.opacity ?? 0.07}
+              stroke="none"
+              label={
+                a.label
+                  ? { value: a.label, position: "insideTop", fontSize: 9, fill: AZ_CHART.ticks }
+                  : undefined
+              }
+            />
+          ))}
 
           {refAreas.map((a, i) => (
             <ReferenceArea
@@ -607,7 +659,7 @@ export function AzTimeSeriesChart({
             ) : (
               <Line
                 key={s.id}
-                type="monotone"
+                type={s.type ?? "monotone"}
                 dataKey={s.id}
                 name={s.label}
                 stroke={resolveColor(s, i, false)}

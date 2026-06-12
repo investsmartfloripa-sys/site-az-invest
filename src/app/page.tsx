@@ -1,7 +1,6 @@
 import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { HeroRecentes } from "@/components/home/HeroRecentes";
-import { MaisLidos } from "@/components/home/MaisLidos";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { UltimasPublicacoes } from "@/components/home/UltimasPublicacoes";
 import { VideosSection } from "@/components/home/VideosSection";
@@ -29,16 +28,16 @@ export const metadata = {
 export default async function Home() {
   const posts = await findPosts({
     where: publishedPostWhere,
-    orderBy: { createdAt: "desc" },
+    // Ordena pela data de PUBLICAÇÃO (posts antigos sem publishedAt caem para o fim
+    // do critério e o desempate é a criação) — publicar um rascunho antigo o traz ao topo.
+    orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
     take: 21,
   });
 
   const mapped = posts.map(mapPost);
 
   const hero = mapped.slice(0, 3);
-  /** Segunda faixa da home; posts 7+ vão só para UltimasPublicacoes (evita repetir cards). */
-  const maisLidos = mapped.slice(3, 6);
-  const restantes = mapped.slice(6);
+  const restantes = mapped.slice(3);
 
   return (
     <div className="min-h-screen text-[#132960]">
@@ -52,7 +51,6 @@ export default async function Home() {
         <div className="az-reveal">
           <DestaquesDaSemana />
         </div>
-        {maisLidos.length > 0 ? <MaisLidos posts={maisLidos} /> : null}
         <UltimasPublicacoes posts={restantes} />
         <VideosSection />
         <CommunityCallout />

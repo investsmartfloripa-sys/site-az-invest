@@ -16,7 +16,21 @@ export type PibValoresPonto = Record<string, NumOrNull | string> & { trim: strin
 export type PibContasPonto = Record<string, NumOrNull | string> & { trim: string };
 export type FocusPonto = { data: string; mediana: NumOrNull; media: NumOrNull; dp: NumOrNull; min: NumOrNull; max: NumOrNull };
 
+/** Contribuição ao crescimento YoY (v2): chaves oferta_* e demanda_* em p.p. */
+export type PibContribPonto = Record<string, NumOrNull | string> & { trim: string; pib_yoy: number };
+
+export type PibCarrego = { ano: number; valor: number; trimestres_divulgados: number } | null;
+
+export type PibPerCapitaPonto = {
+  ano: string;
+  per_capita_nominal: NumOrNull;
+  var_real_per_capita: NumOrNull;
+  var_real_pib: NumOrNull;
+  populacao_mil: NumOrNull;
+};
+
 export type AtividadePibData = {
+  schema_version?: number;
   gerado_em: string;
   trim_recente: string;
   variacao: { serie: PibVariacaoPonto[] };
@@ -26,6 +40,10 @@ export type AtividadePibData = {
   pesos_atuais?: Record<string, number>;
   labels?: Record<string, string>;
   focus: Record<string, FocusPonto[]>;
+  // v2
+  contribuicoes?: { serie: PibContribPonto[] };
+  carrego?: PibCarrego;
+  per_capita?: { serie: PibPerCapitaPonto[] };
   metadata: AtividadeMetadata;
 };
 
@@ -35,13 +53,17 @@ export type IbcBrPonto = {
   indice_sa: NumOrNull;
   indice_ns: NumOrNull;
   var_mom: NumOrNull;
+  /** v2: calculada sobre o índice NS (convenção oficial). */
   var_yoy: NumOrNull;
   var_3m: NumOrNull;
   indice_sa_mm3: NumOrNull;
   var_yoy_mm3: NumOrNull;
+  /** v2: mm3 do índice SA vs mm3 três meses antes, anualizada (3m/3m SAAR). */
+  var_3m3m_saar?: NumOrNull;
 };
 
 export type AtividadeIbcBrData = {
+  schema_version?: number;
   gerado_em: string;
   mes_recente: string;
   serie: IbcBrPonto[];
@@ -73,7 +95,11 @@ export type PimAtividadeItem = {
   indice_sa: NumOrNull;
 };
 
+/** v2: difusão por atividades (cálculo próprio — % de atividades em alta). */
+export type PimDifusaoPonto = { mes: string; pct: number; n: number; criterio: "mom_sa" | "yoy"; pct_mm3: NumOrNull };
+
 export type AtividadePimData = {
+  schema_version?: number;
   gerado_em: string;
   mes_recente: string;
   geral: { serie: PimGeralPonto[] };
@@ -89,6 +115,9 @@ export type AtividadePimData = {
     categorias_ids: string[];
     serie: Record<string, NumOrNull | string>[];
   };
+  // v2
+  difusao?: { serie: PimDifusaoPonto[] };
+  picos?: Record<string, { mes: string; indice_sa: number }>;
   metadata: AtividadeMetadata;
 };
 
@@ -105,6 +134,8 @@ export type PmcAtividadeItem = {
 };
 
 export type AtividadePmcData = {
+  /** v2 também adiciona restrito_deflator_yoy / ampliado_deflator_yoy em cada PmcPonto. */
+  schema_version?: number;
   gerado_em: string;
   mes_recente: string;
   serie: PmcPonto[];
@@ -129,6 +160,7 @@ export type PmsCategoriaItem = {
 };
 
 export type AtividadePmsData = {
+  schema_version?: number;
   gerado_em: string;
   mes_recente: string;
   serie: PmsPonto[];
@@ -172,6 +204,18 @@ export async function loadAtividadePmc(): Promise<AtividadePmcData | null> {
 }
 export async function loadAtividadePms(): Promise<AtividadePmsData | null> {
   return fetchBlobJson<AtividadePmsData>("data/atividade_pms.json");
+}
+
+/** Cronologia CODACE (recessões) — para sombrear séries com 5+ anos. */
+export type CodaceFaixaAtividade = { pico: string; vale: string; tipo: string };
+export type AtividadeCodaceData = {
+  gerado_em: string;
+  trimestral: CodaceFaixaAtividade[];
+  mensal: CodaceFaixaAtividade[];
+};
+
+export async function loadAtividadeCodace(): Promise<AtividadeCodaceData | null> {
+  return fetchBlobJson<AtividadeCodaceData>("data/visao_geral_codace.json");
 }
 
 // --- Helpers ---

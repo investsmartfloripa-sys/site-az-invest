@@ -23,7 +23,8 @@ export function mapPost(post: PostWithAuthor): PostCardData {
     authorSlug: post.author?.slug ?? null,
     authorPhoto: post.author?.photo ?? null,
     excerpt: post.excerpt,
-    date: new Date(post.createdAt).toLocaleDateString("pt-BR"),
+    // Data exibida no card = publicação (criação só p/ posts legados sem publishedAt).
+    date: new Date(post.publishedAt ?? post.createdAt).toLocaleDateString("pt-BR"),
     image: post.coverImage || FALLBACK_IMAGE,
   };
 }

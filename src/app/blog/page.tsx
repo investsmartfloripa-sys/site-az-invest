@@ -41,7 +41,7 @@ export default async function BlogIndexPage({
         ...publishedPostWhere,
         ...(filter ? { category: { equals: filter } } : {}),
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
     }),
     prisma.post.findMany({
       where: { status: "APPROVED", published: true },

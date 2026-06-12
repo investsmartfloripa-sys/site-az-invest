@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
 
 import { PmcDashboard } from "@/components/painel/atividade/PmcDashboard";
-import { loadAtividadePmc } from "@/lib/painel-atividade";
+import { PmcDashboardV2 } from "@/components/painel/atividade/v2/pmc/PmcDashboardV2";
+import { loadAtividadeCodace, loadAtividadePmc } from "@/lib/painel-atividade";
 
 export const metadata: Metadata = {
   title: "PMC — Atividade — AZ Invest",
   description:
-    "Pesquisa Mensal do Comércio. Volume de vendas no varejo restrito (9 atividades) e ampliado (inclui veículos e materiais de construção), comparação lado a lado.",
+    "Pesquisa Mensal de Comércio: o varejo restrito e ampliado contra o nível pré-pandemia, a inflação embutida nas vendas (deflator implícito), o momentum na margem e a abertura por atividade.",
 };
 
 export const dynamic = "force-dynamic";
 export const revalidate = 86400;
 
 export default async function PainelAtividadePmcPage() {
-  const data = await loadAtividadePmc();
+  const [data, codace] = await Promise.all([loadAtividadePmc(), loadAtividadeCodace()]);
 
   if (!data) {
     return (
@@ -23,5 +24,10 @@ export default async function PainelAtividadePmcPage() {
     );
   }
 
-  return <PmcDashboard data={data} />;
+  // Gate v2: blob ainda no schema antigo (sem deflator/atividades v2) → dashboard atual.
+  if (!data.schema_version || data.schema_version < 2) {
+    return <PmcDashboard data={data} />;
+  }
+
+  return <PmcDashboardV2 pmc={data} codace={codace} />;
 }

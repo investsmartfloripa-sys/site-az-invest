@@ -1,10 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { SinteseSetorialCard } from "@/components/painel/atividade/v2/SinteseSetorialCard";
+import {
+  loadAtividadeCodace,
+  loadAtividadeIbcBr,
+  loadAtividadePim,
+  loadAtividadePmc,
+  loadAtividadePms,
+} from "@/lib/painel-atividade";
+
 export const metadata: Metadata = {
   title: "Atividade Econômica — AZ Invest",
   description:
-    "Painéis de atividade econômica brasileira: PIB (IBGE Contas Nacionais Trimestrais + IBC-Br como proxy mensal), Produção Industrial (PIM-PF), Comércio Varejista (PMC) e Serviços (PMS).",
+    "Painéis de atividade econômica brasileira: síntese setorial pós-pandemia (indústria × varejo × serviços), PIB (IBGE Contas Nacionais + IBC-Br), Produção Industrial (PIM-PF), Comércio Varejista (PMC) e Serviços (PMS).",
 };
 
 const CARDS = [
@@ -13,42 +22,54 @@ const CARDS = [
     titulo: "PIB",
     subtitulo: "IBGE Contas Nacionais + IBC-Br",
     descricao:
-      "Produto Interno Bruto trimestral pela ótica da oferta (Agro/Indústria/Serviços) e da demanda (Consumo/FBCF/Exportações). IBC-Br do BCB como proxy mensal.",
+      "Contribuições ao crescimento por ótica da oferta e da demanda, carrego estatístico, IBC-Br como prévia mensal e expectativas Focus.",
   },
   {
     slug: "pim",
     titulo: "PIM-PF",
     subtitulo: "IBGE — Produção Industrial",
     descricao:
-      "Pesquisa Industrial Mensal — Produção Física. Indústria geral, extrativa, transformação e decomposição por categoria econômica (bens de capital, intermediários, consumo).",
+      "Nível dessazonalizado vs pico histórico, ciclo por categoria de uso (bens de capital, intermediários, consumo), difusão setorial e insumos da construção.",
   },
   {
     slug: "pmc",
     titulo: "PMC",
     subtitulo: "IBGE — Comércio Varejista",
     descricao:
-      "Volume de vendas no varejo restrito (9 atividades) e ampliado (inclui veículos e materiais de construção). Comparação lado a lado das duas leituras.",
+      "Volume do varejo restrito e ampliado vs pré-pandemia, deflator implícito (quanta inflação há nas vendas) e abertura por atividade.",
   },
   {
     slug: "pms",
     titulo: "PMS",
     subtitulo: "IBGE — Serviços",
     descricao:
-      "Pesquisa Mensal de Serviços. Volume agregado e ranking por segmento/atividade (alojamento, alimentação, transportes, profissionais, comunicação).",
+      "O motor do PIB pós-pandemia: volume agregado, turismo vs patamar pré-covid, transportes (cargas × passageiros) e abertura por segmento.",
   },
 ];
 
 export const dynamic = "force-dynamic";
+export const revalidate = 86400;
 
-export default function PainelAtividadeHub() {
+export default async function PainelAtividadeHub() {
+  const [pim, pmc, pms, ibcbr, codace] = await Promise.all([
+    loadAtividadePim(),
+    loadAtividadePmc(),
+    loadAtividadePms(),
+    loadAtividadeIbcBr(),
+    loadAtividadeCodace(),
+  ]);
+
   return (
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-bold text-[#132960]">Atividade Econômica</h1>
         <p className="mt-1 text-sm text-zinc-600">
-          Indicadores de ciclo econômico brasileiro. Escolha um card para abrir o painel detalhado.
+          Indicadores de ciclo econômico brasileiro. A síntese abaixo responde a pergunta mais frequente — quem recuperou da
+          pandemia — e cada card abre o painel detalhado.
         </p>
       </header>
+
+      <SinteseSetorialCard pim={pim} pmc={pmc} pms={pms} ibcbr={ibcbr} codace={codace} />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {CARDS.map((c) => (
@@ -59,12 +80,8 @@ export default function PainelAtividadeHub() {
           >
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-[#132960] group-hover:text-[#027DFC]">
-                  {c.titulo}
-                </h2>
-                <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  {c.subtitulo}
-                </p>
+                <h2 className="text-2xl font-bold text-[#132960] group-hover:text-[#027DFC]">{c.titulo}</h2>
+                <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-zinc-500">{c.subtitulo}</p>
               </div>
               <span
                 className="text-xl text-zinc-300 transition group-hover:translate-x-1 group-hover:text-[#027DFC]"

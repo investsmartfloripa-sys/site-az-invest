@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
 
 import { PmsDashboard } from "@/components/painel/atividade/PmsDashboard";
-import { loadAtividadePms } from "@/lib/painel-atividade";
+import { PmsDashboardV2 } from "@/components/painel/atividade/v2/pms/PmsDashboardV2";
+import { loadAtividadeCodace, loadAtividadePms } from "@/lib/painel-atividade";
 
 export const metadata: Metadata = {
   title: "PMS — Atividade — AZ Invest",
   description:
-    "Pesquisa Mensal de Serviços do IBGE. Volume agregado de serviços com ranking por segmento (alojamento, alimentação, transportes, profissionais, comunicação).",
+    "Pesquisa Mensal de Serviços do IBGE: volume e receita do maior setor da economia, nível vs pré-pandemia (fev/2020 = 100), turismo, transporte de cargas × passageiros e abertura por 20 segmentos e 29 atividades.",
 };
 
 export const dynamic = "force-dynamic";
 export const revalidate = 86400;
 
 export default async function PainelAtividadePmsPage() {
-  const data = await loadAtividadePms();
+  const [data, codace] = await Promise.all([loadAtividadePms(), loadAtividadeCodace()]);
 
   if (!data) {
     return (
@@ -23,5 +24,10 @@ export default async function PainelAtividadePmsPage() {
     );
   }
 
-  return <PmsDashboard data={data} />;
+  // Fallback: enquanto o Blob não tiver o schema v2, serve o dashboard antigo.
+  if (!data.schema_version || data.schema_version < 2) {
+    return <PmsDashboard data={data} />;
+  }
+
+  return <PmsDashboardV2 pms={data} codace={codace} />;
 }

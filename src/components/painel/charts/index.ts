@@ -20,6 +20,7 @@ export {
   type AzTimeSeries,
   type AzTimeSeriesChartProps,
   type AzUnit,
+  type AzXRefArea,
 } from "./AzTimeSeriesChart";
 export { HeroHeader, type HeroHeaderProps } from "./HeroHeader";
 export { RangeBar, type RangeBarProps } from "./RangeBar";
