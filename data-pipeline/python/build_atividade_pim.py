@@ -94,9 +94,24 @@ def sidra(tabela, path):
     return data[1:] if data else []
 
 
-def carrega_8888(periodos=60):
-    """Todas as 27 categorias × 6 vars × N meses."""
-    rows = sidra(8888, f"/n1/all/v/all/p/last%20{periodos}/c544/all?formato=json")
+def carrega_8888_secoes(periodos=300):
+    """Só as 3 seções (geral/extrativa/transformação) × 6 vars — janela longa (8888 retropola até 2002)."""
+    ids = ",".join(SECOES.keys())
+    rows = sidra(8888, f"/n1/all/v/all/p/last%20{periodos}/c544/{ids}?formato=json")
+    out = {}  # mes → classif → {var: v}
+    for r in rows:
+        var_nome = VAR_PIM.get(r.get("D2C"))
+        d4c = r.get("D4C", "")
+        d3c = r.get("D3C", "")
+        if not var_nome or not d4c or not d3c:
+            continue
+        out.setdefault(_mes(d3c), {}).setdefault(d4c, {})[var_nome] = _to_float(r.get("V"))
+    return out
+
+
+def carrega_8888_atividades(periodos=180):
+    """Todas as ~27 categorias com 4 vars (mom_sa, yoy, acum_12m, índice SA) — janela média p/ difusão."""
+    rows = sidra(8888, f"/n1/all/v/11601,11602,11604,12607/p/last%20{periodos}/c544/all?formato=json")
     out = {}  # mes → classif → {var: v}
     nomes = {}
     for r in rows:
@@ -111,7 +126,7 @@ def carrega_8888(periodos=60):
     return out, nomes
 
 
-def carrega_8887(periodos=60):
+def carrega_8887(periodos=300):
     rows = sidra(8887, f"/n1/all/v/all/p/last%20{periodos}/c543/all?formato=json")
     out = {}
     for r in rows:
@@ -145,8 +160,8 @@ def carrega_8889(periodos=24):
     return out, nomes
 
 
-def carrega_8886(periodos=24):
-    """Insumos da construção civil."""
+def carrega_8886(periodos=300):
+    """Insumos da construção civil — janela longa (retropola até 2002)."""
     rows = sidra(8886, f"/n1/all/v/all/p/last%20{periodos}?formato=json")
     out = {}
     for r in rows:
@@ -168,8 +183,10 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / "atividade_pim.json"
 
-    print("== PIM 8888 ==")
-    secoes_raw, nomes_atividades = carrega_8888()
+    print("== PIM 8888 seções (janela longa) ==")
+    secoes_raw = carrega_8888_secoes()
+    print("== PIM 8888 atividades ==")
+    atividades_raw, nomes_atividades = carrega_8888_atividades()
     print("== PIM 8887 ==")
     cat_raw = carrega_8887()
     print("== PIM 8889 ==")
@@ -212,12 +229,12 @@ def main():
                 item[f"{chave}_{var_nome}"] = val.get(var_nome)
         serie_cat.append(item)
 
-    # atividades detalhe — TODAS as 25 atividades (não só top 5)
+    # atividades detalhe — TODAS as atividades CNAE (não só top 5)
     # Estrutura: mes → list[{atividade, var_yoy, var_mom_sa, indice_sa}]
     atividades_mes = {}
-    for m in meses:
+    for m in sorted(atividades_raw.keys()):
         items = []
-        for d4c, vals in secoes_raw[m].items():
+        for d4c, vals in atividades_raw[m].items():
             if d4c in SECOES:
                 continue  # pula os 3 macro
             nome = nomes_atividades.get(d4c, d4c)
@@ -231,6 +248,42 @@ def main():
             })
         items.sort(key=lambda x: x["var_yoy"] if x["var_yoy"] is not None else -999, reverse=True)
         atividades_mes[m] = items
+
+    # ── v2: difusão por atividades (cálculo próprio, não o índice oficial de ~789 produtos) ──
+    # critério: % de atividades com var_mom_sa > 0; fallback var_yoy > 0 quando o IBGE não
+    # publica SA para a maioria das atividades no mês
+    difusao_serie = []
+    for m in sorted(atividades_mes.keys()):
+        items = atividades_mes[m]
+        com_mom = [it for it in items if it.get("var_mom_sa") is not None]
+        if len(com_mom) >= 15:
+            n_pos = sum(1 for it in com_mom if it["var_mom_sa"] > 0)
+            n_tot, criterio = len(com_mom), "mom_sa"
+        else:
+            com_yoy = [it for it in items if it.get("var_yoy") is not None]
+            if not com_yoy:
+                continue
+            n_pos = sum(1 for it in com_yoy if it["var_yoy"] > 0)
+            n_tot, criterio = len(com_yoy), "yoy"
+        difusao_serie.append({"mes": m, "pct": round(n_pos / n_tot * 100, 1), "n": n_tot, "criterio": criterio})
+    for i, d in enumerate(difusao_serie):
+        win = [difusao_serie[j]["pct"] for j in range(max(0, i - 2), i + 1)]
+        d["pct_mm3"] = round(sum(win) / len(win), 1) if len(win) == 3 else None
+    criterios = {d["criterio"] for d in difusao_serie}
+    print(f"  [difusão] {len(difusao_serie)} meses | critérios usados: {sorted(criterios)}")
+
+    # ── v2: picos históricos do índice SA (nunca hardcodar a data do pico) ──
+    picos = {}
+    for d4c, chave in SECOES.items():
+        melhor = None
+        for m in meses:
+            v = secoes_raw[m].get(d4c, {}).get("indice_sa")
+            if v is not None and (melhor is None or v > melhor[1]):
+                melhor = (m, v)
+        if melhor:
+            picos[chave] = {"mes": melhor[0], "indice_sa": melhor[1]}
+    if picos.get("industria_geral"):
+        print(f"  [pico] indústria geral: {picos['industria_geral']['mes']} ({picos['industria_geral']['indice_sa']})")
 
     # Construção civil — série completa
     serie_construcao = []
@@ -259,6 +312,7 @@ def main():
     assert ult.get("indice_sa") is None or 70 < ult["indice_sa"] < 130
 
     out = {
+        "schema_version": 2,
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "mes_recente": mes_recente,
         "geral": {"serie": serie_geral},
@@ -270,21 +324,24 @@ def main():
             "categorias": list(CATEGORIAS_PRINCIPAIS.values()),
             "serie": serie_cat,
         },
-        "atividades": {  # NOVO — todas atividades, todos os meses
+        "atividades": {
             "mes_recente": mes_recente,
             "serie_mensal": atividades_mes,  # mes → lista
         },
-        "construcao": {  # NOVO
+        "construcao": {
             "serie": serie_construcao,
         },
-        "indicadores_especiais": {  # NOVO
+        "indicadores_especiais": {
             "labels": nomes_esp,
             "categorias_ids": sorted(todos_d4c_esp),
             "serie": serie_especiais,
         },
+        # ── v2 ──
+        "difusao": {"serie": difusao_serie},
+        "picos": picos,
         "metadata": {
-            "fonte": "IBGE SIDRA — PIM-PF (8888 seções/atividades, 8887 categorias econômicas, 8889 indicadores especiais, 8886 construção). Base 2022=100.",
-            "nota": "Indústria geral é a manchete. Bens de capital reagem primeiro ao ciclo, consumo duráveis em segundo. Insumos da construção é preditor da Construção do PIB.",
+            "fonte": "IBGE SIDRA — PIM-PF (8888 seções/atividades, 8887 categorias econômicas, 8889 indicadores especiais, 8886 construção). Base 2022=100, retropolada a 2002.",
+            "nota": "Indústria geral é a manchete. Bens de capital reagem primeiro ao ciclo, consumo duráveis em segundo. Insumos da construção é preditor da Construção do PIB. Difusão: % de atividades CNAE com variação positiva (cálculo próprio sobre ~25 atividades; critério mom_sa com fallback yoy — não é o índice oficial de difusão por produtos). Picos do índice SA calculados da série longa.",
         },
     }
 

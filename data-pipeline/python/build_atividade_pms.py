@@ -67,7 +67,7 @@ def sidra(tabela, path):
     return data[1:] if data else []
 
 
-def carrega_geral(periodos=60):
+def carrega_geral(periodos=200):
     rows = sidra(5906, f"/n1/all/v/all/p/last%20{periodos}/c11046/all?formato=json")
     out = {}
     for r in rows:
@@ -80,7 +80,7 @@ def carrega_geral(periodos=60):
     return out
 
 
-def carrega_categorias(tabela, classif_id, periodos=24):
+def carrega_categorias(tabela, classif_id, periodos=60):
     """Por segmento (8163) ou atividade (8688) — só volume."""
     rows = sidra(tabela, f"/n1/all/v/all/p/last%20{periodos}/c11046/all/c{classif_id}/all?formato=json")
     by_mes_cat = {}
@@ -112,7 +112,7 @@ def carrega_categorias(tabela, classif_id, periodos=24):
     return out, nomes
 
 
-def carrega_turismo(periodos=24):
+def carrega_turismo(periodos=200):
     rows = sidra(8694, f"/n1/all/v/all/p/last%20{periodos}/c11046/all?formato=json")
     out = {}
     for r in rows:
@@ -125,7 +125,7 @@ def carrega_turismo(periodos=24):
     return out
 
 
-def carrega_transportes(periodos=24):
+def carrega_transportes(periodos=200):
     rows = sidra(8695, f"/n1/all/v/all/p/last%20{periodos}/c11046/all/c12355/all?formato=json")
     by_mes_d5 = {}
     nomes = {}
@@ -170,6 +170,17 @@ def main():
     except Exception as e:
         print(f"  WARN transportes: {e}")
         transportes_raw, nomes_transp = {}, {}
+
+    # nunca sobrescrever dado bom com vazio: se turismo/transportes vierem vazios,
+    # reaproveita o bloco anterior do Blob
+    blocos_prev = None
+    if not turismo or not transportes_raw:
+        try:
+            sys.path.insert(0, str(HERE))
+            from shared.blob_download import download_json
+            blocos_prev = download_json(BLOB_PATH)
+        except Exception:
+            blocos_prev = None
 
     meses = sorted(geral.keys())
     if not meses:
@@ -217,7 +228,21 @@ def main():
     idx_sa = ult.get("volume_indice_sa")
     assert idx_sa is None or 70 < idx_sa < 140
 
+    # preserva blocos anteriores se a rodada veio vazia
+    bloco_turismo = {"serie": serie_turismo}
+    if not serie_turismo and blocos_prev and blocos_prev.get("turismo", {}).get("serie"):
+        bloco_turismo = blocos_prev["turismo"]
+        print("  [preserva] turismo vazio nesta rodada — mantido bloco anterior do Blob")
+    bloco_transportes = {"labels_transportes": nomes_transp, "serie": serie_transportes}
+    if not serie_transportes and blocos_prev and blocos_prev.get("transportes", {}).get("serie"):
+        bloco_transportes = blocos_prev["transportes"]
+        print("  [preserva] transportes vazio nesta rodada — mantido bloco anterior do Blob")
+
+    n_tur_sa = sum(1 for r in bloco_turismo.get("serie", []) if r.get("volume_indice_sa") is not None)
+    print(f"  [turismo] {len(bloco_turismo.get('serie', []))} meses | volume_indice_sa não-nulo: {n_tur_sa}")
+
     out = {
+        "schema_version": 2,
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "mes_recente": mes_recente,
         "serie": serie,
@@ -229,16 +254,11 @@ def main():
             "mes_recente": mes_recente,
             "serie_mensal": atividades,
         },
-        "turismo": {  # NOVO
-            "serie": serie_turismo,
-        },
-        "transportes": {  # NOVO
-            "labels_transportes": nomes_transp,
-            "serie": serie_transportes,
-        },
+        "turismo": bloco_turismo,
+        "transportes": bloco_transportes,
         "metadata": {
-            "fonte": "IBGE SIDRA — PMS (5906 geral, 8163 segmentos, 8688 atividades, 8694 turismo, 8695 transportes). Base 2022=100.",
-            "nota": "Volume deflacionado é a manchete IBGE. Turismo e transporte são sub-indicadores que reagem a sazonalidade e cenário externo.",
+            "fonte": "IBGE SIDRA — PMS (5906 geral, 8163 segmentos, 8688 atividades, 8694 turismo, 8695 transportes). Base 2022=100; série existe desde jan/2011.",
+            "nota": "Volume deflacionado é a manchete IBGE. Turismo e transporte são sub-indicadores que reagem a sazonalidade e cenário externo. Se turismo/transportes vierem vazios numa rodada, o bloco anterior do Blob é preservado.",
         },
     }
 

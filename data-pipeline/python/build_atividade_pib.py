@@ -1,15 +1,21 @@
-"""Build do JSON do Painel Atividade — bloco PIB trimestral (ENRIQUECIDO).
+"""Build do JSON do Painel Atividade — bloco PIB trimestral (schema v2, aditivo).
 
 Tabelas IBGE SIDRA das Contas Nacionais Trimestrais:
 - 5932 — Taxa de variação do índice de volume trimestral (4 vars × 22 classes)
 - 1620/1621 — Série encadeada do índice de volume (sem ajuste / com ajuste)
-- 1846 — Valores a preços correntes (R$ milhões — por setor)
+- 1846 — Valores a preços correntes (R$ milhões — por setor; janela de 84 trim p/ pesos t-4)
 - 2072 — Contas econômicas (renda macro: PIB, RNB, RNDB, Poupança, etc.)
+- 6784 — PIB e PIB per capita anuais (SCN anual)
 
 Focus PIB anual (BCB Olinda).
 
-JSON: gera todos os 22 sub-setores em variação, índice e R$ correntes; salva pesos atuais
-do PIB; histórico completo de Focus pra comparação Realizado × Projetado.
+Schema v2 (aditivo sobre o v1):
+- contribuicoes.serie — contribuição ponderada ao crescimento YoY (óticas oferta e demanda),
+  peso nominal do MESMO trimestre do ano anterior (t-4, convenção BCB/research); importações
+  com sinal trocado; resíduo = não-aditividade do encadeamento (+ estoques na demanda).
+  Índices encadeados são NÃO-aditivos: validação por tolerância, nunca igualdade exata.
+- carrego — carry-over estatístico do ano corrente (índice SA congelado no último trim divulgado).
+- per_capita.serie — PIB per capita anual (SIDRA 6784) + variação real per capita implícita.
 """
 from __future__ import annotations
 
@@ -142,8 +148,8 @@ def carrega_indice(tabela, var_id, periodos=80):
     return out
 
 
-def carrega_1846(periodos=8):
-    """PIB nominal por setor — R$ milhões. Pegamos apenas últimos trimestres pra pesos atuais."""
+def carrega_1846(periodos=84):
+    """PIB nominal por setor — R$ milhões. Janela de 84 trim: cobre o peso t-4 dos 80 trim da 5932."""
     path = f"/n1/all/v/all/p/last%20{periodos}/c11255/all?formato=json"
     rows = sidra_fetch(1846, path)
     out = {}
@@ -154,6 +160,108 @@ def carrega_1846(periodos=8):
             continue
         out.setdefault(_trim_label(d3c), {})[classif] = _to_float(r.get("V"))
     return out
+
+
+VAR_6784 = {
+    "9812": "per_capita_nominal",      # PIB per capita - valores correntes (R$)
+    "9814": "var_real_per_capita",     # PIB per capita - variação em volume (%) — OFICIAL
+    "9810": "var_real_pib",            # PIB - variação em volume (%)
+    "93": "populacao_mil",             # População residente (mil pessoas)
+}
+
+
+def carrega_6784():
+    """PIB e PIB per capita anuais (SCN anual 6784) — variação real per capita OFICIAL (9814)."""
+    rows = sidra_fetch(6784, "/n1/all/v/all/p/all?formato=json")
+    out = {}
+    for r in rows:
+        campo = VAR_6784.get(r.get("D2C", ""))
+        ano = r.get("D3C", "")
+        if not campo or not ano:
+            continue
+        out.setdefault(ano, {})[campo] = _to_float(r.get("V"))
+    return out
+
+
+# ── Contribuições ao crescimento (schema v2) ─────────────────────────────────
+OFERTA_COMPONENTES = ["agro", "industria", "servicos", "impostos"]
+DEMANDA_COMPONENTES = ["consumo_familias", "consumo_governo", "fbcf", "exportacoes", "importacoes"]
+
+
+def _trim_add(trim, n):
+    """'2024-T01' + n trimestres (mantém o zero à esquerda do _trim_label)."""
+    y, q = trim.split("-T")
+    idx = int(y) * 4 + (int(q) - 1) + n
+    return f"{idx // 4}-T{idx % 4 + 1:02d}"
+
+
+def calcula_contribuicoes(trims, var_data, valores):
+    """Contribuição_i(t) = w_i(t-4) × yoy_i(t), w = nominal_i(t-4)/PIB nominal(t-4).
+
+    Importações com sinal trocado (ótica da demanda). Resíduo = yoy_pib − Σ contribuições:
+    na oferta captura a não-aditividade do encadeamento; na demanda soma estoques +
+    discrepância estatística. NUNCA assert de igualdade exata (Laspeyres encadeado é não-aditivo).
+    """
+    serie = []
+    max_residuo_oferta = 0.0
+    for trim in trims:
+        base = valores.get(_trim_add(trim, -4)) or {}
+        pib_nom = base.get("pib")
+        var_t = var_data.get(trim, {}).get("yoy", {})
+        yoy_pib_t = var_t.get("pib")
+        if not pib_nom or yoy_pib_t is None:
+            continue
+        item = {"trim": trim, "pib_yoy": yoy_pib_t}
+        # ótica da oferta
+        soma = 0.0
+        ok = True
+        for k in OFERTA_COMPONENTES:
+            w, y = base.get(k), var_t.get(k)
+            if w is None or y is None:
+                ok = False
+                break
+            c = round(w / pib_nom * y, 2)
+            item[f"oferta_{k}"] = c
+            soma += c
+        if ok:
+            residuo = round(yoy_pib_t - soma, 2)
+            item["oferta_residuo"] = residuo
+            max_residuo_oferta = max(max_residuo_oferta, abs(residuo))
+        # ótica da demanda
+        soma = 0.0
+        ok = True
+        for k in DEMANDA_COMPONENTES:
+            w, y = base.get(k), var_t.get(k)
+            if w is None or y is None:
+                ok = False
+                break
+            sinal = -1.0 if k == "importacoes" else 1.0
+            c = round(sinal * w / pib_nom * y, 2)
+            item[f"demanda_{k}"] = c
+            soma += c
+        if ok:
+            # resíduo da demanda = variação de estoques + discrepância estatística
+            item["demanda_residuo"] = round(yoy_pib_t - soma, 2)
+        serie.append(item)
+    print(f"  [contribuições] {len(serie)} trimestres | resíduo máx oferta {max_residuo_oferta:.2f} p.p. (tolerância 1,0)")
+    if max_residuo_oferta > 1.0:
+        print("  [WARN] resíduo da ótica da oferta acima de 1 p.p. — conferir pesos/fontes", file=sys.stderr)
+    return serie
+
+
+def calcula_carrego(serie_indice, trim_recente):
+    """Carry-over do ano corrente: média do índice SA do ano (último trim divulgado congelado
+    nos restantes) ÷ média do índice SA do ano anterior − 1."""
+    sa_by_trim = {row["trim"]: row.get("sa_pib") for row in serie_indice}
+    ano = int(trim_recente[:4])
+    pub = [sa_by_trim.get(f"{ano}-T{q:02d}") for q in (1, 2, 3, 4)]
+    pub = [v for v in pub if v is not None]
+    prev = [sa_by_trim.get(f"{ano - 1}-T{q:02d}") for q in (1, 2, 3, 4)]
+    if not pub or any(v is None for v in prev):
+        return None
+    congelado = pub + [pub[-1]] * (4 - len(pub))
+    valor = round((sum(congelado) / 4) / (sum(prev) / 4) * 100 - 100, 2)
+    return {"ano": ano, "valor": valor, "trimestres_divulgados": len(pub)}
 
 
 def carrega_2072(periodos=12):
@@ -269,6 +377,39 @@ def main():
             item[ck] = v
         serie_valores.append(item)
 
+    # ── schema v2: contribuições ao crescimento (peso t-4) ──
+    print("== Contribuições ao crescimento (v2) ==")
+    serie_contrib = calcula_contribuicoes(trims, var_data, valores)
+
+    # ── schema v2: carrego estatístico do ano corrente ──
+    carrego = calcula_carrego(serie_indice, trim_recente)
+    if carrego:
+        print(f"  [carrego] {carrego['ano']}: {carrego['valor']}% com {carrego['trimestres_divulgados']} trim divulgados")
+        # teste de consistência: com 4 trim divulgados, carrego ≈ acumulado no ano (T4)
+        if carrego["trimestres_divulgados"] == 4:
+            acum = serie_variacao[-1].get("acum_ano_pib")
+            if acum is not None and abs(carrego["valor"] - acum) > 0.5:
+                print(f"  [WARN] carrego({carrego['valor']}) difere do acum_ano({acum}) > 0,5 p.p.", file=sys.stderr)
+
+    # ── schema v2: PIB per capita anual (6784) ──
+    print("== PIB per capita 6784 (v2) ==")
+    serie_per_capita = []
+    try:
+        anos_pc = carrega_6784()
+        anos_ord = sorted(a for a in anos_pc if anos_pc[a].get("per_capita_nominal") is not None)
+        for ano in anos_ord:
+            d = anos_pc[ano]
+            serie_per_capita.append({
+                "ano": ano,
+                "per_capita_nominal": d.get("per_capita_nominal"),
+                "var_real_per_capita": d.get("var_real_per_capita"),
+                "var_real_pib": d.get("var_real_pib"),
+                "populacao_mil": d.get("populacao_mil"),
+            })
+        print(f"  per capita: {len(serie_per_capita)} anos ({anos_ord[0] if anos_ord else '—'}–{anos_ord[-1] if anos_ord else '—'})")
+    except Exception as e:
+        print(f"  [WARN] 6784 indisponível ({e}) — per_capita omitido nesta rodada", file=sys.stderr)
+
     print("== Focus PIB anual ==")
     ano_atual = int(trim_recente[:4])
     try:
@@ -294,19 +435,24 @@ def main():
     assert qoq_pib is None or -10 < qoq_pib < 10
 
     out = {
+        "schema_version": 2,
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "trim_recente": trim_recente,
         "variacao": {"serie": serie_variacao},
         "indice_volume": {"serie": serie_indice},
-        "valores_correntes": {"serie": serie_valores},  # NOVO
+        "valores_correntes": {"serie": serie_valores},
         "contas_economicas": {"serie": contas},
-        "pesos_atuais": pesos_atuais,  # NOVO
-        "labels": CLASSIF_LABEL,  # NOVO
+        "pesos_atuais": pesos_atuais,
+        "labels": CLASSIF_LABEL,
         "focus": focus,
+        # ── v2 ──
+        "contribuicoes": {"serie": serie_contrib},
+        "carrego": carrego,
+        "per_capita": {"serie": serie_per_capita},
         "metadata": {
-            "fonte_principal": "IBGE SIDRA — Contas Nacionais Trimestrais (5932 variação, 1620/1621 índice volume, 1846 R$ correntes, 2072 contas econômicas)",
+            "fonte_principal": "IBGE SIDRA — Contas Nacionais Trimestrais (5932 variação, 1620/1621 índice volume, 1846 R$ correntes, 2072 contas econômicas, 6784 per capita anual)",
             "fonte_focus": "BCB Olinda — ExpectativasMercadoAnuais PIB Total",
-            "nota": "PIB sai trimestral lag ~60 dias. Pesos atuais calculados a partir de 1846. Cada nova divulgação revisa trimestres anteriores.",
+            "nota": "PIB sai trimestral lag ~60 dias. Cada nova divulgação revisa trimestres anteriores. Contribuições: peso nominal t-4 (1846) × YoY real (5932); índices encadeados são não-aditivos — resíduo gravado por ótica (na demanda inclui estoques + discrepância). Carrego: índice SA congelado no último trim divulgado. Per capita: SIDRA 6784 — variação em volume per capita OFICIAL (v9814).",
         },
     }
 

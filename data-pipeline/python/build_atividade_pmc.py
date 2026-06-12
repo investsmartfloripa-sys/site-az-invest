@@ -68,7 +68,7 @@ def sidra(tabela, path):
     return data[1:] if data else []
 
 
-def carrega_geral(tabela, tipo_map, periodos=60):
+def carrega_geral(tabela, tipo_map, periodos=320):
     rows = sidra(tabela, f"/n1/all/v/all/p/last%20{periodos}/c11046/all?formato=json")
     out = {}
     for r in rows:
@@ -81,7 +81,7 @@ def carrega_geral(tabela, tipo_map, periodos=60):
     return out
 
 
-def carrega_atividades(tabela, tipo_volume, periodos=24):
+def carrega_atividades(tabela, tipo_volume, periodos=60):
     """Todas as atividades com var_yoy + var_mom_sa + var_acum_12m + indice_sa."""
     rows = sidra(tabela, f"/n1/all/v/all/p/last%20{periodos}/c11046/all/c85/all?formato=json")
     out = {}  # mes → list[dict]
@@ -152,6 +152,14 @@ def main():
         rv = item.get("restrito_volume_var_yoy")
         av = item.get("ampliado_volume_var_yoy")
         item["gap_yoy"] = round(av - rv, 2) if (rv is not None and av is not None) else None
+        # v2: deflator implícito do varejo = (1+receita)/(1+volume) − 1 (inflação embutida nas vendas)
+        for escopo in ("restrito", "ampliado"):
+            rec = item.get(f"{escopo}_receita_nominal_var_yoy")
+            vol = item.get(f"{escopo}_volume_var_yoy")
+            item[f"{escopo}_deflator_yoy"] = (
+                round(((1 + rec / 100) / (1 + vol / 100) - 1) * 100, 2)
+                if (rec is not None and vol is not None) else None
+            )
         serie.append(item)
 
     # Sanity
@@ -160,6 +168,7 @@ def main():
     assert idx_r is None or 70 < idx_r < 140
 
     out = {
+        "schema_version": 2,
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "mes_recente": mes_recente,
         "serie": serie,
@@ -169,8 +178,8 @@ def main():
             "ampliado_mensal": ativ_ampliado,  # mes → list
         },
         "metadata": {
-            "fonte": "IBGE SIDRA — PMC (8880 restrito, 8881 ampliado, 8882/8883 por atividade). Base 2022=100.",
-            "nota": "Volume é deflacionado (manchete IBGE); receita nominal mostra impacto da inflação. Ampliado adiciona veículos + materiais de construção (mais volátil). Gap ampliado−restrito mede contribuição de autos/construção.",
+            "fonte": "IBGE SIDRA — PMC (8880 restrito, 8881 ampliado, 8882/8883 por atividade). Base 2022=100; restrito retropola a ~2000, ampliado a ~2003/04 (séries com inícios distintos).",
+            "nota": "Volume é deflacionado (manchete IBGE); receita nominal mostra impacto da inflação. Ampliado adiciona veículos + materiais de construção (mais volátil). Gap ampliado−restrito mede contribuição de autos/construção. Deflator implícito (v2) = (1+receita)/(1+volume)−1.",
         },
     }
 
