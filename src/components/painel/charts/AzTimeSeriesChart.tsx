@@ -219,6 +219,7 @@ function buildChart(
   period: AzPeriodValue,
   mode: AzSeriesMode,
   forwardFill: boolean,
+  padFrac = 0.08,
 ): BuiltChart | null {
   // Range disponível (união de todas as séries).
   let minIso = "";
@@ -323,10 +324,12 @@ function buildChart(
     }
   }
 
-  // Domain Y MANUAL com 8% de folga — sem isso o Recharts clipa as linhas
-  // quando séries têm vértices fora dos ticks "auto".
+  // Domain Y MANUAL — sem isso o Recharts clipa as linhas quando séries têm
+  // vértices fora dos ticks "auto". No variant "hero" a folga é maior (padFrac
+  // ~0.16) para os rótulos de máx/mín (acima/abaixo dos pontos) e a pill do
+  // último valor não serem cortados pelo topo/base do gráfico.
   const span = hi - lo;
-  const pad = span > 0 ? span * 0.08 : Math.max(Math.abs(hi) * 0.08, 1);
+  const pad = span > 0 ? span * padFrac : Math.max(Math.abs(hi) * padFrac, 1);
   const yDomain: [number, number] = [lo - pad, hi + pad];
 
   const firstIso = isoFromUTC(rows[0].t);
@@ -417,8 +420,9 @@ export function AzTimeSeriesChart({
   );
 
   const built = useMemo(
-    () => buildChart(all, period ?? { id: "max" }, mode, forwardFill),
-    [all, period, mode, forwardFill],
+    // Hero precisa de mais folga vertical p/ os rótulos de máx/mín e a pill.
+    () => buildChart(all, period ?? { id: "max" }, mode, forwardFill, variant === "hero" ? 0.16 : 0.08),
+    [all, period, mode, forwardFill, variant],
   );
 
   const valueFmt = useMemo(() => buildValueFmt(mode, unit), [mode, unit]);
@@ -478,7 +482,7 @@ export function AzTimeSeriesChart({
         </div>
       ) : null}
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={rows} margin={{ top: 8, right: marginRight, bottom: 4, left: 0 }}>
+        <ComposedChart data={rows} margin={{ top: isHero ? 18 : 8, right: marginRight, bottom: isHero ? 12 : 4, left: 0 }}>
           {isHero ? (
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">

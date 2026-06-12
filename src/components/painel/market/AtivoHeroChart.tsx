@@ -152,6 +152,7 @@ export function AtivoHeroChart({ name, series, unit, benchmark, stampGiro, stamp
             period={period}
             height={300}
             forwardFill={comparing}
+            variant={comparing ? "default" : "hero"}
           />
         </div>
       ) : (
