@@ -197,8 +197,8 @@ export function TreasuryTimeSeries({ data }: Props) {
           );
         })()}
 
-        {/* Grafico no estilo padrao AZ (mesmo do Ibovespa/IFIX), com a taxa
-            atual marcada no fim de cada linha em vez de painel lateral. */}
+        {/* Grafico no estilo padrao AZ (mesmo do Ibovespa/IFIX), com um dot na
+            cor da serie no fim de cada linha; os valores vao na legenda abaixo. */}
         <AzTimeSeriesChart
           series={chartSeries}
           unit="%"
@@ -208,6 +208,32 @@ export function TreasuryTimeSeries({ data }: Props) {
           showLegend={false}
           seriesEndLabels
         />
+
+        {/* Taxas atuais — último dado de cada vencimento, na cor da linha.
+            Substitui o antigo painel lateral de estatísticas. */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-[#132960]/10 bg-zinc-50/50 px-4 py-3">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+            Taxa atual
+          </span>
+          {chartSeries.map((s) => {
+            const serie = cat.series[s.id] ?? [];
+            const last = serie.length > 0 ? serie[serie.length - 1] : null;
+            const atual = last ? last[1] : null;
+            return (
+              <span key={s.id} className="inline-flex items-center gap-1.5 text-sm">
+                <span
+                  aria-hidden
+                  className="inline-block h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: s.color }}
+                />
+                <span className="font-medium text-[#132960]">{s.label}</span>
+                <span className="tabular-nums font-semibold text-[#132960]">
+                  {atual != null ? `${atual.toFixed(2).replace(".", ",")}%` : "—"}
+                </span>
+              </span>
+            );
+          })}
+        </div>
 
         <p className="text-xs italic text-zinc-500">
           Cada linha mostra a evolução da <em>taxa indicativa</em> de um título com data de vencimento
