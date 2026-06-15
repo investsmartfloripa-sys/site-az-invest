@@ -9,6 +9,7 @@ import { fmtTrimCurto, num } from "../shared";
 import { AnchorContribuicoesPib } from "./AnchorContribuicoesPib";
 import { RitmoTrimestralCard } from "./RitmoTrimestralCard";
 import { IbcBrPibCard } from "./IbcBrPibCard";
+import { DecomposicaoPib } from "./DecomposicaoPib";
 import { FocusPibCard } from "./FocusPibCard";
 import { RealizadoFocusCard } from "./RealizadoFocusCard";
 import { PerCapitaCard } from "./PerCapitaCard";
@@ -103,6 +104,14 @@ export function PibDashboardV2({
         children: <IbcBrPibCard ibcbr={ibcbr} pib={pib} codaceMensal={codace?.mensal} geradoEm={pib.gerado_em} />,
       });
     }
+    out.push({
+      id: "decomposicao",
+      eyebrow: "Composição",
+      titulo: "Decomposição: oferta e demanda",
+      descricao:
+        "Setores da oferta e componentes da demanda, em nível (recuperação vs pré-pandemia) ou momentum (YoY) — alterne nos botões.",
+      children: <DecomposicaoPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />,
+    });
     out.push({
       id: "expectativas",
       eyebrow: "Passado → futuro",
