@@ -377,6 +377,7 @@ function UsRatesBlock({
                   {fedMeetings.map((m, idx) => {
                     const t = Date.parse(m.date);
                     if (!Number.isFinite(t)) return null;
+                    if (!isDecisionWednesday(m.date)) return null; // pula a âncora de hoje (não é reunião)
                     const showLabel = !isNarrow || idx % 2 === 0;
                     return (
                       <ReferenceLine
@@ -519,7 +520,7 @@ function UsRatesBlock({
               <tbody className="divide-y divide-zinc-100">
                 {fedMeetings.map((m) => (
                   <tr key={m.date}>
-                    <td className="py-1.5 pr-2 font-semibold text-[#132960]">{dateLabelBR(m.date)}</td>
+                    <td className="py-1.5 pr-2 font-semibold text-[#132960]">{meetingLabel(m.date)}</td>
                     <td className={`${tdClass} text-zinc-400`}>{fmtRate(m.d90)}</td>
                     <td className={`${tdClass} text-zinc-500`}>{fmtRate(m.d30)}</td>
                     <td className={`${tdClass} ${hasFedD0 ? "text-zinc-600" : "font-semibold text-[#132960]"}`}>{fmtRate(m.recent)}</td>
@@ -558,6 +559,21 @@ function UsRatesBlock({
       </div>
     </section>
   );
+}
+
+/**
+ * Decisões de COPOM e FOMC saem SEMPRE na quarta-feira (2º dia da reunião de
+ * 2 dias). O pipeline inclui a data de geração (HOJE) como 1ª entrada das
+ * meetings — é a taxa VIGENTE/spot em vigor até a próxima reunião, NÃO uma
+ * reunião. Detectamos essa âncora pela falta de quarta-feira (a data de hoje
+ * raramente cai numa quarta de decisão).
+ */
+function isDecisionWednesday(iso: string): boolean {
+  return new Date(`${iso}T00:00:00Z`).getUTCDay() === 3;
+}
+/** Rótulo da coluna "Reunião": data da reunião real, ou "Vigente" para a âncora de hoje. */
+function meetingLabel(iso: string): string {
+  return isDecisionWednesday(iso) ? dateLabelBR(iso) : "Vigente";
 }
 
 export function JurosLiveBlock({
@@ -842,6 +858,7 @@ export function JurosLiveBlock({
                   {selicMeetings.map((m, idx) => {
                     const t = Date.parse(m.date);
                     if (!Number.isFinite(t)) return null;
+                    if (!isDecisionWednesday(m.date)) return null; // pula a âncora de hoje (não é reunião)
                     // No celular, mostra data em reunioes alternadas pra nao amontoar.
                     const showLabel = !isNarrow || idx % 2 === 0;
                     return (
@@ -989,7 +1006,7 @@ export function JurosLiveBlock({
               <tbody className="divide-y divide-zinc-100">
                 {selicMeetings.map((m) => (
                   <tr key={m.date}>
-                    <td className="py-1.5 pr-2 font-semibold text-[#132960]">{dateLabelBR(m.date)}</td>
+                    <td className="py-1.5 pr-2 font-semibold text-[#132960]">{meetingLabel(m.date)}</td>
                     <td className={`${tdClass} text-zinc-400`}>{fmtRate(m.d90)}</td>
                     <td className={`${tdClass} text-zinc-500`}>{fmtRate(m.d30)}</td>
                     <td className={`${tdClass} ${hasSelicAgora ? "text-zinc-500" : "font-semibold text-[#132960]"}`}>{fmtRate(m.recent)}</td>
