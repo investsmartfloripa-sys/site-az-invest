@@ -33,6 +33,9 @@ export default async function HistoricoPage() {
         </p>
       </header>
 
+      {/* Sem <Suspense>: HistoricoChart usa useAzPeriodQueryState, que agora lê a
+          URL via useDeferredSearchParams (sem useSearchParams/CSR bailout). Um
+          boundary aqui quebraria a hidratação do gráfico neste build (Next 16.2.4). */}
       <HistoricoChart full={full} catalog={catalog?.assets ?? []} />
     </div>
   );

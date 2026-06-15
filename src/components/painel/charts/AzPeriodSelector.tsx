@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { addMonthsUTC, parseIsoUTC } from "@/lib/format-br";
 
@@ -123,14 +123,34 @@ function periodToParams(qs: URLSearchParams, prefix: string, v: AzPeriodValue): 
 }
 
 /**
- * Hook p/ usar a QUERYSTRING como fonte única do período (links
+ * Lê a querystring SEM `useSearchParams`. O `useSearchParams()` do App Router
+ * marca a árvore para "CSR bailout" e exige <Suspense> em rota estática — e
+ * neste build de produção (Next 16.2.4) o conteúdo que faz bailout renderiza
+ * no SSR mas NUNCA hidrata (controles inertes, gráficos sem interação). Lendo
+ * via `window.location` após o mount, o SSR e o 1º render do cliente coincidem
+ * (params vazios) e a URL é aplicada logo em seguida — sem bailout, sem
+ * <Suspense>, hidratação normal.
+ */
+function useDeferredSearchParams(): URLSearchParams {
+  const [params, setParams] = useState<URLSearchParams>(() => new URLSearchParams());
+  useEffect(() => {
+    const read = () => setParams(new URLSearchParams(window.location.search));
+    read();
+    window.addEventListener("popstate", read);
+    return () => window.removeEventListener("popstate", read);
+  }, []);
+  return params;
+}
+
+/**
+ * Hook p/ usar a QUERYSTRING como fonte do período inicial (links
  * compartilháveis, back/forward do browser). Chaves: `{prefix}p`,
  * `{prefix}de`, `{prefix}ate` — passe prefixos distintos ("ibov-", "cdi-")
- * p/ múltiplos charts na página. O valor é DERIVADO da URL (sem estado
- * local); o setter escreve com router.replace (scroll: false).
+ * p/ múltiplos charts na página. O valor inicial é DERIVADO da URL (após o
+ * mount); o setter escreve com router.replace (scroll: false).
  *
- * Páginas que usam este hook devem envolver o componente em <Suspense>
- * (exigência do useSearchParams no App Router).
+ * NÃO usa useSearchParams (ver useDeferredSearchParams) — portanto NÃO exige
+ * <Suspense> e a rota estática hidrata normalmente.
  *
  * Use OU este hook OU a prop `queryKey` do AzPeriodSelector — nunca os dois
  * no mesmo chart, senão a URL é escrita em dobro.
@@ -139,7 +159,7 @@ export function useAzPeriodQueryState(
   prefix = "",
   defaultValue: AzPeriodValue = { id: "1y" },
 ): [AzPeriodValue, (v: AzPeriodValue) => void] {
-  const searchParams = useSearchParams();
+  const searchParams = useDeferredSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -147,11 +167,12 @@ export function useAzPeriodQueryState(
 
   const set = useCallback(
     (v: AzPeriodValue) => {
-      const qs = new URLSearchParams(searchParams.toString());
+      const current = typeof window !== "undefined" ? window.location.search : "";
+      const qs = new URLSearchParams(current);
       periodToParams(qs, prefix, v);
       router.replace(`${pathname}?${qs.toString()}`, { scroll: false });
     },
-    [searchParams, router, pathname, prefix],
+    [router, pathname, prefix],
   );
 
   return [value, set];
@@ -178,11 +199,11 @@ export type AzPeriodSelectorProps = {
 };
 
 /**
- * Subcomponente que ISOLA o useSearchParams: montado apenas quando
- * `queryKey` está ativo. Registra no pai (via ref) o writer que espelha o
- * período na querystring — a escrita continua acontecendo no handler do
- * clique (mesma semântica de antes), nunca em render/efeito. Assim o modo
- * controlado puro nunca dispara o requisito de <Suspense> do App Router.
+ * Subcomponente que registra no pai (via ref) o writer que espelha o período
+ * na querystring quando `queryKey` está ativo. A escrita acontece no handler
+ * do clique (lendo window.location na hora), nunca em render/efeito, e NÃO usa
+ * useSearchParams — então não dispara o CSR bailout/<Suspense> nem o bug de
+ * hidratação do Next 16.2.4 (ver useDeferredSearchParams).
  */
 function AzPeriodQueryBridge({
   queryKey,
@@ -191,17 +212,17 @@ function AzPeriodQueryBridge({
   queryKey: string;
   register: (writer: ((v: AzPeriodValue) => void) | null) => void;
 }) {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
   const write = useCallback(
     (v: AzPeriodValue) => {
-      const qs = new URLSearchParams(searchParams.toString());
+      const current = typeof window !== "undefined" ? window.location.search : "";
+      const qs = new URLSearchParams(current);
       periodToParams(qs, queryKey, v);
       router.replace(`${pathname}?${qs.toString()}`, { scroll: false });
     },
-    [queryKey, searchParams, router, pathname],
+    [queryKey, router, pathname],
   );
 
   useEffect(() => {

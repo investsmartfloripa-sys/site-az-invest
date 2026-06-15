@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 
 import { IpcaDashboardV2 } from "@/components/painel/inflacao/IpcaDashboardV2";
 import { loadIpcaData } from "@/lib/painel-ipca";
@@ -24,10 +23,7 @@ export default async function PainelIpcaPage() {
     );
   }
 
-  return (
-    // Suspense exigido pelo useSearchParams (AzPeriodSelector) em rota prerenderizada
-    <Suspense fallback={<div className="h-[60vh] animate-pulse rounded-2xl bg-zinc-100" />}>
-      <IpcaDashboardV2 data={data} />
-    </Suspense>
-  );
+  // Sem <Suspense>: AzPeriodSelector não usa mais useSearchParams (sem CSR
+  // bailout) e um boundary aqui quebraria a hidratação no Next 16.2.4.
+  return <IpcaDashboardV2 data={data} />;
 }

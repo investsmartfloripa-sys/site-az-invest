@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 
 import { IgpmDashboard } from "@/components/painel/inflacao/IgpmDashboard";
 import { IgpmDashboardV2 } from "@/components/painel/inflacao/IgpmDashboardV2";
@@ -31,10 +30,9 @@ export default async function PainelIgpmPage() {
     return <IgpmDashboard data={data} />;
   }
 
-  return (
-    // Suspense exigido pelo useSearchParams (AzPeriodSelector) em rota prerenderizada
-    <Suspense fallback={<div className="h-[60vh] animate-pulse rounded-2xl bg-zinc-100" />}>
-      <IgpmDashboardV2 data={data} />
-    </Suspense>
-  );
+  // Sem <Suspense>: o AzPeriodSelector não usa mais useSearchParams (ver
+  // useDeferredSearchParams), então a rota estática não faz CSR bailout e o
+  // dashboard hidrata normalmente. Um boundary <Suspense> aqui, ao contrário,
+  // QUEBRARIA a hidratação do conteúdo neste build (Next 16.2.4).
+  return <IgpmDashboardV2 data={data} />;
 }

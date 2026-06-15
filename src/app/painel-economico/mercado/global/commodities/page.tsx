@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 
 import { CommoditiesDashboard } from "@/components/painel/commodities/CommoditiesDashboard";
 import { PipelinePendingCard } from "@/components/painel/PipelinePendingCard";
@@ -60,9 +59,9 @@ export default async function CommoditiesPage() {
           workflow="data-pipeline.yml / market-data.yml"
         />
       ) : (
-        <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-white/60" />}>
-          <CommoditiesDashboard panorama={panorama} history={history} />
-        </Suspense>
+        // Sem <Suspense>: AzPeriodSelector não usa mais useSearchParams (sem CSR
+        // bailout) e um boundary aqui quebraria a hidratação no Next 16.2.4.
+        <CommoditiesDashboard panorama={panorama} history={history} />
       )}
 
       <section className="rounded-2xl border border-[#132960]/10 bg-zinc-50/50 p-4 text-xs text-zinc-600">

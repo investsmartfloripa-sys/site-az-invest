@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 
 import { MoedasDashboard } from "@/components/painel/moedas/MoedasDashboard";
 import { PipelinePendingCard } from "@/components/painel/PipelinePendingCard";
@@ -51,10 +50,9 @@ export default async function MoedasPage() {
           workflow="data-pipeline.yml / market-data.yml"
         />
       ) : (
-        // Suspense exigido pelo useSearchParams do AzPeriodSelector em rota prerenderizada
-        <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-white/60" />}>
-          <MoedasDashboard movers={movers} history={history} />
-        </Suspense>
+        // Sem <Suspense>: AzPeriodSelector não usa mais useSearchParams (sem CSR
+        // bailout) e um boundary aqui quebraria a hidratação no Next 16.2.4.
+        <MoedasDashboard movers={movers} history={history} />
       )}
     </div>
   );

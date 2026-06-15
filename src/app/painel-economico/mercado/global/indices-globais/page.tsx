@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 
 import { CorridaDoAno } from "@/components/painel/indices-globais/CorridaDoAno";
 import { buildLeituraValuation, buildMancheteDoDia } from "@/components/painel/indices-globais/narrativa";
@@ -106,10 +105,8 @@ export default async function IndicesGlobaisPage() {
         "Rebase 100: todas as bolsas partem do mesmo ponto e o gráfico mostra quem abriu vantagem — título gerado do acumulado do ano.",
       children:
         history.series.length > 0 ? (
-          // Suspense exigido pelo useSearchParams do AzPeriodSelector em rota prerenderizada
-          <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-white/60" />}>
-            <CorridaDoAno history={history} />
-          </Suspense>
+          // Sem <Suspense>: sem useSearchParams (CSR bailout) o boundary quebraria a hidratação (Next 16.2.4).
+          <CorridaDoAno history={history} />
         ) : (
           <PipelinePendingCard blobPaths={["data/market_history_full.json"]} workflow="market-data.yml" />
         ),
@@ -127,10 +124,8 @@ export default async function IndicesGlobaisPage() {
               {leituraValuation}
             </p>
           ) : null}
-          {/* Suspense exigido pelo useSearchParams dos seletores em rota prerenderizada */}
-          <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-white/60" />}>
-            <ValuationEuaSection data={valuation} />
-          </Suspense>
+          {/* Sem <Suspense>: sem useSearchParams o boundary quebraria a hidratação (Next 16.2.4). */}
+          <ValuationEuaSection data={valuation} />
         </div>
       ) : (
         <PipelinePendingCard blobPaths={["data/global_valuation.json"]} workflow="market-data.yml" />

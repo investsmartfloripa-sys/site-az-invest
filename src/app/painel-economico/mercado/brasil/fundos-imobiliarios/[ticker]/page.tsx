@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -104,21 +103,19 @@ export default async function FiiDetailPage({ params }: Props) {
         <FiiQuoteCard entry={entry} generatedAt={generatedAt} />
 
         {/*
-          O AzPeriodSelector (dentro do AtivoHeroChart) chama useSearchParams().
-          A rota é ISR (revalidate) — o <Suspense> é obrigatório no prerender —
-          e também é a convenção do repo (página de ativo, índices, câmbio);
-          o seletor roda controlado por estado local.
+          O AzPeriodSelector (dentro do AtivoHeroChart) roda controlado por
+          estado local — não usa mais useSearchParams (ver useDeferredSearchParams),
+          sem CSR bailout, dispensa <Suspense>. Um boundary aqui QUEBRARIA a
+          hidratação do gráfico neste build (Next 16.2.4).
         */}
-        <Suspense fallback={<div className="min-h-[380px] animate-pulse rounded-2xl bg-white/60" />}>
-          <AtivoHeroChart
-            name={`Cotação · ${entry.ticker}`}
-            series={priceSeries}
-            unit="R$"
-            benchmark={benchmark}
-            stampGiro={generatedAt ?? null}
-            stampDado={priceSeries[priceSeries.length - 1]?.[0] ?? entry.hero.price_date}
-          />
-        </Suspense>
+        <AtivoHeroChart
+          name={`Cotação · ${entry.ticker}`}
+          series={priceSeries}
+          unit="R$"
+          benchmark={benchmark}
+          stampGiro={generatedAt ?? null}
+          stampDado={priceSeries[priceSeries.length - 1]?.[0] ?? entry.hero.price_date}
+        />
       </div>
 
       <FiiDetailIndicators indicators={entry.indicators} generatedAt={generatedAt} />

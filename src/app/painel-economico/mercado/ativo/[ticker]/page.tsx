@@ -1,7 +1,6 @@
 // ISR: dados vêm do Blob com loaders guardados (degradam para null); ver plano AVALIACAO-GERAL §6.
 export const revalidate = 3600;
 
-import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -299,22 +298,20 @@ export default async function AtivoPage({ params }: Props) {
         </MarketCard>
 
         {/*
-          O AzPeriodSelector (dentro do AtivoHeroChart) chama useSearchParams().
-          Esta página é ISR (revalidate), então o <Suspense> é OBRIGATÓRIO —
-          sem ele o build falha em rotas prerenderizadas estaticamente. Também
-          é a convenção do repo (índices-globais/câmbio/commodities); o seletor
-          roda controlado por estado local, sem querystring.
+          O AzPeriodSelector (dentro do AtivoHeroChart) roda controlado por
+          estado local, sem querystring — não usa mais useSearchParams (ver
+          useDeferredSearchParams), então NÃO faz CSR bailout e dispensa
+          <Suspense>. Um boundary aqui, ao contrário, QUEBRARIA a hidratação do
+          gráfico neste build (Next 16.2.4).
         */}
-        <Suspense fallback={<div className="min-h-[380px] animate-pulse rounded-2xl bg-white/60" />}>
-          <AtivoHeroChart
-            name={asset.name}
-            series={series}
-            unit={heroUnit}
-            benchmark={benchmark}
-            stampGiro={full?.generated_at ?? null}
-            stampDado={series[series.length - 1]?.[0] ?? null}
-          />
-        </Suspense>
+        <AtivoHeroChart
+          name={asset.name}
+          series={series}
+          unit={heroUnit}
+          benchmark={benchmark}
+          stampGiro={full?.generated_at ?? null}
+          stampDado={series[series.length - 1]?.[0] ?? null}
+        />
       </div>
 
       {/* Stats */}
