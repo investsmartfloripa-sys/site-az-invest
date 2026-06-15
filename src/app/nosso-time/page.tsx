@@ -64,7 +64,7 @@ export default async function NossoTimePage() {
             Quem somos
           </p>
           <h1 className="text-4xl font-semibold leading-tight text-[#027DFC] md:text-6xl">
-            O time por trás do AZ Invest
+            Nosso time
           </h1>
           <p className="max-w-3xl text-base leading-relaxed text-zinc-700 md:text-lg">
             Reunimos economistas, assessores de investimentos e analistas com experiência
@@ -74,12 +74,9 @@ export default async function NossoTimePage() {
         </header>
 
         <section className="space-y-5">
-          <div className="flex items-end justify-between gap-3">
-            <h2 className="text-2xl font-semibold text-[#132960] md:text-3xl">Nosso time</h2>
-            <p className="text-xs text-zinc-500">
-              {authors.length} {authors.length === 1 ? "integrante" : "integrantes"}
-            </p>
-          </div>
+          <p className="text-sm text-zinc-500">
+            {authors.length} {authors.length === 1 ? "integrante" : "integrantes"}
+          </p>
 
           {authors.length === 0 ? (
             <p className="rounded-xl border border-[#132960]/20 bg-white p-6 text-sm text-zinc-600">
