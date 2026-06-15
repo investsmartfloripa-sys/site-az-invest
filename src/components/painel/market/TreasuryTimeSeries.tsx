@@ -167,13 +167,18 @@ export function TreasuryTimeSeries({ data }: Props) {
     );
   }
 
+  // data.source vem concatenado por dia no builder (ANBIMA × N dias + Tesouro
+  // Transparente) — dedup das partes repetidas para o rodapé não ficar com a
+  // mesma fonte 40 vezes.
+  const fonte = Array.from(new Set(data.source.split(" + ").map((s) => s.trim()))).join(" + ");
+
   return (
     <MarketCard
       title="Curva histórica de juros"
       subtitle="Evolução da taxa indicativa de cada vencimento ao longo do tempo. A taxa atual de cada título aparece marcada no fim da linha."
       badge={`ANBIMA · ${data.last_data_date}`}
       bodyClassName="px-4 pb-4 pt-2"
-      footer={`Fonte: ${data.source}`}
+      footer={`Fonte: ${fonte}`}
       stampGiro={data.generated_at}
       stampDado={data.last_data_date}
       toolbar={

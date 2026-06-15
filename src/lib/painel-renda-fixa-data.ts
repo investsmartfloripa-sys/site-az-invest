@@ -75,8 +75,29 @@ async function fetchBlobJson<T>(path: string): Promise<T | null> {
   }
 }
 
+/**
+ * Máximo de pontos por série enviado ao cliente. O JSON bruto tem ~2,3 MB
+ * (histórico diário longo por vencimento, incluindo backfill desde 2010).
+ * Passar isso INTEIRO como prop de Server→Client estoura o payload RSC (Flight)
+ * embutido no HTML e QUEBRA a hidratação do gráfico (o componente renderiza no
+ * SSR mas nunca hidrata no cliente). ~520 pontos ≈ 2 anos de pregões — cobre a
+ * janela útil do gráfico com folga e derruba o payload para centenas de KB.
+ */
+const TREASURY_MAX_POINTS_PER_SERIES = 520;
+
 export async function getTreasuryHistory(): Promise<TreasuryHistory | null> {
-  return fetchBlobJson<TreasuryHistory>("data/treasury_history.json");
+  const data = await fetchBlobJson<TreasuryHistory>("data/treasury_history.json");
+  if (!data) return null;
+  for (const cat of Object.values(data.categories)) {
+    if (!cat) continue;
+    for (const venc of Object.keys(cat.series)) {
+      const serie = cat.series[venc];
+      if (serie.length > TREASURY_MAX_POINTS_PER_SERIES) {
+        cat.series[venc] = serie.slice(-TREASURY_MAX_POINTS_PER_SERIES);
+      }
+    }
+  }
+  return data;
 }
 
 export async function getCreditSpreadsHistory(): Promise<CreditSpreadsHistory | null> {
