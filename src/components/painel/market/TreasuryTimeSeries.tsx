@@ -73,18 +73,31 @@ export function TreasuryTimeSeries({ data }: Props) {
 
   const cat = data?.categories[category];
 
+  // Prefixado: o contrato de referência de cada ano vence em 1º de janeiro
+  // (LTN/NTN-F). Os vencimentos intra-ano (abr/jul/out) são secundários e
+  // poluem a leitura — exibimos só os de janeiro. IPCA+ (NTN-B) vence em
+  // mai/ago (sem janeiro), então mantém todos os vencimentos.
+  const catVencimentos = useMemo(() => {
+    if (!cat) return [] as string[];
+    if (category === "PRE") {
+      const jan = cat.vencimentos.filter((v) => v.slice(5, 7) === "01");
+      if (jan.length > 0) return jan;
+    }
+    return cat.vencimentos;
+  }, [cat, category]);
+
   // Default: pega 4 vencimentos espacados ENTRE OS AINDA VIVOS (data > last_data_date).
   // Pre/IPCA tem vencimentos antigos no historico (LTN 2010 etc.) que ja venceram —
   // useis pra ver series passadas, mas o default precisa mostrar a curva vigente.
   const defaultSelected = useMemo(() => {
-    if (!cat) return [] as string[];
+    if (catVencimentos.length === 0) return [] as string[];
     const lastDate = data?.last_data_date ?? "9999-12-31";
-    const alive = cat.vencimentos.filter((v) => v > lastDate);
-    const pool = alive.length >= 4 ? alive : cat.vencimentos;
+    const alive = catVencimentos.filter((v) => v > lastDate);
+    const pool = alive.length >= 4 ? alive : catVencimentos;
     if (pool.length <= 4) return pool;
     const idx = [0, Math.floor(pool.length / 3), Math.floor((pool.length * 2) / 3), pool.length - 1];
     return Array.from(new Set(idx.map((i) => pool[i])));
-  }, [cat, data?.last_data_date]);
+  }, [catVencimentos, data?.last_data_date]);
 
   const activeSelected = selected[category].length > 0 ? selected[category] : defaultSelected;
 
@@ -92,12 +105,12 @@ export function TreasuryTimeSeries({ data }: Props) {
   const seriesMin = useMemo(() => {
     if (!cat) return "1900-01-01";
     let min = "";
-    for (const venc of cat.vencimentos) {
+    for (const venc of catVencimentos) {
       const first = cat.series[venc]?.[0]?.[0];
       if (first && (!min || first < min)) min = first;
     }
     return min || "1900-01-01";
-  }, [cat]);
+  }, [cat, catVencimentos]);
 
   const seriesMax = data?.last_data_date ?? "9999-12-31";
   // Corte de período 100% UTC (resolvePeriodRange — nada de setMonth local).
@@ -201,8 +214,8 @@ export function TreasuryTimeSeries({ data }: Props) {
         {/* Vencimentos disponiveis: separa vivos (em circulacao) de vencidos (historico) */}
         {(() => {
           const lastDate = data.last_data_date ?? "9999-12-31";
-          const alive = cat.vencimentos.filter((v) => v > lastDate);
-          const expired = cat.vencimentos.filter((v) => v <= lastDate);
+          const alive = catVencimentos.filter((v) => v > lastDate);
+          const expired = catVencimentos.filter((v) => v <= lastDate);
           const renderChip = (venc: string, isExpired = false) => {
             const active = activeSelected.includes(venc);
             return (
@@ -331,7 +344,8 @@ export function TreasuryTimeSeries({ data }: Props) {
 
         <p className="text-xs italic text-zinc-500">
           Cada linha mostra a evolução da <em>taxa indicativa</em> de um título com data de vencimento
-          específica. Categoria Prefixado combina LTN e NTN-F (cupom). IPCA+ usa NTN-B.
+          específica. No Prefixado exibimos apenas os vencimentos de <strong>janeiro</strong> (LTN/NTN-F),
+          o contrato de referência de cada ano; IPCA+ usa NTN-B (vencimentos de maio e agosto).
         </p>
       </div>
     </MarketCard>
