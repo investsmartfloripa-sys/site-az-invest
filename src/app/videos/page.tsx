@@ -21,7 +21,13 @@ export const metadata = {
     "Acompanhe as análises e tutoriais em vídeo da equipe AZ Invest sobre economia, mercado e investimentos.",
 };
 
-export const revalidate = 3600;
+// DINÂMICA (não ISR): a página tem estados degradados ("Modo offline" /
+// "Nenhum vídeo") quando a API do YouTube falha. Sob ISR=1h, um hiccup na
+// regeneração assava esse fallback no cache por até 1h. Renderizando por
+// request o fallback nunca fica grudado — e a chamada ao YouTube continua
+// barata porque fetchChannelVideos cacheia o fetch por 10min (não martela a
+// quota a cada acesso).
+export const dynamic = "force-dynamic";
 
 const CHANNEL_URL = "https://www.youtube.com/@azinvestoficial";
 

@@ -12,14 +12,18 @@ import {
 import { prisma } from "@/lib/prisma";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
-// ISR: alterações de perfil chamam revalidatePath("/nosso-time") (workspace);
-// o fallback de 1h cobre o resto. Sem force-dynamic.
-export const revalidate = 3600;
+// DINÂMICA (não ISR): a lista de autores vem do banco e o render tem um
+// estado degradado ("Nenhum autor cadastrado") quando a query falha/volta
+// vazia. Sob ISR, uma regeneração que pegasse o banco com hiccup assava essa
+// lista vazia no cache estático e a servia a todos por até 1h — mesmo com os
+// autores no banco. Renderizando por request (query barata), uma falha
+// transitória afeta só aquele acesso e o próximo já se corrige.
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Nosso time | AZ Invest",
   description:
-    "Conheca os economistas, assessores e analistas que produzem o conteudo do AZ Invest.",
+    "Conheça os economistas, assessores e analistas que produzem o conteúdo do AZ Invest.",
 };
 
 function initials(name: string) {
@@ -60,12 +64,12 @@ export default async function NossoTimePage() {
             Quem somos
           </p>
           <h1 className="text-4xl font-semibold leading-tight text-[#027DFC] md:text-6xl">
-            O time por tras do AZ Invest
+            O time por trás do AZ Invest
           </h1>
           <p className="max-w-3xl text-base leading-relaxed text-zinc-700 md:text-lg">
-            Reunimos economistas, assessores de investimentos e analistas com experiencia
-            consolidada no mercado financeiro. Nosso compromisso e levar informacao de
-            qualidade para que voce tome decisoes financeiras com mais clareza e seguranca.
+            Reunimos economistas, assessores de investimentos e analistas com experiência
+            consolidada no mercado financeiro. Nosso compromisso é levar informação de
+            qualidade para que você tome decisões financeiras com mais clareza e segurança.
           </p>
         </header>
 
@@ -79,7 +83,7 @@ export default async function NossoTimePage() {
 
           {authors.length === 0 ? (
             <p className="rounded-xl border border-[#132960]/20 bg-white p-6 text-sm text-zinc-600">
-              Nenhum autor cadastrado ainda. Use a area restrita para cadastrar.
+              Nenhum autor cadastrado ainda. Use a área restrita para cadastrar.
             </p>
           ) : (
             <ul className="grid gap-4 sm:grid-cols-2">
@@ -92,7 +96,7 @@ export default async function NossoTimePage() {
                 >
                   <Link
                     href={`/nosso-time/${author.slug}`}
-                    aria-label={`Ver curriculo de ${author.name}`}
+                    aria-label={`Ver currículo de ${author.name}`}
                     className="relative w-36 flex-none self-stretch bg-[#132960] sm:w-40"
                   >
                     {author.photo ? (
@@ -176,7 +180,7 @@ export default async function NossoTimePage() {
                         href={`/nosso-time/${author.slug}`}
                         className="rounded-full bg-[#027DFC]/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#027DFC] transition group-hover:bg-[#027DFC] group-hover:text-white"
                       >
-                        Curriculo
+                        Currículo
                       </Link>
                     </div>
                   </div>

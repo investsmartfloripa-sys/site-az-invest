@@ -21,14 +21,14 @@ export default function GlobalError({ error, reset }: ErrorProps) {
         Algo deu errado
       </p>
       <h1 className="text-4xl font-semibold leading-tight text-[#027DFC] md:text-5xl">
-        Tivemos um problema ao carregar essa pagina
+        Tivemos um problema ao carregar essa página
       </h1>
       <p className="max-w-xl text-sm text-zinc-600 md:text-base">
-        O erro foi registrado e nossa equipe ja foi avisada. Voce pode tentar novamente ou
+        O erro foi registrado e nossa equipe já foi avisada. Você pode tentar novamente ou
         voltar para a home.
       </p>
       {error.digest ? (
-        <p className="text-xs text-zinc-400">Codigo: {error.digest}</p>
+        <p className="text-xs text-zinc-400">Código: {error.digest}</p>
       ) : null}
       <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
         <button
