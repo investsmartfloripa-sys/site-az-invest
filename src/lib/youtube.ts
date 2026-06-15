@@ -144,6 +144,29 @@ export async function fetchChannelVideos(maxResults = 12): Promise<{
     };
   }
 
+  // A playlist de uploads do canal (prefixo UC... -> UU...) entrega os mesmos
+  // videos, em ordem cronologica reversa, que search?order=date — mas custa 1
+  // unidade de quota por chamada em vez de 100. Com ISR revalidando home +
+  // /videos a cada poucos minutos, o /search estourava a cota diaria (10k) e
+  // jogava TUDO no fallback estatico. A playlist resolve isso na raiz.
+  if (channelId.startsWith("UC")) {
+    const uploadsPlaylist = `UU${channelId.slice(2)}`;
+    const viaUploads = await fetchPlaylistVideos(uploadsPlaylist, maxResults);
+    if (viaUploads.source === "youtube" && viaUploads.videos.length > 0) {
+      return viaUploads;
+    }
+  }
+
+  // Rede de seguranca: se a playlist de uploads falhar, tenta o /search antigo
+  // antes de exibir o fallback estatico.
+  return fetchChannelVideosViaSearch(apiKey, channelId, maxResults);
+}
+
+async function fetchChannelVideosViaSearch(
+  apiKey: string,
+  channelId: string,
+  maxResults: number,
+): Promise<{ videos: YoutubeVideo[]; source: "youtube" | "fallback"; error?: string }> {
   try {
     const searchUrl = new URL(SEARCH_ENDPOINT);
     searchUrl.searchParams.set("key", apiKey);

@@ -33,22 +33,30 @@ export default async function Home() {
   // Guard para o prerender de build: se o banco estiver indisponível a home
   // degrada para listas vazias em vez de derrubar o build (ISR refaz depois).
   let mapped: ReturnType<typeof mapPost>[] = [];
-  try {
-    const posts = await findPosts({
-      where: publishedPostWhere,
-      // Ordena pela data de PUBLICAÇÃO (posts antigos sem publishedAt caem para o fim
-      // do critério e o desempate é a criação) — publicar um rascunho antigo o traz ao topo.
-      orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
-      take: 21,
-    });
-    mapped = posts.map(mapPost);
-  } catch (err) {
-    console.error("[Home] findPosts falhou; seguindo sem posts", err);
+  // Duas tentativas: no build/ISR o Neon às vezes recusa a 1ª conexão (cold start
+  // ou pool saturado), e o catch silencioso assava a home VAZIA ("Nenhuma postagem
+  // publicada ainda") com posts no ar, até o próximo ISR. O retry curto cobre isso.
+  for (let tentativa = 1; tentativa <= 2; tentativa++) {
+    try {
+      const posts = await findPosts({
+        where: publishedPostWhere,
+        // Ordena pela data de PUBLICAÇÃO (posts antigos sem publishedAt caem para o fim
+        // do critério e o desempate é a criação) — publicar um rascunho antigo o traz ao topo.
+        orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+        take: 21,
+      });
+      mapped = posts.map(mapPost);
+      break;
+    } catch (err) {
+      console.error(`[Home] findPosts falhou (tentativa ${tentativa}/2)`, err);
+    }
   }
 
   const siteUrl = getSiteUrl();
 
   // Hero "Artigos": 1 destaque + 3 cards na coluna direita (preenche a altura sem buraco).
+  // Com ≤4 posts o hero já mostra todos e "Últimas publicações" (restantes) some —
+  // sem duplicar. A partir do 5º post a lista de baixo passa a complementar.
   const hero = mapped.slice(0, 4);
   const restantes = mapped.slice(4);
 
