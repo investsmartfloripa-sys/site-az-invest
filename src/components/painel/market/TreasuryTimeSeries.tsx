@@ -268,47 +268,54 @@ export function TreasuryTimeSeries({ data }: Props) {
           );
         })()}
 
-        {/* Grafico no estilo padrao AZ (mesmo do Ibovespa/IFIX). As taxas
-            atuais vao na legenda colorida abaixo, no lugar do painel lateral. */}
-        <AzTimeSeriesChart
-          series={chartSeries}
-          unit="%"
-          mode="raw"
-          period={period}
-          height={420}
-          showLegend={false}
-          seriesEndLabels={!!liveTodayISO}
-        />
-
-        {/* Taxas atuais — último dado de cada vencimento, na cor da linha.
-            Substitui o antigo painel lateral de estatísticas. */}
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-[#132960]/10 bg-zinc-50/50 px-4 py-3">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
-            {liveTodayISO ? "Taxa atual (D+0)" : "Taxa atual"}
-          </span>
-          {chartSeries.map((s) => {
-            const last = s.data.length > 0 ? s.data[s.data.length - 1] : null;
-            const atual = last ? last[1] : null;
-            const isLive = !!liveTodayISO && last?.[0] === liveTodayISO;
-            return (
-              <span key={s.id} className="inline-flex items-center gap-1.5 text-sm">
-                <span
-                  aria-hidden
-                  className="inline-block h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: s.color }}
-                />
-                <span className="font-medium text-[#132960]">{s.label}</span>
-                <span className="tabular-nums font-semibold text-[#132960]">
-                  {atual != null ? `${atual.toFixed(2).replace(".", ",")}%` : "—"}
-                </span>
-                {isLive ? (
-                  <span className="rounded bg-[#1E8A5C]/10 px-1 text-[9px] font-semibold uppercase tracking-wide text-[#1E8A5C]">
-                    ao vivo
+        {/* Grafico no estilo padrao AZ (mesmo do Ibovespa/IFIX) com o painel de
+            taxas atuais (D+0) no CANTO ESQUERDO, no lugar do antigo painel
+            lateral de estatisticas. No mobile empilha (painel em cima). */}
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch">
+          {/* Painel "Taxa atual (D+0)" — lado esquerdo do grafico */}
+          <div className="flex shrink-0 flex-col gap-2 rounded-xl border border-[#132960]/10 bg-zinc-50/50 px-4 py-3 lg:w-44">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+              {liveTodayISO ? "Taxa atual (D+0)" : "Taxa atual"}
+            </span>
+            <div className="flex flex-row flex-wrap gap-x-4 gap-y-2 lg:flex-col lg:gap-y-2.5">
+              {chartSeries.map((s) => {
+                const last = s.data.length > 0 ? s.data[s.data.length - 1] : null;
+                const atual = last ? last[1] : null;
+                const isLive = !!liveTodayISO && last?.[0] === liveTodayISO;
+                return (
+                  <span key={s.id} className="inline-flex items-center gap-1.5 text-sm">
+                    <span
+                      aria-hidden
+                      className="inline-block h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: s.color }}
+                    />
+                    <span className="font-medium text-[#132960]">{s.label}</span>
+                    <span className="tabular-nums font-semibold text-[#132960]">
+                      {atual != null ? `${atual.toFixed(2).replace(".", ",")}%` : "—"}
+                    </span>
+                    {isLive ? (
+                      <span className="rounded bg-[#1E8A5C]/10 px-1 text-[9px] font-semibold uppercase tracking-wide text-[#1E8A5C]">
+                        ao vivo
+                      </span>
+                    ) : null}
                   </span>
-                ) : null}
-              </span>
-            );
-          })}
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Grafico */}
+          <div className="min-w-0 flex-1">
+            <AzTimeSeriesChart
+              series={chartSeries}
+              unit="%"
+              mode="raw"
+              period={period}
+              height={420}
+              showLegend={false}
+              seriesEndLabels={!!liveTodayISO}
+            />
+          </div>
         </div>
 
         <p className="text-xs italic text-zinc-500">
