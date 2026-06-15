@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo } from "react";
+import { useCallback, useId, useMemo } from "react";
 import {
   Area,
   Brush,
@@ -589,6 +589,14 @@ export function AzTimeSeriesChart({
     return out;
   }, [seriesEndLabels, built, series, variant, valueFmt]);
 
+  // IMPORTANTE: identidade ESTÁVEL — uma função inline em <Customized component>
+  // muda a cada render e faz o Recharts re-renderizar a camada em loop (paint
+  // nunca estabiliza). O useCallback fixa a referência (só muda com os pontos).
+  const renderEndLabels = useCallback(
+    (p: Record<string, unknown>) => <EndLabelsLayer {...p} points={endLabelPoints} />,
+    [endLabelPoints],
+  );
+
   if (!built) {
     return (
       <div className={`flex w-full items-center justify-center ${className}`} style={{ height }}>
@@ -795,13 +803,7 @@ export function AzTimeSeriesChart({
 
           {/* Marcadores de valor atual por série — camada custom com de-colisão
               vertical (pills na cor da série, à direita, sem se sobrepor). */}
-          {endLabelPoints.length > 0 ? (
-            <Customized
-              component={(p: Record<string, unknown>) => (
-                <EndLabelsLayer {...p} points={endLabelPoints} />
-              )}
-            />
-          ) : null}
+          {endLabelPoints.length > 0 ? <Customized component={renderEndLabels} /> : null}
 
           {/* Anotações do hero: máx/mín da janela + último valor em pill navy. */}
           {showMaxDot && main ? (
