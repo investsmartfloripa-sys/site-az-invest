@@ -1,0 +1,193 @@
+/**
+ * Selic implícita D+0 — modelo forward reunião-a-reunião do COPOM calculado no
+ * NAVEGADOR a partir da curva DI ao vivo da B3, replicando exatamente o pipeline
+ * R (build_selic_implicita.R):
+ *   - curva PRE: cada vértice tem DU (dias úteis) e taxa 252 → df = 1/(1+r)^(du/252);
+ *   - grade = [hoje, reuniões COPOM na janela de 1 ano, hoje+1ano];
+ *   - cada data da grade "encosta" (snap) no contrato com vencimento MAIS PRÓXIMO;
+ *     dedup por DU; forward entre vértices consecutivos
+ *     fwd = (df_i/df_{i+1})^(252/(du_{i+1}-du_i)) − 1;
+ *   - arredondado PARA CIMA ao passo de 0,25% (round_step_up).
+ *
+ * O feed intraday da B3 não traz o DU, só a data de vencimento — por isso
+ * carregamos o calendário de feriados ANBIMA/B3 (nacionais + móveis via Páscoa)
+ * para contar dias úteis. Validado em produção reproduzindo a coluna "Recente"
+ * (D-1) do pipeline a partir do ajuste anterior (prevAdjust) — bate em todas as
+ * reuniões. Mantenha COPOM_DECISION_DATES em dia com o calendário oficial
+ * (mesma lista do R).
+ */
+
+const DAY = 86_400_000;
+
+/** Domingo de Páscoa (Gregoriano, algoritmo de Meeus/Butcher) em ms UTC. */
+function easterUTC(year: number): number {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return Date.UTC(year, month - 1, day);
+}
+
+const holidayCache = new Map<number, Set<number>>();
+
+/** Feriados nacionais (DU ANBIMA/B3) do ano: fixos + móveis derivados da Páscoa. */
+function holidaysForYear(year: number): Set<number> {
+  const cached = holidayCache.get(year);
+  if (cached) return cached;
+  const set = new Set<number>();
+  // Fixos: Confraternização, Tiradentes, Trabalho, Independência, Aparecida,
+  // Finados, Proclamação, Consciência Negra (nacional desde 2024), Natal.
+  const fixed: [number, number][] = [
+    [0, 1],
+    [3, 21],
+    [4, 1],
+    [8, 7],
+    [9, 12],
+    [10, 2],
+    [10, 15],
+    [10, 20],
+    [11, 25],
+  ];
+  for (const [mo, da] of fixed) set.add(Date.UTC(year, mo, da));
+  // Móveis: Carnaval (seg/ter = Páscoa−48/−47), Sexta-feira Santa (−2), Corpus Christi (+60).
+  const e = easterUTC(year);
+  for (const off of [-48, -47, -2, 60]) {
+    const dt = new Date(e + off * DAY);
+    set.add(Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate()));
+  }
+  holidayCache.set(year, set);
+  return set;
+}
+
+function isBusinessDay(t: number): boolean {
+  const wd = new Date(t).getUTCDay();
+  if (wd === 0 || wd === 6) return false;
+  return !holidaysForYear(new Date(t).getUTCFullYear()).has(t);
+}
+
+/** Dias úteis entre `from` (exclusivo) e `to` (inclusivo) — convenção do DU 252. */
+function businessDays(fromT: number, toT: number): number {
+  if (toT <= fromT) return 0;
+  let n = 0;
+  for (let t = fromT + DAY; t <= toT; t += DAY) if (isBusinessDay(t)) n++;
+  return n;
+}
+
+function isoToUTC(iso: string): number {
+  const [y, m, d] = iso.split("-").map(Number);
+  return Date.UTC(y, (m ?? 1) - 1, d ?? 1);
+}
+
+function utcToISO(t: number): string {
+  return new Date(t).toISOString().slice(0, 10);
+}
+
+/** Arredonda PARA CIMA ao passo de 0,25% (em fração: 0.0025). */
+function ceilStep(x: number, step = 0.0025): number {
+  return Math.ceil((x - 1e-12) / step) * step;
+}
+
+/**
+ * Datas de decisão do COPOM (mesma lista do build_selic_implicita.R).
+ * Atualize quando o BC divulgar o calendário do ano seguinte.
+ */
+export const COPOM_DECISION_DATES: string[] = [
+  "2026-01-28",
+  "2026-03-18",
+  "2026-04-29",
+  "2026-06-17",
+  "2026-08-05",
+  "2026-09-16",
+  "2026-11-04",
+  "2026-12-09",
+  "2027-01-27",
+  "2027-03-17",
+  "2027-04-28",
+  "2027-06-16",
+];
+
+export type CurvePoint = { maturity: string; rate: number | null };
+/** `level` em PERCENTUAL ao ano (ex.: 14.25), para casar com o resto do painel. */
+export type SelicSegment = { fromISO: string; level: number };
+
+/**
+ * Caminho forward da Selic implícita (degraus por período entre reuniões) a
+ * partir de uma curva PRE (vértices com vencimento + taxa 252) e a data de
+ * referência. Retorna os segmentos como `{ fromISO, level }` já arredondados.
+ * Vazio se a curva for insuficiente.
+ */
+export function selicForwardPath(
+  curve: CurvePoint[],
+  refdateISO: string,
+  copomDates: string[] = COPOM_DECISION_DATES,
+): SelicSegment[] {
+  const refT = isoToUTC(refdateISO);
+  const pts = curve
+    .map((c) => {
+      if (c.rate == null || !Number.isFinite(c.rate)) return null;
+      const fT = isoToUTC(c.maturity);
+      const du = businessDays(refT, fT);
+      if (du <= 0) return null;
+      return { fT, du, df: 1 / Math.pow(1 + c.rate / 100, du / 252) };
+    })
+    .filter((p): p is { fT: number; du: number; df: number } => p != null);
+  if (pts.length < 2) return [];
+
+  const chartEnd = refT + 365 * DAY;
+  const grid = Array.from(
+    new Set([refT, ...copomDates.map(isoToUTC).filter((t) => t >= refT && t <= chartEnd), chartEnd]),
+  ).sort((a, b) => a - b);
+
+  // Snap: cada data da grade encosta no contrato com vencimento mais próximo.
+  let snapped = grid
+    .map((gt) => {
+      let best: { fT: number; du: number; df: number } | null = null;
+      let bestDist = Infinity;
+      for (const p of pts) {
+        const dist = Math.abs(p.fT - gt);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = p;
+        }
+      }
+      return best ? { grid: gt, du: best.du, df: best.df } : null;
+    })
+    .filter((p): p is { grid: number; du: number; df: number } => p != null);
+
+  // Dedup por DU (mantém o primeiro), ordena por DU.
+  snapped.sort((a, b) => a.du - b.du);
+  const seen = new Set<number>();
+  snapped = snapped.filter((p) => (seen.has(p.du) ? false : (seen.add(p.du), true)));
+
+  const segs: SelicSegment[] = [];
+  for (let i = 0; i < snapped.length - 1; i++) {
+    const a = snapped[i];
+    const b = snapped[i + 1];
+    if (b.du <= a.du) continue;
+    const fwd = Math.pow(a.df / b.df, 252 / (b.du - a.du)) - 1;
+    if (!Number.isFinite(fwd)) continue;
+    // Fração arredondada ao passo de 0,25% → PERCENTUAL (ex.: 0.1425 → 14.25).
+    segs.push({ fromISO: utcToISO(a.grid), level: Math.round(ceilStep(fwd) * 10000) / 100 });
+  }
+  return segs;
+}
+
+/** Nível do degrau que cobre `dateISO` (função escada). null se antes do 1º. */
+export function selicLevelAt(segs: SelicSegment[], dateISO: string): number | null {
+  let level: number | null = null;
+  for (const s of segs) {
+    if (s.fromISO <= dateISO) level = s.level;
+    else break;
+  }
+  return level;
+}

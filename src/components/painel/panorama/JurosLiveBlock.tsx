@@ -19,6 +19,7 @@ import {
   type LiveContract,
   type LiveCurve,
 } from "@/lib/painel-b3-live";
+import { selicForwardPath, selicLevelAt, type SelicSegment } from "@/lib/selic-forward";
 
 const REFRESH_MS = 60_000;
 
@@ -617,6 +618,16 @@ export function JurosLiveBlock({
   const preChart = useMemo(() => buildCurveChart(diLiquid, preCuts, show), [diLiquid, preCuts, show]);
   const ipcaChart = useMemo(() => buildCurveChart(dapLiquid, ipcaCuts, show), [dapLiquid, ipcaCuts, show]);
 
+  // Selic implícita D+0: forward COPOM calculado da curva DI AO VIVO (mesmo
+  // modelo do pipeline R, validado reproduzindo o D-1 a partir do prevAdjust).
+  // Só quando há pregão de hoje; senão a aba segue só com os cortes do pipeline.
+  const selicAgora = useMemo<SelicSegment[]>(() => {
+    if (!di?.isToday || !di.quotedAt) return [];
+    const curve = diLiquid.map((c) => ({ maturity: c.maturity, rate: c.rate }));
+    return selicForwardPath(curve, di.quotedAt.slice(0, 10));
+  }, [di, diLiquid]);
+  const hasSelicAgora = selicAgora.length > 0;
+
   const selicChart = useMemo(
     () =>
       selicMeetings.map((m) => ({
@@ -624,8 +635,9 @@ export function JurosLiveBlock({
         recent: m.recent,
         d30: m.d30,
         d90: m.d90,
+        agora: hasSelicAgora ? selicLevelAt(selicAgora, m.date) : null,
       })),
-    [selicMeetings],
+    [selicMeetings, selicAgora, hasSelicAgora],
   );
 
   const fedChart = useMemo(
@@ -882,7 +894,26 @@ export function JurosLiveBlock({
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <Line type="stepAfter" dataKey="d90" name={selicLabels.d90 ?? "D-90"} stroke={PAL_SELIC.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   <Line type="stepAfter" dataKey="d30" name={selicLabels.d30 ?? "D-30"} stroke={PAL_SELIC.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
-                  <Line type="stepAfter" dataKey="recent" name={selicLabels.recent ?? "Recente (D-1)"} stroke={PAL_SELIC.recent} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                  {/* D-1 (ajuste do pregão anterior, pipeline): preto SÓLIDO quando é a
+                      ponta; quando há "Agora" (D+0 ao vivo), vira preto TRACEJADO. */}
+                  <Line
+                    type="stepAfter"
+                    dataKey="recent"
+                    name={
+                      hasSelicAgora
+                        ? (selicLabels.recent ?? "D-1").replace(/^Recente/i, "Ajuste D-1")
+                        : (selicLabels.recent ?? "Recente (D-1)")
+                    }
+                    stroke={PAL_SELIC.recent}
+                    strokeWidth={hasSelicAgora ? 1.5 : 2.2}
+                    strokeDasharray={hasSelicAgora ? "6 4" : undefined}
+                    dot={hasSelicAgora ? false : { r: 2.5 }}
+                    connectNulls
+                    isAnimationActive={false}
+                  />
+                  {hasSelicAgora ? (
+                    <Line type="stepAfter" dataKey="agora" name="Agora (D+0 · ao vivo)" stroke={PAL_SELIC.recent} strokeWidth={2.4} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                  ) : null}
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -934,7 +965,9 @@ export function JurosLiveBlock({
           </div>
           <p className="mt-2 text-[11px] text-zinc-500">
             {tab === "selic"
-              ? "Selic implícita por reunião COPOM — modelo forward do pipeline AZ (B3 PRE, D-1), mesmos valores da trilha de política monetária."
+              ? hasSelicAgora
+                ? "Selic implícita por reunião COPOM — modelo forward sobre a curva PRE. “Agora” (preto): curva DI AO VIVO da B3 (~15 min, D+0), recalculada no navegador com o mesmo modelo do pipeline. “Ajuste D-1” (tracejado): fechamento do pregão anterior. Degraus arredondados a 0,25%."
+                : "Selic implícita por reunião COPOM — modelo forward do pipeline AZ (B3 PRE, D-1), mesmos valores da trilha de política monetária."
               : tab === "ipca"
                 ? "D-30/D-90: títulos IPCA+ (cupom limpo NTN-B, TaxaSwap B3) em janelas anteriores. “Agora” (preto): futuros DAP da B3 (~15 min); “Ajuste D-1” (preto tracejado): ajuste do pregão anterior."
                 : "D-30/D-90: títulos prefixados (TaxaSwap B3) em janelas anteriores. “Agora” (preto): futuros DI1 da B3 (~15 min); “Ajuste D-1” (preto tracejado): ajuste do pregão anterior."}
@@ -949,7 +982,8 @@ export function JurosLiveBlock({
                   <th className="py-2 pr-2 text-left font-semibold">Reunião</th>
                   <th className={thClass}>D-90</th>
                   <th className={thClass}>D-30</th>
-                  <th className={thClass}>Recente</th>
+                  <th className={thClass}>{hasSelicAgora ? "Ajuste D-1" : "Recente"}</th>
+                  {hasSelicAgora ? <th className={thClass}>Agora (D+0)</th> : null}
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -958,7 +992,10 @@ export function JurosLiveBlock({
                     <td className="py-1.5 pr-2 font-semibold text-[#132960]">{dateLabelBR(m.date)}</td>
                     <td className={`${tdClass} text-zinc-400`}>{fmtRate(m.d90)}</td>
                     <td className={`${tdClass} text-zinc-500`}>{fmtRate(m.d30)}</td>
-                    <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(m.recent)}</td>
+                    <td className={`${tdClass} ${hasSelicAgora ? "text-zinc-500" : "font-semibold text-[#132960]"}`}>{fmtRate(m.recent)}</td>
+                    {hasSelicAgora ? (
+                      <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(selicLevelAt(selicAgora, m.date))}</td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>
