@@ -197,8 +197,8 @@ export function TreasuryTimeSeries({ data }: Props) {
           );
         })()}
 
-        {/* Grafico no estilo padrao AZ (mesmo do Ibovespa/IFIX), com um dot na
-            cor da serie no fim de cada linha; os valores vao na legenda abaixo. */}
+        {/* Grafico no estilo padrao AZ (mesmo do Ibovespa/IFIX). As taxas
+            atuais vao na legenda colorida abaixo, no lugar do painel lateral. */}
         <AzTimeSeriesChart
           series={chartSeries}
           unit="%"
@@ -206,7 +206,6 @@ export function TreasuryTimeSeries({ data }: Props) {
           period={period}
           height={420}
           showLegend={false}
-          seriesEndLabels
         />
 
         {/* Taxas atuais — último dado de cada vencimento, na cor da linha.
