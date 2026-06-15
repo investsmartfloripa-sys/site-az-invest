@@ -76,7 +76,10 @@ type VideosResponse = {
 
 const SEARCH_ENDPOINT = "https://www.googleapis.com/youtube/v3/search";
 const VIDEOS_ENDPOINT = "https://www.googleapis.com/youtube/v3/videos";
-const REVALIDATE_SECONDS = 60 * 60; // 1h
+// 10 min: cache curto o bastante para um eventual erro da API (ex.: 403 de quota,
+// que o fetch cachearia junto com a resposta) se auto-corrigir rapido, e longo o
+// bastante para manter o consumo de quota baixo (a chamada de uploads custa 1).
+const REVALIDATE_SECONDS = 10 * 60;
 
 function decode(str: string): string {
   return str

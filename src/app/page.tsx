@@ -11,9 +11,14 @@ import { publishedPostWhere } from "@/lib/workspace/posts";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 import { getSiteUrl } from "@/lib/site-url";
 
-// ISR: publicar/despublicar post chama revalidatePath("/") (workspace), e o
-// fallback de 5 min cobre o resto. Sem force-dynamic — ele anulava o cache.
-export const revalidate = 300;
+// DINÂMICA (não ISR): a home depende de DUAS chamadas externas no render —
+// posts (Neon) e vídeos (YouTube). Com ISR, uma única regeneração que pegasse
+// QUALQUER das duas com hiccup assava a home degradada (Artigos vazio / vídeos
+// de exemplo) no cache estático e a servia a TODOS por minutos. Renderizando por
+// request, uma falha transitória afeta só aquele acesso e o próximo já se corrige
+// — como as páginas do admin, que batem no banco a cada request e nunca quebram.
+// Os dados pesados (blobs do painel) seguem cacheados na própria camada de fetch.
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Investimentos de A a Z - Economia, mercado e educação financeira",
