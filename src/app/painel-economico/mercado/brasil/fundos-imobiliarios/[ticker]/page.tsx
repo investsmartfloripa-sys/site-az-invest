@@ -24,10 +24,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { ticker } = await params;
   const entry = await getFiiDetail(ticker);
   if (!entry) {
-    return { title: `${ticker.toUpperCase()} — Fundo Imobiliário | AZ Invest` };
+    return { title: `${ticker.toUpperCase()} — Fundo Imobiliário` };
   }
   return {
-    title: `${entry.ticker} — ${entry.ficha.full_name || "Fundo Imobiliário"} | AZ Invest`,
+    title: `${entry.ticker} — ${entry.ficha.full_name || "Fundo Imobiliário"}`,
     description: `Cotação, dividendos, P/VP, patrimônio e ficha cadastral do FII ${entry.ticker}.`,
   };
 }
@@ -37,32 +37,35 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // migrar pra um JSON menor (índice + entries on-demand).
 
 /**
- * Benchmark do toggle "Comparar" do card de Histórico (AtivoHeroChart).
+ * Benchmarks do toggle "Comparar" do card de Histórico (AtivoHeroChart, multi).
  *
- * O AtivoHeroChart é compartilhado com a página de ativo de ações e aceita UM
- * único benchmark (toggle Nenhum/<benchmark>). O FII tem dois candidatos no
- * fii_ifix.json (IFIX e CDI), mas escolhemos o **IFIX** — é o índice da classe,
- * a comparação que o leitor de FII faz por padrão ("bati o IFIX?"). O CDI fica
- * de fora desta versão do topo por limitação de 1 benchmark do componente
- * reusado (segue disponível em outras telas).
+ * O FII compara contra DOIS benchmarks da classe: **IFIX** (índice do setor —
+ * "bati o IFIX?") e **CDI** (custo de oportunidade — índice cumulativo base 100
+ * do SGS 12, já pronto no fii_ifix.json). Cada um vira um chip toggle e pode-se
+ * ligar os dois "juntos". Default: nenhum ligado (mostra só a cota em hero).
  *
  * Fatia NO SERVIDOR ao range da cotação do FII (nunca manda série além do
- * necessário; o rebase 100 da janela é feito no chart). Se o JSON falhar ou o
- * IFIX não tiver pontos suficientes, retorna null e o toggle some.
+ * necessário; o rebase 100 da janela é feito no chart). Benchmark sem pontos
+ * suficientes é omitido da lista.
  */
-function buildHeroBenchmark(
+function buildHeroBenchmarks(
   ifixData: FiiIfixData | null,
   fiiFirstDate: string | undefined,
-): AtivoHeroBenchmark | null {
-  if (!ifixData || ifixData.status !== "ok" || ifixData.series_daily.length < 2) return null;
+): AtivoHeroBenchmark[] {
+  if (!ifixData || ifixData.status !== "ok" || ifixData.series_daily.length < 2) return [];
   const windowed = fiiFirstDate
     ? ifixData.series_daily.filter((p) => p.date >= fiiFirstDate)
     : ifixData.series_daily;
+  const out: AtivoHeroBenchmark[] = [];
   const ifix = windowed.flatMap((p) =>
-    Number.isFinite(p.ifix) ? [[p.date, p.ifix] as const] : [],
+    Number.isFinite(p.ifix) ? [[p.date, p.ifix as number] as const] : [],
   );
-  if (ifix.length < 2) return null;
-  return { ticker: "IFIX", label: "IFIX", series: ifix };
+  if (ifix.length >= 2) out.push({ ticker: "IFIX", label: "IFIX", series: ifix });
+  const cdi = windowed.flatMap((p) =>
+    Number.isFinite(p.CDI) ? [[p.date, p.CDI as number] as const] : [],
+  );
+  if (cdi.length >= 2) out.push({ ticker: "CDI", label: "CDI", series: cdi });
+  return out;
 }
 
 export default async function FiiDetailPage({ params }: Props) {
@@ -71,7 +74,7 @@ export default async function FiiDetailPage({ params }: Props) {
   const [detail, ifixData] = await Promise.all([getFiiDetailWithMeta(upper), getFiiIfix()]);
   if (!detail) notFound();
   const { entry, generatedAt } = detail;
-  const benchmark = buildHeroBenchmark(ifixData, entry.price_series_daily[0]?.date);
+  const benchmarks = buildHeroBenchmarks(ifixData, entry.price_series_daily[0]?.date);
   // Série de cota no formato [ISO, close] esperado pelo AtivoHeroChart.
   const priceSeries = entry.price_series_daily.map((p) => [p.date, p.close] as const);
 
@@ -112,7 +115,7 @@ export default async function FiiDetailPage({ params }: Props) {
           name={`Cotação · ${entry.ticker}`}
           series={priceSeries}
           unit="R$"
-          benchmark={benchmark}
+          benchmarks={benchmarks}
           stampGiro={generatedAt ?? null}
           stampDado={priceSeries[priceSeries.length - 1]?.[0] ?? entry.hero.price_date}
         />
