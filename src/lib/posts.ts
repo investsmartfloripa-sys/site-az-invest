@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { PostCardData } from "@/components/common/PostCard";
 
 const FALLBACK_IMAGE =
-  "/capa-padrao.svg";
+  "/capa-padrao.png";
 
 export type PostWithAuthor = Awaited<ReturnType<typeof findPosts>>[number];
 
