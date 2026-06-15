@@ -5,12 +5,13 @@ import Link from "next/link";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { Target, Calendar, Briefcase, TrendingUp, Info, AlertCircle, Wallet, PiggyBank, Percent } from "lucide-react";
 import { CATEGORIAS } from "@/data/simuladores";
+import { SIM, SIM_CHART } from "@/lib/simulador-theme";
+import { NumField, NumFieldDecimal, fmtBRL as fmt } from "@/components/simuladores/ui";
 
 // Categoria do simulador (accent visual — não altera nenhum cálculo)
 const CAT = CATEGORIAS.aposentadoria;
 
 // ===== Helpers =====
-const fmt = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n || 0);
 const fmtCents = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n || 0);
 const fmtCompact = (n) => {
   const abs = Math.abs(n);
@@ -19,25 +20,8 @@ const fmtCompact = (n) => {
   return `${n.toFixed(0)}`;
 };
 
-// ===== Paleta =====
-const C = {
-  dark: '#0f172a',
-  navy: '#1e3a8a',
-  navyDeep: '#172554',
-  blue: '#2563eb',
-  blueBg: '#dbeafe',
-  blueBgSoft: '#eff6ff',
-  orange: '#FF5713',
-  orangeDark: '#E04A0F',
-  orangeBg: '#fff7ed',
-  orangeBgSoft: '#fff3ed',
-  red: '#dc2626',
-  redBg: '#fef2f2',
-  border: '#e2e8f0',
-  borderSoft: '#f1f5f9',
-  textDim: '#64748b',
-  textMore: '#94a3b8',
-};
+// Vermelho de erro — não faz parte da paleta de marca (SIM); mantido localmente.
+const RED = '#dc2626';
 
 // ===== Funções financeiras =====
 // PMT necessário pra atingir VF dado VP, taxa mensal i e prazo n (meses).
@@ -71,70 +55,16 @@ function calcTaxaMensal(VF, VP, PMT, n) {
   return (lo + hi) / 2;
 }
 
-// ===== Inputs numéricos com máscara BR =====
-const NumField = ({ value, onChange, min, max, prefix, suffix, size = 'text-base' }) => (
-  <div className="flex items-center gap-1">
-    {prefix && <span className="text-sm shrink-0" style={{ color: C.textDim }}>{prefix}</span>}
-    <input
-      type="text"
-      inputMode="numeric"
-      value={value.toLocaleString('pt-BR')}
-      onChange={(e) => {
-        const cleaned = e.target.value.replace(/\D/g, '');
-        const num = cleaned === '' ? 0 : parseInt(cleaned);
-        onChange(Math.min(Math.max(num, min), max));
-      }}
-      onFocus={(e) => e.target.select()}
-      className={`${size} font-bold tabular-nums bg-transparent rounded px-1.5 py-0.5 outline-none border transition-colors text-right w-full`}
-      style={{ color: C.dark, borderColor: 'transparent' }}
-      onFocusCapture={(e) => { e.target.style.borderColor = C.blue; e.target.style.backgroundColor = '#f8fafc'; }}
-      onBlurCapture={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent'; }}
-    />
-    {suffix && <span className="text-sm shrink-0" style={{ color: C.textDim }}>{suffix}</span>}
-  </div>
-);
-
-const NumFieldDecimal = ({ value, onChange, min, max, prefix, suffix, size = 'text-base' }) => {
-  const [localStr, setLocalStr] = useState(value.toString().replace('.', ','));
-  return (
-    <div className="flex items-center gap-1">
-      {prefix && <span className="text-sm shrink-0" style={{ color: C.textDim }}>{prefix}</span>}
-      <input
-        type="text"
-        inputMode="decimal"
-        value={localStr}
-        onChange={(e) => setLocalStr(e.target.value.replace(/[^0-9,.]/g, ''))}
-        onBlur={() => {
-          const num = parseFloat(localStr.replace(',', '.'));
-          if (!isNaN(num)) {
-            const clamped = Math.min(Math.max(num, min), max);
-            onChange(clamped);
-            setLocalStr(clamped.toString().replace('.', ','));
-          } else {
-            setLocalStr(value.toString().replace('.', ','));
-          }
-        }}
-        onFocus={(e) => e.target.select()}
-        className={`${size} font-bold tabular-nums bg-transparent rounded px-1.5 py-0.5 outline-none border transition-colors text-right w-full`}
-        style={{ color: C.dark, borderColor: 'transparent' }}
-        onFocusCapture={(e) => { e.target.style.borderColor = C.blue; e.target.style.backgroundColor = '#f8fafc'; }}
-        onBlurCapture={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent'; }}
-      />
-      {suffix && <span className="text-sm shrink-0" style={{ color: C.textDim }}>{suffix}</span>}
-    </div>
-  );
-};
-
 // ===== Wrapper de input em card =====
 const InputCard = ({ label, hint, children }) => (
   <div>
-    <label className="text-[11px] uppercase tracking-wider font-semibold block mb-1.5" style={{ color: C.textDim }}>
+    <label className="text-[11px] uppercase tracking-wider font-semibold block mb-1.5" style={{ color: SIM.textDim }}>
       {label}
     </label>
-    <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
+    <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
       {children}
     </div>
-    {hint && <div className="text-[11px] mt-1" style={{ color: C.textDim }}>{hint}</div>}
+    {hint && <div className="text-[11px] mt-1" style={{ color: SIM.textDim }}>{hint}</div>}
   </div>
 );
 
@@ -267,25 +197,25 @@ export default function SimuladorAposentadoria() {
 
   // Helper styles
   const chipModo = (active) => ({
-    backgroundColor: active ? C.navy : '#ffffff',
+    backgroundColor: active ? SIM.navy : '#ffffff',
     color: active ? '#ffffff' : '#475569',
-    border: `1px solid ${active ? C.navy : C.border}`,
+    border: `1px solid ${active ? SIM.navy : SIM.border}`,
     transition: 'all 0.15s',
   });
   const chipMeta = (active) => ({
-    backgroundColor: active ? C.navy : '#f1f5f9',
+    backgroundColor: active ? SIM.navy : '#f1f5f9',
     color: active ? '#ffffff' : '#475569',
     transition: 'all 0.15s',
   });
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#ffffff', color: C.dark, borderTop: `4px solid ${CAT.cor}` }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#ffffff', color: SIM.dark, borderTop: `4px solid ${CAT.cor}` }}>
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
 
         {/* HEADER */}
         <div className="mb-8">
           <div className="mb-4">
-            <Link href="/simuladores" className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: C.textDim }}>
+            <Link href="/simuladores" className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: SIM.textDim }}>
               <span aria-hidden>←</span> Todos os simuladores
             </Link>
           </div>
@@ -295,16 +225,16 @@ export default function SimuladorAposentadoria() {
             {CAT.nome}
           </div>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 leading-[1.1]">
-            Defina sua meta. <span style={{ color: C.navy }}>Descubra o caminho.</span>
+            Defina sua meta. <span style={{ color: SIM.navy }}>Descubra o caminho.</span>
           </h1>
-          <p className="text-base max-w-2xl" style={{ color: C.textDim }}>
+          <p className="text-base max-w-2xl" style={{ color: SIM.textDim }}>
             Em vez de simular um cenário e ver onde você chega, parta da sua meta e descubra o que precisa para alcançá-la.
           </p>
         </div>
 
         {/* SELETOR DE MODO */}
         <div className="mb-5">
-          <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: C.textDim }}>
+          <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: SIM.textDim }}>
             O que você quer descobrir?
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -332,13 +262,13 @@ export default function SimuladorAposentadoria() {
         </div>
 
         {/* INPUTS */}
-        <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}` }}>
+        <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `1px solid ${SIM.border}` }}>
 
           {/* Situação atual */}
           <div className="mb-5">
             <div className="flex items-center gap-2 mb-3">
-              <Calendar className="w-4 h-4" style={{ color: C.navy }} />
-              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.dark }}>
+              <Calendar className="w-4 h-4" style={{ color: SIM.navy }} />
+              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.dark }}>
                 Sua situação hoje
               </div>
             </div>
@@ -356,15 +286,15 @@ export default function SimuladorAposentadoria() {
           </div>
 
           {/* Sua meta */}
-          <div className="mb-5 pt-5" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
+          <div className="mb-5 pt-5" style={{ borderTop: `1px solid ${SIM.borderSoft}` }}>
             <div className="flex items-center gap-2 mb-3">
-              <Target className="w-4 h-4" style={{ color: C.navy }} />
-              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.dark }}>
+              <Target className="w-4 h-4" style={{ color: SIM.navy }} />
+              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.dark }}>
                 Sua meta
               </div>
             </div>
             <div className="mb-3">
-              <div className="text-[11px] uppercase tracking-wider font-semibold mb-1.5" style={{ color: C.textDim }}>
+              <div className="text-[11px] uppercase tracking-wider font-semibold mb-1.5" style={{ color: SIM.textDim }}>
                 Tipo de meta
               </div>
               <div className="inline-flex gap-2 p-1 rounded-lg" style={{ backgroundColor: '#f1f5f9' }}>
@@ -387,10 +317,10 @@ export default function SimuladorAposentadoria() {
           </div>
 
           {/* Premissas */}
-          <div className="pt-5" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
+          <div className="pt-5" style={{ borderTop: `1px solid ${SIM.borderSoft}` }}>
             <div className="flex items-center gap-2 mb-3">
-              <Briefcase className="w-4 h-4" style={{ color: C.navy }} />
-              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.dark }}>
+              <Briefcase className="w-4 h-4" style={{ color: SIM.navy }} />
+              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.dark }}>
                 Premissas
               </div>
             </div>
@@ -429,9 +359,9 @@ export default function SimuladorAposentadoria() {
             </div>
 
             {/* Avisos sobre poder de compra */}
-            <div className="rounded-lg p-3 flex items-start gap-2" style={{ backgroundColor: C.blueBgSoft, border: `1px solid ${C.blueBg}` }}>
-              <Info className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.navy }} />
-              <div className="text-xs" style={{ color: C.navy }}>
+            <div className="rounded-lg p-3 flex items-start gap-2" style={{ backgroundColor: SIM.blueBgSoft, border: `1px solid ${SIM.blueBg}` }}>
+              <Info className="w-4 h-4 shrink-0 mt-0.5" style={{ color: SIM.navy }} />
+              <div className="text-xs" style={{ color: SIM.navy }}>
                 Todos os valores (meta, aporte e patrimônio acumulado) estão <strong>em valores de hoje</strong>.
                 Isso significa que sua meta, ajustada pela inflação, mantém o poder de compra ao longo do tempo. O simulador trabalha com a <strong>rentabilidade real</strong> (rentabilidade esperada menos inflação) para garantir isso.
               </div>
@@ -441,17 +371,17 @@ export default function SimuladorAposentadoria() {
 
         {/* RESULTADO */}
         {!podeCalcular ? (
-          <div className="rounded-2xl p-12 md:p-16 text-center" style={{ backgroundColor: '#f8fafc', border: `1px dashed ${C.border}` }}>
-            <Target className="w-12 h-12 mx-auto mb-4" style={{ color: C.textMore }} />
-            <h3 className="text-lg font-semibold mb-1" style={{ color: C.dark }}>Preencha os campos acima</h3>
-            <p className="text-sm" style={{ color: C.textDim }}>
+          <div className="rounded-2xl p-12 md:p-16 text-center" style={{ backgroundColor: '#f8fafc', border: `1px dashed ${SIM.border}` }}>
+            <Target className="w-12 h-12 mx-auto mb-4" style={{ color: SIM.textMore }} />
+            <h3 className="text-lg font-semibold mb-1" style={{ color: SIM.dark }}>Preencha os campos acima</h3>
+            <p className="text-sm" style={{ color: SIM.textDim }}>
               Você precisa informar pelo menos sua idade, a idade da aposentadoria e o valor da meta.
             </p>
           </div>
         ) : metaRendaSemTaxa ? (
-          <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: C.orangeBg, border: `1px solid #fed7aa` }}>
-            <AlertCircle className="w-8 h-8 mx-auto mb-3" style={{ color: C.orangeDark }} />
-            <h3 className="text-base font-semibold mb-1" style={{ color: C.orangeDark }}>
+          <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: SIM.orangeBg, border: `1px solid #fed7aa` }}>
+            <AlertCircle className="w-8 h-8 mx-auto mb-3" style={{ color: SIM.orangeDark }} />
+            <h3 className="text-base font-semibold mb-1" style={{ color: SIM.orangeDark }}>
               {taxaEsperadaAno <= 0 ? 'Informe uma rentabilidade esperada' : 'Rentabilidade abaixo da inflação'}
             </h3>
             <p className="text-sm" style={{ color: '#7c2d12' }}>
@@ -464,7 +394,7 @@ export default function SimuladorAposentadoria() {
           <>
             {/* Hero do resultado */}
             <div className="rounded-2xl p-6 md:p-8 mb-5 relative overflow-hidden" style={{
-              backgroundColor: '#ffffff', border: `1px solid ${C.border}`, borderLeft: `6px solid ${C.orange}`,
+              backgroundColor: '#ffffff', border: `1px solid ${SIM.border}`, borderLeft: `6px solid ${SIM.orange}`,
             }}>
               <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl pointer-events-none"
                 style={{ backgroundColor: 'rgba(255,87,19,0.06)' }} />
@@ -473,36 +403,36 @@ export default function SimuladorAposentadoria() {
                   podeCalcularAporte ? (
                     capitalJaSuficiente ? (
                       <>
-                        <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: C.textDim }}>
+                        <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: SIM.textDim }}>
                           Pronto para a meta
                         </div>
-                        <div className="text-2xl md:text-3xl font-bold leading-tight mb-2" style={{ color: C.navy }}>
+                        <div className="text-2xl md:text-3xl font-bold leading-tight mb-2" style={{ color: SIM.navy }}>
                           Seu capital atual já é suficiente
                         </div>
-                        <p className="text-sm" style={{ color: C.textDim }}>
+                        <p className="text-sm" style={{ color: SIM.textDim }}>
                           Com {fmt(capitalAtual)} rendendo {taxaEsperadaAno.toString().replace('.', ',')}% ao ano por {anos} anos, você ultrapassa a meta sem precisar de aportes adicionais.
                         </p>
                       </>
                     ) : (
                       <>
-                        <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: C.textDim }}>
+                        <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: SIM.textDim }}>
                           Você precisa aportar
                         </div>
-                        <div className="text-4xl md:text-6xl font-bold tabular-nums leading-none mb-2" style={{ color: C.orange }}>
+                        <div className="text-4xl md:text-6xl font-bold tabular-nums leading-none mb-2" style={{ color: SIM.orange }}>
                           {fmt(aporteCalculado)}
                         </div>
-                        <div className="text-sm mb-3 font-semibold" style={{ color: C.navy }}>
+                        <div className="text-sm mb-3 font-semibold" style={{ color: SIM.navy }}>
                           por mês em valores de hoje
-                          <span className="font-normal text-xs ml-1" style={{ color: C.textDim }}>(ajustando anualmente pela inflação)</span>
+                          <span className="font-normal text-xs ml-1" style={{ color: SIM.textDim }}>(ajustando anualmente pela inflação)</span>
                         </div>
-                        <div className="text-base" style={{ color: C.textDim }}>
-                          durante <strong style={{ color: C.dark }}>{anos} anos</strong> para atingir {fmt(patrimonioMeta)}
+                        <div className="text-base" style={{ color: SIM.textDim }}>
+                          durante <strong style={{ color: SIM.dark }}>{anos} anos</strong> para atingir {fmt(patrimonioMeta)}
                           {tipoMeta === 'renda' && ` (que renderia ${fmt(valorMeta)}/mês em valores de hoje)`}.
                         </div>
                       </>
                     )
                   ) : (
-                    <div className="text-sm" style={{ color: C.textDim }}>
+                    <div className="text-sm" style={{ color: SIM.textDim }}>
                       Informe a rentabilidade esperada para calcular o aporte necessário.
                     </div>
                   )
@@ -510,10 +440,10 @@ export default function SimuladorAposentadoria() {
                   podeCalcularTaxa ? (
                     resultadoImpossivel ? (
                       <>
-                        <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: C.red }}>
+                        <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: RED }}>
                           Meta inalcançável
                         </div>
-                        <div className="text-2xl md:text-3xl font-bold leading-tight mb-2" style={{ color: C.red }}>
+                        <div className="text-2xl md:text-3xl font-bold leading-tight mb-2" style={{ color: RED }}>
                           Não é possível atingir essa meta
                         </div>
                         <p className="text-sm" style={{ color: '#991b1b' }}>
@@ -523,25 +453,25 @@ export default function SimuladorAposentadoria() {
                       </>
                     ) : (
                       <>
-                        <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: C.textDim }}>
+                        <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: SIM.textDim }}>
                           Sua carteira precisa render
                         </div>
-                        <div className="text-4xl md:text-6xl font-bold tabular-nums leading-none mb-2" style={{ color: C.orange }}>
+                        <div className="text-4xl md:text-6xl font-bold tabular-nums leading-none mb-2" style={{ color: SIM.orange }}>
                           {taxaCalculadaNominalAno !== null ? `${taxaCalculadaNominalAno.toFixed(2).replace('.', ',')}% a.a.` : '—'}
                         </div>
                         {taxaCalculadaAno !== null && (
-                          <div className="text-sm mb-3 font-semibold" style={{ color: C.navy }}>
+                          <div className="text-sm mb-3 font-semibold" style={{ color: SIM.navy }}>
                             ou <span className="tabular-nums">{taxaCalculadaAno >= 0 ? 'IPCA+' : 'IPCA'}{taxaCalculadaAno.toFixed(2).replace('.', ',')}%</span> em termos reais
-                            <span className="font-normal text-xs ml-1" style={{ color: C.textDim }}>(considerando inflação de {inflacaoAno.toString().replace('.', ',')}% a.a.)</span>
+                            <span className="font-normal text-xs ml-1" style={{ color: SIM.textDim }}>(considerando inflação de {inflacaoAno.toString().replace('.', ',')}% a.a.)</span>
                           </div>
                         )}
-                        <div className="text-base" style={{ color: C.textDim }}>
-                          aportando <strong style={{ color: C.dark }}>{fmt(aporteMensalDisponivel)}/mês</strong> por <strong style={{ color: C.dark }}>{anos} anos</strong> para chegar em {fmt(patrimonioMeta)}
+                        <div className="text-base" style={{ color: SIM.textDim }}>
+                          aportando <strong style={{ color: SIM.dark }}>{fmt(aporteMensalDisponivel)}/mês</strong> por <strong style={{ color: SIM.dark }}>{anos} anos</strong> para chegar em {fmt(patrimonioMeta)}
                           {tipoMeta === 'renda' && ` (que renderia ${fmt(valorMeta)}/mês em valores de hoje)`}.
                         </div>
                         {resultadoIrrealista && (
-                          <div className="mt-4 flex items-start gap-2 p-3 rounded-lg" style={{ backgroundColor: C.orangeBg, border: `1px solid #fed7aa` }}>
-                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.orangeDark }} />
+                          <div className="mt-4 flex items-start gap-2 p-3 rounded-lg" style={{ backgroundColor: SIM.orangeBg, border: `1px solid #fed7aa` }}>
+                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: SIM.orangeDark }} />
                             <div className="text-xs" style={{ color: '#7c2d12' }}>
                               Essa rentabilidade é difícil de atingir em investimentos tradicionais. CDB, Tesouro Direto e ações brasileiras costumam render entre 8% e 15% a.a. em termos nominais.
                               Considere aumentar o aporte ou estender o prazo.
@@ -551,7 +481,7 @@ export default function SimuladorAposentadoria() {
                       </>
                     )
                   ) : (
-                    <div className="text-sm" style={{ color: C.textDim }}>
+                    <div className="text-sm" style={{ color: SIM.textDim }}>
                       Informe o aporte mensal disponível para calcular a rentabilidade necessária.
                     </div>
                   )
@@ -562,47 +492,47 @@ export default function SimuladorAposentadoria() {
             {/* Cards complementares */}
             {(podeCalcularAporte || podeCalcularTaxa) && !resultadoImpossivel && !metaRendaSemTaxa && dadosEvolucao.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-5">
-                <div className="rounded-2xl p-5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
-                  <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: C.textDim }}>
+                <div className="rounded-2xl p-5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
+                  <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: SIM.textDim }}>
                     Patrimônio na meta
                   </div>
-                  <div className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: C.dark }}>
+                  <div className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: SIM.dark }}>
                     {fmt(saldoFinal)}
                   </div>
-                  <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
+                  <div className="text-[11px] mt-1" style={{ color: SIM.textDim }}>
                     em valores de hoje
                   </div>
                 </div>
-                <div className="rounded-2xl p-5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
-                  <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: C.textDim }}>
+                <div className="rounded-2xl p-5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
+                  <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: SIM.textDim }}>
                     Total aportado
                   </div>
-                  <div className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: C.dark }}>
+                  <div className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: SIM.dark }}>
                     {fmt(totalAportadoFinal)}
                   </div>
-                  <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
+                  <div className="text-[11px] mt-1" style={{ color: SIM.textDim }}>
                     em valores de hoje (capital atual + aportes)
                   </div>
                 </div>
-                <div className="rounded-2xl p-5" style={{ backgroundColor: C.blueBgSoft, border: `1px solid ${C.blueBg}` }}>
-                  <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: C.navy }}>
+                <div className="rounded-2xl p-5" style={{ backgroundColor: SIM.blueBgSoft, border: `1px solid ${SIM.blueBg}` }}>
+                  <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: SIM.navy }}>
                     Rendimento real
                   </div>
-                  <div className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: C.navy }}>
+                  <div className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: SIM.navy }}>
                     {fmt(rendimentoFinal)}
                   </div>
-                  <div className="text-[11px] mt-1" style={{ color: C.navy }}>
+                  <div className="text-[11px] mt-1" style={{ color: SIM.navy }}>
                     {saldoFinal > 0 ? ((rendimentoFinal / saldoFinal) * 100).toFixed(0) : 0}% do total (acima da inflação)
                   </div>
                 </div>
-                <div className="rounded-2xl p-5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
-                  <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: C.textDim }}>
+                <div className="rounded-2xl p-5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
+                  <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: SIM.textDim }}>
                     Renda mensal gerada
                   </div>
-                  <div className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: C.dark }}>
+                  <div className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: SIM.dark }}>
                     {fmt(rendaProjetada)}
                   </div>
-                  <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
+                  <div className="text-[11px] mt-1" style={{ color: SIM.textDim }}>
                     em valores de hoje, sem consumir capital
                   </div>
                 </div>
@@ -611,77 +541,77 @@ export default function SimuladorAposentadoria() {
 
             {/* EQUIVALÊNCIA NOMINAL FUTURA */}
             {(podeCalcularAporte || podeCalcularTaxa) && !resultadoImpossivel && !metaRendaSemTaxa && anos > 0 && (
-              <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}` }}>
+              <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `1px solid ${SIM.border}` }}>
                 <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className="w-4 h-4" style={{ color: C.navy }} />
-                  <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>
+                  <TrendingUp className="w-4 h-4" style={{ color: SIM.navy }} />
+                  <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>
                     Para você ter dimensão
                   </div>
                 </div>
-                <h3 className="text-xl font-bold mb-1" style={{ color: C.dark }}>Equivalência em valores nominais</h3>
-                <p className="text-sm mb-4" style={{ color: C.textDim }}>
+                <h3 className="text-xl font-bold mb-1" style={{ color: SIM.dark }}>Equivalência em valores nominais</h3>
+                <p className="text-sm mb-4" style={{ color: SIM.textDim }}>
                   Tudo que mostramos acima está em <strong>poder de compra de hoje</strong>. Para dar a você a noção de quanto isso representa em reais nominais daqui a {anos} anos com inflação de {inflacaoAno.toString().replace('.', ',')}% a.a.:
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
-                    <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: C.textDim }}>Sua meta de patrimônio</div>
+                  <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
+                    <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: SIM.textDim }}>Sua meta de patrimônio</div>
                     <div className="text-sm tabular-nums mb-1" style={{ color: '#475569' }}>
-                      Hoje: <strong style={{ color: C.dark }}>{fmt(patrimonioMeta)}</strong>
+                      Hoje: <strong style={{ color: SIM.dark }}>{fmt(patrimonioMeta)}</strong>
                     </div>
-                    <div className="text-base tabular-nums font-semibold" style={{ color: C.navy }}>
+                    <div className="text-base tabular-nums font-semibold" style={{ color: SIM.navy }}>
                       Em {anos} anos: {fmt(patrimonioMetaNominal)} nominais
                     </div>
-                    <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
+                    <div className="text-[11px] mt-1" style={{ color: SIM.textDim }}>
                       É o que você precisa ter acumulado em reais "do futuro" para equivaler a {fmt(patrimonioMeta)} de hoje.
                     </div>
                   </div>
 
-                  <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
-                    <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: C.textDim }}>Renda mensal gerada</div>
+                  <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
+                    <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: SIM.textDim }}>Renda mensal gerada</div>
                     <div className="text-sm tabular-nums mb-1" style={{ color: '#475569' }}>
-                      Hoje: <strong style={{ color: C.dark }}>{fmt(rendaProjetada)}/mês</strong>
+                      Hoje: <strong style={{ color: SIM.dark }}>{fmt(rendaProjetada)}/mês</strong>
                     </div>
-                    <div className="text-base tabular-nums font-semibold" style={{ color: C.navy }}>
+                    <div className="text-base tabular-nums font-semibold" style={{ color: SIM.navy }}>
                       Em {anos} anos: {fmt(rendaProjetadaNominal)}/mês nominais
                     </div>
-                    <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
+                    <div className="text-[11px] mt-1" style={{ color: SIM.textDim }}>
                       Ao manter só a taxa real, sua retirada cresce com a inflação e mantém o mesmo poder de compra ao longo da aposentadoria.
                     </div>
                   </div>
 
                   {modo === 'aporte' && aporteCalculado > 0 && (
-                    <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
-                      <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: C.textDim }}>Seu aporte mensal</div>
+                    <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
+                      <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: SIM.textDim }}>Seu aporte mensal</div>
                       <div className="text-sm tabular-nums mb-1" style={{ color: '#475569' }}>
-                        1º mês: <strong style={{ color: C.dark }}>{fmt(aporteCalculado)}</strong>
+                        1º mês: <strong style={{ color: SIM.dark }}>{fmt(aporteCalculado)}</strong>
                       </div>
-                      <div className="text-base tabular-nums font-semibold" style={{ color: C.navy }}>
+                      <div className="text-base tabular-nums font-semibold" style={{ color: SIM.navy }}>
                         Último mês: {fmt(aporteCalculadoUltimoNominal)} nominais
                       </div>
-                      <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
+                      <div className="text-[11px] mt-1" style={{ color: SIM.textDim }}>
                         Você precisa reajustar seu aporte anualmente pela inflação para manter o plano.
                       </div>
                     </div>
                   )}
 
                   {modo === 'taxa' && aporteMensalDisponivel > 0 && (
-                    <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
-                      <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: C.textDim }}>Seu aporte mensal</div>
+                    <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
+                      <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: SIM.textDim }}>Seu aporte mensal</div>
                       <div className="text-sm tabular-nums mb-1" style={{ color: '#475569' }}>
-                        1º mês: <strong style={{ color: C.dark }}>{fmt(aporteMensalDisponivel)}</strong>
+                        1º mês: <strong style={{ color: SIM.dark }}>{fmt(aporteMensalDisponivel)}</strong>
                       </div>
-                      <div className="text-base tabular-nums font-semibold" style={{ color: C.navy }}>
+                      <div className="text-base tabular-nums font-semibold" style={{ color: SIM.navy }}>
                         Último mês: {fmt(aporteDisponivelUltimoNominal)} nominais
                       </div>
-                      <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
+                      <div className="text-[11px] mt-1" style={{ color: SIM.textDim }}>
                         Você precisa reajustar seu aporte anualmente pela inflação para manter o poder de compra.
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="mt-4 text-[11px] flex items-start gap-1.5" style={{ color: C.textDim }}>
+                <div className="mt-4 text-[11px] flex items-start gap-1.5" style={{ color: SIM.textDim }}>
                   <Info className="w-3 h-3 mt-0.5 shrink-0" />
                   <span>
                     Fator de inflação acumulada em {anos} anos: <strong>{fatorInflacaoFinal.toFixed(2).replace('.', ',')}×</strong>. Ou seja, em {anos} anos, R$ 1 de hoje vale R$ {fatorInflacaoFinal.toFixed(2).replace('.', ',')} nominais.
@@ -692,26 +622,26 @@ export default function SimuladorAposentadoria() {
 
             {/* Gráfico de evolução */}
             {dadosEvolucao.length > 1 && !resultadoImpossivel && (podeCalcularAporte || podeCalcularTaxa) && (
-              <div className="rounded-2xl p-5 md:p-6" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}` }}>
+              <div className="rounded-2xl p-5 md:p-6" style={{ backgroundColor: '#ffffff', border: `1px solid ${SIM.border}` }}>
                 <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className="w-4 h-4" style={{ color: C.navy }} />
-                  <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>
+                  <TrendingUp className="w-4 h-4" style={{ color: SIM.navy }} />
+                  <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>
                     Evolução do patrimônio
                   </div>
                 </div>
-                <h3 className="text-xl font-bold mb-4" style={{ color: C.dark }}>Do hoje até a aposentadoria</h3>
+                <h3 className="text-xl font-bold mb-4" style={{ color: SIM.dark }}>Do hoje até a aposentadoria</h3>
 
                 <div className="flex items-center justify-center flex-wrap gap-4 mb-3 text-xs" style={{ color: '#475569' }}>
                   <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded" style={{ backgroundColor: C.textMore }} />
+                    <div className="w-3 h-3 rounded" style={{ backgroundColor: SIM.textMore }} />
                     <span>Total aportado</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded" style={{ backgroundColor: C.navy }} />
+                    <div className="w-3 h-3 rounded" style={{ backgroundColor: SIM.navy }} />
                     <span>Patrimônio acumulado</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded" style={{ backgroundColor: C.orange }} />
+                    <div className="w-3 h-3 rounded" style={{ backgroundColor: SIM.orange }} />
                     <span>Meta</span>
                   </div>
                 </div>
@@ -721,32 +651,32 @@ export default function SimuladorAposentadoria() {
                     <AreaChart data={dadosEvolucao} margin={{ top: 10, right: 10, left: 0, bottom: 25 }}>
                       <defs>
                         <linearGradient id="gradSaldo" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={C.navy} stopOpacity={0.4} />
-                          <stop offset="100%" stopColor={C.navy} stopOpacity={0.05} />
+                          <stop offset="0%" stopColor={SIM.navy} stopOpacity={0.4} />
+                          <stop offset="100%" stopColor={SIM.navy} stopOpacity={0.05} />
                         </linearGradient>
                         <linearGradient id="gradAportado" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={C.textMore} stopOpacity={0.4} />
-                          <stop offset="100%" stopColor={C.textMore} stopOpacity={0.05} />
+                          <stop offset="0%" stopColor={SIM.textMore} stopOpacity={0.4} />
+                          <stop offset="100%" stopColor={SIM.textMore} stopOpacity={0.05} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <CartesianGrid strokeDasharray="3 3" stroke={SIM_CHART.grid} />
                       <XAxis dataKey="idade" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 11 }}
                         label={{ value: 'Idade', position: 'insideBottom', offset: -5, fill: '#94a3b8', fontSize: 11 }} />
                       <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={fmtCompact} />
                       <Tooltip
-                        contentStyle={{ backgroundColor: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px' }}
+                        contentStyle={{ backgroundColor: '#fff', border: `1px solid ${SIM.border}`, borderRadius: '8px' }}
                         formatter={(v, name) => [fmt(v), name === 'saldo' ? 'Patrimônio' : name === 'aportado' ? 'Aportado' : name]}
                         labelFormatter={(v) => `${v} anos`}
                       />
-                      <ReferenceLine y={patrimonioMeta} stroke={C.orange} strokeDasharray="5 5" strokeWidth={2}
-                        label={{ value: `Meta: ${fmt(patrimonioMeta)}`, position: 'insideTopRight', fill: C.orange, fontSize: 11, fontWeight: 600 }} />
-                      <Area type="monotone" dataKey="aportado" stroke={C.textMore} strokeWidth={2} fill="url(#gradAportado)" name="aportado" />
-                      <Area type="monotone" dataKey="saldo" stroke={C.navy} strokeWidth={2.5} fill="url(#gradSaldo)" name="saldo" />
+                      <ReferenceLine y={patrimonioMeta} stroke={SIM.orange} strokeDasharray="5 5" strokeWidth={2}
+                        label={{ value: `Meta: ${fmt(patrimonioMeta)}`, position: 'insideTopRight', fill: SIM.orange, fontSize: 11, fontWeight: 600 }} />
+                      <Area type="monotone" dataKey="aportado" stroke={SIM.textMore} strokeWidth={2} fill="url(#gradAportado)" name="aportado" />
+                      <Area type="monotone" dataKey="saldo" stroke={SIM.navy} strokeWidth={2.5} fill="url(#gradSaldo)" name="saldo" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
 
-                <div className="mt-3 text-[11px] flex items-start gap-1.5" style={{ color: C.textDim }}>
+                <div className="mt-3 text-[11px] flex items-start gap-1.5" style={{ color: SIM.textDim }}>
                   <Info className="w-3 h-3 mt-0.5 shrink-0" />
                   <span>
                     Todos os valores estão <strong>em poder de compra de hoje</strong>. A área azul-marinho é o patrimônio acumulado, a cinza é só o que você aportou — a diferença é o rendimento real (acima da inflação). A linha laranja é sua meta.
@@ -757,7 +687,7 @@ export default function SimuladorAposentadoria() {
           </>
         )}
 
-        <div className="text-center text-[11px] mt-8 pb-4 px-4 leading-relaxed" style={{ color: C.textDim }}>
+        <div className="text-center text-[11px] mt-8 pb-4 px-4 leading-relaxed" style={{ color: SIM.textDim }}>
           Simulação meramente ilustrativa. Rentabilidade passada não garante rentabilidade futura. Considere taxas, impostos, perfil de risco e seu planejamento financeiro real.
         </div>
       </div>

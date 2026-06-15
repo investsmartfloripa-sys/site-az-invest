@@ -4,33 +4,18 @@ import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { Wallet, Briefcase, TrendingDown, Info, AlertCircle, PiggyBank, FileText, Trophy } from "lucide-react";
 import { CATEGORIAS } from "@/data/simuladores";
+import { SIM } from "@/lib/simulador-theme";
+import { NumField, fmtBRL as fmt } from "@/components/simuladores/ui";
 
 // Categoria do simulador (accent visual — não altera nenhum cálculo)
 const CAT = CATEGORIAS.aposentadoria;
 
 // ===== Helpers =====
-const fmt = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n || 0);
 const fmtCents = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n || 0);
 
-// ===== Paleta =====
-const C = {
-  dark: '#0f172a',
-  navy: '#1e3a8a',
-  navyDeep: '#172554',
-  blue: '#2563eb',
-  blueBg: '#dbeafe',
-  blueBgSoft: '#eff6ff',
-  orange: '#FF5713',
-  orangeDark: '#E04A0F',
-  orangeBg: '#fff7ed',
-  orangeBgSoft: '#fff3ed',
-  green: '#16a34a',
-  greenBg: '#f0fdf4',
-  border: '#e2e8f0',
-  borderSoft: '#f1f5f9',
-  textDim: '#64748b',
-  textMore: '#94a3b8',
-};
+// Verde de sucesso — não faz parte da paleta de marca (SIM); mantido localmente.
+const GREEN = '#16a34a';
+const GREEN_BG = '#f0fdf4';
 
 // ===== Constantes fiscais (vigentes em 2026) =====
 // Atualize aqui se a Receita reajustar os valores
@@ -120,37 +105,15 @@ function calcIRRFAnual(rendaAnual, inssAnual, dependentes) {
 }
 
 // ===== Inputs =====
-const NumField = ({ value, onChange, min, max, prefix, suffix, size = 'text-base' }) => (
-  <div className="flex items-center gap-1">
-    {prefix && <span className="text-sm shrink-0" style={{ color: C.textDim }}>{prefix}</span>}
-    <input
-      type="text"
-      inputMode="numeric"
-      value={value.toLocaleString('pt-BR')}
-      onChange={(e) => {
-        const cleaned = e.target.value.replace(/\D/g, '');
-        const num = cleaned === '' ? 0 : parseInt(cleaned);
-        onChange(Math.min(Math.max(num, min), max));
-      }}
-      onFocus={(e) => e.target.select()}
-      className={`${size} font-bold tabular-nums bg-transparent rounded px-1.5 py-0.5 outline-none border transition-colors text-right w-full`}
-      style={{ color: C.dark, borderColor: 'transparent' }}
-      onFocusCapture={(e) => { e.target.style.borderColor = C.blue; e.target.style.backgroundColor = '#f8fafc'; }}
-      onBlurCapture={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent'; }}
-    />
-    {suffix && <span className="text-sm shrink-0" style={{ color: C.textDim }}>{suffix}</span>}
-  </div>
-);
-
 const InputCard = ({ label, hint, hintColor, children }) => (
   <div>
-    <label className="text-[11px] uppercase tracking-wider font-semibold block mb-1.5" style={{ color: C.textDim }}>
+    <label className="text-[11px] uppercase tracking-wider font-semibold block mb-1.5" style={{ color: SIM.textDim }}>
       {label}
     </label>
-    <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
+    <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
       {children}
     </div>
-    {hint && <div className="text-[11px] mt-1" style={{ color: hintColor || C.textDim }}>{hint}</div>}
+    {hint && <div className="text-[11px] mt-1" style={{ color: hintColor || SIM.textDim }}>{hint}</div>}
   </div>
 );
 
@@ -285,13 +248,13 @@ export default function SimuladorPGBL() {
   }, [pgblFazSentido, economia, anosProjecao, rentabAno]);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#ffffff', color: C.dark, borderTop: `4px solid ${CAT.cor}` }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#ffffff', color: SIM.dark, borderTop: `4px solid ${CAT.cor}` }}>
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
 
         {/* HEADER */}
         <div className="mb-8">
           <div className="mb-4">
-            <Link href="/simuladores" className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: C.textDim }}>
+            <Link href="/simuladores" className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: SIM.textDim }}>
               <span aria-hidden>←</span> Todos os simuladores
             </Link>
           </div>
@@ -301,26 +264,26 @@ export default function SimuladorPGBL() {
             {CAT.nome}
           </div>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 leading-[1.1]">
-            Quanto você economiza de IR <span style={{ color: C.navy }}>investindo em PGBL?</span>
+            Quanto você economiza de IR <span style={{ color: SIM.navy }}>investindo em PGBL?</span>
           </h1>
-          <p className="text-base max-w-2xl" style={{ color: C.textDim }}>
+          <p className="text-base max-w-2xl" style={{ color: SIM.textDim }}>
             Veja o impacto da contribuição na declaração completa. Comparamos os 3 cenários — Simplificada, Completa e Completa com PGBL — para mostrar a economia real.
           </p>
         </div>
 
         {/* INPUTS */}
-        <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}` }}>
+        <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `1px solid ${SIM.border}` }}>
           <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4" style={{ color: C.navy }} />
-              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.dark }}>
+              <FileText className="w-4 h-4" style={{ color: SIM.navy }} />
+              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.dark }}>
                 Sua situação fiscal
               </div>
             </div>
             <div className="inline-flex gap-1 p-1 rounded-lg" style={{ backgroundColor: '#f1f5f9' }}>
               <button onClick={() => setPeriodo('anual')}
                 style={{
-                  backgroundColor: periodo === 'anual' ? C.navy : 'transparent',
+                  backgroundColor: periodo === 'anual' ? SIM.navy : 'transparent',
                   color: periodo === 'anual' ? '#ffffff' : '#475569',
                   transition: 'all 0.15s',
                 }}
@@ -329,7 +292,7 @@ export default function SimuladorPGBL() {
               </button>
               <button onClick={() => setPeriodo('mensal')}
                 style={{
-                  backgroundColor: periodo === 'mensal' ? C.navy : 'transparent',
+                  backgroundColor: periodo === 'mensal' ? SIM.navy : 'transparent',
                   color: periodo === 'mensal' ? '#ffffff' : '#475569',
                   transition: 'all 0.15s',
                 }}
@@ -350,8 +313,8 @@ export default function SimuladorPGBL() {
             <InputCard
               label={`INSS pago (${periodo === 'mensal' ? 'mensal' : 'anual'})`}
               hint={inssAutomatico
-                ? <span>Calculado automaticamente pela tabela CLT. <button onClick={() => setInssAutomatico(false)} className="underline" style={{ color: C.navy }}>Editar manualmente</button></span>
-                : <button onClick={() => { setInssAutomatico(true); }} className="underline" style={{ color: C.navy }}>Voltar ao automático</button>
+                ? <span>Calculado automaticamente pela tabela CLT. <button onClick={() => setInssAutomatico(false)} className="underline" style={{ color: SIM.navy }}>Editar manualmente</button></span>
+                : <button onClick={() => { setInssAutomatico(true); }} className="underline" style={{ color: SIM.navy }}>Voltar ao automático</button>
               }
             >
               <NumField
@@ -366,8 +329,8 @@ export default function SimuladorPGBL() {
             <InputCard
               label={`IR já retido na fonte (${periodo === 'mensal' ? 'mensal' : 'anual'})`}
               hint={irrfAutomatico
-                ? <span>Estimado pela renda e INSS. <button onClick={() => setIrrfAutomatico(false)} className="underline" style={{ color: C.navy }}>Editar manualmente</button></span>
-                : <span>Use o valor do seu informe de rendimentos. <button onClick={() => setIrrfAutomatico(true)} className="underline" style={{ color: C.navy }}>Voltar ao automático</button></span>
+                ? <span>Estimado pela renda e INSS. <button onClick={() => setIrrfAutomatico(false)} className="underline" style={{ color: SIM.navy }}>Editar manualmente</button></span>
+                : <span>Use o valor do seu informe de rendimentos. <button onClick={() => setIrrfAutomatico(true)} className="underline" style={{ color: SIM.navy }}>Voltar ao automático</button></span>
               }
             >
               <NumField
@@ -396,7 +359,7 @@ export default function SimuladorPGBL() {
             <InputCard
               label={`Educação própria (${periodo === 'mensal' ? 'mensal' : 'anual'})`}
               hint={educPropriaExcedente > 0
-                ? <span style={{ color: C.orangeDark }}>Limite anual: {fmtCents(limiteEducPropria)}. Excedente: {fmt(educPropriaExcedente)} (não dedutível).</span>
+                ? <span style={{ color: SIM.orangeDark }}>Limite anual: {fmtCents(limiteEducPropria)}. Excedente: {fmt(educPropriaExcedente)} (não dedutível).</span>
                 : `Limite anual: ${fmtCents(limiteEducPropria)}`}
             >
               <NumField value={educPropriaInput} onChange={setEducPropria} min={0} max={1000000} prefix="R$" />
@@ -405,7 +368,7 @@ export default function SimuladorPGBL() {
             <InputCard
               label={`Educação dos dependentes (${periodo === 'mensal' ? 'mensal' : 'anual'})`}
               hint={educDepExcedente > 0
-                ? <span style={{ color: C.orangeDark }}>Limite anual: {fmt(limiteEducDep)} ({fmtCents(LIMITE_EDUCACAO_PESSOA)}/pessoa). Excedente: {fmt(educDepExcedente)}.</span>
+                ? <span style={{ color: SIM.orangeDark }}>Limite anual: {fmt(limiteEducDep)} ({fmtCents(LIMITE_EDUCACAO_PESSOA)}/pessoa). Excedente: {fmt(educDepExcedente)}.</span>
                 : dependentes > 0
                   ? `Limite anual: ${fmt(limiteEducDep)} (${fmtCents(LIMITE_EDUCACAO_PESSOA)} por dependente)`
                   : 'Adicione dependentes para liberar a dedução'}
@@ -415,10 +378,10 @@ export default function SimuladorPGBL() {
           </div>
 
           {/* PGBL — destaque separado */}
-          <div className="mt-5 pt-5" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
+          <div className="mt-5 pt-5" style={{ borderTop: `1px solid ${SIM.borderSoft}` }}>
             <div className="flex items-center gap-2 mb-3">
-              <PiggyBank className="w-4 h-4" style={{ color: C.orange }} />
-              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.dark }}>
+              <PiggyBank className="w-4 h-4" style={{ color: SIM.orange }} />
+              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.dark }}>
                 Sua contribuição ao PGBL
               </div>
             </div>
@@ -432,8 +395,8 @@ export default function SimuladorPGBL() {
                 <NumField value={pgblInput} onChange={setPgbl} min={0} max={10000000} prefix="R$" />
               </InputCard>
               {pgblExcedente > 0 && (
-                <div className="rounded-lg p-3 flex items-start gap-2" style={{ backgroundColor: C.orangeBgSoft, border: `1px solid #fed7aa` }}>
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.orangeDark }} />
+                <div className="rounded-lg p-3 flex items-start gap-2" style={{ backgroundColor: SIM.orangeBgSoft, border: `1px solid #fed7aa` }}>
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: SIM.orangeDark }} />
                   <div className="text-xs" style={{ color: '#7c2d12' }}>
                     Você contribuiu <strong>{fmt(pgbl)}</strong>, mas o limite dedutível é <strong>{fmt(limitePGBL)}</strong>. O excedente de {fmt(pgblExcedente)} continua investido, mas <strong>não gera economia de IR</strong>. Considere realocar para um VGBL ou outro investimento.
                   </div>
@@ -445,10 +408,10 @@ export default function SimuladorPGBL() {
 
         {/* RESULTADO */}
         {!podeCalcular ? (
-          <div className="rounded-2xl p-12 md:p-16 text-center" style={{ backgroundColor: '#f8fafc', border: `1px dashed ${C.border}` }}>
-            <Wallet className="w-12 h-12 mx-auto mb-4" style={{ color: C.textMore }} />
-            <h3 className="text-lg font-semibold mb-1" style={{ color: C.dark }}>Preencha sua renda bruta tributável</h3>
-            <p className="text-sm" style={{ color: C.textDim }}>
+          <div className="rounded-2xl p-12 md:p-16 text-center" style={{ backgroundColor: '#f8fafc', border: `1px dashed ${SIM.border}` }}>
+            <Wallet className="w-12 h-12 mx-auto mb-4" style={{ color: SIM.textMore }} />
+            <h3 className="text-lg font-semibold mb-1" style={{ color: SIM.dark }}>Preencha sua renda bruta tributável</h3>
+            <p className="text-sm" style={{ color: SIM.textDim }}>
               Informe ao menos a renda bruta tributável {periodo === 'mensal' ? 'mensal' : 'anual'} para ver o cálculo dos 3 cenários.
             </p>
           </div>
@@ -456,50 +419,50 @@ export default function SimuladorPGBL() {
           <>
             {/* HERO: economia */}
             <div className="rounded-2xl p-6 md:p-8 mb-5 relative overflow-hidden" style={{
-              backgroundColor: '#ffffff', border: `1px solid ${C.border}`, borderLeft: `6px solid ${C.orange}`,
+              backgroundColor: '#ffffff', border: `1px solid ${SIM.border}`, borderLeft: `6px solid ${SIM.orange}`,
             }}>
               <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl pointer-events-none"
                 style={{ backgroundColor: 'rgba(255,87,19,0.06)' }} />
               <div className="relative">
                 {pgblFazSentido ? (
                   <>
-                    <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: C.textDim }}>
+                    <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: SIM.textDim }}>
                       Sua economia anual de IR
                     </div>
-                    <div className="text-5xl md:text-6xl font-bold tabular-nums leading-none mb-2" style={{ color: C.orange }}>
+                    <div className="text-5xl md:text-6xl font-bold tabular-nums leading-none mb-2" style={{ color: SIM.orange }}>
                       {fmt(economia)}
                     </div>
-                    <div className="text-sm md:text-base" style={{ color: C.textDim }}>
-                      é o que você deixa de pagar (ou recebe a mais de restituição) ao contribuir <strong style={{ color: C.dark }}>{fmt(pgblDedutivel)}</strong> no PGBL, comparado com a declaração <strong style={{ color: C.dark }}>Simplificada</strong> — o que a maioria das pessoas faz por padrão.
+                    <div className="text-sm md:text-base" style={{ color: SIM.textDim }}>
+                      é o que você deixa de pagar (ou recebe a mais de restituição) ao contribuir <strong style={{ color: SIM.dark }}>{fmt(pgblDedutivel)}</strong> no PGBL, comparado com a declaração <strong style={{ color: SIM.dark }}>Simplificada</strong> — o que a maioria das pessoas faz por padrão.
                     </div>
                     {economiaCompleta > 0 && (
                       <div className="mt-3 text-xs" style={{ color: '#475569' }}>
-                        Dessa economia: <strong style={{ color: C.dark }}>{fmt(economiaCompleta)}</strong> já vem só de migrar para a declaração Completa, e <strong style={{ color: C.orange }}>{fmt(economiaPGBL)}</strong> vem do PGBL em si.
+                        Dessa economia: <strong style={{ color: SIM.dark }}>{fmt(economiaCompleta)}</strong> já vem só de migrar para a declaração Completa, e <strong style={{ color: SIM.orange }}>{fmt(economiaPGBL)}</strong> vem do PGBL em si.
                       </div>
                     )}
                   </>
                 ) : pgbl === 0 ? (
                   <>
-                    <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: C.textDim }}>
+                    <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: SIM.textDim }}>
                       Para calcular a economia
                     </div>
-                    <div className="text-xl md:text-2xl font-bold mb-2" style={{ color: C.navy }}>
+                    <div className="text-xl md:text-2xl font-bold mb-2" style={{ color: SIM.navy }}>
                       Informe quanto pretende contribuir no PGBL
                     </div>
-                    <p className="text-sm" style={{ color: C.textDim }}>
-                      Limite dedutível para você: <strong style={{ color: C.dark }}>{fmt(limitePGBL)}/ano</strong> (12% da renda).
+                    <p className="text-sm" style={{ color: SIM.textDim }}>
+                      Limite dedutível para você: <strong style={{ color: SIM.dark }}>{fmt(limitePGBL)}/ano</strong> (12% da renda).
                       Vamos calcular automaticamente quanto isso reduz seu IR.
                     </p>
                   </>
                 ) : (
                   <>
-                    <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: C.textDim }}>
+                    <div className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: SIM.textDim }}>
                       Resultado
                     </div>
-                    <div className="text-xl md:text-2xl font-bold mb-2" style={{ color: C.navy }}>
+                    <div className="text-xl md:text-2xl font-bold mb-2" style={{ color: SIM.navy }}>
                       O PGBL não gera economia adicional para você
                     </div>
-                    <p className="text-sm" style={{ color: C.textDim }}>
+                    <p className="text-sm" style={{ color: SIM.textDim }}>
                       Sua renda atual já fica abaixo da faixa de tributação na Simplificada. PGBL faz mais sentido para quem tem IR a pagar.
                     </p>
                   </>
@@ -508,97 +471,97 @@ export default function SimuladorPGBL() {
             </div>
 
             {/* COMPARATIVO */}
-            <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}` }}>
+            <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `1px solid ${SIM.border}` }}>
               <div className="flex items-center gap-2 mb-1">
-                <TrendingDown className="w-4 h-4" style={{ color: C.navy }} />
-                <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>
+                <TrendingDown className="w-4 h-4" style={{ color: SIM.navy }} />
+                <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>
                   Comparativo
                 </div>
               </div>
-              <h3 className="text-xl font-bold mb-4" style={{ color: C.dark }}>Os 3 cenários, lado a lado</h3>
+              <h3 className="text-xl font-bold mb-4" style={{ color: SIM.dark }}>Os 3 cenários, lado a lado</h3>
 
               <div className="overflow-x-auto -mx-5 md:-mx-6 px-5 md:px-6">
                 <table className="w-full text-sm min-w-[640px]">
                   <thead>
-                    <tr style={{ borderBottom: `2px solid ${C.border}` }}>
-                      <th className="text-left py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>Item</th>
-                      <th className="text-right py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>Simplificada</th>
-                      <th className="text-right py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>Completa sem PGBL</th>
-                      <th className="text-right py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: C.orange }}>Completa com PGBL</th>
+                    <tr style={{ borderBottom: `2px solid ${SIM.border}` }}>
+                      <th className="text-left py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>Item</th>
+                      <th className="text-right py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>Simplificada</th>
+                      <th className="text-right py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>Completa sem PGBL</th>
+                      <th className="text-right py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: SIM.orange }}>Completa com PGBL</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
-                      <td className="py-2.5 px-3 font-medium" style={{ color: C.dark }}>Renda bruta tributável</td>
+                    <tr style={{ borderBottom: `1px solid ${SIM.borderSoft}` }}>
+                      <td className="py-2.5 px-3 font-medium" style={{ color: SIM.dark }}>Renda bruta tributável</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(renda)}</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(renda)}</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(renda)}</td>
                     </tr>
-                    <tr style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
-                      <td className="py-2.5 px-3 text-xs" style={{ color: C.textDim }}>(−) INSS</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: C.textDim }}>—</td>
+                    <tr style={{ borderBottom: `1px solid ${SIM.borderSoft}` }}>
+                      <td className="py-2.5 px-3 text-xs" style={{ color: SIM.textDim }}>(−) INSS</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: SIM.textDim }}>—</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(inss)}</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(inss)}</td>
                     </tr>
-                    <tr style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
-                      <td className="py-2.5 px-3 text-xs" style={{ color: C.textDim }}>(−) Saúde</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: C.textDim }}>—</td>
+                    <tr style={{ borderBottom: `1px solid ${SIM.borderSoft}` }}>
+                      <td className="py-2.5 px-3 text-xs" style={{ color: SIM.textDim }}>(−) Saúde</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: SIM.textDim }}>—</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(saude)}</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(saude)}</td>
                     </tr>
-                    <tr style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
-                      <td className="py-2.5 px-3 text-xs" style={{ color: C.textDim }}>(−) Dependentes</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: C.textDim }}>—</td>
+                    <tr style={{ borderBottom: `1px solid ${SIM.borderSoft}` }}>
+                      <td className="py-2.5 px-3 text-xs" style={{ color: SIM.textDim }}>(−) Dependentes</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: SIM.textDim }}>—</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(deducDependentes)}</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(deducDependentes)}</td>
                     </tr>
-                    <tr style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
-                      <td className="py-2.5 px-3 text-xs" style={{ color: C.textDim }}>(−) Educação</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: C.textDim }}>—</td>
+                    <tr style={{ borderBottom: `1px solid ${SIM.borderSoft}` }}>
+                      <td className="py-2.5 px-3 text-xs" style={{ color: SIM.textDim }}>(−) Educação</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: SIM.textDim }}>—</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(deducEducPropria + deducEducDep)}</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(deducEducPropria + deducEducDep)}</td>
                     </tr>
-                    <tr style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
-                      <td className="py-2.5 px-3 text-xs font-semibold" style={{ color: C.orange }}>(−) PGBL</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: C.textDim }}>—</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: C.textDim }}>—</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums font-semibold" style={{ color: C.orange }}>{fmt(pgblDedutivel)}</td>
+                    <tr style={{ borderBottom: `1px solid ${SIM.borderSoft}` }}>
+                      <td className="py-2.5 px-3 text-xs font-semibold" style={{ color: SIM.orange }}>(−) PGBL</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: SIM.textDim }}>—</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: SIM.textDim }}>—</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums font-semibold" style={{ color: SIM.orange }}>{fmt(pgblDedutivel)}</td>
                     </tr>
-                    <tr style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
-                      <td className="py-2.5 px-3 text-xs" style={{ color: C.textDim }}>(−) Dedução Simplificada</td>
+                    <tr style={{ borderBottom: `1px solid ${SIM.borderSoft}` }}>
+                      <td className="py-2.5 px-3 text-xs" style={{ color: SIM.textDim }}>(−) Dedução Simplificada</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(deducaoSimpl)}</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: C.textDim }}>—</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: C.textDim }}>—</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: SIM.textDim }}>—</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: SIM.textDim }}>—</td>
                     </tr>
-                    <tr style={{ borderBottom: `2px solid ${C.border}`, backgroundColor: '#f8fafc' }}>
-                      <td className="py-2.5 px-3 font-semibold" style={{ color: C.dark }}>Base de cálculo</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums font-semibold" style={{ color: C.dark }}>{fmt(baseSimpl)}</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums font-semibold" style={{ color: C.dark }}>{fmt(baseSemPGBL)}</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums font-semibold" style={{ color: C.dark }}>{fmt(baseComPGBL)}</td>
+                    <tr style={{ borderBottom: `2px solid ${SIM.border}`, backgroundColor: '#f8fafc' }}>
+                      <td className="py-2.5 px-3 font-semibold" style={{ color: SIM.dark }}>Base de cálculo</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums font-semibold" style={{ color: SIM.dark }}>{fmt(baseSimpl)}</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums font-semibold" style={{ color: SIM.dark }}>{fmt(baseSemPGBL)}</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums font-semibold" style={{ color: SIM.dark }}>{fmt(baseComPGBL)}</td>
                     </tr>
-                    <tr style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
+                    <tr style={{ borderBottom: `1px solid ${SIM.borderSoft}` }}>
                       <td className="py-2.5 px-3 text-sm" style={{ color: '#475569' }}>IR devido</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: C.dark }}>{fmt(irSimpl)}</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: C.dark }}>{fmt(irSemPGBL)}</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums font-semibold" style={{ color: C.orangeDark }}>{fmt(irComPGBL)}</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: SIM.dark }}>{fmt(irSimpl)}</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: SIM.dark }}>{fmt(irSemPGBL)}</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums font-semibold" style={{ color: SIM.orangeDark }}>{fmt(irComPGBL)}</td>
                     </tr>
-                    <tr style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
+                    <tr style={{ borderBottom: `1px solid ${SIM.borderSoft}` }}>
                       <td className="py-2.5 px-3 text-sm" style={{ color: '#475569' }}>IR retido na fonte</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(irrf)}</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(irrf)}</td>
                       <td className="py-2.5 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(irrf)}</td>
                     </tr>
-                    <tr style={{ backgroundColor: C.orangeBgSoft }}>
-                      <td className="py-3 px-3 font-bold text-sm" style={{ color: C.orangeDark }}>
+                    <tr style={{ backgroundColor: SIM.orangeBgSoft }}>
+                      <td className="py-3 px-3 font-bold text-sm" style={{ color: SIM.orangeDark }}>
                         Restituição {restitComPGBL < 0 && '(IR a pagar)'}
                       </td>
-                      <td className="py-3 px-3 text-right tabular-nums text-base font-bold" style={{ color: restitSimpl >= 0 ? C.dark : C.orangeDark, opacity: 0.75 }}>
+                      <td className="py-3 px-3 text-right tabular-nums text-base font-bold" style={{ color: restitSimpl >= 0 ? SIM.dark : SIM.orangeDark, opacity: 0.75 }}>
                         {restitSimpl >= 0 ? fmt(restitSimpl) : `-${fmt(Math.abs(restitSimpl))}`}
                       </td>
-                      <td className="py-3 px-3 text-right tabular-nums text-base font-bold" style={{ color: restitSemPGBL >= 0 ? C.dark : C.orangeDark, opacity: 0.75 }}>
+                      <td className="py-3 px-3 text-right tabular-nums text-base font-bold" style={{ color: restitSemPGBL >= 0 ? SIM.dark : SIM.orangeDark, opacity: 0.75 }}>
                         {restitSemPGBL >= 0 ? fmt(restitSemPGBL) : `-${fmt(Math.abs(restitSemPGBL))}`}
                       </td>
-                      <td className="py-3 px-3 text-right tabular-nums text-base font-bold" style={{ color: restitComPGBL >= 0 ? C.green : C.orangeDark }}>
+                      <td className="py-3 px-3 text-right tabular-nums text-base font-bold" style={{ color: restitComPGBL >= 0 ? GREEN : SIM.orangeDark }}>
                         {restitComPGBL >= 0 ? fmt(restitComPGBL) : `-${fmt(Math.abs(restitComPGBL))}`}
                       </td>
                     </tr>
@@ -606,7 +569,7 @@ export default function SimuladorPGBL() {
                 </table>
               </div>
 
-              <div className="mt-3 text-[11px] flex items-start gap-1.5" style={{ color: C.textDim }}>
+              <div className="mt-3 text-[11px] flex items-start gap-1.5" style={{ color: SIM.textDim }}>
                 <Info className="w-3 h-3 mt-0.5 shrink-0" />
                 <span>
                   Comparamos com a <strong>Simplificada</strong>, que é o ponto de partida da maioria das pessoas. O <strong>IR retido na fonte</strong> é estimado pelo simulador, mas você pode editar manualmente pelo valor exato do seu informe de rendimentos. Restituição = IRRF − IR devido. Saúde, educação e PGBL não entram no IRRF — só no ajuste anual, gerando restituição.
@@ -617,18 +580,18 @@ export default function SimuladorPGBL() {
             {/* EFEITO MULTIPLICADOR — REINVESTINDO A ECONOMIA NO PGBL */}
             {pgblFazSentido && projecao && (
               <div className="rounded-2xl p-5 md:p-6 mb-5 relative overflow-hidden" style={{
-                backgroundColor: '#ffffff', border: `1px solid ${C.border}`, borderLeft: `6px solid ${C.green}`,
+                backgroundColor: '#ffffff', border: `1px solid ${SIM.border}`, borderLeft: `6px solid ${GREEN}`,
               }}>
                 <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl pointer-events-none"
                   style={{ backgroundColor: 'rgba(22,163,74,0.06)' }} />
                 <div className="relative">
                   <div className="flex items-center gap-2 mb-1">
-                    <Trophy className="w-4 h-4" style={{ color: C.green }} />
-                    <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.green }}>
+                    <Trophy className="w-4 h-4" style={{ color: GREEN }} />
+                    <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: GREEN }}>
                       O que muita gente não percebe
                     </div>
                   </div>
-                  <h3 className="text-xl md:text-2xl font-bold mb-2" style={{ color: C.dark }}>
+                  <h3 className="text-xl md:text-2xl font-bold mb-2" style={{ color: SIM.dark }}>
                     {fmt(economia)}/ano não parece muito. Mas reinvestido vira patrimônio.
                   </h3>
                   <p className="text-sm mb-4" style={{ color: '#475569' }}>
@@ -646,11 +609,11 @@ export default function SimuladorPGBL() {
                   </div>
 
                   {/* Resultado */}
-                  <div className="rounded-xl p-5 mb-3" style={{ backgroundColor: C.greenBg, border: `1px solid #bbf7d0` }}>
-                    <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: C.green }}>
+                  <div className="rounded-xl p-5 mb-3" style={{ backgroundColor: GREEN_BG, border: `1px solid #bbf7d0` }}>
+                    <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: GREEN }}>
                       Patrimônio acumulado em {anosProjecao} anos
                     </div>
-                    <div className="text-3xl md:text-5xl font-bold tabular-nums leading-none mb-2" style={{ color: C.green }}>
+                    <div className="text-3xl md:text-5xl font-bold tabular-nums leading-none mb-2" style={{ color: GREEN }}>
                       {fmt(projecao.vf)}
                     </div>
                     <div className="text-sm" style={{ color: '#15803d' }}>
@@ -659,34 +622,34 @@ export default function SimuladorPGBL() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                    <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
-                      <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: C.textDim }}>Total aportado</div>
-                      <div className="text-lg font-bold tabular-nums" style={{ color: C.dark }}>{fmt(projecao.aportado)}</div>
-                      <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
+                    <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
+                      <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: SIM.textDim }}>Total aportado</div>
+                      <div className="text-lg font-bold tabular-nums" style={{ color: SIM.dark }}>{fmt(projecao.aportado)}</div>
+                      <div className="text-[11px] mt-1" style={{ color: SIM.textDim }}>
                         {fmt(economia)} × {anosProjecao} anos
                       </div>
                     </div>
-                    <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
-                      <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: C.textDim }}>Rendimento</div>
-                      <div className="text-lg font-bold tabular-nums" style={{ color: C.navy }}>{fmt(projecao.rendimento)}</div>
-                      <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
+                    <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
+                      <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: SIM.textDim }}>Rendimento</div>
+                      <div className="text-lg font-bold tabular-nums" style={{ color: SIM.navy }}>{fmt(projecao.rendimento)}</div>
+                      <div className="text-[11px] mt-1" style={{ color: SIM.textDim }}>
                         dos juros compostos
                       </div>
                     </div>
-                    <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
-                      <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: C.textDim }}>
+                    <div className="rounded-xl p-4" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
+                      <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: SIM.textDim }}>
                         Líquido após IR no resgate (alíquota efetiva {(projecao.aliquotaEfetiva * 100).toFixed(1).replace('.', ',')}%)
                       </div>
-                      <div className="text-lg font-bold tabular-nums" style={{ color: C.green }}>{fmt(projecao.liquido)}</div>
-                      <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
+                      <div className="text-lg font-bold tabular-nums" style={{ color: GREEN }}>{fmt(projecao.liquido)}</div>
+                      <div className="text-[11px] mt-1" style={{ color: SIM.textDim }}>
                         IR sobre o total: {fmt(projecao.irResgate)}
                       </div>
                     </div>
                   </div>
 
-                  <div className="rounded-lg p-3 flex items-start gap-2" style={{ backgroundColor: C.blueBgSoft, border: `1px solid ${C.blueBg}` }}>
-                    <Info className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.navy }} />
-                    <div className="text-xs" style={{ color: C.navy }}>
+                  <div className="rounded-lg p-3 flex items-start gap-2" style={{ backgroundColor: SIM.blueBgSoft, border: `1px solid ${SIM.blueBg}` }}>
+                    <Info className="w-4 h-4 shrink-0 mt-0.5" style={{ color: SIM.navy }} />
+                    <div className="text-xs" style={{ color: SIM.navy }}>
                       <strong>Importante:</strong> no PGBL, o IR no resgate incide sobre o <strong>total acumulado</strong> (capital + rendimento), não só sobre o rendimento. Usamos a tabela regressiva da Lei 11.053/2004 <strong>aporte a aporte</strong>: cada contribuição tem seu próprio prazo de acumulação, com alíquota de <strong>35% até 2 anos</strong>, caindo até <strong>10% acima de 10 anos</strong> — a alíquota efetiva mostrada é a média ponderada dos aportes. Por isso o PGBL faz sentido para o longo prazo. Se reinvestir em outro produto (CDB, Tesouro, fundo), o IR é só sobre o rendimento (~15%), o que muda os números.
                     </div>
                   </div>
@@ -695,24 +658,24 @@ export default function SimuladorPGBL() {
             )}
 
             {/* RESSALVAS IMPORTANTES */}
-            <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: C.blueBgSoft, border: `1px solid ${C.blueBg}` }}>
+            <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: SIM.blueBgSoft, border: `1px solid ${SIM.blueBg}` }}>
               <div className="flex items-center gap-2 mb-3">
-                <Info className="w-4 h-4" style={{ color: C.navy }} />
-                <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.navy }}>
+                <Info className="w-4 h-4" style={{ color: SIM.navy }} />
+                <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.navy }}>
                   Para você decidir bem
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs" style={{ color: C.navy }}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs" style={{ color: SIM.navy }}>
                 <div>
-                  <div className="font-semibold mb-1" style={{ color: C.dark }}>Limite de 12% da renda</div>
+                  <div className="font-semibold mb-1" style={{ color: SIM.dark }}>Limite de 12% da renda</div>
                   Só é possível deduzir até 12% da renda bruta tributável anual. Acima disso, o valor continua investido mas não gera benefício fiscal.
                 </div>
                 <div>
-                  <div className="font-semibold mb-1" style={{ color: C.dark }}>Só vale na Completa</div>
+                  <div className="font-semibold mb-1" style={{ color: SIM.dark }}>Só vale na Completa</div>
                   O PGBL só reduz IR para quem declara pela Completa. Quem usa a Simplificada (ou é isento) deveria considerar o VGBL.
                 </div>
                 <div>
-                  <div className="font-semibold mb-1" style={{ color: C.dark }}>IR no resgate</div>
+                  <div className="font-semibold mb-1" style={{ color: SIM.dark }}>IR no resgate</div>
                   No futuro, quando resgatar o PGBL, o IR incide sobre o <strong>total acumulado</strong> (capital + rendimento). A alíquota varia conforme a tabela escolhida (a regressiva começa em 35% e cai para 10% nos aportes com mais de 10 anos de acumulação; a progressiva acompanha a tabela do IR vigente no resgate).
                 </div>
               </div>
@@ -720,7 +683,7 @@ export default function SimuladorPGBL() {
           </>
         )}
 
-        <div className="text-center text-[11px] mt-8 pb-4 px-4 leading-relaxed" style={{ color: C.textDim }}>
+        <div className="text-center text-[11px] mt-8 pb-4 px-4 leading-relaxed" style={{ color: SIM.textDim }}>
           Simulação baseada nas tabelas do IRPF e do INSS aplicáveis ao ano-calendário 2026: tabela progressiva mensal vigente desde maio/2025 (MP 1.294/2025, isenta até R$ 2.428,80/mês) anualizada, e tabela do INSS de 2026 (salário mínimo R$ 1.621,00, teto INSS R$ 8.475,55). Inclui o redutor da Lei 15.270/2025, que zera o IR para rendimentos tributáveis até R$ 5.000/mês (R$ 60.000/ano) e o reduz parcialmente até R$ 7.350/mês (R$ 88.200/ano). Não considera outras deduções específicas (pensão alimentícia judicial, livro-caixa, etc.) nem taxas de carregamento/administração do plano de previdência. Consulte seu contador antes de decisões fiscais relevantes.
         </div>
       </div>

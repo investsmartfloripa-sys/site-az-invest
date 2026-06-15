@@ -5,33 +5,18 @@ import Link from "next/link";
 import { Shield, Heart, Info, Settings2, GraduationCap, Banknote, Briefcase, Users, AlertCircle, Building2, FileText, TrendingUp, Wallet, PiggyBank, CheckCircle2 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { CATEGORIAS } from "@/data/simuladores";
+import { SIM } from "@/lib/simulador-theme";
+import { NumField, NumFieldDecimal, fmtBRL as fmt } from "@/components/simuladores/ui";
 
 // Categoria do simulador (accent visual — não altera nenhum cálculo)
 const CAT = CATEGORIAS.protecao;
 
 // ===== Helpers =====
-const fmt = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n || 0);
 const fmtCents = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n || 0);
 
-// ===== Paleta =====
-const C = {
-  dark: '#0f172a',
-  navy: '#1e3a8a',
-  navyDeep: '#172554',
-  blue: '#2563eb',
-  blueBg: '#dbeafe',
-  blueBgSoft: '#eff6ff',
-  orange: '#FF5713',
-  orangeDark: '#E04A0F',
-  orangeBg: '#fff7ed',
-  orangeBgSoft: '#fff3ed',
-  green: '#16a34a',
-  greenBg: '#f0fdf4',
-  border: '#e2e8f0',
-  borderSoft: '#f1f5f9',
-  textDim: '#64748b',
-  textMore: '#94a3b8',
-};
+// Verde de sucesso — não faz parte da paleta de marca (SIM); mantido localmente.
+const GREEN = '#16a34a';
+const GREEN_BG = '#f0fdf4';
 
 // ===== ITCMD por estado — fonte: calculaonline.com.br (mar/2026), pós EC 132/2023 e LC 227/2026 =====
 const ITCMD_ESTADOS = [
@@ -74,69 +59,15 @@ function getSplitPorIdade(idade) {
 }
 
 // ===== Inputs =====
-const NumField = ({ value, onChange, min, max, prefix, suffix }) => (
-  <div className="flex items-center gap-1">
-    {prefix && <span className="text-sm shrink-0" style={{ color: C.textDim }}>{prefix}</span>}
-    <input
-      type="text"
-      inputMode="numeric"
-      value={value.toLocaleString('pt-BR')}
-      onChange={(e) => {
-        const cleaned = e.target.value.replace(/\D/g, '');
-        const num = cleaned === '' ? 0 : parseInt(cleaned);
-        onChange(Math.min(Math.max(num, min), max));
-      }}
-      onFocus={(e) => e.target.select()}
-      className="text-base font-bold tabular-nums bg-transparent rounded px-1.5 py-0.5 outline-none border transition-colors text-right w-full"
-      style={{ color: C.dark, borderColor: 'transparent' }}
-      onFocusCapture={(e) => { e.target.style.borderColor = C.blue; e.target.style.backgroundColor = '#f8fafc'; }}
-      onBlurCapture={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent'; }}
-    />
-    {suffix && <span className="text-sm shrink-0" style={{ color: C.textDim }}>{suffix}</span>}
-  </div>
-);
-
-const NumFieldDecimal = ({ value, onChange, min, max, prefix, suffix }) => {
-  const [localStr, setLocalStr] = useState(value.toString().replace('.', ','));
-  useEffect(() => { setLocalStr(value.toString().replace('.', ',')); }, [value]);
-  return (
-    <div className="flex items-center gap-1">
-      {prefix && <span className="text-sm shrink-0" style={{ color: C.textDim }}>{prefix}</span>}
-      <input
-        type="text"
-        inputMode="decimal"
-        value={localStr}
-        onChange={(e) => setLocalStr(e.target.value.replace(/[^0-9,.]/g, ''))}
-        onBlur={() => {
-          const num = parseFloat(localStr.replace(',', '.'));
-          if (!isNaN(num)) {
-            const clamped = Math.min(Math.max(num, min), max);
-            onChange(clamped);
-            setLocalStr(clamped.toString().replace('.', ','));
-          } else {
-            setLocalStr(value.toString().replace('.', ','));
-          }
-        }}
-        onFocus={(e) => e.target.select()}
-        className="text-base font-bold tabular-nums bg-transparent rounded px-1.5 py-0.5 outline-none border transition-colors text-right w-full"
-        style={{ color: C.dark, borderColor: 'transparent' }}
-        onFocusCapture={(e) => { e.target.style.borderColor = C.blue; e.target.style.backgroundColor = '#f8fafc'; }}
-        onBlurCapture={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent'; }}
-      />
-      {suffix && <span className="text-sm shrink-0" style={{ color: C.textDim }}>{suffix}</span>}
-    </div>
-  );
-};
-
 const InputCard = ({ label, hint, children }) => (
   <div>
-    <label className="text-xs uppercase tracking-wider font-bold block mb-2" style={{ color: C.dark }}>
+    <label className="text-xs uppercase tracking-wider font-bold block mb-2" style={{ color: SIM.dark }}>
       {label}
     </label>
-    <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
+    <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
       {children}
     </div>
-    {hint && <div className="text-[11px] mt-1" style={{ color: C.textDim }}>{hint}</div>}
+    {hint && <div className="text-[11px] mt-1" style={{ color: SIM.textDim }}>{hint}</div>}
   </div>
 );
 
@@ -227,11 +158,11 @@ export default function SimuladorSucessaoSeguro() {
   const pieData = useMemo(() => {
     if (!resultado) return [];
     return [
-      { name: 'Renda da família', value: Math.round(resultado.coberturaRenda), color: C.navy },
-      { name: 'Sucessão (ITCMD + custos)', value: Math.round(resultado.valorItcmd + resultado.valorProc), color: C.orange },
-      { name: 'Dívidas', value: Math.round(resultado.dividas), color: C.blue },
+      { name: 'Renda da família', value: Math.round(resultado.coberturaRenda), color: SIM.navy },
+      { name: 'Sucessão (ITCMD + custos)', value: Math.round(resultado.valorItcmd + resultado.valorProc), color: SIM.orange },
+      { name: 'Dívidas', value: Math.round(resultado.dividas), color: SIM.blue },
       { name: 'Outras despesas', value: Math.round(resultado.outrasDespesas), color: '#7c3aed' },
-      { name: 'Educação', value: Math.round(resultado.custoEducacao), color: C.green },
+      { name: 'Educação', value: Math.round(resultado.custoEducacao), color: GREEN },
     ].filter(d => d.value > 0);
   }, [resultado]);
 
@@ -241,22 +172,22 @@ export default function SimuladorSucessaoSeguro() {
     if (!active || !payload || !payload.length) return null;
     const p = payload[0];
     return (
-      <div className="rounded-lg p-2.5 text-xs" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+      <div className="rounded-lg p-2.5 text-xs" style={{ backgroundColor: '#ffffff', border: `1px solid ${SIM.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
         <div className="font-semibold mb-0.5" style={{ color: p.payload.color }}>{p.name}</div>
-        <div className="tabular-nums font-bold" style={{ color: C.dark }}>{fmt(p.value)}</div>
-        <div className="text-[10px]" style={{ color: C.textDim }}>{pct(p.value)}% do total</div>
+        <div className="tabular-nums font-bold" style={{ color: SIM.dark }}>{fmt(p.value)}</div>
+        <div className="text-[10px]" style={{ color: SIM.textDim }}>{pct(p.value)}% do total</div>
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#ffffff', color: C.dark, borderTop: `4px solid ${CAT.cor}` }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#ffffff', color: SIM.dark, borderTop: `4px solid ${CAT.cor}` }}>
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
 
         {/* HEADER */}
         <div className="mb-8">
           <div className="mb-4">
-            <Link href="/simuladores" className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: C.textDim }}>
+            <Link href="/simuladores" className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: SIM.textDim }}>
               <span aria-hidden>←</span> Todos os simuladores
             </Link>
           </div>
@@ -266,9 +197,9 @@ export default function SimuladorSucessaoSeguro() {
             {CAT.nome}
           </div>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 leading-[1.1]">
-            Sucessão e seguro de vida: <span style={{ color: C.navy }}>quanto você precisa e como cobrir</span>?
+            Sucessão e seguro de vida: <span style={{ color: SIM.navy }}>quanto você precisa e como cobrir</span>?
           </h1>
-          <p className="text-base max-w-2xl" style={{ color: C.textDim }}>
+          <p className="text-base max-w-2xl" style={{ color: SIM.textDim }}>
             Calcule o capital total que protege sua família e descubra o mix ideal entre seguro de vida e previdência para cobrir o que falta — com plano de ação personalizado de acordo com a sua idade.
           </p>
         </div>
@@ -277,10 +208,10 @@ export default function SimuladorSucessaoSeguro() {
         <div className="space-y-5 mb-5">
 
           {/* Bloco 1 — Informações básicas */}
-          <div className="rounded-2xl p-5 md:p-6" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}` }}>
+          <div className="rounded-2xl p-5 md:p-6" style={{ backgroundColor: '#ffffff', border: `1px solid ${SIM.border}` }}>
             <div className="flex items-center gap-2 mb-3">
-              <Users className="w-4 h-4" style={{ color: C.navy }} />
-              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.dark }}>
+              <Users className="w-4 h-4" style={{ color: SIM.navy }} />
+              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.dark }}>
                 Informações básicas
               </div>
             </div>
@@ -298,10 +229,10 @@ export default function SimuladorSucessaoSeguro() {
           </div>
 
           {/* Bloco 2 — Despesas e compromissos */}
-          <div className="rounded-2xl p-5 md:p-6" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}` }}>
+          <div className="rounded-2xl p-5 md:p-6" style={{ backgroundColor: '#ffffff', border: `1px solid ${SIM.border}` }}>
             <div className="flex items-center gap-2 mb-3">
-              <Banknote className="w-4 h-4" style={{ color: C.navy }} />
-              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.dark }}>
+              <Banknote className="w-4 h-4" style={{ color: SIM.navy }} />
+              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.dark }}>
                 Despesas e compromissos
               </div>
             </div>
@@ -319,32 +250,32 @@ export default function SimuladorSucessaoSeguro() {
           </div>
 
           {/* Bloco 3 — Sucessão */}
-          <div className="rounded-2xl p-5 md:p-6" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}` }}>
+          <div className="rounded-2xl p-5 md:p-6" style={{ backgroundColor: '#ffffff', border: `1px solid ${SIM.border}` }}>
             <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
               <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4" style={{ color: C.navy }} />
-                <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.dark }}>
+                <Building2 className="w-4 h-4" style={{ color: SIM.navy }} />
+                <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.dark }}>
                   Sucessão
                 </div>
               </div>
               <button onClick={() => setMostrarConfig(!mostrarConfig)}
                 className="inline-flex items-center gap-1.5 text-[11px] font-medium transition-colors hover:opacity-70"
-                style={{ color: C.textDim }}>
+                style={{ color: SIM.textDim }}>
                 <Settings2 className="w-3.5 h-3.5" />
                 Ajustar alíquotas e premissas
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs uppercase tracking-wider font-bold block mb-2" style={{ color: C.dark }}>
+                <label className="text-xs uppercase tracking-wider font-bold block mb-2" style={{ color: SIM.dark }}>
                   Estado do registro dos bens
                 </label>
-                <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
+                <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
                   <select
                     value={uf}
                     onChange={(e) => setUf(e.target.value)}
                     className="w-full bg-transparent text-base font-bold outline-none cursor-pointer"
-                    style={{ color: C.dark }}
+                    style={{ color: SIM.dark }}
                   >
                     {ITCMD_ESTADOS.map(e => (
                       <option key={e.uf} value={e.uf}>
@@ -353,7 +284,7 @@ export default function SimuladorSucessaoSeguro() {
                     ))}
                   </select>
                 </div>
-                <div className="text-[11px] mt-1" style={{ color: C.textDim }}>
+                <div className="text-[11px] mt-1" style={{ color: SIM.textDim }}>
                   {estadoAtual && estadoAtual.min !== estadoAtual.max
                     ? `${estadoAtual.tipo} de ${estadoAtual.min}% a ${estadoAtual.max}%. Usamos a alíquota máxima como referência conservadora — na progressividade marginal a alíquota efetiva fica entre o piso e o teto.`
                     : `Alíquota ${estadoAtual?.tipo.toLowerCase()} de ${estadoAtual?.max}%.${uf === 'SP' || uf === 'MG' || uf === 'PR' || uf === 'ES' || uf === 'RR' ? ' Estado em transição obrigatória para a progressividade até 2027 (EC 132/2023).' : ''}`}
@@ -365,7 +296,7 @@ export default function SimuladorSucessaoSeguro() {
             </div>
 
             {mostrarConfig && (
-              <div className="mt-4 pt-4 grid grid-cols-1 md:grid-cols-3 gap-4" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
+              <div className="mt-4 pt-4 grid grid-cols-1 md:grid-cols-3 gap-4" style={{ borderTop: `1px solid ${SIM.borderSoft}` }}>
                 <InputCard label="Inflação anual" hint="Só para ilustrar a renda equivalente daqui a alguns anos. Não muda a cobertura.">
                   <NumFieldDecimal value={inflacao} onChange={setInflacao} min={0} max={30} suffix="% a.a." />
                 </InputCard>
@@ -383,14 +314,14 @@ export default function SimuladorSucessaoSeguro() {
           </div>
 
           {/* Bloco 4 — O que você já tem */}
-          <div className="rounded-2xl p-5 md:p-6" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}` }}>
+          <div className="rounded-2xl p-5 md:p-6" style={{ backgroundColor: '#ffffff', border: `1px solid ${SIM.border}` }}>
             <div className="flex items-center gap-2 mb-1">
-              <Wallet className="w-4 h-4" style={{ color: C.navy }} />
-              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.dark }}>
+              <Wallet className="w-4 h-4" style={{ color: SIM.navy }} />
+              <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.dark }}>
                 O que você já tem hoje
               </div>
             </div>
-            <p className="text-xs mb-3" style={{ color: C.textDim }}>
+            <p className="text-xs mb-3" style={{ color: SIM.textDim }}>
               Opcional. Se você já tem seguro contratado ou previdência acumulada, vamos descontar do que ainda precisa cobrir.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -406,63 +337,63 @@ export default function SimuladorSucessaoSeguro() {
 
         {/* RESULTADO */}
         {!podeCalcular ? (
-          <div className="rounded-2xl p-12 md:p-16 text-center" style={{ backgroundColor: '#f8fafc', border: `1px dashed ${C.border}` }}>
-            <Shield className="w-12 h-12 mx-auto mb-4" style={{ color: C.textMore }} />
-            <h3 className="text-lg font-semibold mb-1" style={{ color: C.dark }}>Preencha idade, renda e período para começar</h3>
-            <p className="text-sm" style={{ color: C.textDim }}>São os três campos essenciais. O resto vem depois.</p>
+          <div className="rounded-2xl p-12 md:p-16 text-center" style={{ backgroundColor: '#f8fafc', border: `1px dashed ${SIM.border}` }}>
+            <Shield className="w-12 h-12 mx-auto mb-4" style={{ color: SIM.textMore }} />
+            <h3 className="text-lg font-semibold mb-1" style={{ color: SIM.dark }}>Preencha idade, renda e período para começar</h3>
+            <p className="text-sm" style={{ color: SIM.textDim }}>São os três campos essenciais. O resto vem depois.</p>
           </div>
         ) : (
           <>
             {/* Card 1 - Necessidade total */}
             <div className="rounded-2xl p-5 md:p-8 mb-5 relative overflow-hidden"
-              style={{ background: `linear-gradient(135deg, ${C.blueBgSoft} 0%, #ffffff 100%)`, border: `1px solid ${C.blueBg}` }}>
+              style={{ background: `linear-gradient(135deg, ${SIM.blueBgSoft} 0%, #ffffff 100%)`, border: `1px solid ${SIM.blueBg}` }}>
               <div className="flex items-center gap-2 mb-1">
-                <Heart className="w-4 h-4" style={{ color: C.orange }} />
-                <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>
+                <Heart className="w-4 h-4" style={{ color: SIM.orange }} />
+                <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>
                   Capital total necessário
                 </div>
               </div>
-              <div className="text-4xl md:text-6xl font-bold tracking-tight mb-2 tabular-nums" style={{ color: C.navy }}>
+              <div className="text-4xl md:text-6xl font-bold tracking-tight mb-2 tabular-nums" style={{ color: SIM.navy }}>
                 {fmtCents(resultado.necessidadeTotal)}
               </div>
-              <p className="text-sm max-w-2xl" style={{ color: C.textDim }}>
+              <p className="text-sm max-w-2xl" style={{ color: SIM.textDim }}>
                 Valor que protege a renda da sua família por <strong>{anosProtecao} anos</strong>, além de quitar dívidas, garantir a educação dos filhos e cobrir os custos da sucessão. A cobertura de renda é trazida a valor presente com juro real de {juroReal.toString().replace('.', ',')}% a.a. — premissa de que o capital indenizado segue investido enquanto sustenta a família.
               </p>
             </div>
 
             {/* Cards 2 e 3 - Já tem + Gap (lado a lado) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-              <div className="rounded-2xl p-5 md:p-6" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}` }}>
+              <div className="rounded-2xl p-5 md:p-6" style={{ backgroundColor: '#ffffff', border: `1px solid ${SIM.border}` }}>
                 <div className="flex items-center gap-2 mb-1">
-                  <CheckCircle2 className="w-4 h-4" style={{ color: C.green }} />
-                  <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>
+                  <CheckCircle2 className="w-4 h-4" style={{ color: GREEN }} />
+                  <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>
                     O que você já tem
                   </div>
                 </div>
-                <div className="text-3xl font-bold tracking-tight mb-1 tabular-nums" style={{ color: C.green }}>
+                <div className="text-3xl font-bold tracking-tight mb-1 tabular-nums" style={{ color: GREEN }}>
                   {fmt(resultado.jaTem)}
                 </div>
-                <div className="text-xs space-y-0.5" style={{ color: C.textDim }}>
+                <div className="text-xs space-y-0.5" style={{ color: SIM.textDim }}>
                   <div className="flex justify-between"><span>Seguro de vida atual:</span><strong className="tabular-nums">{fmt(seguroAtual)}</strong></div>
                   <div className="flex justify-between"><span>Previdência acumulada:</span><strong className="tabular-nums">{fmt(prevAtual)}</strong></div>
                 </div>
               </div>
 
               <div className="rounded-2xl p-5 md:p-6" style={{
-                backgroundColor: resultado.gap > 0 ? C.orangeBgSoft : C.greenBg,
+                backgroundColor: resultado.gap > 0 ? SIM.orangeBgSoft : GREEN_BG,
                 border: `1px solid ${resultado.gap > 0 ? '#fed7aa' : '#bbf7d0'}`
               }}>
                 <div className="flex items-center gap-2 mb-1">
                   {resultado.gap > 0 ? (
-                    <AlertCircle className="w-4 h-4" style={{ color: C.orange }} />
+                    <AlertCircle className="w-4 h-4" style={{ color: SIM.orange }} />
                   ) : (
-                    <CheckCircle2 className="w-4 h-4" style={{ color: C.green }} />
+                    <CheckCircle2 className="w-4 h-4" style={{ color: GREEN }} />
                   )}
-                  <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: resultado.gap > 0 ? C.orangeDark : C.green }}>
+                  <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: resultado.gap > 0 ? SIM.orangeDark : GREEN }}>
                     {resultado.gap > 0 ? 'Falta cobrir' : 'Você está protegido'}
                   </div>
                 </div>
-                <div className="text-3xl font-bold tracking-tight mb-1 tabular-nums" style={{ color: resultado.gap > 0 ? C.orange : C.green }}>
+                <div className="text-3xl font-bold tracking-tight mb-1 tabular-nums" style={{ color: resultado.gap > 0 ? SIM.orange : GREEN }}>
                   {fmt(resultado.gap)}
                 </div>
                 <p className="text-xs" style={{ color: resultado.gap > 0 ? '#7c2d12' : '#14532d' }}>
@@ -475,31 +406,31 @@ export default function SimuladorSucessaoSeguro() {
 
             {/* PLANO DE AÇÃO (só se gap > 0) */}
             {resultado.gap > 0 && (
-              <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `2px solid ${C.navy}` }}>
+              <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `2px solid ${SIM.navy}` }}>
                 <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className="w-4 h-4" style={{ color: C.navy }} />
-                  <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.navy }}>
+                  <TrendingUp className="w-4 h-4" style={{ color: SIM.navy }} />
+                  <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.navy }}>
                     Plano de ação personalizado
                   </div>
                 </div>
-                <h3 className="text-xl font-bold mb-1" style={{ color: C.dark }}>
+                <h3 className="text-xl font-bold mb-1" style={{ color: SIM.dark }}>
                   Como cobrir os {fmt(resultado.gap)} que faltam
                 </h3>
-                <p className="text-sm mb-5" style={{ color: C.textDim }}>
+                <p className="text-sm mb-5" style={{ color: SIM.textDim }}>
                   Com {idade} anos, você está na fase <strong>{resultado.split.label}</strong>. Sugerimos um mix de <strong>{(resultado.split.seguro * 100).toFixed(0)}% seguro + {(resultado.split.prev * 100).toFixed(0)}% previdência</strong>:
                 </p>
 
                 {/* Mix recomendado — só metas, sem precificação */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
                   {/* Seguro */}
-                  <div className="rounded-xl p-4" style={{ backgroundColor: C.orangeBgSoft, border: `1px solid #fed7aa` }}>
+                  <div className="rounded-xl p-4" style={{ backgroundColor: SIM.orangeBgSoft, border: `1px solid #fed7aa` }}>
                     <div className="flex items-center gap-2 mb-2">
-                      <Shield className="w-4 h-4" style={{ color: C.orange }} />
-                      <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.orangeDark }}>
+                      <Shield className="w-4 h-4" style={{ color: SIM.orange }} />
+                      <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.orangeDark }}>
                         Seguro de vida ({(resultado.split.seguro * 100).toFixed(0)}%)
                       </div>
                     </div>
-                    <div className="text-3xl font-bold mb-1 tabular-nums" style={{ color: C.orangeDark }}>
+                    <div className="text-3xl font-bold mb-1 tabular-nums" style={{ color: SIM.orangeDark }}>
                       {fmt(resultado.seguroAdicional)}
                     </div>
                     <div className="text-xs mb-3" style={{ color: '#7c2d12' }}>de capital segurado adicional</div>
@@ -509,66 +440,66 @@ export default function SimuladorSucessaoSeguro() {
                   </div>
 
                   {/* Previdência */}
-                  <div className="rounded-xl p-4" style={{ backgroundColor: C.blueBgSoft, border: `1px solid ${C.blueBg}` }}>
+                  <div className="rounded-xl p-4" style={{ backgroundColor: SIM.blueBgSoft, border: `1px solid ${SIM.blueBg}` }}>
                     <div className="flex items-center gap-2 mb-2">
-                      <PiggyBank className="w-4 h-4" style={{ color: C.blue }} />
-                      <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.navy }}>
+                      <PiggyBank className="w-4 h-4" style={{ color: SIM.blue }} />
+                      <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.navy }}>
                         Previdência ({(resultado.split.prev * 100).toFixed(0)}%)
                       </div>
                     </div>
-                    <div className="text-3xl font-bold mb-1 tabular-nums" style={{ color: C.navy }}>
+                    <div className="text-3xl font-bold mb-1 tabular-nums" style={{ color: SIM.navy }}>
                       {fmt(resultado.prevAdicional)}
                     </div>
-                    <div className="text-xs mb-3" style={{ color: C.navy }}>de meta de acumulação em {anosProtecao} anos</div>
-                    <p className="text-[11px]" style={{ color: C.navy }}>
+                    <div className="text-xs mb-3" style={{ color: SIM.navy }}>de meta de acumulação em {anosProtecao} anos</div>
+                    <p className="text-[11px]" style={{ color: SIM.navy }}>
                       Constrói patrimônio em vida. <strong>Não entra no inventário</strong> e vai direto para o beneficiário, sem ITCMD. Ainda tem benefício fiscal no IR.
                     </p>
                   </div>
                 </div>
 
                 {/* Alternativas — só capital/meta, sem precificação */}
-                <div className="pt-5 mb-5" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
-                  <div className="text-xs uppercase tracking-wider font-semibold mb-3" style={{ color: C.textDim }}>
+                <div className="pt-5 mb-5" style={{ borderTop: `1px solid ${SIM.borderSoft}` }}>
+                  <div className="text-xs uppercase tracking-wider font-semibold mb-3" style={{ color: SIM.textDim }}>
                     Outras formas de cobrir o que falta
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="rounded-lg p-3.5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
+                    <div className="rounded-lg p-3.5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
                       <div className="flex items-center gap-1.5 mb-2">
-                        <Shield className="w-3.5 h-3.5" style={{ color: C.orange }} />
-                        <div className="text-xs font-semibold" style={{ color: C.dark }}>100% em seguro</div>
+                        <Shield className="w-3.5 h-3.5" style={{ color: SIM.orange }} />
+                        <div className="text-xs font-semibold" style={{ color: SIM.dark }}>100% em seguro</div>
                       </div>
-                      <div className="text-lg font-bold tabular-nums mb-0.5" style={{ color: C.orangeDark }}>
+                      <div className="text-lg font-bold tabular-nums mb-0.5" style={{ color: SIM.orangeDark }}>
                         {fmt(resultado.gap)}
                       </div>
-                      <div className="text-[10px] mb-2" style={{ color: C.textDim }}>de capital em seguro de vida</div>
+                      <div className="text-[10px] mb-2" style={{ color: SIM.textDim }}>de capital em seguro de vida</div>
                       <div className="text-[11px]" style={{ color: '#7c2d12' }}>
                         <strong>A favor:</strong> proteção máxima desde o dia 1.<br/>
                         <strong>Contra:</strong> não constrói patrimônio, e o prêmio sobe fortemente com a idade nas renovações.
                       </div>
                     </div>
-                    <div className="rounded-lg p-3.5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
+                    <div className="rounded-lg p-3.5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
                       <div className="flex items-center gap-1.5 mb-2">
-                        <PiggyBank className="w-3.5 h-3.5" style={{ color: C.blue }} />
-                        <div className="text-xs font-semibold" style={{ color: C.dark }}>100% em previdência</div>
+                        <PiggyBank className="w-3.5 h-3.5" style={{ color: SIM.blue }} />
+                        <div className="text-xs font-semibold" style={{ color: SIM.dark }}>100% em previdência</div>
                       </div>
-                      <div className="text-lg font-bold tabular-nums mb-0.5" style={{ color: C.navy }}>
+                      <div className="text-lg font-bold tabular-nums mb-0.5" style={{ color: SIM.navy }}>
                         {fmt(resultado.gap)}
                       </div>
-                      <div className="text-[10px] mb-2" style={{ color: C.textDim }}>de meta acumulada em {anosProtecao} anos</div>
-                      <div className="text-[11px]" style={{ color: C.navy }}>
+                      <div className="text-[10px] mb-2" style={{ color: SIM.textDim }}>de meta acumulada em {anosProtecao} anos</div>
+                      <div className="text-[11px]" style={{ color: SIM.navy }}>
                         <strong>A favor:</strong> constrói patrimônio em vida com vantagem fiscal.<br/>
                         <strong>Contra:</strong> não cobre morte precoce — se ocorrer no segundo ano, a família terá apenas o que foi acumulado.
                       </div>
                     </div>
-                    <div className="rounded-lg p-3.5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
+                    <div className="rounded-lg p-3.5" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
                       <div className="flex items-center gap-1.5 mb-2">
-                        <Wallet className="w-3.5 h-3.5" style={{ color: C.green }} />
-                        <div className="text-xs font-semibold" style={{ color: C.dark }}>Aporte único em previdência</div>
+                        <Wallet className="w-3.5 h-3.5" style={{ color: GREEN }} />
+                        <div className="text-xs font-semibold" style={{ color: SIM.dark }}>Aporte único em previdência</div>
                       </div>
-                      <div className="text-lg font-bold tabular-nums mb-0.5" style={{ color: C.green }}>
+                      <div className="text-lg font-bold tabular-nums mb-0.5" style={{ color: GREEN }}>
                         {fmt(resultado.gap)}
                       </div>
-                      <div className="text-[10px] mb-2" style={{ color: C.textDim }}>aportado de uma vez na previdência</div>
+                      <div className="text-[10px] mb-2" style={{ color: SIM.textDim }}>aportado de uma vez na previdência</div>
                       <div className="text-[11px]" style={{ color: '#14532d' }}>
                         <strong>A favor:</strong> dispensa seguro, capital já protege desde o dia 1.<br/>
                         <strong>Contra:</strong> exige caixa disponível hoje. Funciona se você já tem o valor líquido.
@@ -578,11 +509,11 @@ export default function SimuladorSucessaoSeguro() {
                 </div>
 
                 {/* Chamada para especialista */}
-                <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
-                  <Info className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.navy }} />
-                  <div className="text-xs" style={{ color: C.dark }}>
+                <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
+                  <Info className="w-4 h-4 shrink-0 mt-0.5" style={{ color: SIM.navy }} />
+                  <div className="text-xs" style={{ color: SIM.dark }}>
                     <strong>Quer saber quanto cada caminho custaria por mês?</strong>
-                    <div className="mt-1" style={{ color: C.textDim }}>
+                    <div className="mt-1" style={{ color: SIM.textDim }}>
                       Prêmio de seguro varia com idade, saúde, prazo, tipo de apólice (temporário, vitalício, resgatável) e seguradora. Aporte de previdência depende do produto (VGBL/PGBL), tabela tributária e taxa de carregamento. Fazemos a cotação personalizada e fechamos os números reais.
                     </div>
                   </div>
@@ -591,14 +522,14 @@ export default function SimuladorSucessaoSeguro() {
             )}
 
             {/* Composição */}
-            <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `1px solid ${C.border}` }}>
+            <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: '#ffffff', border: `1px solid ${SIM.border}` }}>
               <div className="flex items-center gap-2 mb-1">
-                <Briefcase className="w-4 h-4" style={{ color: C.navy }} />
-                <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.textDim }}>
+                <Briefcase className="w-4 h-4" style={{ color: SIM.navy }} />
+                <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>
                   Composição da necessidade
                 </div>
               </div>
-              <h3 className="text-xl font-bold mb-4" style={{ color: C.dark }}>Como os {fmt(resultado.necessidadeTotal)} se dividem</h3>
+              <h3 className="text-xl font-bold mb-4" style={{ color: SIM.dark }}>Como os {fmt(resultado.necessidadeTotal)} se dividem</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 <div style={{ width: '100%', height: 280 }}>
@@ -627,14 +558,14 @@ export default function SimuladorSucessaoSeguro() {
                 <div className="space-y-2.5">
                   {pieData.map((item) => (
                     <div key={item.name} className="flex items-center justify-between gap-3 py-2"
-                      style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
+                      style={{ borderBottom: `1px solid ${SIM.borderSoft}` }}>
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
-                        <span className="text-sm truncate" style={{ color: C.dark }}>{item.name}</span>
+                        <span className="text-sm truncate" style={{ color: SIM.dark }}>{item.name}</span>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-sm font-bold tabular-nums" style={{ color: C.dark }}>{fmt(item.value)}</div>
-                        <div className="text-[11px] tabular-nums" style={{ color: C.textDim }}>{pct(item.value)}%</div>
+                        <div className="text-sm font-bold tabular-nums" style={{ color: SIM.dark }}>{fmt(item.value)}</div>
+                        <div className="text-[11px] tabular-nums" style={{ color: SIM.textDim }}>{pct(item.value)}%</div>
                       </div>
                     </div>
                   ))}
@@ -642,66 +573,66 @@ export default function SimuladorSucessaoSeguro() {
               </div>
 
               {/* Detalhamento — dois grupos: "vida" e "custo da sucessão" */}
-              <div className="mt-5 pt-5" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
+              <div className="mt-5 pt-5" style={{ borderTop: `1px solid ${SIM.borderSoft}` }}>
 
                 {/* Grupo 1: Para a família continuar a vida */}
                 <div className="mb-5">
                   <div className="flex items-baseline justify-between gap-2 mb-2.5 flex-wrap">
-                    <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: C.navy }}>
+                    <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: SIM.navy }}>
                       Para a família continuar a vida
                     </div>
-                    <div className="text-sm font-bold tabular-nums" style={{ color: C.navy }}>
+                    <div className="text-sm font-bold tabular-nums" style={{ color: SIM.navy }}>
                       {fmt(resultado.coberturaRenda + resultado.custoEducacao + resultado.dividas + resultado.outrasDespesas)}
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                    <div className="rounded-lg p-3" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
+                    <div className="rounded-lg p-3" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
                       <div className="flex items-center gap-1.5 mb-1">
-                        <Users className="w-3 h-3" style={{ color: C.navy }} />
-                        <div className="font-semibold" style={{ color: C.navy }}>Renda da família</div>
+                        <Users className="w-3 h-3" style={{ color: SIM.navy }} />
+                        <div className="font-semibold" style={{ color: SIM.navy }}>Renda da família</div>
                       </div>
-                      <div className="text-base font-bold tabular-nums" style={{ color: C.dark }}>{fmt(resultado.coberturaRenda)}</div>
-                      <div className="text-[10px] mt-0.5" style={{ color: C.textDim }}>
+                      <div className="text-base font-bold tabular-nums" style={{ color: SIM.dark }}>{fmt(resultado.coberturaRenda)}</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: SIM.textDim }}>
                         {fmt(rendaMensal)}/mês por {anosProtecao * 12} meses, trazidos a valor presente com juro real de {juroReal.toString().replace('.', ',')}% a.a. Em {anosProtecao} anos, equivaleria a {fmt(resultado.rendaFutura)}/mês com inflação de {inflacao.toString().replace('.', ',')}% a.a.
                       </div>
                     </div>
-                    <div className="rounded-lg p-3" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
+                    <div className="rounded-lg p-3" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
                       <div className="flex items-center gap-1.5 mb-1">
-                        <GraduationCap className="w-3 h-3" style={{ color: C.green }} />
-                        <div className="font-semibold" style={{ color: C.green }}>Educação</div>
+                        <GraduationCap className="w-3 h-3" style={{ color: GREEN }} />
+                        <div className="font-semibold" style={{ color: GREEN }}>Educação</div>
                       </div>
-                      <div className="text-base font-bold tabular-nums" style={{ color: C.dark }}>{fmt(resultado.custoEducacao)}</div>
-                      <div className="text-[10px] mt-0.5" style={{ color: C.textDim }}>Valor reservado para a educação dos filhos</div>
+                      <div className="text-base font-bold tabular-nums" style={{ color: SIM.dark }}>{fmt(resultado.custoEducacao)}</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: SIM.textDim }}>Valor reservado para a educação dos filhos</div>
                     </div>
-                    <div className="rounded-lg p-3" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
+                    <div className="rounded-lg p-3" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
                       <div className="flex items-center gap-1.5 mb-1">
-                        <Banknote className="w-3 h-3" style={{ color: C.blue }} />
-                        <div className="font-semibold" style={{ color: C.blue }}>Dívidas</div>
+                        <Banknote className="w-3 h-3" style={{ color: SIM.blue }} />
+                        <div className="font-semibold" style={{ color: SIM.blue }}>Dívidas</div>
                       </div>
-                      <div className="text-base font-bold tabular-nums" style={{ color: C.dark }}>{fmt(resultado.dividas)}</div>
-                      <div className="text-[10px] mt-0.5" style={{ color: C.textDim }}>Quitação imediata dos passivos</div>
+                      <div className="text-base font-bold tabular-nums" style={{ color: SIM.dark }}>{fmt(resultado.dividas)}</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: SIM.textDim }}>Quitação imediata dos passivos</div>
                     </div>
-                    <div className="rounded-lg p-3" style={{ backgroundColor: '#f8fafc', border: `1px solid ${C.border}` }}>
+                    <div className="rounded-lg p-3" style={{ backgroundColor: '#f8fafc', border: `1px solid ${SIM.border}` }}>
                       <div className="flex items-center gap-1.5 mb-1">
                         <FileText className="w-3 h-3" style={{ color: '#7c3aed' }} />
                         <div className="font-semibold" style={{ color: '#7c3aed' }}>Outras despesas</div>
                       </div>
-                      <div className="text-base font-bold tabular-nums" style={{ color: C.dark }}>{fmt(resultado.outrasDespesas)}</div>
-                      <div className="text-[10px] mt-0.5" style={{ color: C.textDim }}>Funeral, mudança, ajustes</div>
+                      <div className="text-base font-bold tabular-nums" style={{ color: SIM.dark }}>{fmt(resultado.outrasDespesas)}</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: SIM.textDim }}>Funeral, mudança, ajustes</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Grupo 2: Custo da sucessão — destacado em laranja */}
-                <div className="rounded-xl p-4" style={{ backgroundColor: C.orangeBgSoft, border: `1px solid #fed7aa` }}>
+                <div className="rounded-xl p-4" style={{ backgroundColor: SIM.orangeBgSoft, border: `1px solid #fed7aa` }}>
                   <div className="flex items-baseline justify-between gap-2 mb-1 flex-wrap">
                     <div className="flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5" style={{ color: C.orangeDark }} />
-                      <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: C.orangeDark }}>
+                      <Building2 className="w-3.5 h-3.5" style={{ color: SIM.orangeDark }} />
+                      <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: SIM.orangeDark }}>
                         Custo da sucessão
                       </div>
                     </div>
-                    <div className="text-lg font-bold tabular-nums" style={{ color: C.orangeDark }}>
+                    <div className="text-lg font-bold tabular-nums" style={{ color: SIM.orangeDark }}>
                       {fmt(resultado.valorItcmd + resultado.valorProc)}
                     </div>
                   </div>
@@ -711,21 +642,21 @@ export default function SimuladorSucessaoSeguro() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                     <div className="rounded-lg p-3" style={{ backgroundColor: '#ffffff', border: `1px solid #fed7aa` }}>
                       <div className="flex items-center gap-1.5 mb-1">
-                        <FileText className="w-3 h-3" style={{ color: C.orange }} />
-                        <div className="font-semibold" style={{ color: C.orange }}>ITCMD ({uf})</div>
+                        <FileText className="w-3 h-3" style={{ color: SIM.orange }} />
+                        <div className="font-semibold" style={{ color: SIM.orange }}>ITCMD ({uf})</div>
                       </div>
-                      <div className="text-base font-bold tabular-nums" style={{ color: C.dark }}>{fmt(resultado.valorItcmd)}</div>
-                      <div className="text-[10px] mt-0.5" style={{ color: C.textDim }}>
+                      <div className="text-base font-bold tabular-nums" style={{ color: SIM.dark }}>{fmt(resultado.valorItcmd)}</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: SIM.textDim }}>
                         Imposto estadual de transmissão. {itcmd.toString().replace('.', ',')}% sobre o patrimônio total. Pago antes da partilha — sem isso, o inventário não anda.
                       </div>
                     </div>
                     <div className="rounded-lg p-3" style={{ backgroundColor: '#ffffff', border: `1px solid #fed7aa` }}>
                       <div className="flex items-center gap-1.5 mb-1">
-                        <Briefcase className="w-3 h-3" style={{ color: C.orangeDark }} />
-                        <div className="font-semibold" style={{ color: C.orangeDark }}>Custos jurídicos e cartorários</div>
+                        <Briefcase className="w-3 h-3" style={{ color: SIM.orangeDark }} />
+                        <div className="font-semibold" style={{ color: SIM.orangeDark }}>Custos jurídicos e cartorários</div>
                       </div>
-                      <div className="text-base font-bold tabular-nums" style={{ color: C.dark }}>{fmt(resultado.valorProc)}</div>
-                      <div className="text-[10px] mt-0.5 space-y-0.5" style={{ color: C.textDim }}>
+                      <div className="text-base font-bold tabular-nums" style={{ color: SIM.dark }}>{fmt(resultado.valorProc)}</div>
+                      <div className="text-[10px] mt-0.5 space-y-0.5" style={{ color: SIM.textDim }}>
                         <div className="flex justify-between gap-2">
                           <span>Honorários advocatícios (~5%)</span>
                           <strong className="tabular-nums">{fmt(resultado.valorProc * 5/7)}</strong>
@@ -742,11 +673,11 @@ export default function SimuladorSucessaoSeguro() {
             </div>
 
             {/* Insight box */}
-            <div className="rounded-2xl p-5 mb-5" style={{ backgroundColor: C.orangeBgSoft, border: `1px solid #fed7aa` }}>
+            <div className="rounded-2xl p-5 mb-5" style={{ backgroundColor: SIM.orangeBgSoft, border: `1px solid #fed7aa` }}>
               <div className="flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.orange }} />
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: SIM.orange }} />
                 <div className="text-xs" style={{ color: '#7c2d12' }}>
-                  <strong style={{ color: C.dark }}>
+                  <strong style={{ color: SIM.dark }}>
                     Sem seguro, sua família precisaria de {fmt(resultado.valorItcmd + resultado.valorProc)} em caixa imediato só para abrir o inventário.
                   </strong>
                   {' '}E ainda viver {anosProtecao} anos sem a sua renda. O seguro de vida e a previdência VGBL resolvem os dois problemas — e o valor pago para a família <strong>não entra no inventário e é isento de ITCMD</strong>.
@@ -755,24 +686,24 @@ export default function SimuladorSucessaoSeguro() {
             </div>
 
             {/* RESSALVAS */}
-            <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: C.blueBgSoft, border: `1px solid ${C.blueBg}` }}>
+            <div className="rounded-2xl p-5 md:p-6 mb-5" style={{ backgroundColor: SIM.blueBgSoft, border: `1px solid ${SIM.blueBg}` }}>
               <div className="flex items-center gap-2 mb-3">
-                <Info className="w-4 h-4" style={{ color: C.navy }} />
-                <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: C.navy }}>
+                <Info className="w-4 h-4" style={{ color: SIM.navy }} />
+                <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: SIM.navy }}>
                   Como ler esses números
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs" style={{ color: C.navy }}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs" style={{ color: SIM.navy }}>
                 <div>
-                  <div className="font-semibold mb-1" style={{ color: C.dark }}>Renda descontada a juro real</div>
+                  <div className="font-semibold mb-1" style={{ color: SIM.dark }}>Renda descontada a juro real</div>
                   Cobertura de renda = valor presente de {fmt(rendaMensal)}/mês por {anosProtecao * 12} meses, descontado a juro real de {juroReal.toString().replace('.', ',')}% a.a. A apólice é corrigida pelo IPCA e o capital indenizado, aplicado em Tesouro IPCA+ ou equivalente, rende acima da inflação — por isso o desconto. Com juro real de 0%, a conta vira renda × meses (cenário ultraconservador).
                 </div>
                 <div>
-                  <div className="font-semibold mb-1" style={{ color: C.dark }}>Mix por idade é regra de bolso</div>
+                  <div className="font-semibold mb-1" style={{ color: SIM.dark }}>Mix por idade é regra de bolso</div>
                   A divisão {(resultado.split.seguro * 100).toFixed(0)}/{(resultado.split.prev * 100).toFixed(0)} é uma heurística baseada na fase de vida ({resultado.split.label}). Quanto mais jovem, mais seguro; quanto mais maduro, mais previdência (que acumula em vida e não entra no inventário).
                 </div>
                 <div>
-                  <div className="font-semibold mb-1" style={{ color: C.orangeDark }}>⚠ Custos vêm na cotação</div>
+                  <div className="font-semibold mb-1" style={{ color: SIM.orangeDark }}>⚠ Custos vêm na cotação</div>
                   Prêmio do seguro varia por idade, saúde, sexo, prazo e seguradora. Aporte de previdência depende do produto (VGBL/PGBL), tabela tributária e taxa de carregamento. Falamos com você para fechar os valores reais.
                 </div>
               </div>
@@ -823,7 +754,7 @@ export default function SimuladorSucessaoSeguro() {
 
             {/* CTA */}
             <div className="rounded-2xl p-6 md:p-10 mt-2 relative overflow-hidden" style={{
-              background: `linear-gradient(135deg, ${C.navy} 0%, ${C.navyDeep} 100%)`,
+              background: `linear-gradient(135deg, ${SIM.navy} 0%, ${SIM.navyDeep} 100%)`,
               color: '#ffffff',
             }}>
               <div className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl pointer-events-none"
@@ -853,7 +784,7 @@ export default function SimuladorSucessaoSeguro() {
           </>
         )}
 
-        <div className="text-center text-[11px] mt-8 pb-4 px-4 leading-relaxed" style={{ color: C.textDim }}>
+        <div className="text-center text-[11px] mt-8 pb-4 px-4 leading-relaxed" style={{ color: SIM.textDim }}>
           Simulação meramente ilustrativa. Cobertura de renda calculada como valor presente da renda mensal descontado a juro real de {juroReal.toString().replace('.', ',')}% a.a. (com 0%, equivale a renda × meses), assumindo apólice corrigida pela inflação. ITCMD de {itcmd.toString().replace('.', ',')}% (topo da faixa do {uf}) e custos de inventário em {custoProc.toString().replace('.', ',')}%. Mix entre seguro e previdência é heurística baseada na idade — caso real considera caixa, perfil tributário, saúde e objetivos específicos. Alíquotas pós-EC 132/2023 e LC 227/2026 em transição até 2027. Não substitui orientação tributária, jurídica ou de planejamento financeiro especializada.
         </div>
       </div>
