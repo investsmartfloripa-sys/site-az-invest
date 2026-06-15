@@ -269,10 +269,10 @@ export function TreasuryTimeSeries({ data }: Props) {
         })()}
 
         {/* Grafico no estilo padrao AZ (mesmo do Ibovespa/IFIX) com o painel de
-            taxas atuais (D+0) no CANTO ESQUERDO, no lugar do antigo painel
+            taxas atuais (D+0) no CANTO DIREITO, no lugar do antigo painel
             lateral de estatisticas. No mobile empilha (painel em cima). */}
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch">
-          {/* Painel "Taxa atual (D+0)" — lado esquerdo do grafico */}
+        <div className="flex flex-col gap-3 lg:flex-row-reverse lg:items-stretch">
+          {/* Painel "Taxa atual (D+0)" — lado direito do grafico */}
           <div className="flex shrink-0 flex-col gap-2 rounded-xl border border-[#132960]/10 bg-zinc-50/50 px-4 py-3 lg:w-44">
             <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
               {liveTodayISO ? "Taxa atual (D+0)" : "Taxa atual"}
