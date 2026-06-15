@@ -1,63 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Legend,
-} from "recharts";
 
-import type { TreasuryHistory, TreasuryCategory } from "@/lib/painel-renda-fixa-data";
+import type { TreasuryHistory } from "@/lib/painel-renda-fixa-data";
 import { MarketCard } from "@/components/painel/market/MarketCard";
 import {
   AzPeriodSelector,
-  resolvePeriodRange,
+  AzTimeSeriesChart,
   type AzPeriodValue,
+  type AzTimeSeries,
 } from "@/components/painel/charts";
-import { AzTooltip, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
-import { AZ_TOOLTIP_PROPS, seriesColor } from "@/lib/az-chart-theme";
-import { diffDaysUTC, fmtDataBR, fmtMesCurto, fmtNum, fmtPct, formatAxisDate } from "@/lib/format-br";
+import { seriesColor } from "@/lib/az-chart-theme";
+import { fmtMesCurto } from "@/lib/format-br";
 
 type CategoryKey = "PRE" | "IPCA";
-
-function buildChartData(
-  category: TreasuryCategory,
-  selectedVencimentos: string[],
-  from: string,
-  to: string,
-): Array<Record<string, number | string>> {
-  if (selectedVencimentos.length === 0) return [];
-
-  const dateSet = new Set<string>();
-  for (const venc of selectedVencimentos) {
-    const series = category.series[venc] ?? [];
-    for (const [d] of series) {
-      if (d >= from && d <= to) dateSet.add(d);
-    }
-  }
-  const dates = Array.from(dateSet).sort();
-
-  const indexed: Record<string, Record<string, number>> = {};
-  for (const venc of selectedVencimentos) {
-    const m: Record<string, number> = {};
-    for (const [d, v] of (category.series[venc] ?? [])) m[d] = v;
-    indexed[venc] = m;
-  }
-
-  return dates.map((d) => {
-    const row: Record<string, number | string> = { date: d };
-    for (const venc of selectedVencimentos) {
-      const v = indexed[venc]?.[d];
-      if (v !== undefined) row[venc] = v;
-    }
-    return row;
-  });
-}
 
 type Props = {
   data: TreasuryHistory | null;
@@ -112,14 +68,17 @@ export function TreasuryTimeSeries({ data }: Props) {
     return min || "1900-01-01";
   }, [cat, catVencimentos]);
 
-  const seriesMax = data?.last_data_date ?? "9999-12-31";
-  // Corte de período 100% UTC (resolvePeriodRange — nada de setMonth local).
-  const range = resolvePeriodRange(period, seriesMin, seriesMax);
-
-  const chartData = useMemo(() => {
+  // Séries no formato do AzTimeSeriesChart — o chart recorta a janela pelo
+  // `period` e marca a taxa atual no fim de cada linha (seriesEndLabels).
+  const chartSeries = useMemo<AzTimeSeries[]>(() => {
     if (!cat) return [];
-    return buildChartData(cat, activeSelected, range.from, range.to);
-  }, [cat, activeSelected, range.from, range.to]);
+    return activeSelected.map((venc, i) => ({
+      id: venc,
+      label: fmtMesCurto(venc),
+      color: seriesColor(i),
+      data: cat.series[venc] ?? [],
+    }));
+  }, [cat, activeSelected]);
 
   function toggleVencimento(venc: string) {
     setSelected((prev) => {
@@ -132,19 +91,6 @@ export function TreasuryTimeSeries({ data }: Props) {
     });
   }
 
-  // Stats da serie principal (primeiro vencimento selecionado)
-  const primaryVenc = activeSelected[0];
-  const primarySeries = cat?.series[primaryVenc] ?? [];
-  const inWindow = primarySeries.filter(([d]) => d >= range.from && d <= range.to);
-  const values = inWindow.map(([, v]) => v);
-  const currentVal = values.length > 0 ? values[values.length - 1] : null;
-  const minVal = values.length > 0 ? Math.min(...values) : null;
-  const maxVal = values.length > 0 ? Math.max(...values) : null;
-  const medianVal =
-    values.length > 0
-      ? [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)]
-      : null;
-
   if (!data || !cat) {
     return (
       <MarketCard title="Curva histórica de juros — Títulos Públicos">
@@ -155,18 +101,10 @@ export function TreasuryTimeSeries({ data }: Props) {
     );
   }
 
-  const firstPlotted = chartData[0]?.date;
-  const lastPlotted = chartData[chartData.length - 1]?.date;
-  // Janela visível em dias — controla o formato adaptativo dos ticks de data.
-  const spanDays =
-    typeof firstPlotted === "string" && typeof lastPlotted === "string"
-      ? Math.max(1, diffDaysUTC(firstPlotted, lastPlotted))
-      : 1;
-
   return (
     <MarketCard
       title="Curva histórica de juros"
-      subtitle="Evolução da taxa indicativa de cada vencimento ao longo do tempo."
+      subtitle="Evolução da taxa indicativa de cada vencimento ao longo do tempo. A taxa atual de cada título aparece marcada no fim da linha."
       badge={`ANBIMA · ${data.last_data_date}`}
       bodyClassName="px-4 pb-4 pt-2"
       footer={`Fonte: ${data.source}`}
@@ -259,88 +197,17 @@ export function TreasuryTimeSeries({ data }: Props) {
           );
         })()}
 
-        <div className="grid gap-3 lg:grid-cols-[1fr_220px]">
-          {/* Grafico principal */}
-          <div className="h-[420px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 10, right: 16, bottom: 10, left: 0 }}>
-                <CartesianGrid {...azGridProps()} />
-                <XAxis
-                  {...azXAxisProps()}
-                  dataKey="date"
-                  tickFormatter={(d: string) => formatAxisDate(d, spanDays)}
-                  minTickGap={28}
-                />
-                <YAxis
-                  {...azYAxisProps()}
-                  domain={["auto", "auto"]}
-                  tickFormatter={(v: number) => `${fmtNum(v, 1)}%`}
-                  width={56}
-                />
-                <Tooltip
-                  content={
-                    <AzTooltip
-                      labelFmt={(l) => fmtDataBR(String(l ?? ""))}
-                      valueFmt={(v) => fmtPct(v, 2)}
-                    />
-                  }
-                  cursor={AZ_TOOLTIP_PROPS.cursor}
-                />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                {activeSelected.map((venc, i) => (
-                  <Line
-                    key={venc}
-                    type="monotone"
-                    dataKey={venc}
-                    name={fmtMesCurto(venc)}
-                    stroke={seriesColor(i)}
-                    strokeWidth={1.8}
-                    dot={false}
-                    isAnimationActive={false}
-                    connectNulls
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Stats lateral */}
-          <div className="rounded-xl border border-[#132960]/10 bg-zinc-50/50 p-3 text-sm">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              {category === "PRE" ? "Prefixado" : "IPCA+"} {fmtMesCurto(primaryVenc ?? "")}
-            </p>
-            <dl className="space-y-2">
-              <div className="flex items-center justify-between">
-                <dt className="text-zinc-600">Taxa atual</dt>
-                <dd className="text-lg font-semibold tabular-nums text-[#132960]">
-                  {currentVal != null ? `${currentVal.toFixed(2)}%` : "—"}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between border-t border-zinc-200 pt-2">
-                <dt className="text-zinc-600">Mediana janela</dt>
-                <dd className="font-semibold tabular-nums text-[#132960]">
-                  {medianVal != null ? `${medianVal.toFixed(2)}%` : "—"}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-zinc-600">Mín na janela</dt>
-                <dd className="tabular-nums text-[#16A34A]">
-                  {minVal != null ? `${minVal.toFixed(2)}%` : "—"}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-zinc-600">Máx na janela</dt>
-                <dd className="tabular-nums text-[#DC2626]">
-                  {maxVal != null ? `${maxVal.toFixed(2)}%` : "—"}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between border-t border-zinc-200 pt-2 text-[11px]">
-                <dt className="text-zinc-500">N observações</dt>
-                <dd className="tabular-nums text-zinc-700">{values.length}</dd>
-              </div>
-            </dl>
-          </div>
-        </div>
+        {/* Grafico no estilo padrao AZ (mesmo do Ibovespa/IFIX), com a taxa
+            atual marcada no fim de cada linha em vez de painel lateral. */}
+        <AzTimeSeriesChart
+          series={chartSeries}
+          unit="%"
+          mode="raw"
+          period={period}
+          height={420}
+          showLegend={false}
+          seriesEndLabels
+        />
 
         <p className="text-xs italic text-zinc-500">
           Cada linha mostra a evolução da <em>taxa indicativa</em> de um título com data de vencimento

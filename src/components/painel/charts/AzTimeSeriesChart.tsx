@@ -172,6 +172,13 @@ export type AzTimeSeriesChartProps = {
    * página já tem chips/toggles que fazem o papel de legenda.
    */
   showLegend?: boolean;
+  /**
+   * ADITIVO. Marca o VALOR ATUAL (último ponto plotado) de CADA série principal
+   * com um dot + pill na cor da série, na margem direita — substitui um painel
+   * lateral de "taxa atual". Default false. No variant "hero" a 1ª série já tem
+   * sua pill; aqui as demais (índice ≥ 1) ganham a delas.
+   */
+  seriesEndLabels?: boolean;
   className?: string;
 };
 
@@ -377,7 +384,15 @@ type PillViewBox = { x?: number; y?: number; width?: number; height?: number };
  * Pill navy flutuante com o último valor — usada como `label` do ReferenceDot
  * do último ponto (o Recharts injeta o `viewBox` centrado no dot via clone).
  */
-function AzLastValuePill({ viewBox, text }: { viewBox?: PillViewBox; text: string }) {
+function AzLastValuePill({
+  viewBox,
+  text,
+  color = AZ_BRAND.navy,
+}: {
+  viewBox?: PillViewBox;
+  text: string;
+  color?: string;
+}) {
   if (!viewBox || typeof viewBox.x !== "number" || typeof viewBox.y !== "number") return null;
   const cx = viewBox.x + (viewBox.width ?? 0) / 2;
   const cy = viewBox.y + (viewBox.height ?? 0) / 2;
@@ -386,7 +401,7 @@ function AzLastValuePill({ viewBox, text }: { viewBox?: PillViewBox; text: strin
   const x = cx + 9;
   return (
     <g pointerEvents="none">
-      <rect x={x} y={cy - h / 2} width={w} height={h} rx={h / 2} fill={AZ_BRAND.navy} fillOpacity={0.95} />
+      <rect x={x} y={cy - h / 2} width={w} height={h} rx={h / 2} fill={color} fillOpacity={0.95} />
       <text
         x={x + w / 2}
         y={cy}
@@ -433,6 +448,7 @@ export function AzTimeSeriesChart({
   yAxisLabel,
   variant = "default",
   showLegend,
+  seriesEndLabels = false,
   className = "",
 }: AzTimeSeriesChartProps) {
   const all = useMemo(
@@ -469,6 +485,32 @@ export function AzTimeSeriesChart({
     return ticks.length > 0 ? ticks : undefined;
   }, [built]);
 
+  // Marcadores de "valor atual" por série (substitui painel lateral): último
+  // ponto plotado de cada série principal, anotado na cor da série.
+  const endLabelPoints = useMemo(() => {
+    type EP = { id: string; t: number; v: number; color: string; text: string };
+    if (!seriesEndLabels || !built) return [] as EP[];
+    const heroV = variant === "hero";
+    const out: EP[] = [];
+    series.forEach((s, i) => {
+      if (heroV && i === 0) return; // a 1ª série já tem a pill do hero
+      let t: number | null = null;
+      let v: number | null = null;
+      for (let r = built.rows.length - 1; r >= 0; r--) {
+        const val = built.rows[r][s.id];
+        if (val !== undefined) {
+          t = built.rows[r].t;
+          v = val as number;
+          break;
+        }
+      }
+      if (t != null && v != null) {
+        out.push({ id: s.id, t, v, color: resolveColor(s, i, false), text: valueFmt(v) });
+      }
+    });
+    return out;
+  }, [seriesEndLabels, built, series, variant, valueFmt]);
+
   if (!built) {
     return (
       <div className={`flex w-full items-center justify-center ${className}`} style={{ height }}>
@@ -498,7 +540,9 @@ export function AzTimeSeriesChart({
   const mainColor = series.length > 0 ? resolveColor(series[0], 0, false) : AZ_BRAND.azure;
   // Pill do último valor vive na margem direita — reserva espaço p/ não cortar.
   const lastLabel = isHero && main ? valueFmt(main.lastV) : "";
-  const marginRight = isHero && main ? Math.max(16, pillWidth(lastLabel) + 13) : 16;
+  const endLabelMargin =
+    endLabelPoints.length > 0 ? Math.max(...endLabelPoints.map((p) => pillWidth(p.text))) + 13 : 0;
+  const marginRight = Math.max(isHero && main ? pillWidth(lastLabel) + 13 : 16, endLabelMargin);
   // Máx/mín só quando não coincidem com o último ponto (a pill já o destaca)
   // e a série não é flat (máx === mín seria anotação duplicada sem informação).
   const showMaxDot = isHero && main != null && main.maxV > main.minV && main.maxT !== main.lastT;
@@ -670,6 +714,20 @@ export function AzTimeSeriesChart({
               />
             ),
           )}
+
+          {/* Marcadores de valor atual por série (dot + pill na cor da série). */}
+          {endLabelPoints.map((p) => (
+            <ReferenceDot
+              key={`endlabel-${p.id}`}
+              x={p.t}
+              y={p.v}
+              r={3}
+              fill={p.color}
+              stroke="#FFFFFF"
+              strokeWidth={1.5}
+              label={<AzLastValuePill text={p.text} color={p.color} />}
+            />
+          ))}
 
           {/* Anotações do hero: máx/mín da janela + último valor em pill navy. */}
           {showMaxDot && main ? (
