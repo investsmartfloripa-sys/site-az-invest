@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 import type { AtividadeCodaceData, AtividadeIbcBrData, AtividadePibData } from "@/lib/painel-atividade";
 import { DashboardScaffold, KpiCard, type DashboardBloco } from "@/components/painel/core";
-import { fmtPct, fmtSignedPct } from "@/lib/format-br";
+import { fmtSignedPct } from "@/lib/format-br";
 import { fmtTrimCurto, num } from "../shared";
 import { AnchorContribuicoesPib } from "./AnchorContribuicoesPib";
 import { RitmoTrimestralCard } from "./RitmoTrimestralCard";
@@ -15,17 +15,11 @@ import { PerCapitaCard } from "./PerCapitaCard";
 import { AnaliseCompletaPib } from "./AnaliseCompletaPib";
 
 /**
- * Painel PIB v2 — template narrativo (manchete em prosa → 4 KPIs → âncora de
- * contribuições → blocos numerados → ficha técnica). Duas camadas: leitura
- * rápida em cima, esmiuçamento profissional embaixo.
+ * Painel PIB v2 — ESCRUTÍNIO dos dados em cadeia, SEM narrativa/manchete em
+ * prosa: KPIs → âncora → blocos numerados → ficha técnica. O título afirmativo
+ * de cada card + a pergunta econômica no subtítulo carregam a leitura; nada de
+ * storytelling. Duas camadas: leitura rápida em cima, esmiuçamento embaixo.
  */
-
-const LABEL_MOTOR: Record<string, string> = {
-  demanda_consumo_familias: "o consumo das famílias",
-  demanda_consumo_governo: "o consumo do governo",
-  demanda_fbcf: "o investimento (FBCF)",
-  demanda_exportacoes: "as exportações",
-};
 
 export function PibDashboardV2({
   pib,
@@ -56,45 +50,8 @@ export function PibDashboardV2({
       }
     }
 
-    // Maior motor pela ótica da demanda (excl. resíduo/importações).
-    const contrib = pib.contribuicoes?.serie ?? [];
-    const ultContrib = contrib[contrib.length - 1];
-    let motor: { key: string; v: number } | null = null;
-    if (ultContrib) {
-      for (const k of Object.keys(LABEL_MOTOR)) {
-        const v = num(ultContrib, k);
-        if (v != null && (motor == null || v > motor.v)) motor = { key: k, v };
-      }
-    }
-
-    return { qoq, yoy, acum4t, carrego, focusMediana, motor };
+    return { qoq, yoy, acum4t, carrego, focusMediana };
   }, [pib, anoCorrente]);
-
-  const manchete = useMemo(() => {
-    const { qoq, yoy, carrego, focusMediana, motor } = derivados;
-    if (qoq == null && yoy == null) return null;
-    const partes: string[] = [];
-    if (qoq != null) {
-      partes.push(
-        `O PIB cresceu ${fmtSignedPct(qoq, 1)} no ${fmtTrimCurto(trimRef)} ante o trimestre anterior (com ajuste sazonal)` +
-          (yoy != null ? ` e ${fmtSignedPct(yoy, 1)} sobre o mesmo trimestre do ano passado` : ""),
-      );
-    } else if (yoy != null) {
-      partes.push(`O PIB cresceu ${fmtSignedPct(yoy, 1)} no ${fmtTrimCurto(trimRef)} sobre o mesmo trimestre do ano passado`);
-    }
-    if (motor) partes.push(`o maior motor foi ${LABEL_MOTOR[motor.key]} (${fmtSignedPct(motor.v, 1).replace("%", " p.p.")})`);
-    if (carrego) {
-      let frase = `com o resultado, o carrego para ${carrego.ano} é de ${fmtPct(carrego.valor, 1)}`;
-      if (focusMediana != null) {
-        frase +=
-          carrego.valor > focusMediana
-            ? ` — acima da mediana Focus (${fmtPct(focusMediana, 1)}): o ano já está praticamente garantido`
-            : ` (mediana Focus: ${fmtPct(focusMediana, 1)})`;
-      }
-      partes.push(frase);
-    }
-    return `${partes.join("; ")}.`;
-  }, [derivados, trimRef]);
 
   const kpis = useMemo(() => {
     const { qoq, yoy, acum4t, carrego, focusMediana } = derivados;
@@ -133,7 +90,7 @@ export function PibDashboardV2({
         id: "ritmo",
         eyebrow: "Momentum",
         titulo: "Ritmo trimestral",
-        descricao: "Manchete (QoQ SA) e tendência interanual em painéis separados — escalas diferentes, leituras diferentes.",
+        descricao: "Variação trimestral dessazonalizada (QoQ SA) e interanual (YoY) em painéis separados — nível e momentum nunca no mesmo eixo.",
         children: <RitmoTrimestralCard pib={pib} codaceTrimestral={codace?.trimestral} geradoEm={pib.gerado_em} />,
       },
     ];
@@ -142,7 +99,7 @@ export function PibDashboardV2({
         id: "ibcbr",
         eyebrow: "Prévia mensal",
         titulo: "IBC-Br × PIB",
-        descricao: "A proxy mensal do BCB confrontada com o dado oficial — o que o trimestre corrente está indicando.",
+        descricao: "IBC-Br (proxy mensal do BCB) e PIB trimestral, ambos rebase fev/2020 = 100 — prévia do trimestre em curso.",
         children: <IbcBrPibCard ibcbr={ibcbr} pib={pib} codaceMensal={codace?.mensal} geradoEm={pib.gerado_em} />,
       });
     }
@@ -150,7 +107,7 @@ export function PibDashboardV2({
       id: "expectativas",
       eyebrow: "Passado → futuro",
       titulo: "Expectativas e histórico",
-      descricao: "Para onde o mercado está revisando o PIB — e como o esperado se compara com o que o país entrega.",
+      descricao: "Mediana Focus (revisão ao longo da coleta) e realizado vs projetado por ano.",
       children: (
         <div className="grid gap-4 xl:grid-cols-2">
           <FocusPibCard pib={pib} geradoEm={pib.gerado_em} />
@@ -163,7 +120,7 @@ export function PibDashboardV2({
         id: "per-capita",
         eyebrow: "Bem-estar",
         titulo: "PIB per capita",
-        descricao: "O crescimento descontado da demografia — a medida que o leitor sente no bolso.",
+        descricao: "PIB per capita real: crescimento descontado da variação populacional.",
         children: <PerCapitaCard pib={pib} geradoEm={pib.gerado_em} />,
       });
     }
@@ -184,7 +141,6 @@ export function PibDashboardV2({
         subtitulo: "Contas Nacionais Trimestrais do IBGE, com o IBC-Br do BCB como prévia mensal e as expectativas do Focus.",
         referencia: `Referência: ${fmtTrimCurto(trimRef)} · IBC-Br até ${ibcbr?.mes_recente ?? "—"}`,
       }}
-      manchete={manchete}
       kpis={kpis}
       anchor={<AnchorContribuicoesPib pib={pib} codaceTrimestral={codace?.trimestral} geradoEm={pib.gerado_em} />}
       blocos={blocos}
