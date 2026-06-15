@@ -55,6 +55,7 @@ CLASSIF = {
     "93406": "fbcf",
     "93407": "exportacoes",
     "93408": "importacoes",
+    "102880": "variacao_estoque",   # componente da demanda que faltava (variação de estoque)
 }
 
 # Labels humanos pro front
@@ -81,6 +82,29 @@ CLASSIF_LABEL = {
     "fbcf": "Formação Bruta de Capital Fixo",
     "exportacoes": "Exportações",
     "importacoes": "Importações",
+    "variacao_estoque": "Variação de estoque",
+}
+
+# CLASSIF_FIN c12116 (conta financeira 2205) — códigos -> chaves legíveis
+CLASSIF_FIN = {
+    "39477": "b9",     # B.9 - capacidade(+)/necessidade(-) líquida de financiamento
+    "39478": "idp",    # Memorandum: investimento direto no país (IDP)
+    "100998": "f1",    # F.1 - ouro monetário e direito especial de saque
+    "100999": "f2",    # F.2 - numerário e depósitos
+    "101000": "f3",    # F.3 - títulos de dívidas
+    "101001": "f31",   # F.31 - títulos de dívidas (curto prazo)
+    "101002": "f32",   # F.32 - títulos de dívidas (longo prazo)
+    "101003": "f4",    # F.4 - empréstimos
+    "101004": "f41",   # F.41 - empréstimos (curto prazo)
+    "101005": "f42",   # F.42 - empréstimos (longo prazo)
+    "101006": "f5",    # F.5 - participações de capital e em fundos de investimentos
+    "39475": "f6",     # F.6 - planos de seguros, previdência e garantias padronizadas
+    "101007": "f7",    # F.7 - derivativos financeiros
+    "101008": "f8",    # F.8 - outras contas a receber/pagar
+    "101009": "f81",   # F.81 - créditos comerciais e adiantamentos
+    "39476": "f89",    # F.89 - outros
+    "101010": "total_ativo",   # total da variação do ativo
+    "101011": "total_passivo", # total da variação do passivo
 }
 
 VAR_5932 = {"6561": "yoy", "6562": "acum_4t", "6563": "acum_ano", "6564": "qoq_sa"}
@@ -183,6 +207,99 @@ def carrega_6784():
     return out
 
 
+def carrega_taxa_poupanca():
+    """6726 (v9774) — taxa de poupança bruta (% do PIB), série completa.
+
+    Sem classificação: período em D3C. Retorna lista [{trim, valor}] +
+    sazonalidade (média por trimestre Q1..Q4 sobre toda a série)."""
+    rows = sidra_fetch(6726, "/n1/all/v/9774/p/all?formato=json")
+    serie = []
+    for r in rows:
+        d3c = r.get("D3C", "")
+        if not d3c:
+            continue
+        serie.append({"trim": _trim_label(d3c), "valor": _to_float(r.get("V"))})
+    serie.sort(key=lambda x: x["trim"])
+    # médias sazonais por trimestre (Q1..Q4)
+    buckets = {f"Q{q}": [] for q in (1, 2, 3, 4)}
+    for it in serie:
+        if it["valor"] is None:
+            continue
+        q = int(it["trim"].split("-T")[1])
+        buckets[f"Q{q}"].append(it["valor"])
+    sazonalidade = {
+        k: (round(sum(v) / len(v), 2) if v else None) for k, v in buckets.items()
+    }
+    return {"serie": serie, "sazonalidade": sazonalidade}
+
+
+def carrega_taxa_investimento():
+    """6727 (v2517) — taxa de investimento (FBCF % do PIB), série completa.
+
+    Sem classificação: período em D3C. Retorna {serie: [{trim, valor}]}."""
+    rows = sidra_fetch(6727, "/n1/all/v/2517/p/all?formato=json")
+    serie = []
+    for r in rows:
+        d3c = r.get("D3C", "")
+        if not d3c:
+            continue
+        serie.append({"trim": _trim_label(d3c), "valor": _to_float(r.get("V"))})
+    serie.sort(key=lambda x: x["trim"])
+    return {"serie": serie}
+
+
+def carrega_conta_financeira():
+    """2205 — conta financeira por instrumento (c12116), trimestral desde 2010.
+
+    v1141 = ativos, v1142 = passivos (R$ milhões). Para cada categoria computa
+    liquido = ativo − passivo. Gera também a soma móvel de 4 trimestres (acum4t)
+    de cada série (ativo, passivo, liquido).
+    Retorna {serie: [...], serie_acum4t: [...]}."""
+    # ativos (v1141) e passivos (v1142): {trim: {chave: valor}}
+    ativos, passivos = {}, {}
+    for var_id, alvo in (("1141", ativos), ("1142", passivos)):
+        path = f"/n1/all/v/{var_id}/p/all/c12116/all?formato=json"
+        rows = sidra_fetch(2205, path)
+        for r in rows:
+            chave = CLASSIF_FIN.get(r.get("D4C"))
+            d3c = r.get("D3C", "")
+            if not chave or not d3c:
+                continue
+            alvo.setdefault(_trim_label(d3c), {})[chave] = _to_float(r.get("V"))
+
+    trims = sorted(set(ativos.keys()) | set(passivos.keys()))
+    serie = []
+    for trim in trims:
+        a = ativos.get(trim, {})
+        p = passivos.get(trim, {})
+        item = {"trim": trim}
+        for chave in CLASSIF_FIN.values():
+            va, vp = a.get(chave), p.get(chave)
+            item[f"{chave}_ativo"] = va
+            item[f"{chave}_passivo"] = vp
+            item[f"{chave}_liquido"] = (
+                round(va - vp, 2) if va is not None and vp is not None else None
+            )
+        serie.append(item)
+
+    # acumulado em 4 trimestres (soma móvel de 4 trim) de cada série numérica
+    serie_acum4t = []
+    campos = [k for k in serie[0].keys() if k != "trim"] if serie else []
+    for i, item in enumerate(serie):
+        acc = {"trim": item["trim"]}
+        if i < 3:
+            for c in campos:
+                acc[c] = None
+        else:
+            janela = serie[i - 3 : i + 1]
+            for c in campos:
+                vals = [j[c] for j in janela]
+                acc[c] = round(sum(vals), 2) if all(v is not None for v in vals) else None
+        serie_acum4t.append(acc)
+
+    return {"serie": serie, "serie_acum4t": serie_acum4t}
+
+
 # ── Contribuições ao crescimento (schema v2) ─────────────────────────────────
 OFERTA_COMPONENTES = ["agro", "industria", "servicos", "impostos"]
 DEMANDA_COMPONENTES = ["consumo_familias", "consumo_governo", "fbcf", "exportacoes", "importacoes"]
@@ -264,7 +381,15 @@ def calcula_carrego(serie_indice, trim_recente):
     return {"ano": ano, "valor": valor, "trimestres_divulgados": len(pub)}
 
 
-def carrega_2072(periodos=12):
+PIB_2072_NOME = "Produto Interno Bruto"  # D2N do PIB (D2C 933) na tabela 2072
+
+
+def carrega_2072(periodos=80):
+    """Contas econômicas (renda macro) 2072 — R$ milhões e % do PIB.
+
+    Janela ampliada para 80 trim. Retorna {serie: [...], serie_pct_pib: [...]}:
+    - serie: cada {trim, <conta>: R$ milhões}
+    - serie_pct_pib: cada {trim, <conta>: conta / PIB(933) × 100}."""
     path = f"/n1/all/v/all/p/last%20{periodos}?formato=json"
     rows = sidra_fetch(2072, path)
     by_trim = {}
@@ -278,7 +403,19 @@ def carrega_2072(periodos=12):
         v = _to_float(r.get("V"))
         if v is not None:
             item[d2n] = v
-    return [by_trim[t] for t in sorted(by_trim.keys())]
+    serie = [by_trim[t] for t in sorted(by_trim.keys())]
+    # % do PIB: cada conta / PIB do mesmo trim × 100
+    serie_pct_pib = []
+    for it in serie:
+        pib = it.get(PIB_2072_NOME)
+        pct = {"trim": it["trim"]}
+        if pib:
+            for k, v in it.items():
+                if k == "trim":
+                    continue
+                pct[k] = round(v / pib * 100, 2) if v is not None else None
+        serie_pct_pib.append(pct)
+    return {"serie": serie, "serie_pct_pib": serie_pct_pib}
 
 
 FOCUS_BASE = "https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata"
@@ -330,8 +467,16 @@ def main():
     idx_ns = carrega_indice(1620, "583")
     print("== PIB R$ correntes 1846 ==")
     valores = carrega_1846()
-    print("== Contas econômicas 2072 ==")
-    contas = carrega_2072()
+    print("== Contas econômicas 2072 (R$ + %PIB) ==")
+    contas_2072 = carrega_2072()
+    contas = contas_2072["serie"]              # mantém o formato antigo (R$ milhões)
+    contas_pct_pib = contas_2072["serie_pct_pib"]
+
+    # ── valores encadeados a preços de 1995, R$ reais (6612 NS / 6613 SA) ──
+    print("== PIB R$ reais NS 6612 (v9318) ==")
+    idx_real_ns = carrega_indice(6612, 9318)
+    print("== PIB R$ reais SA 6613 (v9319) ==")
+    idx_real_sa = carrega_indice(6613, 9319)
 
     trims = sorted(var_data.keys())
     if not trims:
@@ -376,6 +521,59 @@ def main():
         for ck, v in valores[trim].items():
             item[ck] = v
         serie_valores.append(item)
+
+    # Séries de valores reais encadeados a preços de 1995 (6612 NS / 6613 SA)
+    # mesmo formato de serie_valores: lista de {trim, <chave>: valor}
+    serie_reais_ns = []
+    for trim in sorted(idx_real_ns.keys()):
+        item = {"trim": trim}
+        for ck, v in idx_real_ns[trim].items():
+            item[ck] = v
+        serie_reais_ns.append(item)
+    serie_reais_sa = []
+    for trim in sorted(idx_real_sa.keys()):
+        item = {"trim": trim}
+        for ck, v in idx_real_sa[trim].items():
+            item[ck] = v
+        serie_reais_sa.append(item)
+
+    # ── estrutura nominal como SÉRIE: cada recorte / PIB nominal × 100, por trim (1846) ──
+    serie_estrutura_nominal = []
+    for trim in sorted(valores.keys()):
+        d = valores[trim]
+        pib = d.get("pib")
+        item = {"trim": trim}
+        if pib:
+            for ck, v in d.items():
+                if ck == "pib" or v is None:
+                    continue
+                item[f"{ck}_pct_pib"] = round(v / pib * 100, 2)
+        serie_estrutura_nominal.append(item)
+
+    # ── taxa de poupança bruta (6726) e taxa de investimento (6727) ──
+    print("== Taxa de poupança 6726 (v9774) ==")
+    try:
+        taxa_poupanca = carrega_taxa_poupanca()
+        print(f"  poupança: {len(taxa_poupanca['serie'])} trim | sazonalidade {taxa_poupanca['sazonalidade']}")
+    except Exception as e:
+        print(f"  [WARN] 6726 indisponível ({e}) — taxa_poupanca omitida", file=sys.stderr)
+        taxa_poupanca = None
+    print("== Taxa de investimento 6727 (v2517) ==")
+    try:
+        taxa_investimento = carrega_taxa_investimento()
+        print(f"  investimento: {len(taxa_investimento['serie'])} trim")
+    except Exception as e:
+        print(f"  [WARN] 6727 indisponível ({e}) — taxa_investimento omitida", file=sys.stderr)
+        taxa_investimento = None
+
+    # ── conta financeira por instrumento (2205) ──
+    print("== Conta financeira 2205 (ativo v1141 / passivo v1142, c12116) ==")
+    try:
+        conta_financeira = carrega_conta_financeira()
+        print(f"  conta financeira: {len(conta_financeira['serie'])} trim | {len(conta_financeira['serie_acum4t'])} acum4t")
+    except Exception as e:
+        print(f"  [WARN] 2205 indisponível ({e}) — conta_financeira omitida", file=sys.stderr)
+        conta_financeira = None
 
     # ── schema v2: contribuições ao crescimento (peso t-4) ──
     print("== Contribuições ao crescimento (v2) ==")
@@ -442,6 +640,7 @@ def main():
         "indice_volume": {"serie": serie_indice},
         "valores_correntes": {"serie": serie_valores},
         "contas_economicas": {"serie": contas},
+        "contas_economicas_pct_pib": {"serie": contas_pct_pib},
         "pesos_atuais": pesos_atuais,
         "labels": CLASSIF_LABEL,
         "focus": focus,
@@ -449,10 +648,18 @@ def main():
         "contribuicoes": {"serie": serie_contrib},
         "carrego": carrego,
         "per_capita": {"serie": serie_per_capita},
+        # ── nova seção PIB (valores reais, taxas, conta financeira, estrutura) ──
+        "valores_reais_ns": {"serie": serie_reais_ns},   # 6612 — encadeado preços 1995, NS
+        "valores_reais_sa": {"serie": serie_reais_sa},   # 6613 — encadeado preços 1995, SA
+        "taxa_poupanca": taxa_poupanca,                  # 6726 — % PIB + sazonalidade
+        "taxa_investimento": taxa_investimento,          # 6727 — FBCF % PIB
+        "conta_financeira": conta_financeira,            # 2205 — ativo/passivo/líquido + acum4t
+        "estrutura_nominal": {"serie": serie_estrutura_nominal},  # 1846 — recorte / PIB nominal × 100
+        "labels_financeiro": {v: k for k, v in CLASSIF_FIN.items()},
         "metadata": {
-            "fonte_principal": "IBGE SIDRA — Contas Nacionais Trimestrais (5932 variação, 1620/1621 índice volume, 1846 R$ correntes, 2072 contas econômicas, 6784 per capita anual)",
+            "fonte_principal": "IBGE SIDRA — Contas Nacionais Trimestrais (5932 variação, 1620/1621 índice volume, 1846 R$ correntes, 2072 contas econômicas, 6784 per capita anual, 6612/6613 R$ reais encadeados, 6726 taxa de poupança, 6727 taxa de investimento, 2205 conta financeira)",
             "fonte_focus": "BCB Olinda — ExpectativasMercadoAnuais PIB Total",
-            "nota": "PIB sai trimestral lag ~60 dias. Cada nova divulgação revisa trimestres anteriores. Contribuições: peso nominal t-4 (1846) × YoY real (5932); índices encadeados são não-aditivos — resíduo gravado por ótica (na demanda inclui estoques + discrepância). Carrego: índice SA congelado no último trim divulgado. Per capita: SIDRA 6784 — variação em volume per capita OFICIAL (v9814).",
+            "nota": "PIB sai trimestral lag ~60 dias. Cada nova divulgação revisa trimestres anteriores. Contribuições: peso nominal t-4 (1846) × YoY real (5932); índices encadeados são não-aditivos — resíduo gravado por ótica (na demanda inclui estoques + discrepância). Carrego: índice SA congelado no último trim divulgado. Per capita: SIDRA 6784 — variação em volume per capita OFICIAL (v9814). Valores reais (6612/6613): valores encadeados a preços de 1995, R$. Conta financeira (2205): ativo (v1141), passivo (v1142), líquido = ativo − passivo, e acumulado em 4 trim por instrumento c12116. Estrutura nominal: cada recorte (1846) / PIB nominal × 100.",
         },
     }
 
