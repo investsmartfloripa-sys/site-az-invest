@@ -6,6 +6,7 @@ import {
   Brush,
   CartesianGrid,
   ComposedChart,
+  Customized,
   Legend,
   Line,
   ReferenceArea,
@@ -418,6 +419,83 @@ function AzLastValuePill({
   );
 }
 
+type EndLabelDatum = { id: string; t: number; v: number; color: string; text: string };
+
+/**
+ * Camada de marcadores de "valor atual" por série, renderizada via `Customized`
+ * (acesso às escalas do Recharts). Cada série ganha um dot no fim da linha + uma
+ * pill na sua cor à direita; as pills sofrem DE-COLISÃO vertical (empurradas
+ * para baixo, depois clampeadas à área de plotagem) para nunca se sobreporem
+ * quando as taxas são próximas. Um conector liga o fim da linha à pill deslocada.
+ */
+function EndLabelsLayer(props: Record<string, unknown>) {
+  const points = (props.points as EndLabelDatum[] | undefined) ?? [];
+  const offset = props.offset as
+    | { top: number; left: number; width: number; height: number }
+    | undefined;
+  const yAxisMap = props.yAxisMap as Record<string, { scale?: (v: number) => number }> | undefined;
+  const xAxisMap = props.xAxisMap as Record<string, { scale?: (v: number) => number }> | undefined;
+  if (points.length === 0 || !offset || !yAxisMap || !xAxisMap) return null;
+  const yScale = yAxisMap[Object.keys(yAxisMap)[0]]?.scale;
+  const xScale = xAxisMap[Object.keys(xAxisMap)[0]]?.scale;
+  if (!yScale || !xScale) return null;
+
+  const rightX = offset.left + offset.width;
+  const topLimit = offset.top;
+  const botLimit = offset.top + offset.height;
+  const h = 18;
+  const gap = h + 1;
+
+  const items = points
+    .map((p) => ({ ...p, px: xScale(p.t), rawY: yScale(p.v) }))
+    .filter((p) => Number.isFinite(p.px) && Number.isFinite(p.rawY))
+    .sort((a, b) => a.rawY - b.rawY)
+    .map((p) => ({ ...p, y: p.rawY }));
+
+  for (let i = 1; i < items.length; i++) {
+    if (items[i].y - items[i - 1].y < gap) items[i].y = items[i - 1].y + gap;
+  }
+  if (items.length > 0) {
+    const overflow = items[items.length - 1].y - (botLimit - h / 2);
+    if (overflow > 0) for (const it of items) it.y -= overflow;
+    for (const it of items) it.y = Math.max(topLimit + h / 2, it.y);
+  }
+
+  return (
+    <g pointerEvents="none">
+      {items.map((it) => {
+        const w = pillWidth(it.text);
+        const pillX = rightX + 9;
+        return (
+          <g key={it.id}>
+            <circle cx={it.px} cy={it.rawY} r={3} fill={it.color} stroke="#FFFFFF" strokeWidth={1.5} />
+            <path
+              d={`M ${it.px} ${it.rawY} L ${pillX} ${it.y}`}
+              stroke={it.color}
+              strokeWidth={1}
+              strokeOpacity={0.45}
+              fill="none"
+            />
+            <rect x={pillX} y={it.y - h / 2} width={w} height={h} rx={h / 2} fill={it.color} fillOpacity={0.95} />
+            <text
+              x={pillX + w / 2}
+              y={it.y}
+              dy={3.5}
+              textAnchor="middle"
+              fontSize={10.5}
+              fontWeight={600}
+              fill="#FFFFFF"
+              style={{ fontVariantNumeric: "tabular-nums" }}
+            >
+              {it.text}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
 /**
  * Série temporal padrão AZ. Exemplo:
  *
@@ -715,19 +793,15 @@ export function AzTimeSeriesChart({
             ),
           )}
 
-          {/* Marcadores de valor atual por série (dot + pill na cor da série). */}
-          {endLabelPoints.map((p) => (
-            <ReferenceDot
-              key={`endlabel-${p.id}`}
-              x={p.t}
-              y={p.v}
-              r={3}
-              fill={p.color}
-              stroke="#FFFFFF"
-              strokeWidth={1.5}
-              label={<AzLastValuePill text={p.text} color={p.color} />}
+          {/* Marcadores de valor atual por série — camada custom com de-colisão
+              vertical (pills na cor da série, à direita, sem se sobrepor). */}
+          {endLabelPoints.length > 0 ? (
+            <Customized
+              component={(p: Record<string, unknown>) => (
+                <EndLabelsLayer {...p} points={endLabelPoints} />
+              )}
             />
-          ))}
+          ) : null}
 
           {/* Anotações do hero: máx/mín da janela + último valor em pill navy. */}
           {showMaxDot && main ? (
