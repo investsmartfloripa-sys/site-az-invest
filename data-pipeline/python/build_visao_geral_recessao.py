@@ -1,4 +1,7 @@
-"""Build do JSON do Painel Visão Geral — bloco Probabilidade de Recessão (5 modelos).
+"""DEPRECATED 2026-06: fora do workflow; UI nao consome mais
+(substituido por build_visao_geral_probit_az + codace).
+
+Build do JSON do Painel Visão Geral — bloco Probabilidade de Recessão (5 modelos).
 
 Roda 5 modelos da literatura sobre dados já no Blob, gera série mensal com
 P(recessão|dados) por método e um consolidado (mediana + contagem acima

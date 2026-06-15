@@ -3,15 +3,25 @@
 Consome o BCB SGS para:
 - Concessões totais PF (20662) e PJ (20635) — mensal R$ milhões
 - Concessões PF veículos (20673), não-consignado (20666), imobiliário direcionado (20704)
-- Saldos crédito ampliado: famílias (20571) e empresas (20572)
+- Saldos de crédito livre PF: não rotativo (20571) e rotativo (20572)
+- Saldos de crédito SFN: total (20539), PJ (20540), PF (20541)
 - Agregados monetários: M1 (27788), M2 (27789), M3 (27790), M4 (27791)
 - IPCA mensal (433, desde 2010) para compor o índice deflator
+
+AUDITORIA 2026-06 (rótulos legados): as séries 20571/20572 estavam rotuladas
+como "crédito ampliado famílias/empresas", mas no catálogo SGS são:
+  20571 = Saldo da carteira de crédito com recursos LIVRES NÃO ROTATIVO — PF
+  20572 = Saldo da carteira de crédito com recursos LIVRES ROTATIVO — PF
+  (20571 + 20572 = 20570 = livres PF total; nada de "ampliado" nem de "empresas")
+Pela regra aditiva do schema v2, os campos JSON legados (`credito_*_pct_pib`,
+`impulso_*_pp`) foram MANTIDOS com os mesmos valores; campos novos com nomes
+corretos foram adicionados (`livres_pf_*` e `saldo_sfn_*`). O front deve migrar.
 
 Calcula:
 - Concessões reais (deflator = índice IPCA composto Π(1+v/100), último mês = 100)
 - Variação real a/a das concessões
-- Crédito ampliado total / PIB (PIB mensal 4382)
-- Impulso de crédito: Δ em pp do crédito/PIB em 12 meses (total, PF, PJ)
+- Crédito/PIB (PIB 12m nominal 4382): livres PF (legado) e saldo SFN total/PF/PJ (correto)
+- Impulso de crédito: Δ em pp do crédito/PIB em 12 meses
 
 Gera `data-pipeline/out/visao_geral_credito.json`.
 
@@ -42,8 +52,13 @@ SERIES: dict[str, int] = {
     "concessoes_pf_veiculos": 20673,
     "concessoes_pf_naoconsignado": 20666,
     "concessoes_pf_imobiliario": 20704,
-    "saldo_credito_amp_familias": 20571,
-    "saldo_credito_amp_empresas": 20572,
+    # 20571/20572: rotulados historicamente como "crédito ampliado famílias/empresas",
+    # mas são na verdade crédito LIVRE PF não rotativo/rotativo (ver docstring).
+    "saldo_livres_pf_nao_rotativo": 20571,
+    "saldo_livres_pf_rotativo": 20572,
+    "saldo_sfn_total": 20539,
+    "saldo_sfn_pj": 20540,
+    "saldo_sfn_pf": 20541,
     "m1": 27788,
     "m2": 27789,
     "m3": 27790,
@@ -60,7 +75,10 @@ SERIES_DATA_INICIAL: dict[str, str] = {
 INPUTS = {  # min_start_date conservador — séries começam mais tarde
     "concessoes_pf_total": "2011-03",
     "concessoes_pj_total": "2011-03",
+    # "credito_ampliado" é rótulo LEGADO (mantido pela regra aditiva): refere-se
+    # às séries 20571/20572 = crédito livre PF (início real 2007-03).
     "credito_ampliado": "2013-01",
+    "saldo_credito_sfn": "2007-03",
     "ipca_mensal": "2010-01",
     "pib_12m": "1990-01",
 }
@@ -191,30 +209,48 @@ def main() -> None:
     var_pf_real = variacao_12m(concessoes_pf_real)
     var_pj_real = variacao_12m(concessoes_pj_real)
 
-    # Crédito ampliado / PIB
-    saldo_amp_total = series.get("saldo_credito_amp_familias", {})
-    saldo_amp_emp = series.get("saldo_credito_amp_empresas", {})
+    # Crédito / PIB
+    # Legado (rótulo errado, valores mantidos): 20571/20572 = livres PF não rotativo/rotativo.
+    saldo_livre_nrot = series.get("saldo_livres_pf_nao_rotativo", {})
+    saldo_livre_rot = series.get("saldo_livres_pf_rotativo", {})
+    # Correto: saldo da carteira de crédito do SFN — total (20539), PF (20541), PJ (20540).
+    saldo_sfn_total = series.get("saldo_sfn_total", {})
+    saldo_sfn_pf = series.get("saldo_sfn_pf", {})
+    saldo_sfn_pj = series.get("saldo_sfn_pj", {})
     pib_12m = series.get("pib_12m_brl", {})
 
+    def _pct_pib(valor: float | None, pib: float | None) -> float | None:
+        if valor is None or pib is None or pib == 0:
+            return None
+        return round(valor / pib * 100, 2)
+
     credito_pib: list[dict[str, Any]] = []
-    todos_meses = sorted(set(saldo_amp_total.keys()) | set(saldo_amp_emp.keys()))
+    todos_meses = sorted(set(saldo_livre_nrot.keys()) | set(saldo_livre_rot.keys()))
     for m in todos_meses:
-        s_fam = saldo_amp_total.get(m)
-        s_emp = saldo_amp_emp.get(m)
-        if s_fam is None or s_emp is None:
+        s_nrot = saldo_livre_nrot.get(m)
+        s_rot = saldo_livre_rot.get(m)
+        if s_nrot is None or s_rot is None:
             continue
         # pib_12m está em R$ milhões, saldos em R$ milhões → razão *100 = %
         pib = pib_12m.get(m)
         if pib is None or pib == 0:
-            credito_pib.append({"mes": m, "credito_total_pct_pib": None, "credito_familias_pct_pib": None, "credito_empresas_pct_pib": None})
-            continue
-        total = s_fam + s_emp
+            pib = None
+        total = s_nrot + s_rot
         credito_pib.append(
             {
                 "mes": m,
-                "credito_total_pct_pib": round(total / pib * 100, 2),
-                "credito_familias_pct_pib": round(s_fam / pib * 100, 2),
-                "credito_empresas_pct_pib": round(s_emp / pib * 100, 2),
+                # LEGADO (nomes errados — manter pela regra aditiva; front deve migrar):
+                "credito_total_pct_pib": _pct_pib(total, pib),
+                "credito_familias_pct_pib": _pct_pib(s_nrot, pib),
+                "credito_empresas_pct_pib": _pct_pib(s_rot, pib),
+                # NOVOS (nomes corretos para os mesmos dados legados):
+                "livres_pf_total_pct_pib": _pct_pib(total, pib),
+                "livres_pf_nao_rotativo_pct_pib": _pct_pib(s_nrot, pib),
+                "livres_pf_rotativo_pct_pib": _pct_pib(s_rot, pib),
+                # NOVOS (séries corretas para total/famílias/empresas — saldo SFN):
+                "saldo_sfn_total_pct_pib": _pct_pib(saldo_sfn_total.get(m), pib),
+                "saldo_sfn_familias_pct_pib": _pct_pib(saldo_sfn_pf.get(m), pib),
+                "saldo_sfn_empresas_pct_pib": _pct_pib(saldo_sfn_pj.get(m), pib),
             }
         )
 
@@ -235,9 +271,18 @@ def main() -> None:
         impulso_credito.append(
             {
                 "mes": m,
+                # LEGADO (nomes errados — base = livres PF; manter pela regra aditiva):
                 "impulso_total_pp": _delta("credito_total_pct_pib"),
                 "impulso_familias_pp": _delta("credito_familias_pct_pib"),
                 "impulso_empresas_pp": _delta("credito_empresas_pct_pib"),
+                # NOVOS (nomes corretos para os mesmos dados legados):
+                "impulso_livres_pf_total_pp": _delta("livres_pf_total_pct_pib"),
+                "impulso_livres_pf_nao_rotativo_pp": _delta("livres_pf_nao_rotativo_pct_pib"),
+                "impulso_livres_pf_rotativo_pp": _delta("livres_pf_rotativo_pct_pib"),
+                # NOVOS (base correta — saldo SFN total/PF/PJ):
+                "impulso_saldo_sfn_total_pp": _delta("saldo_sfn_total_pct_pib"),
+                "impulso_saldo_sfn_familias_pp": _delta("saldo_sfn_familias_pct_pib"),
+                "impulso_saldo_sfn_empresas_pp": _delta("saldo_sfn_empresas_pct_pib"),
             }
         )
 
@@ -275,8 +320,9 @@ def main() -> None:
         "inputs": INPUTS,
         "min_start_date": max(INPUTS.values()),
         "metadata": {
-            "fonte": "BCB SGS — concessões mensais (20662/20635/20673/20666/20704), crédito ampliado (20571/20572), agregados (27788-27791), IPCA mensal (433, desde 2010), PIB 12m (4382).",
-            "nota": "Deflator: índice IPCA composto Π(1+v/100) a partir do SGS 433, normalizado com último mês = 100 — séries reais a preços do último mês. Impulso de crédito = variação em 12 meses, em pontos percentuais do PIB, do estoque de crédito ampliado/PIB (total, famílias, empresas).",
+            "fonte": "BCB SGS — concessões mensais (20662/20635/20673/20666/20704), crédito livre PF não rotativo/rotativo (20571/20572), saldo SFN total/PJ/PF (20539/20540/20541), agregados (27788-27791), IPCA mensal (433, desde 2010), PIB 12m (4382).",
+            "nota": "Deflator: índice IPCA composto Π(1+v/100) a partir do SGS 433, normalizado com último mês = 100 — séries reais a preços do último mês. Impulso de crédito = variação em 12 meses, em pontos percentuais do PIB, do estoque de crédito/PIB.",
+            "nota_auditoria_2026_06": "Os campos legados credito_total/familias/empresas_pct_pib e impulso_total/familias/empresas_pp usam as séries 20571/20572, que são crédito LIVRE PF (não rotativo/rotativo) — NÃO 'crédito ampliado famílias/empresas' como o rótulo sugeria. Valores preservados pela regra aditiva. Migrar o front para livres_pf_* (mesmos dados, nome correto) ou saldo_sfn_* (saldo da carteira de crédito do SFN: total 20539, famílias 20541, empresas 20540).",
         },
     }
 
