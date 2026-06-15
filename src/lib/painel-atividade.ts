@@ -44,6 +44,22 @@ export type AtividadePibData = {
   contribuicoes?: { serie: PibContribPonto[] };
   carrego?: PibCarrego;
   per_capita?: { serie: PibPerCapitaPonto[] };
+  // v3 — Contas Nacionais Trimestrais completas (cobertura 100%, ver PLANO-PIB-CNT-100.md)
+  /** 6612 — valores encadeados a preços de 1995, R$ reais NS, por recorte c11255. */
+  valores_reais_ns?: { serie: PibIndicePonto[] };
+  /** 6613 — valores encadeados a preços de 1995, R$ reais COM ajuste sazonal. */
+  valores_reais_sa?: { serie: PibIndicePonto[] };
+  /** 1846 — % do PIB nominal por recorte, série temporal (chaves `{recorte}_pct_pib`). */
+  estrutura_nominal?: { serie: Record<string, NumOrNull | string>[] };
+  /** 6726 — taxa de poupança bruta (% PIB) + médias sazonais por trimestre. */
+  taxa_poupanca?: { serie: Array<{ trim: string; valor: NumOrNull }>; sazonalidade?: Record<string, NumOrNull> };
+  /** 6727 — taxa de investimento (FBCF % PIB). */
+  taxa_investimento?: { serie: Array<{ trim: string; valor: NumOrNull }> };
+  /** 2205 — conta financeira: ativo/passivo/líquido por instrumento F.x (trim e acum-4T). */
+  conta_financeira?: { serie: Record<string, NumOrNull | string>[]; serie_acum4t: Record<string, NumOrNull | string>[] };
+  /** 2072 em % do PIB (sequência da renda). */
+  contas_economicas_pct_pib?: { serie: PibContasPonto[] };
+  labels_financeiro?: Record<string, string>;
   metadata: AtividadeMetadata;
 };
 

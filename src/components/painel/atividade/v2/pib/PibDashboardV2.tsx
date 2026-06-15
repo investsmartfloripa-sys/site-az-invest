@@ -10,6 +10,7 @@ import { AnchorContribuicoesPib } from "./AnchorContribuicoesPib";
 import { RitmoTrimestralCard } from "./RitmoTrimestralCard";
 import { IbcBrPibCard } from "./IbcBrPibCard";
 import { DecomposicaoPib } from "./DecomposicaoPib";
+import { HeatmapSetorialPib } from "./HeatmapSetorialPib";
 import { FocusPibCard } from "./FocusPibCard";
 import { RealizadoFocusCard } from "./RealizadoFocusCard";
 import { PerCapitaCard } from "./PerCapitaCard";
@@ -111,6 +112,14 @@ export function PibDashboardV2({
       descricao:
         "Setores da oferta e componentes da demanda, em nível (recuperação vs pré-pandemia) ou momentum (YoY) — alterne nos botões.",
       children: <DecomposicaoPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />,
+    });
+    out.push({
+      id: "heatmap-setorial",
+      eyebrow: "Composição",
+      titulo: "Crescimento setorial (mapa de calor)",
+      descricao:
+        "Os 17 setores da oferta × 4 medidas de variação no trimestre — leitura rápida de quem expande e quem recua.",
+      children: <HeatmapSetorialPib pib={pib} geradoEm={pib.gerado_em} />,
     });
     out.push({
       id: "expectativas",
