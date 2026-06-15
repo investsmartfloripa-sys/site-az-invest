@@ -123,17 +123,17 @@ export default async function VideosPage({ searchParams }: VideosPageProps) {
 
         {source === "fallback" && error ? (
           <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900">
-            <strong>Modo offline:</strong> exibindo videos de exemplo. ({error})
+            <strong>Modo offline:</strong> exibindo vídeos de exemplo. ({error})
           </div>
         ) : null}
 
         {videos.length === 0 ? (
           <p className="text-sm text-zinc-500">
             {activeType === "shorts"
-              ? "Nenhum short encontrado nos videos recentes."
+              ? "Nenhum short encontrado nos vídeos recentes."
               : activeType === "long"
-                ? "Nenhum video longo encontrado nos videos recentes."
-                : "Nenhum video encontrado nesta playlist."}
+                ? "Nenhum vídeo longo encontrado nos vídeos recentes."
+                : "Nenhum vídeo encontrado nesta playlist."}
           </p>
         ) : (
           <section

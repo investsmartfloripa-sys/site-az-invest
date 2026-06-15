@@ -64,7 +64,7 @@ export function YoutubeVideoCard({
             type="button"
             onClick={() => setIsPlaying(true)}
             className="relative block h-full w-full text-left"
-            aria-label={`Reproduzir video: ${video.title}`}
+            aria-label={`Reproduzir vídeo: ${video.title}`}
           >
             {video.thumbnail ? (
               <Image

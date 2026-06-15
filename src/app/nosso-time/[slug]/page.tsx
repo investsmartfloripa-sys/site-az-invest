@@ -72,7 +72,7 @@ async function registerWhatsappClickAction(
     ? ` Meu telefone: ${normalizedVisitorPhone}.`
     : "";
   const greeting = encodeURIComponent(
-    `Ola ${author.name.split(" ")[0]}, sou ${trimmed} e vim pelo site Investimentos de A a Z.${visitorLine}`,
+    `Olá ${author.name.split(" ")[0]}, sou ${trimmed} e vim pelo site Investimentos de A a Z.${visitorLine}`,
   );
   return `https://wa.me/${digits}?text=${greeting}`;
 }
@@ -84,7 +84,7 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   const author = await getAuthor(slug);
-  if (!author) return { title: "Autor nao encontrado | AZ Invest" };
+  if (!author) return { title: "Autor não encontrado | AZ Invest" };
   return {
     title: `${author.name} | AZ Invest`,
     description:
@@ -176,7 +176,7 @@ export default async function AuthorPage({
           <section className="rounded-xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
             <div className="space-y-0.5">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#027DFC] md:text-[11px]">
-                Quem e
+                Quem é
               </p>
               <h2 className="text-xl font-medium text-[#132960] md:text-2xl">
                 Sobre {firstName}
@@ -191,7 +191,7 @@ export default async function AuthorPage({
         <section className="space-y-3">
           <div className="space-y-0.5">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#FF5713] md:text-[11px]">
-              Conteudo autoral
+              Conteúdo autoral
             </p>
             <h2 className="text-xl font-medium text-[#132960] md:text-2xl">
               Artigos desta pessoa
@@ -199,7 +199,7 @@ export default async function AuthorPage({
           </div>
           {mappedPosts.length === 0 ? (
             <p className="rounded-xl border border-[#132960]/20 bg-white px-4 py-3 text-sm text-zinc-600">
-              {firstName} ainda nao publicou nenhum artigo por aqui.
+              {firstName} ainda não publicou nenhum artigo por aqui.
             </p>
           ) : (
             <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

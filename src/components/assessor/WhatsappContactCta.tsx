@@ -92,7 +92,7 @@ export function WhatsappContactCta({
             </h3>
             <p className="mt-1 text-sm text-zinc-600">
               Confirme seu nome. Se quiser, informe seu telefone para {firstName}{" "}
-              localizar seu contato — e opcionalmente enviamos esse numero na
+              localizar seu contato — e opcionalmente enviamos esse número na
               primeira mensagem.
             </p>
 

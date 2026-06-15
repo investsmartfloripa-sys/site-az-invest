@@ -98,7 +98,7 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
           ))}
           {others.length === 0 ? (
             <article className="flex h-full min-h-44 items-center justify-center rounded-2xl border border-dashed border-[#132960]/30 bg-white text-sm text-zinc-500">
-              Publique mais posts para preencher esse espaco.
+              Publique mais posts para preencher esse espaço.
             </article>
           ) : null}
         </div>
