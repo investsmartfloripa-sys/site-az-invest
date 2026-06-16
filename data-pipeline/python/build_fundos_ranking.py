@@ -41,46 +41,63 @@ PLAN = os.environ.get("MAISRETORNO_PLAN", "free").strip() or "free"
 # Quando `id` é None, o script resolve via /search/{query} (1 chamada extra).
 # Preferir `id` explícito (determinístico e econômico em cota).
 UNIVERSO: dict[str, dict[str, Any]] = {
-    "multimercado": {
-        "label": "Multimercado",
-        "metric_default": "sharpe_12m",
+    'multimercado': {
+        "label": 'Multimercado',
+        "metric_default": 'sharpe_12m',
         "funds": [
-            {"nome": "CSHG Verde", "id": "01221890000124:fi", "query": "CSHG Verde FIC FIM"},
-            {"nome": "SPX Nimitz", "id": None, "query": "SPX Nimitz"},
-            {"nome": "Kapitalo Zeta", "id": None, "query": "Kapitalo Zeta"},
-            {"nome": "Legacy Capital", "id": None, "query": "Legacy Capital"},
-            {"nome": "Ibiúna Hedge", "id": None, "query": "Ibiuna Hedge"},
-            {"nome": "Bahia AM Maraú", "id": None, "query": "Bahia AM Marau"},
-            {"nome": "Genoa Capital Radar", "id": None, "query": "Genoa Capital Radar"},
-            {"nome": "Vinland Macro", "id": None, "query": "Vinland Macro"},
+            {"nome": 'CSHG Verde FIC FIF Multimercado RL', "id": '01221890000124:fi'},
+            {"nome": 'SPX Nimitz Feeder FIF da Classe FIC Multimercado RL', "id": '12831360000114:fi'},
+            {"nome": 'Kapitalo Zeta FIF Cotas FIM', "id": '12105992000109:fi'},
+            {"nome": 'Legacy Capital FIF Cotas FIM', "id": '30586677000114:fi'},
+            {"nome": 'Ibiúna Hedge FIF Classe FIC Multimercado RL', "id": '12154412000165:fi'},
+            {"nome": 'Bahia AM Maraú FIF Classe FIC Multimercado RL', "id": '17087932000116:fi'},
+            {"nome": 'Genoa Capital Radar FIF CIC Multimercado RL', "id": '35828684000107:fi'},
+            {"nome": 'Vinland Macro FIF da Classe FIC Multimercado RL', "id": '28581166000168:fi'},
+            {"nome": 'Itaú Kinea Atlas FIF CIC Multimercado RL', "id": '31238370000195:fi'},
+            {"nome": 'Gávea Macro FIF CIC Mult RL', "id": '08893082000152:fi'},
+            {"nome": 'Absolute Vertex FIC FIF Multimercado RL', "id": '21470989000177:fi'},
+            {"nome": 'Occam Retorno Absoluto FIC FIF Multimercado RL', "id": '17162002000180:fi'},
+            {"nome": 'Asa Hedge Classe FIM CP RL', "id": '22918586000100:fi'},
         ],
     },
-    "acoes": {
-        "label": "Ações",
-        "metric_default": "sharpe_12m",
+    'acoes': {
+        "label": 'Ações',
+        "metric_default": 'sharpe_12m',
         "funds": [
-            {"nome": "Dynamo Cougar", "id": None, "query": "Dynamo Cougar"},
-            {"nome": "Bogari Value", "id": None, "query": "Bogari Value"},
-            {"nome": "Alaska Black", "id": None, "query": "Alaska Black"},
-            {"nome": "Tork Long Only", "id": None, "query": "Tork"},
-            {"nome": "Moat Capital", "id": None, "query": "Moat Capital"},
-            {"nome": "Atmos Ações", "id": None, "query": "Atmos"},
-            {"nome": "Real Investor", "id": None, "query": "Real Investor"},
-            {"nome": "Constellation", "id": None, "query": "Constellation"},
+            {"nome": 'Dynamo Cougar FIF', "id": '73232530000139:fi'},
+            {"nome": 'Bogari Value FIC FIF Ações RL', "id": '08323402000139:fi'},
+            {"nome": 'Alaska Black FIF Cotas FIA', "id": '12987743000186:fi'},
+            {"nome": 'Tork Long Only Feeder I FIF Cotas FIA', "id": '35957054000124:fi'},
+            {"nome": 'Moat Capital FIF da CIC Ações RL', "id": '20658576000158:fi'},
+            {"nome": 'Atmos Ações FIF Cotas FIA', "id": '11145320000156:fi'},
+            {"nome": 'Real Investor FIC FIF Ações RL', "id": '10500884000105:fi'},
+            {"nome": 'Constellation FIF Cotas FIA', "id": '08671980000166:fi'},
+            {"nome": 'Velt FIF Cotas FIA', "id": '08940189000104:fi'},
+            {"nome": 'Squadra Long Biased FIF Cotas FIA', "id": '09285146000103:fi'},
+            {"nome": 'Brasil Capital 30 Master FIF Ações RL', "id": '14284684000105:fi'},
+            {"nome": 'Tarpon GT FIF Cotas FIA', "id": '22232927000190:fi'},
+            {"nome": 'Sharp Equity Value Feeder FIF Cotas FIF Ações', "id": '12565159000132:fi'},
+            {"nome": 'Forpus Ações FIC FIF Ações RL', "id": '21917184000129:fi'},
+            {"nome": 'Encore Ações FIF Ações', "id": '37487612000160:fi'},
         ],
     },
-    "renda_fixa": {
-        "label": "Renda Fixa",
-        "metric_default": "12m",
+    'renda_fixa': {
+        "label": 'Renda Fixa',
+        "metric_default": '12m',
         "funds": [
-            {"nome": "ARX Denali", "id": None, "query": "ARX Denali"},
-            {"nome": "JGP Crédito", "id": None, "query": "JGP Credito"},
-            {"nome": "AZ Quest Altro", "id": None, "query": "AZ Quest Altro"},
-            {"nome": "Capitânia", "id": None, "query": "Capitania"},
-            {"nome": "SPX Seahawk", "id": None, "query": "SPX Seahawk"},
-            {"nome": "Augme", "id": None, "query": "Augme"},
-            {"nome": "Sparta", "id": None, "query": "Sparta"},
-            {"nome": "Icatu Vanguarda", "id": None, "query": "Icatu Vanguarda"},
+            {"nome": 'ARX Denali FIC FIF RF CP RL', "id": '30921203000181:fi'},
+            {"nome": 'JGP Crédito Advisory FIF Multimercado CP RL', "id": '28767162000179:fi'},
+            {"nome": 'AZ Quest Altro FIC FIF Multimercado CP', "id": '22100009000107:fi'},
+            {"nome": 'Capitânia Top CP FIC FIF RF RL', "id": '13615411000133:fi'},
+            {"nome": 'SPX Seahawk FIF CIC RF CP LP RL', "id": '35505971000178:fi'},
+            {"nome": 'Augme 90 FIF Cotas FIM', "id": '17012208000123:fi'},
+            {"nome": 'Sparta Top FIC FIF RF CP LP RL', "id": '14188162000100:fi'},
+            {"nome": 'Icatu Vanguarda Credit Plus FIF CIC RF CP RL', "id": '32760042000117:fi'},
+            {"nome": 'Vinci Portfolio Crédito I FIF Classe Investimento RF CP RL', "id": '38658541000184:fi'},
+            {"nome": 'Sulamérica Crédito ESG FIF RF CP LP Investimento Sustentável RL', "id": '33701828000126:fi'},
+            {"nome": 'Western Asset Crédito Bancário Plus FIF RF CP RL', "id": '49983964000196:fi'},
+            {"nome": 'BTG Pactual Crédito Corporativo I FIF Cotas FI RF', "id": '14171644000157:fi'},
+            {"nome": 'Valora Absolute FIF RF CP LP RL', "id": '10326625000100:fi'},
         ],
     },
 }
@@ -158,7 +175,8 @@ def fetch_row(fund: dict[str, Any], key: str, *, with_drawdown: bool) -> Optiona
         print(f"  [skip] não resolveu: {fund.get('nome')}", file=sys.stderr)
         return None
 
-    stats_resp = _get(f"stats/{ident}?format_decimal=false", key)
+    # format_decimal=true → valores em DECIMAL (0.0621); _to_pp multiplica por 100.
+    stats_resp = _get(f"stats/{ident}?format_decimal=true", key)
     if not isinstance(stats_resp, dict):
         return None
     stats = stats_resp.get("stats", {}) or {}

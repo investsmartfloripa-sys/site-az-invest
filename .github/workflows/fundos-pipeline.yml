@@ -1,13 +1,16 @@
 name: Fundos pipeline (Fundos de Investimento — Mais Retorno)
 
 # Ranking de fundos por categoria via Mais Retorno Data API.
-# Cadência SEMANAL para respeitar a cota do plano (free = 500 req/mês):
-#   00 11 UTC sábado = 08:00 BRT, após o fechamento de sexta (dados D-1).
-# Ao assinar um plano superior, aumentar a frequência (ex.: dias úteis) e
-# ligar `--with-drawdown`.
+# Cadência alvo: A CADA 2 DIAS — 0 11 UTC = 08:00 BRT (dados D-1).
+#   ⚠️ COTA (free = 500 req/mês): 41 fundos × 1 req/fundo × ~15 rodadas/mês
+#   ≈ 615 req/mês, que ESTOURA o free. ANTES de ligar a automação (criar o
+#   secret MAISRETORNO_API_KEY), escolher uma destas:
+#     (a) batch via compare_assets em pares (~2 fundos/chamada → ~315/mês, cabe);
+#     (b) reduzir p/ ~2x/semana (cron "0 11 * * 2,5");
+#     (c) assinar o Basic (1.500/mês).
 on:
   schedule:
-    - cron: "0 11 * * 6"
+    - cron: "0 11 */2 * *"
   workflow_dispatch:
     inputs:
       with_drawdown:
