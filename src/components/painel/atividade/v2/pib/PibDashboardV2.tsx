@@ -16,6 +16,11 @@ import { PesoSetorialPib } from "./PesoSetorialPib";
 import { ComposicaoVaPib } from "./ComposicaoVaPib";
 import { SetorLupaPib } from "./SetorLupaPib";
 import { TabelaMestraOfertaPib } from "./TabelaMestraOfertaPib";
+import { ComponentesDemandaPib } from "./ComponentesDemandaPib";
+import { EstruturaDemandaPib } from "./EstruturaDemandaPib";
+import { AberturaComercialPib } from "./AberturaComercialPib";
+import { ComponenteLupaDemandaPib } from "./ComponenteLupaDemandaPib";
+import { TabelaMestraDemandaPib } from "./TabelaMestraDemandaPib";
 import { FocusPibCard } from "./FocusPibCard";
 import { RealizadoFocusCard } from "./RealizadoFocusCard";
 import { PerCapitaCard } from "./PerCapitaCard";
@@ -180,7 +185,11 @@ export function PibDashboardV2({
       </FaceSection>
 
       <FaceSection id="demanda" nome="Demanda" sub="ótica da despesa — quem gasta">
-        <EmConstrucao texto="Consumo das famílias e do governo, investimento (FBCF), exportações e importações — gráficos em construção. Os dados já estão na pipeline." />
+        <ComponentesDemandaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <EstruturaDemandaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <AberturaComercialPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <ComponenteLupaDemandaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <TabelaMestraDemandaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
       </FaceSection>
 
       <FaceSection id="renda" nome="Renda" sub="distribuição da renda, poupança e investimento">
