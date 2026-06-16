@@ -54,6 +54,8 @@ export type FundosRanking = {
   /** Rótulo do limite de histórico do plano (ex.: "12m" no free). */
   plan_history_limit: string;
   source: string;
+  /** Retorno do CDI por janela (pontos percentuais) — benchmark livre de risco. */
+  cdi?: FundoRetornos;
   categories: FundoCategoria[];
 };
 

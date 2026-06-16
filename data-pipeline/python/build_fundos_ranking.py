@@ -45,59 +45,63 @@ UNIVERSO: dict[str, dict[str, Any]] = {
         "label": 'Multimercado',
         "metric_default": 'sharpe_12m',
         "funds": [
-            {"nome": 'CSHG Verde FIC FIF Multimercado RL', "id": '01221890000124:fi'},
-            {"nome": 'SPX Nimitz Feeder FIF da Classe FIC Multimercado RL', "id": '12831360000114:fi'},
-            {"nome": 'Kapitalo Zeta FIF Cotas FIM', "id": '12105992000109:fi'},
-            {"nome": 'Legacy Capital FIF Cotas FIM', "id": '30586677000114:fi'},
-            {"nome": 'Ibiúna Hedge FIF Classe FIC Multimercado RL', "id": '12154412000165:fi'},
-            {"nome": 'Bahia AM Maraú FIF Classe FIC Multimercado RL', "id": '17087932000116:fi'},
-            {"nome": 'Genoa Capital Radar FIF CIC Multimercado RL', "id": '35828684000107:fi'},
-            {"nome": 'Vinland Macro FIF da Classe FIC Multimercado RL', "id": '28581166000168:fi'},
-            {"nome": 'Itaú Kinea Atlas FIF CIC Multimercado RL', "id": '31238370000195:fi'},
-            {"nome": 'Gávea Macro FIF CIC Mult RL', "id": '08893082000152:fi'},
-            {"nome": 'Absolute Vertex FIC FIF Multimercado RL', "id": '21470989000177:fi'},
-            {"nome": 'Occam Retorno Absoluto FIC FIF Multimercado RL', "id": '17162002000180:fi'},
-            {"nome": 'Asa Hedge Classe FIM CP RL', "id": '22918586000100:fi'},
+            {"nome": 'CSHG Verde', "id": '01221890000124:fi'},
+            {"nome": 'SPX Nimitz', "id": '12831360000114:fi'},
+            {"nome": 'Kapitalo Zeta', "id": '12105992000109:fi'},
+            {"nome": 'Legacy Capital', "id": '30586677000114:fi'},
+            {"nome": 'Ibiúna Hedge', "id": '12154412000165:fi'},
+            {"nome": 'Bahia AM Maraú', "id": '17087932000116:fi'},
+            {"nome": 'Genoa Capital Radar', "id": '35828684000107:fi'},
+            {"nome": 'Vinland Macro', "id": '28581166000168:fi'},
+            {"nome": 'Kinea Atlas', "id": '31238370000195:fi'},
+            {"nome": 'Gávea Macro', "id": '08893082000152:fi'},
+            {"nome": 'Absolute Vertex', "id": '21470989000177:fi'},
+            {"nome": 'Occam Retorno Absoluto', "id": '17162002000180:fi'},
+            {"nome": 'Asa Hedge', "id": '22918586000100:fi'},
+            {"nome": 'Truxt Macro', "id": '26859555000187:fi'},
+            {"nome": 'Kinea Chronos', "id": '23731781000190:fi'},
         ],
     },
     'acoes': {
         "label": 'Ações',
         "metric_default": 'sharpe_12m',
         "funds": [
-            {"nome": 'Dynamo Cougar FIF', "id": '73232530000139:fi'},
-            {"nome": 'Bogari Value FIC FIF Ações RL', "id": '08323402000139:fi'},
-            {"nome": 'Alaska Black FIF Cotas FIA', "id": '12987743000186:fi'},
-            {"nome": 'Tork Long Only Feeder I FIF Cotas FIA', "id": '35957054000124:fi'},
-            {"nome": 'Moat Capital FIF da CIC Ações RL', "id": '20658576000158:fi'},
-            {"nome": 'Atmos Ações FIF Cotas FIA', "id": '11145320000156:fi'},
-            {"nome": 'Real Investor FIC FIF Ações RL', "id": '10500884000105:fi'},
-            {"nome": 'Constellation FIF Cotas FIA', "id": '08671980000166:fi'},
-            {"nome": 'Velt FIF Cotas FIA', "id": '08940189000104:fi'},
-            {"nome": 'Squadra Long Biased FIF Cotas FIA', "id": '09285146000103:fi'},
-            {"nome": 'Brasil Capital 30 Master FIF Ações RL', "id": '14284684000105:fi'},
-            {"nome": 'Tarpon GT FIF Cotas FIA', "id": '22232927000190:fi'},
-            {"nome": 'Sharp Equity Value Feeder FIF Cotas FIF Ações', "id": '12565159000132:fi'},
-            {"nome": 'Forpus Ações FIC FIF Ações RL', "id": '21917184000129:fi'},
-            {"nome": 'Encore Ações FIF Ações', "id": '37487612000160:fi'},
+            {"nome": 'Dynamo Cougar', "id": '73232530000139:fi'},
+            {"nome": 'Bogari Value', "id": '08323402000139:fi'},
+            {"nome": 'Alaska Black', "id": '12987743000186:fi'},
+            {"nome": 'Tork Long Only', "id": '35957054000124:fi'},
+            {"nome": 'Moat Capital', "id": '20658576000158:fi'},
+            {"nome": 'Atmos Ações', "id": '11145320000156:fi'},
+            {"nome": 'Real Investor', "id": '10500884000105:fi'},
+            {"nome": 'Constellation', "id": '08671980000166:fi'},
+            {"nome": 'Velt', "id": '08940189000104:fi'},
+            {"nome": 'Squadra Long Biased', "id": '09285146000103:fi'},
+            {"nome": 'Brasil Capital 30', "id": '14284684000105:fi'},
+            {"nome": 'Tarpon GT', "id": '22232927000190:fi'},
+            {"nome": 'Sharp Equity Value', "id": '12565159000132:fi'},
+            {"nome": 'Forpus Ações', "id": '21917184000129:fi'},
+            {"nome": 'Encore Ações', "id": '37487612000160:fi'},
         ],
     },
     'renda_fixa': {
         "label": 'Renda Fixa',
         "metric_default": '12m',
         "funds": [
-            {"nome": 'ARX Denali FIC FIF RF CP RL', "id": '30921203000181:fi'},
-            {"nome": 'JGP Crédito Advisory FIF Multimercado CP RL', "id": '28767162000179:fi'},
-            {"nome": 'AZ Quest Altro FIC FIF Multimercado CP', "id": '22100009000107:fi'},
-            {"nome": 'Capitânia Top CP FIC FIF RF RL', "id": '13615411000133:fi'},
-            {"nome": 'SPX Seahawk FIF CIC RF CP LP RL', "id": '35505971000178:fi'},
-            {"nome": 'Augme 90 FIF Cotas FIM', "id": '17012208000123:fi'},
-            {"nome": 'Sparta Top FIC FIF RF CP LP RL', "id": '14188162000100:fi'},
-            {"nome": 'Icatu Vanguarda Credit Plus FIF CIC RF CP RL', "id": '32760042000117:fi'},
-            {"nome": 'Vinci Portfolio Crédito I FIF Classe Investimento RF CP RL', "id": '38658541000184:fi'},
-            {"nome": 'Sulamérica Crédito ESG FIF RF CP LP Investimento Sustentável RL', "id": '33701828000126:fi'},
-            {"nome": 'Western Asset Crédito Bancário Plus FIF RF CP RL', "id": '49983964000196:fi'},
-            {"nome": 'BTG Pactual Crédito Corporativo I FIF Cotas FI RF', "id": '14171644000157:fi'},
-            {"nome": 'Valora Absolute FIF RF CP LP RL', "id": '10326625000100:fi'},
+            {"nome": 'ARX Denali', "id": '30921203000181:fi'},
+            {"nome": 'JGP Crédito', "id": '28767162000179:fi'},
+            {"nome": 'AZ Quest Altro', "id": '22100009000107:fi'},
+            {"nome": 'Capitânia Top', "id": '13615411000133:fi'},
+            {"nome": 'SPX Seahawk', "id": '35505971000178:fi'},
+            {"nome": 'Augme 90', "id": '17012208000123:fi'},
+            {"nome": 'Sparta Top', "id": '14188162000100:fi'},
+            {"nome": 'Icatu Vanguarda Credit Plus', "id": '32760042000117:fi'},
+            {"nome": 'Vinci Crédito', "id": '38658541000184:fi'},
+            {"nome": 'SulAmérica Crédito ESG', "id": '33701828000126:fi'},
+            {"nome": 'Western Asset Crédito', "id": '49983964000196:fi'},
+            {"nome": 'BTG Crédito Corporativo', "id": '14171644000157:fi'},
+            {"nome": 'Valora Absolute', "id": '10326625000100:fi'},
+            {"nome": 'JGP Corporate', "id": '20824446000148:fi'},
+            {"nome": 'Daycoval Classic', "id": '10783480000168:fi'},
         ],
     },
 }
@@ -212,42 +216,96 @@ def fetch_row(fund: dict[str, Any], key: str, *, with_drawdown: bool) -> Optiona
     }
 
 
+def fetch_cdi(key: str) -> Optional[dict[str, Any]]:
+    """Retornos do CDI (cdi:idx) por janela, em pontos percentuais — benchmark."""
+    resp = _get("stats/cdi:idx?format_decimal=true", key)
+    if not isinstance(resp, dict):
+        return None
+    stats = resp.get("stats", {}) or {}
+    w12 = _tf(stats, "last_12_months") or _tf(stats, "begin")
+    return {
+        "3m": _to_pp(_tf(stats, "last_3_months").get("profitability")),
+        "6m": _to_pp(_tf(stats, "last_6_months").get("profitability")),
+        "ytd": _to_pp(_tf(stats, "ytd").get("profitability")),
+        "12m": _to_pp(w12.get("profitability")),
+    }
+
+
+def _days_between(a: str, b: str) -> int:
+    """Dias |a - b| para datas 'YYYY-MM-DD'. 0 se inválidas."""
+    try:
+        da = datetime.strptime(a[:10], "%Y-%m-%d")
+        db = datetime.strptime(b[:10], "%Y-%m-%d")
+        return abs((da - db).days)
+    except (ValueError, TypeError):
+        return 0
+
+
+# Filtro anti-lixo: dado stale/anômalo não vai pro ar (ver exclusões manuais jun/2026).
+MAX_STALE_DAYS = 30
+ANOMALY_3M = 30.0  # |retorno 3m| acima disso = provável distorção de cota
+ANOMALY_12M = 45.0
+
+
+def _row_quality(row: dict[str, Any], ref_date: Optional[str]) -> Optional[str]:
+    """Devolve o MOTIVO de rejeição do fundo, ou None se está limpo."""
+    r = row.get("retornos", {})
+    if r.get("6m") is None or r.get("ytd") is None or r.get("12m") is None:
+        return "janelas incompletas (6m/ytd/12m nulos)"
+    if abs(r.get("3m") or 0) > ANOMALY_3M or abs(r.get("12m") or 0) > ANOMALY_12M:
+        return f"retorno anômalo (3m={r.get('3m')} 12m={r.get('12m')})"
+    lq = row.get("_last_quote")
+    if ref_date and lq and _days_between(ref_date, lq) > MAX_STALE_DAYS:
+        return f"dado defasado (última cota {lq})"
+    return None
+
+
 def build_payload(*, with_drawdown: bool) -> dict[str, Any]:
     key = _api_key()
     if not key:
         return {"status": "error", "message": "MAISRETORNO_API_KEY ausente"}
 
-    categories: list[dict[str, Any]] = []
-    data_date: Optional[str] = None
-
+    # 1ª passada: coleta os rows (com _last_quote) e acha a data de referência.
+    raw: dict[str, list[dict[str, Any]]] = {}
+    ref_date: Optional[str] = None
     for cat_key in CATEGORY_ORDER:
-        cfg = UNIVERSO[cat_key]
         rows: list[dict[str, Any]] = []
-        for fund in cfg["funds"]:
+        for fund in UNIVERSO[cat_key]["funds"]:
             row = fetch_row(fund, key, with_drawdown=with_drawdown)
             if not row:
                 continue
-            lq = row.pop("_last_quote", None)
-            if lq and (data_date is None or lq > data_date):
-                data_date = lq
+            lq = row.get("_last_quote")
+            if lq and (ref_date is None or lq > ref_date):
+                ref_date = lq
             rows.append(row)
+        raw[cat_key] = rows
+
+    # 2ª passada: filtro de qualidade + remove o campo interno _last_quote.
+    categories: list[dict[str, Any]] = []
+    for cat_key in CATEGORY_ORDER:
+        clean: list[dict[str, Any]] = []
+        for row in raw[cat_key]:
+            reason = _row_quality(row, ref_date)
+            if reason:
+                print(f"  [drop] {row.get('nome')}: {reason}", file=sys.stderr)
+                continue
+            row.pop("_last_quote", None)
+            clean.append(row)
+        cfg = UNIVERSO[cat_key]
         categories.append(
-            {
-                "key": cat_key,
-                "label": cfg["label"],
-                "metric_default": cfg["metric_default"],
-                "funds": rows,
-            }
+            {"key": cat_key, "label": cfg["label"], "metric_default": cfg["metric_default"], "funds": clean}
         )
 
+    cdi = fetch_cdi(key)
     total = sum(len(c["funds"]) for c in categories)
     return {
         "status": "ok" if total else "error",
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "data_date": data_date,
+        "data_date": ref_date,
         "plan": PLAN,
         "plan_history_limit": "12m" if PLAN == "free" else "completo",
         "source": "Mais Retorno Data API",
+        "cdi": cdi,
         "categories": categories,
     }
 

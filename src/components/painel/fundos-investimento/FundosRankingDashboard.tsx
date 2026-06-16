@@ -7,9 +7,14 @@ import { fmtNum, fmtPct, fmtSignedPct } from "@/lib/format-br";
 import type {
   FundoCategoria,
   FundoJanela,
+  FundoRetornos,
   FundoRow,
   FundosRanking,
 } from "@/lib/painel-fundos-investimento-data";
+
+const MINUS = "−";
+/** Troca o hífen-menos do Intl pelo menos tipográfico da casa (U+2212). */
+const tm = (s: string) => s.replace(/-/g, MINUS);
 
 const JANELAS: ReadonlyArray<{ id: FundoJanela; label: string }> = [
   { id: "3m", label: "3M" },
@@ -44,7 +49,6 @@ function sortValue(row: FundoRow, key: SortKey, janela: FundoJanela): number | s
 function compareRows(a: FundoRow, b: FundoRow, key: SortKey, dir: SortDir, janela: FundoJanela): number {
   const va = sortValue(a, key, janela);
   const vb = sortValue(b, key, janela);
-  // Nulos sempre por último, independente da direção.
   if (va == null && vb == null) return 0;
   if (va == null) return 1;
   if (vb == null) return -1;
@@ -53,11 +57,16 @@ function compareRows(a: FundoRow, b: FundoRow, key: SortKey, dir: SortDir, janel
   return ((va as number) - (vb as number)) * sign;
 }
 
-/** Verde p/ positivo, vermelho p/ negativo, neutro p/ zero/nulo. */
-function retClass(v: number | null): string {
-  if (v == null) return "text-zinc-400";
-  if (v > 0) return "text-[#16A34A]";
-  if (v < 0) return "text-[#DC2626]";
+/** Cor do retorno relativa ao CDI: verde supera, vermelho fica abaixo. */
+function retClass(ret: number | null, cdi: number | null): string {
+  if (ret == null) return "text-zinc-400";
+  if (cdi != null) {
+    if (ret > cdi) return "text-[#16A34A]";
+    if (ret < cdi) return "text-[#DC2626]";
+    return "text-[#132960]";
+  }
+  if (ret > 0) return "text-[#16A34A]";
+  if (ret < 0) return "text-[#DC2626]";
   return "text-[#132960]";
 }
 
@@ -75,15 +84,7 @@ function bestBy(funds: FundoRow[], pick: (f: FundoRow) => number | null): FundoR
   return best;
 }
 
-function HighlightCard({
-  tag,
-  fund,
-  value,
-}: {
-  tag: string;
-  fund: FundoRow | null;
-  value: string;
-}) {
+function HighlightCard({ tag, fund, value }: { tag: string; fund: FundoRow | null; value: string }) {
   return (
     <article className="rounded-xl border border-[#132960]/15 bg-white p-4 shadow-sm">
       <p className="text-[10px] font-semibold uppercase tracking-wide text-[#027DFC]">{tag}</p>
@@ -102,7 +103,15 @@ function HighlightCard({
   );
 }
 
-function CategoriaTabela({ categoria, janela }: { categoria: FundoCategoria; janela: FundoJanela }) {
+function CategoriaTabela({
+  categoria,
+  janela,
+  cdiJanela,
+}: {
+  categoria: FundoCategoria;
+  janela: FundoJanela;
+  cdiJanela: number | null;
+}) {
   const [sortKey, setSortKey] = useState<SortKey>(
     categoria.metric_default === "sharpe_12m" ? "sharpe_12m" : "retorno",
   );
@@ -116,6 +125,14 @@ function CategoriaTabela({ categoria, janela }: { categoria: FundoCategoria; jan
 
   const bestSharpe = useMemo(() => bestBy(categoria.funds, (f) => f.sharpe_12m), [categoria.funds]);
   const bestRet12 = useMemo(() => bestBy(categoria.funds, (f) => retorno(f, "12m")), [categoria.funds]);
+
+  const acimaCdi = useMemo(() => {
+    if (cdiJanela == null) return null;
+    return categoria.funds.filter((f) => {
+      const r = retorno(f, janela);
+      return r != null && r > cdiJanela;
+    }).length;
+  }, [categoria.funds, janela, cdiJanela]);
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
@@ -141,7 +158,7 @@ function CategoriaTabela({ categoria, janela }: { categoria: FundoCategoria; jan
         <HighlightCard
           tag="Melhor Sharpe (12M)"
           fund={bestSharpe}
-          value={bestSharpe ? fmtNum(bestSharpe.sharpe_12m, 2) : "—"}
+          value={bestSharpe ? tm(fmtNum(bestSharpe.sharpe_12m, 2)) : "—"}
         />
         <HighlightCard
           tag="Maior retorno (12M)"
@@ -149,6 +166,15 @@ function CategoriaTabela({ categoria, janela }: { categoria: FundoCategoria; jan
           value={bestRet12 ? fmtSignedPct(retorno(bestRet12, "12m")) : "—"}
         />
       </div>
+
+      {acimaCdi != null ? (
+        <p className="text-[11px] text-zinc-500">
+          <span className="font-semibold text-[#132960]">{acimaCdi}</span> de {categoria.funds.length}{" "}
+          fundos superaram o CDI em {janelaLabel}.{" "}
+          <span className="text-[#16A34A]">Verde</span> = acima do CDI ·{" "}
+          <span className="text-[#DC2626]">vermelho</span> = abaixo.
+        </p>
+      ) : null}
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[680px] border-collapse text-left text-xs">
@@ -198,14 +224,12 @@ function CategoriaTabela({ categoria, janela }: { categoria: FundoCategoria; jan
                         </span>
                       </span>
                     </td>
-                    <td className={`px-2 py-2 text-right font-semibold tabular-nums ${retClass(ret)}`}>
+                    <td className={`px-2 py-2 text-right font-semibold tabular-nums ${retClass(ret, cdiJanela)}`}>
                       {fmtSignedPct(ret)}
                     </td>
                     <td className="px-2 py-2 text-right tabular-nums text-[#132960]">{fmtPct(f.vol_12m)}</td>
-                    <td className="px-2 py-2 text-right tabular-nums text-[#132960]">{fmtNum(f.sharpe_12m, 2)}</td>
-                    <td className={`px-2 py-2 text-right tabular-nums ${retClass(f.drawdown_12m)}`}>
-                      {fmtPct(f.drawdown_12m)}
-                    </td>
+                    <td className="px-2 py-2 text-right tabular-nums text-[#132960]">{tm(fmtNum(f.sharpe_12m, 2))}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-zinc-500">{tm(fmtPct(f.drawdown_12m))}</td>
                   </tr>
                 );
               })
@@ -223,6 +247,8 @@ export function FundosRankingDashboard({ data }: { data: FundosRanking }) {
   const [janela, setJanela] = useState<FundoJanela>("12m");
 
   const ativa = categorias.find((c) => c.key === activeKey) ?? categorias[0] ?? null;
+  const cdi: FundoRetornos | undefined = data.cdi;
+  const cdiJanela = cdi?.[janela] ?? null;
 
   if (!ativa) {
     return (
@@ -234,7 +260,7 @@ export function FundosRankingDashboard({ data }: { data: FundosRanking }) {
 
   return (
     <section className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-6">
-      <div className="flex flex-wrap items-center gap-3 pb-4">
+      <div className="flex flex-wrap items-center gap-3 pb-2">
         {/* Categorias */}
         <div role="tablist" aria-label="Categoria de fundo" className="inline-flex flex-wrap gap-1">
           {categorias.map((c) => {
@@ -286,13 +312,24 @@ export function FundosRankingDashboard({ data }: { data: FundosRanking }) {
         </div>
       </div>
 
-      <CategoriaTabela categoria={ativa} janela={janela} />
+      {/* Benchmark CDI da janela selecionada */}
+      {cdiJanela != null ? (
+        <p className="pb-3 text-[11px] text-zinc-500">
+          Benchmark{" "}
+          <span className="rounded bg-[#132960]/5 px-1.5 py-0.5 font-semibold text-[#132960]">
+            CDI {JANELAS.find((j) => j.id === janela)?.label}: {fmtSignedPct(cdiJanela)}
+          </span>{" "}
+          — o retorno é colorido em relação a esse CDI.
+        </p>
+      ) : null}
+
+      <CategoriaTabela categoria={ativa} janela={janela} cdiJanela={cdiJanela} />
 
       <p className="mt-3 text-[10px] text-zinc-400">
         Universo acompanhado pela AZ Invest (curado, não é toda a base CVM). Retorno, volatilidade,
-        Sharpe e drawdown via <strong>Mais Retorno</strong> (Data API), dados D-1. Sharpe usa o CDI
-        como ativo livre de risco — valor negativo indica desempenho abaixo do CDI na janela. Não é
-        recomendação de investimento.
+        Sharpe e drawdown via <strong>Mais Retorno</strong> (Data API), dados D-1. Sharpe e a cor do
+        retorno usam o <strong>CDI</strong> como referência livre de risco. Não é recomendação de
+        investimento.
       </p>
       <p className="mt-2 text-right">
         <DataStamp giro={data.generated_at} dado={data.data_date ?? undefined} />
