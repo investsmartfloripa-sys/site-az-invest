@@ -74,3 +74,60 @@ async function fetchBlobJson<T>(path: string): Promise<T | null> {
 export async function getFundosRanking(): Promise<FundosRanking | null> {
   return fetchBlobJson<FundosRanking>("data/fundos_ranking.json");
 }
+
+// ── Séries de cota por fundo (gráfico da página de detalhe) ─────────────────
+
+/** Ponto de série temporal no formato [ISO, valor] esperado pelos charts. */
+export type QuoteSeries = ReadonlyArray<readonly [string, number]>;
+
+export type FundoQuotes = {
+  generated_at: string;
+  data_date: string | null;
+  /** Série diária do CDI (nível do índice) — benchmark do gráfico. */
+  cdi: QuoteSeries;
+  /** Série de cota por identificador "<cnpj>:fi". */
+  funds: Record<string, { nome: string; series: QuoteSeries }>;
+};
+
+export async function getFundosQuotes(): Promise<FundoQuotes | null> {
+  return fetchBlobJson<FundoQuotes>("data/fundos_quotes.json");
+}
+
+/** Slug da página de detalhe = CNPJ (só dígitos) do fundo. */
+export function fundoSlug(fund: Pick<FundoRow, "id" | "cnpj">): string {
+  return (fund.cnpj ?? fund.id.split(":")[0]).replace(/\D/g, "");
+}
+
+export type FundoDetail = {
+  fund: FundoRow;
+  categoria: FundoCategoria;
+  series: QuoteSeries;
+  cdiSeries: QuoteSeries;
+  generatedAt: string;
+  dataDate: string | null;
+  /** CDI por janela (do ranking) — referência nas métricas. */
+  cdi?: FundoRetornos;
+};
+
+/** Combina ranking (métricas) + cotas (série) para um fundo pelo slug (CNPJ). */
+export async function getFundoDetail(slug: string): Promise<FundoDetail | null> {
+  const key = slug.replace(/\D/g, "");
+  const [ranking, quotes] = await Promise.all([getFundosRanking(), getFundosQuotes()]);
+  if (!ranking) return null;
+  for (const categoria of ranking.categories) {
+    const fund = categoria.funds.find((f) => fundoSlug(f) === key);
+    if (fund) {
+      const q = quotes?.funds?.[fund.id];
+      return {
+        fund,
+        categoria,
+        series: q?.series ?? [],
+        cdiSeries: quotes?.cdi ?? [],
+        generatedAt: quotes?.generated_at ?? ranking.generated_at,
+        dataDate: quotes?.data_date ?? ranking.data_date,
+        cdi: ranking.cdi,
+      };
+    }
+  }
+  return null;
+}

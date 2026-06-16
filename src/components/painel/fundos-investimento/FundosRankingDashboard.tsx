@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import DataStamp from "@/components/painel/DataStamp";
 import { fmtNum, fmtPct, fmtSignedPct } from "@/lib/format-br";
+import { fundoSlug } from "@/lib/painel-fundos-investimento-data";
 import type {
   FundoCategoria,
   FundoJanela,
@@ -215,9 +217,13 @@ function CategoriaTabela({
                       <span className="flex items-baseline gap-2">
                         <span className="w-4 shrink-0 text-[10px] tabular-nums text-zinc-400">{i + 1}</span>
                         <span className="min-w-0">
-                          <span className="block truncate font-semibold text-[#132960]" title={f.nome}>
+                          <Link
+                            href={`/painel-economico/mercado/brasil/fundos-investimento/${fundoSlug(f)}`}
+                            className="block truncate font-semibold text-[#132960] transition hover:text-[#027DFC] hover:underline"
+                            title={`Ver ${f.nome}`}
+                          >
                             {f.nome}
-                          </span>
+                          </Link>
                           <span className="block truncate text-[10px] text-zinc-500" title={f.gestora ?? ""}>
                             {f.gestora ?? "—"}
                           </span>
