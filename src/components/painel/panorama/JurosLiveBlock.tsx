@@ -635,11 +635,17 @@ export function JurosLiveBlock({
   // Selic implícita D+0: forward COPOM calculado da curva DI AO VIVO (mesmo
   // modelo do pipeline R, validado reproduzindo o D-1 a partir do prevAdjust).
   // Só quando há pregão de hoje; senão a aba segue só com os cortes do pipeline.
+  // IMPORTANTE: o bootstrap usa a curva COMPLETA (di.contracts), NÃO diLiquid.
+  // diLiquid é filtro de EXIBIÇÃO (só F/janeiro + trades>2000) e dropa os meses
+  // curtos (N26, Q26, U26, V26, X26, Z26) — justamente os vértices dentro da
+  // janela forward de 1 ano. Sem eles o 1º vértice vira jan/27 e TODAS as
+  // reuniões de 2026 colapsam num único forward alto (ex.: 14,75% plano). O
+  // selicForwardPath já descarta rate==null e faz snap/dedup por vencimento.
   const selicAgora = useMemo<SelicSegment[]>(() => {
     if (!di?.isToday || !di.quotedAt) return [];
-    const curve = diLiquid.map((c) => ({ maturity: c.maturity, rate: c.rate }));
+    const curve = (di.contracts ?? []).map((c) => ({ maturity: c.maturity, rate: c.rate }));
     return selicForwardPath(curve, di.quotedAt.slice(0, 10));
-  }, [di, diLiquid]);
+  }, [di]);
   const hasSelicAgora = selicAgora.length > 0;
 
   const selicChart = useMemo(
