@@ -158,7 +158,7 @@ export type TermPremiumCfg = {
  */
 export const SELIC_TERM_PREMIUM = {
   baseBps: 25,
-  shapeExp: 2,
+  shapeExp: 1, // 1 = linear (rampa uniforme do joelho a 12m); 2 = quadrática (back-loaded).
   kneeFrac: 0.25,
   clamp: [0.5, 2] as [number, number],
 };
