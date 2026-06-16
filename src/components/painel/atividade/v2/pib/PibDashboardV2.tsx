@@ -12,6 +12,10 @@ import { RitmoTrimestralCard } from "./RitmoTrimestralCard";
 import { IbcBrPibCard } from "./IbcBrPibCard";
 import { DecomposicaoPib } from "./DecomposicaoPib";
 import { HeatmapSetorialPib } from "./HeatmapSetorialPib";
+import { PesoSetorialPib } from "./PesoSetorialPib";
+import { ComposicaoVaPib } from "./ComposicaoVaPib";
+import { SetorLupaPib } from "./SetorLupaPib";
+import { TabelaMestraOfertaPib } from "./TabelaMestraOfertaPib";
 import { FocusPibCard } from "./FocusPibCard";
 import { RealizadoFocusCard } from "./RealizadoFocusCard";
 import { PerCapitaCard } from "./PerCapitaCard";
@@ -131,6 +135,38 @@ export function PibDashboardV2({
       descricao:
         "Os 17 setores da oferta × 4 medidas de variação no trimestre — leitura rápida de quem expande e quem recua.",
       children: <HeatmapSetorialPib pib={pib} geradoEm={pib.gerado_em} />,
+    });
+    out.push({
+      id: "peso-setorial-pib",
+      eyebrow: "Estrutura",
+      titulo: "Quanto cada setor pesa no PIB",
+      descricao:
+        "Participação de cada setor da oferta no PIB nominal e a variação desse peso (Δ p.p.) frente a 1 ou 10 anos atrás.",
+      children: <PesoSetorialPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />,
+    });
+    out.push({
+      id: "composicao-va",
+      eyebrow: "Estrutura",
+      titulo: "Composição do valor adicionado",
+      descricao:
+        "De que é feita a economia: o peso de cada setor no PIB nominal e o tamanho real de cada grande setor ao longo do tempo.",
+      children: <ComposicaoVaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />,
+    });
+    out.push({
+      id: "setor-lupa",
+      eyebrow: "Setor sob a lupa",
+      titulo: "Qualquer setor, qualquer lente",
+      descricao:
+        "Escolha um setor da oferta e a transformação — nível (índice ou R$ reais), ritmo (YoY, acum 4T, QoQ SA) ou peso no PIB.",
+      children: <SetorLupaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />,
+    });
+    out.push({
+      id: "tabela-mestra-oferta",
+      eyebrow: "Esmiuçamento",
+      titulo: "Tabela mestra da oferta",
+      descricao:
+        "Os 17 setores no trimestre mais recente — nível, variações e peso no PIB, exportável em CSV.",
+      children: <TabelaMestraOfertaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />,
     });
     out.push({
       id: "expectativas",
