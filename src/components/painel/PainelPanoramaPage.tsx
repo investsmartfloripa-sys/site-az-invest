@@ -14,6 +14,7 @@ import { MarketTape, type TapeItem } from "@/components/painel/panorama/MarketTa
 import { PeriodicosChips } from "@/components/painel/panorama/PeriodicosChips";
 import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection";
 import { getPanoramaData, painelBlobConfigured, type PanoramaData } from "@/lib/painel-data";
+import { getRatesVolMult } from "@/lib/painel-market-data";
 import { findPosts, mapPost } from "@/lib/posts";
 
 function parseNumber(value: string | number | null | undefined): number | null {
@@ -251,7 +252,11 @@ export async function PainelPanoramaPage() {
   } catch (err) {
     console.error("[PainelPanoramaPage] findPosts falhou; seguindo sem analises", err);
   }
-  const [data, selicAtual] = await Promise.all([getPanoramaData(), fetchSelicAtual()]);
+  const [data, selicAtual, ratesVol] = await Promise.all([
+    getPanoramaData(),
+    fetchSelicAtual(),
+    getRatesVolMult(),
+  ]);
 
   const blobConfigured = painelBlobConfigured();
 
@@ -467,6 +472,7 @@ export async function PainelPanoramaPage() {
         selicLabels={selicLabels}
         treasuryLabels={treasuryLabels}
         fedLabels={fedLabels}
+        selicVol={ratesVol}
       />
 
       <section id="analises" className="space-y-4">

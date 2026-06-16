@@ -179,6 +179,43 @@ export async function getMarketHistoryFull(): Promise<MarketHistoryFull | null> 
   return fetchBlobJson<MarketHistoryFull>("data/market_history_full.json");
 }
 
+/**
+ * Vol de regime da renda fixa pré BR (IRF-M via IRFM11): desvio-padrão dos
+ * retornos diários dos ÚLTIMOS 15 pregões contra o da SÉRIE INTEIRA (5a). O preço
+ * do ETF de NTN-F move com a curva pré, então sua vol É a vol da taxa pré. O
+ * multiplicador `vol15d/volFull` (>1 = mercado mais volátil que o normal
+ * histórico) escala o ajuste de prêmio de prazo da Selic implícita — a vol
+ * histórica vira a referência natural, sem σ_ref arbitrário. Reusa o cache do
+ * market_history_full (já buscado por outras páginas).
+ */
+export type RatesVol = { vol15dAnn: number; volFullAnn: number; mult: number };
+
+const RATES_VOL_TICKER = "IRFM11.SA";
+const RATES_VOL_WINDOW = 15;
+const RATES_VOL_CLAMP: readonly [number, number] = [0.5, 2];
+
+export async function getRatesVolMult(): Promise<RatesVol | null> {
+  const full = await getMarketHistoryFull();
+  const series = full?.tickers?.[RATES_VOL_TICKER]?.series_daily ?? [];
+  const closes = series
+    .map((p) => p[1])
+    .filter((v): v is number => typeof v === "number" && v > 0);
+  if (closes.length < RATES_VOL_WINDOW + 5) return null;
+  const rets: number[] = [];
+  for (let i = 1; i < closes.length; i++) rets.push(Math.log(closes[i] / closes[i - 1]));
+  const std = (a: number[]): number => {
+    if (a.length < 2) return 0;
+    const m = a.reduce((x, y) => x + y, 0) / a.length;
+    return Math.sqrt(a.reduce((x, y) => x + (y - m) ** 2, 0) / a.length);
+  };
+  const ann = Math.sqrt(252);
+  const vol15 = std(rets.slice(-RATES_VOL_WINDOW));
+  const volFull = std(rets);
+  if (!(volFull > 0)) return null;
+  const mult = Math.min(RATES_VOL_CLAMP[1], Math.max(RATES_VOL_CLAMP[0], vol15 / volFull));
+  return { vol15dAnn: vol15 * ann, volFullAnn: volFull * ann, mult };
+}
+
 export async function getMarketFundamentals(): Promise<MarketFundamentals | null> {
   return fetchBlobJson<MarketFundamentals>("data/market_fundamentals.json");
 }
