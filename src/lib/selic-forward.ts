@@ -220,9 +220,17 @@ export function selicForwardPath(
 
   const chartEnd = refT + 365 * DAY;
   const du1y = businessDays(refT, chartEnd) || 252;
-  const grid = Array.from(
-    new Set([refT, ...copomDates.map(isoToUTC).filter((t) => t >= refT && t <= chartEnd), chartEnd]),
-  )
+  // Reuniões dentro da janela de 1 ano (estritamente antes do corte) = as exibidas.
+  const future = copomDates.map(isoToUTC).filter((t) => t >= refT).sort((a, b) => a - b);
+  const inWindow = future.filter((t) => t < chartEnd);
+  // Fronteira do ÚLTIMO degrau = a PRÓXIMA reunião do COPOM (mesmo além de 1 ano).
+  // Assim o último período é INTEIRO (reunião→próxima reunião) e NÃO depende de
+  // onde o corte de 1 ano cai — senão o último degrau balança conforme a data,
+  // sem motivo econômico. Se a lista do COPOM acabar, usa um gap típico (~45d).
+  const nextAfter = future.find((t) => t >= chartEnd);
+  const lastW = inWindow.length ? inWindow[inWindow.length - 1] : refT;
+  const boundary = nextAfter ?? lastW + 45 * DAY;
+  const grid = Array.from(new Set([refT, ...inWindow, boundary]))
     .sort((a, b) => a - b)
     .map((t) => ({ t, du: businessDays(refT, t) }));
   // Dedup por DU (reuniões que caem no mesmo dia útil colapsam).

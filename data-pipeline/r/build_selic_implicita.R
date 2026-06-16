@@ -277,13 +277,20 @@ chart_end <- requested_refdate %m+% years(1)
 end_plot <- chart_end
 copom_in_window <- copom_decision_dates[
   copom_decision_dates >= chart_start &
-    copom_decision_dates <= chart_end
+    copom_decision_dates < chart_end
 ]
-grid_dates <- sort(unique(c(chart_start, copom_in_window, chart_end)))
+# Fronteira do ULTIMO degrau = a PROXIMA reuniao do COPOM (mesmo alem de 1 ano),
+# p/ o ultimo periodo ser INTEIRO (reuniao->proxima) e NAO depender de onde o
+# corte de 1 ano cai (senao o ultimo degrau balanca conforme a data). Rede de
+# seguranca se a lista do COPOM acabar: gap tipico de 45 dias.
+copom_after <- copom_decision_dates[copom_decision_dates >= chart_end]
+last_w <- if (length(copom_in_window)) max(copom_in_window) else chart_start
+grid_boundary <- if (length(copom_after)) min(copom_after) else (last_w + days(45))
+grid_dates <- sort(unique(c(chart_start, copom_in_window, grid_boundary)))
 
 compute_series_data <- function(series_info) {
   yc_win <- make_curve_window(series_info$yc_data, years_ahead = 2) |>
-    filter(forward_date <= chart_end)
+    filter(forward_date <= max(chart_end, grid_boundary))
   grid_c <- grid_on_dates(yc_win, grid_dates)
   fwd <- calc_forward(grid_c)
   if (!nrow(fwd)) return(NULL)
