@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
   Shield,
@@ -28,6 +29,7 @@ import { SubmitButton } from "@/components/workspace/SubmitButton";
 const NAV_ICONS = {
   dashboard: LayoutDashboard,
   conteudo: FileText,
+  comentarios: MessageSquare,
   revisao: SquareCheckBig,
   perfil: UserRound,
   autores: Users,
@@ -54,6 +56,7 @@ export const SIDEBAR_COOKIE_NAME = "az_ws_sidebar";
 const SEGMENT_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
   conteudo: "Conteúdo",
+  comentarios: "Comentários",
   novo: "Novo texto",
   revisao: "Revisão",
   autores: "Autores",
@@ -235,7 +238,7 @@ export function WorkspaceShell({
 
   return (
     <div className="min-h-screen bg-[#F3F5FB] text-[#132960]">
-      <div className="mx-auto flex w-full max-w-[1500px]">
+      <div className="flex w-full">
         {/* Sidebar desktop: expandida (240px) ou rail só-ícones (56px) */}
         <aside
           className={`sticky top-0 hidden h-screen shrink-0 flex-col bg-[#132960] transition-[width] duration-200 md:flex ${

@@ -2,7 +2,6 @@ import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { HeroRecentes } from "@/components/home/HeroRecentes";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
-import { UltimasPublicacoes } from "@/components/home/UltimasPublicacoes";
 import { VideosSection } from "@/components/home/VideosSection";
 import { DestaquesDaSemana } from "@/components/conteudo/DestaquesDaSemana";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -48,7 +47,7 @@ export default async function Home() {
         // Ordena pela data de PUBLICAÇÃO (posts antigos sem publishedAt caem para o fim
         // do critério e o desempate é a criação) — publicar um rascunho antigo o traz ao topo.
         orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
-        take: 21,
+        take: 4,
       });
       mapped = posts.map(mapPost);
       break;
@@ -60,10 +59,8 @@ export default async function Home() {
   const siteUrl = getSiteUrl();
 
   // Hero "Artigos": 1 destaque + 3 cards na coluna direita (preenche a altura sem buraco).
-  // Com ≤4 posts o hero já mostra todos e "Últimas publicações" (restantes) some —
-  // sem duplicar. A partir do 5º post a lista de baixo passa a complementar.
+  // A lista completa fica em /blog ("Ver todas"); a home não repete a seção embaixo.
   const hero = mapped.slice(0, 4);
-  const restantes = mapped.slice(4);
 
   return (
     <div className="min-h-screen text-[#132960]">
@@ -100,7 +97,6 @@ export default async function Home() {
         <div className="az-reveal">
           <DestaquesDaSemana />
         </div>
-        <UltimasPublicacoes posts={restantes} />
         <VideosSection />
         <CommunityCallout />
       </main>

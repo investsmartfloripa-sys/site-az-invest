@@ -23,7 +23,17 @@ const getPost = cache(async (slug: string) =>
     where: { slug },
     include: {
       author: true,
-      comments: { orderBy: { createdAt: "desc" }, take: 100 },
+      comments: {
+        where: { parentId: null, isStaffReply: false },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+        include: {
+          replies: {
+            orderBy: { createdAt: "asc" },
+            include: { repliedBy: { select: { authorId: true } } },
+          },
+        },
+      },
     },
   }),
 );
@@ -35,9 +45,9 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   const post = await getPost(slug);
-  if (!post) return { title: "Artigo não encontrado | AZ Invest" };
+  if (!post) return { title: "Artigo não encontrado" };
   return {
-    title: `${post.title} | AZ Invest`,
+    title: post.title,
     description: post.excerpt ?? undefined,
     alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {
@@ -253,6 +263,36 @@ export default async function BlogPostPage({
                     </span>
                   </p>
                   <p className="mt-1 whitespace-pre-line text-sm text-zinc-700">{comment.content}</p>
+
+                  {comment.replies.length > 0 ? (
+                    <ul className="mt-3 space-y-3 border-l-2 border-[#027DFC]/30 pl-4">
+                      {comment.replies.map((reply) => {
+                        const isAuthorReply =
+                          reply.repliedBy?.authorId != null &&
+                          reply.repliedBy.authorId === post.authorId;
+                        return (
+                          <li key={reply.id}>
+                            <p className="text-sm font-semibold text-[#027DFC]">
+                              {reply.name}{" "}
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                                  isAuthorReply
+                                    ? "bg-[#166B47]/10 text-[#166B47]"
+                                    : "bg-[#027DFC]/10 text-[#027DFC]"
+                                }`}
+                              >
+                                {isAuthorReply ? "Autor" : "AZ Invest"}
+                              </span>{" "}
+                              <span className="text-xs font-normal text-zinc-500">
+                                | {new Date(reply.createdAt).toLocaleDateString("pt-BR")}
+                              </span>
+                            </p>
+                            <p className="mt-1 whitespace-pre-line text-sm text-zinc-700">{reply.content}</p>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
                 </li>
               ))}
             </ul>

@@ -9,6 +9,11 @@ import {
   canViewDataHealth,
 } from "@/lib/workspace/permissions";
 import { POST_STATUS_LABELS } from "@/lib/workspace/posts";
+import {
+  countComments,
+  countUnansweredComments,
+  listWorkspaceComments,
+} from "@/lib/workspace/comments";
 import { ChartCard, KpiCard } from "@/components/painel/core";
 import { fmtNum } from "@/lib/format-br";
 import { MetricDailyViewsChart } from "@/components/workspace/MetricDailyViewsChart";
@@ -120,6 +125,10 @@ export default async function DashboardPage() {
     dataIssues,
     recentPosts,
     dailyViews,
+    commentsTotal,
+    comments7,
+    unansweredComments,
+    recentComments,
   ] = await Promise.all([
     prisma.analyticsEvent.count({ where: viewsWhere({ gte: since7 }) }),
     prisma.analyticsEvent.count({ where: viewsWhere({ gte: since14, lt: since7 }) }),
@@ -151,6 +160,10 @@ export default async function DashboardPage() {
       select: { id: true, title: true, status: true },
     }),
     dailyPageViews(since30, authorId),
+    countComments(session),
+    countComments(session, since7),
+    countUnansweredComments(session),
+    listWorkspaceComments(session, 5),
   ]);
 
   const actions: { key: string; text: string; href: string; cta: string }[] = [];
@@ -176,6 +189,14 @@ export default async function DashboardPage() {
       text: `${leads24h} ${plural(leads24h, "lead recebido", "leads recebidos")} nas últimas 24h`,
       href: "/area-restrita/leads",
       cta: "Ver leads",
+    });
+  }
+  if (unansweredComments > 0) {
+    actions.push({
+      key: "comentarios",
+      text: `${unansweredComments} ${plural(unansweredComments, "comentário sem resposta", "comentários sem resposta")}`,
+      href: "/area-restrita/comentarios",
+      cta: "Responder",
     });
   }
 
@@ -221,7 +242,7 @@ export default async function DashboardPage() {
       </section>
 
       {/* KPIs com delta vs janela anterior. */}
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <KpiCard
           label="Views (7d)"
           value={fmtNum(views7, 0)}
@@ -250,6 +271,15 @@ export default async function DashboardPage() {
           delta={published30 - published30Prev}
           deltaUnit="abs"
           deltaHint="vs 30d anteriores"
+        />
+        <KpiCard
+          label="Comentários"
+          value={fmtNum(commentsTotal, 0)}
+          hint={
+            unansweredComments > 0
+              ? `${unansweredComments} sem resposta · ${comments7} ${plural(comments7, "novo", "novos")} (7d)`
+              : `${comments7} ${plural(comments7, "novo", "novos")} (7d)`
+          }
         />
       </div>
 
@@ -292,6 +322,48 @@ export default async function DashboardPage() {
           ))}
           {recentPosts.length === 0 ? (
             <li className="py-4 text-sm text-[#132960]/55">Nenhum texto ainda.</li>
+          ) : null}
+        </ul>
+      </section>
+
+      {/* Comentários recentes — ver e responder pela área logada. */}
+      <section className="mt-4 rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-[#132960]">
+            Comentários recentes
+          </h2>
+          <Link
+            href="/area-restrita/comentarios"
+            className="text-sm font-medium text-[#027DFC] hover:underline"
+          >
+            Ver todos
+          </Link>
+        </div>
+        <ul className="mt-2 divide-y divide-[#132960]/[0.06]">
+          {recentComments.map((c) => (
+            <li key={c.id} className="py-2.5">
+              <Link href="/area-restrita/comentarios" className="group block">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="truncate text-sm font-medium text-[#132960] group-hover:text-[#027DFC]">
+                    {c.name}
+                  </span>
+                  <span
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                      c.replies.length > 0
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-amber-50 text-amber-700"
+                    }`}
+                  >
+                    {c.replies.length > 0 ? "Respondido" : "Responder"}
+                  </span>
+                </div>
+                <p className="mt-0.5 truncate text-xs text-[#132960]/60">{c.content}</p>
+                <p className="truncate text-[11px] text-[#132960]/40">em {c.post.title}</p>
+              </Link>
+            </li>
+          ))}
+          {recentComments.length === 0 ? (
+            <li className="py-4 text-sm text-[#132960]/55">Nenhum comentário ainda.</li>
           ) : null}
         </ul>
       </section>

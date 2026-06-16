@@ -7,6 +7,7 @@ import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Bold,
   Image as ImageIcon,
@@ -59,6 +60,13 @@ export function WorkspaceEditor({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [counts, setCounts] = useState({ words: 0, chars: 0 });
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // Menu de contexto (botão direito) do editor: formatação rápida + inserir imagem.
+  const [ctxMenu, setCtxMenu] = useState<{ open: boolean; x: number; y: number }>({
+    open: false,
+    x: 0,
+    y: 0,
+  });
 
   const [linkDialog, setLinkDialog] = useState<{
     open: boolean;
@@ -199,6 +207,33 @@ export function WorkspaceEditor({
     setImageDialog({ open: false, url: "", alt: "", error: null });
   }
 
+  function handleContextMenu(e: React.MouseEvent) {
+    if (disabled) return;
+    // Substitui o menu nativo do navegador por opções de formatação do editor.
+    e.preventDefault();
+    setCtxMenu({ open: true, x: e.clientX, y: e.clientY });
+  }
+
+  function closeCtxMenu() {
+    setCtxMenu((m) => (m.open ? { ...m, open: false } : m));
+  }
+
+  // Fecha o menu de contexto ao rolar, redimensionar, perder foco ou Esc.
+  useEffect(() => {
+    if (!ctxMenu.open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") closeCtxMenu();
+    }
+    window.addEventListener("scroll", closeCtxMenu, true);
+    window.addEventListener("resize", closeCtxMenu);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("scroll", closeCtxMenu, true);
+      window.removeEventListener("resize", closeCtxMenu);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [ctxMenu.open]);
+
   if (!editor) return null;
 
   return (
@@ -248,7 +283,26 @@ export function WorkspaceEditor({
         </BubbleButton>
       </BubbleMenu>
 
-      <EditorContent editor={editor} />
+      <div onContextMenu={handleContextMenu}>
+        <EditorContent editor={editor} />
+      </div>
+
+      {ctxMenu.open ? (
+        <ContextMenu
+          x={ctxMenu.x}
+          y={ctxMenu.y}
+          editor={editor}
+          onClose={closeCtxMenu}
+          onInsertImage={() => {
+            closeCtxMenu();
+            setImageDialog({ open: true, url: "", alt: "", error: null });
+          }}
+          onInsertLink={() => {
+            closeCtxMenu();
+            openLinkDialog();
+          }}
+        />
+      ) : null}
 
       <Counter words={counts.words} chars={counts.chars} />
 
@@ -597,6 +651,117 @@ function BubbleButton({
       }`}
     >
       {children}
+    </button>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+ * Menu de contexto (botão direito)
+ * ------------------------------------------------------------------------- */
+
+const CTX_MENU_WIDTH = 220;
+const CTX_MENU_HEIGHT = 300;
+
+function ContextMenu({
+  x,
+  y,
+  editor,
+  onClose,
+  onInsertImage,
+  onInsertLink,
+}: {
+  x: number;
+  y: number;
+  editor: ToolbarEditor;
+  onClose: () => void;
+  onInsertImage: () => void;
+  onInsertLink: () => void;
+}) {
+  // Mantém o menu dentro da viewport.
+  const left = Math.min(x, window.innerWidth - CTX_MENU_WIDTH - 8);
+  const top = Math.min(y, window.innerHeight - CTX_MENU_HEIGHT - 8);
+
+  const run = (fn: () => void) => () => {
+    fn();
+    onClose();
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-[60]" onMouseDown={onClose} onContextMenu={(e) => { e.preventDefault(); onClose(); }}>
+      <div
+        role="menu"
+        aria-label="Ações do editor"
+        onMouseDown={(e) => e.stopPropagation()}
+        style={{ left: Math.max(8, left), top: Math.max(8, top) }}
+        className="absolute min-w-[220px] overflow-hidden rounded-xl border border-[#132960]/12 bg-white py-1 text-sm shadow-2xl"
+      >
+        <CtxItem
+          label="Negrito"
+          active={editor.isActive("bold")}
+          onClick={run(() => editor.chain().focus().toggleBold().run())}
+        >
+          <Bold aria-hidden className="h-4 w-4" />
+        </CtxItem>
+        <CtxItem
+          label="Itálico"
+          active={editor.isActive("italic")}
+          onClick={run(() => editor.chain().focus().toggleItalic().run())}
+        >
+          <Italic aria-hidden className="h-4 w-4" />
+        </CtxItem>
+        <CtxItem
+          label="Título"
+          active={editor.isActive("heading", { level: 2 })}
+          onClick={run(() => editor.chain().focus().toggleHeading({ level: 2 }).run())}
+        >
+          <Heading2 aria-hidden className="h-4 w-4" />
+        </CtxItem>
+        <CtxItem
+          label="Lista"
+          active={editor.isActive("bulletList")}
+          onClick={run(() => editor.chain().focus().toggleBulletList().run())}
+        >
+          <List aria-hidden className="h-4 w-4" />
+        </CtxItem>
+
+        <div aria-hidden className="my-1 h-px bg-[#132960]/10" />
+
+        <CtxItem label="Inserir link" active={editor.isActive("link")} onClick={onInsertLink}>
+          <LinkIcon aria-hidden className="h-4 w-4" />
+        </CtxItem>
+        <CtxItem label="Inserir imagem" active={false} onClick={onInsertImage}>
+          <ImageIcon aria-hidden className="h-4 w-4" />
+        </CtxItem>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function CtxItem({
+  label,
+  active,
+  onClick,
+  children,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      // onMouseDown evita que o clique tire a seleção/foco do editor antes da ação.
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+      className={`flex w-full items-center gap-2.5 px-3 py-2 text-left transition hover:bg-[#027DFC]/8 ${
+        active ? "font-semibold text-[#027DFC]" : "text-[#132960]/85"
+      }`}
+    >
+      <span className="flex h-4 w-4 items-center justify-center text-[#132960]/55">{children}</span>
+      {label}
     </button>
   );
 }

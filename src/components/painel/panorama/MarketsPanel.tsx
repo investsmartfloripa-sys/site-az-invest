@@ -14,8 +14,10 @@ import {
   YAxis,
 } from "recharts";
 
+import { Coins, Globe, LineChart, Wheat, type LucideIcon } from "lucide-react";
 import DataStamp from "@/components/painel/DataStamp";
 import { AzSegmented } from "@/components/painel/panorama/AzSegmented";
+import { PanelTabs } from "@/components/painel/panorama/PanelTabs";
 import type { FxMoversPayload } from "@/components/painel/DynamicFxMoversBar";
 import type { ByPeriodBlock, Row } from "@/components/painel/DynamicReturnsBar";
 import { AZ_CHART } from "@/lib/az-chart-theme";
@@ -28,11 +30,11 @@ type PanoramaByPeriod = { generated_at?: string; by_period?: ByPeriodBlock };
 
 type CategoryId = "ativos" | "indices" | "moedas" | "commodities";
 
-const CATEGORIES: { id: CategoryId; label: string; currencyToggle: boolean }[] = [
-  { id: "ativos", label: "Ativos", currencyToggle: true },
-  { id: "indices", label: "Índices globais", currencyToggle: false },
-  { id: "moedas", label: "Moedas", currencyToggle: false },
-  { id: "commodities", label: "Commodities", currencyToggle: true },
+const CATEGORIES: { id: CategoryId; label: string; currencyToggle: boolean; icon: LucideIcon }[] = [
+  { id: "ativos", label: "Ativos", currencyToggle: true, icon: LineChart },
+  { id: "indices", label: "Índices globais", currencyToggle: false, icon: Globe },
+  { id: "moedas", label: "Moedas", currencyToggle: false, icon: Coins },
+  { id: "commodities", label: "Commodities", currencyToggle: true, icon: Wheat },
 ];
 
 const PERIODS = [
@@ -249,22 +251,14 @@ export function MarketsPanel(props: Props) {
         </div>
       </div>
 
-      <div className="mb-3 flex flex-wrap gap-0.5 border-b border-zinc-100">
-        {CATEGORIES.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            onClick={() => setCat(c.id)}
-            aria-pressed={cat === c.id}
-            className={`rounded-t-lg border-b-2 px-3 py-2 text-xs font-semibold transition-colors duration-150 md:text-sm ${
-              cat === c.id
-                ? "border-[#027DFC] text-[#027DFC]"
-                : "border-transparent text-zinc-500 hover:text-[#132960]"
-            }`}
-          >
-            {c.label}
-          </button>
-        ))}
+      <div className="mb-3">
+        <PanelTabs
+          ariaLabel="Categoria de mercado"
+          tabs={CATEGORIES}
+          value={cat}
+          onChange={setCat}
+          accent="#027DFC"
+        />
       </div>
 
       {sorted.length === 0 ? (

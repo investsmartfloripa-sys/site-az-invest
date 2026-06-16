@@ -16,6 +16,7 @@ import {
   canReviewPosts,
   canViewDataHealth,
 } from "@/lib/workspace/permissions";
+import { countUnansweredComments } from "@/lib/workspace/comments";
 
 async function logoutAction() {
   "use server";
@@ -23,10 +24,20 @@ async function logoutAction() {
   redirect("/area-restrita/login");
 }
 
-function navForSession(session: SessionUser, pendingReviewCount: number): WorkspaceNavItem[] {
+function navForSession(
+  session: SessionUser,
+  pendingReviewCount: number,
+  unansweredComments: number,
+): WorkspaceNavItem[] {
   const items: WorkspaceNavItem[] = [
     { href: "/area-restrita/dashboard", label: "Dashboard", icon: "dashboard" },
     { href: "/area-restrita/conteudo", label: "Conteúdo", icon: "conteudo" },
+    {
+      href: "/area-restrita/comentarios",
+      label: "Comentários",
+      icon: "comentarios",
+      badge: unansweredComments,
+    },
   ];
 
   if (canReviewPosts(session)) {
@@ -79,14 +90,17 @@ export default async function WorkspaceLayout({
   const cookieStore = await cookies();
   const sidebarCollapsed = cookieStore.get(SIDEBAR_COOKIE_NAME)?.value === "1";
 
-  // Badge numérico de "Revisão" (textos aguardando aprovação).
-  const pendingReviewCount = canReviewPosts(session)
-    ? await prisma.post.count({ where: { status: "PENDING_REVIEW" } })
-    : 0;
+  // Badges numéricos: "Revisão" (textos aguardando) e "Comentários" (sem resposta).
+  const [pendingReviewCount, unansweredComments] = await Promise.all([
+    canReviewPosts(session)
+      ? prisma.post.count({ where: { status: "PENDING_REVIEW" } })
+      : Promise.resolve(0),
+    countUnansweredComments(session),
+  ]);
 
   return (
     <WorkspaceShell
-      nav={navForSession(session, pendingReviewCount)}
+      nav={navForSession(session, pendingReviewCount, unansweredComments)}
       roleLabel={roleLabel}
       email={session.email}
       name={session.name}

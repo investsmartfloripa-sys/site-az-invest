@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 type EditorDialogProps = {
   open: boolean;
@@ -13,9 +14,20 @@ type EditorDialogProps = {
  * Modal genérico do editor com <dialog> nativo (mesmo padrão do ConfirmDialog,
  * sem dependência nova): Esc fecha, clique no backdrop fecha, foco vai para o
  * conteúdo ao abrir. Usado pelos diálogos de Link e Imagem.
+ *
+ * IMPORTANTE: renderizado via portal no <body>. O editor vive dentro do
+ * <form action={savePostDraftAction}> do post; como o diálogo tem seu próprio
+ * <form> (URL/ALT + botão submit), deixá-lo na árvore do form do post criaria
+ * <form> aninhado — HTML inválido. O navegador descarta o form interno e o botão
+ * "Inserir imagem"/"Aplicar link" passa a submeter o form do post (salvar
+ * rascunho) em vez de rodar o onSubmit do diálogo. O portal tira o <dialog> de
+ * dentro do form, restaurando a inserção de imagem/link no meio do texto.
  */
 export function EditorDialog({ open, title, onClose, children }: EditorDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  // Portal só existe no cliente (document indisponível no SSR).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Abre/fecha o <dialog> nativo conforme a prop `open`.
   useEffect(() => {
@@ -31,9 +43,11 @@ export function EditorDialog({ open, title, onClose, children }: EditorDialogPro
     } else if (!open && el.open) {
       el.close();
     }
-  }, [open]);
+  }, [open, mounted]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <dialog
       ref={dialogRef}
       onClose={onClose}
@@ -52,6 +66,7 @@ export function EditorDialog({ open, title, onClose, children }: EditorDialogPro
         <h2 className="text-base font-semibold text-[#132960]">{title}</h2>
         <div className="mt-4">{children}</div>
       </div>
-    </dialog>
+    </dialog>,
+    document.body,
   );
 }

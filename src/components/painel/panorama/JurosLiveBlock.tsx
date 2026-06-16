@@ -20,6 +20,11 @@ import {
   type LiveCurve,
 } from "@/lib/painel-b3-live";
 import { selicForwardPath, selicLevelAt, type SelicSegment } from "@/lib/selic-forward";
+import { Landmark, Percent, LineChart as LineChartIcon } from "lucide-react";
+import {
+  PanelTabs,
+  type PanelTabItem,
+} from "@/components/painel/panorama/PanelTabs";
 
 const REFRESH_MS = 60_000;
 
@@ -39,14 +44,12 @@ const LIVE_COLOR = "#000000";
 const PAL_PRE = { d30: "#00008B", d90: "#56B4E9" } as const;
 const PAL_IPCA = { d30: "#8B0000", d90: "#F8766D" } as const;
 const PAL_SELIC = { recent: "#000000", d30: "#2E74C9", d90: "#56B4E9", meeting: "#ff5713", meetingLabel: "#0078fd" } as const;
-// Treasury EUA — gradiente temporal verde (PADRAO-VISUAL-GRAFICOS.md §2).
-// Regra: o ATUAL e sempre preto. Com D+0 (Tesouro EUA, par yield) como serie
-// mais recente, o preto migra p/ d0; D-1 (fechamento FRED) assume o verde mais
-// escuro e os cortes ficam progressivamente mais claros.
-const PAL_TREASURY = { d0: "#000000", recent: "#0B6B2E", d30: "#2BBF5E", d90: "#8BE28F", d365: "#C7F0CB" } as const;
-// Fed implicita — mesma familia verde do Treasury ao lado (antes era preto/cinza/azul
-// copiados da Selic BR). Com D+0 disponivel, o preto vai p/ d0 e os cortes seguem o ramp.
-const PAL_FED = { d0: "#000000", recent: "#0B6B2E", d30: "#2BBF5E", d90: "#8BE28F", meeting: "#ff5713" } as const;
+// Treasury EUA — mesma convenção das curvas BR: D+0/"Agora" = PRETO sólido,
+// D-1 = PRETO TRACEJADO (definidos direto nas <Line>, não aqui). Os cortes
+// históricos seguem o gradiente verde (mais escuro = mais recente).
+const PAL_TREASURY = { d0: "#000000", d30: "#2BBF5E", d90: "#8BE28F", d365: "#C7F0CB" } as const;
+// Fed implicita — D+0 preto sólido, D-1 preto tracejado (nas <Line>); cortes em verde.
+const PAL_FED = { d0: "#000000", d30: "#2BBF5E", d90: "#8BE28F", meeting: "#ff5713" } as const;
 
 const GRID = "#E2E8F0";
 const TICKS = "#64748B";
@@ -56,15 +59,15 @@ type TabId = "pre" | "ipca" | "selic";
 /** Sub-abas do bloco EUA (Treasury & Fed). */
 type UsTabId = "treasury" | "fed";
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: "pre", label: "Curva pré" },
-  { id: "ipca", label: "Curva IPCA+" },
-  { id: "selic", label: "Selic implícita" },
+const TABS: PanelTabItem<TabId>[] = [
+  { id: "pre", label: "Curva pré", icon: LineChartIcon },
+  { id: "ipca", label: "Curva IPCA+", icon: Percent },
+  { id: "selic", label: "Selic implícita", icon: Landmark },
 ];
 
-const US_TABS: { id: UsTabId; label: string }[] = [
-  { id: "treasury", label: "Curva Treasury" },
-  { id: "fed", label: "Fed implícita" },
+const US_TABS: PanelTabItem<UsTabId>[] = [
+  { id: "treasury", label: "Curva Treasury", icon: LineChartIcon },
+  { id: "fed", label: "Fed implícita", icon: Landmark },
 ];
 
 export type CurveCut = { maturity: string; rate: number };
@@ -350,21 +353,14 @@ function UsRatesBlock({
         <p className="text-[11px] text-[#bfe6cb]">Fonte: FRED (Treasury) · D-1</p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1 border-b border-zinc-100 px-4 pt-3 md:px-5">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setUsTab(t.id)}
-            className={`rounded-t-lg border-b-2 px-3 py-2 text-xs font-semibold transition md:text-sm ${
-              tab === t.id
-                ? "border-[#0B6B2E] text-[#0B6B2E]"
-                : "border-transparent text-zinc-500 hover:text-[#132960]"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="border-b border-zinc-100 px-4 pb-2 pt-3 md:px-5">
+        <PanelTabs
+          ariaLabel="Visão de juros EUA"
+          tabs={tabs}
+          value={tab}
+          onChange={setUsTab}
+          accent="#0B6B2E"
+        />
       </div>
 
       <div className="grid gap-5 p-4 md:p-5 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
@@ -433,9 +429,10 @@ function UsRatesBlock({
                     type="stepAfter"
                     dataKey="recent"
                     name={fedLabels.recent ?? "D-1"}
-                    stroke={PAL_FED.recent}
-                    strokeWidth={hasFedD0 ? 1.8 : 2.2}
-                    dot={{ r: hasFedD0 ? 2 : 2.5 }}
+                    stroke="#000000"
+                    strokeWidth={1.6}
+                    strokeDasharray="6 4"
+                    dot={false}
                     connectNulls
                     isAnimationActive={false}
                   />
@@ -481,9 +478,10 @@ function UsRatesBlock({
                     type="monotone"
                     dataKey="recent"
                     name={treasuryLabels.recent ?? "D-1"}
-                    stroke={PAL_TREASURY.recent}
-                    strokeWidth={hasTreasuryD0 ? 1.8 : 2.2}
-                    dot={{ r: hasTreasuryD0 ? 2 : 2.5 }}
+                    stroke="#000000"
+                    strokeWidth={1.6}
+                    strokeDasharray="6 4"
+                    dot={false}
                     connectNulls
                     isAnimationActive={false}
                   />
@@ -784,22 +782,14 @@ export function JurosLiveBlock({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 px-4 pt-3 md:px-5">
-        <div className="flex flex-wrap gap-1">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className={`rounded-t-lg border-b-2 px-3 py-2 text-xs font-semibold transition md:text-sm ${
-                tab === t.id
-                  ? "border-[#027DFC] text-[#027DFC]"
-                  : "border-transparent text-zinc-500 hover:text-[#132960]"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <PanelTabs
+          ariaLabel="Curva de juros (Brasil)"
+          tabs={TABS}
+          value={tab}
+          onChange={setTab}
+          accent="#027DFC"
+          className="pb-2"
+        />
         <div className="flex flex-wrap items-center gap-3 pb-2">
           {isCurveTab ? (
             <>

@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 
+import { Globe, MapPin } from "lucide-react";
 import DataStamp from "@/components/painel/DataStamp";
 import { AzSegmented } from "@/components/painel/panorama/AzSegmented";
+import { PanelTabs, type PanelTabItem } from "@/components/painel/panorama/PanelTabs";
 import type { SectorBrPayload } from "@/components/painel/DynamicSectorBr";
 import type { SectorGlobalPayload } from "@/components/painel/DynamicSectorGlobal";
 
@@ -22,6 +24,11 @@ const PERIODS = [
   { id: "1mo", label: "1M" },
   { id: "3mo", label: "3M" },
   { id: "1y", label: "1A" },
+];
+
+const SCOPE_TABS: PanelTabItem<ScopeId>[] = [
+  { id: "brasil", label: "Brasil", icon: MapPin },
+  { id: "global", label: "Global", icon: Globe },
 ];
 
 function RankCol({ title, dotColor, rows }: { title: string; dotColor: string; rows: BasketRow[] }) {
@@ -114,27 +121,14 @@ export function SectorsPanel({ sectorBr, sectorGlobal }: Props) {
         </div>
       </div>
 
-      <div className="mb-3 flex flex-wrap gap-0.5 border-b border-zinc-100">
-        {(
-          [
-            { id: "brasil", label: "Brasil" },
-            { id: "global", label: "Global" },
-          ] as { id: ScopeId; label: string }[]
-        ).map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => setScope(s.id)}
-            aria-pressed={scope === s.id}
-            className={`rounded-t-lg border-b-2 px-3 py-2 text-xs font-semibold transition-colors duration-150 md:text-sm ${
-              scope === s.id
-                ? "border-[#027DFC] text-[#027DFC]"
-                : "border-transparent text-zinc-500 hover:text-[#132960]"
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
+      <div className="mb-3">
+        <PanelTabs
+          ariaLabel="Escopo de setores"
+          tabs={SCOPE_TABS}
+          value={scope}
+          onChange={setScope}
+          accent="#027DFC"
+        />
       </div>
 
       {top.length === 0 && bottom.length === 0 ? (

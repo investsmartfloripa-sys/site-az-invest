@@ -40,6 +40,7 @@ model User {
   passwordResetExpiresAt DateTime?
   lastLoginAt            DateTime?
   reviewedPosts          Post[]    @relation("PostReviewedBy")
+  commentReplies         PostComment[] @relation("CommentRepliedBy")
   auditLogs              AuditLog[]
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
@@ -101,7 +102,17 @@ model PostComment {
   content   String
   createdAt DateTime @default(now())
 
+  // Thread de 1 nível: resposta da equipe/autor a um comentário do leitor.
+  // Apagar o comentário pai apaga as respostas em cascata.
+  parentId     Int?
+  parent       PostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies      PostComment[] @relation("CommentReplies")
+  isStaffReply Boolean       @default(false)
+  repliedById  Int?
+  repliedBy    User?         @relation("CommentRepliedBy", fields: [repliedById], references: [id])
+
   @@index([postId, createdAt])
+  @@index([parentId])
 }
 
 model AuthorLead {
