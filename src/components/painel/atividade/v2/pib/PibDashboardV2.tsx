@@ -21,6 +21,11 @@ import { EstruturaDemandaPib } from "./EstruturaDemandaPib";
 import { AberturaComercialPib } from "./AberturaComercialPib";
 import { ComponenteLupaDemandaPib } from "./ComponenteLupaDemandaPib";
 import { TabelaMestraDemandaPib } from "./TabelaMestraDemandaPib";
+import { CascataRendaPib } from "./CascataRendaPib";
+import { CunhaTributariaPib } from "./CunhaTributariaPib";
+import { VazamentoRendaPib } from "./VazamentoRendaPib";
+import { EstruturaNominalDetalhadaPib } from "./EstruturaNominalDetalhadaPib";
+import { TabelaMestraRendaPib } from "./TabelaMestraRendaPib";
 import { FocusPibCard } from "./FocusPibCard";
 import { RealizadoFocusCard } from "./RealizadoFocusCard";
 import { PerCapitaCard } from "./PerCapitaCard";
@@ -193,7 +198,11 @@ export function PibDashboardV2({
       </FaceSection>
 
       <FaceSection id="renda" nome="Renda" sub="distribuição da renda, poupança e investimento">
-        <EmConstrucao texto="Cascata PIB → renda nacional bruta → renda disponível → poupança, e a estrutura nominal por setor — em construção." />
+        <CascataRendaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <CunhaTributariaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <VazamentoRendaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <EstruturaNominalDetalhadaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <TabelaMestraRendaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
       </FaceSection>
 
       <FaceSection id="financiamento" nome="Financiamento" sub="como o país se financia (conta financeira)">
