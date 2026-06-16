@@ -26,6 +26,11 @@ import { CunhaTributariaPib } from "./CunhaTributariaPib";
 import { VazamentoRendaPib } from "./VazamentoRendaPib";
 import { EstruturaNominalDetalhadaPib } from "./EstruturaNominalDetalhadaPib";
 import { TabelaMestraRendaPib } from "./TabelaMestraRendaPib";
+import { CapacidadeFinanciamentoPib } from "./CapacidadeFinanciamentoPib";
+import { QualidadeFinanciamentoPib } from "./QualidadeFinanciamentoPib";
+import { InstrumentosFinanciamentoPib } from "./InstrumentosFinanciamentoPib";
+import { ReconciliacaoFinanceiraPib } from "./ReconciliacaoFinanceiraPib";
+import { TabelaMestraFinanceiraPib } from "./TabelaMestraFinanceiraPib";
 import { FocusPibCard } from "./FocusPibCard";
 import { RealizadoFocusCard } from "./RealizadoFocusCard";
 import { PerCapitaCard } from "./PerCapitaCard";
@@ -74,14 +79,6 @@ function FaceSection({ id, nome, sub, children }: { id: string; nome: string; su
       </div>
       <div className="flex flex-col gap-5">{children}</div>
     </section>
-  );
-}
-
-function EmConstrucao({ texto }: { texto: string }) {
-  return (
-    <div className="rounded-2xl border border-dashed border-[#132960]/20 bg-zinc-50/60 p-6 text-sm text-zinc-500">
-      {texto}
-    </div>
   );
 }
 
@@ -206,7 +203,11 @@ export function PibDashboardV2({
       </FaceSection>
 
       <FaceSection id="financiamento" nome="Financiamento" sub="como o país se financia (conta financeira)">
-        <EmConstrucao texto="Capacidade/necessidade líquida de financiamento (B.9), investimento direto e instrumentos financeiros — em construção." />
+        <CapacidadeFinanciamentoPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <QualidadeFinanciamentoPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <InstrumentosFinanciamentoPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <ReconciliacaoFinanceiraPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <TabelaMestraFinanceiraPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
       </FaceSection>
 
       <FaceSection id="sintese" nome="Síntese" sub="expectativas, per capita e o fecho macro">
