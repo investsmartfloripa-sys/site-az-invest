@@ -64,6 +64,9 @@ const PAL_FED = { d0: "#000000", d30: "#2BBF5E", d90: "#8BE28F", meeting: "#ff57
 const SELIC_TP_BASE_BPS = 25;
 const SELIC_TP_VOL_REF = 0.04;
 const SELIC_TP_CLAMP: readonly [number, number] = [0.5, 2];
+// Forma no prazo: 1 = linear (50% do ajuste no 6m), 2 = quadrática (25% no 6m,
+// mais peso na cauda — protege o front, custo: concentra no longo).
+const SELIC_TP_SHAPE_EXP = 2;
 
 const GRID = "#E2E8F0";
 const TICKS = "#64748B";
@@ -732,6 +735,7 @@ export function JurosLiveBlock({
     return selicForwardPath(curve, di.quotedAt.slice(0, 10), undefined, {
       maxFrac: SELIC_TP_BASE_BPS / 10000,
       volMult: selicTp.volMult,
+      shapeExp: SELIC_TP_SHAPE_EXP,
     });
   }, [di, selicTp.volMult]);
   const hasSelicAgora = selicAgora.length > 0;
@@ -1074,7 +1078,7 @@ export function JurosLiveBlock({
           <p className="mt-2 text-[11px] text-zinc-500">
             {tab === "selic"
               ? hasSelicAgora
-                ? `Selic implícita por reunião COPOM — modelo forward sobre a curva PRE. “Agora” (preto): curva DI AO VIVO da B3 (~15 min, D+0), recalculada no navegador com o mesmo modelo do pipeline. “Ajuste D-1” (tracejado): fechamento do pregão anterior. Degraus arredondados a 0,25%. Ajuste de prêmio de prazo no D+0 (experimental, quadrático no prazo): base ${SELIC_TP_BASE_BPS} bps a 12m × ${selicTp.source === "irfm" ? `vol IRF-M 15d ${(selicTp.vol15d! * 100).toFixed(1)}% vs 5a ${(selicTp.volFull! * 100).toFixed(1)}%` : "vol do dia (proxy)"} (×${selicTp.volMult.toFixed(2)}) → −${selicTp.bpsAt12m.toFixed(0)} bps na cauda.`
+                ? `Selic implícita por reunião COPOM — modelo forward sobre a curva PRE. “Agora” (preto): curva DI AO VIVO da B3 (~15 min, D+0), recalculada no navegador com o mesmo modelo do pipeline. “Ajuste D-1” (tracejado): fechamento do pregão anterior. Degraus arredondados a 0,25%. Ajuste de prêmio de prazo no D+0 (experimental, quadrático no prazo): base ${SELIC_TP_BASE_BPS} bps a 12m × ${selicTp.source === "irfm" ? `vol IRF-M 15d ${(selicTp.vol15d! * 100).toFixed(1)}% vs 5a ${(selicTp.volFull! * 100).toFixed(1)}%` : "vol do dia (proxy)"} (×${selicTp.volMult.toFixed(2)}) → −${selicTp.bpsAt12m.toFixed(0)} bps na cauda. Um eventual sobe-e-desce no longo é o pico de juro terminal precificado pelo mercado (não erro): prêmio crescente sobre forward que aplaina implica leve alívio esperado.`
                 : "Selic implícita por reunião COPOM — modelo forward do pipeline AZ (B3 PRE, D-1), mesmos valores da trilha de política monetária."
               : tab === "ipca"
                 ? "D-30/D-90: títulos IPCA+ (cupom limpo NTN-B, TaxaSwap B3) em janelas anteriores. “Agora” (preto): futuros DAP da B3 (~15 min); “Ajuste D-1” (preto tracejado): ajuste do pregão anterior."

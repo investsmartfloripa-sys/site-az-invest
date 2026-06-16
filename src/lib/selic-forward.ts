@@ -142,6 +142,9 @@ export type TermPremiumCfg = {
   maxFrac: number;
   /** Multiplicador de regime (vol do dia / vol de referência), já clampado. */
   volMult: number;
+  /** Expoente da forma no prazo: 1 = linear (50% no 6m), 2 = quadrática (25% no
+   *  6m, mais peso na cauda). Default 2. */
+  shapeExp?: number;
 };
 
 export function selicForwardPath(
@@ -213,7 +216,7 @@ export function selicForwardPath(
     // Prêmio de prazo (experimental): tira o wedge crescente da cauda ANTES de
     // arredondar — quadrático no prazo × multiplicador de vol do dia.
     if (termPremium && a.du > 0) {
-      fwd -= termPremium.maxFrac * (a.du / du1y) ** 2 * termPremium.volMult;
+      fwd -= termPremium.maxFrac * (a.du / du1y) ** (termPremium.shapeExp ?? 2) * termPremium.volMult;
     }
     // Fração arredondada ao passo de 0,25% → PERCENTUAL (ex.: 0.1425 → 14.25).
     segs.push({ fromISO: utcToISO(a.t), level: Math.round(ceilStep(fwd) * 10000) / 100 });
