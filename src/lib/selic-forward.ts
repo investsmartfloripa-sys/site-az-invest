@@ -125,6 +125,17 @@ export type SelicSegment = { fromISO: string; level: number };
  * partir de uma curva PRE (vértices com vencimento + taxa 252) e a data de
  * referência. Retorna os segmentos como `{ fromISO, level }` já arredondados.
  * Vazio se a curva for insuficiente.
+ *
+ * METODOLOGIA — interpolação, NÃO snapping. O pipeline R (build_selic_implicita.R)
+ * usa a curva PRE OFICIAL da B3 (TaxaSwap), que é DENSA (um vértice por dia útil);
+ * lá "encostar a reunião no vértice mais próximo" pega o df praticamente NA data
+ * da reunião. A curva DI ao vivo só tem os FUTUROS (mensais → anuais), esparsa: o
+ * snapping jogaria a reunião num contrato a até ~2 semanas e calcularia o forward
+ * sobre vãos de DU errados, gerando zig-zag. Por isso aqui interpolamos a função
+ * de desconto (ln df linear em DU = forward constante entre vértices, padrão
+ * ANBIMA/B3) e avaliamos o df na data EXATA de cada reunião. Forward de cada
+ * período entre reuniões consecutivas: fwd = (df_k/df_{k+1})^(252/Δdu) − 1,
+ * arredondado PARA CIMA ao passo de 0,25% (round_step_up).
  */
 export function selicForwardPath(
   curve: CurvePoint[],
@@ -132,52 +143,61 @@ export function selicForwardPath(
   copomDates: string[] = COPOM_DECISION_DATES,
 ): SelicSegment[] {
   const refT = isoToUTC(refdateISO);
+  // Vértices (DU, ln df) a partir da curva. ln df = −(du/252)·ln(1+r).
   const pts = curve
     .map((c) => {
       if (c.rate == null || !Number.isFinite(c.rate)) return null;
-      const fT = isoToUTC(c.maturity);
-      const du = businessDays(refT, fT);
+      const du = businessDays(refT, isoToUTC(c.maturity));
       if (du <= 0) return null;
-      return { fT, du, df: 1 / Math.pow(1 + c.rate / 100, du / 252) };
+      return { du, lndf: -(du / 252) * Math.log(1 + c.rate / 100) };
     })
-    .filter((p): p is { fT: number; du: number; df: number } => p != null);
+    .filter((p): p is { du: number; lndf: number } => p != null);
   if (pts.length < 2) return [];
+  // Âncora hoje: DU=0, df=1 (ln df=0) — ancora o forward do trecho vigente.
+  pts.push({ du: 0, lndf: 0 });
+  pts.sort((a, b) => a.du - b.du);
+  const seenDu = new Set<number>();
+  const verts = pts.filter((p) => (seenDu.has(p.du) ? false : (seenDu.add(p.du), true)));
+
+  // Interpolação flat-forward: ln df linear em DU (forward constante entre
+  // vértices). Avalia o df numa data qualquer — inclusive na data da reunião.
+  const lndfAt = (du: number): number => {
+    if (du <= verts[0].du) return verts[0].lndf;
+    for (let i = 0; i < verts.length - 1; i++) {
+      const a = verts[i];
+      const b = verts[i + 1];
+      if (du <= b.du) {
+        const w = (du - a.du) / (b.du - a.du);
+        return a.lndf + w * (b.lndf - a.lndf);
+      }
+    }
+    // Extrapola flat-forward além do último vértice (mesmo forward do último tramo).
+    const a = verts[verts.length - 2];
+    const b = verts[verts.length - 1];
+    const slope = (b.lndf - a.lndf) / (b.du - a.du);
+    return b.lndf + slope * (du - b.du);
+  };
 
   const chartEnd = refT + 365 * DAY;
   const grid = Array.from(
     new Set([refT, ...copomDates.map(isoToUTC).filter((t) => t >= refT && t <= chartEnd), chartEnd]),
-  ).sort((a, b) => a - b);
-
-  // Snap: cada data da grade encosta no contrato com vencimento mais próximo.
-  let snapped = grid
-    .map((gt) => {
-      let best: { fT: number; du: number; df: number } | null = null;
-      let bestDist = Infinity;
-      for (const p of pts) {
-        const dist = Math.abs(p.fT - gt);
-        if (dist < bestDist) {
-          bestDist = dist;
-          best = p;
-        }
-      }
-      return best ? { grid: gt, du: best.du, df: best.df } : null;
-    })
-    .filter((p): p is { grid: number; du: number; df: number } => p != null);
-
-  // Dedup por DU (mantém o primeiro), ordena por DU.
-  snapped.sort((a, b) => a.du - b.du);
-  const seen = new Set<number>();
-  snapped = snapped.filter((p) => (seen.has(p.du) ? false : (seen.add(p.du), true)));
+  )
+    .sort((a, b) => a - b)
+    .map((t) => ({ t, du: businessDays(refT, t) }));
+  // Dedup por DU (reuniões que caem no mesmo dia útil colapsam).
+  const seenG = new Set<number>();
+  const gg = grid.filter((g) => (seenG.has(g.du) ? false : (seenG.add(g.du), true)));
 
   const segs: SelicSegment[] = [];
-  for (let i = 0; i < snapped.length - 1; i++) {
-    const a = snapped[i];
-    const b = snapped[i + 1];
+  for (let i = 0; i < gg.length - 1; i++) {
+    const a = gg[i];
+    const b = gg[i + 1];
     if (b.du <= a.du) continue;
-    const fwd = Math.pow(a.df / b.df, 252 / (b.du - a.du)) - 1;
+    // Forward sobre o período EXATO entre as duas reuniões (df interpolado).
+    const fwd = Math.exp(((lndfAt(a.du) - lndfAt(b.du)) * 252) / (b.du - a.du)) - 1;
     if (!Number.isFinite(fwd)) continue;
     // Fração arredondada ao passo de 0,25% → PERCENTUAL (ex.: 0.1425 → 14.25).
-    segs.push({ fromISO: utcToISO(a.grid), level: Math.round(ceilStep(fwd) * 10000) / 100 });
+    segs.push({ fromISO: utcToISO(a.t), level: Math.round(ceilStep(fwd) * 10000) / 100 });
   }
   return segs;
 }
