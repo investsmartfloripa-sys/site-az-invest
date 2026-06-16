@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 
 import type { AtividadeCodaceData, AtividadeIbcBrData, AtividadePibData } from "@/lib/painel-atividade";
-import { DashboardScaffold, KpiCard, type DashboardBloco } from "@/components/painel/core";
+import { KpiCard } from "@/components/painel/core";
 import { fmtSignedPct } from "@/lib/format-br";
 import { fmtTrimCurto, num } from "../shared";
 import { AnchorContribuicoesPib } from "./AnchorContribuicoesPib";
@@ -27,6 +27,53 @@ import { AnaliseCompletaPib } from "./AnaliseCompletaPib";
  * de cada card + a pergunta econômica no subtítulo carregam a leitura; nada de
  * storytelling. Duas camadas: leitura rápida em cima, esmiuçamento embaixo.
  */
+
+/** As 5 faces do circuito macro — cada uma é uma seção da página, sem numeração. */
+const FACES = [
+  { id: "producao", nome: "Produção", sub: "ótica da oferta — quem produz" },
+  { id: "demanda", nome: "Demanda", sub: "ótica da despesa — quem gasta" },
+  { id: "renda", nome: "Renda", sub: "distribuição da renda e poupança" },
+  { id: "financiamento", nome: "Financiamento", sub: "como o país se financia" },
+  { id: "sintese", nome: "Síntese", sub: "expectativas e fecho macro" },
+] as const;
+
+/** Barra de âncoras (sticky) que salta entre as faces. */
+function FaceNav() {
+  return (
+    <nav className="sticky top-[var(--az-header-h,0px)] z-20 flex flex-wrap gap-1.5 rounded-xl border border-[#132960]/10 bg-white/90 px-2 py-2 backdrop-blur">
+      {FACES.map((f) => (
+        <a
+          key={f.id}
+          href={`#${f.id}`}
+          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[#132960] transition hover:bg-[#027DFC]/10 hover:text-[#027DFC]"
+        >
+          {f.nome}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+/** Seção de uma face: cabeçalho (nome + subtítulo) + os cards diretos, sem número. */
+function FaceSection({ id, nome, sub, children }: { id: string; nome: string; sub: string; children: ReactNode }) {
+  return (
+    <section id={id} className="scroll-mt-28">
+      <div className="mb-4 border-b-2 border-[#027DFC]/30 pb-1.5">
+        <h2 className="text-xl font-bold text-[#132960]">{nome}</h2>
+        <p className="text-sm text-zinc-500">{sub}</p>
+      </div>
+      <div className="flex flex-col gap-5">{children}</div>
+    </section>
+  );
+}
+
+function EmConstrucao({ texto }: { texto: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-[#132960]/20 bg-zinc-50/60 p-6 text-sm text-zinc-500">
+      {texto}
+    </div>
+  );
+}
 
 export function PibDashboardV2({
   pib,
@@ -91,149 +138,87 @@ export function PibDashboardV2({
     return cards;
   }, [derivados, trimRef]);
 
-  const blocos = useMemo<DashboardBloco[]>(() => {
-    const out: DashboardBloco[] = [
-      {
-        id: "contribuicoes",
-        eyebrow: "Quem puxou",
-        titulo: "Contribuições ao crescimento",
-        descricao:
-          "Quanto cada setor (oferta) e cada componente (demanda) somou ao PIB no trimestre, em pontos percentuais.",
-        children: (
-          <AnchorContribuicoesPib pib={pib} codaceTrimestral={codace?.trimestral} geradoEm={pib.gerado_em} />
-        ),
-      },
-      {
-        id: "ritmo",
-        eyebrow: "Momentum",
-        titulo: "Ritmo trimestral",
-        descricao: "Variação trimestral dessazonalizada (QoQ SA) e interanual (YoY) em painéis separados — nível e momentum nunca no mesmo eixo.",
-        children: <RitmoTrimestralCard pib={pib} codaceTrimestral={codace?.trimestral} geradoEm={pib.gerado_em} />,
-      },
-    ];
-    if (ibcbr) {
-      out.push({
-        id: "ibcbr",
-        eyebrow: "Prévia mensal",
-        titulo: "IBC-Br × PIB",
-        descricao: "IBC-Br (proxy mensal do BCB) e PIB trimestral, ambos rebase fev/2020 = 100 — prévia do trimestre em curso.",
-        children: <IbcBrPibCard ibcbr={ibcbr} pib={pib} codaceMensal={codace?.mensal} geradoEm={pib.gerado_em} />,
-      });
-    }
-    out.push({
-      id: "decomposicao",
-      eyebrow: "Composição",
-      titulo: "Decomposição: oferta e demanda",
-      descricao:
-        "Setores da oferta e componentes da demanda, em nível (recuperação vs pré-pandemia) ou momentum (YoY) — alterne nos botões.",
-      children: <DecomposicaoPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />,
-    });
-    out.push({
-      id: "heatmap-setorial",
-      eyebrow: "Composição",
-      titulo: "Crescimento setorial (mapa de calor)",
-      descricao:
-        "Os 17 setores da oferta × 4 medidas de variação no trimestre — leitura rápida de quem expande e quem recua.",
-      children: <HeatmapSetorialPib pib={pib} geradoEm={pib.gerado_em} />,
-    });
-    out.push({
-      id: "peso-setorial-pib",
-      eyebrow: "Estrutura",
-      titulo: "Quanto cada setor pesa no PIB",
-      descricao:
-        "Participação de cada setor da oferta no PIB nominal e a variação desse peso (Δ p.p.) frente a 1 ou 10 anos atrás.",
-      children: <PesoSetorialPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />,
-    });
-    out.push({
-      id: "composicao-va",
-      eyebrow: "Estrutura",
-      titulo: "Composição do valor adicionado",
-      descricao:
-        "De que é feita a economia: o peso de cada setor no PIB nominal e o tamanho real de cada grande setor ao longo do tempo.",
-      children: <ComposicaoVaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />,
-    });
-    out.push({
-      id: "setor-lupa",
-      eyebrow: "Setor sob a lupa",
-      titulo: "Qualquer setor, qualquer lente",
-      descricao:
-        "Escolha um setor da oferta e a transformação — nível (índice ou R$ reais), ritmo (YoY, acum 4T, QoQ SA) ou peso no PIB.",
-      children: <SetorLupaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />,
-    });
-    out.push({
-      id: "tabela-mestra-oferta",
-      eyebrow: "Esmiuçamento",
-      titulo: "Tabela mestra da oferta",
-      descricao:
-        "Os 17 setores no trimestre mais recente — nível, variações e peso no PIB, exportável em CSV.",
-      children: <TabelaMestraOfertaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />,
-    });
-    out.push({
-      id: "expectativas",
-      eyebrow: "Passado → futuro",
-      titulo: "Expectativas e histórico",
-      descricao: "Mediana Focus (revisão ao longo da coleta) e realizado vs projetado por ano.",
-      children: (
-        <div className="grid gap-4 xl:grid-cols-2">
+  const ibcbrCard = ibcbr ? (
+    <IbcBrPibCard ibcbr={ibcbr} pib={pib} codaceMensal={codace?.mensal} geradoEm={pib.gerado_em} />
+  ) : null;
+
+  return (
+    <div className="flex flex-col gap-8">
+      <header className="rounded-2xl border border-[#132960]/10 bg-white p-5 shadow-sm">
+        <h1 className="text-2xl font-bold text-[#132960]">PIB — Atividade Econômica</h1>
+        <p className="mt-1 text-sm text-zinc-600">
+          Contas Nacionais Trimestrais do IBGE, esmiuçadas pelas faces do circuito macroeconômico.
+        </p>
+        <p className="mt-2 text-xs text-zinc-500">
+          Referência: {fmtTrimCurto(trimRef)} · IBC-Br até {ibcbr?.mes_recente ?? "—"}
+        </p>
+      </header>
+
+      {kpis.length > 0 ? (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {kpis.map((kpi, i) => (
+            <div key={i} className="min-w-0">
+              {kpi}
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      <FaceNav />
+
+      <FaceSection id="producao" nome="Produção" sub="ótica da oferta — quem produz">
+        <TamanhoEconomiaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <AnchorContribuicoesPib pib={pib} codaceTrimestral={codace?.trimestral} geradoEm={pib.gerado_em} />
+        <RitmoTrimestralCard pib={pib} codaceTrimestral={codace?.trimestral} geradoEm={pib.gerado_em} />
+        {ibcbrCard}
+        <DecomposicaoPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <HeatmapSetorialPib pib={pib} geradoEm={pib.gerado_em} />
+        <PesoSetorialPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <ComposicaoVaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <SetorLupaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+        <TabelaMestraOfertaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />
+      </FaceSection>
+
+      <FaceSection id="demanda" nome="Demanda" sub="ótica da despesa — quem gasta">
+        <EmConstrucao texto="Consumo das famílias e do governo, investimento (FBCF), exportações e importações — gráficos em construção. Os dados já estão na pipeline." />
+      </FaceSection>
+
+      <FaceSection id="renda" nome="Renda" sub="distribuição da renda, poupança e investimento">
+        <EmConstrucao texto="Cascata PIB → renda nacional bruta → renda disponível → poupança, e a estrutura nominal por setor — em construção." />
+      </FaceSection>
+
+      <FaceSection id="financiamento" nome="Financiamento" sub="como o país se financia (conta financeira)">
+        <EmConstrucao texto="Capacidade/necessidade líquida de financiamento (B.9), investimento direto e instrumentos financeiros — em construção." />
+      </FaceSection>
+
+      <FaceSection id="sintese" nome="Síntese" sub="expectativas, per capita e o fecho macro">
+        <div className="grid gap-5 xl:grid-cols-2">
           <FocusPibCard pib={pib} geradoEm={pib.gerado_em} />
           <RealizadoFocusCard pib={pib} geradoEm={pib.gerado_em} />
         </div>
-      ),
-    });
-    if (pib.per_capita?.serie?.length) {
-      out.push({
-        id: "per-capita",
-        eyebrow: "Bem-estar",
-        titulo: "PIB per capita",
-        descricao: "PIB per capita real: crescimento descontado da variação populacional.",
-        children: <PerCapitaCard pib={pib} geradoEm={pib.gerado_em} />,
-      });
-    }
-    out.push({
-      id: "analise-completa",
-      eyebrow: "Esmiuçamento",
-      titulo: "Análise completa",
-      descricao: "A série em todas as transformações, tabela e export CSV.",
-      children: <AnaliseCompletaPib pib={pib} geradoEm={pib.gerado_em} />,
-    });
-    return out;
-  }, [pib, ibcbr, codace]);
+        {pib.per_capita?.serie?.length ? <PerCapitaCard pib={pib} geradoEm={pib.gerado_em} /> : null}
+        <AnaliseCompletaPib pib={pib} geradoEm={pib.gerado_em} />
+      </FaceSection>
 
-  return (
-    <DashboardScaffold
-      header={{
-        titulo: "PIB — Atividade Econômica",
-        subtitulo: "Contas Nacionais Trimestrais do IBGE, com o IBC-Br do BCB como prévia mensal e as expectativas do Focus.",
-        referencia: `Referência: ${fmtTrimCurto(trimRef)} · IBC-Br até ${ibcbr?.mes_recente ?? "—"}`,
-      }}
-      kpis={kpis}
-      anchor={<TamanhoEconomiaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />}
-      blocos={blocos}
-      fichaTecnica={
-        <div className="space-y-2">
+      <details className="group rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">
+        <summary className="cursor-pointer select-none text-sm font-semibold text-[#132960] marker:text-[#027DFC]">
+          Ficha técnica — fontes e metodologia
+        </summary>
+        <div className="mt-3 space-y-2 text-xs leading-relaxed text-zinc-600">
           <p>
-            <strong>Fontes e séries.</strong> IBGE/SIDRA — Contas Nacionais Trimestrais: 5932 (variações: YoY 6561, acum. 4T
-            6562, acum. ano 6563, QoQ SA 6564), 1621/1620 (índice de volume com/sem ajuste sazonal), 1846 (valores correntes —
-            pesos), 6784 (SCN anual — PIB per capita, variação em volume oficial v9814). BCB: SGS 24363/24364 (IBC-Br NS/SA),
-            Olinda ExpectativasMercadoAnuais (Focus PIB Total). Recessões: cronologia CODACE/FGV (última datação oficial: 2020).
+            <strong>Fontes e séries.</strong> IBGE/SIDRA — Contas Nacionais Trimestrais (10 tabelas): 5932 (variações), 1620/1621
+            (índice de volume NS/SA), 6612/6613 (valores reais a preços de 1995), 1846 (valores correntes e % do PIB nominal),
+            2072 (contas econômicas/renda), 2205 (conta financeira), 6726/6727 (taxas de poupança e investimento), 6784 (per
+            capita anual). BCB: SGS 24363/24364 (IBC-Br NS/SA), Olinda (Focus PIB Total). Recessões: cronologia CODACE/FGV-IBRE.
           </p>
           <p>
-            <strong>Metodologia — honestidade de cálculo.</strong> Contribuições ao crescimento: peso nominal do MESMO trimestre
-            do ano anterior (t-4, convenção BCB/research — a composição nominal é sazonal) × variação real YoY; importações com
-            sinal trocado. Índices de volume encadeados são NÃO-aditivos: o resíduo gravado no JSON absorve a diferença (na
-            demanda, também a variação de estoques e a discrepância estatística) — nunca forçamos a soma. Carrego estatístico:
-            média do índice SA do ano com o último trimestre divulgado congelado nos restantes ÷ média do ano anterior. YoY do
-            IBC-Br sobre o índice SEM ajuste (a sazonalidade cancela na comparação interanual); 3m/3m SAAR = média móvel de 3
-            meses vs a média móvel anterior, anualizada.
+            <strong>Metodologia.</strong> PIB potencial = filtro Hodrick-Prescott (λ=1600) sobre o log do índice de volume.
+            Contribuições ao crescimento: peso nominal t-4 × variação real YoY (importações com sinal trocado); índices de volume
+            encadeados são não-aditivos (o resíduo absorve a diferença — nunca forçamos a soma). Pipeline:
+            data-pipeline/python/build_atividade_pib.py · GitHub Actions atividade-pipeline.yml.
           </p>
-          <p>
-            <strong>Réguas editoriais.</strong> "Ritmo normal" = mediana de 10 anos do QoQ SA (mediana, não média — 2020
-            distorce). Dispersão do Focus = ±1 desvio-padrão (min/máx carregam outliers). Faixas cinzas = recessões CODACE; a
-            cronologia é atualizada com anos de defasagem — ausência de faixa recente não significa ausência de risco.
-          </p>
-          <p>Pipeline: data-pipeline/python/build_atividade_pib.py (schema v2) · GitHub Actions atividade-pipeline.yml.</p>
         </div>
-      }
-    />
+      </details>
+    </div>
   );
 }
