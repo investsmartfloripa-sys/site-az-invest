@@ -49,6 +49,7 @@ const PAINEL_PATHS: string[] = [
   "/painel-economico/mercado/fundamentos",
   "/painel-economico/mercado/brasil/renda-fixa",
   "/painel-economico/mercado/brasil/renda-variavel",
+  "/painel-economico/mercado/brasil/fundos-investimento",
   "/painel-economico/mercado/brasil/fundos-imobiliarios",
   "/painel-economico/mercado/global/commodities",
   "/painel-economico/mercado/global/moedas",

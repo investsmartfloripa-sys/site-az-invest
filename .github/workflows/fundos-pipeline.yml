@@ -1,0 +1,62 @@
+name: Fundos pipeline (Fundos de Investimento — Mais Retorno)
+
+# Ranking de fundos por categoria via Mais Retorno Data API.
+# Cadência SEMANAL para respeitar a cota do plano (free = 500 req/mês):
+#   00 11 UTC sábado = 08:00 BRT, após o fechamento de sexta (dados D-1).
+# Ao assinar um plano superior, aumentar a frequência (ex.: dias úteis) e
+# ligar `--with-drawdown`.
+on:
+  schedule:
+    - cron: "0 11 * * 6"
+  workflow_dispatch:
+    inputs:
+      with_drawdown:
+        description: "Buscar drawdown (1 chamada extra por fundo; cuidado com a cota)"
+        required: false
+        default: "0"
+
+concurrency:
+  group: fundos-pipeline
+  cancel-in-progress: true
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      MAISRETORNO_API_KEY: ${{ secrets.MAISRETORNO_API_KEY }}
+      MAISRETORNO_PLAN: ${{ vars.MAISRETORNO_PLAN || 'free' }}
+      PYTHONUTF8: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: data-pipeline/python/requirements.txt
+
+      - name: Pip install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r data-pipeline/python/requirements.txt
+
+      - name: build_fundos_ranking (Mais Retorno)
+        run: |
+          python data-pipeline/python/build_fundos_ranking.py --upload \
+            ${{ github.event.inputs.with_drawdown == '1' && '--with-drawdown' || '' }}
+        continue-on-error: true
+
+      - name: Upload artefatos (debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fundos-pipeline-${{ github.run_id }}
+          path: |
+            data-pipeline/out/fundos_ranking.json
+          if-no-files-found: warn
+          retention-days: 7

@@ -31,22 +31,19 @@ const mercadoBrasil: CategoryDef[] = [
     sourceHint: "B3, yfinance, CVM, BCB, ANBIMA",
   },
   {
+    slug: "fundos-investimento",
+    label: "Fundos de Investimento",
+    description:
+      "Rankings de fundos por categoria (multimercado, ações, renda fixa): retorno, Sharpe e volatilidade contra o CDI. Fonte: Mais Retorno (D-1).",
+    frequency: "semanal",
+    sourceHint: "Mais Retorno (Data API)",
+  },
+  {
     slug: "renda-fixa",
     label: "Renda fixa",
     description: "Curvas de juros, spreads e estrutura a prazo doméstica.",
     frequency: "diario",
     sourceHint: "Tesouro, B3, ANBIMA",
-  },
-  {
-    // Absorvida pela área Moedas (Global): a rota
-    // src/app/painel-economico/mercado/brasil/cambio/page.tsx faz redirect
-    // permanente p/ /painel-economico/mercado/global/moedas. A entrada fica
-    // no menu Brasil p/ quem procura "Câmbio" — o clique cai na página nova.
-    slug: "cambio",
-    label: "Câmbio",
-    description: "Agora em Global → Moedas: dólar (USD/BRL), cruzes do real e as moedas do mundo contra o USD.",
-    frequency: "tempo-real",
-    sourceHint: "Yahoo Finance, pipeline AZ (fx_top_movers + histórico 5a)",
   },
   {
     slug: "fundos-imobiliarios",

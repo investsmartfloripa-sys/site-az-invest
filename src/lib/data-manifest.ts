@@ -53,6 +53,7 @@ export type DataSourceDef = {
 export const PAINEIS: PainelDef[] = [
   { key: "panorama", label: "Panorama", pagePath: "/painel-economico/panorama" },
   { key: "renda-variavel", label: "Mercado · Renda variável", pagePath: "/painel-economico/mercado/brasil/renda-variavel" },
+  { key: "fundos-investimento", label: "Mercado · Fundos de Investimento", pagePath: "/painel-economico/mercado/brasil/fundos-investimento" },
   { key: "renda-fixa", label: "Mercado · Renda fixa", pagePath: "/painel-economico/mercado/brasil/renda-fixa" },
   { key: "fii", label: "Mercado · Fundos Imobiliários", pagePath: "/painel-economico/mercado/brasil/fundos-imobiliarios" },
   { key: "mercado-ativos", label: "Mercado · Histórico e fundamentos", pagePath: "/painel-economico/mercado/historico" },
@@ -91,6 +92,9 @@ export const DATA_SOURCES: DataSourceDef[] = [
   { key: "fii_screener", label: "Screener FIIs", blobPath: "data/fii_screener.json", workflowName: "fii-pipeline-live.yml", cadence: "intraday-util", painel: "fii" },
   { key: "fii_details", label: "Detalhe por ticker (107 FIIs)", blobPath: "data/fii_details.json", workflowName: "fii-pipeline.yml", cadence: "diario-util", painel: "fii", pagePath: "/painel-economico/mercado/brasil/fundos-imobiliarios", heavy: true },
   { key: "fii_macro_charts", label: "Macro charts (P/VP + prêmio)", blobPath: "data/fii_macro_charts.json", workflowName: "fii-pipeline.yml", cadence: "diario-util", painel: "fii" },
+
+  // ── Fundos de Investimento (fundos-pipeline.yml, semanal — Mais Retorno) ───
+  { key: "fundos_ranking", label: "Ranking de fundos (Mais Retorno)", blobPath: "data/fundos_ranking.json", workflowName: "fundos-pipeline.yml", cadence: "semanal", painel: "fundos-investimento", pagePath: "/painel-economico/mercado/brasil/fundos-investimento", dataDateField: "data_date" },
 
   // ── Mercado: histórico e fundamentos (market-data.yml) ─────────────────────
   { key: "market_catalog", label: "Catálogo de ativos", blobPath: "data/market_catalog.json", workflowName: "market-data.yml", cadence: "diario-util", painel: "mercado-ativos" },
