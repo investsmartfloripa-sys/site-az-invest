@@ -14,7 +14,8 @@ import { MarketTape, type TapeItem } from "@/components/painel/panorama/MarketTa
 import { PeriodicosChips } from "@/components/painel/panorama/PeriodicosChips";
 import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection";
 import { getPanoramaData, painelBlobConfigured, type PanoramaData } from "@/lib/painel-data";
-import { getRatesVolMult } from "@/lib/painel-market-data";
+import { getRatesVolMult, type RatesVol } from "@/lib/painel-market-data";
+import { SELIC_TERM_PREMIUM, termPremiumLevel } from "@/lib/selic-forward";
 import { findPosts, mapPost } from "@/lib/posts";
 
 function parseNumber(value: string | number | null | undefined): number | null {
@@ -105,24 +106,44 @@ function extractCurveCutSet(table: CurveTable): CurveCutSet {
   };
 }
 
-/** Reunioes COPOM + cortes da selic implicita do pipeline (charts/tables/selic_implicita.json). */
-function extractSelicMeetings(data: PanoramaData): SelicMeeting[] {
+/** Reunioes COPOM + cortes da selic implicita do pipeline (charts/tables/selic_implicita.json).
+ *  Aplica o MESMO ajuste de premio de prazo do D+0 nas series historicas
+ *  (D-90/D-30/D-1), sobre o forward BRUTO ("<curva>__raw" exportado pelo R),
+ *  usando o multiplicador de vol do IRF-M. Fed/Treasury (EUA) NAO recebem. */
+function extractSelicMeetings(data: PanoramaData, ratesVol: RatesVol | null): SelicMeeting[] {
   const table = data.tableSelic.data;
   const cols = table?.columns ?? [];
   const keyOf = (prefix: string) => cols.find((c) => c.key.startsWith(prefix))?.key;
   const kRecent = keyOf("Recente") ?? keyOf("Hoje");
   const kD30 = keyOf("D-30");
   const kD90 = keyOf("D-90");
+  const refToday = table?.ref_today ?? null;
+  const cfg = {
+    maxFrac: SELIC_TERM_PREMIUM.baseBps / 10000,
+    volMult: ratesVol?.mult ?? 1,
+    shapeExp: SELIC_TERM_PREMIUM.shapeExp,
+    kneeFrac: SELIC_TERM_PREMIUM.kneeFrac,
+  };
+  // Ajusta pelo premio se houver raw + refToday; senao devolve o arredondado
+  // original (fallback ate o pipeline R reexportar o "__raw").
+  const adj = (rounded: number | null, rawStr: unknown, dateISO: string): number | null => {
+    if (!refToday) return rounded;
+    const raw = typeof rawStr === "string" ? Number(rawStr) : NaN;
+    if (!Number.isFinite(raw)) return rounded;
+    return termPremiumLevel(raw, dateISO, refToday, cfg);
+  };
   const out: SelicMeeting[] = [];
   for (const row of table?.rows ?? []) {
     const first = String(Object.values(row)[0] ?? "");
     const m = first.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     if (!m) continue;
+    const date = `${m[3]}-${m[2]}-${m[1]}`;
+    const rawAt = (k: string | undefined) => (k ? (row as Record<string, unknown>)[`${k}__raw`] : null);
     out.push({
-      date: `${m[3]}-${m[2]}-${m[1]}`,
-      recent: kRecent ? parseNumber(row[kRecent]) : null,
-      d30: kD30 ? parseNumber(row[kD30]) : null,
-      d90: kD90 ? parseNumber(row[kD90]) : null,
+      date,
+      recent: adj(kRecent ? parseNumber(row[kRecent]) : null, rawAt(kRecent), date),
+      d30: adj(kD30 ? parseNumber(row[kD30]) : null, rawAt(kD30), date),
+      d90: adj(kD90 ? parseNumber(row[kD90]) : null, rawAt(kD90), date),
     });
   }
   return out;
@@ -279,7 +300,7 @@ export async function PainelPanoramaPage() {
 
   const preCuts = extractCurveCutSet(data.tablePrefixado.data);
   const ipcaCuts = extractCurveCutSet(data.tableIpca.data);
-  const selicMeetings = extractSelicMeetings(data);
+  const selicMeetings = extractSelicMeetings(data, ratesVol);
   const treasuryTenors = extractTreasury(data);
   const fedMeetings = extractFedMeetings(data);
 

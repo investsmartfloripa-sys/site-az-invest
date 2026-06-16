@@ -421,6 +421,14 @@ table_wide <- df_plot |>
   mutate(curve = as.character(curve)) |>
   tidyr::pivot_wider(names_from = curve, values_from = fwd) |>
   arrange(grid_date)
+# Pivot paralelo do forward BRUTO (fwd_raw, antes do arredondamento) para o
+# frontend aplicar o ajuste de premio de prazo nas series historicas com o MESMO
+# vetor do D+0. Exportado em "<curva>__raw" (percentual, ex.: "13.6800").
+table_wide_raw <- df_plot |>
+  select(grid_date, curve, fwd_raw) |>
+  mutate(curve = as.character(curve)) |>
+  tidyr::pivot_wider(names_from = curve, values_from = fwd_raw) |>
+  arrange(grid_date)
 curve_cols <- setdiff(names(table_wide), "grid_date")
 table_payload <- list(
   status = "ok",
@@ -435,10 +443,13 @@ table_payload <- list(
   ),
   rows = lapply(seq_len(nrow(table_wide)), function(i) {
     row <- table_wide[i, , drop = FALSE]
+    row_raw <- table_wide_raw[i, , drop = FALSE]
     out <- list(grid_date = format(as.Date(row$grid_date[[1]]), "%d/%m/%Y"))
     for (k in curve_cols) {
       v <- row[[k]][[1]]
       out[[k]] <- if (is.na(v)) NULL else sprintf("%.2f%%", as.numeric(v) * 100)
+      vr <- if (k %in% names(row_raw)) row_raw[[k]][[1]] else NA
+      if (!is.na(vr)) out[[paste0(k, "__raw")]] <- sprintf("%.4f", as.numeric(vr) * 100)
     }
     out
   })

@@ -150,6 +150,27 @@ export type TermPremiumCfg = {
   kneeFrac?: number;
 };
 
+/**
+ * Parâmetros do ajuste de prêmio de prazo — ÚNICA fonte (D+0 ao vivo e séries
+ * históricas D-90/D-30/D-1 usam estes mesmos valores, garantindo o MESMO vetor).
+ * Calibre aqui. `volMult` NÃO está aqui (vem do percentil de vol do IRF-M, por
+ * série/dia). `clamp` é o piso/teto do multiplicador.
+ */
+export const SELIC_TERM_PREMIUM = {
+  baseBps: 25,
+  shapeExp: 2,
+  kneeFrac: 0.25,
+  clamp: [0.5, 2] as [number, number],
+};
+
+/** Fração subtraída do forward bruto na reunião com DU `du` (0 antes do joelho). */
+function premiumFrac(du: number, du1y: number, cfg: TermPremiumCfg): number {
+  if (du <= 0) return 0;
+  const knee = cfg.kneeFrac ?? 0;
+  const ramp = Math.max(0, (du / du1y - knee) / (1 - knee));
+  return cfg.maxFrac * ramp ** (cfg.shapeExp ?? 2) * cfg.volMult;
+}
+
 export function selicForwardPath(
   curve: CurvePoint[],
   refdateISO: string,
@@ -217,13 +238,8 @@ export function selicForwardPath(
     let fwd = Math.exp(((lndfAt(a.du) - lndfAt(b.du)) * 252) / (b.du - a.du)) - 1;
     if (!Number.isFinite(fwd)) continue;
     // Prêmio de prazo (experimental): tira o wedge crescente da cauda ANTES de
-    // arredondar — quadrático no prazo × multiplicador de vol do dia.
-    if (termPremium && a.du > 0) {
-      // Rampa a partir do joelho (kneeFrac·1ano): 0 antes, cresce até 1 em 1 ano.
-      const knee = termPremium.kneeFrac ?? 0;
-      const ramp = Math.max(0, (a.du / du1y - knee) / (1 - knee));
-      fwd -= termPremium.maxFrac * ramp ** (termPremium.shapeExp ?? 2) * termPremium.volMult;
-    }
+    // arredondar — mesma fórmula (premiumFrac) das séries históricas.
+    if (termPremium) fwd -= premiumFrac(a.du, du1y, termPremium);
     // Fração arredondada ao passo de 0,25% → PERCENTUAL (ex.: 0.1425 → 14.25).
     segs.push({ fromISO: utcToISO(a.t), level: Math.round(ceilStep(fwd) * 10000) / 100 });
   }
@@ -238,4 +254,24 @@ export function selicLevelAt(segs: SelicSegment[], dateISO: string): number | nu
     else break;
   }
   return level;
+}
+
+/**
+ * Aplica o prêmio de prazo a um forward BRUTO (em PERCENTUAL, ex.: 13.68) de uma
+ * reunião e retorna o nível arredondado a 0,25% (em PERCENTUAL, ex.: 13.50). Usa
+ * o MESMO `premiumFrac` do D+0, então as séries históricas (D-90/D-30/D-1) ficam
+ * ajustadas com o mesmo vetor. `refdateISO` = hoje (a forma é horizonte-a-partir-
+ * de-hoje, igual para todas as séries → desloca todas pelo mesmo vetor).
+ */
+export function termPremiumLevel(
+  rawPct: number,
+  meetingISO: string,
+  refdateISO: string,
+  cfg: TermPremiumCfg,
+): number {
+  const refT = isoToUTC(refdateISO);
+  const du = businessDays(refT, isoToUTC(meetingISO));
+  const du1y = businessDays(refT, refT + 365 * DAY) || 252;
+  const frac = rawPct / 100 - premiumFrac(du, du1y, cfg);
+  return Math.round(ceilStep(frac) * 10000) / 100;
 }
