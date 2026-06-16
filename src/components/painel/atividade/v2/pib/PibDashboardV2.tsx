@@ -7,6 +7,7 @@ import { DashboardScaffold, KpiCard, type DashboardBloco } from "@/components/pa
 import { fmtSignedPct } from "@/lib/format-br";
 import { fmtTrimCurto, num } from "../shared";
 import { AnchorContribuicoesPib } from "./AnchorContribuicoesPib";
+import { TamanhoEconomiaPib } from "./TamanhoEconomiaPib";
 import { RitmoTrimestralCard } from "./RitmoTrimestralCard";
 import { IbcBrPibCard } from "./IbcBrPibCard";
 import { DecomposicaoPib } from "./DecomposicaoPib";
@@ -89,6 +90,16 @@ export function PibDashboardV2({
   const blocos = useMemo<DashboardBloco[]>(() => {
     const out: DashboardBloco[] = [
       {
+        id: "contribuicoes",
+        eyebrow: "Quem puxou",
+        titulo: "Contribuições ao crescimento",
+        descricao:
+          "Quanto cada setor (oferta) e cada componente (demanda) somou ao PIB no trimestre, em pontos percentuais.",
+        children: (
+          <AnchorContribuicoesPib pib={pib} codaceTrimestral={codace?.trimestral} geradoEm={pib.gerado_em} />
+        ),
+      },
+      {
         id: "ritmo",
         eyebrow: "Momentum",
         titulo: "Ritmo trimestral",
@@ -160,7 +171,7 @@ export function PibDashboardV2({
         referencia: `Referência: ${fmtTrimCurto(trimRef)} · IBC-Br até ${ibcbr?.mes_recente ?? "—"}`,
       }}
       kpis={kpis}
-      anchor={<AnchorContribuicoesPib pib={pib} codaceTrimestral={codace?.trimestral} geradoEm={pib.gerado_em} />}
+      anchor={<TamanhoEconomiaPib pib={pib} codace={codace} geradoEm={pib.gerado_em} />}
       blocos={blocos}
       fichaTecnica={
         <div className="space-y-2">
