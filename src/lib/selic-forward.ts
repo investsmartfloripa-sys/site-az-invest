@@ -145,6 +145,9 @@ export type TermPremiumCfg = {
   /** Expoente da forma no prazo: 1 = linear (50% no 6m), 2 = quadrática (25% no
    *  6m, mais peso na cauda). Default 2. */
   shapeExp?: number;
+  /** Joelho: fração de 1 ano em que a rampa começa (prêmio = 0 antes disso).
+   *  Ex.: 0.25 = 3 meses. Default 0. */
+  kneeFrac?: number;
 };
 
 export function selicForwardPath(
@@ -216,7 +219,10 @@ export function selicForwardPath(
     // Prêmio de prazo (experimental): tira o wedge crescente da cauda ANTES de
     // arredondar — quadrático no prazo × multiplicador de vol do dia.
     if (termPremium && a.du > 0) {
-      fwd -= termPremium.maxFrac * (a.du / du1y) ** (termPremium.shapeExp ?? 2) * termPremium.volMult;
+      // Rampa a partir do joelho (kneeFrac·1ano): 0 antes, cresce até 1 em 1 ano.
+      const knee = termPremium.kneeFrac ?? 0;
+      const ramp = Math.max(0, (a.du / du1y - knee) / (1 - knee));
+      fwd -= termPremium.maxFrac * ramp ** (termPremium.shapeExp ?? 2) * termPremium.volMult;
     }
     // Fração arredondada ao passo de 0,25% → PERCENTUAL (ex.: 0.1425 → 14.25).
     segs.push({ fromISO: utcToISO(a.t), level: Math.round(ceilStep(fwd) * 10000) / 100 });

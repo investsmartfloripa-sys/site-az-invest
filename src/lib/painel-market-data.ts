@@ -180,15 +180,16 @@ export async function getMarketHistoryFull(): Promise<MarketHistoryFull | null> 
 }
 
 /**
- * Vol de regime da renda fixa pré BR (IRF-M via IRFM11): desvio-padrão dos
- * retornos diários dos ÚLTIMOS 15 pregões contra o da SÉRIE INTEIRA (5a). O preço
- * do ETF de NTN-F move com a curva pré, então sua vol É a vol da taxa pré. O
- * multiplicador `vol15d/volFull` (>1 = mercado mais volátil que o normal
- * histórico) escala o ajuste de prêmio de prazo da Selic implícita — a vol
- * histórica vira a referência natural, sem σ_ref arbitrário. Reusa o cache do
- * market_history_full (já buscado por outras páginas).
+ * Vol de regime da renda fixa pré BR (IRF-M via IRFM11). Calcula a vol-15d
+ * ROLANTE ao longo de toda a série (preço do ETF de NTN-F move com a curva pré,
+ * então sua vol É a vol da taxa pré) e mede em que PERCENTIL a vol-15d ATUAL está
+ * na distribuição histórica. Percentil (em vez de ratio vs média de 5a) porque a
+ * distribuição é torta à direita — um ratio simples fica manso (a média de 5a é
+ * inflada por 2021-22); o percentil mede "quão extremo é o momento" sem esse
+ * viés. mult = 2^((pct−50)/50): mediana→1,0; extremos→clamp [0,5; 2,0]. Reusa o
+ * cache do market_history_full (já buscado por outras páginas).
  */
-export type RatesVol = { vol15dAnn: number; volFullAnn: number; mult: number };
+export type RatesVol = { vol15dAnn: number; pct: number; mult: number };
 
 const RATES_VOL_TICKER = "IRFM11.SA";
 const RATES_VOL_WINDOW = 15;
@@ -200,7 +201,7 @@ export async function getRatesVolMult(): Promise<RatesVol | null> {
   const closes = series
     .map((p) => p[1])
     .filter((v): v is number => typeof v === "number" && v > 0);
-  if (closes.length < RATES_VOL_WINDOW + 5) return null;
+  if (closes.length < RATES_VOL_WINDOW + 30) return null;
   const rets: number[] = [];
   for (let i = 1; i < closes.length; i++) rets.push(Math.log(closes[i] / closes[i - 1]));
   const std = (a: number[]): number => {
@@ -208,12 +209,20 @@ export async function getRatesVolMult(): Promise<RatesVol | null> {
     const m = a.reduce((x, y) => x + y, 0) / a.length;
     return Math.sqrt(a.reduce((x, y) => x + (y - m) ** 2, 0) / a.length);
   };
-  const ann = Math.sqrt(252);
-  const vol15 = std(rets.slice(-RATES_VOL_WINDOW));
-  const volFull = std(rets);
-  if (!(volFull > 0)) return null;
-  const mult = Math.min(RATES_VOL_CLAMP[1], Math.max(RATES_VOL_CLAMP[0], vol15 / volFull));
-  return { vol15dAnn: vol15 * ann, volFullAnn: volFull * ann, mult };
+  // Série de vols-15d rolantes (uma por pregão, da janela 15 até o fim).
+  const roll: number[] = [];
+  for (let i = RATES_VOL_WINDOW; i <= rets.length; i++) {
+    roll.push(std(rets.slice(i - RATES_VOL_WINDOW, i)));
+  }
+  if (roll.length < 30) return null;
+  const cur = roll[roll.length - 1];
+  if (!(cur > 0)) return null;
+  const below = roll.filter((v) => v <= cur).length;
+  const pct = (below / roll.length) * 100;
+  // 2^((pct−50)/50): mediana=1; 0%→0,5; 100%→2. Clamp por garantia.
+  const raw = Math.pow(2, (pct - 50) / 50);
+  const mult = Math.min(RATES_VOL_CLAMP[1], Math.max(RATES_VOL_CLAMP[0], raw));
+  return { vol15dAnn: cur * Math.sqrt(252), pct, mult };
 }
 
 export async function getMarketFundamentals(): Promise<MarketFundamentals | null> {
