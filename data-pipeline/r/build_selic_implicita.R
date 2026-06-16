@@ -60,8 +60,9 @@ if (!requireNamespace("rb3", quietly = TRUE)) {
 }
 library(rb3)
 
-round_step_up <- function(x, step = 0.0025, eps = 1e-12) {
-  ceiling((x - eps) / step) * step
+# Arredonda ao passo de 0,25% MAIS PROXIMO (nearest), nao para cima.
+round_step_near <- function(x, step = 0.0025) {
+  round(x / step) * step
 }
 
 parse_t1apr_from_taswap <- function(lines) {
@@ -292,7 +293,7 @@ compute_series_data <- function(series_info) {
     mutate(
       curve = curve_label,
       fwd_raw = fwd,
-      fwd_025_up = round_step_up(fwd, step = 0.0025),
+      fwd_025_up = round_step_near(fwd, step = 0.0025),
       fwd = fwd_025_up
     ) |>
     select(grid_date, curve, fwd, fwd_raw, fwd_025_up)

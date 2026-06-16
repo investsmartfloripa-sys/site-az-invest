@@ -7,7 +7,7 @@
  *   - cada data da grade "encosta" (snap) no contrato com vencimento MAIS PRÓXIMO;
  *     dedup por DU; forward entre vértices consecutivos
  *     fwd = (df_i/df_{i+1})^(252/(du_{i+1}-du_i)) − 1;
- *   - arredondado PARA CIMA ao passo de 0,25% (round_step_up).
+ *   - arredondado ao 0,25% MAIS PRÓXIMO (round nearest).
  *
  * O feed intraday da B3 não traz o DU, só a data de vencimento — por isso
  * carregamos o calendário de feriados ANBIMA/B3 (nacionais + móveis via Páscoa)
@@ -92,9 +92,9 @@ function utcToISO(t: number): string {
   return new Date(t).toISOString().slice(0, 10);
 }
 
-/** Arredonda PARA CIMA ao passo de 0,25% (em fração: 0.0025). */
-function ceilStep(x: number, step = 0.0025): number {
-  return Math.ceil((x - 1e-12) / step) * step;
+/** Arredonda ao passo de 0,25% MAIS PRÓXIMO (não para cima; em fração: 0.0025). */
+function roundStep(x: number, step = 0.0025): number {
+  return Math.round(x / step) * step;
 }
 
 /**
@@ -135,7 +135,7 @@ export type SelicSegment = { fromISO: string; level: number };
  * de desconto (ln df linear em DU = forward constante entre vértices, padrão
  * ANBIMA/B3) e avaliamos o df na data EXATA de cada reunião. Forward de cada
  * período entre reuniões consecutivas: fwd = (df_k/df_{k+1})^(252/Δdu) − 1,
- * arredondado PARA CIMA ao passo de 0,25% (round_step_up).
+ * arredondado ao 0,25% MAIS PRÓXIMO (round nearest).
  */
 export type TermPremiumCfg = {
   /** Ajuste máximo a 1 ano, em fração (ex.: 0.0025 = 25 bps). */
@@ -241,7 +241,7 @@ export function selicForwardPath(
     // arredondar — mesma fórmula (premiumFrac) das séries históricas.
     if (termPremium) fwd -= premiumFrac(a.du, du1y, termPremium);
     // Fração arredondada ao passo de 0,25% → PERCENTUAL (ex.: 0.1425 → 14.25).
-    segs.push({ fromISO: utcToISO(a.t), level: Math.round(ceilStep(fwd) * 10000) / 100 });
+    segs.push({ fromISO: utcToISO(a.t), level: Math.round(roundStep(fwd) * 10000) / 100 });
   }
   return segs;
 }
@@ -273,5 +273,5 @@ export function termPremiumLevel(
   const du = businessDays(refT, isoToUTC(meetingISO));
   const du1y = businessDays(refT, refT + 365 * DAY) || 252;
   const frac = rawPct / 100 - premiumFrac(du, du1y, cfg);
-  return Math.round(ceilStep(frac) * 10000) / 100;
+  return Math.round(roundStep(frac) * 10000) / 100;
 }
