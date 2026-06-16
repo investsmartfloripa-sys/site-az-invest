@@ -304,6 +304,46 @@ function paddedYDomain(values: (number | null | undefined)[]): [number, number] 
 }
 
 /**
+ * Eixo Y alinhado a MÚLTIPLOS DE 0,25% — o passo das decisões de Selic/Fed. Para
+ * os gráficos de juros IMPLÍCITOS, onde cada degrau é um múltiplo de 0,25, os
+ * ticks do eixo devem cair em 0,25/0,50/0,75/0,00 (não em 0,1 quebrado). Domínio
+ * com folga encostado em múltiplos de 0,25; passo de 0,25 (sobe pra 0,50/1,00 só
+ * se o range gerar ticks demais). Retorna domínio + lista de ticks.
+ */
+function quarterAxis(
+  values: (number | null | undefined)[],
+): { domain: [number, number]; ticks: number[] } | undefined {
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const v of values) {
+    if (v != null && Number.isFinite(v)) {
+      if (v < lo) lo = v;
+      if (v > hi) hi = v;
+    }
+  }
+  if (!Number.isFinite(lo) || !Number.isFinite(hi)) return undefined;
+  const range = hi - lo || 0.25;
+  const pad = Math.max(0.05, range * 0.08);
+  let step = 0.25;
+  for (const s of [0.25, 0.5, 1, 1.5, 2, 5]) {
+    if ((range + 2 * pad) / s <= 10) {
+      step = s;
+      break;
+    }
+  }
+  const snap = (x: number, dir: 1 | -1) =>
+    (dir < 0 ? Math.floor((x - 1e-9) / step) : Math.ceil((x + 1e-9) / step)) * step;
+  const dlo = snap(lo - pad, -1);
+  const dhi = snap(hi + pad, 1);
+  const ticks: number[] = [];
+  for (let v = dlo; v <= dhi + 1e-9; v += step) ticks.push(Math.round(v * 100) / 100);
+  return { domain: [Math.round(dlo * 100) / 100, Math.round(dhi * 100) / 100], ticks };
+}
+
+/** Rótulo do eixo Y das implícitas: 2 casas, vírgula (ex.: 14,25%). */
+const quarterTickFmt = (v: number | string) => `${Number(v).toFixed(2).replace(".", ",")}%`;
+
+/**
  * Bloco PROPRIO de juros dos EUA (separado das abas brasileiras da B3).
  * Duas sub-abas: "Curva Treasury" (por prazo, FRED) e "Fed implícita"
  * (forward meeting-to-meeting entre reunioes do FOMC — mesmo modelo da Selic
@@ -329,9 +369,9 @@ function UsRatesBlock({
   // D+0 so existe quando o pipeline conseguiu puxar a curva do mesmo dia (Tesouro EUA).
   const hasTreasuryD0 = treasuryTenors.some((t) => t.d0 != null);
   const hasFedD0 = fedMeetings.some((m) => m.d0 != null);
-  // Domain do eixo Y com folga p/ a Fed implicita (degraus nao colam na linha X).
-  const fedYDomain = useMemo(
-    () => paddedYDomain(fedChart.flatMap((p) => [p.d0, p.recent, p.d30, p.d90])),
+  // Eixo Y da Fed implicita em múltiplos de 0,25% (degraus do FOMC = 0,25).
+  const fedYAxis = useMemo(
+    () => quarterAxis(fedChart.flatMap((p) => [p.d0, p.recent, p.d30, p.d90])),
     [fedChart],
   );
   const treasuryYDomain = useMemo(
@@ -408,9 +448,10 @@ function UsRatesBlock({
                   />
                   <YAxis
                     tick={{ fontSize: 10, fill: TICKS }}
-                    width={52}
-                    domain={fedYDomain ?? ["auto", "auto"]}
-                    tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
+                    width={58}
+                    domain={fedYAxis?.domain ?? ["auto", "auto"]}
+                    ticks={fedYAxis?.ticks}
+                    tickFormatter={quarterTickFmt}
                     axisLine={false}
                     tickLine={false}
                     label={{ value: "Taxa (% a.a.)", angle: -90, position: "insideLeft", fontSize: 10, fill: TICKS }}
@@ -660,6 +701,12 @@ export function JurosLiveBlock({
     [selicMeetings, selicAgora, hasSelicAgora],
   );
 
+  // Eixo Y da Selic implícita em múltiplos de 0,25% (cada degrau é 0,25).
+  const selicYAxis = useMemo(
+    () => quarterAxis(selicChart.flatMap((p) => [p.agora, p.recent, p.d30, p.d90])),
+    [selicChart],
+  );
+
   const fedChart = useMemo(
     () =>
       fedMeetings.map((m) => ({
@@ -890,9 +937,10 @@ export function JurosLiveBlock({
                   />
                   <YAxis
                     tick={{ fontSize: 10, fill: TICKS }}
-                    width={52}
-                    domain={["auto", "auto"]}
-                    tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
+                    width={58}
+                    domain={selicYAxis?.domain ?? ["auto", "auto"]}
+                    ticks={selicYAxis?.ticks}
+                    tickFormatter={quarterTickFmt}
                     axisLine={false}
                     tickLine={false}
                     label={{ value: "Taxa (% a.a.)", angle: -90, position: "insideLeft", fontSize: 10, fill: TICKS }}
