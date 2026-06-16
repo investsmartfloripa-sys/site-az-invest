@@ -51,6 +51,18 @@ const PAL_TREASURY = { d0: "#000000", d30: "#2BBF5E", d90: "#8BE28F", d365: "#C7
 // Fed implicita — D+0 preto sólido, D-1 preto tracejado (nas <Line>); cortes em verde.
 const PAL_FED = { d0: "#000000", d30: "#2BBF5E", d90: "#8BE28F", meeting: "#ff5713" } as const;
 
+// ── Ajuste de prêmio de prazo da Selic implícita D+0 (EXPERIMENTAL) ────────────
+// Subtrai do forward BRUTO um wedge quadrático no prazo (0 no curto → base a 12m),
+// escalado linearmente pela vol do dia. Calibrável NO OLHO (análise visual):
+//   • SELIC_TP_BASE_BPS  = base do ajuste a 12m, em vol "normal" (mult=1).
+//   • SELIC_TP_VOL_REF   = movimento diário médio "normal" da curva (% a.a.) que
+//     corresponde ao mult=1; vol acima/abaixo empurra o ajuste pra cima/baixo.
+//   • SELIC_TP_CLAMP     = piso/teto do multiplicador (nunca zera, nunca explode).
+// Aplicado só no D+0 por enquanto (D-1/D-30/D-90 ficam crus, como controle visual).
+const SELIC_TP_BASE_BPS = 25;
+const SELIC_TP_VOL_REF = 0.04;
+const SELIC_TP_CLAMP: readonly [number, number] = [0.5, 2];
+
 const GRID = "#E2E8F0";
 const TICKS = "#64748B";
 
@@ -682,11 +694,29 @@ export function JurosLiveBlock({
   // janela forward de 1 ano. Sem eles o 1º vértice vira jan/27 e TODAS as
   // reuniões de 2026 colapsam num único forward alto (ex.: 14,75% plano). O
   // selicForwardPath já descarta rate==null e faz snap/dedup por vencimento.
+  // Vol do dia (proxy de regime): movimento médio |taxa − ajuste D-1| da curva.
+  // Escala o ajuste de prêmio de prazo pra cima/baixo da base (mult clampado).
+  const selicTp = useMemo(() => {
+    const cs = di?.contracts ?? [];
+    const moves = cs
+      .map((c) => (c.rate != null && c.prevAdjust != null ? Math.abs(c.rate - c.prevAdjust) : null))
+      .filter((v): v is number => v != null);
+    const sigma = moves.length ? moves.reduce((a, b) => a + b, 0) / moves.length : null;
+    const volMult =
+      sigma != null
+        ? Math.min(SELIC_TP_CLAMP[1], Math.max(SELIC_TP_CLAMP[0], sigma / SELIC_TP_VOL_REF))
+        : 1;
+    return { sigma, volMult, bpsAt12m: SELIC_TP_BASE_BPS * volMult };
+  }, [di]);
+
   const selicAgora = useMemo<SelicSegment[]>(() => {
     if (!di?.isToday || !di.quotedAt) return [];
     const curve = (di.contracts ?? []).map((c) => ({ maturity: c.maturity, rate: c.rate }));
-    return selicForwardPath(curve, di.quotedAt.slice(0, 10));
-  }, [di]);
+    return selicForwardPath(curve, di.quotedAt.slice(0, 10), undefined, {
+      maxFrac: SELIC_TP_BASE_BPS / 10000,
+      volMult: selicTp.volMult,
+    });
+  }, [di, selicTp.volMult]);
   const hasSelicAgora = selicAgora.length > 0;
 
   const selicChart = useMemo(
@@ -1027,7 +1057,7 @@ export function JurosLiveBlock({
           <p className="mt-2 text-[11px] text-zinc-500">
             {tab === "selic"
               ? hasSelicAgora
-                ? "Selic implícita por reunião COPOM — modelo forward sobre a curva PRE. “Agora” (preto): curva DI AO VIVO da B3 (~15 min, D+0), recalculada no navegador com o mesmo modelo do pipeline. “Ajuste D-1” (tracejado): fechamento do pregão anterior. Degraus arredondados a 0,25%."
+                ? `Selic implícita por reunião COPOM — modelo forward sobre a curva PRE. “Agora” (preto): curva DI AO VIVO da B3 (~15 min, D+0), recalculada no navegador com o mesmo modelo do pipeline. “Ajuste D-1” (tracejado): fechamento do pregão anterior. Degraus arredondados a 0,25%. Ajuste de prêmio de prazo no D+0 (experimental, quadrático no prazo): base ${SELIC_TP_BASE_BPS} bps a 12m × vol do dia ${selicTp.sigma != null ? (selicTp.sigma * 100).toFixed(1) : "—"} bps (×${selicTp.volMult.toFixed(2)}) → −${selicTp.bpsAt12m.toFixed(0)} bps na cauda.`
                 : "Selic implícita por reunião COPOM — modelo forward do pipeline AZ (B3 PRE, D-1), mesmos valores da trilha de política monetária."
               : tab === "ipca"
                 ? "D-30/D-90: títulos IPCA+ (cupom limpo NTN-B, TaxaSwap B3) em janelas anteriores. “Agora” (preto): futuros DAP da B3 (~15 min); “Ajuste D-1” (preto tracejado): ajuste do pregão anterior."

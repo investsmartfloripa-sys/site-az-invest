@@ -137,10 +137,23 @@ export type SelicSegment = { fromISO: string; level: number };
  * período entre reuniões consecutivas: fwd = (df_k/df_{k+1})^(252/Δdu) − 1,
  * arredondado PARA CIMA ao passo de 0,25% (round_step_up).
  */
+export type TermPremiumCfg = {
+  /** Ajuste máximo a 1 ano, em fração (ex.: 0.0025 = 25 bps). */
+  maxFrac: number;
+  /** Multiplicador de regime (vol do dia / vol de referência), já clampado. */
+  volMult: number;
+};
+
 export function selicForwardPath(
   curve: CurvePoint[],
   refdateISO: string,
   copomDates: string[] = COPOM_DECISION_DATES,
+  // EXPERIMENTAL — prêmio de prazo. Subtrai do forward BRUTO (antes do
+  // arredondamento) um wedge crescente: forma QUADRÁTICA no prazo (0 no curto →
+  // maxFrac·volMult a 1 ano). volMult deixa a vol do dia empurrar o ajuste pra
+  // cima/baixo da base. Sem isto, a cauda longa lê o forward como expectativa e
+  // fica viesada pra cima (term premium embutido).
+  termPremium?: TermPremiumCfg,
 ): SelicSegment[] {
   const refT = isoToUTC(refdateISO);
   // Vértices (DU, ln df) a partir da curva. ln df = −(du/252)·ln(1+r).
@@ -179,6 +192,7 @@ export function selicForwardPath(
   };
 
   const chartEnd = refT + 365 * DAY;
+  const du1y = businessDays(refT, chartEnd) || 252;
   const grid = Array.from(
     new Set([refT, ...copomDates.map(isoToUTC).filter((t) => t >= refT && t <= chartEnd), chartEnd]),
   )
@@ -194,8 +208,13 @@ export function selicForwardPath(
     const b = gg[i + 1];
     if (b.du <= a.du) continue;
     // Forward sobre o período EXATO entre as duas reuniões (df interpolado).
-    const fwd = Math.exp(((lndfAt(a.du) - lndfAt(b.du)) * 252) / (b.du - a.du)) - 1;
+    let fwd = Math.exp(((lndfAt(a.du) - lndfAt(b.du)) * 252) / (b.du - a.du)) - 1;
     if (!Number.isFinite(fwd)) continue;
+    // Prêmio de prazo (experimental): tira o wedge crescente da cauda ANTES de
+    // arredondar — quadrático no prazo × multiplicador de vol do dia.
+    if (termPremium && a.du > 0) {
+      fwd -= termPremium.maxFrac * (a.du / du1y) ** 2 * termPremium.volMult;
+    }
     // Fração arredondada ao passo de 0,25% → PERCENTUAL (ex.: 0.1425 → 14.25).
     segs.push({ fromISO: utcToISO(a.t), level: Math.round(ceilStep(fwd) * 10000) / 100 });
   }
