@@ -11,9 +11,9 @@ Não encerre a tarefa só porque o build passou ou o código foi escrito. **Um a
 ### Checklist obrigatório após mudanças na área logada ou deploy
 
 1. `npm run build` (ou `tsc --noEmit` se a mudança for pequena) — corrija erros no mesmo turno.
-2. Se houver migration Prisma nova: aplique no Neon com `npx prisma migrate dev` (via `DIRECT_URL`) antes do deploy.
-3. Publique: `vercel --prod --yes` na pasta do repo (produção pode estar à frente do `main` — veja AGENTS_COWORK).
-4. Aguarde o build até **"Aliased"** no log da Vercel.
+2. Se houver migration Prisma nova: aplique no Neon com `npx prisma migrate deploy` (SQL escrito à mão; `migrate dev` quebra com shadow DB no Neon) antes do push.
+3. **Publique por git — NÃO use `vercel --prod`:** `git add` só os SEUS arquivos → commit (sem vírgulas na msg) → `git push origin main`. O projeto está conectado ao GitHub (branch de produção `main`) e faz **auto-deploy** a cada push. O repo vive no OneDrive: o folder-deploy (`vercel --prod`) sobe o estado NÃO-commitado/desatualizado da pasta e **reverte o trabalho de outras sessões** — por isso só publicamos por push.
+4. Acompanhe o deploy git na Vercel (`vercel ls` ou dashboard) até ficar **Ready/Aliased**.
 5. **Teste em produção** (não confie só no exit code):
    ```bash
    npm run site:check-access
@@ -36,6 +36,8 @@ Papéis: `ADMIN`, `STAFF`, `AUTHOR` (substituem o antigo MASTER/EDITOR).
 
 ### O que não fazer
 
+- **Usar `vercel --prod` / folder-deploy.** Publique SÓ por `git push origin main` (auto-deploy). Folder-deploy do OneDrive sobe versões antigas/não-commitadas e reverte produção.
+- Commitar arquivos de OUTRAS sessões (Cursor roda em paralelo no mesmo repo). `git add` só os seus.
 - Pedir ao usuário para rodar comandos que você pode executar.
 - Afirmar "está em produção" sem checar o HTML da URL.
 - Deixar migration aplicada no banco sem deploy do código compatível (ou vice-versa).
