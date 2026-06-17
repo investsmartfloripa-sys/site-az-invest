@@ -17,6 +17,10 @@ on:
         description: "Buscar drawdown (1 chamada extra por fundo; cuidado com a cota)"
         required: false
         default: "0"
+      with_quotes:
+        description: "Gerar fundos_quotes.json (série de cota p/ gráficos; ~46 req extras — pesado na cota)"
+        required: false
+        default: "0"
 
 concurrency:
   group: fundos-pipeline
@@ -54,6 +58,14 @@ jobs:
             ${{ github.event.inputs.with_drawdown == '1' && '--with-drawdown' || '' }}
         continue-on-error: true
 
+      # Cotas p/ os gráficos da página de detalhe — PESADO (~46 req). Só no
+      # disparo manual com with_quotes=1 (a série muda devagar; não precisa
+      # rodar a cada 2 dias). No free, rodar com parcimônia.
+      - name: build_fundos_quotes (séries p/ gráficos)
+        if: ${{ github.event.inputs.with_quotes == '1' }}
+        run: python data-pipeline/python/build_fundos_quotes.py --upload
+        continue-on-error: true
+
       - name: Upload artefatos (debug)
         if: always()
         uses: actions/upload-artifact@v4
@@ -61,5 +73,6 @@ jobs:
           name: fundos-pipeline-${{ github.run_id }}
           path: |
             data-pipeline/out/fundos_ranking.json
+            data-pipeline/out/fundos_quotes.json
           if-no-files-found: warn
           retention-days: 7

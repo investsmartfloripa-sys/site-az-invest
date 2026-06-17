@@ -95,6 +95,7 @@ export const DATA_SOURCES: DataSourceDef[] = [
 
   // ── Fundos de Investimento (fundos-pipeline.yml, semanal — Mais Retorno) ───
   { key: "fundos_ranking", label: "Ranking de fundos (Mais Retorno)", blobPath: "data/fundos_ranking.json", workflowName: "fundos-pipeline.yml", cadence: "semanal", painel: "fundos-investimento", pagePath: "/painel-economico/mercado/brasil/fundos-investimento", dataDateField: "data_date" },
+  { key: "fundos_quotes", label: "Cotas dos fundos (gráficos de detalhe)", blobPath: "data/fundos_quotes.json", workflowName: "fundos-pipeline.yml", cadence: "mensal", painel: "fundos-investimento", heavy: true, dataDateField: "data_date" },
 
   // ── Mercado: histórico e fundamentos (market-data.yml) ─────────────────────
   { key: "market_catalog", label: "Catálogo de ativos", blobPath: "data/market_catalog.json", workflowName: "market-data.yml", cadence: "diario-util", painel: "mercado-ativos" },
