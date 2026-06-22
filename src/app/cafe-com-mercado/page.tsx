@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Footer } from "@/components/common/Footer";
@@ -44,27 +45,18 @@ export default async function MorningCallIndex() {
               <li key={b.date}>
                 <Link
                   href={`/cafe-com-mercado/${b.date}`}
-                  className="az-card group block p-5 transition hover:border-[#027DFC]/40 md:p-6"
+                  className="az-card group flex flex-col gap-4 p-5 transition hover:border-[#027DFC]/40 sm:flex-row sm:items-center md:p-6"
                 >
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
-                    {b.weekday ? `${b.weekday}, ` : ""}
-                    {formatDateBR(b.date)}
-                  </p>
-                  <h2 className="mt-1 text-xl font-semibold text-[#132960] group-hover:text-[#027DFC]">
-                    {b.title}
-                  </h2>
-                  {b.description ? (
-                    <p className="mt-2 line-clamp-2 text-sm text-zinc-700">
-                      {b.description}
-                    </p>
+                  {b.image ? (
+                    <div className="relative aspect-[1200/630] w-full shrink-0 overflow-hidden rounded-xl sm:aspect-square sm:w-28 md:w-32">
+                      <Image
+                        src={b.image}
+                        alt={b.imageAlt || b.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, 128px"
+                        className="object-cover"
+                      />
+                    </div>
                   ) : null}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </main>
-      <Footer />
-    </div>
-  );
-}
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC

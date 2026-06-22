@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -24,10 +25,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const briefing = await getBriefing(date);
   if (!briefing) return { title: "Briefing não encontrado" };
 
+  const ogImage = briefing.image || "/opengraph-image.png";
+
   return {
     title: briefing.title,
     description: briefing.description,
-    openGraph: { images: ["/opengraph-image.png"],
+    openGraph: {
+      images: [{ url: ogImage, alt: briefing.imageAlt || briefing.title }],
       title: briefing.title,
       description: briefing.description,
       type: "article",
@@ -37,6 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: "summary_large_image",
       title: briefing.title,
       description: briefing.description,
+      images: [ogImage],
     },
   };
 }
@@ -61,6 +66,18 @@ export default async function MorningCallPage({ params }: Props) {
         </Link>
 
         <article className="az-card mt-6 space-y-4 p-6 md:p-10">
+          {briefing.image ? (
+            <div className="relative aspect-[1200/630] w-full overflow-hidden rounded-2xl">
+              <Image
+                src={briefing.image}
+                alt={briefing.imageAlt || briefing.title}
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 768px"
+                className="object-cover"
+              />
+            </div>
+          ) : null}
           <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
             {briefing.weekday ? `${briefing.weekday}, ` : ""}
             {formatDateBR(briefing.date)}
@@ -85,27 +102,4 @@ export default async function MorningCallPage({ params }: Props) {
         <nav className="mt-10 flex flex-col gap-3 text-sm sm:flex-row sm:justify-between">
           {prev ? (
             <Link
-              href={`/cafe-com-mercado/${prev}`}
-              className="text-[#027DFC] hover:underline"
-            >
-              {"<-"} Briefing anterior ({formatDateBR(prev)})
-            </Link>
-          ) : (
-            <span />
-          )}
-          {next ? (
-            <Link
-              href={`/cafe-com-mercado/${next}`}
-              className="text-[#027DFC] hover:underline sm:text-right"
-            >
-              Briefing seguinte ({formatDateBR(next)}) {"->"}
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      </main>
-      <Footer />
-    </div>
-  );
-}
+              href={`/cafe-com

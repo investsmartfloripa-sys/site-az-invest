@@ -17,6 +17,10 @@ export type Briefing = {
   publishedAt: string;
   /** Resumo curto para metadata (description, OG). */
   description: string;
+  /** Caminho da capa (ex.: /cafe-com-mercado/2026-06-22.jpg). Vazio = sem capa. */
+  image: string;
+  /** Texto alternativo da capa. */
+  imageAlt: string;
   /** Corpo Markdown sem frontmatter e sem o H1. */
   body: string;
 };
@@ -28,6 +32,8 @@ type BriefingFrontmatter = {
   hora?: unknown;
   publishedAt?: unknown;
   description?: unknown;
+  image?: unknown;
+  imageAlt?: unknown;
 };
 
 /** Coerce qualquer valor (Date, number, string) para string segura. YAML parseia datas no formato YYYY-MM-DD como Date — esse helper devolve sempre string. */
@@ -72,6 +78,8 @@ export async function getBriefing(date: string): Promise<Briefing | null> {
       hora: asString(fm.hora),
       publishedAt: asString(fm.publishedAt),
       description: asString(fm.description),
+      image: asString(fm.image),
+      imageAlt: asString(fm.imageAlt),
       body: parsed.content.trim(),
     };
   } catch (e) {
@@ -98,14 +106,4 @@ const MESES_PT = [
   "julho",
   "agosto",
   "setembro",
-  "outubro",
-  "novembro",
-  "dezembro",
-];
-
-/** "2026-05-29" → "29 de maio de 2026". */
-export function formatDateBR(date: string): string {
-  const [y, m, d] = date.split("-").map(Number);
-  if (!y || !m || !d) return date;
-  return `${d} de ${MESES_PT[m - 1]} de ${y}`;
-}
+  "outubro
