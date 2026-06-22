@@ -59,4 +59,26 @@ export default async function MorningCallIndex() {
                     </div>
                   ) : null}
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
+                      {b.weekday ? `${b.weekday}, ` : ""}
+                      {formatDateBR(b.date)}
+                    </p>
+                    <h2 className="mt-1 text-xl font-semibold text-[#132960] group-hover:text-[#027DFC]">
+                      {b.title}
+                    </h2>
+                    {b.description ? (
+                      <p className="mt-2 line-clamp-2 text-sm text-zinc-700">
+                        {b.description}
+                      </p>
+                    ) : null}
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
+      <Footer />
+    </div>
+  );
+}

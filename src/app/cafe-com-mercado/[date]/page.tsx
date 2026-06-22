@@ -102,4 +102,27 @@ export default async function MorningCallPage({ params }: Props) {
         <nav className="mt-10 flex flex-col gap-3 text-sm sm:flex-row sm:justify-between">
           {prev ? (
             <Link
-              href={`/cafe-com
+              href={`/cafe-com-mercado/${prev}`}
+              className="text-[#027DFC] hover:underline"
+            >
+              {"<-"} Briefing anterior ({formatDateBR(prev)})
+            </Link>
+          ) : (
+            <span />
+          )}
+          {next ? (
+            <Link
+              href={`/cafe-com-mercado/${next}`}
+              className="text-[#027DFC] hover:underline sm:text-right"
+            >
+              Briefing seguinte ({formatDateBR(next)}) {"->"}
+            </Link>
+          ) : (
+            <span />
+          )}
+        </nav>
+      </main>
+      <Footer />
+    </div>
+  );
+}

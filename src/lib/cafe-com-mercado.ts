@@ -106,4 +106,14 @@ const MESES_PT = [
   "julho",
   "agosto",
   "setembro",
-  "outubro
+  "outubro",
+  "novembro",
+  "dezembro",
+];
+
+/** "2026-05-29" → "29 de maio de 2026". */
+export function formatDateBR(date: string): string {
+  const [y, m, d] = date.split("-").map(Number);
+  if (!y || !m || !d) return date;
+  return `${d} de ${MESES_PT[m - 1]} de ${y}`;
+}
