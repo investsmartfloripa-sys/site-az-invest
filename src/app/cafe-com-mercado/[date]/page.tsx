@@ -31,7 +31,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: briefing.title,
     description: briefing.description,
     openGraph: {
-      images: [{ url: ogImage, alt: briefing.imageAlt || briefing.title }],
+      images: [
+        {
+          url: ogImage,
+          alt: briefing.imageAlt || briefing.title,
+          width: 1600,
+          height: 840,
+        },
+      ],
       title: briefing.title,
       description: briefing.description,
       type: "article",
@@ -99,30 +106,4 @@ export default async function MorningCallPage({ params }: Props) {
           </div>
         </article>
 
-        <nav className="mt-10 flex flex-col gap-3 text-sm sm:flex-row sm:justify-between">
-          {prev ? (
-            <Link
-              href={`/cafe-com-mercado/${prev}`}
-              className="text-[#027DFC] hover:underline"
-            >
-              {"<-"} Briefing anterior ({formatDateBR(prev)})
-            </Link>
-          ) : (
-            <span />
-          )}
-          {next ? (
-            <Link
-              href={`/cafe-com-mercado/${next}`}
-              className="text-[#027DFC] hover:underline sm:text-right"
-            >
-              Briefing seguinte ({formatDateBR(next)}) {"->"}
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      </main>
-      <Footer />
-    </div>
-  );
-}
+        <nav className="mt-10 flex flex-col gap-3 text-sm sm:fl
