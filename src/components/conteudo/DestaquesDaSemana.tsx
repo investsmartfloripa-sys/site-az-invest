@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { formatDateBR, listBriefings } from "@/lib/cafe-com-mercado";
 import { listPautas } from "@/lib/pauta-da-semana";
@@ -28,24 +29,40 @@ export async function DestaquesDaSemana() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Café com Mercado */}
         {cafe ? (
-          <Link
-            href={`/cafe-com-mercado/${cafe.date}`}
-            className="az-card group flex flex-col gap-2 p-5 transition hover:border-[#027DFC]/40 md:p-6"
-          >
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
-              Café com Mercado · {cafe.weekday ? `${cafe.weekday}, ` : ""}
-              {formatDateBR(cafe.date)}
-            </p>
-            <h3 className="text-lg font-semibold text-[#132960] group-hover:text-[#027DFC] md:text-xl">
-              {cafe.title}
-            </h3>
-            {cafe.description ? (
-              <p className="line-clamp-3 text-sm text-zinc-700">{cafe.description}</p>
-            ) : null}
-            <p className="mt-auto pt-2 text-sm font-semibold text-[#027DFC]">
-              Ler briefing →
-            </p>
-          </Link>
+          cafe.image ? (
+            <Link
+              href={`/cafe-com-mercado/${cafe.date}`}
+              aria-label={cafe.title}
+              className="az-card group relative block min-h-[180px] overflow-hidden p-0 transition hover:border-[#027DFC]/40"
+            >
+              <Image
+                src={cafe.image}
+                alt={cafe.imageAlt || cafe.title}
+                fill
+                sizes="(max-width: 768px) 100vw, 400px"
+                className="object-cover"
+              />
+            </Link>
+          ) : (
+            <Link
+              href={`/cafe-com-mercado/${cafe.date}`}
+              className="az-card group flex flex-col gap-2 p-5 transition hover:border-[#027DFC]/40 md:p-6"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
+                Café com Mercado · {cafe.weekday ? `${cafe.weekday}, ` : ""}
+                {formatDateBR(cafe.date)}
+              </p>
+              <h3 className="text-lg font-semibold text-[#132960] group-hover:text-[#027DFC] md:text-xl">
+                {cafe.title}
+              </h3>
+              {cafe.description ? (
+                <p className="line-clamp-3 text-sm text-zinc-700">{cafe.description}</p>
+              ) : null}
+              <p className="mt-auto pt-2 text-sm font-semibold text-[#027DFC]">
+                Ler briefing →
+              </p>
+            </Link>
+          )
         ) : (
           <div className="az-card flex flex-col gap-2 p-5 md:p-6">
             <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
