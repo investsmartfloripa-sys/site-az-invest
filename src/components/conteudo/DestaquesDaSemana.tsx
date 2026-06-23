@@ -26,22 +26,24 @@ export async function DestaquesDaSemana() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
         {/* Café com Mercado */}
         {cafe ? (
           cafe.image ? (
             <Link
               href={`/cafe-com-mercado/${cafe.date}`}
               aria-label={cafe.title}
-              className="az-card group relative block min-h-[180px] overflow-hidden p-0 transition hover:border-[#027DFC]/40"
+              className="az-card group block overflow-hidden p-0 transition hover:border-[#027DFC]/40"
             >
-              <Image
-                src={cafe.image}
-                alt={cafe.imageAlt || cafe.title}
-                fill
-                sizes="(max-width: 768px) 100vw, 400px"
-                className="object-cover"
-              />
+              <div className="relative aspect-[1200/630] w-full">
+                <Image
+                  src={cafe.image}
+                  alt={cafe.imageAlt || cafe.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 400px"
+                  className="object-cover"
+                />
+              </div>
             </Link>
           ) : (
             <Link
