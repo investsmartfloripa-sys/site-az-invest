@@ -371,3 +371,29 @@ export async function getFiiArtigosMaisLidos(): Promise<FiiEditorialPost[]> {
   // não existir. Substituir por GA / Plausible no futuro.
   return findFiiPosts("oldest", 5);
 }
+
+// ---------------------------------------------------------------------------
+// Preço x Retorno total (preço + proventos) por FII
+// Pipeline: build_fii_total_return.py -> data/fii_total_return.json
+// (mesmo schema do acoes_total_return — comparador/simulador compartilhados)
+// ---------------------------------------------------------------------------
+
+/** [date, close (só valorização), adj_close (retorno total)]. */
+export type FiiTotalReturnPoint = readonly [date: string, close: number, adj: number];
+
+export type FiiTotalReturnData = {
+  status: "ok" | "error";
+  generated_at: string;
+  source: string;
+  /** ticker com ".SA" (ex.: "HGLG11.SA") -> { series }. */
+  tickers: Record<string, { series: FiiTotalReturnPoint[] }>;
+};
+
+export async function getFiiTotalReturn(): Promise<FiiTotalReturnData | null> {
+  return fetchBlobJson<FiiTotalReturnData>("data/fii_total_return.json");
+}
+
+/** Normaliza um ticker p/ a chave do JSON ("HGLG11" | "hglg11.sa" -> "HGLG11.SA"). */
+export function toFiiTotalReturnKey(ticker: string): string {
+  return `${ticker.trim().toUpperCase().replace(/\.SA$/i, "")}.SA`;
+}

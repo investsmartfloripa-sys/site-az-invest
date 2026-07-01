@@ -30,10 +30,12 @@ export type ComparadorAtivoRow = {
 };
 
 type Props = {
-  /** Série do Ibovespa (pontos) — vira a linha-régua. */
+  /** Série do índice de referência (pontos) — vira a linha-régua. */
   ibovData: ReadonlyArray<AzSeriesPoint>;
   rows: ComparadorAtivoRow[];
   period: AzPeriodValue;
+  /** Rótulo da linha-régua (default "Ibovespa"; use "IFIX" nos FIIs). */
+  indexLabel?: string;
 };
 
 /** Retorno % entre o último valor <= from e o último <= to. null se não cobre. */
@@ -98,7 +100,7 @@ function Pct({ v }: { v: number | null }) {
   );
 }
 
-export function ComparadorTabela({ ibovData, rows, period }: Props) {
+export function ComparadorTabela({ ibovData, rows, period, indexLabel = "Ibovespa" }: Props) {
   const computed = useMemo<ComputedRow[]>(() => {
     // Range da união (mesma regra do gráfico) → janela selecionada.
     let minIso = "";
@@ -123,8 +125,8 @@ export function ComparadorTabela({ ibovData, rows, period }: Props) {
 
     return [
       {
-        key: "ibov",
-        label: "Ibovespa",
+        key: "index",
+        label: indexLabel,
         color: "#027DFC",
         isIndex: true,
         ...compute(ibovData),

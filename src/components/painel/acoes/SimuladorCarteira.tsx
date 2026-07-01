@@ -48,10 +48,12 @@ export type SimAssetInput = {
 
 type Props = {
   assets: SimAssetInput[];
-  /** Série do Ibovespa em pontos (benchmark). */
+  /** Série do índice de referência em pontos (Ibovespa nas ações, IFIX nos FIIs). */
   ibovSeries: ReadonlyArray<AzSeriesPoint>;
   /** Série do CDI acumulado (base 100) — taxa livre de risco. */
   cdiSeries: ReadonlyArray<AzSeriesPoint>;
+  /** Rótulo do índice de referência. Default "Ibovespa". */
+  benchLabel?: string;
 };
 
 const UNLOCK_KEY = "az-sim-carteira-unlocked";
@@ -66,7 +68,8 @@ function parseValor(s: string): number {
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
-export function SimuladorCarteira({ assets, ibovSeries, cdiSeries }: Props) {
+export function SimuladorCarteira({ assets, ibovSeries, cdiSeries, benchLabel = "Ibovespa" }: Props) {
+  const benchShort = benchLabel === "Ibovespa" ? "Ibov" : benchLabel;
   const [open, setOpen] = useState(false);
   const [valorStr, setValorStr] = useState("10.000");
   /** Pesos BRUTOS por ticker (0–100 no slider); normalizados no cálculo. */
@@ -228,8 +231,8 @@ export function SimuladorCarteira({ assets, ibovSeries, cdiSeries }: Props) {
     ? [
         { id: "carteira", label: "Sua carteira", color: AZ_BRAND.azure, data: carteira },
         {
-          id: "ibov",
-          label: "Ibovespa",
+          id: "bench",
+          label: benchLabel,
           color: "#132960",
           data: ibovSeries.filter(([d]) => d >= (panel?.dates[0] ?? fromISO)),
         },
@@ -354,7 +357,7 @@ export function SimuladorCarteira({ assets, ibovSeries, cdiSeries }: Props) {
                 label={`Retorno (${WINDOW_YEARS} anos)`}
                 value={fmtSignedPct(stats.totalPct, 1)}
                 tone={stats.totalPct >= 0 ? "pos" : "neg"}
-                sub={ibovStats ? `Ibov: ${fmtSignedPct(ibovStats.totalPct, 1)}` : undefined}
+                sub={ibovStats ? `${benchShort}: ${fmtSignedPct(ibovStats.totalPct, 1)}` : undefined}
               />
               <KpiBox
                 label="Retorno anualizado"
@@ -362,7 +365,7 @@ export function SimuladorCarteira({ assets, ibovSeries, cdiSeries }: Props) {
                 tone={stats.cagrPct >= 0 ? "pos" : "neg"}
                 sub={`CDI: ${fmtNum(cdiAnnual, 1)}% a.a.`}
               />
-              <KpiBox label="Volatilidade anual" value={`${fmtNum(stats.volPct, 1)}%`} tone="neutral" sub={ibovStats ? `Ibov: ${fmtNum(ibovStats.volPct, 1)}%` : undefined} />
+              <KpiBox label="Volatilidade anual" value={`${fmtNum(stats.volPct, 1)}%`} tone="neutral" sub={ibovStats ? `${benchShort}: ${fmtNum(ibovStats.volPct, 1)}%` : undefined} />
               <KpiBox
                 label="Valor final simulado"
                 value={fmtBRL(carteira[carteira.length - 1][1])}
@@ -385,7 +388,7 @@ export function SimuladorCarteira({ assets, ibovSeries, cdiSeries }: Props) {
                     label="Máximo drawdown"
                     value={fmtSignedPct(stats.maxDrawdownPct, 1)}
                     tone="neg"
-                    sub={ibovStats ? `Ibov: ${fmtSignedPct(ibovStats.maxDrawdownPct, 1)}` : undefined}
+                    sub={ibovStats ? `${benchShort}: ${fmtSignedPct(ibovStats.maxDrawdownPct, 1)}` : undefined}
                   />
                   <KpiBox
                     label="Sharpe (vs CDI)"
@@ -415,6 +418,7 @@ export function SimuladorCarteira({ assets, ibovSeries, cdiSeries }: Props) {
                     userPoint={userPoint}
                     ibovPoint={ibovStats ? { volPct: ibovStats.volPct, retPct: ibovStats.cagrPct } : null}
                     tickers={tickers}
+                    benchLabel={benchLabel}
                   />
                 ) : null}
               </div>
@@ -511,11 +515,13 @@ function FronteiraChart({
   userPoint,
   ibovPoint,
   tickers,
+  benchLabel,
 }: {
   frontier: NonNullable<ReturnType<typeof efficientFrontier>>;
   userPoint: { volPct: number; retPct: number };
   ibovPoint: { volPct: number; retPct: number } | null;
   tickers: string[];
+  benchLabel: string;
 }) {
   // Nuvem reduzida p/ render leve (a fronteira/pontos notáveis ficam completos).
   const cloud = frontier.cloud.filter((_, i) => i % 5 === 0).map((p) => ({ x: p.volPct, y: p.retPct }));
@@ -569,7 +575,7 @@ function FronteiraChart({
             <Scatter name="Mín. variância" data={[{ x: frontier.minVar.volPct, y: frontier.minVar.retPct }]} fill="#1E8A5C" />
             <Scatter name="Máx. Sharpe" data={[{ x: frontier.maxSharpe.volPct, y: frontier.maxSharpe.retPct }]} fill="#FF5713" />
             <Scatter name="Sua carteira" data={[{ x: userPoint.volPct, y: userPoint.retPct }]} fill="#132960" shape="star" />
-            {ibovPoint ? <Scatter name="Ibovespa" data={[{ x: ibovPoint.volPct, y: ibovPoint.retPct }]} fill="#A16207" shape="diamond" /> : null}
+            {ibovPoint ? <Scatter name={benchLabel} data={[{ x: ibovPoint.volPct, y: ibovPoint.retPct }]} fill="#A16207" shape="diamond" /> : null}
           </ScatterChart>
         </ResponsiveContainer>
       </div>
@@ -577,7 +583,7 @@ function FronteiraChart({
         <LegendDot color="#132960" label="Sua carteira (estrela)" />
         <LegendDot color="#FF5713" label="Máx. Sharpe" />
         <LegendDot color="#1E8A5C" label="Mín. variância" />
-        <LegendDot color="#A16207" label="Ibovespa (losango)" />
+        <LegendDot color="#A16207" label={`${benchLabel} (losango)`} />
         <LegendDot color="#027DFC" label="Fronteira" />
         <LegendDot color="#64748B" label="Ações individuais" />
       </div>

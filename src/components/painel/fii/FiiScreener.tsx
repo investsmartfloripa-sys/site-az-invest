@@ -57,13 +57,28 @@ function compareRow(a: FiiScreenerRow, b: FiiScreenerRow, key: SortKey, dir: Sor
 
 type Props = {
   data: FiiScreenerData;
+  /** Comparação: tickers selecionados (ativa a coluna ✓ quando `onToggleSelect` existe). */
+  selected?: string[];
+  /** Cor atribuída a cada ticker selecionado (casa com a linha do gráfico). */
+  selectedColors?: Record<string, string>;
+  /** Callback de seleção/deseleção de um FII. */
+  onToggleSelect?: (ticker: string) => void;
+  /** Limite de seleção (legibilidade do gráfico). Default 5. */
+  maxSelected?: number;
 };
 
-export function FiiScreener({ data }: Props) {
+export function FiiScreener({
+  data,
+  selected = [],
+  selectedColors = {},
+  onToggleSelect,
+  maxSelected = 5,
+}: Props) {
   const [query, setQuery] = useState("");
   const [segmentFilter, setSegmentFilter] = useState<string>("Todos");
   const [sortKey, setSortKey] = useState<SortKey>("liquidity_avg_21d");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const selectable = onToggleSelect != null;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -147,11 +162,26 @@ export function FiiScreener({ data }: Props) {
         </span>
       </div>
 
+      {selectable ? (
+        <p className="mb-2 text-[11px] text-zinc-500">
+          Marque FIIs na coluna <span className="font-semibold text-[#132960]">✓</span> para
+          compará-los no gráfico acima (retorno total, com proventos) — até {maxSelected}.
+          {selected.length > 0 ? (
+            <span className="ml-1 font-semibold text-[#027DFC]">{selected.length} selecionado(s)</span>
+          ) : null}
+        </p>
+      ) : null}
+
       {/* Tabela */}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[760px] border-collapse text-left text-xs">
           <thead>
             <tr className="border-b border-[#132960]/10 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+              {selectable ? (
+                <th scope="col" className="w-8 px-2 py-2 text-center" title="Comparar no gráfico">
+                  ✓
+                </th>
+              ) : null}
               {(["name", "segment", "price", "dy_12m_pct", "pvp", "pl", "liquidity_avg_21d"] as SortKey[]).map(
                 (k) => {
                   const isActive = k === sortKey;
@@ -183,16 +213,41 @@ export function FiiScreener({ data }: Props) {
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-2 py-6 text-center text-zinc-400">
+                <td colSpan={selectable ? 8 : 7} className="px-2 py-6 text-center text-zinc-400">
                   Nenhum FII encontrado com esses filtros.
                 </td>
               </tr>
             ) : (
-              sorted.map((r) => (
+              sorted.map((r) => {
+                const isSel = selected.includes(r.ticker);
+                const disabled = !isSel && selected.length >= maxSelected;
+                return (
                 <tr
                   key={r.ticker}
                   className="border-b border-zinc-100 transition hover:bg-zinc-50/60"
                 >
+                  {selectable ? (
+                    <td className="px-2 py-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => onToggleSelect?.(r.ticker)}
+                        disabled={disabled}
+                        aria-pressed={isSel}
+                        aria-label={isSel ? `Remover ${r.ticker} do gráfico` : `Comparar ${r.ticker} no gráfico`}
+                        title={disabled ? `Máximo de ${maxSelected} FIIs no comparador` : undefined}
+                        className={`inline-flex h-5 w-5 items-center justify-center rounded-[5px] border text-[11px] font-bold transition ${
+                          isSel
+                            ? "border-transparent text-white"
+                            : disabled
+                              ? "cursor-not-allowed border-zinc-200 text-transparent"
+                              : "border-[#132960]/25 text-transparent hover:border-[#027DFC] hover:bg-[#027DFC]/10"
+                        }`}
+                        style={isSel ? { backgroundColor: selectedColors[r.ticker] ?? "#027DFC" } : undefined}
+                      >
+                        ✓
+                      </button>
+                    </td>
+                  ) : null}
                   <td className="px-2 py-2">
                     <Link
                       href={`/painel-economico/mercado/brasil/fundos-imobiliarios/${r.ticker.toLowerCase()}`}
@@ -243,7 +298,8 @@ export function FiiScreener({ data }: Props) {
                     {formatBig(r.liquidity_avg_21d)}
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>
