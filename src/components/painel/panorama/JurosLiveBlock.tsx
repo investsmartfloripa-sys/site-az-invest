@@ -25,8 +25,82 @@ import {
   PanelTabs,
   type PanelTabItem,
 } from "@/components/painel/panorama/PanelTabs";
+import { GLOBAL_COUNTRIES, countryById, type CountryRatesPayload, type GlobalCountryId } from "@/lib/global-rates";
+import { GlobalCountryPane } from "@/components/painel/juros-globais/GlobalCountryPane";
+import { PolicyStepChart } from "@/components/painel/juros-globais/PolicyStepChart";
 
 const REFRESH_MS = 60_000;
+
+/** País selecionado no bloco unificado (Brasil + internacionais). */
+type CountrySel = "br" | GlobalCountryId;
+
+/** Lista do seletor de país: Brasil (B3 intraday) à frente, depois os internacionais. */
+const SWITCHER_COUNTRIES: { id: CountrySel; flag: string; name: string }[] = [
+  { id: "br", flag: "br", name: "Brasil" },
+  ...GLOBAL_COUNTRIES.map((c) => ({ id: c.id as CountrySel, flag: c.flag, name: c.name })),
+];
+
+/** Títulos (fora do gráfico) e legenda de fonte por país. */
+const COUNTRY_HEAD: Record<CountrySel, { title: string; subtitle: string }> = {
+  br: {
+    title: "Renda fixa ao vivo — Brasil (B3)",
+    subtitle: "Curvas DI e IPCA+ e Selic implícita, intraday da B3 (~15 min).",
+  },
+  us: {
+    title: "Juros EUA — Treasury & Fed",
+    subtitle: "Curva Treasury (FRED) e Fed implícita pelos futuros de Fed Funds (CME/FedWatch).",
+  },
+  jp: {
+    title: "Juros Japão — JGB & BoJ",
+    subtitle: "Curva dos títulos do governo japonês (MOF) e BoJ implícita pelos futuros de TONA.",
+  },
+  de: {
+    title: "Juros Alemanha — Bund & BCE",
+    subtitle: "Curva do Bund (Deutsche Bundesbank) e BCE implícita pelos futuros de €STR.",
+  },
+  gb: {
+    title: "Juros Reino Unido — Gilt",
+    subtitle: "Curva de gilts do Reino Unido (Bank of England, par yields).",
+  },
+};
+
+/**
+ * Botões de bandeira que alternam o país — fica DENTRO do header (navy) do card,
+ * no lugar onde antes ficava o título do gráfico.
+ */
+function CountrySwitcher({ value, onChange }: { value: CountrySel; onChange: (v: CountrySel) => void }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {SWITCHER_COUNTRIES.map((c) => {
+        const active = c.id === value;
+        return (
+          <button
+            key={c.id}
+            type="button"
+            aria-pressed={active}
+            title={c.name}
+            onClick={() => onChange(c.id)}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-sm font-semibold transition ${
+              active
+                ? "border-transparent bg-white text-[#132960] shadow-sm"
+                : "border-white/25 bg-white/5 text-white hover:bg-white/15"
+            }`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`https://flagcdn.com/w40/${c.flag}.png`}
+              alt={`Bandeira ${c.name}`}
+              width={22}
+              height={16}
+              className="h-4 w-[22px] rounded-[3px] shadow-sm"
+            />
+            {c.name}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 /**
  * Paletas POR GRAFICO — exatamente as dos scripts R do pipeline
@@ -379,7 +453,35 @@ function UsRatesBlock({
   isNarrow: boolean;
 }) {
   const [usTab, setUsTab] = useState<UsTabId>("treasury");
-  const hasFed = fedMeetings.length > 0;
+  // Fed implícita pelos FUTUROS de Fed Funds (mercado, ~15 min) — a proxy direta
+  // (estilo CME FedWatch). Substitui a aproximação via Treasury quando disponível;
+  // degrada para o pipeline (Treasury) se o feed de futuros falhar.
+  const [usPolicy, setUsPolicy] = useState<NonNullable<CountryRatesPayload["policy"]> | null>(null);
+  useEffect(() => {
+    const ctrl = new AbortController();
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch("/api/global-rates/us", { cache: "no-store", signal: ctrl.signal });
+        if (!res.ok) return;
+        const json = (await res.json()) as CountryRatesPayload;
+        if (!cancelled) setUsPolicy(json.policy ?? null);
+      } catch {
+        /* feed de futuros indisponível — segue com a Fed implícita do pipeline */
+      }
+    }
+    load();
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 5 * 60_000);
+    return () => {
+      cancelled = true;
+      ctrl.abort();
+      window.clearInterval(id);
+    };
+  }, []);
+  const hasFuturesPolicy = !!usPolicy && usPolicy.rows.length > 0;
+  const hasFed = fedMeetings.length > 0 || hasFuturesPolicy;
   // D+0 so existe quando o pipeline conseguiu puxar a curva do mesmo dia (Tesouro EUA).
   const hasTreasuryD0 = treasuryTenors.some((t) => t.d0 != null);
   const hasFedD0 = fedMeetings.some((m) => m.d0 != null);
@@ -397,17 +499,8 @@ function UsRatesBlock({
   const tab = !hasFed ? "treasury" : usTab;
 
   return (
-    <section
-      id="juros-eua"
-      aria-label="Juros EUA"
-      className="overflow-hidden rounded-2xl border border-[#132960]/15 bg-white shadow-sm"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0B6B2E] px-4 py-3 md:px-5">
-        <h2 className="text-base font-semibold text-white md:text-lg">Juros EUA — Treasury &amp; Fed</h2>
-        <p className="text-[11px] text-[#bfe6cb]">Fonte: FRED (Treasury) · D-1</p>
-      </div>
-
-      <div className="border-b border-zinc-100 px-4 pb-2 pt-3 md:px-5">
+    <div aria-label="Juros EUA">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 px-4 pb-2 pt-3 md:px-5">
         <PanelTabs
           ariaLabel="Visão de juros EUA"
           tabs={tabs}
@@ -415,8 +508,14 @@ function UsRatesBlock({
           onChange={setUsTab}
           accent="#0B6B2E"
         />
+        <span className="text-[11px] text-zinc-500">Fonte: FRED (Treasury) · futuros de Fed Funds</span>
       </div>
 
+      {tab === "fed" && hasFuturesPolicy ? (
+        <div className="p-4 md:p-5">
+          <PolicyStepChart rows={usPolicy!.rows} meetings={usPolicy!.meetings} labels={usPolicy!.labels} note={usPolicy!.note} />
+        </div>
+      ) : (
       <div className="grid gap-5 p-4 md:p-5 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
         <div className="min-w-0">
           <div className="h-[300px] w-full md:h-[340px]">
@@ -513,7 +612,7 @@ function UsRatesBlock({
                     tick={{ fontSize: 10, fill: TICKS }}
                     width={52}
                     domain={treasuryYDomain ?? ["auto", "auto"]}
-                    tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
+                    tickFormatter={(v) => `${Number(v).toFixed(1).replace(".", ",")}%`}
                     axisLine={false}
                     tickLine={false}
                     label={{ value: "Taxa (% a.a.)", angle: -90, position: "insideLeft", fontSize: 10, fill: TICKS }}
@@ -610,7 +709,8 @@ function UsRatesBlock({
           )}
         </div>
       </div>
-    </section>
+      )}
+    </div>
   );
 }
 
@@ -643,6 +743,7 @@ export function JurosLiveBlock({
   selicVol = null,
 }: Props) {
   const isNarrow = useIsNarrow();
+  const [country, setCountry] = useState<CountrySel>("br");
   const [tab, setTab] = useState<TabId>("pre");
   const [showAll, setShowAll] = useState(false);
   // Todas as series ligadas por default — quem quiser enxugar, desliga.
@@ -823,14 +924,9 @@ export function JurosLiveBlock({
     return [...map.values()].sort((a, b) => a.t - b.t);
   }, [isCurve, activeCuts, diLiquid, dapLiquid, tab]);
 
-  if (error && !di) {
-    return (
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-        Cotações intraday da B3 indisponíveis no momento — os dados D-1 do pipeline seguem valendo nas
-        trilhas de renda fixa.
-      </div>
-    );
-  }
+  // Erro do feed B3 NÃO derruba o bloco inteiro: só troca o pane do Brasil pela
+  // mensagem de fallback (os panes internacionais seguem funcionando).
+  const brErrored = error && !di;
 
   const statusBadge = di ? (
     <span
@@ -864,22 +960,36 @@ export function JurosLiveBlock({
   const chart = tab === "ipca" ? ipcaChart : preChart;
 
   return (
-    <div className="space-y-6">
-    <section
-      id="juros"
-      aria-label="Renda fixa intraday"
-      className="overflow-hidden rounded-2xl border border-[#132960]/15 bg-white shadow-sm"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#132960] px-4 py-3 md:px-5">
-        <div className="flex items-center gap-3">
-          <h2 className="text-base font-semibold text-white md:text-lg">Renda fixa ao vivo — B3</h2>
-          {statusBadge}
-        </div>
-        <p className="text-[11px] text-[#9db8e8]">
-          {di?.quotedAt ? `Cotado às ${fmtQuotedAt(di.quotedAt)}` : "Carregando cotações..."}
-        </p>
-      </div>
+    <div className="space-y-3" id="juros">
+      {/* Título FORA do gráfico */}
+      <header className="space-y-0.5">
+        <h2 className="text-xl font-semibold text-[#132960] md:text-2xl">{COUNTRY_HEAD[country].title}</h2>
+        <p className="text-sm text-zinc-500">{COUNTRY_HEAD[country].subtitle}</p>
+      </header>
 
+      {/* Card único: o header (navy) traz as BANDEIRAS no lugar do antigo título. */}
+      <div className="overflow-hidden rounded-2xl border border-[#132960]/15 bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-[#132960] px-3 py-2.5 md:px-4">
+          <CountrySwitcher value={country} onChange={setCountry} />
+          {country === "br" ? (
+            <div className="flex flex-wrap items-center gap-2">
+              {statusBadge}
+              <span className="text-[11px] text-[#9db8e8]">
+                {di?.quotedAt ? `Cotado às ${fmtQuotedAt(di.quotedAt)}` : "Carregando cotações..."}
+              </span>
+            </div>
+          ) : null}
+        </div>
+
+        {country === "br" && brErrored ? (
+          <div className="border-t border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            Cotações intraday da B3 indisponíveis no momento — os dados D-1 do pipeline seguem valendo nas
+            trilhas de renda fixa.
+          </div>
+        ) : null}
+
+        {country === "br" && !brErrored ? (
+      <>
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 px-4 pt-3 md:px-5">
         <PanelTabs
           ariaLabel="Curva de juros (Brasil)"
@@ -1041,7 +1151,7 @@ export function JurosLiveBlock({
                     tick={{ fontSize: 10, fill: TICKS }}
                     width={52}
                     domain={chart.yDomain}
-                    tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
+                    tickFormatter={(v) => `${Number(v).toFixed(1).replace(".", ",")}%`}
                     axisLine={false}
                     tickLine={false}
                     label={{ value: "Taxa (% a.a.)", angle: -90, position: "insideLeft", fontSize: 10, fill: TICKS }}
@@ -1137,16 +1247,27 @@ export function JurosLiveBlock({
           )}
         </div>
       </div>
-    </section>
+      </>
+      ) : null}
 
-    <UsRatesBlock
-      treasuryTenors={treasuryTenors}
-      fedMeetings={fedMeetings}
-      fedChart={fedChart}
-      treasuryLabels={treasuryLabels}
-      fedLabels={fedLabels}
-      isNarrow={isNarrow}
-    />
+      {country === "us" ? (
+        <UsRatesBlock
+          treasuryTenors={treasuryTenors}
+          fedMeetings={fedMeetings}
+          fedChart={fedChart}
+          treasuryLabels={treasuryLabels}
+          fedLabels={fedLabels}
+          isNarrow={isNarrow}
+        />
+      ) : null}
+
+      {country !== "br" && country !== "us"
+        ? (() => {
+            const c = countryById(country);
+            return c ? <GlobalCountryPane key={c.id} country={c} /> : null;
+          })()
+        : null}
+      </div>
     </div>
   );
 }
