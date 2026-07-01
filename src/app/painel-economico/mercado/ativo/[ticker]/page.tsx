@@ -6,6 +6,8 @@ import { notFound } from "next/navigation";
 
 import { MarketCard } from "@/components/painel/market/MarketCard";
 import { AtivoHeroChart, type AtivoHeroBenchmark } from "@/components/painel/market/AtivoHeroChart";
+import { CompanyLogo } from "@/components/painel/acoes/CompanyLogo";
+import { getAcoesLogos, getAcoesTotalReturn, toTotalReturnKey } from "@/lib/painel-acoes";
 import {
   classLabel,
   formatBigNumber,
@@ -155,11 +157,13 @@ const STAT_GROUPS: Array<{ label: string; rows: Array<[string, keyof Fundamental
 export default async function AtivoPage({ params }: Props) {
   const { ticker: rawSlug } = await params;
 
-  const [catalogPayload, latest, full, fundamentals] = await Promise.all([
+  const [catalogPayload, latest, full, fundamentals, logos, totalReturn] = await Promise.all([
     getMarketCatalog(),
     getMarketHistoryLatest(),
     getMarketHistoryFull(),
     getMarketFundamentals(),
+    getAcoesLogos(),
+    getAcoesTotalReturn(),
   ]);
 
   const catalog = catalogPayload?.assets ?? [];
@@ -169,11 +173,24 @@ export default async function AtivoPage({ params }: Props) {
   }
 
   const tk = asset.ticker;
+  const tickerBare = tk.replace(/\.SA$/i, "");
+  const logoUrl = logos[tickerBare] ?? null;
   const assetCurrency = asset.currency;
   const latestRow = latest?.tickers[tk] ?? null;
-  // Série COMPLETA disponível (até 5 anos) — alimenta o hero chart.
-  const series = full?.tickers[tk]?.series_daily ?? [];
-  // Último 1y (~252 pregões) só p/ o range de 52 semanas.
+
+  // Ações BR: usamos o dataset dedicado de preço + retorno total (data/acoes_total_return.json).
+  // A linha principal passa a ser o PREÇO (close, só valorização) e a curva
+  // dourada o retorno total (preço + dividendos). Demais classes seguem com o
+  // close ajustado do market_history_full (comportamento anterior).
+  const trNode = asset.klass === "br_acoes" ? totalReturn?.tickers[toTotalReturnKey(tk)] ?? null : null;
+  const hasTr = Boolean(trNode && trNode.series.length > 1);
+  const adjSeries = full?.tickers[tk]?.series_daily ?? [];
+  const series: ReadonlyArray<readonly [string, number]> = hasTr
+    ? trNode!.series.map(([d, close]) => [d, close] as const)
+    : adjSeries;
+  const trRaw = hasTr ? trNode!.series.map(([d, , adj]) => [d, adj] as const) : undefined;
+
+  // Último 1y (~252 pregões) só p/ o range de 52 semanas (usa a série de preço exibida).
   const series1y = series.slice(Math.max(0, series.length - 252));
   const fund = fundamentals?.tickers[tk] ?? null;
   const info = fund?.info ?? null;
@@ -218,12 +235,15 @@ export default async function AtivoPage({ params }: Props) {
         <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
           Ativos de mercado · {classLabel(asset.klass)}
         </p>
-        <div className="flex flex-wrap items-baseline gap-2">
-          <h2 className="text-3xl font-semibold text-[#132960]">{asset.name}</h2>
-          <code className="rounded bg-zinc-100 px-2 py-0.5 text-sm text-zinc-700">{asset.ticker}</code>
-          <span className="rounded-full bg-[#ebf4ff] px-2 py-0.5 text-xs font-semibold text-[#027DFC]">
-            {asset.sector}
-          </span>
+        <div className="flex items-center gap-3">
+          <CompanyLogo ticker={tickerBare} name={asset.name} src={logoUrl} size={44} />
+          <div className="flex flex-wrap items-baseline gap-2">
+            <h2 className="text-3xl font-semibold text-[#132960]">{asset.name}</h2>
+            <code className="rounded bg-zinc-100 px-2 py-0.5 text-sm text-zinc-700">{asset.ticker}</code>
+            <span className="rounded-full bg-[#ebf4ff] px-2 py-0.5 text-xs font-semibold text-[#027DFC]">
+              {asset.sector}
+            </span>
+          </div>
         </div>
         <p className="text-sm text-zinc-600">
           {info?.longName ?? info?.shortName ?? ""}{" "}
@@ -307,6 +327,7 @@ export default async function AtivoPage({ params }: Props) {
         <AtivoHeroChart
           name={asset.name}
           series={series}
+          trRaw={trRaw}
           unit={heroUnit}
           benchmark={benchmark}
           stampGiro={full?.generated_at ?? null}

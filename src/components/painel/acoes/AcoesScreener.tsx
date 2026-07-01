@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import DataStamp from "@/components/painel/DataStamp";
+import { CompanyLogo } from "@/components/painel/acoes/CompanyLogo";
 import type { AcoesScreenerData, AcoesScreenerRow } from "@/lib/painel-acoes";
 
 type SortKey =
@@ -66,13 +67,34 @@ function compareRow(a: AcoesScreenerRow, b: AcoesScreenerRow, key: SortKey, dir:
 
 type Props = {
   data: AcoesScreenerData;
+  /** Mapa ticker(bare) -> URL do logo. */
+  logos?: Record<string, string>;
+  /** Comparação: tickers selecionados (ativa a coluna de seleção quando `onToggleSelect` existe). */
+  selected?: string[];
+  /** Cor atribuída a cada ticker selecionado (casa com a linha do gráfico). */
+  selectedColors?: Record<string, string>;
+  /** Callback de seleção/deseleção de um papel. */
+  onToggleSelect?: (ticker: string) => void;
+  /** Limite de seleção (readabilidade do gráfico). Default 5. */
+  maxSelected?: number;
 };
 
-export function AcoesScreener({ data }: Props) {
+export function AcoesScreener({
+  data,
+  logos,
+  selected = [],
+  selectedColors = {},
+  onToggleSelect,
+  maxSelected = 5,
+}: Props) {
   const [query, setQuery] = useState("");
   const [sectorFilter, setSectorFilter] = useState<string>("Todos");
   const [sortKey, setSortKey] = useState<SortKey>("ibov_weight_pct");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const selectable = typeof onToggleSelect === "function";
+  const selectedSet = useMemo(() => new Set(selected), [selected]);
+  const atLimit = selected.length >= maxSelected;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -99,6 +121,7 @@ export function AcoesScreener({ data }: Props) {
   }
 
   const cols: SortKey[] = ["name", "sector", "price", "pl", "pvp", "dy_12m_pct", "roe_pct", "market_cap", "ibov_weight_pct"];
+  const totalCols = cols.length + (selectable ? 1 : 0);
 
   return (
     <section
@@ -143,10 +166,26 @@ export function AcoesScreener({ data }: Props) {
         </span>
       </div>
 
+      {selectable ? (
+        <p className="mb-2 text-[11px] text-zinc-500">
+          Marque papéis na coluna{" "}
+          <span className="font-semibold text-[#132960]">✓</span> para compará-los no gráfico acima
+          (retorno total, com dividendos) — até {maxSelected}.
+          {selected.length > 0 ? (
+            <span className="ml-1 font-semibold text-[#027DFC]">{selected.length} selecionada(s)</span>
+          ) : null}
+        </p>
+      ) : null}
+
       <div className="overflow-x-auto">
         <table className="w-full min-w-[820px] border-collapse text-left text-xs">
           <thead>
             <tr className="border-b border-[#132960]/10 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+              {selectable ? (
+                <th scope="col" className="w-8 px-2 py-2 text-center" title="Comparar no gráfico">
+                  ✓
+                </th>
+              ) : null}
               {cols.map((k) => {
                 const isActive = k === sortKey;
                 const isNum = NUMERIC.includes(k);
@@ -170,59 +209,103 @@ export function AcoesScreener({ data }: Props) {
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={cols.length} className="px-2 py-6 text-center text-zinc-400">
+                <td colSpan={totalCols} className="px-2 py-6 text-center text-zinc-400">
                   Nenhuma ação encontrada com esses filtros.
                 </td>
               </tr>
             ) : (
-              sorted.map((r) => (
-                <tr key={r.ticker} className="border-b border-zinc-100 transition hover:bg-zinc-50/60">
-                  <td className="px-2 py-2">
-                    <Link
-                      href={`/painel-economico/mercado/ativo/${r.ticker.toLowerCase()}.sa`}
-                      className="block font-semibold tabular-nums text-[#132960] transition hover:text-[#027DFC] hover:underline"
-                    >
-                      {r.ticker}
-                    </Link>
-                    <span className="block max-w-[160px] truncate text-[10px] text-zinc-500" title={r.name}>
-                      {r.name}
-                    </span>
-                  </td>
-                  <td className="px-2 py-2 text-zinc-600">{r.sector}</td>
-                  <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
-                    {fmtBRL(r.price)}
-                    {r.change_pct_1d != null ? (
-                      <span className={`block text-[10px] ${r.change_pct_1d >= 0 ? "text-[#16A34A]" : "text-[#DC2626]"}`}>
-                        {r.change_pct_1d >= 0 ? "▲" : "▼"} {Math.abs(r.change_pct_1d).toFixed(2)}%
-                      </span>
+              sorted.map((r) => {
+                const isSel = selectedSet.has(r.ticker);
+                const color = selectedColors[r.ticker];
+                const disabled = selectable && !isSel && atLimit;
+                return (
+                  <tr
+                    key={r.ticker}
+                    className={`border-b border-zinc-100 transition ${
+                      isSel ? "bg-[#027DFC]/5" : "hover:bg-zinc-50/60"
+                    }`}
+                    style={isSel && color ? { boxShadow: `inset 3px 0 0 ${color}` } : undefined}
+                  >
+                    {selectable ? (
+                      <td className="px-2 py-2 text-center align-middle">
+                        <button
+                          type="button"
+                          onClick={() => onToggleSelect?.(r.ticker)}
+                          disabled={disabled}
+                          aria-pressed={isSel}
+                          aria-label={isSel ? `Remover ${r.ticker} do gráfico` : `Comparar ${r.ticker} no gráfico`}
+                          title={
+                            disabled
+                              ? `Limite de ${maxSelected} ações no gráfico`
+                              : isSel
+                                ? "Remover do gráfico"
+                                : "Comparar no gráfico"
+                          }
+                          className={`inline-flex h-5 w-5 items-center justify-center rounded-[5px] border text-[11px] font-bold transition ${
+                            isSel
+                              ? "border-transparent text-white"
+                              : disabled
+                                ? "cursor-not-allowed border-zinc-200 text-transparent"
+                                : "border-[#132960]/25 text-transparent hover:border-[#027DFC] hover:bg-[#027DFC]/10"
+                          }`}
+                          style={isSel ? { backgroundColor: color ?? "#027DFC" } : undefined}
+                        >
+                          ✓
+                        </button>
+                      </td>
                     ) : null}
-                  </td>
-                  <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
-                    <span
-                      title={r.pl_warning ? "Lucro negativo ou múltiplo atípico — interpretar com cautela." : undefined}
-                      className={r.pl_warning ? "cursor-help text-amber-700" : undefined}
-                    >
-                      {fmtRatio(r.pl)}
-                      {r.pl_warning ? "*" : ""}
-                    </span>
-                  </td>
-                  <td className="px-2 py-2 text-right tabular-nums text-[#132960]">{fmtRatio(r.pvp)}</td>
-                  <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
-                    <span
-                      title={r.dy_atypical ? "DY > 15% — pode incluir proventos extraordinários." : undefined}
-                      className={r.dy_atypical ? "cursor-help text-amber-700" : undefined}
-                    >
-                      {fmtPct(r.dy_12m_pct)}
-                      {r.dy_atypical ? "*" : ""}
-                    </span>
-                  </td>
-                  <td className="px-2 py-2 text-right tabular-nums text-[#132960]">{fmtPct(r.roe_pct)}</td>
-                  <td className="px-2 py-2 text-right tabular-nums text-[#132960]">{fmtBig(r.market_cap)}</td>
-                  <td className="px-2 py-2 text-right tabular-nums text-zinc-600">
-                    {r.ibov_weight_pct != null ? `${r.ibov_weight_pct.toFixed(2)}%` : "—"}
-                  </td>
-                </tr>
-              ))
+                    <td className="px-2 py-2">
+                      <div className="flex items-center gap-2">
+                        <CompanyLogo ticker={r.ticker} name={r.name} src={logos?.[r.ticker]} size={26} />
+                        <div className="min-w-0">
+                          <Link
+                            href={`/painel-economico/mercado/ativo/${r.ticker.toLowerCase()}.sa`}
+                            className="block font-semibold tabular-nums text-[#132960] transition hover:text-[#027DFC] hover:underline"
+                          >
+                            {r.ticker}
+                          </Link>
+                          <span className="block max-w-[150px] truncate text-[10px] text-zinc-500" title={r.name}>
+                            {r.name}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-2 py-2 text-zinc-600">{r.sector}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
+                      {fmtBRL(r.price)}
+                      {r.change_pct_1d != null ? (
+                        <span className={`block text-[10px] ${r.change_pct_1d >= 0 ? "text-[#16A34A]" : "text-[#DC2626]"}`}>
+                          {r.change_pct_1d >= 0 ? "▲" : "▼"} {Math.abs(r.change_pct_1d).toFixed(2)}%
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
+                      <span
+                        title={r.pl_warning ? "Lucro negativo ou múltiplo atípico — interpretar com cautela." : undefined}
+                        className={r.pl_warning ? "cursor-help text-amber-700" : undefined}
+                      >
+                        {fmtRatio(r.pl)}
+                        {r.pl_warning ? "*" : ""}
+                      </span>
+                    </td>
+                    <td className="px-2 py-2 text-right tabular-nums text-[#132960]">{fmtRatio(r.pvp)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
+                      <span
+                        title={r.dy_atypical ? "DY > 15% — pode incluir proventos extraordinários." : undefined}
+                        className={r.dy_atypical ? "cursor-help text-amber-700" : undefined}
+                      >
+                        {fmtPct(r.dy_12m_pct)}
+                        {r.dy_atypical ? "*" : ""}
+                      </span>
+                    </td>
+                    <td className="px-2 py-2 text-right tabular-nums text-[#132960]">{fmtPct(r.roe_pct)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-[#132960]">{fmtBig(r.market_cap)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-zinc-600">
+                      {r.ibov_weight_pct != null ? `${r.ibov_weight_pct.toFixed(2)}%` : "—"}
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
@@ -231,8 +314,8 @@ export function AcoesScreener({ data }: Props) {
       <p className="mt-3 text-[10px] text-zinc-400">
         Universo: carteira teórica do Ibovespa (B3 <code>GetPortfolioDay</code>). P/L, P/VP, DY, ROE e
         valor de mercado via yfinance (<code>.info</code>); preço via yfinance. Setor por catálogo
-        curado. <strong>*</strong> P/L de empresa com lucro negativo/atípico ou DY com proventos
-        extraordinários. Não é recomendação.
+        curado. Logos via TradingView. <strong>*</strong> P/L de empresa com lucro negativo/atípico ou
+        DY com proventos extraordinários. Não é recomendação.
       </p>
       <p className="mt-2 text-right">
         <DataStamp giro={data.generated_at} dado={data.generated_at} />

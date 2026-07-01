@@ -175,6 +175,81 @@ export async function getAcoesScreener(): Promise<AcoesScreenerData | null> {
 }
 
 // ---------------------------------------------------------------------------
+// Fluxo de investidores (B3 — saldo líquido por perfil, acumulado no ano)
+// ---------------------------------------------------------------------------
+
+/**
+ * Série anual já reconstruída pelo pipeline (build_fluxo_investidores.py).
+ * `series[rótulo]` é o acumulado no ano (R$ bi) alinhado a `dates` (as_of).
+ */
+export type FluxoInvestidoresYear = {
+  dates: string[]; // YYYY-MM-DD (as_of, D-2)
+  series: Record<string, number[]>; // rótulo canônico -> acumulado no ano (R$ bi)
+  labels: string[]; // ordem de exibição das categorias
+};
+
+export type FluxoInvestidoresData = {
+  status: "ok" | "error";
+  generated_at: string;
+  source: string;
+  unit: string; // "R$ bi"
+  lag_dias_uteis: number; // 2 (D-2)
+  data_date: string | null; // as_of mais recente
+  /** YTD por ano presente no arquivo permanente (a janela cresce a cada dia). */
+  years: Record<string, FluxoInvestidoresYear>;
+};
+
+export async function getFluxoInvestidores(): Promise<FluxoInvestidoresData | null> {
+  return fetchBlobJson<FluxoInvestidoresData>("data/fluxo_investidores.json");
+}
+
+// ---------------------------------------------------------------------------
+// Logos das ações (mapa ticker "bare" -> URL SVG do TradingView)
+// Pipeline: build_acoes_logos.py -> data/acoes_logos.json
+// ---------------------------------------------------------------------------
+
+export type AcoesLogosData = {
+  status: "ok" | "error";
+  generated_at: string;
+  source: string;
+  count: number;
+  /** ticker sem ".SA" (ex.: "PETR4") -> URL do logo SVG. */
+  tickers: Record<string, string>;
+};
+
+/** Mapa ticker(bare) -> logo URL. `{}` se indisponível (frontend cai no badge de iniciais). */
+export async function getAcoesLogos(): Promise<Record<string, string>> {
+  const d = await fetchBlobJson<AcoesLogosData>("data/acoes_logos.json");
+  return d?.tickers ?? {};
+}
+
+// ---------------------------------------------------------------------------
+// Preço x Retorno total (preço + dividendos) por papel
+// Pipeline: build_acoes_total_return.py -> data/acoes_total_return.json
+// series: [[date, close_split_adj, adj_close_total_return], ...]
+// ---------------------------------------------------------------------------
+
+/** [date, close (só valorização, ajustado por splits), adj_close (retorno total)]. */
+export type AcoesTotalReturnPoint = readonly [date: string, close: number, adj: number];
+
+export type AcoesTotalReturnData = {
+  status: "ok" | "error";
+  generated_at: string;
+  source: string;
+  /** ticker com ".SA" (ex.: "PETR4.SA") -> { series }. */
+  tickers: Record<string, { series: AcoesTotalReturnPoint[] }>;
+};
+
+export async function getAcoesTotalReturn(): Promise<AcoesTotalReturnData | null> {
+  return fetchBlobJson<AcoesTotalReturnData>("data/acoes_total_return.json");
+}
+
+/** Normaliza um ticker para a chave do JSON de total return ("PETR4" | "petr4.sa" -> "PETR4.SA"). */
+export function toTotalReturnKey(ticker: string): string {
+  return `${ticker.trim().toUpperCase().replace(/\.SA$/i, "")}.SA`;
+}
+
+// ---------------------------------------------------------------------------
 // Editorial (Prisma) — filtro tolerante por categoria
 // ---------------------------------------------------------------------------
 

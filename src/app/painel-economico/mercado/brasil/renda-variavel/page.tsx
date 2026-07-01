@@ -1,27 +1,29 @@
 import { AcoesComunidadeCta } from "@/components/painel/acoes/AcoesComunidadeCta";
 import { AcoesNoticias } from "@/components/painel/acoes/AcoesNoticias";
-import { AcoesScreener } from "@/components/painel/acoes/AcoesScreener";
-import { AcoesValuation } from "@/components/painel/acoes/AcoesValuation";
-import { IbovHero } from "@/components/painel/acoes/IbovHero";
+import { RendaVariavelClient } from "@/components/painel/acoes/RendaVariavelClient";
 import {
   getAcoesIbov,
+  getAcoesLogos,
   getAcoesScreener,
   getAcoesUltimasNoticias,
   getAcoesValuation,
+  getFluxoInvestidores,
 } from "@/lib/painel-acoes";
 
 export const metadata = {
-  title: "Ações Brasil (Ibovespa) — Ativos de mercado | AZ Invest",
+  title: "Ações Brasil (Ibovespa) — Ativos de mercado",
   description:
     "Panorama do Ibovespa: índice vs CDI/S&P 500/dólar, P/L histórico com bandas de desvio, prêmio de risco vs NTN-B e screener das ações do índice.",
 };
 
 export default async function RendaVariavelPage() {
-  const [ibov, valuation, screener, noticias] = await Promise.all([
+  const [ibov, valuation, screener, noticias, fluxo, logos] = await Promise.all([
     getAcoesIbov(),
     getAcoesValuation(),
     getAcoesScreener(),
     getAcoesUltimasNoticias(),
+    getFluxoInvestidores(),
+    getAcoesLogos(),
   ]);
 
   return (
@@ -32,49 +34,25 @@ export default async function RendaVariavelPage() {
         </p>
         <h2 className="text-2xl font-semibold text-[#132960]">Ações Brasil — Ibovespa</h2>
         <p className="max-w-3xl text-sm text-zinc-600">
-          Acompanhamento do Ibovespa e do valuation da bolsa brasileira: o índice comparado a CDI,
-          S&amp;P 500 e dólar, o P/L histórico com média e bandas de desvio, o prêmio de risco das
-          ações contra o juro real da NTN-B, e um screener com as ações do índice (P/L, P/VP, DY,
-          ROE, valor de mercado e peso).
+          Acompanhamento do Ibovespa e do valuation da bolsa brasileira. Na{" "}
+          <strong>Visão geral</strong>, o índice comparado a CDI, S&amp;P 500 e dólar, e um screener
+          com as ações do índice — clique para jogar qualquer papel no gráfico (retorno total, com
+          dividendos). Na aba <strong>Analítico</strong>, o P/L histórico com bandas de desvio, o
+          prêmio de risco contra a NTN-B e o fluxo de investidores.
         </p>
       </header>
 
-      {/* Hero Ibovespa */}
-      {ibov && ibov.status === "ok" ? (
-        <IbovHero data={ibov} />
-      ) : (
-        <section
-          aria-label="Ibovespa"
-          className="rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm"
-        >
-          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Ibovespa</p>
-          <p className="mt-2 text-sm text-zinc-500">
-            Pipeline em construção — dados serão preenchidos no próximo deploy.
-          </p>
-        </section>
-      )}
-
-      {/* Valuation: P/L com bandas + prêmio vs NTN-B */}
-      {valuation && valuation.status === "ok" ? <AcoesValuation data={valuation} /> : null}
+      {/* Abas (Visão geral / Analítico) + comparador do hero com o screener */}
+      <RendaVariavelClient
+        ibov={ibov}
+        valuation={valuation}
+        fluxo={fluxo}
+        screener={screener}
+        logos={logos}
+      />
 
       {/* Editorial (esconde se não houver posts) */}
       <AcoesNoticias posts={noticias} />
-
-      {/* Screener das ações do Ibovespa */}
-      {screener && screener.status === "ok" ? (
-        <AcoesScreener data={screener} />
-      ) : (
-        <section
-          aria-label="Screener de ações"
-          className="rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm"
-        >
-          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Screener</p>
-          <p className="mt-2 text-sm text-zinc-500">
-            Em construção — universo Ibovespa com P/L, P/VP, DY, ROE, valor de mercado e peso no
-            índice.
-          </p>
-        </section>
-      )}
 
       {/* CTA Comunidade (esconde se não houver URL configurada) */}
       <AcoesComunidadeCta />

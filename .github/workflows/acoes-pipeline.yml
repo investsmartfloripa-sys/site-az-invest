@@ -53,6 +53,16 @@ jobs:
         run: python data-pipeline/python/build_acoes_screener.py --upload
         continue-on-error: true
 
+      # Logos das empresas (TradingView symbol-search -> s3-symbol-logo) — leve, ~30s
+      - name: build_acoes_logos (logos das empresas)
+        run: python data-pipeline/python/build_acoes_logos.py --upload
+        continue-on-error: true
+
+      # Preço x retorno total (preço + dividendos reinvestidos) por papel — yfinance, ~2-3 min
+      - name: build_acoes_total_return (preço + dividendos)
+        run: python data-pipeline/python/build_acoes_total_return.py --upload
+        continue-on-error: true
+
       # Valuation (P/L bottom-up + prêmio EY/DY vs NTN-B) — pesado, ~5 min, append-only
       # ATENÇÃO: em runs de `schedule` o github.event.inputs não existe e o if
       # antigo (inputs.run_valuation != '0') avaliava FALSE — o step era PULADO
@@ -70,6 +80,8 @@ jobs:
           path: |
             data-pipeline/out/acoes_ibov.json
             data-pipeline/out/acoes_screener.json
+            data-pipeline/out/acoes_logos.json
+            data-pipeline/out/acoes_total_return.json
             data-pipeline/out/acoes_valuation.json
           if-no-files-found: warn
           retention-days: 7

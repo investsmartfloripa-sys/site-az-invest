@@ -16,24 +16,21 @@ import { fmtDataBR } from "@/lib/format-br";
 
 /**
  * Hero da página de ativo individual (/painel-economico/mercado/ativo/[ticker]):
- * substitui o antigo sparkline de 1 ano por um gráfico de verdade sobre a
- * fundação AzTimeSeriesChart — eixo de datas adaptativo, tooltip navy,
- * AzPeriodSelector (1M/3M/6M/YTD/1A/5A/Máx + datas custom, default 1A) e
- * toggle de comparação com o benchmark da classe.
+ * gráfico sobre a fundação AzTimeSeriesChart — eixo de datas adaptativo, tooltip
+ * navy, AzPeriodSelector (1M/3M/6M/YTD/1A/5A/Máx, default 1A) e toggle de
+ * comparação com o benchmark da classe.
  *
- * Comparação ativa ⇒ mode "rebase100" (as duas séries valem 100 no primeiro
- * pregão da janela — compara trajetória, não nível) + forwardFill (calendários
- * distintos: B3 × NYSE × futuros × cripto 24/7). Sem comparação ⇒ mode "raw"
- * na unidade nativa do ativo.
- *
- * Suspense/useSearchParams (Next 16): o AzPeriodSelector chama
- * useSearchParams() internamente. O build só falha por falta de <Suspense>
- * quando a rota é prerenderizada ESTATICAMENTE; a página do ativo é
- * `force-dynamic`, então não seria obrigatório — ainda assim a página envolve
- * este componente em <Suspense> (convenção do repo, ver páginas de
- * índices-globais/câmbio/commodities) e o seletor roda 100% CONTROLADO por
- * estado local, sem espelhar nada na querystring (sem `queryKey`).
+ * Ações BR: além da linha de PREÇO, aceita `trRaw` (adj close = retorno total).
+ * No modo sem comparação, desenhamos a curva DOURADA "preço + dividendos",
+ * ancorada no 1º preço da JANELA visível (as duas linhas partem juntas em
+ * qualquer período e a distância entre elas é exatamente o efeito dos
+ * dividendos reinvestidos). Na comparação com o benchmark (base 100), a linha
+ * do ativo vira o retorno total — disputa justa com o Ibovespa (índice de
+ * retorno total).
  */
+
+/** Dourado da linha de retorno total (preço + dividendos) — legível em fundo branco. */
+const DIVIDEND_GOLD = "#E0A100";
 
 export type AtivoHeroBenchmark = {
   /** Ticker Yahoo do benchmark (informativo). */
@@ -47,7 +44,7 @@ export type AtivoHeroBenchmark = {
 type Props = {
   /** Nome amigável do ativo — vira o label da série principal. */
   name: string;
-  /** Série diária completa disponível do ativo (até 5 anos), [ISO, close ajustado]. */
+  /** Série diária de PREÇO do ativo (até 5 anos), [ISO, close]. */
   series: ReadonlyArray<AzSeriesPoint>;
   /** Unidade dos valores brutos no modo sem comparação ("R$", "index", "none"...). */
   unit: AzUnit;
@@ -55,6 +52,14 @@ type Props = {
   benchmark?: AtivoHeroBenchmark | null;
   /** Vários benchmarks comparáveis (ex.: FII = IFIX + CDI). Cada um vira um chip toggle independente. */
   benchmarks?: ReadonlyArray<AtivoHeroBenchmark>;
+  /**
+   * Série de RETORNO TOTAL bruta (adj close, [ISO, adj]) alinhada em data com
+   * `series`. Quando presente: linha dourada "preço + dividendos" (modo raw,
+   * ancorada na janela) e linha do ativo na comparação (base 100).
+   */
+  trRaw?: ReadonlyArray<AzSeriesPoint>;
+  /** Rótulo da linha de retorno total. Default "Preço + dividendos". */
+  trLabel?: string;
   stampGiro?: string | null;
   stampDado?: string | null;
 };
@@ -72,7 +77,17 @@ function scanRange(all: ReadonlyArray<ReadonlyArray<AzSeriesPoint>>): { minIso: 
   return { minIso, maxIso };
 }
 
-export function AtivoHeroChart({ name, series, unit, benchmark, benchmarks, stampGiro, stampDado }: Props) {
+export function AtivoHeroChart({
+  name,
+  series,
+  unit,
+  benchmark,
+  benchmarks,
+  trRaw,
+  trLabel = "Preço + dividendos",
+  stampGiro,
+  stampDado,
+}: Props) {
   const [period, setPeriod] = useState<AzPeriodValue>({ id: "1y" });
 
   // Benchmarks comparáveis (retrocompat: `benchmark` único vira lista de 1).
@@ -83,39 +98,78 @@ export function AtivoHeroChart({ name, series, unit, benchmark, benchmarks, stam
       ),
     [benchmarks, benchmark],
   );
-  // Rótulos dos benchmarks ATIVOS no toggle — multi-seleção permite "IFIX + CDI juntos".
   const [selected, setSelected] = useState<string[]>([]);
 
   const hasSeries = series.length > 1;
+  const hasTr = Boolean(trRaw && trRaw.length > 1);
   const activeBenches = useMemo(
     () => benchList.filter((b) => selected.includes(b.label)),
     [benchList, selected],
   );
   const comparing = activeBenches.length > 0;
 
-  const mainSeries = useMemo<AzTimeSeries[]>(
-    () => [{ id: "ativo", label: name, data: series }],
-    [name, series],
+  // Range disponível (datas) — independe da ancoragem.
+  const { minIso, maxIso } = useMemo(
+    () =>
+      scanRange([
+        series,
+        ...(hasTr && trRaw ? [trRaw] : []),
+        ...(comparing ? activeBenches.map((b) => b.series) : []),
+      ]),
+    [series, trRaw, hasTr, activeBenches, comparing],
   );
+
+  const range = minIso && maxIso ? resolvePeriodRange(period, minIso, maxIso) : null;
+
+  // Curva dourada ancorada no 1º preço DA JANELA: tr[t] = close0 · adj[t]/adj0.
+  const anchoredTr = useMemo<AzSeriesPoint[] | null>(() => {
+    if (!hasTr || !trRaw || !range) return null;
+    const closeByDate = new Map(series.map(([d, v]) => [d, v] as const));
+    let close0: number | null = null;
+    let adj0: number | null = null;
+    for (const [d, adj] of trRaw) {
+      if (d < range.from) continue;
+      const c = closeByDate.get(d);
+      if (c != null && Number.isFinite(c) && adj > 0) {
+        close0 = c;
+        adj0 = adj;
+        break;
+      }
+    }
+    if (close0 == null || adj0 == null || !(adj0 > 0)) return null;
+    return trRaw.map(([d, adj]) => [d, close0! * (adj / adj0!)] as const);
+  }, [hasTr, trRaw, series, range]);
+
+  // Séries principais: na comparação o ativo entra em RETORNO TOTAL (justo vs
+  // benchmark); sem comparação, entra o preço e a curva dourada é companheira.
+  const chartSeries = useMemo<AzTimeSeries[]>(() => {
+    if (comparing) {
+      const main =
+        hasTr && trRaw
+          ? { id: "ativo", label: `${name} (c/ dividendos)`, data: trRaw }
+          : { id: "ativo", label: name, data: series };
+      return [main];
+    }
+    const priceLine: AzTimeSeries = { id: "ativo", label: name, data: series };
+    if (anchoredTr) {
+      return [priceLine, { id: "tr", label: trLabel, color: DIVIDEND_GOLD, data: anchoredTr }];
+    }
+    return [priceLine];
+  }, [comparing, hasTr, trRaw, anchoredTr, name, series, trLabel]);
+
   const benchSeries = useMemo<AzTimeSeries[]>(
     () => activeBenches.map((b, i) => ({ id: `bench-${i}`, label: b.label, data: b.series })),
     [activeBenches],
   );
 
-  // Range disponível: ativo sempre; benchmarks só quando visíveis (a página já
-  // fatia cada benchmark p/ começar junto com o ativo, então o min não recua).
-  const { minIso, maxIso } = useMemo(
-    () => scanRange(comparing ? [series, ...activeBenches.map((b) => b.series)] : [series]),
-    [series, activeBenches, comparing],
-  );
+  const modeText = comparing
+    ? "base 100 no início da janela"
+    : hasTr
+      ? "preço × preço + dividendos (retorno total)"
+      : "fechamento diário (close ajustado)";
+  const subtitle = range ? `${fmtDataBR(range.from)} — ${fmtDataBR(range.to)} · ${modeText}` : "Sem série histórica disponível";
 
-  // Subtítulo dinâmico: a janela concreta resolvida (mesma aritmética UTC do chart).
-  const range = minIso && maxIso ? resolvePeriodRange(period, minIso, maxIso) : null;
-  const subtitle = range
-    ? `${fmtDataBR(range.from)} — ${fmtDataBR(range.to)} · ${
-        comparing ? "base 100 no início da janela" : "fechamento diário (close ajustado)"
-      }`
-    : "Sem série histórica disponível";
+  const showTrLegend = !comparing && Boolean(anchoredTr);
 
   return (
     <MarketCard
@@ -155,8 +209,15 @@ export function AtivoHeroChart({ name, series, unit, benchmark, benchmarks, stam
       footer={
         comparing ? (
           <>
-            Base 100 no primeiro pregão da janela — compara trajetória, não nível. Calendários
-            distintos alinhados pelo último fechamento disponível. Não é recomendação.
+            Base 100 no primeiro pregão da janela — compara trajetória, não nível. Ativo em retorno
+            total (preço + dividendos) quando disponível. Calendários alinhados pelo último
+            fechamento. Não é recomendação.
+          </>
+        ) : showTrLegend ? (
+          <>
+            Linha <span style={{ color: DIVIDEND_GOLD }} className="font-semibold">dourada</span> ={" "}
+            retorno total (preço + dividendos reinvestidos), ancorada no início da janela.
+            Fechamento diário (Yahoo Finance).
           </>
         ) : (
           <>Fechamento diário ajustado (Yahoo Finance).</>
@@ -165,15 +226,29 @@ export function AtivoHeroChart({ name, series, unit, benchmark, benchmarks, stam
     >
       {hasSeries ? (
         <div className="space-y-3">
+          {showTrLegend ? (
+            <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold">
+              <span className="inline-flex items-center gap-1.5 text-[#132960]">
+                <span aria-hidden className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: "#027DFC" }} />
+                Preço
+              </span>
+              <span className="inline-flex items-center gap-1.5" style={{ color: DIVIDEND_GOLD }}>
+                <span aria-hidden className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: DIVIDEND_GOLD }} />
+                {trLabel}
+              </span>
+            </div>
+          ) : null}
           <AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} />
           <AzTimeSeriesChart
-            series={mainSeries}
+            series={chartSeries}
             benchmarks={benchSeries}
             mode={comparing ? "rebase100" : "raw"}
             unit={unit}
             period={period}
             height={300}
             forwardFill={comparing}
+            seriesEndLabels={showTrLegend}
+            showLegend={false}
             variant={comparing ? "default" : "hero"}
           />
         </div>
