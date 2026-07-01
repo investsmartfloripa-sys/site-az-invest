@@ -18,6 +18,7 @@ import {
 
 import type { IpcaData, Influencia, SerieGrupo } from "@/lib/painel-ipca";
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { lastSeriesDate } from "@/lib/data-stamp";
 
 const CORES_GRUPOS = [
@@ -488,9 +489,12 @@ function FocusChart({ data }: { data: IpcaData }) {
 
   return (
     <div className="w-full min-w-0 rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm">
-      <h3 className="text-base font-semibold text-[#027DFC]">Expectativas Focus — mediana</h3>
+      <h3 className="text-base font-semibold text-[#027DFC]">
+        Expectativas Focus — mediana
+        <MethodInfo className="ml-1.5 align-middle">Fonte: BCB Olinda.</MethodInfo>
+      </h3>
       <p className="mb-3 mt-1 text-xs text-zinc-600">
-        Projeção mediana do mercado pra IPCA acumulado em cada ano de referência, ao longo do tempo. Fonte: BCB Olinda.
+        Projeção mediana do mercado pra IPCA acumulado em cada ano de referência, ao longo do tempo.
       </p>
       <div style={{ width: "100%", height: 260 }}>
         <ResponsiveContainer>
@@ -663,9 +667,11 @@ export function IpcaDashboard({ data }: { data: IpcaData }) {
 
       <TabelaInfluencias data={data} />
 
-      <footer className="border-t border-zinc-200 pt-4 text-xs text-zinc-500">
-        Fontes: IBGE (SIDRA tabelas 7060 e 7062) · BCB SGS (núcleos e difusão) · BCB Olinda (Focus). Dados gerados em{" "}
-        {data.gerado_em}.
+      <footer className="flex items-center gap-1.5 border-t border-zinc-200 pt-4 text-xs text-zinc-500">
+        <MethodInfo>
+          Fontes: IBGE (SIDRA tabelas 7060 e 7062) · BCB SGS (núcleos e difusão) · BCB Olinda (Focus).
+        </MethodInfo>
+        <span>Dados gerados em {data.gerado_em}.</span>
       </footer>
     </div>
   );

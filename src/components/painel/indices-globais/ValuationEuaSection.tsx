@@ -9,6 +9,7 @@ import {
   type AzTimeSeries,
 } from "@/components/painel/charts";
 import { ChartCard, KpiCard } from "@/components/painel/core";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { AZ_BRAND, AZ_CHART } from "@/lib/az-chart-theme";
 import { fmtDataBR, fmtNum, fmtPct, fmtSignedNum } from "@/lib/format-br";
 import type {
@@ -210,14 +211,16 @@ export function ValuationEuaSection({ data }: Props) {
         <BlocoIndisponivel nome="CAPE (Shiller)" />
       )}
 
-      {/* Rodapé do SPY: de onde vêm os múltiplos dos KPIs */}
+      {/* Rodapé do SPY: leitura visível + fonte dos múltiplos atrás do ícone (?) */}
       <p className="text-[11px] text-zinc-500">
-        P/L e dividend yield do S&amp;P 500 medidos pelo ETF SPY (yfinance, giro diário útil
-        {spyCur?.date ? ` — último dado ${fmtDataBR(spyCur.date)}` : ""}); a série diária desses
-        múltiplos é acumulada pelo pipeline a cada giro
-        {spy?.series?.length ? ` (${spy.series.length} snapshot${spy.series.length > 1 ? "s" : ""} até aqui)` : ""}.
         CAPE e Buffett medem régua longa; o P/L trailing mede o preço de hoje contra o lucro dos
         últimos 12 meses.
+        <MethodInfo className="ml-1.5 align-middle">
+          P/L e dividend yield do S&amp;P 500 medidos pelo ETF SPY (yfinance, giro diário útil
+          {spyCur?.date ? ` — último dado ${fmtDataBR(spyCur.date)}` : ""}); a série diária desses
+          múltiplos é acumulada pelo pipeline a cada giro
+          {spy?.series?.length ? ` (${spy.series.length} snapshot${spy.series.length > 1 ? "s" : ""} até aqui)` : ""}.
+        </MethodInfo>
       </p>
     </div>
   );

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { fmtNum, fmtPct, fmtSignedPct } from "@/lib/format-br";
 import { fundoSlug } from "@/lib/painel-fundos-investimento-data";
 import type {
@@ -297,6 +298,12 @@ export function FundosRankingDashboard({ data }: { data: FundosRanking }) {
           className="ml-auto inline-flex flex-wrap items-center gap-1"
         >
           <span className="mr-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Janela</span>
+          <MethodInfo align="right" className="order-last ml-1 align-middle">
+            Universo acompanhado pela AZ Invest (curado, não é toda a base CVM). Retorno,
+            volatilidade, Sharpe e drawdown via <strong>Mais Retorno</strong> (Data API), dados
+            D-1. Sharpe e a cor do retorno usam o <strong>CDI</strong> como referência livre de
+            risco. Não é recomendação de investimento.
+          </MethodInfo>
           {JANELAS.map((j) => {
             const active = j.id === janela;
             return (
@@ -331,12 +338,6 @@ export function FundosRankingDashboard({ data }: { data: FundosRanking }) {
 
       <CategoriaTabela categoria={ativa} janela={janela} cdiJanela={cdiJanela} />
 
-      <p className="mt-3 text-[10px] text-zinc-400">
-        Universo acompanhado pela AZ Invest (curado, não é toda a base CVM). Retorno, volatilidade,
-        Sharpe e drawdown via <strong>Mais Retorno</strong> (Data API), dados D-1. Sharpe e a cor do
-        retorno usam o <strong>CDI</strong> como referência livre de risco. Não é recomendação de
-        investimento.
-      </p>
       <p className="mt-2 text-right">
         <DataStamp giro={data.generated_at} dado={data.data_date ?? undefined} />
       </p>

@@ -193,7 +193,8 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
     <div className="space-y-6">
       <CardHeader
         titulo="Dívida pública"
-        subtitulo="Trajetória da dívida bruta (DBGG), líquida (DLSP) e do setor privado. Clique nos cards à direita para adicionar/remover séries do gráfico. Fonte: BCB SGS 13762, 4513, 4503, 20622."
+        subtitulo="Trajetória da dívida bruta (DBGG), líquida (DLSP) e do setor privado. Clique nos cards à direita para adicionar/remover séries do gráfico."
+        info="Fonte: BCB SGS 13762, 4513, 4503, 20622."
         rightSlot={<Toggle value={horizonte.horizonte} onChange={horizonte.setHorizonte} options={[...HORIZONTES]} />}
       />
 
@@ -317,7 +318,8 @@ export function DividaDashboard({ data }: { data: FiscalClassicosData }) {
         return (
           <Section
             titulo="Composição da DPMFi por indexador"
-            hint="Dívida Pública Mobiliária Federal interna por tipo de indexador. Selic/LFT = exposta a aperto monetário. Câmbio = exposta a desvalorização. Fonte: BCB SGS 4174-4180."
+            hint="Dívida Pública Mobiliária Federal interna por tipo de indexador. Selic/LFT = exposta a aperto monetário. Câmbio = exposta a desvalorização."
+            info="Fonte: BCB SGS 4174-4180."
           >
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <IndicadorBox

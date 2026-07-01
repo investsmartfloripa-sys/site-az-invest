@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
+
 export const COR_PRIMARIA = "#132960";
 export const COR_ACENTO = "#027DFC";
 export const COR_POSITIVO = "#16a34a";
@@ -122,18 +124,24 @@ export function CardHeader({
   divulgadoEm,
   periodoReferencia,
   rightSlot,
+  info,
 }: {
   titulo: string;
   subtitulo: string;
   divulgadoEm?: string;
   periodoReferencia?: string;
   rightSlot?: React.ReactNode;
+  /** Nota de fonte/metodologia — vira ícone (?) ao lado do título. */
+  info?: React.ReactNode;
 }) {
   return (
     <header className="rounded-2xl border border-[#132960]/15 bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#132960]">{titulo}</h1>
+          <h1 className="text-2xl font-bold text-[#132960]">
+            {titulo}
+            {info ? <MethodInfo className="ml-1.5 align-middle">{info}</MethodInfo> : null}
+          </h1>
           <p className="mt-1 text-sm text-zinc-600">{subtitulo}</p>
           {(divulgadoEm || periodoReferencia) && (
             <p className="mt-2 text-xs text-zinc-500">
@@ -174,17 +182,23 @@ export function Section({
   titulo,
   rightSlot,
   hint,
+  info,
   children,
 }: {
   titulo: string;
   rightSlot?: React.ReactNode;
   hint?: string;
+  /** Nota de fonte/metodologia — vira ícone (?) ao lado do título da seção. */
+  info?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <section className="rounded-2xl border border-[#132960]/15 bg-white p-5 shadow-sm">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-[#132960]">{titulo}</h2>
+        <h2 className="text-sm font-semibold text-[#132960]">
+          {titulo}
+          {info ? <MethodInfo className="ml-1.5 align-middle">{info}</MethodInfo> : null}
+        </h2>
         {rightSlot}
       </div>
       {children}
@@ -376,7 +390,15 @@ export function IndicadorBox({
   return (
     <div className="flex flex-col rounded-xl border-2 border-zinc-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
-        <h4 className="text-sm font-bold leading-tight text-[#132960]">{titulo}</h4>
+        <h4 className="text-sm font-bold leading-tight text-[#132960]">
+          {titulo}
+          {(formula || fonte) && (
+            <MethodInfo className="ml-1.5 align-middle">
+              {formula && <span className="block">Fórmula: {formula}</span>}
+              {fonte && !formula && <span className="block">Fonte: {fonte}</span>}
+            </MethodInfo>
+          )}
+        </h4>
         {isCalc && (
           <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-violet-900" title="Indicador calculado, não vem direto de uma série">
             calculado
@@ -389,12 +411,6 @@ export function IndicadorBox({
         {unidade && <span className="text-sm text-zinc-500">{unidade}</span>}
       </div>
 
-      {formula && (
-        <p className="mt-1.5 text-[10px] italic text-violet-700">Fórmula: {formula}</p>
-      )}
-      {fonte && !formula && (
-        <p className="mt-1.5 text-[10px] text-zinc-500">Fonte: {fonte}</p>
-      )}
       {narrativa && (
         <p className="mt-2 text-[11px] leading-relaxed text-zinc-700">{narrativa}</p>
       )}

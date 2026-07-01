@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 
 type Props = {
   title: string;
@@ -7,7 +8,11 @@ type Props = {
   badge?: string;
   /** Slot superior direito (ex.: toggles, filtros, link "Ver tudo") */
   toolbar?: ReactNode;
-  /** Rodape pequeno (ex.: "Atualizado em ...") */
+  /**
+   * Fonte/metodologia — NÃO aparece mais como texto no rodapé: vira o ícone
+   * (?) ao lado do título (decisão de design: nota metodológica fica a um
+   * clique, sem poluir o card).
+   */
   footer?: ReactNode;
   /** Carimbo discreto: data do último giro do pipeline (ISO). */
   stampGiro?: string | Date | null;
@@ -49,6 +54,7 @@ export function MarketCard({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <h2 className="truncate text-lg font-semibold text-[#132960]">{title}</h2>
+            {footer ? <MethodInfo className="align-middle">{footer}</MethodInfo> : null}
             {badge ? (
               <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
                 {badge}
@@ -62,10 +68,9 @@ export function MarketCard({
 
       <div className={bodyClassName}>{children}</div>
 
-      {footer || hasStamp ? (
-        <footer className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t border-[#132960]/10 px-4 py-2 text-xs italic text-zinc-500">
-          <span className="min-w-0">{footer}</span>
-          {hasStamp ? <DataStamp giro={stampGiro} dado={stampDado} className="not-italic" /> : null}
+      {hasStamp ? (
+        <footer className="flex flex-wrap items-baseline justify-end gap-x-3 gap-y-1 border-t border-[#132960]/10 px-4 py-2 text-xs text-zinc-500">
+          <DataStamp giro={stampGiro} dado={stampDado} className="not-italic" />
         </footer>
       ) : null}
     </article>

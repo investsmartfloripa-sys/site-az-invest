@@ -35,6 +35,7 @@ import {
   useHorizonte,
 } from "./AtividadeShell";
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 
 type Visao = "pib" | "ibcbr";
 type Decomposicao = "nenhuma" | "oferta" | "demanda";
@@ -150,6 +151,7 @@ function PibView({
         subtitulo="IBGE / Contas Nacionais Trimestrais — variações reais com ajuste sazonal e contra mesmo período do ano anterior."
         divulgadoEm={formatDivulgadoEm(pib.gerado_em)}
         periodoReferencia={formatTrim(pib.trim_recente)}
+        info={pib.metadata.nota}
         rightSlot={
           <Toggle
             value={visao}
@@ -277,7 +279,12 @@ function PibView({
       {/* Focus PIB */}
       {(ultimoFocusAtual || ultimoFocusProximo) && (
         <section className="rounded-2xl border border-[#132960]/15 bg-white p-5 shadow-sm">
-          <h2 className="mb-3 text-sm font-semibold text-[#132960]">Expectativas Focus (PIB anual)</h2>
+          <h2 className="mb-3 text-sm font-semibold text-[#132960]">
+            Expectativas Focus (PIB anual)
+            <MethodInfo className="ml-1.5 align-middle">
+              Fonte: BCB Olinda (boletim Focus). A mediana é a estimativa central das instituições consultadas.
+            </MethodInfo>
+          </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {ultimoFocusAtual && (
               <KPI
@@ -296,16 +303,12 @@ function PibView({
               />
             )}
           </div>
-          <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <p className="text-[11px] text-zinc-400">
-              Fonte: BCB Olinda (boletim Focus). A mediana é a estimativa central das instituições consultadas.
-            </p>
+          <div className="mt-3 flex flex-wrap items-baseline justify-end gap-x-3 gap-y-1">
             <DataStamp giro={pib.gerado_em} dado={(ultimoFocusAtual ?? ultimoFocusProximo)?.data} />
           </div>
         </section>
       )}
 
-      <footer className="text-[11px] text-zinc-500">{pib.metadata.nota}</footer>
     </div>
   );
 }
@@ -339,6 +342,7 @@ function IbcBrView({
         subtitulo="Índice de Atividade Econômica do BCB. Proxy mensal do PIB, base 2002=100."
         divulgadoEm={formatDivulgadoEm(ibcbr.gerado_em)}
         periodoReferencia={formatMes(ibcbr.mes_recente)}
+        info={ibcbr.metadata.nota}
         rightSlot={
           <Toggle
             value={visao}
@@ -414,7 +418,6 @@ function IbcBrView({
       </section>
 
 
-      <footer className="text-[11px] text-zinc-500">{ibcbr.metadata.nota}</footer>
     </div>
   );
 }

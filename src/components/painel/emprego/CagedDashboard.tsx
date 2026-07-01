@@ -46,6 +46,7 @@ import {
   sequentialScale,
 } from "./shared";
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 
 const CORES_SETOR: Record<string, string> = {
   Agropecuária: "#84cc16",
@@ -706,10 +707,13 @@ function SerieCompletaView({
 // ============================================================
 function NotaCobertura() {
   return (
-    <p className="mt-3 text-xs italic text-zinc-400">
-      ⓘ Distribuições por faixa salarial/setor e salário médio refletem APENAS declarações no prazo
-      (~40-50% do saldo oficial). Saldo absoluto e admissões/demissões nos KPIs e na aba "Saldo total"
-      vêm do consolidado oficial MTE (via IPEADATA).
+    <p className="mt-3 flex items-center gap-1.5 text-xs italic text-zinc-400">
+      <MethodInfo label="Nota de cobertura — fonte e metodologia">
+        Distribuições por faixa salarial/setor e salário médio refletem APENAS declarações no prazo
+        (~40-50% do saldo oficial). Saldo absoluto e admissões/demissões nos KPIs e na aba "Saldo total"
+        vêm do consolidado oficial MTE (via IPEADATA).
+      </MethodInfo>
+      <span>Nota de cobertura</span>
     </p>
   );
 }

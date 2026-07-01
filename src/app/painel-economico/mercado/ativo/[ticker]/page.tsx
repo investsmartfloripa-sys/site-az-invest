@@ -338,10 +338,11 @@ export default async function AtivoPage({ params }: Props) {
       {/* Stats */}
       <MarketCard
         title="Múltiplos e estatísticas"
-        subtitle={
+        subtitle={info ? undefined : "Yahoo Finance não retornou múltiplos para este ativo."}
+        footer={
           info
             ? `Fonte: Yahoo Finance .info${fund?.stale ? " (dado em cache, pode estar desatualizado)" : ""}`
-            : "Yahoo Finance não retornou múltiplos para este ativo."
+            : undefined
         }
         bodyClassName="px-4 pb-4 pt-2"
         stampGiro={fundamentals?.generated_at ?? null}

@@ -15,6 +15,7 @@ import {
 import type { CodaceFaixa, ProbitAzContribuicao, ProbitAzData, ProbitAzLabelPt } from "@/lib/painel-visao-geral";
 import { formatMes, resumoProbabilidade } from "@/lib/painel-visao-geral";
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 
 import { rotuloFaixaCodace } from "./codace-rotulos";
 
@@ -290,9 +291,12 @@ export function CardProbitAz({
         <div className="flex-1 min-w-[200px]">
           <h3 className="text-base font-bold text-[#132960]">
             Termômetro de recessão — mediana de {resumo.nModelos} de 4 modelos causais
+            <MethodInfo className="ml-1.5 align-middle">
+              Quatro metodologias da literatura (Moore 1950, Hamilton 2018, Estrella-Mishkin 1998,
+              Issler-Vahid 2006).
+            </MethodInfo>
           </h3>
           <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">
-            Quatro metodologias da literatura (Moore 1950, Hamilton 2018, Estrella-Mishkin 1998, Issler-Vahid 2006).{" "}
             {aucOos !== null ? (
               <>Backtest fora da amostra: AUC <strong>{aucOos.toFixed(2)}</strong>.</>
             ) : (
@@ -304,7 +308,9 @@ export function CardProbitAz({
           <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded" style={{ backgroundColor: corHist + "22", color: corHist }}>
             HISTERESE: {estadoHist}
           </span>
-          <div className="text-[9px] text-zinc-400 mt-1">Chauvet-Hamilton (2006) · 65/35 · 2m persist.</div>
+          <MethodInfo align="right" className="ml-1.5 align-middle">
+            Chauvet-Hamilton (2006) · 65/35 · 2m persist.
+          </MethodInfo>
         </div>
       </div>
 

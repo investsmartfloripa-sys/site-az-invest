@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { FundosRankingDashboard } from "@/components/painel/fundos-investimento/FundosRankingDashboard";
 import { getFundosRanking } from "@/lib/painel-fundos-investimento-data";
 
@@ -21,12 +22,16 @@ export default async function FundosInvestimentoPage() {
         <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
           Ativos de mercado · Brasil · Fundos de Investimento
         </p>
-        <h2 className="text-2xl font-semibold text-[#132960]">Rankings de fundos por categoria</h2>
+        <h2 className="text-2xl font-semibold text-[#132960]">
+          Rankings de fundos por categoria
+          <MethodInfo className="ml-1.5 align-middle">
+            Fonte: <strong>Mais Retorno</strong>, atualizada após o fechamento (D-1).
+          </MethodInfo>
+        </h2>
         <p className="max-w-3xl text-sm text-zinc-600">
           Compare os fundos de um universo curado por categoria (multimercado, ações e renda fixa)
           pelo retorno em diferentes janelas, pela volatilidade e pelo <strong>Sharpe vs CDI</strong>.
-          Fonte: <strong>Mais Retorno</strong>, atualizada após o fechamento (D-1). Para a bolsa, veja
-          também{" "}
+          Para a bolsa, veja também{" "}
           <Link href="/painel-economico/mercado/brasil/renda-variavel" className="underline hover:text-[#027DFC]">
             Ibovespa
           </Link>

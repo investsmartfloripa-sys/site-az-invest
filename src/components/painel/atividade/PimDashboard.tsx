@@ -120,6 +120,7 @@ export function PimDashboard({ data }: { data: AtividadePimData }) {
         subtitulo="IBGE / Pesquisa Industrial Mensal — Produção Física. Base 2022=100. Inclui categorias econômicas, atividades CNAE e insumos da construção civil."
         divulgadoEm={formatDivulgadoEm(data.gerado_em)}
         periodoReferencia={formatMes(data.mes_recente)}
+        info={data.metadata.nota}
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -269,8 +270,6 @@ export function PimDashboard({ data }: { data: AtividadePimData }) {
           <DataStamp giro={data.gerado_em} dado={data.mes_recente} />
         </p>
       </Section>
-
-      <footer className="text-[11px] text-zinc-500">{data.metadata.nota}</footer>
     </div>
   );
 }

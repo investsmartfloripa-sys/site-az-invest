@@ -9,6 +9,7 @@ import {
 import type { FiscalClassicosData, PontoMensalPct, PontoMensal, PontoMensal12m } from "@/lib/painel-fiscal";
 import { CardHeader, Section } from "./FiscalShell";
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { lastSeriesDate } from "@/lib/data-stamp";
 
 // ============ HELPERS ============
@@ -166,11 +167,13 @@ function CardKpiCompacto({
     "text-zinc-900";
   return (
     <div className={`rounded-xl border-2 ${bg} p-3`}>
-      <div className={`text-[10px] font-bold uppercase tracking-wide ${txt} opacity-80`}>{label}</div>
+      <div className={`text-[10px] font-bold uppercase tracking-wide ${txt} opacity-80`}>
+        {label}
+        {fonte && <MethodInfo className="ml-1.5 align-middle">Fonte: {fonte}</MethodInfo>}
+      </div>
       <div className={`mt-1 text-2xl font-bold tabular-nums ${txt}`}>
         {valor != null ? `${valor.toFixed(2)}${unidade}` : "—"}
       </div>
-      {fonte && <div className="mt-0.5 text-[9.5px] text-zinc-500">{fonte}</div>}
     </div>
   );
 }
@@ -363,7 +366,8 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
     <div className="space-y-8">
       <CardHeader
         titulo="Receita e gastos do governo central"
-        subtitulo="Fluxo fiscal: tesoura Receita × Despesa, decomposição por tributo (3 famílias OFG/STN), por rubrica de despesa e serviço da dívida. Fonte: Tesouro Nacional/RTN, BCB SGS, IBGE."
+        subtitulo="Fluxo fiscal: tesoura Receita × Despesa, decomposição por tributo (3 famílias OFG/STN), por rubrica de despesa e serviço da dívida."
+        info="Fonte: Tesouro Nacional/RTN, BCB SGS, IBGE."
       />
 
       {/* ===================== BLOCO 1 — RESULTADO PRIMÁRIO ===================== */}
@@ -749,7 +753,7 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
           </div>
         </div>
 
-        <Section titulo="Juros nominais central × NFSP setor público (% PIB, 12m)" hint="Juros nominais do gov central + Necessidade de Financiamento do Setor Público consolidado (BCB SGS 5727).">
+        <Section titulo="Juros nominais central × NFSP setor público (% PIB, 12m)" hint="Juros nominais do gov central + Necessidade de Financiamento do Setor Público consolidado." info="Fonte: BCB SGS 5727.">
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={serieJurosNfsp} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
@@ -808,9 +812,11 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
         </div>
       </section>
 
-      <p className="text-xs text-zinc-500">
-        Última atualização: {new Date(data.gerado_em).toLocaleString("pt-BR")}. Pipeline diário 9h BRT.
-        Fontes: Tesouro Nacional/RTN tabela 1.1, BCB SGS (5727 NFSP, 13522 IPCA, 13762 DBGG), IBGE PIB.
+      <p className="flex items-center gap-1.5 text-xs text-zinc-500">
+        <MethodInfo>
+          Fontes: Tesouro Nacional/RTN tabela 1.1, BCB SGS (5727 NFSP, 13522 IPCA, 13762 DBGG), IBGE PIB.
+        </MethodInfo>
+        <span>Última atualização: {new Date(data.gerado_em).toLocaleString("pt-BR")}. Pipeline diário 9h BRT.</span>
       </p>
     </div>
   );

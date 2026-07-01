@@ -191,7 +191,13 @@ export function FundamentalsTable({ data }: Props) {
       }
       badge="Yahoo Finance .info"
       bodyClassName="px-4 pb-4 pt-2"
-      footer="Fonte: Yahoo Finance (.info)"
+      footer={
+        <>
+          Fonte: Yahoo Finance (.info). Valores de múltiplos vêm do{" "}
+          <code className="rounded bg-zinc-100 px-1">.info</code> do Yahoo Finance. DY, ROE e
+          margens são exibidos como % (origem ratio).
+        </>
+      }
       stampGiro={data?.generated_at ?? null}
       stampDado={data?.generated_at ?? null}
     >
@@ -296,9 +302,7 @@ export function FundamentalsTable({ data }: Props) {
           </div>
 
           <p className="text-xs italic text-zinc-500">
-            Valores de múltiplos vêm do <code className="rounded bg-zinc-100 px-1">.info</code> do Yahoo Finance.
-            DY, ROE e margens são exibidos como % (origem ratio). Campos vazios significam que o Yahoo não
-            retornou o múltiplo para aquele ativo.
+            Campos vazios significam que o Yahoo não retornou o múltiplo para aquele ativo.
           </p>
         </div>
       )}

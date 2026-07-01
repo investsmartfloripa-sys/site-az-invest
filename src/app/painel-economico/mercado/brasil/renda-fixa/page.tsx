@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { TreasuryTimeSeries } from "@/components/painel/market/TreasuryTimeSeries";
 import { CreditSpreadsHistory } from "@/components/painel/market/CreditSpreadsHistory";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { getRendaFixaData } from "@/lib/painel-renda-fixa-data";
 
 export const metadata = {
@@ -22,12 +23,16 @@ export default async function RendaFixaPage() {
         <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
           Ativos de mercado · Brasil · Renda fixa
         </p>
-        <h2 className="text-2xl font-semibold text-[#132960]">Curva histórica e crédito privado</h2>
+        <h2 className="text-2xl font-semibold text-[#132960]">
+          Curva histórica e crédito privado
+          <MethodInfo className="ml-1.5 align-middle">
+            Fonte: <strong>ANBIMA mercado secundário</strong>, atualizada após o fechamento de
+            cada pregão (D-1).
+          </MethodInfo>
+        </h2>
         <p className="max-w-3xl text-sm text-zinc-600">
           Acompanhe a evolução da taxa indicativa de cada vencimento dos títulos públicos federais
-          (Prefixados e IPCA+) e o spread médio de crédito privado nas debêntures. Fonte:
-          <strong> ANBIMA mercado secundário</strong>, atualizada após o fechamento de cada pregão
-          (D-1). Ver também a{" "}
+          (Prefixados e IPCA+) e o spread médio de crédito privado nas debêntures. Ver também a{" "}
           <Link href="/painel-economico/economia/brasil/politica-monetaria" className="underline hover:text-[#027DFC]">
             trilha de política monetária
           </Link>

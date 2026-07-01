@@ -25,6 +25,7 @@ import type {
   SubPainelComponente,
 } from "@/lib/painel-igpm";
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 
 const CORES_COMP: Record<string, string> = {
   "IPA-M": "#132960",
@@ -137,14 +138,16 @@ function VisaoGeral({ overview, giro }: { overview: OverviewBlock; giro?: string
     <div className="w-full min-w-0 rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm lg:p-6">
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-[#027DFC]">IGP-M — Contribuição por componente</h2>
+          <h2 className="text-lg font-semibold text-[#027DFC]">
+            IGP-M — Contribuição por componente
+            <MethodInfo className="ml-1.5 align-middle">
+              Pesos no IGP-M: IPA-M 60% · IPC-M 30% · INCC-M 10%. Fonte: FGV via BCB SGS (códigos 7450 / 7456 / 7465).
+            </MethodInfo>
+          </h2>
           <p className="mt-1 text-xs text-zinc-600">
             Mês de referência: <strong>{formatMes(overview.mes_recente)}</strong> ·{" "}
             {periodo === "12m" ? "Acumulado em 12 meses" : "Variação mensal"} ·{" "}
             {modo === "empilhado" ? "Barras empilhadas" : "Linhas sobrepostas"}
-          </p>
-          <p className="mt-1 text-[11px] text-zinc-500">
-            Pesos no IGP-M: IPA-M 60% · IPC-M 30% · INCC-M 10%. Fonte: FGV via BCB SGS (códigos 7450 / 7456 / 7465).
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -376,15 +379,16 @@ export function IgpmDashboard({ data }: { data: IgpmData }) {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-[#132960]">Painel IGP-M</h1>
+        <h1 className="text-2xl font-bold text-[#132960]">
+          Painel IGP-M
+          <MethodInfo className="ml-1.5 align-middle">Fonte: FGV (via BCB SGS)</MethodInfo>
+        </h1>
         <p className="mt-1 text-sm text-zinc-600">
           Mês de referência: <strong>{formatMesLongo(data.mes_recente)}</strong>
           <span className="mx-2 text-zinc-300">·</span>
           IGP-M mensal: <strong className="text-[#132960]">{igpmM != null ? `${igpmM.toFixed(2)}%` : "—"}</strong>
           <span className="mx-2 text-zinc-300">·</span>
           IGP-M 12m: <strong className="text-[#132960]">{igpm12m != null ? `${igpm12m.toFixed(2)}%` : "—"}</strong>
-          <span className="mx-2 text-zinc-300">·</span>
-          Fonte: FGV (via BCB SGS)
         </p>
       </header>
 
@@ -396,9 +400,12 @@ export function IgpmDashboard({ data }: { data: IgpmData }) {
           <SubPainel key={nome} nome={nome} sub={sub} cor={CORES_COMP[nome] ?? "#132960"} giro={data.gerado_em} />
         ))}
 
-      <footer className="border-t border-zinc-200 pt-4 text-xs text-zinc-500">
-        Fontes: FGV (IGP-M e componentes IPA-M, IPC-M, INCC-M) via BCB SGS códigos 189/7450/7456/7465 (12m composto
-        no pipeline). IPCA pra comparação cruzada: 433/13522. Dados gerados em {data.gerado_em}.
+      <footer className="flex items-center gap-1.5 border-t border-zinc-200 pt-4 text-xs text-zinc-500">
+        <MethodInfo>
+          Fontes: FGV (IGP-M e componentes IPA-M, IPC-M, INCC-M) via BCB SGS códigos 189/7450/7456/7465 (12m composto
+          no pipeline). IPCA pra comparação cruzada: 433/13522.
+        </MethodInfo>
+        <span>Dados gerados em {data.gerado_em}.</span>
       </footer>
     </div>
   );

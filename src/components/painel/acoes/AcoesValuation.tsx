@@ -26,6 +26,7 @@ import {
   azYAxisProps,
   azZeroLineProps,
 } from "@/components/painel/core";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import {
   AZ_BRAND,
   AZ_CHART,
@@ -116,6 +117,13 @@ export function AcoesValuation({ data }: Props) {
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
               P/L do Ibovespa
+              <MethodInfo className="ml-1.5 align-middle">
+                P/L bottom-up: 1 / Σ(peso·earnings yield) dos papéis do Ibovespa (pesos B3, EPS TTM
+                e preço via yfinance). Bandas = média ± 1σ e ± 2σ da janela. Série inicia em{" "}
+                {data.series[0]?.date ? fmtMesCurto(data.series[0].date) : "—"} (limite do
+                histórico de lucros) e cresce a cada dia. {data.n_constituents} papéis, cobertura{" "}
+                {data.coverage_weight_pct ?? "—"}% do índice. Não é recomendação.
+              </MethodInfo>
             </h3>
             <p className="mt-0.5 text-[11px] text-zinc-500">
               Histórico com média e bandas de ±1σ/±2σ (z-score)
@@ -214,13 +222,6 @@ export function AcoesValuation({ data }: Props) {
             </ResponsiveContainer>
           )}
         </div>
-        <p className="mt-2 text-[10px] text-zinc-400">
-          P/L bottom-up: 1 / Σ(peso·earnings yield) dos papéis do Ibovespa (pesos B3, EPS TTM e
-          preço via yfinance). Bandas = média ± 1σ e ± 2σ da janela. Série inicia em{" "}
-          {data.series[0]?.date ? fmtMesCurto(data.series[0].date) : "—"} (limite do histórico de
-          lucros) e cresce a cada dia. {data.n_constituents} papéis, cobertura{" "}
-          {data.coverage_weight_pct ?? "—"}% do índice. Não é recomendação.
-        </p>
         <p className="mt-2 text-right">
           <DataStamp
             giro={data.generated_at}
@@ -235,6 +236,12 @@ export function AcoesValuation({ data }: Props) {
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
               Prêmio de risco vs NTN-B
+              <MethodInfo className="ml-1.5 align-middle">
+                Prêmio (linha tracejada) = yield da bolsa − NTN-B real ~10a (curva IPCA ANBIMA,
+                interpolada), em pontos percentuais na mesma escala do eixo. Earnings/dividend
+                yield são nominais e a NTN-B é real — é o gauge usual de &quot;quanto a bolsa paga
+                acima do juro real&quot;.
+              </MethodInfo>
             </h3>
             <p className="mt-0.5 text-[11px] text-zinc-500">
               {yieldLabel} do Ibovespa − juro real da NTN-B ~10a
@@ -370,9 +377,6 @@ export function AcoesValuation({ data }: Props) {
           )}
         </div>
         <p className="mt-2 text-[10px] text-zinc-400">
-          Prêmio (linha tracejada) = yield da bolsa − NTN-B real ~10a (curva IPCA ANBIMA,
-          interpolada), em pontos percentuais na mesma escala do eixo. Earnings/dividend yield são
-          nominais e a NTN-B é real — é o gauge usual de "quanto a bolsa paga acima do juro real".
           Acima de 0 = bolsa mais atrativa que o juro real; abaixo = mais cara. Não é recomendação.
         </p>
         <p className="mt-2 text-right">

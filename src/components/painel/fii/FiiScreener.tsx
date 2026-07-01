@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import type { FiiScreenerData, FiiScreenerRow } from "@/lib/painel-fii";
 
 type SortKey = "name" | "segment" | "price" | "dy_12m_pct" | "pvp" | "pl" | "liquidity_avg_21d";
@@ -136,8 +137,13 @@ export function FiiScreener({ data }: Props) {
           </select>
         </label>
 
-        <span className="ml-auto text-[11px] text-zinc-500">
+        <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] text-zinc-500">
           {sorted.length} de {data.total_rows} FIIs
+          <MethodInfo align="right" className="align-middle">
+            Universo: composição IFIX ({data.total_in_ifix} FIIs). Preço, dividendos e liquidez
+            via yfinance; PL e VP/cota via CVM Informe Mensal. Segmento por catálogo curado
+            (gestoras).
+          </MethodInfo>
         </span>
       </div>
 
@@ -244,8 +250,6 @@ export function FiiScreener({ data }: Props) {
       </div>
 
       <p className="mt-3 text-[10px] text-zinc-400">
-        Universo: composição IFIX ({data.total_in_ifix} FIIs). Preço, dividendos e liquidez via
-        yfinance; PL e VP/cota via CVM Informe Mensal. Segmento por catálogo curado (gestoras).
         Outliers de P/VP (escala não padronizada na CVM) ficam como “—”. <strong>*</strong>{" "}
         DY &gt; 18% pode incluir amortização — não é renda recorrente.
       </p>

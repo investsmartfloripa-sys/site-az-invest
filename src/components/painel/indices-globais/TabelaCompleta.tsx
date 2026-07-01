@@ -1,4 +1,5 @@
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { variationText } from "@/lib/az-chart-theme";
 import { fmtSignedPct } from "@/lib/format-br";
 import {
@@ -106,10 +107,10 @@ export function TabelaCompleta({ panorama }: Props) {
         </table>
       </div>
       <div className="mt-3 flex flex-wrap items-end justify-between gap-2 pt-1">
-        <p className="text-[11px] text-zinc-500">
+        <MethodInfo className="align-middle">
           Variação em moeda local, ordenada pelo retorno de 12 meses; Brasil via EWZ (ETF em US$
           listado em NY). Fonte: Yahoo Finance, giro a cada 15 min.
-        </p>
+        </MethodInfo>
         <DataStamp giro={panorama.generated_at} dado={panorama.generated_at} />
       </div>
     </details>

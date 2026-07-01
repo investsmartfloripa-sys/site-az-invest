@@ -26,6 +26,7 @@ import type {
   IpcaFaixaPonto,
 } from "@/lib/painel-familias";
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { lastSeriesDate } from "@/lib/data-stamp";
 
 // ----------------------------------------------------------------------------
@@ -853,10 +854,14 @@ export function FamiliasDashboard({ data }: { data: FamiliasData }) {
   return (
     <div className="space-y-6">
       <header className="rounded-2xl border border-[#132960]/15 bg-white p-5 shadow-sm">
-        <h1 className="text-2xl font-bold text-[#132960]">Famílias</h1>
+        <h1 className="text-2xl font-bold text-[#132960]">
+          Famílias
+          <MethodInfo className="ml-1.5 align-middle">
+            Fontes: BCB SGS, IBGE PNAD Contínua, Ipeadata (DIEESE, IPEA, FIPE, MDS).
+          </MethodInfo>
+        </h1>
         <p className="mt-1 text-xs text-zinc-500">
           Saúde financeira das famílias brasileiras — renda, endividamento, poder de compra e estrutura social.
-          {" "}Fontes: BCB SGS, IBGE PNAD Contínua, Ipeadata (DIEESE, IPEA, FIPE, MDS).
           {renda?.trim_recente && (
             <>{" · "}PNAD: <strong className="text-zinc-700">{fmtTrimMovel(renda.trim_recente)}</strong></>
           )}

@@ -17,6 +17,7 @@ import {
 import type { HiatoData } from "@/lib/painel-visao-geral";
 import { formatMes, formatPct } from "@/lib/painel-visao-geral";
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 
 type PontoRelogio = {
   mes: string;
@@ -121,7 +122,13 @@ export function RelogioCicloCard({ hiato }: { hiato: HiatoData | null }) {
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h3 className="text-base font-semibold text-zinc-900">Relógio do ciclo — nível × direção do hiato</h3>
+          <h3 className="text-base font-semibold text-zinc-900">
+            Relógio do ciclo — nível × direção do hiato
+            <MethodInfo className="ml-1.5 align-middle">
+              Δ3m usa a mesma decomposição do hiato (gap HP em t menos t−3), não a variação 3m do
+              IBC-Br.
+            </MethodInfo>
+          </h3>
           <p className="text-xs text-zinc-500">
             Como ler: cada ponto é um mês (últimos {JANELA_MESES}). Direita = atividade acima da tendência; metade de cima =
             hiato abrindo. O ciclo típico gira em sentido horário: recuperação → expansão → desaceleração → recessão.
@@ -165,7 +172,7 @@ export function RelogioCicloCard({ hiato }: { hiato: HiatoData | null }) {
         </ComposedChart>
       </ResponsiveContainer>
       <p className="mt-1 text-[10px] text-zinc-400">
-        Δ3m usa a mesma decomposição do hiato (gap HP em t menos t−3), não a variação 3m do IBC-Br. Ponto cheio com seta = {formatMes(atual.mes)}.
+        Ponto cheio com seta = {formatMes(atual.mes)}.
       </p>
       <p className="mt-2"><DataStamp giro={hiato?.gerado_em} dado={atual.mes} /></p>
     </div>

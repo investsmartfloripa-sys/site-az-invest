@@ -8,6 +8,7 @@ import type { FiscalTermometroData, Matriz, IndicadorSemaforo, Nivel } from "@/l
 import { CardHeader, KPI, Section } from "./FiscalShell";
 import { SimuladorTrajetoria } from "./SimuladorTrajetoria";
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 
 function fmt(v: number | null | undefined, casas = 1, suf = ""): string {
   if (v == null) return "—";
@@ -133,7 +134,12 @@ function IndicadorCard({ id, ind }: { id: string; ind: IndicadorSemaforo }) {
       {/* Header com badge */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
-          <h4 className={`text-sm font-bold leading-tight ${cor.text}`}>{ind.titulo}</h4>
+          <h4 className={`text-sm font-bold leading-tight ${cor.text}`}>
+            {ind.titulo}
+            {isDerivado && (
+              <MethodInfo className="ml-1.5 align-middle">Fórmula: {DERIVADOS[id].formula}</MethodInfo>
+            )}
+          </h4>
           <div className="mt-1 flex flex-wrap gap-1">
             {isDerivado && (
               <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-violet-900" title="Indicador calculado, não vem direto de uma série">
@@ -153,11 +159,6 @@ function IndicadorCard({ id, ind }: { id: string; ind: IndicadorSemaforo }) {
           <div className={`text-3xl font-bold tabular-nums ${cor.text}`}>
             {fmt(valor, valor != null && Math.abs(valor) > 100 ? 0 : 2, ind.unidade)}
           </div>
-          {isDerivado && (
-            <p className="mt-1 text-[10px] italic text-violet-700">
-              Fórmula: {DERIVADOS[id].formula}
-            </p>
-          )}
         </div>
         <div className="w-32 flex-shrink-0">
           <TermometroVertical ind={ind} />
@@ -447,7 +448,8 @@ export function TermometroFiscalDashboard({ data }: { data: FiscalTermometroData
     <div className="space-y-6">
       <CardHeader
         titulo="Termômetro Fiscal"
-        subtitulo='Aplicação das fórmulas e tabelas de "How Countries Go Broke" (Ray Dalio, 2025) ao Brasil. Dados em tempo real via BCB SGS, Tesouro RTN e IBGE.'
+        subtitulo='Aplicação das fórmulas e tabelas de "How Countries Go Broke" (Ray Dalio, 2025) ao Brasil.'
+        info="Dados em tempo real via BCB SGS, Tesouro RTN e IBGE."
       />
 
       <Section titulo="Leia isto primeiro (em 30 segundos)">

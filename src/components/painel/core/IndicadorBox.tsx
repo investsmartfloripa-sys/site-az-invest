@@ -1,4 +1,5 @@
 import { fmtNum } from "@/lib/format-br";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 
 /**
  * Box de indicador com transparência metodológica — generalização do
@@ -16,7 +17,7 @@ export type IndicadorBoxProps = {
   /** Valor (number é formatado pt-BR; string passa direto; null vira "—"). */
   valor: string | number | null | undefined;
   unidade?: string;
-  /** Fonte oficial (ex.: "BCB SGS 13762"). Exibida sob o valor. */
+  /** Fonte oficial (ex.: "BCB SGS 13762"). Vira ícone (?) ao lado do título. */
   fonte?: string;
   /** Fórmula do cálculo — quando presente, badge default vira CALCULADO. */
   formula?: string;
@@ -53,7 +54,12 @@ export function IndicadorBox({
   return (
     <div className="flex flex-col rounded-xl border border-[#132960]/10 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
-        <h4 className="text-sm font-bold leading-tight text-[#132960]">{titulo}</h4>
+        <h4 className="text-sm font-bold leading-tight text-[#132960]">
+          {titulo}
+          {fonte ? (
+            <MethodInfo className="ml-1.5 align-middle">Fonte: {fonte}</MethodInfo>
+          ) : null}
+        </h4>
         {badge === "calculado" ? (
           <span
             className="rounded bg-violet-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-violet-900"
@@ -79,7 +85,6 @@ export function IndicadorBox({
       </div>
 
       {formula ? <p className="mt-1.5 text-[10px] italic text-violet-700">Fórmula: {formula}</p> : null}
-      {fonte ? <p className="mt-1.5 text-[10px] text-zinc-500">Fonte: {fonte}</p> : null}
       {narrativa ? <p className="mt-2 text-[11px] leading-relaxed text-zinc-700">{narrativa}</p> : null}
       {siglas && siglas.length > 0 ? (
         <div className="mt-2 border-t border-zinc-200 pt-2 text-[10px] text-zinc-600">

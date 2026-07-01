@@ -27,6 +27,7 @@ import {
   azYAxisProps,
   azZeroLineProps,
 } from "@/components/painel/core";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { AZ_BRAND, AZ_CHART, AZ_SERIES, AZ_TOOLTIP_PROPS, BENCHMARK_COLORS } from "@/lib/az-chart-theme";
 import {
   diffDaysUTC,
@@ -160,6 +161,9 @@ export function FiiMacroCharts({ data }: Props) {
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
               P/VP mediana dos top 25
+              <MethodInfo className="ml-1.5 align-middle">
+                P/VP = preço / VP por cota (CVM Informe Mensal).
+              </MethodInfo>
             </h3>
             <p className="mt-0.5 text-[11px] text-zinc-500">
               Mediana + banda P25-P75 dos 25 mais líquidos (cesta recomposta todo mês)
@@ -285,8 +289,7 @@ export function FiiMacroCharts({ data }: Props) {
           <strong>Tijolo</strong> = Logística, Lajes, Shoppings, Renda urbana, Residencial,
           Hospitalar, Hotelaria, Educacional, Agro, Varejo. <strong>Papel</strong> = CRI.
           Linhas = mediana; faixas sombreadas = quartis P25-P75 mensais. A linha navy marca a
-          paridade (P/VP = 1,00): mediana acima dela = ágio, abaixo = deságio. P/VP = preço / VP
-          por cota (CVM Informe Mensal). Não é recomendação.
+          paridade (P/VP = 1,00): mediana acima dela = ágio, abaixo = deságio. Não é recomendação.
         </p>
         <p className="mt-2 text-right">
           <DataStamp
@@ -302,6 +305,13 @@ export function FiiMacroCharts({ data }: Props) {
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
               Prêmio FII tijolo vs NTN-B
+              <MethodInfo className="ml-1.5 align-middle">
+                DY 12m = soma dividendos 12m / preço atual por FII (yfinance), mediana dos top 25
+                tijolo. NTN-B = yield real Taxa Compra (Tesouro Direto) do título IPCA+ sem cupom
+                mais longo de cada dia (vencimento muda ao longo do tempo — hoje 2050, antes
+                2045). Prêmio (linha tracejada) = DY − NTN-B, em pontos percentuais na mesma
+                escala do eixo.
+              </MethodInfo>
             </h3>
             <p className="mt-0.5 text-[11px] text-zinc-500">
               DY 12m mediana top 25 tijolo − yield NTN-B mais longa (TD)
@@ -411,12 +421,8 @@ export function FiiMacroCharts({ data }: Props) {
           )}
         </div>
         <p className="mt-2 text-[10px] text-zinc-400">
-          DY 12m = soma dividendos 12m / preço atual por FII (yfinance), mediana dos top 25 tijolo.
-          NTN-B = yield real Taxa Compra (Tesouro Direto) do título IPCA+ sem cupom mais longo de
-          cada dia (vencimento muda ao longo do tempo — hoje 2050, antes 2045). Prêmio (linha
-          tracejada) = DY − NTN-B, em pontos percentuais na mesma escala do eixo. Indicador
-          histórico — <strong>não é recomendação</strong>. FII tem risco de cota, vacância e
-          crédito que NTN-B não tem.
+          Indicador histórico — <strong>não é recomendação</strong>. FII tem risco de cota,
+          vacância e crédito que NTN-B não tem.
         </p>
         <p className="mt-2 text-right">
           <DataStamp giro={data.generated_at} dado={latestPremio?.date ?? null} />

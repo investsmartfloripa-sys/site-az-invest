@@ -118,6 +118,7 @@ export function PmsDashboard({ data }: { data: AtividadePmsData }) {
         subtitulo="IBGE / PMS. Base 2022=100. Inclui segmentos detalhados, atividades, atividades turísticas (PMS especial) e transporte de passageiros vs cargas."
         divulgadoEm={formatDivulgadoEm(data.gerado_em)}
         periodoReferencia={formatMes(data.mes_recente)}
+        info={data.metadata.nota}
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -277,8 +278,6 @@ export function PmsDashboard({ data }: { data: AtividadePmsData }) {
           <DataStamp giro={data.gerado_em} dado={data.mes_recente} />
         </p>
       </Section>
-
-      <footer className="text-[11px] text-zinc-500">{data.metadata.nota}</footer>
     </div>
   );
 }

@@ -25,6 +25,7 @@ import type {
   SecaoSeriePonto,
 } from "@/lib/painel-contas-externas";
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { lastSeriesDate } from "@/lib/data-stamp";
 
 // ---------------------------------------------------------------------------
@@ -332,9 +333,13 @@ export function ContasExternasDashboard({
     <div className="space-y-6">
       {/* Header */}
       <header className="rounded-2xl border border-[#132960]/15 bg-white p-5 shadow-sm">
-        <h1 className="text-2xl font-bold text-[#132960]">Contas Externas</h1>
+        <h1 className="text-2xl font-bold text-[#132960]">
+          Contas Externas
+          <MethodInfo className="ml-1.5 align-middle">
+            Fontes: <strong>BCB</strong> (Balanço de Pagamentos BPM6) e <strong>SECEX/MDIC</strong> (Comex Stat)
+          </MethodInfo>
+        </h1>
         <p className="mt-1 text-xs text-zinc-500">
-          Fontes: <strong>BCB</strong> (Balanço de Pagamentos BPM6) e <strong>SECEX/MDIC</strong> (Comex Stat) ·
           Última referência mensal: <strong className="text-zinc-700">{fmtMes(ultima_referencia_mensal ?? "")}</strong>
           {ultima_referencia_diaria && (
             <>

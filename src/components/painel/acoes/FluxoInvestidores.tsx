@@ -21,6 +21,7 @@ import {
   azYAxisProps,
   azZeroLineProps,
 } from "@/components/painel/core";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { diffDaysUTC, fmtDataBR, fmtSignedNum, formatAxisDate } from "@/lib/format-br";
 import type { FluxoInvestidoresData } from "@/lib/painel-acoes";
@@ -163,6 +164,11 @@ export function FluxoInvestidores({ data }: Props) {
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
             Fluxo de investidores em ações
+            <MethodInfo className="ml-1.5 align-middle">
+              Fonte: B3 — Boletim Diário do Mercado (dado público). Fluxo = compras − vendas;
+              acumulado no ano a partir do acumulado mensal, defasagem de ~{data.lag_dias_uteis}{" "}
+              dias úteis (D-{data.lag_dias_uteis}). Não é recomendação.
+            </MethodInfo>
           </h3>
           <p className="mt-0.5 text-[11px] text-zinc-500">
             Saldo líquido (compras − vendas) por perfil — acumulado em{" "}
@@ -305,11 +311,6 @@ export function FluxoInvestidores({ data }: Props) {
         ) : null}
       </div>
 
-      <p className="mt-2 text-[10px] text-zinc-400">
-        Fonte: B3 — Boletim Diário do Mercado (dado público). Fluxo = compras − vendas; acumulado no
-        ano a partir do acumulado mensal, defasagem de ~{data.lag_dias_uteis} dias úteis (D-
-        {data.lag_dias_uteis}). Não é recomendação.
-      </p>
       <p className="mt-2 text-right">
         <DataStamp giro={data.generated_at} dado={data.data_date} />
       </p>

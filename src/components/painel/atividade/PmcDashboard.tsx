@@ -101,6 +101,7 @@ export function PmcDashboard({ data }: { data: AtividadePmcData }) {
         subtitulo="IBGE / Pesquisa Mensal de Comércio. Base 2022=100. Volume é deflacionado (manchete); receita nominal carrega inflação."
         divulgadoEm={formatDivulgadoEm(data.gerado_em)}
         periodoReferencia={formatMes(data.mes_recente)}
+        info={data.metadata.nota}
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -262,8 +263,6 @@ export function PmcDashboard({ data }: { data: AtividadePmcData }) {
           <DataStamp giro={data.gerado_em} dado={data.mes_recente} />
         </p>
       </Section>
-
-      <footer className="text-[11px] text-zinc-500">{data.metadata.nota}</footer>
     </div>
   );
 }

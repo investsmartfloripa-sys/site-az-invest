@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
 
 import DataStamp from "@/components/painel/DataStamp";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 
 /**
  * Card branco padrão p/ gráficos (PADRAO-VISUAL-GRAFICOS.md §6):
  * rounded-2xl, borda navy a 10%, shadow-sm, título NAVY bold, subtítulo,
  * slot de toolbar (AzSegmented/AzPeriodSelector) e rodapé com DataStamp.
  *
- * Server-safe: sem hooks. O conteúdo interativo (chart) vai em `children`.
+ * Server-safe: sem hooks (o MethodInfo interno é client component).
  */
 export type ChartCardProps = {
   /** Título do card — sempre navy bold (azul vivo é só de links/tab ativa). */
@@ -18,7 +19,11 @@ export type ChartCardProps = {
   toolbar?: ReactNode;
   /** Conteúdo do card (gráfico, tabela...). */
   children: ReactNode;
-  /** Texto/JSX de rodapé à esquerda (fonte, metodologia curta). */
+  /**
+   * Fonte/metodologia — NÃO aparece mais como texto no rodapé: vira o ícone
+   * (?) ao lado do título (decisão de design: nota metodológica fica a um
+   * clique, sem poluir o card).
+   */
   footer?: ReactNode;
   /** Quando o pipeline gravou o JSON (DataStamp "Giro"). */
   stampGiro?: string | Date | null;
@@ -49,7 +54,10 @@ export function ChartCard({
     >
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="text-base font-bold text-[#132960] md:text-lg">{title}</h2>
+          <h2 className="text-base font-bold text-[#132960] md:text-lg">
+            {title}
+            {footer ? <MethodInfo className="ml-1.5 align-middle">{footer}</MethodInfo> : null}
+          </h2>
           {subtitle ? <p className="mt-0.5 text-xs text-zinc-500">{subtitle}</p> : null}
         </div>
         {toolbar ? <div className="flex flex-wrap items-center gap-2">{toolbar}</div> : null}
@@ -57,10 +65,9 @@ export function ChartCard({
 
       <div className="min-w-0 flex-1">{children}</div>
 
-      {footer || hasStamp ? (
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-2 pt-1">
-          <div className="text-[11px] text-zinc-500">{footer}</div>
-          {hasStamp ? <DataStamp giro={stampGiro} dado={stampDado} /> : null}
+      {hasStamp ? (
+        <div className="mt-3 flex flex-wrap items-end justify-end gap-2 pt-1">
+          <DataStamp giro={stampGiro} dado={stampDado} />
         </div>
       ) : null}
     </section>

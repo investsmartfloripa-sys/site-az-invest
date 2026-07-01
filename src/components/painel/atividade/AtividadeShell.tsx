@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
+
 export const COR_PRIMARIA = "#132960";
 export const COR_ACENTO = "#027DFC";
 export const COR_POSITIVO = "#16a34a";
@@ -122,18 +124,24 @@ export function CardHeader({
   divulgadoEm,
   periodoReferencia,
   rightSlot,
+  info,
 }: {
   titulo: string;
   subtitulo: string;
   divulgadoEm?: string;
   periodoReferencia?: string;
   rightSlot?: React.ReactNode;
+  /** Nota de fonte/metodologia — vira ícone (?) ao lado do título. */
+  info?: React.ReactNode;
 }) {
   return (
     <header className="rounded-2xl border border-[#132960]/15 bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#132960]">{titulo}</h1>
+          <h1 className="text-2xl font-bold text-[#132960]">
+            {titulo}
+            {info ? <MethodInfo className="ml-1.5 align-middle">{info}</MethodInfo> : null}
+          </h1>
           <p className="mt-1 text-sm text-zinc-600">{subtitulo}</p>
           {(divulgadoEm || periodoReferencia) && (
             <p className="mt-2 text-xs text-zinc-500">
