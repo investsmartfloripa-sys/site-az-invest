@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Visão Geral — em construção | AZ Invest",
+  title: "Visão Geral — em construção",
   description:
     "Síntese executiva consolidada com leitura unificada do cenário brasileiro. Em construção.",
 };

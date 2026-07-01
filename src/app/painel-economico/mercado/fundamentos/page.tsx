@@ -5,7 +5,7 @@ import { SectorHeatmap } from "@/components/painel/market/SectorHeatmap";
 import { getMarketFundamentals } from "@/lib/painel-market-data";
 
 export const metadata = {
-  title: "Fundamentos e múltiplos — Ativos de mercado | AZ Invest",
+  title: "Fundamentos e múltiplos — Ativos de mercado",
   description:
     "Screener de fundamentos e mediana setorial: P/L, P/VP, EV/EBITDA, ROE, dividend yield. Compare ações BR e EUA.",
 };

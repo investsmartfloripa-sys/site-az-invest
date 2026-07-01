@@ -84,9 +84,9 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   const author = await getAuthor(slug);
-  if (!author) return { title: "Autor não encontrado | AZ Invest" };
+  if (!author) return { title: "Autor não encontrado" };
   return {
-    title: `${author.name} | AZ Invest`,
+    title: author.name,
     description:
       author.bio ?? author.headline ?? `Artigos publicados por ${author.name}`,
     alternates: { canonical: `/nosso-time/${author.slug}` },

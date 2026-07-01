@@ -18,7 +18,7 @@ import {
 } from "@/lib/painel-mercado-global";
 
 export const metadata: Metadata = {
-  title: "Índices globais — O dia dos mercados | AZ Invest",
+  title: "Índices globais — O dia dos mercados",
   description:
     "A história do dia dos mercados globais: manchete gerada dos retornos por região, relógio das praças de Tóquio a Nova York, fotografia por região em 5 janelas, corrida do ano (rebase 100) e termômetro de valuation dos EUA.",
 };

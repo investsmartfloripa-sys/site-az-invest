@@ -6,7 +6,7 @@ import { loadAtividadeCodace } from "@/lib/painel-atividade";
 import { loadCagedFull } from "@/lib/painel-emprego";
 
 export const metadata: Metadata = {
-  title: "Emprego — CAGED — AZ Invest",
+  title: "Emprego — CAGED",
   description:
     "Leitura narrativa do Novo CAGED (MTE): saldo dessazonalizado e momentum do mercado formal, acumulado do ano, fluxos de admissões e desligamentos, salário real de admissão e abertura por setor e faixa salarial. Atualizado mensalmente.",
 };

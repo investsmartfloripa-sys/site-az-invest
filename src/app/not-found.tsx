@@ -4,7 +4,7 @@ import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 
 export const metadata = {
-  title: "Página não encontrada | AZ Invest",
+  title: "Página não encontrada",
   description: "A página que você procura não existe ou foi movida.",
 };
 

@@ -13,7 +13,7 @@ import {
 } from "@/lib/painel-fii";
 
 export const metadata = {
-  title: "Fundos Imobiliários — Ativos de mercado | AZ Invest",
+  title: "Fundos Imobiliários — Ativos de mercado",
   description:
     "Panorama dos FIIs: IFIX vs CDI/IBOV/IMA-B, retornos por segmento e screener completo com DY, P/VP, PL e liquidez.",
 };

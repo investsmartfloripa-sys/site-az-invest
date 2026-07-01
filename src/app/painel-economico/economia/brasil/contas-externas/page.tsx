@@ -7,7 +7,7 @@ import { loadContasExternas, loadContasExternasComex } from "@/lib/painel-contas
 import { loadAtividadeCodace } from "@/lib/painel-atividade";
 
 export const metadata: Metadata = {
-  title: "Contas Externas — AZ Invest",
+  title: "Contas Externas",
   description:
     "Balanço de pagamentos do Brasil em acumulado de 12 meses: conta corrente em % do PIB, decomposição em bens, serviços e rendas, cobertura do déficit pelo IDP, reservas em meses de importação e a pauta de comércio por produto e destino. Dados BCB (BPM6) e SECEX/MDIC (Comex Stat), atualização automática diária.",
 };

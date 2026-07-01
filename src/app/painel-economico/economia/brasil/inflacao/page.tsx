@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Inflação — AZ Invest",
+  title: "Inflação",
   description:
     "Painéis de inflação brasileira: IPCA (oficial do Banco Central) e IGP-M (FGV). Escolha o índice para abrir o painel detalhado.",
 };

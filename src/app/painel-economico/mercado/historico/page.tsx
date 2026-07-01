@@ -4,7 +4,7 @@ import { HistoricoChart } from "@/components/painel/market/HistoricoChart";
 import { getMarketCatalog, getMarketHistoryFull } from "@/lib/painel-market-data";
 
 export const metadata = {
-  title: "Histórico comparativo — Ativos de mercado | AZ Invest",
+  title: "Histórico comparativo — Ativos de mercado",
   description:
     "Compare a evolução de ações, ETFs, índices, FX, commodities e cripto em janelas de 1 mês a 5 anos com rebase 100.",
 };

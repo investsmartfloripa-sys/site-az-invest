@@ -5,7 +5,7 @@ import { CreditSpreadsHistory } from "@/components/painel/market/CreditSpreadsHi
 import { getRendaFixaData } from "@/lib/painel-renda-fixa-data";
 
 export const metadata = {
-  title: "Renda Fixa — Ativos de mercado | AZ Invest",
+  title: "Renda Fixa — Ativos de mercado",
   description:
     "Curvas históricas de juros dos títulos públicos (Pré e IPCA+) por data de vencimento, e spreads de crédito privado via ANBIMA.",
 };

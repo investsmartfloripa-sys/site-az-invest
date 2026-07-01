@@ -10,7 +10,7 @@ import {
 } from "@/lib/painel-mercado-global";
 
 export const metadata: Metadata = {
-  title: "Moedas — Ativos de mercado | AZ Invest",
+  title: "Moedas — Ativos de mercado",
   description:
     "Moedas do mundo contra o dólar: ranking de majors e emergentes por janela, índice DXY, e o bloco do real (USD/BRL em 5 anos, cruzes EUR/BRL e GBP/BRL e o real entre os emergentes).",
 };

@@ -5,7 +5,7 @@ import { PmsDashboardV2 } from "@/components/painel/atividade/v2/pms/PmsDashboar
 import { loadAtividadeCodace, loadAtividadePms } from "@/lib/painel-atividade";
 
 export const metadata: Metadata = {
-  title: "PMS — Atividade — AZ Invest",
+  title: "PMS — Atividade",
   description:
     "Pesquisa Mensal de Serviços do IBGE: volume e receita do maior setor da economia, nível vs pré-pandemia (fev/2020 = 100), turismo, transporte de cargas × passageiros e abertura por 20 segmentos e 29 atividades.",
 };

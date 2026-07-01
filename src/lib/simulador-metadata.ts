@@ -11,10 +11,10 @@ import { CATEGORIAS, simuladores } from "@/data/simuladores";
 export function metadataSimulador(slug: string): Metadata {
   const sim = simuladores.find((s) => s.slug === slug);
   if (!sim) {
-    return { title: "Simuladores | AZ Invest" };
+    return { title: "Simuladores" };
   }
   const cat = CATEGORIAS[sim.categoria];
-  const title = `${sim.title} — Simulador | AZ Invest`;
+  const title = `${sim.title} — Simulador`;
   return {
     title,
     description: sim.description,

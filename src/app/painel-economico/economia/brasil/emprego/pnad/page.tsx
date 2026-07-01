@@ -6,7 +6,7 @@ import { loadAtividadeCodace } from "@/lib/painel-atividade";
 import { loadPnadData } from "@/lib/painel-emprego";
 
 export const metadata: Metadata = {
-  title: "Emprego — PNAD — AZ Invest",
+  title: "Emprego — PNAD",
   description:
     "Mercado de trabalho amplo (IBGE/PNAD Contínua): desocupação com leitura dessazonalizada, participação e nível de ocupação, subutilização e informalidade, qualidade do vínculo (com/sem carteira), setores que criam ocupação e massa real de rendimentos. Atualizado trimestralmente.",
 };

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Fiscal — AZ Invest",
+  title: "Fiscal",
   description:
     "Painéis fiscais brasileiros: divida publica (DBGG, DLSP), receita e gastos do governo central, e Termometro Fiscal aplicando as formulas de Ray Dalio (How Countries Go Broke) ao Brasil.",
 };

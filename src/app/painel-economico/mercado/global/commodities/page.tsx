@@ -9,7 +9,7 @@ import {
 } from "@/lib/painel-mercado-global";
 
 export const metadata: Metadata = {
-  title: "Commodities — Ativos de mercado | AZ Invest",
+  title: "Commodities — Ativos de mercado",
   description:
     "Retornos de energia, metais e agro em USD e BRL por período, e histórico comparativo de 5 anos dos futuros (Brent, WTI, ouro, café, soja e mais).",
 };

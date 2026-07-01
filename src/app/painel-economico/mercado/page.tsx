@@ -12,7 +12,7 @@ import {
 } from "@/lib/painel-market-data";
 
 export const metadata = {
-  title: "Ativos de mercado — Painel econômico | AZ Invest",
+  title: "Ativos de mercado — Painel econômico",
   description:
     "Visão completa dos ativos de mercado: retornos por classe, histórico comparativo, múltiplos fundamentalistas e páginas individuais por ativo.",
 };

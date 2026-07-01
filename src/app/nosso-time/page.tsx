@@ -21,7 +21,7 @@ import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Nosso time | AZ Invest",
+  title: "Nosso time",
   description:
     "Conheça os economistas, assessores e analistas que produzem o conteúdo do AZ Invest.",
 };

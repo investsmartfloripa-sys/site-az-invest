@@ -12,7 +12,7 @@ import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Artigos | AZ Invest",
+  title: "Artigos",
   description:
     "Análises, guias e opiniões da equipe AZ Invest sobre economia, mercado financeiro e educação financeira.",
   alternates: { canonical: "/blog" },

@@ -4,7 +4,7 @@ import { TermometroFiscalDashboard } from "@/components/painel/fiscal/Termometro
 import { loadFiscalTermometro } from "@/lib/painel-fiscal";
 
 export const metadata: Metadata = {
-  title: "Termometro Fiscal — AZ Invest",
+  title: "Termometro Fiscal",
   description:
     "Aplicacao das formulas de How Countries Go Broke (Ray Dalio, 2025) ao Brasil. Projecao de Debt/Income em 10 anos, matrizes de sensibilidade e os 4 levers para estabilizar a divida.",
 };

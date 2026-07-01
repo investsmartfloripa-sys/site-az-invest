@@ -5,7 +5,7 @@ import { IgpmDashboardV2 } from "@/components/painel/inflacao/IgpmDashboardV2";
 import { loadIgpmData } from "@/lib/painel-igpm";
 
 export const metadata: Metadata = {
-  title: "Inflação — IGP-M — AZ Invest",
+  title: "Inflação — IGP-M",
   description:
     "IGP-M esmiuçado: decomposição por componente com pesos efetivos, IGP-M × IPCA com defasagem, reajuste de aluguel na prática e série mensal completa. Atualizado via FGV/BCB-SGS.",
 };

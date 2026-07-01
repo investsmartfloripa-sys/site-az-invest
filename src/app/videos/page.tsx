@@ -16,7 +16,7 @@ import {
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export const metadata = {
-  title: "Vídeos | AZ Invest",
+  title: "Vídeos",
   description:
     "Acompanhe as análises e tutoriais em vídeo da equipe AZ Invest sobre economia, mercado e investimentos.",
 };

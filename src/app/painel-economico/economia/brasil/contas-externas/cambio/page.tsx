@@ -4,7 +4,7 @@ import { CambioMacroDashboard } from "@/components/painel/contas-externas/cambio
 import { loadCambioMacro } from "@/lib/painel-contas-externas";
 
 export const metadata: Metadata = {
-  title: "Câmbio Econômico — Contas Externas — AZ Invest",
+  title: "Câmbio Econômico — Contas Externas",
   description:
     "Câmbio real (REER do BCB e bilateral USD/BRL deflacionado), paridade de juros Selic−Fed Funds e o scorecard da UIP na prática. Dados BCB/SGS e FRED, atualização automática diária.",
 };

@@ -6,7 +6,7 @@ import { loadFiscalClassicos } from "@/lib/painel-fiscal";
 import { loadAtividadeCodace } from "@/lib/painel-atividade";
 
 export const metadata: Metadata = {
-  title: "Divida — Fiscal — AZ Invest",
+  title: "Divida — Fiscal",
   description:
     "Trajetoria da divida bruta (DBGG) e liquida (DLSP), dinamica r-g, decomposicao anual e composicao da DPMFi por indexador. Fonte: BCB SGS + pipeline fiscal AZ.",
 };

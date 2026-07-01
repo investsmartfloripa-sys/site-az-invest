@@ -5,7 +5,7 @@ import { PibDashboardV2 } from "@/components/painel/atividade/v2/pib/PibDashboar
 import { loadAtividadeCodace, loadAtividadeIbcBr, loadAtividadePib } from "@/lib/painel-atividade";
 
 export const metadata: Metadata = {
-  title: "PIB — Atividade — AZ Invest",
+  title: "PIB — Atividade",
   description:
     "Produto Interno Bruto trimestral (IBGE Contas Nacionais): contribuições ao crescimento por ótica da oferta e da demanda, carrego estatístico, IBC-Br como prévia mensal, expectativas Focus e PIB per capita.",
 };

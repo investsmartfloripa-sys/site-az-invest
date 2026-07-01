@@ -7,7 +7,7 @@ import { loadPnadData } from "@/lib/painel-emprego";
 import { loadAtividadeCodace } from "@/lib/painel-atividade";
 
 export const metadata: Metadata = {
-  title: "Famílias — AZ Invest",
+  title: "Famílias",
   description:
     "Renda real do trabalho, massa de salários, endividamento e juros, poder de compra e estrutura social das famílias brasileiras — leitura narrativa com dados BCB SGS, IBGE PNAD Contínua e Ipeadata, atualizados automaticamente todos os dias.",
 };

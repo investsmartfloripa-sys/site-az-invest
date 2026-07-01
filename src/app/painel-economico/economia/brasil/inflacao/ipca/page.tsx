@@ -4,7 +4,7 @@ import { IpcaDashboardV2 } from "@/components/painel/inflacao/IpcaDashboardV2";
 import { loadIpcaData } from "@/lib/painel-ipca";
 
 export const metadata: Metadata = {
-  title: "Inflação — IPCA — AZ Invest",
+  title: "Inflação — IPCA",
   description:
     "IPCA esmiuçado: contribuição por grupo encadeada no 12m oficial, núcleos do BC, difusão com régua histórica, sazonalidade, expectativas Focus e tabela completa de influências. Atualizado via IBGE/SIDRA e BCB.",
 };

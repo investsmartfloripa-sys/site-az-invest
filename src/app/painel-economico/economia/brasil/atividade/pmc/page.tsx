@@ -5,7 +5,7 @@ import { PmcDashboardV2 } from "@/components/painel/atividade/v2/pmc/PmcDashboar
 import { loadAtividadeCodace, loadAtividadePmc } from "@/lib/painel-atividade";
 
 export const metadata: Metadata = {
-  title: "PMC — Atividade — AZ Invest",
+  title: "PMC — Atividade",
   description:
     "Pesquisa Mensal de Comércio: o varejo restrito e ampliado contra o nível pré-pandemia, a inflação embutida nas vendas (deflator implícito), o momentum na margem e a abertura por atividade.",
 };

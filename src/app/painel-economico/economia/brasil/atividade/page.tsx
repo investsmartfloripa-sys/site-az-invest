@@ -11,7 +11,7 @@ import {
 } from "@/lib/painel-atividade";
 
 export const metadata: Metadata = {
-  title: "Atividade Econômica — AZ Invest",
+  title: "Atividade Econômica",
   description:
     "Painéis de atividade econômica brasileira: síntese setorial pós-pandemia (indústria × varejo × serviços), PIB (IBGE Contas Nacionais + IBC-Br), Produção Industrial (PIM-PF), Comércio Varejista (PMC) e Serviços (PMS).",
 };

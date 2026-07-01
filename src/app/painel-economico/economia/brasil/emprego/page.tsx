@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Emprego — AZ Invest",
+  title: "Emprego",
   description:
     "Painéis do mercado de trabalho brasileiro: PNAD (pesquisa amostral do IBGE, inclui informal) e CAGED (registro administrativo do MTE, formal). Escolha a fonte para abrir o painel detalhado.",
 };

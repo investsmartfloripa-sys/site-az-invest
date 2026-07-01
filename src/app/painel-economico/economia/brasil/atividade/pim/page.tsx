@@ -5,7 +5,7 @@ import { PimDashboardV2 } from "@/components/painel/atividade/v2/pim/PimDashboar
 import { loadAtividadeCodace, loadAtividadePib, loadAtividadePim } from "@/lib/painel-atividade";
 
 export const metadata: Metadata = {
-  title: "PIM-PF — Atividade — AZ Invest",
+  title: "PIM-PF — Atividade",
   description:
     "Pesquisa Industrial Mensal — Produção Física do IBGE: nível da produção contra o pico histórico, ciclo por categoria de uso, extrativa × transformação, insumos da construção como sinal antecedente do PIB, difusão por atividades e recessões CODACE sombreadas.",
 };

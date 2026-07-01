@@ -6,7 +6,7 @@ import { loadAtividadeCodace } from "@/lib/painel-atividade";
 import { loadFiscalClassicos } from "@/lib/painel-fiscal";
 
 export const metadata: Metadata = {
-  title: "Receita e gastos — Fiscal — AZ Invest",
+  title: "Receita e gastos — Fiscal",
   description:
     "Tesoura receita × despesa do governo central, primário vs meta LDO e estabilizador da dívida, famílias de receita, rubricas de despesa, arcabouço fiscal e resultado nominal decomposto. Fonte: STN/RTN + BCB.",
 };
