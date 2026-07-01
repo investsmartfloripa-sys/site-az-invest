@@ -8,6 +8,7 @@ import {
   type AzPeriodValue,
   type AzTimeSeries,
 } from "@/components/painel/charts";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { seriesColor } from "@/lib/az-chart-theme";
 import {
   COMPARATOR_TENORS,
@@ -27,12 +28,16 @@ type HistoryResp = {
 /** Prazos do comparador como number[] (COMPARATOR_TENORS é tupla literal). */
 const ALL_TENORS: number[] = [...COMPARATOR_TENORS];
 
+/** Janela longa (anos) do 2º estágio de carga — vira o "Max" do seletor. */
+const LONG_YEARS = 25;
+
 /** Cor fixa por país (consistente em todo o comparador). */
 const COUNTRY_COLOR: Record<GlobalCountryId, string> = {
   us: "#132960", // navy
   jp: "#FF5713", // rust
   de: "#027DFC", // azure
   gb: "#1E8A5C", // verde-mar
+  co: "#D97706", // âmbar
 };
 
 function tenorLabel(years: number): string {
@@ -52,33 +57,50 @@ export function GlobalRatesComparator() {
   useEffect(() => {
     const ctrl = new AbortController();
     let cancelled = false;
-    async function load() {
+    let longLoaded = false;
+    let gotAny = false;
+
+    async function load(years: number) {
       try {
-        const res = await fetch("/api/global-rates/history?years=3", {
+        const res = await fetch(`/api/global-rates/history?years=${years}`, {
           cache: "no-store",
           signal: ctrl.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = (await res.json()) as HistoryResp;
-        if (cancelled) return;
+        if (cancelled || json.countries.length === 0) return;
+        // Resposta curta atrasada não pode regredir o histórico longo já carregado.
+        if (years < LONG_YEARS && longLoaded) return;
+        if (years >= LONG_YEARS) longLoaded = true;
+        gotAny = true;
         setResp(json);
-        setFailed(json.countries.length === 0);
-        // Default: todos os países que vieram com dados, ordem do catálogo.
+        setFailed(false);
+        // Default: todos os países que vieram com dados, ordem do catálogo —
+        // mas preserva a seleção do usuário nos reloads.
         const order = GLOBAL_COUNTRIES.map((c) => c.id);
-        setSelected(
-          json.countries
-            .map((c) => c.country)
-            .sort((a, b) => order.indexOf(a) - order.indexOf(b)),
+        setSelected((prev) =>
+          prev.length > 0
+            ? prev
+            : json.countries
+                .map((c) => c.country)
+                .sort((a, b) => order.indexOf(a) - order.indexOf(b)),
         );
       } catch {
-        if (!cancelled) setFailed(true);
-      } finally {
-        if (!cancelled) setLoading(false);
+        // Falha individual é tolerada; `failed` só se nada carregou no boot.
       }
     }
-    load();
+
+    async function boot() {
+      // 2 estágios: 3 anos pinta rápido; o histórico longo substitui em seguida.
+      await load(3);
+      if (!cancelled) setLoading(false);
+      await load(LONG_YEARS);
+      if (!cancelled && !gotAny) setFailed(true);
+    }
+
+    boot();
     const id = window.setInterval(() => {
-      if (document.visibilityState === "visible") load();
+      if (document.visibilityState === "visible") load(longLoaded ? LONG_YEARS : 3);
     }, 6 * 60_000);
     return () => {
       cancelled = true;
@@ -185,8 +207,15 @@ export function GlobalRatesComparator() {
   return (
     <section className="overflow-hidden rounded-2xl border border-[#132960]/15 bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 bg-[#132960] px-4 py-3 md:px-5">
-        <h2 className="text-base font-semibold text-white md:text-lg">
+        <h2 className="flex items-center gap-2 text-base font-semibold text-white md:text-lg">
           Juros soberanos — comparativo por prazo
+          <MethodInfo align="left" className="align-middle">
+            Yields nominais soberanos por prazo constante, fechamento diário (downsample semanal no
+            histórico). Fontes: EUA — FRED (Treasury constant maturity); Japão — Ministério das
+            Finanças (JGB); Alemanha — Deutsche Bundesbank (curva Svensson); Reino Unido — Bank of
+            England (par yields de gilts). O Brasil é acompanhado ao vivo no Panorama (curva DI/IPCA+
+            intraday da B3).
+          </MethodInfo>
         </h2>
         <p className="text-[11px] text-[#9db8e8]">
           {resp ? `Atualizado ${resp.generatedAt.slice(0, 10).split("-").reverse().join("/")}` : "Carregando…"}
@@ -300,12 +329,6 @@ export function GlobalRatesComparator() {
             </p>
           ) : null}
 
-          <p className="text-[11px] text-zinc-500">
-            Yields nominais soberanos por prazo constante, fechamento diário (downsample semanal no histórico).
-            Fontes: EUA — FRED (Treasury constant maturity); Japão — Ministério das Finanças (JGB); Alemanha —
-            Deutsche Bundesbank (curva Svensson); Reino Unido — Bank of England (par yields de gilts). O Brasil é
-            acompanhado ao vivo no Panorama (curva DI/IPCA+ intraday da B3).
-          </p>
         </div>
       )}
     </section>

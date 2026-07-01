@@ -27,7 +27,7 @@
 // ---------------------------------------------------------------------------
 
 /** Países internacionais com curva diária (o Brasil tem trilha própria intraday B3). */
-export type GlobalCountryId = "us" | "jp" | "de" | "gb";
+export type GlobalCountryId = "us" | "jp" | "de" | "gb" | "co";
 
 export type CountryPolicy = {
   /** Banco central (ex.: "Fed", "BCE", "BoJ"). */
@@ -85,6 +85,13 @@ export const GLOBAL_COUNTRIES: readonly GlobalCountry[] = [
     curveLabel: "Gilt",
     source: "Bank of England",
   },
+  {
+    id: "co",
+    flag: "co",
+    name: "Colômbia",
+    curveLabel: "TES",
+    source: "Banco de la República (TES cero cupón)",
+  },
 ] as const;
 
 export function countryById(id: string): GlobalCountry | undefined {
@@ -92,7 +99,7 @@ export function countryById(id: string): GlobalCountry | undefined {
 }
 
 /** Prazos padrão (anos) do comparador "Juros Globais". */
-export const COMPARATOR_TENORS = [2, 5, 10, 20, 30] as const;
+export const COMPARATOR_TENORS = [1, 2, 5, 10, 20, 30] as const;
 
 // ---------------------------------------------------------------------------
 // Tipos de payload (rotas /api/global-rates/*)

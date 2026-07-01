@@ -25,6 +25,7 @@ import {
   PanelTabs,
   type PanelTabItem,
 } from "@/components/painel/panorama/PanelTabs";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { GLOBAL_COUNTRIES, countryById, type CountryRatesPayload, type GlobalCountryId } from "@/lib/global-rates";
 import { GlobalCountryPane } from "@/components/painel/juros-globais/GlobalCountryPane";
 import { PolicyStepChart } from "@/components/painel/juros-globais/PolicyStepChart";
@@ -61,6 +62,10 @@ const COUNTRY_HEAD: Record<CountrySel, { title: string; subtitle: string }> = {
   gb: {
     title: "Juros Reino Unido — Gilt",
     subtitle: "Curva de gilts do Reino Unido (Bank of England, par yields).",
+  },
+  co: {
+    title: "Juros Colômbia — TES",
+    subtitle: "Curva zero cupom dos TES em pesos (Banco de la República, 1/5/10 anos).",
   },
 };
 
@@ -498,6 +503,19 @@ function UsRatesBlock({
   const tabs = hasFed ? US_TABS : US_TABS.filter((t) => t.id === "treasury");
   const tab = !hasFed ? "treasury" : usTab;
 
+  // Nota metodológica da visão atual (vai pro ícone (?) do cabeçalho; a visão
+  // "Fed implícita" via futuros usa a nota própria do PolicyStepChart).
+  const methodNote =
+    tab === "fed"
+      ? hasFuturesPolicy
+        ? null
+        : hasFedD0
+          ? "Fed implícita por reunião do FOMC — mesmo modelo forward da Selic implícita, via curva curta de Treasury. D+0: Tesouro EUA (par yield do mesmo dia útil); cortes D-1/D-30/D-90: FRED. Como o Treasury embute prêmio de prazo (≠ OIS/Fed Funds futures), é uma aproximação da trajetória implícita do Fed, não a precificação exata do mercado de Fed Funds."
+          : "Fed implícita por reunião do FOMC — mesmo modelo forward da Selic implícita, porém via curva curta de Treasury (FRED: 1m–2a). Como o Treasury embute prêmio de prazo (≠ OIS/Fed Funds futures), é uma aproximação da trajetória implícita do Fed, não a precificação exata do mercado de Fed Funds."
+      : hasTreasuryD0
+        ? "Curva Treasury EUA por prazo — yields nominais por maturidade. D+0: Tesouro EUA (par yield do mesmo dia útil); cortes D-1/D-30/D-90/D-365: FRED."
+        : "Curva Treasury EUA por prazo (FRED, D-1) — yields nominais por maturidade, cortes D-1/D-30/D-90/D-365.";
+
   return (
     <div aria-label="Juros EUA">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 px-4 pb-2 pt-3 md:px-5">
@@ -508,7 +526,10 @@ function UsRatesBlock({
           onChange={setUsTab}
           accent="#0B6B2E"
         />
-        <span className="text-[11px] text-zinc-500">Fonte: FRED (Treasury) · futuros de Fed Funds</span>
+        <MethodInfo align="right" className="align-middle">
+          Fonte: FRED (Treasury) · futuros de Fed Funds
+          {methodNote ? <span className="mt-1 block">{methodNote}</span> : null}
+        </MethodInfo>
       </div>
 
       {tab === "fed" && hasFuturesPolicy ? (
@@ -646,15 +667,6 @@ function UsRatesBlock({
               </ResponsiveContainer>
             )}
           </div>
-          <p className="mt-2 text-[11px] text-zinc-500">
-            {tab === "fed"
-              ? hasFedD0
-                ? "Fed implícita por reunião do FOMC — mesmo modelo forward da Selic implícita, via curva curta de Treasury. D+0: Tesouro EUA (par yield do mesmo dia útil); cortes D-1/D-30/D-90: FRED. Como o Treasury embute prêmio de prazo (≠ OIS/Fed Funds futures), é uma aproximação da trajetória implícita do Fed, não a precificação exata do mercado de Fed Funds."
-                : "Fed implícita por reunião do FOMC — mesmo modelo forward da Selic implícita, porém via curva curta de Treasury (FRED: 1m–2a). Como o Treasury embute prêmio de prazo (≠ OIS/Fed Funds futures), é uma aproximação da trajetória implícita do Fed, não a precificação exata do mercado de Fed Funds."
-              : hasTreasuryD0
-                ? "Curva Treasury EUA por prazo — yields nominais por maturidade. D+0: Tesouro EUA (par yield do mesmo dia útil); cortes D-1/D-30/D-90/D-365: FRED."
-                : "Curva Treasury EUA por prazo (FRED, D-1) — yields nominais por maturidade, cortes D-1/D-30/D-90/D-365."}
-          </p>
         </div>
 
         <div className="min-w-0 overflow-x-auto">

@@ -12,6 +12,9 @@
  *   - Reino Unido (gb): Bank of England IADB — par yields nominais de gilts
  *                     (IUDSNPY 5a, IUDMNPY 10a, IUDLNPY 20a).
  *   - EUA (us):       FRED (keyless fredgraph.csv) — DGS1/2/3/5/7/10/20/30.
+ *   - Colômbia (co):  BanRep SUAMECA REST — TES pesos cero cupón 1/5/10a
+ *                     (POST JSON, diário desde 2003, carga em lotes com lag
+ *                     de ~3–7 dias corridos).
  *   - Zona do euro:   ECB Data Portal — curva AAA curta (SR_3M/6M/1Y/2Y) p/ a
  *                     BCE implícita da Alemanha.
  *
@@ -462,6 +465,88 @@ async function getUSHistory(tenors: number[], cutoffISO: string): Promise<Countr
 }
 
 // ---------------------------------------------------------------------------
+// Colômbia — Banco de la República (SUAMECA, TES pesos cero cupón)
+// ---------------------------------------------------------------------------
+
+const BANREP_URL =
+  "https://suameca.banrep.gov.co/buscador-de-series/rest/buscadorSeriesRestService/consultaDatosSeries";
+/** idSerie do SUAMECA por prazo (TES pesos cero cupón). */
+const CO_SERIES: { idSerie: number; years: number }[] = [
+  { idSerie: 15272, years: 1 },
+  { idSerie: 15273, years: 5 },
+  { idSerie: 15274, years: 10 },
+];
+
+function isoToBanrepNum(iso: string): number {
+  return Number(iso.replaceAll("-", ""));
+}
+
+/** POST JSON do SUAMECA: devolve [iso, %][] por série (data = [[epoch_ms, valor]]). */
+async function fetchBanrepSeries(
+  startISO: string,
+  revalidate: number,
+): Promise<Map<number, [string, number][]>> {
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), 25_000);
+  const out = new Map<number, [string, number][]>();
+  try {
+    const res = await fetch(BANREP_URL, {
+      method: "POST",
+      signal: ctrl.signal,
+      headers: { "User-Agent": UA, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        series: CO_SERIES.map((s) => ({ idSerie: s.idSerie, idPeriodicidades: [1] })),
+        fechaInicio: isoToBanrepNum(startISO),
+        fechaFin: isoToBanrepNum(todayISO()),
+      }),
+      next: { revalidate },
+    });
+    if (!res.ok) return out;
+    const json = (await res.json()) as { id?: number; data?: [number, number][] }[];
+    for (const s of json ?? []) {
+      if (typeof s?.id !== "number" || !Array.isArray(s.data)) continue;
+      const pts: [string, number][] = [];
+      for (const [ms, v] of s.data) {
+        if (typeof ms === "number" && typeof v === "number" && Number.isFinite(v)) {
+          pts.push([new Date(ms).toISOString().slice(0, 10), v]);
+        }
+      }
+      pts.sort((a, b) => (a[0] < b[0] ? -1 : 1));
+      out.set(s.id, pts);
+    }
+    return out;
+  } catch {
+    return out;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+async function getColombiaCurve(): Promise<CountryCurve | null> {
+  // Janela maior que os ~100d dos demais: a carga do BanRep tem lag de dias.
+  const bySeries = await fetchBanrepSeries(isoNDaysAgo(130), CURVE_REVALIDATE);
+  const perTenor: TenorHist[] = CO_SERIES.map((s) => ({
+    years: s.years,
+    hist: bySeries.get(s.idSerie) ?? [],
+  })).filter((t) => t.hist.length > 0);
+  if (perTenor.length < 2) return null;
+  return curveWithCuts("co", perTenor, "Banco de la República (TES cero cupón)");
+}
+
+async function getColombiaHistory(tenors: number[], cutoffISO: string): Promise<CountryHistory | null> {
+  const bySeries = await fetchBanrepSeries(cutoffISO, HISTORY_REVALIDATE);
+  const series: TenorHistory[] = CO_SERIES.filter((s) => tenors.includes(s.years))
+    .map((s) => ({ years: s.years, points: downsampleWeekly(bySeries.get(s.idSerie) ?? []) }))
+    .filter((s) => s.points.length > 0);
+  if (series.length === 0) return null;
+  const asOf = series.reduce((mx, s) => {
+    const d = s.points[s.points.length - 1][0];
+    return d > mx ? d : mx;
+  }, "0000-00-00");
+  return { country: "co", asOf, series, source: "Banco de la República (TES cero cupón)" };
+}
+
+// ---------------------------------------------------------------------------
 // Zona do euro — ECB Data Portal (curva AAA curta) p/ a BCE implícita
 // ---------------------------------------------------------------------------
 
@@ -509,6 +594,8 @@ export async function getCountryCurve(country: GlobalCountryId): Promise<Country
       return getUKCurve();
     case "us":
       return getUSCurve();
+    case "co":
+      return getColombiaCurve();
     default:
       return null;
   }
@@ -528,6 +615,8 @@ export async function getCountryHistory(
       return getUKHistory(tenors, cutoffISO);
     case "us":
       return getUSHistory(tenors, cutoffISO);
+    case "co":
+      return getColombiaHistory(tenors, cutoffISO);
     default:
       return null;
   }
