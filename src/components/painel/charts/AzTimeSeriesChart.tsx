@@ -550,15 +550,9 @@ export function AzTimeSeriesChart({
 
   return (
     <div className={`relative w-full ${className}`} style={{ height }}>
-      {/* Badge de variação da janela (1º→último ponto plotado da série principal). */}
-      {isHero && main?.windowPct != null ? (
-        <div
-          className="pointer-events-none absolute right-2 top-0 z-10 rounded-full border border-[#132960]/10 bg-white/85 px-2 py-0.5 text-[10px] font-semibold tabular-nums shadow-sm"
-          style={{ color: variationText(main.windowPct) }}
-        >
-          na janela: {fmtSignedPct(main.windowPct, 1)}
-        </div>
-      ) : null}
+      {/* Badge flutuante "na janela: +x%" REMOVIDO (decisão de design jul/2026):
+          o retorno do período pertence à pill/tabela de comparação, não a um
+          chip solto sobre o gráfico. */}
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={rows} margin={{ top: isHero ? 18 : 8, right: marginRight, bottom: isHero ? 12 : 4, left: 0 }}>
           {isHero ? (

@@ -4,9 +4,10 @@ import { useCallback, useState } from "react";
 
 import { AcoesScreener } from "@/components/painel/acoes/AcoesScreener";
 import { AcoesValuation } from "@/components/painel/acoes/AcoesValuation";
+import { ComparadorTabela, type ComparadorAtivoRow } from "@/components/painel/acoes/ComparadorTabela";
 import { FluxoInvestidores } from "@/components/painel/acoes/FluxoInvestidores";
 import { IbovHero, type IbovOverlaySeries } from "@/components/painel/acoes/IbovHero";
-import type { AzSeriesPoint } from "@/components/painel/charts";
+import type { AzPeriodValue, AzSeriesPoint } from "@/components/painel/charts";
 import type {
   AcoesIbovData,
   AcoesScreenerData,
@@ -30,6 +31,10 @@ type Props = {
 
 export function RendaVariavelClient({ ibov, valuation, fluxo, screener, logos }: Props) {
   const [tab, setTab] = useState<TabId>("visao");
+
+  // Janela do comparador — vive AQUI (não no hero) porque gráfico e tabela
+  // compartilham o mesmo período selecionado.
+  const [period, setPeriod] = useState<AzPeriodValue>({ id: "1y" });
 
   // Comparador: seleção ordenada + cache das séries de retorno total + cores estáveis.
   const [selected, setSelected] = useState<string[]>([]);
@@ -94,6 +99,20 @@ export function RendaVariavelClient({ ibov, valuation, fluxo, screener, logos }:
     .filter((t) => (cache[t]?.length ?? 0) >= 2)
     .map((t) => ({ ticker: t, label: t, color: colors[t] ?? OVERLAY_PALETTE[0], data: cache[t] }));
 
+  // Linhas da tabela do comparador: séries do gráfico + DY/preço do screener.
+  const tabelaRows: ComparadorAtivoRow[] = overlays.map((o) => {
+    const sc = screener?.rows.find((r) => r.ticker === o.ticker);
+    return {
+      ticker: o.ticker,
+      label: o.label,
+      color: o.color,
+      data: o.data,
+      logoSrc: logos[o.ticker] ?? null,
+      dy12m: sc?.dy_12m_pct ?? null,
+      price: sc?.price ?? null,
+    };
+  });
+
   const tabBtn = (id: TabId, label: string) => (
     <button
       type="button"
@@ -117,12 +136,21 @@ export function RendaVariavelClient({ ibov, valuation, fluxo, screener, logos }:
       {tab === "visao" ? (
         <div className="space-y-6">
           {ibov && ibov.status === "ok" ? (
-            <IbovHero
-              data={ibov}
-              overlays={overlays}
-              loadingTickers={loading}
-              onRemoveOverlay={toggleSelect}
-            />
+            <>
+              <IbovHero
+                data={ibov}
+                overlays={overlays}
+                loadingTickers={loading}
+                onRemoveOverlay={toggleSelect}
+                period={period}
+                onPeriodChange={setPeriod}
+              />
+              <ComparadorTabela
+                ibovData={ibov.series_daily.map((p) => [p.date, p.ibov] as const)}
+                rows={tabelaRows}
+                period={period}
+              />
+            </>
           ) : (
             <section className="rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Ibovespa</p>

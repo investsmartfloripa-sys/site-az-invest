@@ -57,33 +57,10 @@ export default async function RendaVariavelPage() {
       {/* CTA Comunidade (esconde se não houver URL configurada) */}
       <AcoesComunidadeCta />
 
-      <section className="rounded-2xl border border-[#132960]/10 bg-white p-4 text-xs text-zinc-600">
-        <p className="font-semibold uppercase tracking-wide text-zinc-500">Notas metodológicas</p>
-        <ul className="mt-2 space-y-1 list-disc pl-4">
-          <li>
-            <strong>Ibovespa (histórico)</strong>: <code>^BVSP</code> via yfinance. Benchmarks em base
-            100: CDI (BCB SGS 12), S&amp;P 500 (<code>^GSPC</code>, em USD) e USD/BRL.
-          </li>
-          <li>
-            <strong>P/L do índice</strong>: bottom-up — 1 / Σ(peso·earnings yield) dos papéis do
-            Ibovespa. Pesos da carteira teórica B3 (<code>GetPortfolioDay</code>); EPS TTM (resultado
-            anual + trimestral) e preço via yfinance. Bandas = média ± 1σ e ± 2σ da janela.
-          </li>
-          <li>
-            <strong>Prêmio de risco</strong>: earnings yield (1/P-L) ou dividend yield do Ibovespa
-            menos o juro real da NTN-B ~10 anos (curva IPCA ANBIMA, <code>treasury_history</code>,
-            interpolada por prazo).
-          </li>
-          <li>
-            <strong>Screener</strong>: carteira teórica do Ibovespa (B3). P/L, P/VP, DY, ROE e valor
-            de mercado via yfinance; setor por catálogo curado.
-          </li>
-          <li>
-            A série de valuation começa onde há histórico de lucros confiável e cresce a cada
-            atualização (não retroage décadas). Indicadores — <strong>não são recomendação</strong>.
-          </li>
-        </ul>
-      </section>
+      {/* Notas metodológicas saíram do rodapé da página (poluição visual):
+          cada uma vive no ícone (?) do card correspondente — hero (yfinance/
+          benchmarks), valuation (P/L bottom-up e prêmio vs NTN-B), screener
+          (universo B3 + yfinance) e tabela do comparador. */}
     </div>
   );
 }

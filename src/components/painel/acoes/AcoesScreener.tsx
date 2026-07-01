@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 
 import DataStamp from "@/components/painel/DataStamp";
 import { CompanyLogo } from "@/components/painel/acoes/CompanyLogo";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import type { AcoesScreenerData, AcoesScreenerRow } from "@/lib/painel-acoes";
 
 type SortKey =
@@ -161,8 +162,13 @@ export function AcoesScreener({
           </select>
         </label>
 
-        <span className="ml-auto text-[11px] text-zinc-500">
+        <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] text-zinc-500">
           {sorted.length} de {data.total_rows} ações
+          <MethodInfo align="right">
+            Universo = carteira teórica do Ibovespa (B3, GetPortfolioDay). P/L, P/VP, DY, ROE e
+            valor de mercado via yfinance; setor por catálogo curado. Indicadores — não são
+            recomendação.
+          </MethodInfo>
         </span>
       </div>
 

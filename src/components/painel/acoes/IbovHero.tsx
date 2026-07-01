@@ -7,12 +7,14 @@ import {
   AzPeriodSelector,
   AzTimeSeriesChart,
   HeroHeader,
+  resolvePeriodRange,
   type AzPeriodValue,
   type AzSeriesPoint,
   type AzTimeSeries,
 } from "@/components/painel/charts";
-import { AZ_BRAND, BENCHMARK_COLORS } from "@/lib/az-chart-theme";
-import { fmtNum } from "@/lib/format-br";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
+import { AZ_BRAND, BENCHMARK_COLORS, variationText } from "@/lib/az-chart-theme";
+import { fmtNum, fmtSignedPct } from "@/lib/format-br";
 import type { AcoesBenchmarkKey, AcoesIbovData } from "@/lib/painel-acoes";
 
 /** Série de uma ação sobreposta ao hero (retorno total, vinda do screener). */
@@ -25,12 +27,15 @@ export type IbovOverlaySeries = {
 
 type Props = {
   data: AcoesIbovData;
-  /** Ações selecionadas no screener (retorno total) para comparar vs Ibov em base 100. */
+  /** Ações selecionadas no screener (retorno total) para comparar vs Ibov em % acumulado. */
   overlays?: IbovOverlaySeries[];
   /** Remove uma ação da comparação (chip ×). */
   onRemoveOverlay?: (ticker: string) => void;
   /** Tickers cuja série ainda está carregando (mostra chip "carregando"). */
   loadingTickers?: string[];
+  /** Janela CONTROLADA pelo pai (compartilhada com a tabela do comparador). */
+  period?: AzPeriodValue;
+  onPeriodChange?: (v: AzPeriodValue) => void;
 };
 
 // Benchmarks na cor FIXA oficial (mesma série = mesma cor no site inteiro).
@@ -42,15 +47,46 @@ const BENCH_META: Record<AcoesBenchmarkKey, { label: string; color: string }> = 
 
 const IBOV_COLOR = AZ_BRAND.azure; // série principal do hero — azul AZ
 
-export function IbovHero({ data, overlays = [], onRemoveOverlay, loadingTickers = [] }: Props) {
-  // Seletor padrão (§8): controlado por estado local, SEM querystring —
-  // nesse modo o AzPeriodSelector não toca em useSearchParams, então a rota
-  // estática não precisa de <Suspense>.
-  const [period, setPeriod] = useState<AzPeriodValue>({ id: "1y" });
+export function IbovHero({
+  data,
+  overlays = [],
+  onRemoveOverlay,
+  loadingTickers = [],
+  period: periodProp,
+  onPeriodChange,
+}: Props) {
+  // Seletor padrão (§8): estado local SEM querystring (rota estática não
+  // precisa de <Suspense>) — ou CONTROLADO pelo pai quando `period` vem via
+  // prop (a página compartilha a janela com a tabela do comparador).
+  const [periodInternal, setPeriodInternal] = useState<AzPeriodValue>({ id: "1y" });
+  const period = periodProp ?? periodInternal;
+  const setPeriod = onPeriodChange ?? setPeriodInternal;
   const [activeBenches, setActiveBenches] = useState<AcoesBenchmarkKey[]>([]);
 
-  // Comparando quando há benchmark OU ação selecionada — aí tudo vai p/ base 100.
+  // Comparando quando há benchmark OU ação selecionada — aí tudo vira
+  // variação % acumulada desde o início da janela (base 0, leitura direta).
   const comparing = activeBenches.length > 0 || overlays.length > 0;
+
+  // Retorno na janela por ação selecionada — vai no chip, na cor da série
+  // (o gráfico marca só o dot no fim da linha; o número vive aqui).
+  const overlayPcts = useMemo<Record<string, number | null>>(() => {
+    const first = data.series_daily[0]?.date;
+    const last = data.series_daily[data.series_daily.length - 1]?.date;
+    if (!first || !last) return {};
+    const { from, to } = resolvePeriodRange(period, first, last);
+    const out: Record<string, number | null> = {};
+    for (const o of overlays) {
+      let base: number | null = null;
+      let end: number | null = null;
+      for (const [d, v] of o.data) {
+        if (d < from || d > to || !Number.isFinite(v)) continue;
+        if (base == null) base = v;
+        end = v;
+      }
+      out[o.ticker] = base != null && end != null && base > 0 ? 100 * (end / base - 1) : null;
+    }
+    return out;
+  }, [data, overlays, period]);
 
   // Série principal (Ibov) + ações sobrepostas viram séries sólidas (base 100).
   const ibovSeries = useMemo<AzTimeSeries[]>(
@@ -115,7 +151,14 @@ export function IbovHero({ data, overlays = [], onRemoveOverlay, loadingTickers 
       <div className="mt-4 flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-            {comparing ? "Comparativo (base 100 · retorno total)" : "Ibovespa (pontos)"}
+            {comparing ? "Comparativo (variação % · retorno total)" : "Ibovespa (pontos)"}
+            <MethodInfo className="ml-1.5 align-middle">
+              {comparing
+                ? "Variação % acumulada desde o início da janela (todas as séries partem de 0%). Ações em retorno total (preço + dividendos reinvestidos); Ibovespa é índice de retorno total — comparação justa. "
+                : "Ibovespa (^BVSP) via yfinance. "}
+              Benchmarks na mesma base: CDI (BCB SGS 12), S&amp;P 500 (em USD) e USD/BRL. Não é
+              recomendação.
+            </MethodInfo>
           </p>
           <AzPeriodSelector value={period} onChange={setPeriod} min={seriesMin} max={seriesMax} />
         </div>
@@ -133,6 +176,14 @@ export function IbovHero({ data, overlays = [], onRemoveOverlay, loadingTickers 
               >
                 <span aria-hidden className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: o.color }} />
                 {o.ticker}
+                {overlayPcts[o.ticker] != null ? (
+                  <span
+                    className="tabular-nums"
+                    style={{ color: variationText(overlayPcts[o.ticker] as number) }}
+                  >
+                    {fmtSignedPct(overlayPcts[o.ticker] as number, 1)}
+                  </span>
+                ) : null}
                 {onRemoveOverlay ? (
                   <button
                     type="button"
@@ -160,7 +211,7 @@ export function IbovHero({ data, overlays = [], onRemoveOverlay, loadingTickers 
           variant="hero"
           series={ibovSeries}
           benchmarks={benchSeries}
-          mode={comparing ? "rebase100" : "raw"}
+          mode={comparing ? "pct_acum" : "raw"}
           unit="pts"
           period={period}
           height={260}
@@ -199,13 +250,7 @@ export function IbovHero({ data, overlays = [], onRemoveOverlay, loadingTickers 
             );
           })}
         </div>
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <p className="min-w-0 text-[10px] text-zinc-400">
-            {comparing
-              ? "Base 100 no início da janela. Ações em retorno total (preço + dividendos reinvestidos); Ibovespa é índice de retorno total — comparação justa. "
-              : "Ibovespa (^BVSP) via yfinance. "}
-            Benchmarks em base 100: CDI (BCB SGS 12), S&amp;P 500 (em USD) e USD/BRL. Não é recomendação.
-          </p>
+        <div className="flex flex-wrap items-baseline justify-end gap-x-3 gap-y-1">
           {/* Cotação do hero é coletada no giro do pipeline: generated_at
               preserva os minutos para auditar atualização. */}
           <DataStamp giro={data.generated_at} dado={data.generated_at} />
