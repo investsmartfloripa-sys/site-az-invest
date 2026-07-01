@@ -26,6 +26,7 @@ import requests
 
 sys.path.append(str(Path(__file__).parent))
 from shared.blob_upload import maybe_upload_json  # noqa: E402
+from shared.blob_download import download_json  # noqa: E402
 import market_catalog as mc  # noqa: E402
 
 UA = {
@@ -92,7 +93,22 @@ def build_payload() -> Dict:
         if (i + 1) % 20 == 0:
             print(f"[logos]  {i + 1}/{len(tickers_bare)} (ok={len(logos)})")
         time.sleep(0.15)  # gentileza com o endpoint
-    print(f"[logos] resolvidos {len(logos)}/{len(tickers_bare)}")
+
+    run_count = len(logos)
+    # Merge com o Blob: se o symbol-search do TradingView falhar em alguns papéis
+    # (rate limit), preserva os logos já publicados — um run parcial só
+    # ADICIONA/ATUALIZA, nunca derruba um logo bom.
+    prev = download_json("data/acoes_logos.json")
+    preserved = 0
+    if isinstance(prev, dict) and isinstance(prev.get("tickers"), dict):
+        for tk, url in prev["tickers"].items():
+            if tk not in logos and url:
+                logos[tk] = url
+                preserved += 1
+    if preserved:
+        print(f"[logos] merge com Blob: {run_count} deste run + {preserved} preservados = {len(logos)}")
+
+    print(f"[logos] resolvidos {len(logos)}/{len(tickers_bare)} (run={run_count})")
     return {
         "status": "ok" if logos else "error",
         "generated_at": datetime.now(timezone.utc).isoformat(),

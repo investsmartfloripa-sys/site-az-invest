@@ -36,6 +36,7 @@ import pandas as pd
 
 sys.path.append(str(Path(__file__).parent))
 from shared.blob_upload import maybe_upload_json  # noqa: E402
+from shared.blob_download import download_json  # noqa: E402
 import market_catalog as mc  # noqa: E402
 
 DEFAULT_LOOKBACK_YEARS = 5
@@ -152,7 +153,23 @@ def build_payload(lookback_years: int, batch_size: int) -> Dict:
             continue
         payload_tickers[t] = {"series": series}
 
-    print(f"[tr] total com dados: {len(payload_tickers)}/{len(tickers)}")
+    run_count = len(payload_tickers)
+
+    # Merge com o Blob: papéis que ESTE run não conseguiu (throttle do Yahoo,
+    # 404 disfarçado) mantêm a série já publicada. Um run parcial só
+    # ADICIONA/ATUALIZA — nunca derruba dado bom (mesma proteção do
+    # build_market_history.py::merge_blob_fallback).
+    prev = download_json("data/acoes_total_return.json")
+    preserved = 0
+    if isinstance(prev, dict) and isinstance(prev.get("tickers"), dict):
+        for t, node in prev["tickers"].items():
+            if t not in payload_tickers and isinstance(node, dict) and node.get("series"):
+                payload_tickers[t] = node
+                preserved += 1
+    if preserved:
+        print(f"[tr] merge com Blob: {run_count} deste run + {preserved} preservados = {len(payload_tickers)}")
+
+    print(f"[tr] total com dados: {len(payload_tickers)}/{len(tickers)} (run={run_count})")
     return {
         "status": "ok" if payload_tickers else "error",
         "generated_at": datetime.now(timezone.utc).isoformat(),
