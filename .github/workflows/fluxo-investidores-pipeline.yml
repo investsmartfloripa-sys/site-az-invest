@@ -1,0 +1,64 @@
+name: Fluxo de investidores (B3 — acoes)
+
+# Roda 1x por dia util. O dado da B3 (participacao dos investidores no Boletim
+# Diario do Mercado) tem defasagem D-2, entao nao ha pressa intradia.
+#   30 23 UTC = 20:30 BRT (apos o fechamento)
+#   30 01 UTC do dia seguinte = 22:30 BRT (retry se a 1a falhar)
+# Modo incremental (--days 10): so raspa os dias recentes e faz MERGE append-only
+# com o arquivo ja salvo no Blob — a janela historica cresce indefinidamente.
+on:
+  schedule:
+    - cron: "30 23 * * 1-5"
+    - cron: "30 1 * * 2-6"
+  workflow_dispatch:
+    inputs:
+      backfill:
+        description: "Raspar a janela inteira da B3 (~6 meses) em vez do incremental"
+        required: false
+        default: "0"
+
+concurrency:
+  group: fluxo-investidores-pipeline
+  cancel-in-progress: true
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      NEXT_PUBLIC_BLOB_BASE_URL: ${{ secrets.NEXT_PUBLIC_BLOB_BASE_URL }}
+      PYTHONUTF8: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: data-pipeline/python/requirements.txt
+
+      - name: Pip install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r data-pipeline/python/requirements.txt
+
+      - name: build_fluxo_investidores (incremental + merge append-only no Blob)
+        if: ${{ github.event.inputs.backfill != '1' }}
+        run: python data-pipeline/python/build_fluxo_investidores.py --days 12 --upload
+
+      - name: build_fluxo_investidores (BACKFILL janela completa)
+        if: ${{ github.event.inputs.backfill == '1' }}
+        run: python data-pipeline/python/build_fluxo_investidores.py --backfill --upload
+
+      - name: Upload artefato (debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fluxo-investidores-${{ github.run_id }}
+          path: data-pipeline/out/fluxo_investidores.json
+          if-no-files-found: warn
+          retention-days: 7
