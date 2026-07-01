@@ -7,6 +7,7 @@ import { AcoesValuation } from "@/components/painel/acoes/AcoesValuation";
 import { ComparadorTabela, type ComparadorAtivoRow } from "@/components/painel/acoes/ComparadorTabela";
 import { FluxoInvestidores } from "@/components/painel/acoes/FluxoInvestidores";
 import { IbovHero, type IbovOverlaySeries } from "@/components/painel/acoes/IbovHero";
+import { SimuladorCarteira, type SimAssetInput } from "@/components/painel/acoes/SimuladorCarteira";
 import type { AzPeriodValue, AzSeriesPoint } from "@/components/painel/charts";
 import type {
   AcoesIbovData,
@@ -113,6 +114,18 @@ export function RendaVariavelClient({ ibov, valuation, fluxo, screener, logos }:
     };
   });
 
+  // Ativos do simulador de carteira (mesmas séries + DY/market cap do screener).
+  const simAssets: SimAssetInput[] = overlays.map((o) => {
+    const sc = screener?.rows.find((r) => r.ticker === o.ticker);
+    return {
+      ticker: o.ticker,
+      color: o.color,
+      series: o.data,
+      dy12m: sc?.dy_12m_pct ?? null,
+      marketCap: sc?.market_cap ?? null,
+    };
+  });
+
   const tabBtn = (id: TabId, label: string) => (
     <button
       type="button"
@@ -149,6 +162,13 @@ export function RendaVariavelClient({ ibov, valuation, fluxo, screener, logos }:
                 ibovData={ibov.series_daily.map((p) => [p.date, p.ibov] as const)}
                 rows={tabelaRows}
                 period={period}
+              />
+              <SimuladorCarteira
+                assets={simAssets}
+                ibovSeries={ibov.series_daily.map((p) => [p.date, p.ibov] as const)}
+                cdiSeries={ibov.series_daily.flatMap((p) =>
+                  typeof p.CDI === "number" ? [[p.date, p.CDI] as const] : [],
+                )}
               />
             </>
           ) : (

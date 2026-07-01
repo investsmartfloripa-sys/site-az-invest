@@ -6,14 +6,14 @@ import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/workspace/audit";
 
-export type LeadTipo = "whatsapp" | "fii" | "consorcio" | "form";
+export type LeadTipo = "whatsapp" | "fii" | "consorcio" | "form" | "acoes";
 export type LeadStatusValue = "novo" | "contactado" | "convertido" | "descartado";
 
 export type SetLeadStatusResult =
   | { ok: true }
   | { ok: false; reason: "invalid" | "forbidden" | "migration" | "error" };
 
-const LEAD_TIPOS: readonly LeadTipo[] = ["whatsapp", "fii", "consorcio", "form"];
+const LEAD_TIPOS: readonly LeadTipo[] = ["whatsapp", "fii", "consorcio", "form", "acoes"];
 const LEAD_STATUSES: readonly LeadStatusValue[] = [
   "novo",
   "contactado",
@@ -70,6 +70,14 @@ async function canAnnotateLead(
     case "consorcio": {
       if (isAuthor) return "forbidden";
       const lead = await prisma.consorcioLead.findUnique({
+        where: { id: leadId },
+        select: { id: true },
+      });
+      return lead ? "ok" : "invalid";
+    }
+    case "acoes": {
+      if (isAuthor) return "forbidden";
+      const lead = await prisma.acoesSimLead.findUnique({
         where: { id: leadId },
         select: { id: true },
       });

@@ -159,6 +159,20 @@ model ConsorcioLead {
   createdAt  DateTime @default(now())
 }
 
+/// Lead do simulador de carteira (renda variável) — `carteira` guarda a
+/// simulação completa (tickers + pesos + valor) p/ o comercial saber o
+/// interesse do lead.
+model AcoesSimLead {
+  id           Int      @id @default(autoincrement())
+  name         String
+  phone        String
+  email        String?
+  valorInicial Float?
+  carteira     Json
+  source       String   @default("SIMULADOR_ACOES")
+  createdAt    DateTime @default(now())
+}
+
 model AnalyticsEvent {
   id        Int      @id @default(autoincrement())
   type      String

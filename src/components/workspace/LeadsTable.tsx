@@ -52,6 +52,7 @@ const ORIGEM_BADGES: Record<LeadTipo, { label: string; className: string }> = {
   fii: { label: "FII", className: "bg-[#ebf4ff] text-[#027DFC]" },
   consorcio: { label: "Consórcio", className: "bg-[#FF5713]/12 text-[#FF5713]" },
   form: { label: "Formulário", className: "bg-[#132960]/10 text-[#132960]" },
+  acoes: { label: "Simulador Ações", className: "bg-violet-100 text-violet-700" },
 };
 
 /** Link wa.me com DDI 55: remove não-dígitos e evita duplicar o 55 de números já internacionais. */

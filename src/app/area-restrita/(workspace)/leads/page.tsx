@@ -12,7 +12,7 @@ import { authorScopeWhere } from "@/lib/workspace/permissions";
 const PER_SOURCE_LIMIT = 300;
 const TOTAL_LIMIT = 500;
 
-const LEAD_TIPOS: readonly LeadTipo[] = ["whatsapp", "fii", "consorcio", "form"];
+const LEAD_TIPOS: readonly LeadTipo[] = ["whatsapp", "fii", "consorcio", "form", "acoes"];
 const LEAD_STATUSES: readonly LeadStatusValue[] = [
   "novo",
   "contactado",
@@ -27,6 +27,7 @@ const ORIGEM_LABELS: Record<LeadTipo, string> = {
   fii: "FII",
   consorcio: "Consórcio",
   form: "Formulário",
+  acoes: "Simulador Ações",
 };
 
 type SearchParams = Promise<{
@@ -78,7 +79,7 @@ export default async function LeadsPage({
     return allowedTipos.includes(tipo) && (!origem || origem === tipo);
   }
 
-  const [whatsapp, fii, consorcio, form] = await Promise.all([
+  const [whatsapp, fii, consorcio, form, acoesSim] = await Promise.all([
     wants("whatsapp")
       ? prisma.authorWhatsappClick.findMany({
           where: { ...authorFilter, ...dateWhere, ...nameWhere },
@@ -108,6 +109,16 @@ export default async function LeadsPage({
           orderBy: { createdAt: "desc" },
           take: PER_SOURCE_LIMIT,
         })
+      : Promise.resolve([]),
+    wants("acoes")
+      ? prisma.acoesSimLead
+          .findMany({
+            where: { ...dateWhere, ...nameWhere },
+            orderBy: { createdAt: "desc" },
+            take: PER_SOURCE_LIMIT,
+          })
+          // Antes da migration a tabela não existe — degrada p/ lista vazia.
+          .catch(() => [])
       : Promise.resolve([]),
   ]);
 
@@ -175,6 +186,33 @@ export default async function LeadsPage({
         status: "novo",
       }),
     ),
+    ...acoesSim.map((l): LeadRow => {
+      // `carteira` = JSON {valorInicial, ativos:[{ticker,pesoPct}]} gravado
+      // pelo simulador — vira o detalhe do lead (interesse do contato).
+      let carteiraTxt: string | null = null;
+      const c = l.carteira as { ativos?: Array<{ ticker?: string; pesoPct?: number }> } | null;
+      if (c && Array.isArray(c.ativos)) {
+        carteiraTxt = c.ativos
+          .filter((a) => a?.ticker)
+          .map((a) => (a.pesoPct != null ? `${a.ticker} ${Math.round(a.pesoPct)}%` : String(a.ticker)))
+          .join(" · ");
+      }
+      return {
+        key: `acoes-${l.id}`,
+        tipo: "acoes",
+        id: l.id,
+        createdAt: l.createdAt.toISOString(),
+        nome: l.name,
+        telefone: l.phone,
+        email: l.email,
+        detalhe: joinDetalhe([
+          l.valorInicial != null ? `Simulou ${fmtBRL(l.valorInicial, 0)}` : null,
+          carteiraTxt ? truncate(carteiraTxt, 90) : null,
+        ]),
+        assessor: null,
+        status: "novo",
+      };
+    }),
   ];
 
   rows.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
