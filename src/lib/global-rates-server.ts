@@ -24,6 +24,7 @@
 import "server-only";
 
 import {
+  BANREP_DECISION_DATES,
   ECB_DECISION_DATES,
   futureMeetings,
   impliedPolicyPath,
@@ -38,14 +39,11 @@ import {
   type TenorHistory,
 } from "@/lib/global-rates";
 import {
-  BOE_DECISION_DATES,
   BOJ_DECISION_DATES,
   FOMC_DECISION_DATES,
   fedFundsImpliedPath,
   futuresSymbol,
-  immDateISO,
   monthlySchedule,
-  quarterlySchedule,
   type FuturesQuote,
 } from "@/lib/rate-futures";
 
@@ -483,6 +481,7 @@ function isoToBanrepNum(iso: string): number {
 
 /** POST JSON do SUAMECA: devolve [iso, %][] por série (data = [[epoch_ms, valor]]). */
 async function fetchBanrepSeries(
+  ids: number[],
   startISO: string,
   revalidate: number,
 ): Promise<Map<number, [string, number][]>> {
@@ -495,7 +494,7 @@ async function fetchBanrepSeries(
       signal: ctrl.signal,
       headers: { "User-Agent": UA, "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
-        series: CO_SERIES.map((s) => ({ idSerie: s.idSerie, idPeriodicidades: [1] })),
+        series: ids.map((idSerie) => ({ idSerie, idPeriodicidades: [1] })),
         fechaInicio: isoToBanrepNum(startISO),
         fechaFin: isoToBanrepNum(todayISO()),
       }),
@@ -524,7 +523,11 @@ async function fetchBanrepSeries(
 
 async function getColombiaCurve(): Promise<CountryCurve | null> {
   // Janela maior que os ~100d dos demais: a carga do BanRep tem lag de dias.
-  const bySeries = await fetchBanrepSeries(isoNDaysAgo(130), CURVE_REVALIDATE);
+  const bySeries = await fetchBanrepSeries(
+    CO_SERIES.map((s) => s.idSerie),
+    isoNDaysAgo(130),
+    CURVE_REVALIDATE,
+  );
   const perTenor: TenorHist[] = CO_SERIES.map((s) => ({
     years: s.years,
     hist: bySeries.get(s.idSerie) ?? [],
@@ -534,7 +537,11 @@ async function getColombiaCurve(): Promise<CountryCurve | null> {
 }
 
 async function getColombiaHistory(tenors: number[], cutoffISO: string): Promise<CountryHistory | null> {
-  const bySeries = await fetchBanrepSeries(cutoffISO, HISTORY_REVALIDATE);
+  const bySeries = await fetchBanrepSeries(
+    CO_SERIES.map((s) => s.idSerie),
+    cutoffISO,
+    HISTORY_REVALIDATE,
+  );
   const series: TenorHistory[] = CO_SERIES.filter((s) => tenors.includes(s.years))
     .map((s) => ({ years: s.years, points: downsampleWeekly(bySeries.get(s.idSerie) ?? []) }))
     .filter((s) => s.points.length > 0);
@@ -714,40 +721,9 @@ function buildPolicyRows(
   }));
 }
 
-/** Linhas amostrando os 3 caminhos em `dates` (usado quando o eixo é o calendário de reuniões). */
-function buildRowsAtDates(
-  dates: string[],
-  pathD0: PolicySegment[],
-  pathD30: PolicySegment[],
-  pathD90: PolicySegment[],
-): PolicyRow[] {
-  return dates.map((d) => ({
-    date: d,
-    d0: policyLevelAt(pathD0, d),
-    d30: policyLevelAt(pathD30, d),
-    d90: policyLevelAt(pathD90, d),
-  }));
-}
-
-function isoMonthsAhead(months: number): string {
-  return new Date(Date.now() + months * 30.4 * 86_400_000).toISOString().slice(0, 10);
-}
-
-/** Histórico da taxa básica do BoE (Bank Rate, série IUDBEDR) — [iso, %][]. */
-async function fetchBoeBankRate(fromISO: string): Promise<[string, number][]> {
-  const url =
-    `${BOE_BASE}?csv.x=yes&Datefrom=${encodeURIComponent(boeDateUK(fromISO))}&Dateto=now` +
-    `&SeriesCodes=IUDBEDR&CSVF=TT&UsingCodes=Y&VPD=Y&VFD=N`;
-  const csv = await fetchText(url, FUTURES_HISTORY_REVALIDATE, 25_000);
-  if (!csv) return [];
-  const { rows } = parseBoeCsv(csv);
-  const out: [string, number][] = [];
-  for (const r of rows) {
-    const v = r.vals[0];
-    if (v != null) out.push([r.iso, v]);
-  }
-  return out.sort((a, b) => (a[0] < b[0] ? -1 : 1));
-}
+// (buildRowsAtDates removida junto com a pseudo-implícita do Reino Unido —
+// sem tira de SONIA gratuita, a "implícita" era uma linha chapada sem
+// conteúdo informativo; o UK ficou curva-only.)
 
 /** Série (multi-linha) de uma chave da curva ECB (csvdata): [iso, valor][]. */
 function parseEcbSeries(csv: string): [string, number][] {
@@ -900,41 +876,58 @@ export async function getFuturesPolicy(country: GlobalCountryId): Promise<Future
     };
   }
 
-  if (country === "gb") {
-    // Sem tira datada de SONIA gratuita: âncora = Bank Rate do BoE + 1 ponto forward
-    // (futuro SONIA contínuo SON=F, ~próximo trimestre). D-30/D-90 = idem no histórico.
-    const [bankHist, sonHist] = await Promise.all([fetchBoeBankRate(isoDaysAgo(130)), fetchYahooHistory("SON=F")]);
-    if (bankHist.length === 0) return null;
-    const frontQ = quarterlySchedule(year, month, 1)[0];
-    const frontIMM = immDateISO(frontQ.year, frontQ.month);
-    const round2 = (x: number) => Math.round(x * 100) / 100;
-    const pathAt = (iso: string): PolicySegment[] => {
-      const b = valueOnOrBefore(bankHist, iso);
-      if (b == null) return [];
-      const segs: PolicySegment[] = [{ fromISO: ref, level: round2(b) }];
-      const p = valueOnOrBefore(sonHist, iso);
-      if (p != null) segs.push({ fromISO: frontIMM, level: round2(100 - p) });
-      return segs;
-    };
-    const p0 = pathAt(ref);
+  if (country === "co") {
+    // Colômbia: a ponta curta é o IBR (Indicador Bancario de Referencia) —
+    // overnight + 1m/3m/6m/12m formados pelos swaps IBR (o OIS colombiano),
+    // publicados diariamente pelo BanRep (D-1, sem o lag da carga dos TES).
+    // Mesmo modelo forward do BCE/BoJ, alinhado às decisões da Junta.
+    // (Os betas Nelson-Siegel do SUAMECA vêm arredondados a 2 casas — precisão
+    // insuficiente p/ a ponta curta; o IBR é a fonte correta.)
+    const IBR: { idSerie: number; years: number }[] = [
+      { idSerie: 15324, years: 1 / 365 }, // overnight (âncora do nível vigente)
+      { idSerie: 15325, years: 1 / 12 },
+      { idSerie: 15326, years: 0.25 },
+      { idSerie: 16561, years: 0.5 },
+      { idSerie: 16563, years: 1 },
+    ];
+    const bySeries = await fetchBanrepSeries(
+      IBR.map((s) => s.idSerie),
+      isoDaysAgo(130),
+      FUTURES_HISTORY_REVALIDATE,
+    );
+    const hists = IBR.map((s) => ({ years: s.years, hist: bySeries.get(s.idSerie) ?? [] }));
+    if (hists.filter((h) => h.hist.length > 0).length < 3) return null;
+    const curveAt = (iso: string): CurvePoint[] =>
+      hists
+        .map((h) => {
+          const r = valueOnOrBefore(h.hist, iso);
+          return r == null ? null : { years: h.years, rate: r };
+        })
+        .filter((p): p is CurvePoint => p != null)
+        .sort((a, b) => a.years - b.years);
+    const opts = { stepPct: 0.25, horizonYears: 1.0 }; // IBR só vai a 12m
+    const c0 = curveAt(ref);
+    if (c0.length < 2) return null;
+    const p0 = impliedPolicyPath(c0, ref, BANREP_DECISION_DATES, opts);
     if (p0.length === 0) return null;
-    // Eixo = calendário do BoE até ~15 meses (linha ~plana no nível precificado).
-    const horizon = isoMonthsAhead(15);
-    const meetings = futureMeetings(BOE_DECISION_DATES, ref).filter((d) => d <= horizon);
+    const p30 = impliedPolicyPath(curveAt(ref30), ref, BANREP_DECISION_DATES, opts);
+    const p90 = impliedPolicyPath(curveAt(ref90), ref, BANREP_DECISION_DATES, opts);
     return {
-      label: "BoE implícita (SONIA)",
-      bank: "BoE",
-      rows: buildRowsAtDates([ref, ...meetings], p0, pathAt(ref30), pathAt(ref90)),
+      label: "BanRep implícita (IBR)",
+      bank: "BanRep",
+      rows: buildPolicyRows(p0, p30, p90),
       labels,
-      meetings,
+      meetings: futureMeetings(BANREP_DECISION_DATES, ref),
       asOf: ref,
       note:
-        "Reino Unido: NÃO existe tira datada de futuros de SONIA gratuita (só o contínuo do próximo trimestre). Mostramos " +
-        "a taxa básica atual do BoE (Bank Rate) e a expectativa do próximo trimestre precificada pelo futuro SONIA de 3 " +
-        "meses (CME, via Yahoo). Reunião-a-reunião completo exigiria feed pago (ICE/Refinitiv). D-30/D-90: os mesmos " +
-        "indicadores há ~30 e ~90 dias.",
+        "Trajetória implícita do BanRep pela curva do IBR (Indicador Bancario de Referencia, overnight a 12 meses — " +
+        "formado pelos swaps IBR, o análogo colombiano do DI/OIS; BanRep, D-1). Forward entre as decisões de taxa da " +
+        "Junta Directiva (8/ano; calendário 2027 estimado), degraus de 0,25 p.p., horizonte ~12 meses. D-30/D-90: a " +
+        "mesma curva há ~30 e ~90 dias.",
     };
   }
 
+  // gb: sem tira de SONIA gratuita → curva-only (a antiga aproximação Bank
+  // Rate + 1 forward era uma linha chapada sem informação).
   return null;
 }

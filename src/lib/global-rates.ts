@@ -91,6 +91,7 @@ export const GLOBAL_COUNTRIES: readonly GlobalCountry[] = [
     name: "Colômbia",
     curveLabel: "TES",
     source: "Banco de la República (TES cero cupón)",
+    policy: { bank: "BanRep", label: "BanRep implícita" },
   },
 ] as const;
 
@@ -195,6 +196,32 @@ export const ECB_DECISION_DATES: readonly string[] = [
   "2027-09-09",
   "2027-10-28",
   "2027-12-16",
+] as const;
+
+/**
+ * Datas de DECISÃO de taxa da Junta Directiva do BanRep (Colômbia). 2026 =
+ * calendário OFICIAL (8 decisões/ano; as reuniões sem decisão de taxa ficam
+ * fora). 2027 = ESTIMADO pelo padrão (fim de mês; atualizar quando o BanRep
+ * publicar o calendário oficial).
+ */
+export const BANREP_DECISION_DATES: readonly string[] = [
+  "2026-01-30",
+  "2026-03-31",
+  "2026-04-30",
+  "2026-06-30",
+  "2026-07-31",
+  "2026-09-30",
+  "2026-10-30",
+  "2026-12-18",
+  // 2027 — ESTIMADO
+  "2027-01-29",
+  "2027-03-31",
+  "2027-04-30",
+  "2027-06-30",
+  "2027-07-30",
+  "2027-09-30",
+  "2027-10-29",
+  "2027-12-17",
 ] as const;
 
 // ---------------------------------------------------------------------------

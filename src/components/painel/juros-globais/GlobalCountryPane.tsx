@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { Landmark, LineChart as LineChartIcon } from "lucide-react";
 
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { PanelTabs, type PanelTabItem } from "@/components/painel/panorama/PanelTabs";
 import { PolicyStepChart } from "@/components/painel/juros-globais/PolicyStepChart";
 import type { CountryRatesPayload, GlobalCountry } from "@/lib/global-rates";
@@ -158,8 +159,12 @@ export function GlobalCountryPane({ country }: { country: GlobalCountry }) {
     <div aria-label={`Juros ${country.name}`}>
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 px-4 pb-2 pt-3 md:px-5">
         <PanelTabs ariaLabel={`Visão de juros ${country.name}`} tabs={tabs} value={activeTab} onChange={setTab} accent="#0B6B2E" />
-        <span className="text-[11px] text-zinc-500">
-          {curve ? `Fonte: ${curve.source} · ${dateLabelBR(curve.asOf)}` : country.source}
+        <span className="inline-flex items-center gap-1.5 text-[11px] text-zinc-500">
+          {curve ? dateLabelBR(curve.asOf) : null}
+          <MethodInfo align="right">
+            Fonte: {curve ? curve.source : country.source}. Dados diários oficiais buscados ao
+            vivo pelo servidor do site.
+          </MethodInfo>
         </span>
       </div>
 
@@ -257,9 +262,11 @@ export function GlobalCountryPane({ country }: { country: GlobalCountry }) {
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">
-              {`Curva soberana de ${country.name} por prazo — yields nominais por maturidade. “Agora”: fechamento mais recente (${dateLabelBR(curve.asOf)}); “Ajuste D-1”: pregão anterior; “D-30”/“D-90”: a curva há ~30 e ~90 dias. Fonte: ${country.source}.`}
-            </p>
+            <div className="mt-2 flex justify-end">
+              <MethodInfo align="right">
+                {`Curva soberana de ${country.name} por prazo — yields nominais por maturidade. “Agora”: fechamento mais recente (${dateLabelBR(curve.asOf)}); “Ajuste D-1”: pregão anterior; “D-30”/“D-90”: a curva há ~30 e ~90 dias. Fonte: ${country.source}.`}
+              </MethodInfo>
+            </div>
           </div>
 
           <div className="min-w-0 overflow-x-auto">

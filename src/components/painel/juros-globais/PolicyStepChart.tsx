@@ -13,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import type { PolicyRow } from "@/lib/global-rates";
 
 const GRID = "#E2E8F0";
@@ -164,7 +165,9 @@ export function PolicyStepChart({
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <p className="mt-2 text-[11px] text-zinc-500">{note}</p>
+        <div className="mt-2 flex justify-end">
+          <MethodInfo align="right">{note}</MethodInfo>
+        </div>
       </div>
 
       <div className="min-w-0 overflow-x-auto">
