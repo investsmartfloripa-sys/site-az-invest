@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { COMPARATOR_TENORS, type CountryHistory, type GlobalCountryId } from "@/lib/global-rates";
 import { getCountryHistory } from "@/lib/global-rates-server";
 
-const COUNTRIES: GlobalCountryId[] = ["br", "us", "jp", "de", "gb", "co", "cn"];
+const COUNTRIES: GlobalCountryId[] = ["br", "us", "jp", "de", "gb", "co", "cl", "cn"];
 
 /**
  * Histórico por prazo (downsample semanal) de TODOS os países do comparador

@@ -555,6 +555,94 @@ async function getColombiaHistory(tenors: number[], cutoffISO: string): Promise<
 }
 
 // ---------------------------------------------------------------------------
+// Chile — Banco Central de Chile (SieteRestWS / Base de Datos Estadísticos)
+// Cadastro gratuito; credenciais via env BCCH_USER/BCCH_PASS (vão na query
+// string — desenho da API deles). Bonos em pesos (BCP/BTP) mercado secundário.
+// ---------------------------------------------------------------------------
+
+const BCCH_URL = "https://si3.bcentral.cl/SieteRestWS/SieteRestWS.ashx";
+const CL_SERIES: { code: string; years: number }[] = [
+  { code: "F022.BCLP.TIS.AN01.NO.Z.D", years: 1 },
+  { code: "F022.BCLP.TIS.AN02.NO.Z.D", years: 2 },
+  { code: "F022.BCLP.TIS.AN05.NO.Z.D", years: 5 },
+  { code: "F022.BCLP.TIS.AN10.NO.Z.D", years: 10 },
+];
+
+/** "02-07-2026" (formato Obs do BCCh) → "2026-07-02". */
+function bcchDateISO(s: string): string | null {
+  const t = s.trim();
+  const m = t.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  return /^\d{4}-\d{2}-\d{2}$/.test(t) ? t : null;
+}
+
+async function fetchBcchSeries(
+  code: string,
+  firstISO: string,
+  revalidate: number,
+): Promise<[string, number][]> {
+  const user = process.env.BCCH_USER;
+  const pass = process.env.BCCH_PASS;
+  if (!user || !pass) return []; // sem credenciais → Chile degrada p/ ausente
+  const url =
+    `${BCCH_URL}?user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}` +
+    `&function=GetSeries&timeseries=${encodeURIComponent(code)}&firstdate=${firstISO}`;
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), 25_000);
+  try {
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: { "User-Agent": UA, Accept: "application/json" },
+      next: { revalidate },
+    });
+    if (!res.ok) return [];
+    const json = (await res.json()) as {
+      Codigo?: number;
+      Series?: { Obs?: { indexDateString?: string; value?: string | number; statusCode?: string }[] };
+    };
+    const obs = json?.Series?.Obs ?? [];
+    const out: [string, number][] = [];
+    for (const o of obs) {
+      const iso = o.indexDateString ? bcchDateISO(o.indexDateString) : null;
+      const v = typeof o.value === "number" ? o.value : Number(o.value);
+      // BCCh marca ausência com value "NaN"/statusCode "ND".
+      if (iso && Number.isFinite(v) && o.statusCode !== "ND") out.push([iso, v]);
+    }
+    return out.sort((a, b) => (a[0] < b[0] ? -1 : 1));
+  } catch {
+    return [];
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+async function getChileCurve(): Promise<CountryCurve | null> {
+  const start = isoNDaysAgo(100);
+  const perTenor = await Promise.all(
+    CL_SERIES.map(async (s) => ({ years: s.years, hist: await fetchBcchSeries(s.code, start, CURVE_REVALIDATE) })),
+  );
+  const valid = perTenor.filter((t) => t.hist.length > 0);
+  if (valid.length < 2) return null;
+  return curveWithCuts("cl", valid, "Banco Central de Chile (BCP/BTP, mercado secundário)");
+}
+
+async function getChileHistory(tenors: number[], cutoffISO: string): Promise<CountryHistory | null> {
+  const wanted = CL_SERIES.filter((s) => tenors.includes(s.years));
+  const results = await Promise.all(
+    wanted.map(async (s) => ({ years: s.years, obs: await fetchBcchSeries(s.code, cutoffISO, HISTORY_REVALIDATE) })),
+  );
+  const series: TenorHistory[] = results
+    .map((r) => ({ years: r.years, points: downsampleWeekly(r.obs) }))
+    .filter((s) => s.points.length > 0);
+  if (series.length === 0) return null;
+  const asOf = series.reduce((mx, s) => {
+    const d = s.points[s.points.length - 1][0];
+    return d > mx ? d : mx;
+  }, "0000-00-00");
+  return { country: "cl", asOf, series, source: "Banco Central de Chile (BCP/BTP)" };
+}
+
+// ---------------------------------------------------------------------------
 // China (cn) e Brasil (br) — arquivos de PIPELINE no Blob (fontes frágeis ou
 // de janela curta NÃO são consultadas ao vivo; cron diário grava, o site lê).
 //   data/china_curve.json — build_china_curve.py (ChinaBond/CCDC)
@@ -699,6 +787,8 @@ export async function getCountryCurve(country: GlobalCountryId): Promise<Country
       return getUSCurve();
     case "co":
       return getColombiaCurve();
+    case "cl":
+      return getChileCurve();
     case "cn":
       return getChinaCurve();
     default:
@@ -722,6 +812,8 @@ export async function getCountryHistory(
       return getUSHistory(tenors, cutoffISO);
     case "co":
       return getColombiaHistory(tenors, cutoffISO);
+    case "cl":
+      return getChileHistory(tenors, cutoffISO);
     case "cn":
       return getChinaHistory(tenors, cutoffISO);
     case "br":

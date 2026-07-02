@@ -71,6 +71,10 @@ const COUNTRY_HEAD: Record<CountrySel, { title: string; subtitle: string }> = {
     title: "Juros Colômbia — TES & BanRep",
     subtitle: "Curva zero cupom dos TES em pesos e BanRep implícita pela curva do IBR (swaps).",
   },
+  cl: {
+    title: "Juros Chile — BCP/BTP",
+    subtitle: "Bonos em pesos do mercado secundário (Banco Central de Chile, 1/2/5/10 anos).",
+  },
   cn: {
     title: "Juros China — CGB",
     subtitle: "Curva dos títulos do governo chinês (ChinaBond/CCDC, D-1 via pipeline).",

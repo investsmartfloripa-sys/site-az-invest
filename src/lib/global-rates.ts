@@ -32,7 +32,7 @@
  * Brasil usa a trilha própria intraday da B3 (o "br" daqui serve ao
  * comparador histórico).
  */
-export type GlobalCountryId = "br" | "us" | "jp" | "de" | "gb" | "co" | "cn";
+export type GlobalCountryId = "br" | "us" | "jp" | "de" | "gb" | "co" | "cl" | "cn";
 
 export type CountryPolicy = {
   /** Banco central (ex.: "Fed", "BCE", "BoJ"). */
@@ -104,6 +104,13 @@ export const GLOBAL_COUNTRIES: readonly GlobalCountry[] = [
     curveLabel: "TES",
     source: "Banco de la República (TES cero cupón)",
     policy: { bank: "BanRep", label: "BanRep implícita" },
+  },
+  {
+    id: "cl",
+    flag: "cl",
+    name: "Chile",
+    curveLabel: "BCP/BTP",
+    source: "Banco Central de Chile (BDE)",
   },
   {
     id: "cn",

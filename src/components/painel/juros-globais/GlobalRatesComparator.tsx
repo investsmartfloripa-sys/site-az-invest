@@ -39,6 +39,7 @@ const COUNTRY_COLOR: Record<GlobalCountryId, string> = {
   de: "#027DFC", // azure
   gb: "#1E8A5C", // verde-mar
   co: "#D97706", // âmbar
+  cl: "#6D28D9", // violeta
   cn: "#B91C1C", // vermelho escuro
 };
 
