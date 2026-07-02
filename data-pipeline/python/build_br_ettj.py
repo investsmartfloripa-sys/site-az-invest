@@ -212,6 +212,8 @@ def main() -> int:
         "source": "ANBIMA ETTJ (vértices Svensson, % a.a. 252du) + Tesouro Direto LTN/NTN-F (backfill)",
         "tenors_years": TENORS_YEARS,
         "schema": "dates[iso] = {pre: [r_1a, r_2a, r_5a, r_10a], ipca: idem|null, src}",
+        # Última observação — lido pelo health-check (data-manifest dataDateField).
+        "last_data_date": max(dates_map) if dates_map else None,
         "dates": dict(sorted(dates_map.items())),
     }
     out = Path(args.out_dir)

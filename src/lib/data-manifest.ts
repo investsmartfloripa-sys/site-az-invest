@@ -56,6 +56,7 @@ export const PAINEIS: PainelDef[] = [
   { key: "fundos-investimento", label: "Mercado · Fundos de Investimento", pagePath: "/painel-economico/mercado/brasil/fundos-investimento" },
   { key: "renda-fixa", label: "Mercado · Renda fixa", pagePath: "/painel-economico/mercado/brasil/renda-fixa" },
   { key: "fii", label: "Mercado · Fundos Imobiliários", pagePath: "/painel-economico/mercado/brasil/fundos-imobiliarios" },
+  { key: "juros-globais", label: "Mercado · Juros globais", pagePath: "/painel-economico/mercado/global/juros-globais" },
   { key: "mercado-ativos", label: "Mercado · Histórico e fundamentos", pagePath: "/painel-economico/mercado/historico" },
   { key: "termometro-ciclo", label: "Economia · Termômetro de Ciclo", pagePath: "/painel-economico/economia/brasil/termometro-ciclo" },
   { key: "atividade", label: "Economia · Atividade", pagePath: "/painel-economico/economia/brasil/atividade" },
@@ -77,11 +78,16 @@ export const DATA_SOURCES: DataSourceDef[] = [
   { key: "svg_selic_implicita", label: "SVG Selic implícita (R)", blobPath: "charts/static/selic_implicita.svg", kind: "svg", workflowName: "data-pipeline.yml", cadence: "15min", painel: "panorama" },
   { key: "svg_juros_treasury_us", label: "SVG Treasury EUA (R)", blobPath: "charts/static/juros_treasury_us.svg", kind: "svg", workflowName: "data-pipeline.yml", cadence: "15min", painel: "panorama" },
   { key: "svg_fed_implicita", label: "SVG Fed implícita (R)", blobPath: "charts/static/fed_implicita.svg", kind: "svg", workflowName: "data-pipeline.yml", cadence: "15min", painel: "panorama" },
+  { key: "svg_juros_prefixado", label: "SVG curva pré (R)", blobPath: "charts/static/juros_prefixado.svg", kind: "svg", workflowName: "data-pipeline.yml", cadence: "15min", painel: "panorama" },
+  { key: "svg_juros_ipca", label: "SVG curva IPCA+ (R)", blobPath: "charts/static/juros_ipca.svg", kind: "svg", workflowName: "data-pipeline.yml", cadence: "15min", painel: "panorama" },
 
   // ── Renda variável (acoes-pipeline.yml, dias úteis 22:45/00:45 UTC) ────────
   { key: "acoes_ibov", label: "Ibovespa (hero)", blobPath: "data/acoes_ibov.json", workflowName: "acoes-pipeline.yml", cadence: "diario-util", painel: "renda-variavel" },
   { key: "acoes_valuation", label: "Valuation (P/L + prêmio)", blobPath: "data/acoes_valuation.json", workflowName: "acoes-pipeline.yml", cadence: "diario-util", painel: "renda-variavel" },
   { key: "acoes_screener", label: "Screener IBOV", blobPath: "data/acoes_screener.json", workflowName: "acoes-pipeline.yml", cadence: "diario-util", painel: "renda-variavel" },
+  { key: "acoes_total_return", label: "Retorno total por papel (comparador/simulador)", blobPath: "data/acoes_total_return.json", workflowName: "acoes-pipeline.yml", cadence: "diario-util", painel: "renda-variavel", heavy: true },
+  { key: "acoes_logos", label: "Logos das empresas (TradingView)", blobPath: "data/acoes_logos.json", workflowName: "acoes-pipeline.yml", cadence: "diario-util", painel: "renda-variavel" },
+  { key: "fluxo_investidores", label: "Fluxo de investidores B3 (janela crescente)", blobPath: "data/fluxo_investidores.json", workflowName: "fluxo-investidores-pipeline.yml", cadence: "diario-util", painel: "renda-variavel", dataDateField: "data_date" },
 
   // ── Renda fixa (market-data.yml, dias úteis 22:30/00:30 UTC) ───────────────
   { key: "treasury_history", label: "Curvas de juros (ANBIMA TPF)", blobPath: "data/treasury_history.json", workflowName: "market-data.yml", cadence: "diario-util", painel: "renda-fixa", dataDateField: "last_data_date" },
@@ -92,6 +98,11 @@ export const DATA_SOURCES: DataSourceDef[] = [
   { key: "fii_screener", label: "Screener FIIs", blobPath: "data/fii_screener.json", workflowName: "fii-pipeline-live.yml", cadence: "intraday-util", painel: "fii" },
   { key: "fii_details", label: "Detalhe por ticker (107 FIIs)", blobPath: "data/fii_details.json", workflowName: "fii-pipeline.yml", cadence: "diario-util", painel: "fii", pagePath: "/painel-economico/mercado/brasil/fundos-imobiliarios", heavy: true },
   { key: "fii_macro_charts", label: "Macro charts (P/VP + prêmio)", blobPath: "data/fii_macro_charts.json", workflowName: "fii-pipeline.yml", cadence: "diario-util", painel: "fii" },
+  { key: "fii_total_return", label: "Retorno total por FII (comparador/simulador)", blobPath: "data/fii_total_return.json", workflowName: "fii-pipeline.yml", cadence: "diario-util", painel: "fii", heavy: true },
+
+  // ── Juros globais (pipelines→Blob; as demais fontes da página são AO VIVO) ─
+  { key: "br_ettj", label: "Curva pré/IPCA Brasil (ANBIMA ETTJ)", blobPath: "data/br_ettj.json", workflowName: "br-ettj-pipeline.yml", cadence: "diario-util", painel: "juros-globais", dataDateField: "last_data_date" },
+  { key: "china_curve", label: "Curva CGB China (ChinaBond)", blobPath: "data/china_curve.json", workflowName: "china-curve-pipeline.yml", cadence: "diario-util", painel: "juros-globais", dataDateField: "last_data_date" },
 
   // ── Fundos de Investimento (fundos-pipeline.yml, semanal — Mais Retorno) ───
   { key: "fundos_ranking", label: "Ranking de fundos (Mais Retorno)", blobPath: "data/fundos_ranking.json", workflowName: "fundos-pipeline.yml", cadence: "semanal", painel: "fundos-investimento", pagePath: "/painel-economico/mercado/brasil/fundos-investimento", dataDateField: "data_date" },
@@ -123,7 +134,9 @@ export const DATA_SOURCES: DataSourceDef[] = [
   { key: "visao_geral_icf", label: "ICF (intenção de consumo)", blobPath: "data/visao_geral_icf.json", workflowName: "visao-geral-pipeline.yml", cadence: "diario", painel: "termometro-ciclo" },
   { key: "visao_geral_hiato", label: "Hiato do produto", blobPath: "data/visao_geral_hiato.json", workflowName: "visao-geral-pipeline.yml", cadence: "diario", painel: "termometro-ciclo" },
   { key: "visao_geral_hard_data", label: "Hard data (coincidentes)", blobPath: "data/visao_geral_hard_data.json", workflowName: "visao-geral-pipeline.yml", cadence: "diario", painel: "termometro-ciclo" },
-  { key: "visao_geral_recessao", label: "Probabilidade de recessão (consolidado)", blobPath: "data/visao_geral_recessao.json", workflowName: "visao-geral-pipeline.yml", cadence: "diario", painel: "termometro-ciclo" },
+  // visao_geral_recessao REMOVIDO do monitoramento (jul/2026): o job que o
+  // gerava saiu do visao-geral-pipeline.yml em 06/2026 — fonte morta acusava
+  // erro permanente. Se o build voltar, re-registrar aqui.
 
   // ── Atividade (atividade-pipeline.yml, janelas mensais/trimestrais) ────────
   { key: "atividade_pib", label: "PIB trimestral", blobPath: "data/atividade_pib.json", workflowName: "atividade-pipeline.yml", cadence: "trimestral", painel: "atividade", pagePath: "/painel-economico/economia/brasil/atividade/pib", dataDateField: "trim_recente" },

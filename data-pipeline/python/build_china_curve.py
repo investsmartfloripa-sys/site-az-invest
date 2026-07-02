@@ -112,6 +112,8 @@ def main() -> int:
         "source": "ChinaBond/CCDC — Government Bond Yield Curve (YTM)",
         "tenors_years": TENORS_YEARS,
         "schema": "dates[iso] = [taxa % a.a. em cada tenor, null se ausente]",
+        # Última observação — lido pelo health-check (data-manifest dataDateField).
+        "last_data_date": max(dates_map) if dates_map else None,
         "dates": dict(sorted(dates_map.items())),
     }
     out = Path(args.out_dir)
