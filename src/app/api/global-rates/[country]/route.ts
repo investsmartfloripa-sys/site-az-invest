@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { type CountryRatesPayload, type GlobalCountryId } from "@/lib/global-rates";
 import { getCountryCurve, getFuturesPolicy } from "@/lib/global-rates-server";
 
-const VALID: GlobalCountryId[] = ["us", "jp", "de", "gb", "co"];
+const VALID: GlobalCountryId[] = ["us", "jp", "de", "gb", "co", "cn"];
 
 /**
  * Curva soberana corrente (+ D-1) e, onde há futuros de juros de curto prazo, a

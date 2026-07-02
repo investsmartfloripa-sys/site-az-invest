@@ -35,10 +35,14 @@ const REFRESH_MS = 60_000;
 /** País selecionado no bloco unificado (Brasil + internacionais). */
 type CountrySel = "br" | GlobalCountryId;
 
-/** Lista do seletor de país: Brasil (B3 intraday) à frente, depois os internacionais. */
+/**
+ * Lista do seletor de país: Brasil (B3 intraday, trilha própria) à frente,
+ * depois os internacionais — o "br" do catálogo global (ANBIMA, p/ o
+ * comparador histórico) é FILTRADO p/ não duplicar o botão.
+ */
 const SWITCHER_COUNTRIES: { id: CountrySel; flag: string; name: string }[] = [
   { id: "br", flag: "br", name: "Brasil" },
-  ...GLOBAL_COUNTRIES.map((c) => ({ id: c.id as CountrySel, flag: c.flag, name: c.name })),
+  ...GLOBAL_COUNTRIES.filter((c) => c.id !== "br").map((c) => ({ id: c.id as CountrySel, flag: c.flag, name: c.name })),
 ];
 
 /** Títulos (fora do gráfico) e legenda de fonte por país. */
@@ -66,6 +70,10 @@ const COUNTRY_HEAD: Record<CountrySel, { title: string; subtitle: string }> = {
   co: {
     title: "Juros Colômbia — TES & BanRep",
     subtitle: "Curva zero cupom dos TES em pesos e BanRep implícita pela curva do IBR (swaps).",
+  },
+  cn: {
+    title: "Juros China — CGB",
+    subtitle: "Curva dos títulos do governo chinês (ChinaBond/CCDC, D-1 via pipeline).",
   },
 };
 

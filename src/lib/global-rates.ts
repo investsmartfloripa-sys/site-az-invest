@@ -26,8 +26,13 @@
 // Países
 // ---------------------------------------------------------------------------
 
-/** Países internacionais com curva diária (o Brasil tem trilha própria intraday B3). */
-export type GlobalCountryId = "us" | "jp" | "de" | "gb" | "co";
+/**
+ * Países com curva diária. "br" e "cn" vêm de PIPELINE+Blob (ANBIMA/Tesouro e
+ * ChinaBond, respectivamente), os demais de fetch ao vivo; no Panorama o
+ * Brasil usa a trilha própria intraday da B3 (o "br" daqui serve ao
+ * comparador histórico).
+ */
+export type GlobalCountryId = "br" | "us" | "jp" | "de" | "gb" | "co" | "cn";
 
 export type CountryPolicy = {
   /** Banco central (ex.: "Fed", "BCE", "BoJ"). */
@@ -55,6 +60,13 @@ export type GlobalCountry = {
  * bandeira (o Brasil é injetado à frente pelo componente do Panorama).
  */
 export const GLOBAL_COUNTRIES: readonly GlobalCountry[] = [
+  {
+    id: "br",
+    flag: "br",
+    name: "Brasil",
+    curveLabel: "Pré",
+    source: "ANBIMA (ETTJ) / Tesouro Direto",
+  },
   {
     id: "us",
     flag: "us",
@@ -92,6 +104,13 @@ export const GLOBAL_COUNTRIES: readonly GlobalCountry[] = [
     curveLabel: "TES",
     source: "Banco de la República (TES cero cupón)",
     policy: { bank: "BanRep", label: "BanRep implícita" },
+  },
+  {
+    id: "cn",
+    flag: "cn",
+    name: "China",
+    curveLabel: "CGB",
+    source: "ChinaBond (CCDC)",
   },
 ] as const;
 

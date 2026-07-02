@@ -1,0 +1,65 @@
+name: BR ETTJ pipeline (curva pré/IPCA ANBIMA)
+
+# Curva prefixada + IPCA do Brasil por prazo (1/2/5/10a) p/ o comparador de
+# juros soberanos. ANBIMA publica a ETTJ ~18h30 BRT; a janela pública é de só
+# ~4 meses → o merge append-only no Blob faz o arquivo crescer com o tempo
+# (mesmo padrão do fluxo-investidores).
+#   21:50 UTC = 18:50 BRT (após a publicação) · retry 23:50 UTC
+on:
+  schedule:
+    - cron: "50 21 * * 1-5"
+    - cron: "50 23 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: "1 = buscar a janela cheia da ANBIMA (~88 dias úteis)"
+        required: false
+        default: "0"
+      tesouro_backfill:
+        description: "1 = backfill 2002+ via CSV do Tesouro Direto (LTN/NTN-F)"
+        required: false
+        default: "0"
+
+concurrency:
+  group: br-ettj-pipeline
+  cancel-in-progress: true
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: data-pipeline/python/requirements.txt
+
+      - name: Pip install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r data-pipeline/python/requirements.txt
+
+      # Em runs de `schedule` os inputs não existem (padrão: incremental 10du).
+      - name: build_br_ettj
+        run: |
+          FLAGS="--days 10"
+          if [ "${{ github.event.inputs.seed }}" = "1" ]; then FLAGS="--seed"; fi
+          if [ "${{ github.event.inputs.tesouro_backfill }}" = "1" ]; then FLAGS="$FLAGS --tesouro-backfill"; fi
+          python data-pipeline/python/build_br_ettj.py $FLAGS --upload
+
+      - name: Upload artefato (debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: br-ettj-${{ github.run_id }}
+          path: data-pipeline/out/br_ettj.json
+          if-no-files-found: warn
+          retention-days: 7

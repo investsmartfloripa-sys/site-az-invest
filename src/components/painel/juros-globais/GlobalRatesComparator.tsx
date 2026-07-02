@@ -33,11 +33,13 @@ const LONG_YEARS = 25;
 
 /** Cor fixa por país (consistente em todo o comparador). */
 const COUNTRY_COLOR: Record<GlobalCountryId, string> = {
+  br: "#009C3B", // verde-bandeira
   us: "#132960", // navy
   jp: "#FF5713", // rust
   de: "#027DFC", // azure
   gb: "#1E8A5C", // verde-mar
   co: "#D97706", // âmbar
+  cn: "#B91C1C", // vermelho escuro
 };
 
 function tenorLabel(years: number): string {
@@ -211,12 +213,13 @@ export function GlobalRatesComparator() {
           Juros soberanos — comparativo por prazo
           <MethodInfo align="left" className="align-middle">
             Yields nominais soberanos por prazo constante, fechamento diário (amostragem semanal no
-            histórico p/ leveza). Fontes: EUA — FRED (Treasury constant maturity); Japão —
-            Ministério das Finanças (JGB); Alemanha — Deutsche Bundesbank (curva Svensson);
-            Reino Unido — Bank of England (par yields de gilts, só 5/10/20a); Colômbia — Banco de
-            la República (TES pesos zero cupom 1/5/10a, com alguns dias de defasagem de carga).
-            O Brasil é acompanhado ao vivo no Panorama (curva DI/IPCA+ intraday da B3). França não
-            tem curva diária gratuita; China está no radar via ChinaBond.
+            histórico p/ leveza). Fontes: Brasil — ANBIMA (ETTJ pré 1/2/5/10a; histórico antigo via
+            Tesouro Direto LTN/NTN-F); EUA — FRED (Treasury constant maturity); Japão — Ministério
+            das Finanças (JGB); Alemanha — Deutsche Bundesbank (curva Svensson); Reino Unido — Bank
+            of England (par yields de gilts, só 5/10/20a); Colômbia — Banco de la República (TES
+            zero cupom 1/5/10a, dias de defasagem de carga); China — ChinaBond/CCDC (CGB, via
+            pipeline diário). A leitura intraday do Brasil (curva DI/IPCA+ da B3) vive no Panorama.
+            França não tem curva diária gratuita.
           </MethodInfo>
         </h2>
         <p className="text-[11px] text-[#9db8e8]">

@@ -46,6 +46,7 @@ import {
   monthlySchedule,
   type FuturesQuote,
 } from "@/lib/rate-futures";
+import { painelBlobUrl } from "@/lib/painel-blob";
 
 const UA = "Mozilla/5.0 (compatible; AZInvestBot/1.0; +https://investimentosdeaz.com.br)";
 
@@ -554,6 +555,101 @@ async function getColombiaHistory(tenors: number[], cutoffISO: string): Promise<
 }
 
 // ---------------------------------------------------------------------------
+// China (cn) e Brasil (br) — arquivos de PIPELINE no Blob (fontes frágeis ou
+// de janela curta NÃO são consultadas ao vivo; cron diário grava, o site lê).
+//   data/china_curve.json — build_china_curve.py (ChinaBond/CCDC)
+//   data/br_ettj.json     — build_br_ettj.py (ANBIMA ETTJ + Tesouro backfill)
+// ---------------------------------------------------------------------------
+
+type ChinaCurveFile = {
+  status?: string;
+  tenors_years?: number[];
+  dates?: Record<string, (number | null)[]>;
+};
+
+type BrEttjFile = {
+  status?: string;
+  tenors_years?: number[];
+  dates?: Record<string, { pre?: (number | null)[] | null }>;
+};
+
+async function fetchBlobJson<T>(path: string, revalidate: number): Promise<T | null> {
+  const url = painelBlobUrl(path);
+  if (!url) return null;
+  try {
+    const res = await fetch(url, { next: { revalidate } });
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+/** Séries por prazo do arquivo da China: [{years, hist}] ordenado por data. */
+async function loadChinaPerTenor(revalidate: number): Promise<TenorHist[] | null> {
+  const f = await fetchBlobJson<ChinaCurveFile>("data/china_curve.json", revalidate);
+  if (!f?.dates || !Array.isArray(f.tenors_years)) return null;
+  const perTenor: TenorHist[] = f.tenors_years.map((y) => ({ years: y, hist: [] }));
+  for (const iso of Object.keys(f.dates).sort()) {
+    const vals = f.dates[iso];
+    if (!Array.isArray(vals)) continue;
+    perTenor.forEach((t, i) => {
+      const v = vals[i];
+      if (typeof v === "number" && Number.isFinite(v)) t.hist.push([iso, v]);
+    });
+  }
+  const valid = perTenor.filter((t) => t.hist.length > 0);
+  return valid.length >= 3 ? valid : null;
+}
+
+async function getChinaCurve(): Promise<CountryCurve | null> {
+  const perTenor = await loadChinaPerTenor(CURVE_REVALIDATE);
+  if (!perTenor) return null;
+  return curveWithCuts("cn", perTenor, "ChinaBond (CCDC)");
+}
+
+async function getChinaHistory(tenors: number[], cutoffISO: string): Promise<CountryHistory | null> {
+  const perTenor = await loadChinaPerTenor(HISTORY_REVALIDATE);
+  if (!perTenor) return null;
+  const series: TenorHistory[] = perTenor
+    .filter((t) => tenors.includes(t.years))
+    .map((t) => ({ years: t.years, points: downsampleWeekly(t.hist.filter(([d]) => d >= cutoffISO)) }))
+    .filter((s) => s.points.length > 0);
+  if (series.length === 0) return null;
+  const asOf = series.reduce((mx, s) => {
+    const d = s.points[s.points.length - 1][0];
+    return d > mx ? d : mx;
+  }, "0000-00-00");
+  return { country: "cn", asOf, series, source: "ChinaBond (CCDC)" };
+}
+
+/** Histórico da curva PRÉ do Brasil (1/2/5/10a) — só p/ o comparador. */
+async function getBrazilHistory(tenors: number[], cutoffISO: string): Promise<CountryHistory | null> {
+  const f = await fetchBlobJson<BrEttjFile>("data/br_ettj.json", HISTORY_REVALIDATE);
+  if (!f?.dates || !Array.isArray(f.tenors_years)) return null;
+  const perTenor: TenorHist[] = f.tenors_years.map((y) => ({ years: y, hist: [] }));
+  for (const iso of Object.keys(f.dates).sort()) {
+    if (iso < cutoffISO) continue;
+    const pre = f.dates[iso]?.pre;
+    if (!Array.isArray(pre)) continue;
+    perTenor.forEach((t, i) => {
+      const v = pre[i];
+      if (typeof v === "number" && Number.isFinite(v)) t.hist.push([iso, v]);
+    });
+  }
+  const series: TenorHistory[] = perTenor
+    .filter((t) => tenors.includes(t.years))
+    .map((t) => ({ years: t.years, points: downsampleWeekly(t.hist) }))
+    .filter((s) => s.points.length > 0);
+  if (series.length === 0) return null;
+  const asOf = series.reduce((mx, s) => {
+    const d = s.points[s.points.length - 1][0];
+    return d > mx ? d : mx;
+  }, "0000-00-00");
+  return { country: "br", asOf, series, source: "ANBIMA (ETTJ pré) / Tesouro Direto" };
+}
+
+// ---------------------------------------------------------------------------
 // Zona do euro — ECB Data Portal (curva AAA curta) p/ a BCE implícita
 // ---------------------------------------------------------------------------
 
@@ -603,6 +699,8 @@ export async function getCountryCurve(country: GlobalCountryId): Promise<Country
       return getUSCurve();
     case "co":
       return getColombiaCurve();
+    case "cn":
+      return getChinaCurve();
     default:
       return null;
   }
@@ -624,6 +722,10 @@ export async function getCountryHistory(
       return getUSHistory(tenors, cutoffISO);
     case "co":
       return getColombiaHistory(tenors, cutoffISO);
+    case "cn":
+      return getChinaHistory(tenors, cutoffISO);
+    case "br":
+      return getBrazilHistory(tenors, cutoffISO);
     default:
       return null;
   }
