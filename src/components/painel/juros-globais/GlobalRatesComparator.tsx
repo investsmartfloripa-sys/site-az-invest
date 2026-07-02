@@ -210,11 +210,13 @@ export function GlobalRatesComparator() {
         <h2 className="flex items-center gap-2 text-base font-semibold text-white md:text-lg">
           Juros soberanos — comparativo por prazo
           <MethodInfo align="left" className="align-middle">
-            Yields nominais soberanos por prazo constante, fechamento diário (downsample semanal no
-            histórico). Fontes: EUA — FRED (Treasury constant maturity); Japão — Ministério das
-            Finanças (JGB); Alemanha — Deutsche Bundesbank (curva Svensson); Reino Unido — Bank of
-            England (par yields de gilts). O Brasil é acompanhado ao vivo no Panorama (curva DI/IPCA+
-            intraday da B3).
+            Yields nominais soberanos por prazo constante, fechamento diário (amostragem semanal no
+            histórico p/ leveza). Fontes: EUA — FRED (Treasury constant maturity); Japão —
+            Ministério das Finanças (JGB); Alemanha — Deutsche Bundesbank (curva Svensson);
+            Reino Unido — Bank of England (par yields de gilts, só 5/10/20a); Colômbia — Banco de
+            la República (TES pesos zero cupom 1/5/10a, com alguns dias de defasagem de carga).
+            O Brasil é acompanhado ao vivo no Panorama (curva DI/IPCA+ intraday da B3). França não
+            tem curva diária gratuita; China está no radar via ChinaBond.
           </MethodInfo>
         </h2>
         <p className="text-[11px] text-[#9db8e8]">

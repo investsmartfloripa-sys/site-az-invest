@@ -39,32 +39,8 @@ export default function JurosGlobaisPage() {
 
       <GlobalRatesComparator />
 
-      <section className="rounded-2xl border border-[#132960]/10 bg-zinc-50/50 p-4 text-xs text-zinc-600">
-        <p className="font-semibold uppercase tracking-wide text-zinc-500">Notas metodológicas</p>
-        <ul className="mt-2 list-disc space-y-1 pl-4">
-          <li>
-            <strong>EUA (Treasury)</strong>: yields de maturidade constante do Tesouro americano, via FRED
-            (séries DGS2/5/10/20/30), fechamento diário (D-1).
-          </li>
-          <li>
-            <strong>Japão (JGB)</strong>: taxas de referência dos títulos do governo japonês publicadas pelo
-            Ministério das Finanças (JGB CME), prazos de 1 a 40 anos.
-          </li>
-          <li>
-            <strong>Alemanha (Bund)</strong>: curva estimada (modelo Svensson) dos títulos federais alemães
-            publicada pelo Deutsche Bundesbank — referência da zona do euro.
-          </li>
-          <li>
-            <strong>Reino Unido (Gilt)</strong>: par yields nominais dos gilts publicados pelo Bank of England
-            (5, 10 e 20 anos — prazos disponíveis gratuitamente).
-          </li>
-          <li>
-            O histórico é mostrado com amostragem semanal para leveza; o último ponto reflete o fechamento mais
-            recente de cada fonte. França e China foram deixadas de fora por não terem curva diária completa de
-            fonte pública gratuita reproduzível em tempo real.
-          </li>
-        </ul>
-      </section>
+      {/* Notas metodológicas saíram do rodapé (poluição visual): vivem no
+          ícone (?) do header do comparador, fonte por fonte. */}
     </div>
   );
 }
