@@ -26,7 +26,8 @@ FAIXAS_IPCA = {
 }
 
 
-def _get(url, *, timeout=60, retries=3, sleep=3.0):
+def _get(url, *, timeout=60, retries=5, sleep=3.0):
+    # Backoff exponencial: SIDRA bloqueia IPs de nuvem em rajadas.
     last = None
     for i in range(retries):
         try:
@@ -35,8 +36,9 @@ def _get(url, *, timeout=60, retries=3, sleep=3.0):
             return r
         except Exception as e:
             last = e
-            print(f"  retry {i+1}/{retries}: {e}", file=sys.stderr)
-            time.sleep(sleep)
+            wait = sleep * (2 ** i)
+            print(f"  retry {i+1}/{retries}: {e} (aguardando {wait:.0f}s)", file=sys.stderr)
+            time.sleep(wait)
     raise RuntimeError(f"falha apos {retries} tentativas: {last}")
 
 

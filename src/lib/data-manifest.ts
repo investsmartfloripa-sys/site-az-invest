@@ -36,7 +36,7 @@ export type DataSourceDef = {
   blobPath: string;
   /** "json" lê metadados internos; "svg" usa HEAD + last-modified. */
   kind?: "json" | "svg";
-  /** Arquivo .yml em .github/workflows que gera essa fonte. */
+  /** Arquivo .yml em .github/workflows que gera essa fonte ("(ao vivo)" p/ probes). */
   workflowName: string;
   /** Cadência esperada do giro (alimenta o cálculo de SLA). */
   cadence: Cadence;
@@ -48,6 +48,12 @@ export type DataSourceDef = {
   dataDateField?: string;
   /** JSON grande demais pra baixar no health-check → só HEAD. */
   heavy?: boolean;
+  /**
+   * Fonte AO VIVO (sem Blob): o health-check chama o fetcher server-side dos
+   * juros globais em vez de sondar o Blob. `maxAgeDays` = tolerância p/ a data
+   * do último fechamento (feriados/lag de carga da fonte contam).
+   */
+  probe?: { kind: "global-rates"; country: string; expectPolicy?: boolean; maxAgeDays: number };
 };
 
 export const PAINEIS: PainelDef[] = [
@@ -103,6 +109,14 @@ export const DATA_SOURCES: DataSourceDef[] = [
   // ── Juros globais (pipelines→Blob; as demais fontes da página são AO VIVO) ─
   { key: "br_ettj", label: "Curva pré/IPCA Brasil (ANBIMA ETTJ)", blobPath: "data/br_ettj.json", workflowName: "br-ettj-pipeline.yml", cadence: "diario-util", painel: "juros-globais", dataDateField: "last_data_date" },
   { key: "china_curve", label: "Curva CGB China (ChinaBond)", blobPath: "data/china_curve.json", workflowName: "china-curve-pipeline.yml", cadence: "diario-util", painel: "juros-globais", dataDateField: "last_data_date" },
+  // Sondas AO VIVO: se o parser/credencial de uma fonte quebrar, o país some do
+  // site em silêncio — a sonda chama o fetcher real e acende o badge aqui.
+  { key: "live_rates_us", label: "EUA ao vivo (FRED + Fed implícita/Yahoo)", blobPath: "live:global-rates/us", workflowName: "(ao vivo)", cadence: "diario-util", painel: "juros-globais", probe: { kind: "global-rates", country: "us", expectPolicy: true, maxAgeDays: 6 } },
+  { key: "live_rates_jp", label: "Japão ao vivo (MOF + BoJ implícita)", blobPath: "live:global-rates/jp", workflowName: "(ao vivo)", cadence: "diario-util", painel: "juros-globais", probe: { kind: "global-rates", country: "jp", expectPolicy: true, maxAgeDays: 6 } },
+  { key: "live_rates_de", label: "Alemanha ao vivo (Bundesbank + BCE implícita)", blobPath: "live:global-rates/de", workflowName: "(ao vivo)", cadence: "diario-util", painel: "juros-globais", probe: { kind: "global-rates", country: "de", expectPolicy: true, maxAgeDays: 6 } },
+  { key: "live_rates_gb", label: "Reino Unido ao vivo (BoE)", blobPath: "live:global-rates/gb", workflowName: "(ao vivo)", cadence: "diario-util", painel: "juros-globais", probe: { kind: "global-rates", country: "gb", maxAgeDays: 6 } },
+  { key: "live_rates_co", label: "Colômbia ao vivo (BanRep + implícita IBR)", blobPath: "live:global-rates/co", workflowName: "(ao vivo)", cadence: "diario-util", painel: "juros-globais", probe: { kind: "global-rates", country: "co", expectPolicy: true, maxAgeDays: 12 } },
+  { key: "live_rates_cl", label: "Chile ao vivo (BCCh, credencial BCCH_*)", blobPath: "live:global-rates/cl", workflowName: "(ao vivo)", cadence: "diario-util", painel: "juros-globais", probe: { kind: "global-rates", country: "cl", maxAgeDays: 7 } },
 
   // ── Fundos de Investimento (fundos-pipeline.yml, semanal — Mais Retorno) ───
   { key: "fundos_ranking", label: "Ranking de fundos (Mais Retorno)", blobPath: "data/fundos_ranking.json", workflowName: "fundos-pipeline.yml", cadence: "semanal", painel: "fundos-investimento", pagePath: "/painel-economico/mercado/brasil/fundos-investimento", dataDateField: "data_date" },
@@ -126,7 +140,11 @@ export const DATA_SOURCES: DataSourceDef[] = [
   { key: "visao_geral_epe", label: "EPE energia", blobPath: "data/visao_geral_epe.json", workflowName: "visao-geral-pipeline.yml", cadence: "diario", painel: "termometro-ciclo" },
   { key: "visao_geral_codace", label: "CODACE cronologia", blobPath: "data/visao_geral_codace.json", workflowName: "visao-geral-pipeline.yml", cadence: "diario", painel: "termometro-ciclo" },
   { key: "visao_geral_ipeadata", label: "IPEADATA (papelão, aço, FENABRAVE)", blobPath: "data/visao_geral_ipeadata.json", workflowName: "visao-geral-pipeline.yml", cadence: "diario", painel: "termometro-ciclo" },
-  { key: "visao_geral_fgv_antecedentes", label: "FGV antecedentes", blobPath: "data/visao_geral_fgv_antecedentes.json", workflowName: "visao-geral-pipeline.yml", cadence: "diario", painel: "termometro-ciclo" },
+  // visao_geral_fgv_antecedentes FORA do monitoramento (jul/2026): a FGV
+  // removeu os XLSX do HTML estático (portal novo via JS) e o dado NUNCA
+  // chegou ao Blob — feature em construção, não fonte quebrada. O script já
+  // fura o TLS via curl_cffi e sobe marcador missing; re-registrar quando a
+  // captação for reconstruída (ver task/chip "Reconstruir captação FGV").
   { key: "visao_geral_fgv_confianca", label: "FGV confianças", blobPath: "data/visao_geral_fgv_confianca.json", workflowName: "visao-geral-pipeline.yml", cadence: "diario", painel: "termometro-ciclo" },
   { key: "visao_geral_cni", label: "CNI indústria", blobPath: "data/visao_geral_cni.json", workflowName: "visao-geral-pipeline.yml", cadence: "diario", painel: "termometro-ciclo" },
   { key: "visao_geral_pmi", label: "PMI Brasil", blobPath: "data/visao_geral_pmi.json", workflowName: "visao-geral-pipeline.yml", cadence: "diario", painel: "termometro-ciclo" },

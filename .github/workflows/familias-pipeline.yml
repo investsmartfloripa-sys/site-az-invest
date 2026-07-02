@@ -30,11 +30,29 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r data-pipeline/python/requirements.txt
+      # Steps ISOLADOS (continue-on-error): o SIDRA do IBGE bloqueia IPs de
+      # nuvem intermitentemente (jun-jul/2026: ConnectTimeout por 3+ dias) e
+      # derrubava o job inteiro — as fontes BCB/Ipeadata (B e C) não podem
+      # parar por causa disso. O step final falha o workflow se algo quebrou,
+      # p/ o Saúde dos dados continuar acusando.
       - name: Build Familias — Endividamento (B)
+        id: endividamento
         run: python data-pipeline/python/build_familias_endividamento.py --upload
+        continue-on-error: true
       - name: Build Familias — Renda (A)
+        id: renda
         run: python data-pipeline/python/build_familias_renda.py --upload
+        continue-on-error: true
       - name: Build Familias — Poder de Compra (C)
+        id: poder_compra
         run: python data-pipeline/python/build_familias_poder_compra.py --upload
+        continue-on-error: true
       - name: Build Familias — Estrutura Social (D)
+        id: estrutura_social
         run: python data-pipeline/python/build_familias_estrutura_social.py --upload
+        continue-on-error: true
+      - name: Falhar se algum build quebrou
+        if: steps.endividamento.outcome == 'failure' || steps.renda.outcome == 'failure' || steps.poder_compra.outcome == 'failure' || steps.estrutura_social.outcome == 'failure'
+        run: |
+          echo "Builds com falha: endividamento=${{ steps.endividamento.outcome }} renda=${{ steps.renda.outcome }} poder_compra=${{ steps.poder_compra.outcome }} estrutura_social=${{ steps.estrutura_social.outcome }}"
+          exit 1

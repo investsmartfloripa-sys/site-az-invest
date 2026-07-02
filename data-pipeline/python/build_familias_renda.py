@@ -59,7 +59,9 @@ POSICAO_CATS_6389 = {
 }
 
 
-def _get(url: str, *, timeout: int = 60, retries: int = 3, sleep: float = 3.0) -> requests.Response:
+def _get(url: str, *, timeout: int = 60, retries: int = 5, sleep: float = 3.0) -> requests.Response:
+    # Backoff exponencial (3s→48s): o SIDRA bloqueia IPs de nuvem em rajadas;
+    # espaçar as tentativas aumenta a chance de furar janelas curtas de bloqueio.
     last: Exception | None = None
     for i in range(retries):
         try:
@@ -68,8 +70,9 @@ def _get(url: str, *, timeout: int = 60, retries: int = 3, sleep: float = 3.0) -
             return r
         except Exception as e:
             last = e
-            print(f"  retry {i + 1}/{retries}: {e}", file=sys.stderr)
-            time.sleep(sleep)
+            wait = sleep * (2 ** i)
+            print(f"  retry {i + 1}/{retries}: {e} (aguardando {wait:.0f}s)", file=sys.stderr)
+            time.sleep(wait)
     raise RuntimeError(f"falha após {retries} tentativas: {last}")
 
 

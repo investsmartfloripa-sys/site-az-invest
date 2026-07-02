@@ -65,6 +65,7 @@ export async function GET(request: Request) {
 
   const now = new Date();
   const results: Record<string, string> = {};
+  let failures = 0;
   for (const p of PIPELINES) {
     if (p.onlyMarketHours && !inMarketWindow(now)) {
       results[p.file] = "skipped (fora do pregão)";
@@ -75,6 +76,18 @@ export async function GET(request: Request) {
     } catch (e) {
       results[p.file] = e instanceof Error ? e.message : "erro";
     }
+    if (results[p.file] !== "dispatched") failures++;
+  }
+
+  // FALHA ALTO: dispatch recusado (ex.: PAT expirado → HTTP 401) responde 500
+  // p/ o dashboard de crons da Vercel acusar — antes respondia 200 e o
+  // Panorama degradava de 15 min p/ 2-5 h em silêncio.
+  if (failures > 0) {
+    console.error("[dispatch-pipelines] falhas:", JSON.stringify(results));
+    return NextResponse.json(
+      { ok: false, at: now.toISOString(), results },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ ok: true, at: now.toISOString(), results });

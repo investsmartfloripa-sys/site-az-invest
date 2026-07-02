@@ -19,10 +19,17 @@ from pathlib import Path
 
 import requests
 
+try:
+    # portalibre.fgv.br rejeita o fingerprint TLS do Python; curl_cffi
+    # impersona o Chrome (mesma correção do fgv_antecedentes).
+    from curl_cffi import requests as curl_requests
+except ImportError:
+    curl_requests = None
+
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/visao_geral_codace.json"
-UA = {"User-Agent": "az-invest-visao-geral-codace/0.1"}
+UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"}
 
 CODACE_URL = "https://portalibre.fgv.br/codace-cronologia"
 
@@ -59,11 +66,15 @@ CODACE_MENSAL_BACKUP: list[dict] = [
 INPUTS = {"codace": "1980-01"}
 
 
-def _get(url: str, *, timeout: int = 30, retries: int = 1) -> requests.Response:
+def _get(url: str, *, timeout: int = 30, retries: int = 1):
+    """GET com impersonação de browser (curl_cffi) e fallback pro requests."""
     last: Exception | None = None
     for i in range(retries + 1):
         try:
-            r = requests.get(url, timeout=timeout, headers=UA)
+            if curl_requests is not None:
+                r = curl_requests.get(url, timeout=timeout, impersonate="chrome", headers=UA)
+            else:
+                r = requests.get(url, timeout=timeout, headers=UA)
             r.raise_for_status()
             return r
         except Exception as e:

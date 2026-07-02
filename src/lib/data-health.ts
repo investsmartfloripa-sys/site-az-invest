@@ -6,6 +6,8 @@ import {
   effectiveAgeMinutes,
   type DataSourceDef,
 } from "@/lib/data-manifest";
+import { getCountryCurve, getFuturesPolicy } from "@/lib/global-rates-server";
+import type { GlobalCountryId } from "@/lib/global-rates";
 
 export { DATA_SOURCES };
 export type { DataSourceDef };
@@ -124,18 +126,74 @@ async function fetchWithTimeout(url: string, ms: number, method: "GET" | "HEAD" 
   return fetch(url, { method, cache: "no-store", signal: AbortSignal.timeout(ms) });
 }
 
-/**
- * Checa uma fonte:
- *  - kind=svg ou heavy=true → HEAD (last-modified como giro, sem meta interna)
- *  - JSON normal → GET + leitura de gerado_em/generated_at, freshness e data do dado
- */
-async function probeSource(source: DataSourceDef): Promise<{
+type ProbeResult = {
   generatedAt: Date | null;
   lastDataLabel: string | null;
   level: HealthLevel;
   freshness: string;
   error: string | null;
-}> {
+};
+
+/**
+ * Sonda uma fonte AO VIVO dos juros globais: chama o fetcher real (o mesmo das
+ * páginas) e valida curva (+ implícita onde esperada) e a idade do último
+ * fechamento. Parser quebrado, credencial expirada ou fonte fora do ar viram
+ * badge aqui — antes o país sumia do site em silêncio.
+ */
+async function probeLiveRates(source: DataSourceDef): Promise<ProbeResult> {
+  const probe = source.probe!;
+  const country = probe.country as GlobalCountryId;
+  try {
+    const [curve, policy] = await Promise.all([
+      getCountryCurve(country),
+      probe.expectPolicy ? getFuturesPolicy(country) : Promise.resolve(null),
+    ]);
+    if (!curve || curve.tenors.length === 0) {
+      return {
+        generatedAt: null,
+        lastDataLabel: null,
+        level: "error",
+        freshness: "missing",
+        error: "Fonte ao vivo não respondeu (curva vazia) — parser/credencial/upstream",
+      };
+    }
+    const asOf = new Date(`${curve.asOf}T00:00:00Z`);
+    const generatedAt = new Date(); // giro = a sonda buscou AGORA com sucesso
+    const ageDays = (Date.now() - asOf.getTime()) / 86_400_000;
+    if (ageDays > probe.maxAgeDays) {
+      return {
+        generatedAt,
+        lastDataLabel: curve.asOf,
+        level: "error",
+        freshness: "atrasado",
+        error: `Último fechamento há ${Math.round(ageDays)} dias (tolerância ${probe.maxAgeDays})`,
+      };
+    }
+    if (probe.expectPolicy && !policy) {
+      return {
+        generatedAt,
+        lastDataLabel: curve.asOf,
+        level: "warn",
+        freshness: "stale",
+        error: "Curva OK mas política implícita indisponível (ponta curta/futuros falharam)",
+      };
+    }
+    return { generatedAt, lastDataLabel: curve.asOf, level: "ok", freshness: "fresh", error: null };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "probe failed";
+    return { generatedAt: null, lastDataLabel: null, level: "error", freshness: "missing", error: msg };
+  }
+}
+
+/**
+ * Checa uma fonte:
+ *  - probe (ao vivo) → chama o fetcher dos juros globais
+ *  - kind=svg ou heavy=true → HEAD (last-modified como giro, sem meta interna)
+ *  - JSON normal → GET + leitura de gerado_em/generated_at, freshness e data do dado
+ */
+async function probeSource(source: DataSourceDef): Promise<ProbeResult> {
+  if (source.probe?.kind === "global-rates") return probeLiveRates(source);
+
   const url = painelBlobUrl(source.blobPath);
   const headOnly = source.kind === "svg" || source.heavy === true;
 
@@ -208,8 +266,11 @@ async function refreshOneSource(source: DataSourceDef, workflow: WorkflowInfo | 
 }
 
 export async function refreshDataSourceSnapshots() {
-  // 1 chamada de GitHub API por workflow (várias fontes compartilham o mesmo)
-  const workflowNames = Array.from(new Set(DATA_SOURCES.map((s) => s.workflowName)));
+  // 1 chamada de GitHub API por workflow (várias fontes compartilham o mesmo);
+  // sondas ao vivo têm workflowName "(ao vivo)" — sem chamada.
+  const workflowNames = Array.from(
+    new Set(DATA_SOURCES.map((s) => s.workflowName).filter((n) => n.endsWith(".yml"))),
+  );
   const workflowEntries = await Promise.allSettled(
     workflowNames.map(async (name) => [name, await fetchWorkflowStatus(name)] as const),
   );

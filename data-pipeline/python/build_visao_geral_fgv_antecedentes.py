@@ -32,10 +32,17 @@ from pathlib import Path
 
 import requests
 
+try:
+    # portalibre.fgv.br BLOQUEIA o fingerprint TLS do Python (SSLV3 alert
+    # handshake failure) mas aceita browsers — curl_cffi impersona o Chrome.
+    from curl_cffi import requests as curl_requests
+except ImportError:  # ambiente sem curl_cffi: cai no requests (vai falhar na FGV)
+    curl_requests = None
+
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/visao_geral_fgv_antecedentes.json"
-UA = {"User-Agent": "az-invest-visao-geral-fgv/0.1", "Accept": "*/*"}
+UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36", "Accept": "*/*"}
 
 PAGES = {
     "iace_icce": "https://portalibre.fgv.br/iace-e-icce",
@@ -51,10 +58,14 @@ INPUTS = {
 }
 
 
-def _get(url: str, *, timeout: int = 60, retries: int = 2, sleep: float = 4.0) -> requests.Response | None:
+def _get(url: str, *, timeout: int = 60, retries: int = 2, sleep: float = 4.0):
+    """GET com impersonação de browser (curl_cffi) e fallback pro requests."""
     for i in range(retries):
         try:
-            r = requests.get(url, timeout=timeout, headers=UA)
+            if curl_requests is not None:
+                r = curl_requests.get(url, timeout=timeout, impersonate="chrome", headers=UA)
+            else:
+                r = requests.get(url, timeout=timeout, headers=UA)
             r.raise_for_status()
             return r
         except Exception as e:
@@ -265,7 +276,9 @@ def main() -> None:
     else:
         print("    nao localizado")
 
-    # se nada veio, soft-fail
+    # se nada veio, soft-fail — SEM return precoce: o marcador stale/missing
+    # também precisa SUBIR pro Blob (bug antigo: o return pulava o upload e a
+    # fonte ficava 404 eterna no monitoramento).
     any_serie = any(series.values())
     if not any_serie:
         print("  Nenhuma serie obtida — soft-fail / preservar Blob", file=sys.stderr)
@@ -273,52 +286,52 @@ def main() -> None:
         from shared.blob_download import download_json
         prev = download_json(BLOB_PATH)
         if prev:
-            prev["freshness_status"] = "stale"
-            prev["gerado_em"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
-            out_file.write_text(json.dumps(prev, indent=2, ensure_ascii=False), encoding="utf-8")
-            return
+            payload = dict(prev)
+            payload["freshness_status"] = "stale"
+            payload["gerado_em"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        else:
+            payload = {
+                "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "freshness_status": "missing",
+                "iace": [],
+                "icce": [],
+                "iaemp": [],
+                "iie_br": [],
+                "metadata": {"fonte": "FGV-IBRE", "nota": "Scraper nao localizou XLSX nas paginas conhecidas. Manter Onda 2 sob revisao manual."},
+            }
+        out_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(f"JSON {out_file} (soft-fail, freshness={payload['freshness_status']})")
+    else:
+        # normaliza chaves
+        def pegar(*keys: str) -> dict[str, float | None]:
+            for k in keys:
+                if k in series and series[k]:
+                    return series[k]
+            return {}
+
+        iace = pegar("IACE")
+        icce = pegar("ICCE")
+        iaemp = pegar("IAEMP")
+        iie_br = pegar("IIE-BR", "IIE_BR", "IIEBR", "IIE BR")
+
         payload = {
             "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "freshness_status": "missing",
-            "iace": [],
-            "icce": [],
-            "iaemp": [],
-            "iie_br": [],
-            "metadata": {"fonte": "FGV-IBRE", "nota": "Scraper nao localizou XLSX nas paginas conhecidas. Manter Onda 2 sob revisao manual."},
+            "freshness_status": "fresh",
+            "iace": {"serie": serie_lista(iace), "var_yoy": serie_lista(variacao_yoy(iace))},
+            "icce": {"serie": serie_lista(icce), "var_yoy": serie_lista(variacao_yoy(icce))},
+            "iaemp": {"serie": serie_lista(iaemp), "var_yoy": serie_lista(variacao_yoy(iaemp))},
+            "iie_br": {"serie": serie_lista(iie_br), "var_yoy": serie_lista(variacao_yoy(iie_br))},
+            "inputs": INPUTS,
+            "min_start_date": max(INPUTS.values()),
+            "metadata": {
+                "fonte": "FGV-IBRE - portal pubblico. IACE/ICCE (Conference Board), IAEmp, IIE-Br.",
+                "nota": "Scraping de XLSX (TLS impersonado via curl_cffi — o portal FGV rejeita o TLS padrao do Python). Em caso de falha, JSON anterior preservado como 'stale'.",
+            },
         }
+
         out_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-        return
-
-    # normaliza chaves
-    def pegar(*keys: str) -> dict[str, float | None]:
-        for k in keys:
-            if k in series and series[k]:
-                return series[k]
-        return {}
-
-    iace = pegar("IACE")
-    icce = pegar("ICCE")
-    iaemp = pegar("IAEMP")
-    iie_br = pegar("IIE-BR", "IIE_BR", "IIEBR", "IIE BR")
-
-    payload = {
-        "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "freshness_status": "fresh",
-        "iace": {"serie": serie_lista(iace), "var_yoy": serie_lista(variacao_yoy(iace))},
-        "icce": {"serie": serie_lista(icce), "var_yoy": serie_lista(variacao_yoy(icce))},
-        "iaemp": {"serie": serie_lista(iaemp), "var_yoy": serie_lista(variacao_yoy(iaemp))},
-        "iie_br": {"serie": serie_lista(iie_br), "var_yoy": serie_lista(variacao_yoy(iie_br))},
-        "inputs": INPUTS,
-        "min_start_date": max(INPUTS.values()),
-        "metadata": {
-            "fonte": "FGV-IBRE - portal pubblico. IACE/ICCE (Conference Board), IAEmp, IIE-Br.",
-            "nota": "Scraping de XLSX. Estrutura pode mudar - parser defensivo. Em caso de falha, JSON anterior preservado como 'stale'.",
-        },
-    }
-
-    out_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"JSON {out_file} ({out_file.stat().st_size / 1024:.1f} KB)")
-    print(f"  IACE {len(iace)} obs | ICCE {len(icce)} | IAEmp {len(iaemp)} | IIE-Br {len(iie_br)}")
+        print(f"JSON {out_file} ({out_file.stat().st_size / 1024:.1f} KB)")
+        print(f"  IACE {len(iace)} obs | ICCE {len(icce)} | IAEmp {len(iaemp)} | IIE-Br {len(iie_br)}")
 
     if args.upload:
         sys.path.insert(0, str(HERE))
