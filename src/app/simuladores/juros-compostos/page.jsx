@@ -70,6 +70,26 @@ export default function CalculadoraJurosCompostos() {
       totalReal: Math.round(d.saldoReal),
     })), [dadosMensais]);
 
+  // Domínio do eixo Y: não força zero. Começa um pouco abaixo do menor valor
+  // (tipicamente o aporte inicial) pra curva não ficar espremida no topo quando
+  // o crescimento é pequeno em relação ao valor inicial. Só cai a zero quando o
+  // aporte inicial já é pequeno perto do total (aí o zero é natural).
+  const yDomain = useMemo(() => {
+    let minVal = Infinity;
+    let maxVal = -Infinity;
+    for (const d of dadosGrafico) {
+      const vals = temInflacao ? [d.aportado, d.totalNominal, d.totalReal] : [d.aportado, d.totalNominal];
+      for (const v of vals) {
+        if (v < minVal) minVal = v;
+        if (v > maxVal) maxVal = v;
+      }
+    }
+    if (!isFinite(minVal)) return [0, 'auto'];
+    const span = (maxVal - minVal) || maxVal || 1;
+    const piso = Math.max(0, Math.floor(minVal - span * 0.08));
+    return [piso, 'auto'];
+  }, [dadosGrafico, temInflacao]);
+
   // ===== Tabela ano a ano =====
   // Colunas respeitam o modo ativo (nominal ou real). Sem marcos/destaques.
   const dadosAnuais = useMemo(() => {
@@ -327,7 +347,7 @@ export default function CalculadoraJurosCompostos() {
                 <CartesianGrid strokeDasharray="3 3" stroke={SIM_CHART.grid} vertical={false} />
                 <XAxis dataKey="mes" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 11 }}
                   label={{ value: 'Meses', position: 'insideBottom', offset: -5, fill: '#94a3b8', fontSize: 11 }} />
-                <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={fmtCompact} width={54} />
+                <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={fmtCompact} width={54} domain={yDomain} allowDataOverflow />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#fff', border: `1px solid ${SIM.border}`, borderRadius: '8px' }}
                   formatter={(value, name) => [fmt(value), name]}
