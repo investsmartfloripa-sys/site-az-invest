@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Calculator, Info, TrendingUp, HelpCircle } from "lucide-react";
+import { Calculator, Info, TrendingUp } from "lucide-react";
 import { CATEGORIAS } from "@/data/simuladores";
 import { SIM, SIM_CHART } from "@/lib/simulador-theme";
 import { NumField, NumFieldDecimal, fmtBRL as fmt, fmtCompacto as fmtCompact } from "@/components/simuladores/ui";
@@ -18,27 +18,10 @@ export default function CalculadoraJurosCompostos() {
   const [periodoMeses, setPeriodoMeses] = useState(0);
   const [taxaJurosAno, setTaxaJurosAno] = useState(0);
   const [inflacaoAno, setInflacaoAno] = useState(0);
-  const [modo, setModo] = useState("nominal"); // "nominal" | "real"
-  const [showInfo, setShowInfo] = useState(false);
 
   const taxaMensal = Math.pow(1 + taxaJurosAno / 100, 1 / 12) - 1;
   const inflacaoMensal = Math.pow(1 + inflacaoAno / 100, 1 / 12) - 1;
-  // Taxa real de juros (Fisher) — só faz sentido com inflação informada.
-  const taxaRealMensal = (1 + taxaMensal) / (1 + inflacaoMensal) - 1;
   const temInflacao = inflacaoAno > 0;
-  // Só existe "real" quando há inflação pra descontar.
-  const real = modo === "real" && temInflacao;
-
-  // Fecha o popover de ajuda ao clicar fora ou apertar Esc.
-  const infoRef = useRef(null);
-  useEffect(() => {
-    if (!showInfo) return;
-    const onDoc = (e) => { if (infoRef.current && !infoRef.current.contains(e.target)) setShowInfo(false); };
-    const onKey = (e) => { if (e.key === "Escape") setShowInfo(false); };
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey); };
-  }, [showInfo]);
 
   // ===== Evolução mês a mês (nominal + real deflacionado) =====
   // saldoReal = saldo nominal deflacionado por (1+infl)^m → poder de compra de hoje.
@@ -91,7 +74,7 @@ export default function CalculadoraJurosCompostos() {
   }, [dadosGrafico, temInflacao]);
 
   // ===== Tabela ano a ano =====
-  // Colunas respeitam o modo ativo (nominal ou real). Sem marcos/destaques.
+  // Consolidada: nominais + a coluna de Saldo real (quando há inflação). Sem marcos/destaques.
   const dadosAnuais = useMemo(() => {
     const totalAnos = Math.ceil(periodoMeses / 12);
     const arr = [];
@@ -102,27 +85,19 @@ export default function CalculadoraJurosCompostos() {
       const dPrev = dadosMensais[mesPrev];
       if (!d || !dPrev) continue;
 
-      const total = real ? d.saldoReal : d.saldo;
-      const totalPrev = real ? dPrev.saldoReal : dPrev.saldo;
-      const aportado = real ? d.aportadoReal : d.aportado;
-      const aportadoPrev = real ? dPrev.aportadoReal : dPrev.aportado;
+      const aporteAno = d.aportado - dPrev.aportado;
+      const jurosAno = (d.saldo - dPrev.saldo) - aporteAno;
+      const rendaMensal = d.saldo * taxaMensal;
 
-      const aporteAno = aportado - aportadoPrev;
-      const jurosAno = (total - totalPrev) - aporteAno;
-      const rendimento = total - aportado;
-      const pctJuros = total > 0 ? (rendimento / total) * 100 : 0;
-      // Renda mensal coerente com o modo: nominal = juros do mês; real = saque que preserva poder de compra.
-      const rendaMensal = real ? d.saldoReal * taxaRealMensal : d.saldo * taxaMensal;
-
-      arr.push({ ano: a, aporteAno, jurosAno, saldo: total, pctJuros, rendaMensal });
+      arr.push({ ano: a, aporteAno, jurosAno, saldo: d.saldo, saldoReal: d.saldoReal, rendaMensal });
     }
     return arr;
-  }, [dadosMensais, real, taxaMensal, taxaRealMensal, periodoMeses]);
+  }, [dadosMensais, taxaMensal, periodoMeses]);
 
   const ult = dadosMensais[dadosMensais.length - 1] || { saldo: 0, aportado: 0, saldoReal: 0, aportadoReal: 0 };
-  const totalMostrar = real ? ult.saldoReal : ult.saldo;
-  const aportadoMostrar = real ? ult.aportadoReal : ult.aportado;
-  const rendimentoMostrar = totalMostrar - aportadoMostrar;
+  const rendimentoNominal = ult.saldo - ult.aportado;
+  const rendimentoReal = ult.saldoReal - ult.aportadoReal;
+  const pctRendimento = ult.saldo > 0 ? (rendimentoNominal / ult.saldo) * 100 : 0;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#ffffff', color: SIM.dark, borderTop: `4px solid ${CAT.cor}` }}>
@@ -211,61 +186,13 @@ export default function CalculadoraJurosCompostos() {
           </div>
         ) : (
         <>
-        {/* BARRA DE MODO — só aparece quando há inflação pra descontar */}
+        {/* EXPLICAÇÃO NOMINAL x REAL — sempre visível quando há inflação */}
         {temInflacao && (
-          <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
-            <div className="flex items-center gap-2.5">
-              <span className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>
-                Ver valores em
-              </span>
-              <div className="inline-flex rounded-full p-0.5" style={{ backgroundColor: '#f1f5f9', border: `1px solid ${SIM.border}` }}>
-                <button
-                  onClick={() => setModo('nominal')}
-                  aria-pressed={!real}
-                  className="px-4 py-1.5 rounded-full text-sm font-semibold transition-colors"
-                  style={real ? { backgroundColor: 'transparent', color: SIM.navy } : { backgroundColor: SIM.navy, color: '#fff' }}
-                >
-                  Nominal
-                </button>
-                <button
-                  onClick={() => setModo('real')}
-                  aria-pressed={real}
-                  className="px-4 py-1.5 rounded-full text-sm font-semibold transition-colors"
-                  style={real ? { backgroundColor: SIM.navy, color: '#fff' } : { backgroundColor: 'transparent', color: SIM.navy }}
-                >
-                  Real
-                </button>
-              </div>
-              <div className="relative" ref={infoRef}>
-                <button
-                  onClick={() => setShowInfo((v) => !v)}
-                  aria-label="O que é nominal e real"
-                  aria-expanded={showInfo}
-                  className="w-6 h-6 rounded-full inline-flex items-center justify-center transition-colors"
-                  style={{ border: `1px solid ${SIM.border}`, color: SIM.navy, backgroundColor: '#fff' }}
-                >
-                  <HelpCircle className="w-3.5 h-3.5" />
-                </button>
-                {showInfo && (
-                  <div className="absolute z-30 mt-2 left-0 w-72 rounded-xl p-4 text-left"
-                    style={{ backgroundColor: '#fff', border: `1px solid ${SIM.border}`, boxShadow: '0 8px 28px rgba(15,23,42,.14)' }}>
-                    <div className="text-sm font-semibold mb-2" style={{ color: SIM.dark }}>Nominal x real</div>
-                    <p className="text-xs leading-relaxed mb-2" style={{ color: '#475569' }}>
-                      <strong style={{ color: SIM.navy }}>Nominal</strong> é o valor de face — o número que vai aparecer na sua conta lá na frente. Não desconta a inflação.
-                    </p>
-                    <p className="text-xs leading-relaxed mb-2.5" style={{ color: '#475569' }}>
-                      <strong style={{ color: SIM.navy }}>Real</strong> é esse mesmo valor trazido para o poder de compra de hoje, já descontada a inflação. Mostra quanto o dinheiro do futuro vale de verdade.
-                    </p>
-                    <div className="text-[11px] leading-relaxed rounded-lg p-2.5" style={{ color: SIM.textDim, backgroundColor: SIM.fieldBg }}>
-                      Ex.: R$ 1 milhão daqui a 20 anos, com inflação de 4,5% ao ano, equivale a cerca de <strong style={{ color: SIM.dark }}>R$ 410 mil</strong> de hoje.
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="text-[11px]" style={{ color: SIM.textDim }}>
-              {real ? 'Poder de compra de hoje, já descontada a inflação.' : 'Valores de face, sem descontar a inflação.'}
-            </div>
+          <div className="flex items-start gap-1.5 mb-5 text-xs" style={{ color: SIM.textDim }}>
+            <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: SIM.navy }} />
+            <span>
+              Mostramos os valores <strong style={{ color: SIM.dark }}>nominais</strong> (de face, o número que aparece na conta lá na frente) e, ao lado, os <strong style={{ color: SIM.dark }}>reais</strong> — o mesmo patrimônio em poder de compra de hoje, já descontada a inflação de {inflacaoAno.toString().replace('.', ',')}% ao ano.
+            </span>
           </div>
         )}
 
@@ -281,10 +208,10 @@ export default function CalculadoraJurosCompostos() {
                 Total Acumulado
               </div>
               <div className="text-3xl md:text-4xl font-bold tabular-nums leading-none" style={{ color: SIM.orange }}>
-                {fmt(totalMostrar)}
+                {fmt(ult.saldo)}
               </div>
               <div className="text-[11px] mt-2" style={{ color: SIM.textDim }}>
-                {real ? 'em poder de compra de hoje' : `em ${periodoMeses} meses`}
+                {temInflacao ? <><strong style={{ color: SIM.dark }}>{fmt(ult.saldoReal)}</strong> em poder de compra de hoje</> : `em ${periodoMeses} meses`}
               </div>
             </div>
           </div>
@@ -293,10 +220,10 @@ export default function CalculadoraJurosCompostos() {
               Total Aportado
             </div>
             <div className="text-2xl md:text-3xl font-bold tabular-nums" style={{ color: SIM.dark }}>
-              {fmt(aportadoMostrar)}
+              {fmt(ult.aportado)}
             </div>
             <div className="text-[11px] mt-2" style={{ color: SIM.textDim }}>
-              {real ? 'a valor de hoje' : 'do seu bolso'}
+              {temInflacao ? <><strong style={{ color: SIM.dark }}>{fmt(ult.aportadoReal)}</strong> a valor de hoje</> : 'do seu bolso'}
             </div>
           </div>
           <div className="rounded-2xl p-5" style={{ backgroundColor: SIM.blueBgSoft, border: `1px solid ${SIM.blueBg}` }}>
@@ -304,10 +231,10 @@ export default function CalculadoraJurosCompostos() {
               Rendimento
             </div>
             <div className="text-2xl md:text-3xl font-bold tabular-nums" style={{ color: SIM.navy }}>
-              {fmt(rendimentoMostrar)}
+              {fmt(rendimentoNominal)}
             </div>
             <div className="text-[11px] mt-2" style={{ color: SIM.navy }}>
-              {totalMostrar > 0 ? ((rendimentoMostrar / totalMostrar) * 100).toFixed(1).replace('.', ',') : 0}% do total
+              {pctRendimento.toFixed(1).replace('.', ',')}% do total{temInflacao ? <> · <strong>{fmt(rendimentoReal)}</strong> a valor de hoje</> : ''}
             </div>
           </div>
         </div>
@@ -354,10 +281,10 @@ export default function CalculadoraJurosCompostos() {
                   labelFormatter={(v) => `Mês ${v}`}
                 />
                 <Line type="monotone" dataKey="totalNominal" name="Total nominal" stroke={SIM.navy}
-                  strokeWidth={real ? 2 : 3} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
+                  strokeWidth={3} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
                 {temInflacao && (
                   <Line type="monotone" dataKey="totalReal" name="Total real" stroke={SIM.blue}
-                    strokeWidth={real ? 3 : 2} strokeDasharray="6 4" dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
+                    strokeWidth={2} strokeDasharray="6 4" dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
                 )}
                 <Line type="monotone" dataKey="aportado" name="Aportado" stroke={SIM.textMore}
                   strokeWidth={1.8} dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
@@ -382,18 +309,20 @@ export default function CalculadoraJurosCompostos() {
           </div>
           <h3 className="text-xl font-bold mb-1" style={{ color: SIM.dark }}>Quando os juros passam a trabalhar por você</h3>
           <p className="text-sm mb-4" style={{ color: SIM.textDim }}>
-            {real ? 'Valores em poder de compra de hoje.' : 'Valores nominais (de face).'}
+            {temInflacao ? 'Aportes e juros em valores nominais, com o saldo real (poder de compra de hoje) ao lado.' : 'Valores nominais.'}
           </p>
 
           <div className="overflow-x-auto -mx-5 md:-mx-6 px-5 md:px-6">
-            <table className="w-full text-sm min-w-[640px]">
+            <table className="w-full text-sm min-w-[620px]">
               <thead>
                 <tr style={{ borderBottom: `2px solid ${SIM.border}` }}>
                   <th className="text-left py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>Ano</th>
                   <th className="text-right py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>Aporte no ano</th>
                   <th className="text-right py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>Juros no ano</th>
                   <th className="text-right py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>Saldo</th>
-                  <th className="text-right py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>% Juros</th>
+                  {temInflacao && (
+                    <th className="text-right py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>Saldo Real</th>
+                  )}
                   <th className="text-right py-2.5 px-3 text-[11px] uppercase tracking-wider font-semibold" style={{ color: SIM.textDim }}>Renda Mensal</th>
                 </tr>
               </thead>
@@ -404,7 +333,9 @@ export default function CalculadoraJurosCompostos() {
                     <td className="py-3 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(d.aporteAno)}</td>
                     <td className="py-3 px-3 text-right tabular-nums" style={{ color: SIM.navy }}>{fmt(d.jurosAno)}</td>
                     <td className="py-3 px-3 text-right tabular-nums font-semibold" style={{ color: SIM.dark }}>{fmt(d.saldo)}</td>
-                    <td className="py-3 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{d.pctJuros.toFixed(0)}%</td>
+                    {temInflacao && (
+                      <td className="py-3 px-3 text-right tabular-nums" style={{ color: SIM.blue }}>{fmt(d.saldoReal)}</td>
+                    )}
                     <td className="py-3 px-3 text-right tabular-nums" style={{ color: '#475569' }}>{fmt(d.rendaMensal)}</td>
                   </tr>
                 ))}
@@ -414,10 +345,8 @@ export default function CalculadoraJurosCompostos() {
           <div className="mt-4 text-[11px] flex items-start gap-1.5" style={{ color: SIM.textDim }}>
             <Info className="w-3 h-3 mt-0.5 shrink-0" />
             <span>
-              <strong>% Juros</strong> é a fatia do saldo que já vem de rendimento (não do seu bolso).{' '}
-              {real
-                ? 'Renda Mensal é o saque que preserva o poder de compra do patrimônio — taxa real de juros (juros descontada a inflação) sobre o saldo real.'
-                : 'Renda Mensal é quanto o saldo renderia por mês só de juros, sem consumir o principal.'}
+              {temInflacao ? <><strong>Saldo Real</strong> é o patrimônio em poder de compra de hoje (descontada a inflação). </> : null}
+              <strong>Renda Mensal</strong> é quanto o saldo renderia por mês só de juros, sem consumir o principal.
             </span>
           </div>
         </div>
