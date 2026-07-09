@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths-ignore:
       - "data-pipeline/out/**"
+      - "agent/**"
       - "**/*.md"
   workflow_dispatch:
 
