@@ -46,10 +46,20 @@ O helper já publica `agent/state/previous-day-snapshot.md` no mesmo push.
 deploy é do `.jpg`. Bom: snapshot não força rebuild à toa.
 
 ### Verificação de deploy (Passo 7.5)
-Ler runs é GET (liberado). Após o push, checar a última run de
-`deploy-vercel.yml` (`event=push`) e só declarar publicado se
-`conclusion=success`. Se falhar em "Pull Vercel config", o `VERCEL_TOKEN`
-expirou (renovar no secret do repo).
+ATENÇÃO: no ambiente de nuvem restrito, **a Actions API também é bloqueada**
+para LEITURA (`GET /actions/...` → 403 "Access to this GitHub Actions path is
+not permitted through this proxy"). Então **não** dá para checar
+`deploy-vercel.yml/runs` na nuvem. Verificar pelo **site público** (GET normal,
+liberado):
+```bash
+sleep 120
+curl -sI "https://investimentosdeaz.com.br/cafe-com-mercado/{{DATA}}" | head -1
+# ou WebFetch da página e confirmar título/capa do dia
+```
+Só declarar publicado se a página do dia responder 200 com o conteúdo novo.
+Obs.: o deploy em si é acionado pelo push para `main` (Vercel Git integration
+e/ou `deploy-vercel.yml`). Se o site não atualizar e houver acesso ao painel,
+conferir o `VERCEL_TOKEN` (erro típico em "Pull Vercel config" = token expirado).
 
 ## Capa — evitar manchete "deslocada"
 `compose-capa.py` quebra a manchete por largura. Manchete longa gera **palavra
