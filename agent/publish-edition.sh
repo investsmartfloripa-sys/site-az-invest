@@ -36,7 +36,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-PAT="${GITHUB_PAT_COWORK:-}"
+PAT="$(printf %s "${GITHUB_PAT_COWORK:-}" | tr -d "[:space:]")"  # trim: paste em campo web pode meter \n/espaco
 [ -z "$PAT" ] && { echo "ERRO_SEM_PAT: defina GITHUB_PAT_COWORK" >&2; exit 3; }
 [ -z "$DATE" ] && { echo "ERRO: --date obrigatório (YYYY-MM-DD)" >&2; exit 2; }
 [ -f "$MD" ]   || { echo "ERRO: --md não encontrado: $MD" >&2; exit 2; }
