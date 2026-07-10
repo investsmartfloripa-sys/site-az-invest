@@ -1,28 +1,28 @@
 #!/usr/bin/env bash
-# publish-edition.sh — publica uma edição do "Café com Mercado" via git push.
+# publish-edition.sh — prepara a publicação de uma edição do "Café com Mercado".
 #
-# POR QUE ESTE SCRIPT EXISTE (incidente 2026-07-09):
-# Na nuvem (PC desligado, auto-run), a GitHub Contents API (PUT em
-# api.github.com/.../contents/...) e o workflow_dispatch (POST na Actions API)
-# são BLOQUEADOS pelo proxy de egresso com HTTP 403
-# ("Write access to this GitHub API path is not permitted through this proxy").
-# Leitura (GET) passa; escrita não. O token NÃO é o problema.
+# MODELO ATUAL (incidente 2026-07-10 — nuvem Claude Code na web):
+# O proxy do GitHub da sessão só permite `git push` na BRANCH DE TRABALHO da
+# sessão (não direto na `main`), e a escrita na Contents API é bloqueada. Logo,
+# NÃO se publica com push direto na main. O fluxo compatível é:
+#     commit + push na branch da sessão  ->  abrir PR para `main`  ->  merge
+# O merge na `main` dispara o deploy (Vercel Git integration; e o push da capa
+# .jpg, non-.md, também aciona o deploy-vercel.yml). O deploy NÃO sai só do push
+# na branch — precisa do MERGE na main.
 #
-# SOLUÇÃO: git push via HTTPS para github.com é OUTRO host e FUNCIONA.
-# Além disso, o deploy-vercel.yml dispara em `push` para main com
-# paths-ignore de "**/*.md" e "data-pipeline/out/**". Como a CAPA (.jpg) NÃO é
-# .md, o próprio push da capa DISPARA o deploy automaticamente — dispensando o
-# workflow_dispatch bloqueado. Portanto: um único `git push` publica E faz deploy.
+# Este helper faz a parte de GIT (copia os arquivos, commita só os nossos, e dá
+# push na branch atual). A abertura e o MERGE do PR são feitos pelo AGENTE com as
+# ferramentas do GitHub (MCP) — ver Passo 7 do prompt da rotina. Ele imprime a
+# branch e o SHA para o passo do PR.
 #
-# USO:
-#   export GITHUB_PAT_COWORK=ghp_xxx            # segredo do Environment
-#   agent/publish-edition.sh \
-#     --date 2026-07-09 \
-#     --md /tmp/edicao.md \
-#     --cover /tmp/capa.jpg \
-#     [--snapshot /tmp/snapshot.md]
+# Autenticação do git: é a credencial da sessão (configurada uma vez por
+# `/web-setup` no terminal do PC). NÃO usa mais GITHUB_PAT_COWORK — o proxy
+# traduz a credencial escopada da sessão. Se `git push` der 403 "denied", a
+# sessão está sem escrita: rode `/web-setup` (ver agent/PIPELINE-NOTES.md).
 #
-# Sai 0 em sucesso (push aceito). O deploy roda no GitHub Actions logo após.
+# USO (a partir do checkout da sessão, na branch de trabalho):
+#   agent/publish-edition.sh --date 2026-07-10 --md /tmp/edicao.md \
+#     --cover /tmp/capa.jpg [--snapshot /tmp/snapshot.md]
 set -euo pipefail
 
 DATE="" MD="" COVER="" SNAP=""
@@ -36,47 +36,49 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-PAT="$(printf %s "${GITHUB_PAT_COWORK:-}" | tr -d "[:space:]")"  # trim: paste em campo web pode meter \n/espaco
-[ -z "$PAT" ] && { echo "ERRO_SEM_PAT: defina GITHUB_PAT_COWORK" >&2; exit 3; }
 [ -z "$DATE" ] && { echo "ERRO: --date obrigatório (YYYY-MM-DD)" >&2; exit 2; }
-[ -f "$MD" ]   || { echo "ERRO: --md não encontrado: $MD" >&2; exit 2; }
-[ -f "$COVER" ]|| { echo "ERRO: --cover não encontrado: $COVER" >&2; exit 2; }
+[ -f "$MD" ]    || { echo "ERRO: --md não encontrado: $MD" >&2; exit 2; }
+[ -f "$COVER" ] || { echo "ERRO: --cover não encontrado: $COVER" >&2; exit 2; }
 
-REPO="investsmartfloripa-sys/site-az-invest"
-WORK="$(mktemp -d)"
-trap 'rm -rf "$WORK"' EXIT
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "HEAD" ]; then
+  echo "ERRO: publique a partir da BRANCH DE TRABALHO da sessão (branch atual: $BRANCH)." >&2
+  echo "      Na nuvem o push direto na main é bloqueado; use branch -> PR -> merge." >&2
+  exit 3
+fi
 
-# Clona raso (git para github.com funciona mesmo com a REST API bloqueada).
-git clone --depth 1 "https://x-access-token:${PAT}@github.com/${REPO}.git" "$WORK" \
-  2>&1 | sed "s/${PAT}/***/g"
+# Copia os arquivos da edição (higiene do .md: remove NUL bytes).
+mkdir -p content/cafe-com-mercado public/capas/cafe-com-mercado agent/state
+tr -d '\000' < "$MD" > "content/cafe-com-mercado/${DATE}.md"
+cp "$COVER" "public/capas/cafe-com-mercado/${DATE}.jpg"
+[ -n "$SNAP" ] && [ -f "$SNAP" ] && cp "$SNAP" "agent/state/previous-day-snapshot.md"
 
-# Higiene do .md: remove NUL bytes.
-tr -d '\000' < "$MD" > "$WORK/content/cafe-com-mercado/${DATE}.md"
-mkdir -p "$WORK/public/capas/cafe-com-mercado"
-cp "$COVER" "$WORK/public/capas/cafe-com-mercado/${DATE}.jpg"
-[ -n "$SNAP" ] && [ -f "$SNAP" ] && cp "$SNAP" "$WORK/agent/state/previous-day-snapshot.md"
+git config user.email "noreply@anthropic.com"
+git config user.name  "Claude"
 
-cd "$WORK"
-git config user.name  "cafe-com-mercado-bot"
-git config user.email "investsmart.floripa@gmail.com"
-git add content/cafe-com-mercado/"${DATE}".md \
-        public/capas/cafe-com-mercado/"${DATE}".jpg \
+# Adiciona SÓ os nossos arquivos (outra sessão/Cursor pode rodar em paralelo).
+git add "content/cafe-com-mercado/${DATE}.md" \
+        "public/capas/cafe-com-mercado/${DATE}.jpg" \
         agent/state/previous-day-snapshot.md 2>/dev/null || true
 
 if git diff --cached --quiet; then
   echo "Nada a publicar (sem mudanças)."; exit 0
 fi
 
-git commit -m "content(cafe-com-mercado): edição ${DATE}" -q
+git commit -q -m "content(cafe-com-mercado): edição ${DATE} + capa"
 
-# Push com backoff exponencial (2s,4s,8s,16s) apenas p/ falha de rede.
+# Push na branch da sessão, com backoff só p/ falha de rede.
 n=0; until [ $n -ge 5 ]; do
-  if git push origin HEAD:main 2>&1 | sed "s/${PAT}/***/g"; then
-    echo "PUSH OK — deploy dispara pelo push da capa (.jpg é non-.md)."
+  if git push -u origin "HEAD:${BRANCH}"; then
+    echo "PUSH OK — branch: ${BRANCH} (SHA $(git rev-parse --short HEAD))"
+    echo "PROXIMO PASSO (agente, via GitHub MCP): abrir PR base=main head=${BRANCH} e fazer MERGE."
+    echo "  O merge na main dispara o deploy. Depois verifique 200 no site (Passo 7.3)."
     exit 0
   fi
   n=$((n+1)); sleep $((2**n))
-  echo "retry push #$n..."
+  echo "retry push #$n... (se for 403 'denied', a sessão está sem escrita — rode /web-setup)"
 done
 echo "ERRO: push falhou após 5 tentativas" >&2
 exit 4

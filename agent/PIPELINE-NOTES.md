@@ -22,28 +22,40 @@ contornando as duas APIs bloqueadas.
 
 Helper pronto: [`agent/publish-edition.sh`](./publish-edition.sh).
 
-## Edições a fazer no PROMPT da rotina (Claude web → routine)
+## Publicação na nuvem — fluxo branch → PR → merge (ATUAL, incidente 2026-07-10)
 
-O pipeline vive no prompt da rotina (não no repo). Trocar o Passo 7/8 por git:
+Na nuvem do Claude Code na web o proxy do GitHub **só permite `git push` na
+branch de trabalho da sessão** ("Restricts git push operations to the current
+working branch") e **bloqueia a escrita na Contents API**. Ou seja: **não dá para
+dar push direto na `main`**. O fluxo que funciona:
 
-### Passo 7 (substituir Contents API + dispatch)
-```bash
-# Requer GITHUB_PAT_COWORK no ambiente e /tmp/edicao.md + /tmp/capa.jpg prontos.
-bash agent/publish-edition.sh \
-  --date {{YYYY-MM-DD}} \
-  --md /tmp/edicao.md \
-  --cover /tmp/capa.jpg \
-  --snapshot /tmp/snapshot.md
-```
-Ou, sem clonar via helper, dentro de um checkout do repo: copiar
-`content/cafe-com-mercado/{{DATA}}.md` + `public/capas/cafe-com-mercado/{{DATA}}.jpg`,
-`git add`, `git commit`, `git push origin main`. O deploy vem do push da capa.
-**Não usar** `curl -X PUT .../contents` nem `workflow_dispatch` na nuvem: 403.
+1. **Escrita destravada** por `/web-setup` (rodar UMA vez no terminal do PC,
+   logado no `gh` com a conta dona do repo). Isso sincroniza a credencial para as
+   sessões da nuvem. Se `git push` der `403 ... denied`, a sessão está sem escrita
+   → rodar `/web-setup`. (O `GITHUB_PAT_COWORK` não é mais usado pelo git: o proxy
+   traduz a credencial escopada da sessão.)
+2. **Git (helper):** commita os arquivos e faz push na branch da sessão.
+   ```bash
+   bash agent/publish-edition.sh \
+     --date {{YYYY-MM-DD}} \
+     --md /tmp/edicao.md \
+     --cover /tmp/capa.jpg \
+     --snapshot /tmp/snapshot.md
+   ```
+3. **PR + merge (agente, via GitHub MCP):** abrir PR `base=main head=<branch da
+   sessão>` e fazer o **merge** (squash). O merge na `main` dispara o deploy
+   (Vercel Git integration; o push da capa `.jpg` non-`.md` também aciona o
+   `deploy-vercel.yml`). Ferramentas: `create_pull_request` + `merge_pull_request`.
+   **O deploy NÃO sai só do push na branch — precisa do MERGE na main.**
+
+**Não usar** na nuvem: push direto `HEAD:main` (bloqueado), `curl -X PUT
+.../contents` nem `workflow_dispatch` (403). O helper antigo que clonava e dava
+`push origin HEAD:main` foi substituído por este fluxo.
 
 ### Passo 8 (snapshot)
-O helper já publica `agent/state/previous-day-snapshot.md` no mesmo push.
-`agent/**` está em `paths-ignore`, então isso não dispara deploy sozinho — o
-deploy é do `.jpg`. Bom: snapshot não força rebuild à toa.
+O helper inclui `agent/state/previous-day-snapshot.md` no mesmo commit/PR.
+`agent/**` está em `paths-ignore` do `deploy-vercel.yml`, então o snapshot não
+força rebuild sozinho — o deploy vem do `.jpg` no merge.
 
 ### Verificação de deploy (Passo 7.5)
 ATENÇÃO: no ambiente de nuvem restrito, **a Actions API também é bloqueada**
