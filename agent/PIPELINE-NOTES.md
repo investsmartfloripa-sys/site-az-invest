@@ -90,10 +90,36 @@ E compor com o script versionado (não mais só no PC):
 com barra azul, a manchete condensada pesada e o subtítulo de 1 linha; **avisa
 em stderr** se cair no fallback largo. Assim a capa fica idêntica em PC e nuvem.
 
-**Editar no PROMPT da rotina (Passo 6.5.3):** trocar "use ...Condensed-Bold se
-existir; senão DejaVuSans-Bold" por: PRIMEIRO instalar `fonts-dejavu-extra`
-(1 linha de apt), DEPOIS compor com `agent/compose-capa.py`. O fallback largo
-deixa de ser um caminho "aceitável" — vira só rede de segurança com aviso.
+**Duas camadas de proteção (para não repetir):**
+
+1. **Hook de SessionStart** (`.claude/hooks/session-start.sh`, registrado em
+   `.claude/settings.json`): instala `fonts-dejavu-extra` no início de toda
+   sessão de nuvem (idempotente; só roda com `CLAUDE_CODE_REMOTE=true`). Depois
+   que este arquivo estiver na branch padrão (`main`), TODA sessão futura já
+   começa com a fonte condensada instalada — a capa não depende mais de sorte.
+
+2. **Texto do PROMPT da rotina (Passo 6.5.3)** — substituir o passo de fonte por
+   (o prompt vive fora do repo; colar lá):
+
+   ```
+   6.5.3 A fonte da capa (DejaVu Sans Condensed Bold) é garantida pelo hook de
+         SessionStart do repo (.claude/hooks/session-start.sh). Se, por qualquer
+         motivo, ela faltar, instale antes de compor:
+           apt-get install -y --no-install-recommends fonts-dejavu-extra
+           (confira: fc-list | grep -i "Sans Condensed")
+         Componha SEMPRE com o script versionado (nunca o script inline):
+           python3 agent/compose-capa.py \
+             --base /tmp/base.png --out /tmp/capa.jpg \
+             --dia "{{DIA_SEMANA_CAIXA_ALTA}}" --data "{{DD/MM}}" \
+             --head "{{MANCHETE CURTA EM CAIXA ALTA}}" \
+             --sub  "{{subtítulo de 1 linha}}"
+         O script usa a condensada + kicker branco com barra azul + degradê suave
+         no topo (sem caixa preta dura), e AVISA no stderr se cair no fallback
+         largo. Conferir a capa antes de publicar; nunca publicar no fallback.
+   ```
+
+O fallback para `DejaVuSans-Bold` (larga) deixa de ser caminho "aceitável" — vira
+só rede de segurança com aviso.
 
 ## Agendamento
 A rotina roda pelo *trigger* do Claude Code on the web (não por cron do repo
