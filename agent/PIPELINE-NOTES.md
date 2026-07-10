@@ -68,6 +68,33 @@ Regra: **manchete curta, CAIXA ALTA, que caiba em 1 linha ou quebre 2 linhas
 equilibradas** (ex.: "PETRÓLEO RECUA, FED ENDURECE"). Evitar linha final com 1
 palavra curta. Conferir a capa antes de publicar.
 
+## Incidente 2026-07-10 — capa "perdeu o padrão" na nuvem (fonte)
+**Sintoma.** A capa saiu com letras LARGAS e sem cara de thumbnail de notícia
+(kicker sem barra azul), diferente das capas padronizadas (ex.: 06/07, 08/07,
+09/07).
+
+**Causa-raiz.** O visual padrão usa **DejaVu Sans Condensed Bold**
+(pacote `fonts-dejavu-extra`). No PC do autor essa fonte existe; no sandbox de
+NUVEM só vem o `fonts-dejavu-core` → apenas `DejaVuSans-Bold` (LARGA). O
+`Passo 6.5.3` do prompt manda cair no fallback largo quando a condensada falta —
+e é esse fallback que quebra o padrão. Não é o modelo de imagem nem o Higgsfield;
+é a fonte do sandbox.
+
+**Correção (determinística).** Antes de compor a capa, garantir a fonte:
+```bash
+apt-get install -y --no-install-recommends fonts-dejavu-extra
+# confirmar: fc-list | grep -i 'Sans Condensed'
+```
+E compor com o script versionado (não mais só no PC):
+[`agent/compose-capa.py`](./compose-capa.py) — usa a condensada, o kicker branco
+com barra azul, a manchete condensada pesada e o subtítulo de 1 linha; **avisa
+em stderr** se cair no fallback largo. Assim a capa fica idêntica em PC e nuvem.
+
+**Editar no PROMPT da rotina (Passo 6.5.3):** trocar "use ...Condensed-Bold se
+existir; senão DejaVuSans-Bold" por: PRIMEIRO instalar `fonts-dejavu-extra`
+(1 linha de apt), DEPOIS compor com `agent/compose-capa.py`. O fallback largo
+deixa de ser um caminho "aceitável" — vira só rede de segurança com aviso.
+
 ## Agendamento
 A rotina roda pelo *trigger* do Claude Code on the web (não por cron do repo
 nem da sessão — `CronCreate` é só de sessão e não sobrevive). Para mudar o
