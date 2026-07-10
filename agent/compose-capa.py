@@ -69,8 +69,17 @@ def main():
             gd.line([(0, y), (W, y)], fill=base_rgb + (int(amax * t ** power),))
         im.paste(g, (0, 0 if top_edge else H - h), g)
 
-    grad(300, True, (8, 12, 22), 150, 1.3)
-    grad(150, False, (6, 10, 18), 150, 1.4)
+    grad(150, False, (6, 10, 18), 150, 1.4)  # rodapé (marca)
+
+    # faixa superior DEFINIDA (largura total, borda inferior suave) — o kicker é
+    # centralizado verticalmente nela, como nas capas padrão.
+    BAND_H, FADE = 140, 44
+    top = Image.new("RGBA", (W, BAND_H), (0, 0, 0, 0))
+    td = ImageDraw.Draw(top)
+    for y in range(BAND_H):
+        av = 216 if y < BAND_H - FADE else int(216 * (1 - (y - (BAND_H - FADE)) / FADE))
+        td.line([(0, y), (W, y)], fill=(8, 12, 20, av))
+    im.paste(top, (0, 0), top)
 
     def font(sz):
         return ImageFont.truetype(font_path, sz)
@@ -99,13 +108,16 @@ def main():
 
     maxw = W - 2 * MARGIN
 
+    # kicker + barra azul, centralizados verticalmente na faixa
     fk = font(33)
-    ky = 66
-    tracked(MARGIN, ky, kicker, fk, (255, 255, 255, 255), 4)
-    by = ky + fk.size + 12
-    draw.rounded_rectangle([MARGIN, by, MARGIN + 96, by + 7], radius=3, fill=BLUE)
+    kb = draw.textbbox((0, 0), kicker, font=fk)
+    kh, gap, bar_h = kb[3] - kb[1], 15, 7
+    group_top = (BAND_H - (kh + gap + bar_h)) // 2
+    tracked(MARGIN, group_top - kb[1], kicker, fk, (255, 255, 255, 255), 4)
+    by = group_top + kh + gap
+    draw.rounded_rectangle([MARGIN, by, MARGIN + 96, by + bar_h], radius=3, fill=BLUE)
 
-    hy = by + 34
+    hy = BAND_H + 28
     hsz, fh = 118, font(118)
     lines = wrap_balanced(a.head, fh, maxw)
     while (len(lines) > 2 or any(tw(l, fh) > maxw for l in lines)) and hsz > 72:
