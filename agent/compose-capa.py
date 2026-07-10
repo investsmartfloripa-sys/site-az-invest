@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+"""compose-capa.py — crava a manchete padrão do "Café com Mercado" sobre a base.
+
+POR QUE ESTE ARQUIVO EXISTE (incidente 2026-07-10):
+O visual padronizado das capas depende da fonte **DejaVu Sans Condensed Bold**
+(pacote `fonts-dejavu-extra`) + do layout kicker-branco-com-barra-azul. No PC do
+autor essa fonte existe; no sandbox de NUVEM só vem o `fonts-dejavu-core`
+(DejaVuSans-Bold, LARGA). Quando a rotina caía no fallback para a fonte larga,
+a capa "perdia o padrão" (letras largas, sem cara de thumbnail de notícia).
+
+FIX: garantir a fonte condensada antes de compor. Rode uma vez por sessão:
+    apt-get install -y --no-install-recommends fonts-dejavu-extra
+Este script já detecta a fonte e AVISA se caiu no fallback (não falha por causa
+da fonte — mas o ideal é instalar a extra para manter o padrão).
+
+USO:
+    python3 agent/compose-capa.py \
+        --base /tmp/base.png --out /tmp/capa.jpg \
+        --dia "SEXTA" --data "10/07" \
+        --head "INFLAÇÃO CEDE, JURO RECUA" \
+        --sub  "IPCA a 0,16% reacende a aposta de corte da Selic; dólar cai a R$5,12"
+"""
+import argparse
+import os
+import sys
+from PIL import Image, ImageDraw, ImageFont
+
+W, H = 1600, 840
+BLUE = (46, 123, 240)
+MARGIN = 92
+BRAND = "investimentosdeaz.com.br"
+
+FCOND = "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf"
+FALLBACK = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--base", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--dia", required=True, help="dia da semana em CAIXA ALTA, ex.: SEXTA")
+    ap.add_argument("--data", required=True, help="DD/MM, ex.: 10/07")
+    ap.add_argument("--head", required=True, help="manchete curta em CAIXA ALTA")
+    ap.add_argument("--sub", required=True, help="subtítulo de 1 linha")
+    a = ap.parse_args()
+
+    font_path = FCOND if os.path.exists(FCOND) else FALLBACK
+    if font_path != FCOND:
+        print("AVISO: DejaVuSansCondensed-Bold ausente — capa sairá FORA do padrão. "
+              "Rode: apt-get install -y --no-install-recommends fonts-dejavu-extra",
+              file=sys.stderr)
+
+    kicker = f"CAFÉ COM MERCADO      ·      {a.dia}, {a.data}"
+
+    im = Image.open(a.base).convert("RGB")
+    sw, sh = im.size
+    scale = max(W / sw, H / sh)
+    im = im.resize((int(sw * scale), int(sh * scale)), Image.LANCZOS)
+    nw, nh = im.size
+    left, top = (nw - W) // 2, (nh - H) // 2
+    im = im.crop((left, top, left + W, top + H))
+    draw = ImageDraw.Draw(im, "RGBA")
+
+    def grad(h, top_edge, base_rgb, amax, power):
+        g = Image.new("RGBA", (W, h), (0, 0, 0, 0))
+        gd = ImageDraw.Draw(g)
+        for y in range(h):
+            t = (1 - y / h) if top_edge else (y / h)
+            gd.line([(0, y), (W, y)], fill=base_rgb + (int(amax * t ** power),))
+        im.paste(g, (0, 0 if top_edge else H - h), g)
+
+    grad(300, True, (8, 12, 22), 150, 1.3)
+    grad(150, False, (6, 10, 18), 150, 1.4)
+
+    def font(sz):
+        return ImageFont.truetype(font_path, sz)
+
+    def tw(s, f):
+        return draw.textbbox((0, 0), s, font=f)[2]
+
+    def tracked(x, y, s, f, fill, track):
+        cx = x
+        for ch in s:
+            draw.text((cx, y), ch, font=f, fill=fill)
+            cx += tw(ch, f) + track
+
+    def wrap_balanced(s, f, max_w):
+        words = s.split()
+        if tw(s, f) <= max_w:
+            return [s]
+        best = None
+        for i in range(1, len(words)):
+            l1, l2 = " ".join(words[:i]), " ".join(words[i:])
+            if tw(l1, f) <= max_w and tw(l2, f) <= max_w:
+                d = abs(tw(l1, f) - tw(l2, f))
+                if best is None or d < best[0]:
+                    best = (d, [l1, l2])
+        return best[1] if best else [s]
+
+    maxw = W - 2 * MARGIN
+
+    fk = font(33)
+    ky = 66
+    tracked(MARGIN, ky, kicker, fk, (255, 255, 255, 255), 4)
+    by = ky + fk.size + 12
+    draw.rounded_rectangle([MARGIN, by, MARGIN + 96, by + 7], radius=3, fill=BLUE)
+
+    hy = by + 34
+    hsz, fh = 118, font(118)
+    lines = wrap_balanced(a.head, fh, maxw)
+    while (len(lines) > 2 or any(tw(l, fh) > maxw for l in lines)) and hsz > 72:
+        hsz -= 3
+        fh = font(hsz)
+        lines = wrap_balanced(a.head, fh, maxw)
+    y = hy
+    for ln in lines:
+        draw.text((MARGIN + 3, y + 3), ln, font=fh, fill=(0, 0, 0, 150))
+        draw.text((MARGIN, y), ln, font=fh, fill=(255, 255, 255, 255))
+        y += fh.size + int(fh.size * 0.02)
+
+    ssz, fs = 44, font(44)
+    while tw(a.sub, fs) > maxw and ssz > 26:
+        ssz -= 2
+        fs = font(ssz)
+    sy = y + 10
+    draw.text((MARGIN + 2, sy + 2), a.sub, font=fs, fill=(0, 0, 0, 130))
+    draw.text((MARGIN, sy), a.sub, font=fs, fill=(238, 242, 250, 255))
+
+    fbr = font(33)
+    draw.text((W - MARGIN - tw(BRAND, fbr), H - 58), BRAND, font=fbr, fill=(240, 244, 250, 240))
+
+    im.save(a.out, "JPEG", quality=90)
+    print(f"OK {a.out} | fonte: {os.path.basename(font_path)} | manchete: {len(lines)} linha(s) @ {hsz}px | sub {ssz}px")
+
+
+if __name__ == "__main__":
+    main()
