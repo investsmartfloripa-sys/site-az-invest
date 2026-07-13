@@ -1,64 +1,64 @@
 # Snapshot do dia anterior — Café com Mercado
 
-**Rodada:** 2026-07-10 (sexta-feira), ~12:47 BRT. Narrativa-mãe: **IPCA de junho surpreende para baixo e destrava a bolsa**. O IPCA veio a **+0,16% m/m** (vs +0,58% mai; consenso +0,31%; menor em 8 meses), 12m recuou a **4,64%** (de 4,72%), ano +3,36%. Derrubou os DIs em bloco (DI jan/27 abaixo de 14%) e reacendeu a aposta de corte da **Selic 14,25%→14,00%** no Copom de **4-5/8**. **Ibov** fechou quinta a **172.742 (+1,22%)** (bancos lideraram) e na sexta subia **+2%** rumo às 176 mil (Magalu +8%, Cogna +5%); **dólar ~R$5,11** (real firme). Externo comprado: alívio EUA-Irã (Teerã busca acordo, mediação Catar/Paquistão) derrubou **petróleo** (Brent ~US$76 -0,8%, WTI ~US$72) 2ª sessão; **UST 10a 4,54%** (2a 4,17%, 30a 5,06%); DXY 100,87; **iene forte ~161,70** (premiê Katayama incentiva GPIF de US$1,5tri a repatriar). **Fed:** ata dura ainda ancora manutenção em **29/7** (FedWatch ~79%), mas forma-se campo mais brando; **CPI EUA 14/7** é o gatilho. Chips: **SK Hynix** fez a maior estreia estrangeira da história da Nasdaq (US$26,5bi; ADR US$149), drenando Micron/WDC → futuros mistos (Nasdaq-100 no vermelho, Dow no azul).
+**Rodada:** 2026-07-13 (segunda-feira), ~09:45 BRT. Narrativa-mãe: **escalada EUA-Irã dispara o petróleo, mas o Ibovespa segue na contramão** apoiado pela aposta em corte de Selic em agosto. Fim de semana: Trump declarou encerrado o cessar-fogo; EUA lançaram 4ª rodada de ataques ao Irã (300+ alvos em 3 noites) após o Irã atacar navio porta-contêiner no Estreito de Ormuz e declarar a via "fechada até nova ordem" (CENTCOM contesta). **Brent** disparou para **US$78-79** (WTI ~US$74-75), maior nível em semanas. **UST 10a ~4,58%** (máxima em 7 semanas), **UST 2a no maior nível desde início de 2025** — mercado repreçando risco de o Fed até subir juros (não mais cortar). **Ouro caiu a ~US$4.064 (-1,2%)** — aperto monetário pesou mais que busca por proteção. **Bitcoin ~US$63 mil**. **Kospi despencou 5,6%** (SK Hynix -13%, Kioxia -12%, Samsung -9%, realização de lucro pós-estreia recorde na Nasdaq de US$26,5bi); Nikkei -1,1%, Shanghai -2,1%, Hang Seng +0,2%. Europa: petroleiras (BP, Eni) +2%, tech (ASML, Infineon) cedendo, STOXX 600 perto da estabilidade. Futuros EUA em queda, Nasdaq mais pressionado (~-0,8/-1%).
 
-## Níveis (diff p/ próxima rodada) — 10/7
+**Brasil:** Ibovespa fechou sexta 10/7 em **177.866 (+2,97%)**, 3ª semana seguida de alta; futuro hoje pela manhã **~180.138 (+2,91%)**. Boletim Focus de hoje: IPCA 2026 cortado a **5,16%** (2ª semana seguida de revisão para baixo), Selic-fim-2026 mantida em **14%**, câmbio **R$5,20**. Opções B3: **75%** de chance de corte de 0,25pp no Copom **4-5/8** (ante 15% início de junho), open interest +43% para 3,5mi contratos. Dólar à vista/futuro ~**R$5,11**.
+
+## Níveis (diff p/ próxima rodada) — 13/7
 | Ativo | Nível |
 |---|---|
-| Ibov | fech. quinta 9/7 **172.742 (+1,22%)**; sexta 10/7 intradia **+2%** rumo às 176 mil (cíclicos: Magalu +8%, Cogna +5%) |
-| Dólar | à vista **~R$5,11** (-0,25% a -0,48%); real firme pós-IPCA |
-| Selic | **14,25%**; Copom **4-5/8** — mercado reprecificou corte p/ 14,00% em agosto; DI jan/27 <14% |
-| Petróleo | **Brent ~US$76 (-0,8%)** / WTI ~US$72 — 2ª queda; alívio EUA-Irã; Ormuz com tráfego limitado |
-| Futuros/bolsas EUA | mistos: S&P ~flat, **Nasdaq-100 -0,3/-0,5%** (SK Hynix drena memórias), Dow +0,1/0,2%. Quinta fechou forte: S&P +0,81% (7.543), Nasdaq +1,30% (26.206), SOX +3,06% |
-| Ásia | **Kospi +2,5%** (7.475), Nikkei +1,2% (SoftBank +10,7%), Hang Seng +0,5%, **Shanghai -1% / CSI300 -1,96%**, ASX +0,5% |
-| Europa | DAX ~+0,1%, CAC ~flat, FTSE +0,1%, IBEX +0,40%, MIB +0,08%, STOXX 600 +0,1/0,2% |
-| Ouro / Prata / Cobre | **~US$4.100 (-0,6%)** / ~US$61 / ~estável (+1% na semana) |
-| UST | 2a **4,17%**; **10a 4,54%** (-2bp); 30a **5,06%** — cedeu 2ª sessão |
-| DXY / Bitcoin | **100,87** / **~US$64 mil** (+2%) |
-| Fed | manutenção 29/7 base (FedWatch ~79%); campo dovish em formação (Williams; metodologia CPI; revisão payroll ago); CPI EUA **14/7** |
+| Ibov | fech. sexta 10/7 **177.866 (+2,97%)**; futuro segunda 13/7 manhã **~180.138 (+2,91%)** |
+| Dólar | **~R$5,11** (leve queda/estável) |
+| Selic | **14,25%** atual; Copom **4-5/8** — 75% de chance de corte p/ 14,00% (opções B3) |
+| Petróleo | **Brent US$78-79** / WTI ~US$74-75 — disparou no fim de semana (Irã/Ormuz) |
+| Futuros/bolsas EUA | queda: S&P ~-0,3/-0,46%, Dow ~-0,3/-0,36% (~52.717), Nasdaq/Nasdaq-100 mais pressionado ~-0,8/-1% |
+| Ásia (fech. 13/7) | **Kospi -5,6% (7.060,69)** — SK Hynix -13%, Kioxia -12%, Samsung -9%; Nikkei -1,1% (67.786,86); Hang Seng +0,2% (24.212,36); Shanghai -2,1% (3.913,79); ASX ~flat (8.808,50) |
+| Europa | mista/cautelosa: energia (BP +2,6%, Eni +2,5%, TotalEnergies +1,9%, Repsol +1,7%) sobe; tech (ASML -2%, Infineon -3%) cai; STOXX 600 ~-0,2% |
+| Ouro / Prata / Bitcoin | **~US$4.064 (-1,2/-1,4%)** / ~US$60,43 / **~US$63.020** |
+| UST | 10a **~4,58%** (máxima 7 semanas); 2a no maior nível desde início 2025 (valor exato n/d) |
+| DXY | ~101,00-101,50 |
+| Fed | Kevin Warsh (novo chair) 1º depoimento ao Congresso nesta semana; decisão **29/7** (mercado ~80% manutenção, taxa 3,50%-3,75%); CPI EUA **14/7** é o gatilho |
 
-## IPCA junho (detalhe)
-- Cheio **+0,16% m/m** (12m 4,64%; ano 3,36%). Pressão: **Habitação +0,63%** (energia elétrica +1,53%, bandeira amarela). Alívio: **Alimentação -0,24%** (café -3,72%, carnes -0,64%); **Combustíveis -0,48%** (etanol -3,09%). Passagem aérea +7,12%. Qualidade boa: núcleos/médias aparadas desaceleram, difusão 65→53%. INPC +0,14%.
-- Atividade fraca no pano de fundo: Cielo pior junho desde 2020; **CAGED 72k** (esperado 130k). Tesouro reduziu emissão de prefixado (20bi→9bi), aliviando a curva.
+## Boletim Focus / Copom (detalhe)
+- IPCA 2026 cortado para **5,16%** (de 5,30%), 2ª semana seguida de revisão para baixo. Selic-fim-2026 mantida em 14%. Câmbio R$5,20.
+- Opções B3 sobre Copom 4-5/8: corte de 0,25pp em **75%** (vs 15% início de junho); manutenção ~21%. Open interest +43% (3,5 milhões de contratos).
+- Próximo termômetro: IBC-Br sexta-feira 17/7.
 
-## Divergência entre casas (Mercado) — morning calls 10/7 (transcritos: XP, Genial, BTG)
-- **Todas as casas projetavam IPCA acima do realizado** (XP +0,32%, BTG +0,29%, consenso +0,31%) → surpresa baixista.
-- **Genial** (Villegas + Roberto "Motinha" Mota) — mais construtiva/dovish: IPCA = desinflação em curso puxada por atividade fraca; corte de 0,25 em ago "cristalizado", espaço p/ juro <14% e Selic terminal ~13,5%; tese do "saco de maldade" japonês (GPIF/iene→150, DXY<100).
-- **XP** (Rodrigo Gavioli + Gilberto "Gibão" Coelho) — agnóstica: call anterior ao dado; mantém preferência por **crédito IPCA+** ("inflação com mais dificuldade de convergir"); técnico compra Vale, Itaú, Cyrela, Cogna, Sabesp, **Petrobras/PRIO** (aposta estabilização do petróleo).
-- **BTG** (Bruno + Thiago Salomão + Mateus Parisoto, time Portilho) — cauteloso: curva "beira o insustentável", cobra ajuste fiscal, petróleo é o obstáculo ao corte; vídeo temático (cripto 2S: BTC núcleo + Hype/Sky/Aave, "sentimento no fundo, seja contrário").
-- Fora do consenso: **Bruno Serra (Itaú Asset)** aposta em 2 cortes (ago+set).
+## Divergência entre casas (Mercado) — 13/7
+- **XP** (Rafael "Rafi" Figueiredo, Super Money Call, transcrito): construtivo/técnico — lê sexta como sinal de fundo (indicadores de sobrevenda revertendo, preço acima da MM200), múltiplo 8,5x lucro vs média 10,2x, target ~199-200mil (15% de upside), fluxo estrangeiro (R$33bi no ano) visto como resiliente. Também destaca DXY+petróleo como termômetro semanal, CPI EUA amanhã e testemunho de Kevin Warsh ao Congresso.
+- **Genial** (carteira de julho, texto): viés mais defensivo/cambial — tirou ABEV3, UGPA3, USIM5, VALE3, VBBR3; incluiu BBSE3, CPLE3, CXSE3, ENEV3, TEND3, preparando-se para dólar mais forte.
+- **BTG**: mantém PETR4 como proteção geopolítica (dividend yield ~11% em 2026 mesmo com petróleo a US$70 — dado pré-escalada, vale reavaliar). **Safra**: Top 10 (+27,47% em 12m vs +23,89% Ibov), trocou Google/Mastercard por TSMC/NextEra nos BDRs. **XP** (relatório, distinto do Rafi): cortou valor justo do Ibovespa fim-2026 de 205mil para 200mil pontos.
+- Petrobras e Vale seguem como ações mais recomendadas do mercado (9 casas cada).
 
-## Empresas (10/7)
-- **Engie (EGIE3):** follow-on primário, **precificação 14/7**, até **R$10,5 bi** (fatia em Jirau).
-- **Braskem (BRKM5):** disse à Justiça que dívida de R$2,7 bi (jul) poderia disparar aceleração de ~**R$54 bi**; suspensão de execuções por 60 dias.
-- **Brava (BRAV3):** OPA Ecopetrol **R$23/ação** (~R$2,8 bi, p/ 51%) aprovada pelo Cade mas suspensa; CVM levou recurso da colombiana ao Colegiado (7/7).
-- **Vale (VALE3):** Previ estuda contestar reunião do conselho (conflito de Stieler).
-- **Petrobras (PETR4):** XP elevou alvo a **R$63** (ganho de fluxo de caixa com subsídios).
-- **Magazine Luiza (MGLU3):** disparou (+8% intradia) com especulação de parceria com Amazon (JPMorgan).
+## Empresas (13/7)
+- **Engie Brasil (EGIE3):** precificação do follow-on **14/7**, até R$10,5 bi (oferta primária R$5,74bi p/ reforçar fatia em Jirau); coordenadores Itaú BBA (líder), Santander, Bradesco BBI, BTG, Morgan Stanley.
+- **Enel São Paulo (distribuidora):** Equatorial, Neoenergia (Iberdrola) e CPFL (State Grid) avaliam comprar a concessão, sem bancos mandatados ainda; AGU considera insuficientes os argumentos da Enel contra a caducidade (Aneel).
+- IPOs: 2026 segue fraco, nenhum programado; 8 follow-ons captaram ~R$22bi no 1S26.
 
-## Política / fiscal
-- **Tarifaço (Seção 301, 25%):** decisão do USTR até **15/7**; possível sobretaxa de 12,5% (trabalho forçado) → até 37,5%. Equipes técnicas BR-EUA tentam último encontro; 335 empresas/entidades se manifestaram. EUA pressionam BR contra tributação de serviços digitais.
-- **Fiscal:** projeções privadas veem dívida bruta acima de 80% do PIB. Ferrogrão: governo diz ter dado "tranquilidade" ao STF.
+## Política / tarifaço
+- **Tarifaço (Seção 301):** prazo do USTR **15/7 (quarta)** para decisão sobre tarifa a produtos brasileiros — mercado teme até 25%, com adicional de 12,5% em estudo (decisão só em 24/7) por trabalho forçado. Mais de 4 mil itens exportados, ~US$14,9bi em risco. Tesla, Coca-Cola, Nestlé, Siemens Energy, eBay já se manifestaram ao USTR.
+- **Eleições:** pesquisa Nexus — Lula 47% x Flávio Bolsonaro 44%; rejeição alta dos dois lados; mercado não vê gatilho de precificação por ora.
 
 ## Dados / agenda à frente
-- **CPI EUA 14/7** (esperado ~-0,1% m/m) + bancões EUA; **PPI EUA 15/7** + decisão tarifaço; **Engie precificação 14/7**; **Copom 4-5/8**; **Fed 29/7**.
+- **CPI EUA 14/7** (terça) — gatilho principal; **5 megabancos reportam 14/7** pré-mercado (JPMorgan, Goldman, BofA, Wells Fargo, Citigroup); **Kevin Warsh depõe ao Congresso** nesta semana (1ª vez como chair).
+- **PPI EUA 15/7**; **vendas no varejo EUA 16/7**; **CPI zona do euro + IBC-Br 17/7**.
+- **Fed 29/7** (mercado ~80% manutenção); **Copom 4-5/8** (75% de corte, opções B3); **TSMC, Netflix, Morgan Stanley, US Bancorp, BlackRock** reportam ao longo da semana.
 
-## Transcrições / vídeos 10/7 (confirmados por RSS)
-- **XP 9aPpADPt0cU** ("Análise técnica e onde investir | Morning Call", 08:53), **Genial sKH8DPRi-Fo** ("Bolsas recuam com tensão no Irã e dólar cai", 09:41), **BTG k5rnhB_RYWk** ("Onde investir em criptoativos no 2S", 09:02): yt-dlp OK (pt + pt-orig VTT), transcritos e lidos.
-- Genial foi o mais macro (reagiu AO VIVO ao IPCA). BTG temático (cripto), mas bloco macro inicial rico. XP call antes do dado.
-- Pablo Spyer sem MC hoje (último 01/07). InfoMoney/Money Times/Suno/Empiricus sem MC macro clássico matinal.
+## Transcrições / vídeos 13/7 (via RSS)
+- **XP** `v9MOys3XQAc` ("Conflito EUA-Irã e bolsa brasileira: o que esperar na semana? | Morning Call", publ. 11:51 UTC): yt-dlp OK (legenda pt disponível), transcrito e lido — apresentado por Rafael "Rafi" Figueiredo (estrategista de ações), 1º programa após período de férias.
+- **BTG** `dLHasMIgDaM` ("Petróleo volta a subir com aumento da tensão no Oriente Médio | Morning Call BTG Pactual", publ. 11:57 UTC): **SEM LEGENDA disponível** (yt-dlp: "has no automatic captions"; youtube-transcript-api: bloqueio de IP) — vídeo publicado poucas horas antes da produção da edição, legendas ainda não geradas. Não usado (não se inferiu tese do título).
+- **Genial** `wNNkfe1pU38` ("Tensão no Oriente Médio derruba futuros de NY | Morning Call Genial"): mesmo problema — **SEM LEGENDA**, campo `published` do feed RSS inconsistente com a data no título (registrado 09/07 apesar do "13/07" no título — possível vídeo agendado/premiere). Não usado.
+- **Empiricus** `pdx8sM7vu4M` ("Ataques entre EUA e Irã derrubam o Bitcoin | Morning Crypto #138", publ. 11:41 UTC): identificado mas não transcrito (fora do escopo macro clássico, tema cripto).
+- **Pablo Spyer:** sem morning call hoje (último em 06/07, conteúdo promocional). **InfoMoney/Suno:** sem morning call macro hoje (conteúdo político/eleitoral e #shorts, respectivamente). **Money Times:** vídeo de mercado hoje (`qZI553PfxFU`, "Vale, Prio, Gerdau e Jalles") mas não é morning call clássico — não usado no corpo, apenas mapeado.
 
 ## Capa
-- Manchete **"IPCA CEDE, BOLSA DISPARA"** / kicker "CAFÉ COM MERCADO · SEXTA, 10/07" / sub "Inflação abaixo do esperado reacende o corte da Selic". Base `cinematic_studio_2_5` (16:9, 2k): seta azul de queda (inflação cedendo) sobre Congresso + bandeira BR, petroleiro no Estreito de Ormuz, wafer de semicondutor, fachada da NYSE, velas verdes à direita; faixa escura no topo. 2 gerações tailored (c4687a4b grid; **20cdd7b5 escolhida** — colagem dramática com faixa superior limpa) + candidata 31e9aade. capa.jpg 283.562 bytes.
+- Manchete **"PETRÓLEO DISPARA, IBOVESPA RESISTE"** / kicker "CAFÉ COM MERCADO · SEGUNDA, 13/07" / sub "Irã e EUA trocam ataques no Golfo; Brasil aposta no corte da Selic em agosto". Base `cinematic_studio_2_5` (16:9, 2k): petroleiro no Estreito de Ormuz ao entardecer com explosões e fumaça ao fundo, seta vermelha de alta sobrepondo, painel de negociação da B3 desfocado em verde no primeiro plano, barras de ouro com seta de queda; silhuetas sem rosto reconhecível; faixa escura no topo. 1 geração (`a6f19628`), aprovada de primeira. Fonte condensada confirmada (DejaVuSansCondensed-Bold.ttf). capa.jpg ~327.900 bytes.
 
-## Publicação (1 commit atômico via Git Data API)
-- Base main = **b533ae8d**. Commit atômico com **.md (9.483 bytes, 0 NULs, termina em `Fontes:`) + capa (283.562 bytes)** → new commit **0583bde0**; ref main atualizada, **HEAD = 0583bde0 (MATCH)**. md e capa resolvem **200** em main ANTES do dispatch.
-- **Dispatch** deploy-vercel.yml → run **415 (29105549904)**, head_sha **0583bde0 (MATCH)** → **conclusion=success**. Página e capa resolvem **200** no site; H1 renderiza. Sem race de capa (commit atômico).
-
-## Próxima rodada (segunda 13/7 — cobre desde sexta 18h)
-- **Fechamento de 10/7:** confirmar onde o Ibov fechou (intradia batia 176 mil) e o dólar; ver se o mercado cravou o corte de agosto ou recuou.
-- **CPI EUA 14/7** (o gatilho): se vier fraco (Goldman via negativo), consolida o campo dovish nos EUA; efeito em juro global e câmbio.
-- **Tarifaço (decisão até 15/7):** resultado do último encontro técnico BR-EUA; tarifa final (25% vs até 37,5%).
-- **Petróleo/Ormuz:** a mediação Catar/Paquistão avança ou o Irã revida? Brent segura ~US$76?
-- **Chips:** SK Hynix sustenta o fluxo pós-estreia ou drena as memórias listadas? Início da temporada de balanços (bancões EUA 14/7).
-- **Acompanhar:** **Engie** (precificação 14/7); Copom **4-5/8**; Fed **29/7**; Vale (conselho/Previ); Braskem (default/aceleração); Brava/Ecopetrol (Colegiado CVM); Magalu/Amazon. Segunda pode ter dossiê semanal — checar rotina.
+## Próxima rodada (terça 14/7)
+- **CPI EUA (14/7):** o gatilho da semana — leitura vai definir se o campo "Fed pode subir juros" se consolida ou esfria; efeito direto sobre UST, DXY e câmbio.
+- **Bancões EUA (14/7):** JPMorgan, Goldman, BofA, Wells Fargo, Citigroup — termômetro de crédito/consumo nos EUA.
+- **Engie (14/7):** confirmar precificação do follow-on (~R$10,5bi).
+- **Kevin Warsh:** acompanhar o depoimento ao Congresso — primeira sinalização pública mais extensa como chair.
+- **Irã/Ormuz:** verificar se a escalada arrefece ou o Brent sustenta US$78-79; efeito sobre inflação implícita e Selic.
+- **BTG e Genial:** tentar novamente a transcrição (pode já haver legenda disponível 24h depois); Money Times e Empiricus como fontes secundárias se necessário.
+- **Acompanhar:** Kospi/SK Hynix (nova sessão), tarifaço (contagem regressiva para 15/7), pesquisas eleitorais adicionais.
