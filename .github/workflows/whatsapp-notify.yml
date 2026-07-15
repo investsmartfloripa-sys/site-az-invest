@@ -1,0 +1,139 @@
+# Café com Mercado → grupo do WhatsApp.
+#
+# Dispara quando uma edição NOVA entra na main (o merge do PR da rotina).
+# Espera a página ficar no ar (o deploy roda em paralelo), aí manda a capa
+# com legenda (título + resumo + link) para o grupo, via Evolution API no VPS.
+#
+# Segredos necessários (Settings → Secrets → Actions, ou `gh secret set`):
+#   EVOLUTION_URL       ex.: https://203-0-113-10.sslip.io
+#   EVOLUTION_APIKEY    a chave do .env do VPS
+#   EVOLUTION_INSTANCE  ex.: azinvest
+#   WHATSAPP_GROUP_JID  ex.: 120363XXXXXXXXXXX@g.us
+# Sem os segredos o job termina com aviso, sem falhar (para o CI não quebrar
+# antes de o VPS existir). Setup do VPS: agent/whatsapp/README-SETUP.md.
+#
+# Teste manual (com a edição de um dia já publicado):
+#   gh workflow run whatsapp-notify.yml -f date=2026-07-15
+
+name: whatsapp-notify
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "content/cafe-com-mercado/*.md"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Data da edição (YYYY-MM-DD)"
+        required: true
+
+concurrency:
+  group: whatsapp-notify
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detectar edição nova
+        id: ed
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            DATE="${{ github.event.inputs.date }}"
+          else
+            # Só notifica arquivo ADICIONADO (A) — update de edição (ex.: pós-CPI) não repete o aviso.
+            ADDED=$(git diff --name-only --diff-filter=A HEAD^ HEAD -- 'content/cafe-com-mercado/*.md' 2>/dev/null | head -1 || true)
+            if [ -z "$ADDED" ]; then
+              echo "Nenhuma edição nova neste push — nada a notificar."
+              echo "found=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            DATE=$(basename "$ADDED" .md)
+          fi
+          FILE="content/cafe-com-mercado/${DATE}.md"
+          if [ ! -f "$FILE" ]; then
+            echo "ERRO: $FILE não existe."; exit 1
+          fi
+          WEEKDAY=$(grep -m1 '^weekday:' "$FILE" | sed 's/^weekday: *//' | tr -d '\r')
+          DESC=$(grep -m1 '^description:' "$FILE" | sed 's/^description: *//' | tr -d '\r')
+          DDMM=$(date -d "$DATE" +%d/%m)
+          {
+            echo "found=true"
+            echo "date=$DATE"
+            echo "weekday=$WEEKDAY"
+            echo "ddmm=$DDMM"
+            echo "desc=$DESC"
+          } >> "$GITHUB_OUTPUT"
+          echo "Edição detectada: $DATE ($WEEKDAY)"
+
+      - name: Enviar para o grupo
+        if: steps.ed.outputs.found == 'true'
+        env:
+          EVOLUTION_URL: ${{ secrets.EVOLUTION_URL }}
+          EVOLUTION_APIKEY: ${{ secrets.EVOLUTION_APIKEY }}
+          EVOLUTION_INSTANCE: ${{ secrets.EVOLUTION_INSTANCE }}
+          WHATSAPP_GROUP_JID: ${{ secrets.WHATSAPP_GROUP_JID }}
+          DATE: ${{ steps.ed.outputs.date }}
+          WEEKDAY: ${{ steps.ed.outputs.weekday }}
+          DDMM: ${{ steps.ed.outputs.ddmm }}
+          DESC: ${{ steps.ed.outputs.desc }}
+        run: |
+          set -euo pipefail
+          if [ -z "${EVOLUTION_URL}" ] || [ -z "${EVOLUTION_APIKEY}" ] || [ -z "${EVOLUTION_INSTANCE}" ] || [ -z "${WHATSAPP_GROUP_JID}" ]; then
+            echo "::warning::Segredos do WhatsApp ausentes — envio pulado. Configure: agent/whatsapp/README-SETUP.md"
+            exit 0
+          fi
+
+          PAGE="https://investimentosdeaz.com.br/cafe-com-mercado/${DATE}"
+          CAPA="https://investimentosdeaz.com.br/capas/cafe-com-mercado/${DATE}.jpg"
+
+          # Espera o deploy: até 10 min para a página do dia responder 200.
+          echo "Aguardando ${PAGE} ..."
+          ok=""
+          for i in $(seq 1 20); do
+            if curl -sfI -o /dev/null "$PAGE"; then ok=1; break; fi
+            sleep 30
+          done
+          if [ -z "$ok" ]; then
+            echo "ERRO: página da edição não ficou no ar em 10 min — não vou anunciar link quebrado."
+            exit 1
+          fi
+
+          TEXT="☕ *Café com Mercado — ${WEEKDAY}, ${DDMM}*
+
+          ${DESC}
+
+          📖 Edição completa: ${PAGE}"
+          # (remove a indentação do YAML das linhas do heredoc acima)
+          TEXT=$(printf '%s\n' "$TEXT" | sed 's/^          //')
+
+          # 1ª opção: capa como imagem com legenda.
+          BODY=$(jq -n --arg n "$WHATSAPP_GROUP_JID" --arg m "$CAPA" --arg c "$TEXT" --arg f "cafe-${DATE}.jpg" \
+            '{number:$n, mediatype:"image", mimetype:"image/jpeg", media:$m, fileName:$f, caption:$c}')
+          CODE=$(curl -s -o /tmp/resp.json -w '%{http_code}' -X POST \
+            -H "apikey: ${EVOLUTION_APIKEY}" -H "Content-Type: application/json" \
+            -d "$BODY" "${EVOLUTION_URL}/message/sendMedia/${EVOLUTION_INSTANCE}")
+          if [ "${CODE:0:1}" = "2" ]; then
+            echo "Enviado com capa (HTTP $CODE)."
+            exit 0
+          fi
+          echo "::warning::sendMedia falhou (HTTP $CODE): $(cat /tmp/resp.json | head -c 400). Tentando texto puro..."
+
+          # Fallback: texto com preview do link.
+          BODY=$(jq -n --arg n "$WHATSAPP_GROUP_JID" --arg t "$TEXT" '{number:$n, text:$t, linkPreview:true}')
+          CODE=$(curl -s -o /tmp/resp.json -w '%{http_code}' -X POST \
+            -H "apikey: ${EVOLUTION_APIKEY}" -H "Content-Type: application/json" \
+            -d "$BODY" "${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}")
+          if [ "${CODE:0:1}" = "2" ]; then
+            echo "Enviado como texto (HTTP $CODE)."
+            exit 0
+          fi
+          echo "ERRO: sendText também falhou (HTTP $CODE): $(cat /tmp/resp.json | head -c 400)"
+          exit 1

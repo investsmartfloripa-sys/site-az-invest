@@ -155,6 +155,19 @@ Com isso a garantia deixa de depender do prompt: **não existe mais caminho
 automático que produza capa fora do padrão.** Se a fonte não instalar, a rotina
 falha visivelmente no Passo 6.5.3 em vez de publicar errado.
 
+## Canal WhatsApp (distribuição)
+
+Toda edição NOVA mergeada na `main` é anunciada automaticamente no grupo do
+WhatsApp pelo workflow [`whatsapp-notify.yml`](../.github/workflows/whatsapp-notify.yml):
+ele espera a página do dia responder 200 (nunca anuncia link quebrado) e manda
+a **capa com legenda** (título + description do frontmatter + link) via
+**Evolution API** rodando em VPS próprio 24/7. A rotina de nuvem NÃO participa
+do envio — ela só publica; o aviso sai do merge. Update de edição já publicada
+(mesmo arquivo modificado) não re-notifica.
+
+Setup do VPS + QR + segredos do GitHub: [`agent/whatsapp/README-SETUP.md`](./whatsapp/README-SETUP.md).
+Teste manual: `gh workflow run whatsapp-notify.yml -f date=YYYY-MM-DD`.
+
 ## Agendamento
 A rotina roda pelo *trigger* do Claude Code on the web (não por cron do repo
 nem da sessão — `CronCreate` é só de sessão e não sobrevive). Para mudar o
