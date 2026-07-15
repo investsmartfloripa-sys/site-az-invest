@@ -10,8 +10,11 @@ a capa "perdia o padrão" (letras largas, sem cara de thumbnail de notícia).
 
 FIX: garantir a fonte condensada antes de compor. Rode uma vez por sessão:
     apt-get install -y --no-install-recommends fonts-dejavu-extra
-Este script já detecta a fonte e AVISA se caiu no fallback (não falha por causa
-da fonte — mas o ideal é instalar a extra para manter o padrão).
+Desde o incidente 2026-07-15 (capa publicada no fallback largo mesmo com o hook
+de SessionStart na main), este script é FAIL-HARD: se a condensada faltar, ele
+tenta instalá-la sozinho (apt-get update + install) e, se ainda faltar, SAI COM
+ERRO em vez de compor fora do padrão. O fallback largo só sai com a flag
+explícita --allow-fallback (decisão do autor, nunca da rotina).
 
 USO:
     python3 agent/compose-capa.py \
@@ -22,6 +25,8 @@ USO:
 """
 import argparse
 import os
+import shutil
+import subprocess
 import sys
 from PIL import Image, ImageDraw, ImageFont
 
@@ -30,8 +35,20 @@ BLUE = (46, 123, 240)
 MARGIN = 92
 BRAND = "investimentosdeaz.com.br"
 
-FCOND = "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf"
+# Caminhos da condensada: nuvem (Linux) primeiro; Windows para testes no PC.
+FCOND_CANDIDATES = [
+    "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf",
+    r"C:\Windows\Fonts\DejaVuSansCondensed-Bold.ttf",
+    os.path.expanduser(r"~\AppData\Local\Microsoft\Windows\Fonts\DejaVuSansCondensed-Bold.ttf"),
+]
 FALLBACK = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+
+
+def find_condensed():
+    for p in FCOND_CANDIDATES:
+        if os.path.exists(p):
+            return p
+    return None
 
 
 def main():
@@ -42,12 +59,36 @@ def main():
     ap.add_argument("--data", required=True, help="DD/MM, ex.: 10/07")
     ap.add_argument("--head", required=True, help="manchete curta em CAIXA ALTA")
     ap.add_argument("--sub", required=True, help="subtítulo de 1 linha")
+    ap.add_argument("--allow-fallback", action="store_true",
+                    help="permite compor com a DejaVuSans-Bold LARGA (fora do padrão); "
+                         "só com aprovação explícita do autor")
     a = ap.parse_args()
 
-    font_path = FCOND if os.path.exists(FCOND) else FALLBACK
-    if font_path != FCOND:
-        print("AVISO: DejaVuSansCondensed-Bold ausente — capa sairá FORA do padrão. "
-              "Rode: apt-get install -y --no-install-recommends fonts-dejavu-extra",
+    font_path = find_condensed()
+    if font_path is None and shutil.which("apt-get"):
+        # Sandbox de nuvem novo pode vir sem a fonte E sem listas do apt —
+        # o update antes do install é o que faz a instalação funcionar.
+        print("fonte condensada ausente — tentando instalar fonts-dejavu-extra...",
+              file=sys.stderr)
+        for cmd in (["apt-get", "update", "-qq"],
+                    ["apt-get", "install", "-y", "--no-install-recommends",
+                     "fonts-dejavu-extra"]):
+            try:
+                subprocess.run(cmd, capture_output=True, timeout=300)
+            except Exception:
+                break
+        font_path = find_condensed()
+
+    if font_path is None:
+        if not a.allow_fallback:
+            sys.exit(
+                "ERRO: DejaVu Sans Condensed Bold ausente e a instalação de "
+                "fonts-dejavu-extra falhou. A capa NÃO sai no fallback largo "
+                "(padrão visual). Instale a fonte e recomponha; --allow-fallback "
+                "existe só para uso manual com aprovação do autor."
+            )
+        font_path = FALLBACK
+        print("AVISO: compondo no fallback LARGO (--allow-fallback) — capa FORA do padrão.",
               file=sys.stderr)
 
     kicker = f"CAFÉ COM MERCADO      ·      {a.dia}, {a.data}"

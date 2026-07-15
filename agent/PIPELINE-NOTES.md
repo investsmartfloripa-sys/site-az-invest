@@ -114,24 +114,46 @@ em stderr** se cair no fallback largo. Assim a capa fica idêntica em PC e nuvem
    (o prompt vive fora do repo; colar lá):
 
    ```
-   6.5.3 A fonte da capa (DejaVu Sans Condensed Bold) é garantida pelo hook de
-         SessionStart do repo (.claude/hooks/session-start.sh). Se, por qualquer
-         motivo, ela faltar, instale antes de compor:
-           apt-get install -y --no-install-recommends fonts-dejavu-extra
-           (confira: fc-list | grep -i "Sans Condensed")
-         Componha SEMPRE com o script versionado (nunca o script inline):
+   6.5.3 Componha a capa SEMPRE com o script versionado (nunca script inline):
            python3 agent/compose-capa.py \
              --base /tmp/base.png --out /tmp/capa.jpg \
              --dia "{{DIA_SEMANA_CAIXA_ALTA}}" --data "{{DD/MM}}" \
              --head "{{MANCHETE CURTA EM CAIXA ALTA}}" \
              --sub  "{{subtítulo de 1 linha}}"
-         O script usa a condensada + kicker branco com barra azul + degradê suave
-         no topo (sem caixa preta dura), e AVISA no stderr se cair no fallback
-         largo. Conferir a capa antes de publicar; nunca publicar no fallback.
+         A fonte padrão (DejaVu Sans Condensed Bold) é garantida pelo hook de
+         SessionStart e pelo próprio script, que instala fonts-dejavu-extra se
+         faltar e FALHA COM ERRO se não conseguir. Se o script falhar por fonte,
+         rode: apt-get update && apt-get install -y --no-install-recommends \
+         fonts-dejavu-extra — e recomponha. NUNCA use --allow-fallback nem
+         componha com outra fonte/script: capa fora do padrão não publica.
+         Confira a capa (kicker branco com barra azul, manchete condensada em
+         1–2 linhas equilibradas) antes de publicar.
    ```
 
 O fallback para `DejaVuSans-Bold` (larga) deixa de ser caminho "aceitável" — vira
 só rede de segurança com aviso.
+
+## Incidente 2026-07-15 — capa REINCIDIU no fallback largo (fail-hard aplicado)
+
+**Sintoma.** Mesmo com o hook de SessionStart na `main` desde 10/07, a capa de
+15/07 foi publicada com a fonte LARGA (13/07 e 14/07 saíram corretas).
+
+**Causa provável.** Duas fraquezas somadas: (1) o hook rodava `apt-get install`
+**sem `apt-get update`** — em sandbox novo, sem as listas do apt, o install
+falha e o `|| true` engolia o erro; (2) o `compose-capa.py` só **avisava** em
+stderr e compunha assim mesmo — aviso que a rotina ignora.
+
+**Correção (2026-07-15).**
+- `.claude/hooks/session-start.sh`: agora faz `apt-get update` antes do
+  install e loga em `/tmp/session-start-font.log`.
+- `agent/compose-capa.py`: **FAIL-HARD**. Se a condensada faltar, ele mesmo
+  tenta `apt-get update + install fonts-dejavu-extra`; se ainda faltar, **sai
+  com erro** e a capa não é composta. O fallback largo só sai com a flag
+  `--allow-fallback` (uso manual, com aprovação do autor — nunca da rotina).
+
+Com isso a garantia deixa de depender do prompt: **não existe mais caminho
+automático que produza capa fora do padrão.** Se a fonte não instalar, a rotina
+falha visivelmente no Passo 6.5.3 em vez de publicar errado.
 
 ## Agendamento
 A rotina roda pelo *trigger* do Claude Code on the web (não por cron do repo

@@ -20,10 +20,14 @@ if [ -f "$FONT" ]; then
 fi
 
 echo "session-start: instalando fonts-dejavu-extra (fonte padrão da capa)..."
-apt-get install -y --no-install-recommends fonts-dejavu-extra >/dev/null 2>&1 || true
+# Sandbox novo pode vir sem as listas do apt — sem o update o install falha
+# em silêncio (foi a causa provável da capa fora do padrão em 2026-07-15).
+LOG=/tmp/session-start-font.log
+{ apt-get update -qq && apt-get install -y --no-install-recommends fonts-dejavu-extra; } >"$LOG" 2>&1 || true
 
 if [ -f "$FONT" ]; then
   echo "session-start: OK — fonte condensada disponível para a capa."
 else
-  echo "session-start: AVISO — não instalou a fonte condensada; a capa pode sair no fallback largo." >&2
+  echo "session-start: AVISO — não instalou a fonte condensada (detalhes em $LOG)." >&2
+  echo "  O compose-capa.py vai tentar de novo e FALHA se não conseguir — não publique capa no fallback." >&2
 fi
