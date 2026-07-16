@@ -248,6 +248,26 @@ e o relay é quem fala com o YouTube.
   linhas, idêntico ao direto); relay fora do ar → caiu no direto sem erro;
   sem variáveis → comportamento original preservado; auth errada → 401.
 
+**STATUS (16/07/2026, fim do dia) — PAUSADO pelo operador; retomar daqui:**
+- Relay INSTALADO e no ar no VPS Hetzner (mesmo VPS da Evolution/WhatsApp):
+  `https://transcript.89-167-86-133.sslip.io/health` responde
+  `{"ok":true,"cookies":false}`. Instalação via
+  `agent/transcript-relay/bootstrap.sh` (uma linha, detecta o caddy da
+  Evolution sozinho e se integra por subdomínio).
+- PORÉM o IP da Hetzner também é bot-checkado pelo YouTube (testado inclusive
+  com `player_client=android_vr` — bloqueado igual). Transcrição via relay
+  ainda NÃO funciona.
+- Próximo passo (pendente, ~5min do operador): exportar cookies.txt de conta
+  Google DESCARTÁVEL e enviar a `/opt/transcript-relay/cookies/cookies.txt`
+  no servidor — passo a passo na seção "Cookies" do
+  `agent/transcript-relay/README-SETUP.md`. Depois: rodar o bootstrap de novo
+  e conferir `"cookies":true` no /health e `"status":"ok"` no teste.
+- As variáveis `TRANSCRIPT_RELAY_URL`/`TRANSCRIPT_RELAY_TOKEN` NÃO foram
+  adicionadas ao environment da rotina — de propósito: sem elas o
+  `fetch-transcript.sh` segue 100% no caminho direto (yt-dlp local), que
+  funciona na maioria dos dias. A rotina diária NÃO é afetada pela pausa.
+  Só adicionar as variáveis DEPOIS que o teste com cookies der "ok".
+
 ## Canal WhatsApp (distribuição)
 
 Toda edição NOVA mergeada na `main` é anunciada automaticamente no grupo do
