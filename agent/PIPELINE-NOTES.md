@@ -155,6 +155,75 @@ Com isso a garantia deixa de depender do prompt: **não existe mais caminho
 automático que produza capa fora do padrão.** Se a fonte não instalar, a rotina
 falha visivelmente no Passo 6.5.3 em vez de publicar errado.
 
+## Transcrição dos morning calls — falhas recorrentes e correção (2026-07-16)
+
+**Sintoma.** O Passo 5 (transcrição de vídeo) falhava com frequência variável:
+em 15/07 os 3 vídeos tentados falharam; em 16/07, 2 de 3 (XP e BTG) funcionaram
+mas só depois de retry manual, e o vídeo da Genial nunca funcionou.
+
+**Investigação (16/07).** Havia duas causas distintas sendo tratadas como uma só:
+
+1. **Vídeo ainda AO VIVO.** O vídeo da Genial (`NGMM28Ec_zo`) era uma
+   transmissão `yt_live_broadcast` em andamento no horário da rotina — HLS com
+   segmentos assinados e expiráveis. Legenda automática só existe depois que a
+   live termina e é processada; nenhum retry de legenda resolve isso, e
+   tentar baixar a mídia para transcrever localmente (Whisper) também não
+   ajudaria (ver item 2). `yt-dlp --dump-json --skip-download` expõe
+   `is_live: true` de forma confiável e barata (~2s, só metadados) — dá para
+   detectar e desistir sem gastar tempo/tentativas.
+2. **Vídeo encerrado mas legenda ainda não processada.** Comum nos primeiros
+   ~15-20min após a publicação. Aqui **retry resolve**: o BTG de 16/07 falhou
+   na 1ª tentativa e funcionou na 2ª, poucos minutos depois.
+
+**Cotovelo descartado: Whisper local como fallback.** A ideia óbvia — baixar o
+áudio com `yt-dlp` e transcrever localmente com `faster-whisper` quando não há
+legenda — **não é viável neste sandbox de nuvem**: testes em 16/07 confirmam
+que o download de MÍDIA (áudio/vídeo, não legenda) do CDN `googlevideo.com`
+retorna **403 Forbidden de forma consistente**, inclusive para vídeos já
+encerrados e com legenda disponível (testado com XP e BTG, ambos 403 tanto em
+formato de áudio isolado quanto vídeo progressivo). É o mesmo tipo de bloqueio
+de IP de cloud provider já registrado para o `youtube-transcript-api`
+(`RequestBlocked`), só que atingindo também o CDN de mídia — não só a API de
+transcript. Ou seja: **o endpoint de legenda (timedtext) é a única via que
+funciona neste ambiente**; não adianta instalar `ffmpeg`/Whisper esperando
+contornar — o bloqueio é anterior a isso, no download do arquivo de origem.
+
+**Correção.** Novo helper versionado
+[`agent/fetch-transcript.sh`](./fetch-transcript.sh):
+```bash
+agent/fetch-transcript.sh <video_id> <output_dir>
+```
+- Primeiro checa `is_live` via `--dump-json --skip-download` (barato, ~2s).
+  Se ao vivo, retorna `AINDA_AO_VIVO` na hora — sem gastar tentativas.
+- Senão, tenta baixar a legenda (`--write-auto-sub --write-sub`) até 4 vezes
+  com pequenos intervalos (0s, 20s, 40s, 60s — cabe dentro do tempo do
+  Passo 5 da rotina).
+- Em sucesso, já entrega o `.vtt` limpo em `<output_dir>/<video_id>.clean.txt`
+  (mesma higiene que já era feita manualmente: remove `WEBVTT`/timestamps/tags,
+  dedup).
+- `youtube-transcript-api` **sai do caminho principal**: no sandbox de nuvem
+  ele falha de forma estrutural (IP bloqueado), não pontual — manter como
+  fallback só adiciona tempo de espera sem chance real de sucesso. Se quiser
+  tentar mesmo assim (ex.: rodando fora da nuvem), é só chamar como antes,
+  fora deste script.
+
+**Resultado testado (16/07, retroativo aos 3 vídeos do dia):** Genial →
+`AINDA_AO_VIVO` em 2,5s (antes: 3 tentativas perdidas, minutos de log de
+erro); XP → `OK` na 1ª tentativa em 4,8s; BTG → `OK` na 1ª tentativa em 4,7s
+(a legenda já havia sido processada pelo YouTube neste momento do teste).
+
+**Atualização recomendada para o Passo 5 do prompt da rotina** (o prompt vive
+fora do repo; colar lá):
+```
+5.2 Para cada vídeo candidato, use o helper versionado:
+      agent/fetch-transcript.sh <video_id> /tmp/transcripts
+    Ele já resolve retry (legenda ainda não processada) e detecção de
+    AINDA_AO_VIVO (não perder tempo com vídeo em transmissão) — não usar
+    yt-dlp nem youtube-transcript-api soltos. Em AINDA_AO_VIVO ou
+    SEM_LEGENDA, registrar a falha no snapshot com a causa exata (uma frase),
+    nunca inferir tese pelo título.
+```
+
 ## Canal WhatsApp (distribuição)
 
 Toda edição NOVA mergeada na `main` é anunciada automaticamente no grupo do
