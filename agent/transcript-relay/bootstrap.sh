@@ -48,7 +48,37 @@ fi
 set -a; . ./.env; set +a
 
 log "5/6 subindo contêineres (o build pode levar alguns minutos)"
-docker compose up -d --build
+# Dois cenários:
+#   A) servidor dedicado — sobe relay + caddy próprio (compose completo);
+#   B) mesmo VPS da Evolution API (WhatsApp) — o caddy da Evolution já ocupa
+#      as portas 80/443. Nesse caso sobe SÓ o relay e o pendura no caddy
+#      existente com o subdomínio transcript.<dominio-da-evolution>.
+if docker ps --format '{{.Names}}' | grep -q '^evolution_caddy$'; then
+  echo "detectado caddy da Evolution nas portas 80/443 — integrando (cenário B)"
+  docker rm -f transcript_caddy >/dev/null 2>&1 || true
+  docker compose up -d --build transcript-relay
+
+  EVODIR="/opt/evolution"
+  [ -f "$EVODIR/.env" ] || { echo "ERRO: $EVODIR/.env não encontrado — a Evolution não está em /opt/evolution?"; exit 1; }
+  EVODOMAIN="$(grep '^DOMAIN=' "$EVODIR/.env" | head -1 | cut -d= -f2 | tr -d '[:space:]')"
+  [ -n "$EVODOMAIN" ] || { echo "ERRO: DOMAIN vazio em $EVODIR/.env"; exit 1; }
+  DOMAIN="transcript.${EVODOMAIN}"
+  sed -i "s/^DOMAIN=.*/DOMAIN=${DOMAIN}/" .env
+
+  # rota no Caddyfile da Evolution (idempotente)
+  if ! grep -q 'transcript_relay:8000' "$EVODIR/Caddyfile"; then
+    printf '\ntranscript.{$DOMAIN} {\n\treverse_proxy transcript_relay:8000\n}\n' >> "$EVODIR/Caddyfile"
+    echo "rota adicionada ao Caddyfile da Evolution"
+  fi
+
+  # coloca o relay na rede do caddy da Evolution (DNS pelo nome do contêiner)
+  EVONET="$(docker inspect evolution_caddy -f '{{range $k,$_ := .NetworkSettings.Networks}}{{$k}} {{end}}' | awk '{print $1}')"
+  docker network connect "$EVONET" transcript_relay >/dev/null 2>&1 || true
+  docker restart evolution_caddy >/dev/null
+  echo "caddy da Evolution recarregado com a nova rota (interrupção de ~2s)"
+else
+  docker compose up -d --build
+fi
 
 log "6/6 verificação"
 echo -n "aguardando HTTPS (certificado Let's Encrypt) "
