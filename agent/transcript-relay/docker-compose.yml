@@ -14,6 +14,11 @@ services:
     restart: always
     environment:
       - RELAY_TOKEN=${RELAY_TOKEN}
+    volumes:
+      # cookies.txt (Netscape) de conta Google dedicada — só necessário se o
+      # IP do servidor for bot-checkado pelo YouTube. Montado rw porque o
+      # yt-dlp rotaciona os cookies e reescreve o arquivo.
+      - ./cookies:/srv/cookies
     expose:
       - "8000"
 

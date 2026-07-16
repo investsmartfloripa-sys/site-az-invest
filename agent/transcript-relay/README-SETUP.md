@@ -91,6 +91,38 @@ pelo YouTube — teste antes de considerar o setup concluído (é raro em VPS
 pequeno de provedor comum, mas acontece; nesse caso trocar de VPS/região é
 mais fácil que insistir).
 
+## Cookies — quando o IP do servidor também é bloqueado (caso Hetzner, 16/07/2026)
+
+Se o teste de transcrição devolver `"status":"error"` com "Sign in to confirm
+you're not a bot", o IP do servidor também está na lista ruim do YouTube
+(aconteceu com VPS Hetzner). A saída é dar ao yt-dlp os **cookies de uma conta
+Google** — aí a chamada se apresenta como usuário logado e passa, independente
+do IP.
+
+**Use uma conta dedicada/descartável, nunca a pessoal** (risco pequeno de a
+conta ser sinalizada). Passos no SEU PC:
+
+1. Crie (ou use) uma conta Google descartável.
+2. Abra uma **janela anônima** do Chrome/Edge e faça login em youtube.com com
+   essa conta.
+3. Instale a extensão **"Get cookies.txt LOCALLY"** (permita em modo anônimo:
+   chrome://extensions → detalhes → "Permitir em anônimo").
+4. Na aba anônima do youtube.com, clique na extensão → **Export** (formato
+   Netscape) → salva `youtube.com_cookies.txt`.
+5. **Feche a janela anônima SEM fazer logout** e não faça mais login com essa
+   conta no navegador — assim a sessão exportada continua válida por meses.
+6. Envie ao servidor (PowerShell tem scp):
+   ```powershell
+   scp $HOME\Downloads\youtube.com_cookies.txt root@SEU-IP:/opt/transcript-relay/cookies/cookies.txt
+   ```
+7. No servidor, rode o bootstrap de novo (ou só `cd /opt/transcript-relay &&
+   docker compose up -d --build transcript-relay`). O `/health` passa a
+   responder `"cookies": true` e o teste de transcrição deve virar `ok`.
+
+O arquivo é montado com escrita porque o YouTube rotaciona cookies e o yt-dlp
+precisa reescrevê-lo. Se um dia expirar (teste volta a dar bot-check), repita
+os passos 2-7 — leva 2 minutos.
+
 ## Conectar a rotina de nuvem (última etapa)
 
 No painel do Claude Code on the web, no **environment** da rotina do Café
