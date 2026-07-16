@@ -1,60 +1,66 @@
 # Snapshot do dia anterior — Café com Mercado
 
-**Rodada:** 2026-07-15 (quarta-feira), ~09:45 BRT — rodada única do dia. Publicação em `content/cafe-com-mercado/2026-07-15.md` + capa `/capas/cafe-com-mercado/2026-07-15.jpg`.
+**Rodada:** 2026-07-16 (quinta-feira), ~09:45 BRT — rodada única do dia. Publicação em `content/cafe-com-mercado/2026-07-16.md` + capa `/capas/cafe-com-mercado/2026-07-16.jpg` (via PR #10, squash-merge para main).
 
-## Narrativa-mãe do dia (15/7)
-Alívio do CPI de terça (14/7) segue precificado nos EUA (futuros em alta, Treasuries perto de mínimas), mas no Brasil a curva de juros já reverteu o sinal nesta manhã (DI longos subindo ~0,49pp) por causa do prazo da **Seção 301**, que vence **hoje sem acordo confirmado** até o horário de publicação. Pacote: 25% sobre +4 mil produtos + sobretaxa de 12,5% (até 37,5% em alguns setores). Planalto trabalha com 3 cenários (aplicação = mais provável, adiamento político, adiamento técnico); Pix e etanol são linhas vermelhas; CNI pediu adiamento a Trump.
+## Narrativa-mãe do dia (16/7)
+A pendência de ontem se resolveu: o USTR confirmou a tarifa adicional de **25%** sobre produtos brasileiros sob a Seção 301, com vigência a partir de **22/07**. Isenções: café, carne bovina, aeronaves e partes, terras raras, energia (óleo/gás), celulose. Taxados: açúcar, papel, aço, vestuário, máquinas agrícolas, equipamentos elétricos. Departamento de Comércio americano tem outras ~80 investigações da Seção 301 abertas, podendo atingir China, UE, Índia, Coreia do Sul. Governo Lula chamou de "marco lastimável", vai acionar Lei de Reciprocidade Econômica + OMC + Plano Brasil Soberano (com possível subsídio a setores expostos).
 
-**Ormuz:** EUA recuaram do pedágio de 20% sobre cargas (resistência do setor de navegação, custo ~US$32mi/petroleiro) e substituíram por **bloqueio naval formal aos portos iranianos**, endurecido após nova rodada de ataques a Teerã na madrugada de 15/7 (4ª noite seguida). Petróleo seguiu pressionado mesmo sem o pedágio: Brent ~US$85,70, WTI ~US$80.
+**Susto do dia foi outro:** realização de lucros generalizada no setor de chips/semicondutores, espalhada da Ásia (Kospi -6,4%, SK Hynix -11%, Samsung -8,8%; Nikkei -2,8%; Shanghai -1,9%; Hang Seng destoou +1,3%/+1,7% puxada por Alibaba) para futuros americanos (Nasdaq futuro -0,5/-0,7%, S&P futuro -0,1/-0,16%). Estopim: balanço da TSMC veio com receita/margem acima do esperado (lucro +77% a/a), mas anúncio de capex adicional de **US$100bi** no Arizona assustou o mercado sobre retorno do ciclo de IA — Nvidia, AMD, Micron, Broadcom, STM, ASMI, Infineon caindo no pré-mercado/Europa. BTG (via morning call) trouxe conceito de "news failure" (Jon Chapiro): XLK perdendo força relativa vs S&P desde início de junho, mas sem catalisador definitivo ainda para correção broad do S&P.
 
-**Kevin Warsh** (Fed chair desde maio) fez 2º dia de testemunho semestral de política monetária — Câmara na terça, Senado (Comitê Bancário) nesta quarta 10h Washington. Repetiu "não é missão cumprida"; Warren cobrou transparência sobre projeções não divulgadas. Mercado precifica ~20% de chance de alta em 29/07 (não corte).
+**Irã/Ormuz:** escalada — Trump ameaçou atacar usinas de energia e pontes iranianas sem avanço diplomático; Irã ameaçou retaliação de larga escala. 5ª noite seguida de ataques (petroleiro sancionado perto do principal terminal de exportação iraniano); Irã revidou contra bases dos EUA no Kuwait e na Jordânia (Jordânia interceptou 8 mísseis). Apesar disso, petróleo NÃO acompanhou a escalada — Brent/WTI em leve queda, presos a resistência ~US$85-87 (bem abaixo dos US$92 pré-cessar-fogo anterior). Mercado já dessensibilizado a cada nova escalada (comentário recorrente tanto na XP quanto no BTG).
 
-**China:** PIB 2T +4,3% a/a (esp. 4,5%; ante 5,0% no 1T) — mais fraco desde 4T22. Produção industrial de junho +5,3% a/a (surpresa positiva); varejo +1,0% m/m (reverteu queda de maio).
+**PPI EUA (divulgado 15/7):** -0,3% m/m (esp. estável), núcleo +0,2% (esp. +0,4%), núcleo anual caiu de 4,9% para 4,7% — reforça leitura dovish pós-CPI de terça. Warsh encerrou 2º dia de testemunho no Senado sem sinalizar rumo de juros, negou receber ordens da Casa Branca.
 
-**Balanços 2T26 EUA:** Morgan Stanley (15/7) — LPA US$3,46 vs 2,94 esp., receita US$21,35bi, lucro +58% a/a. Goldman Sachs (14/7) — melhor trimestre da história (157 anos), receita recorde US$20,34bi, LPA US$20,98. IBM caiu 25% na terça (pior pregão da história do papel) após alertar resultado abaixo do esperado — arrastou ServiceNow, Salesforce, Accenture.
+**Wall Street fechou quarta em recorde:** S&P +0,38% (7.572), Nasdaq +0,62%, Dow +0,29%.
 
-## Níveis (diff p/ próxima rodada) — 15/7
+## Níveis (diff p/ próxima rodada) — 16/7
 | Ativo | Nível |
 |---|---|
-| Ibov | fech. terça 14/7 **176.641 (+0,51%)** (mín 175.742/máx 177.179); futuro quarta abriu 178.240, caiu a **176.995 (-0,73%)** intradia |
-| Dólar | fech. terça **R$5,078 (-1,06%)**; quarta manhã R$5,078/5,079 |
-| DI | terça: DI jan/27 13,895%, DI jan/28 13,865%, DI jan/29 14,02% (recuo em bloco pós-CPI); **quarta de manhã reverteu — DI longos (jan/33, jan/35) subindo ~0,49pp** |
-| Selic | 14,25%; Focus IPCA 2026 em 5,16%; ~75% de chance de corte de 0,25pp no Copom 4-5/8 |
-| Fed | prob. de alta em 29/07 em ~17-20% pós-CPI (CME FedWatch) |
-| UST | terça pós-CPI: 10a 4,579% (mín 4,525%, -3,1bp); 2a 4,185% (-7bp+); 30a 5,096% (-1bp). Quarta manhã: 10a ~4,57-4,59%; 2a ~4,14-4,18%; 30a ~5,11% |
-| DXY | ~100,79 (-0,13%) quarta manhã |
-| Petróleo | Brent ~US$85,70 (+~1%); WTI ~US$80 (+0,45-0,89%) — SEM pedágio de 20% (recuado), COM bloqueio naval formal |
-| Ouro / Bitcoin | Ouro US$4.032 (-0,54%, correção pós-rali); Bitcoin US$64.600-64.800 (+~3,6% 24h) |
-| Ásia (fech. 15/7) | Nikkei +0,9%; Kospi +1,0%; Shanghai +0,5%; Hang Seng -0,6% (misto pós-PIB China) |
-| PMS Brasil | maio: -0,4% m/m serviços |
+| Ibov | fech. quarta 15/7 **176.011 (-0,36%)**; futuro quinta indicando abertura perto de 177 mil pontos |
+| Dólar | fech. quarta **R$5,0782 (+0,08%)**; quinta manhã ~R$5,08-5,09 |
+| DI | fech. quarta: alta em bloco — DI1F27 +0,072pp, DI1F28 +0,253pp, DI1F29 +0,321pp (cautela fiscal, apesar do alívio inflacionário externo) |
+| Selic | 14,25%; Copom 4-5/8; mercado precificando ~86% de chance de corte de 0,25pp; DI Jan/27 ~14,35% |
+| UST | 10a ~4,57-4,62%; 2a ~4,14% (fechou quarta -6bp); 30a n/d preciso pra quinta |
+| DXY | ~100,4-100,6 (-0,4/-0,5% quarta) |
+| Petróleo | Brent ~US$84,7-85; WTI ~US$79,6-80 — leve queda apesar da escalada Irã |
+| Ouro / Bitcoin | Ouro ~US$4.030-4.040 (-0,3/-0,6%); Bitcoin ~US$64.000-64.800 |
+| Ásia (fech. 16/7) | Kospi -6,4% (SK Hynix -11%, Samsung -8,8%); Nikkei -2,8%; Shanghai -1,9%; Hang Seng +1,3/+1,7% (Alibaba +3,1%) |
+| Cobre/Prata | Cobre US$6,34/lb (+0,78%); Prata US$59,15 |
 
-## Divergência entre casas (Mercado) — 15/7
-- **BTG:** carteira mensal (10SIM) trocou para incluir Embraer, Itaú, Totvs; Petrobras projetando dividend yield ~11% em 2026. Carteira dividendos: Allos (12,2%), Petrobras (9,7%), Bradesco (9,7%), Vale (8,7%), Caixa Seguridade (8,2%). Viés defensivo/exportador.
-- **Empiricus:** trocou Direcional por Cyrela no dividendos — aposta que imobiliário resiste apesar da Selic a 14,25%. Divergência com o BTG sobre até que ponto o juro alto ainda pesa sobre cíclicos domésticos.
-- XP, Genial, Ágora, Itaú BBA, Bradesco BBI, Santander, Safra, BB/Investalk, Inter, Toro, Rico, Modal, C6, Órama, Nu Invest, Suno, Levante, Necton, TC Pulse: sem peça textual granular de hoje encontrada (a maioria só em vídeo).
+## Divergência entre casas (Mercado) — 16/7
+- **BTG (Lucas Costa, análise técnica):** lê recuo de ~15% do Ibov desde a máxima histórica como zona de suporte técnico — MM200 em 170.313 não foi perdida, amplitude melhorando (60% dos papéis acima da MM50, 53% acima da MM200), fluxo estrangeiro estabilizando. Trata lateralização recente como pausa saudável pós-alta de 10/7. Visão construtiva de curto prazo.
+- **XP (Raquel/Research):** mais cauteloso — acha que fatores domésticos (eleição, fiscal) vão dominar o humor local e provocar descolamento do Brasil vs. exterior, com volatilidade elevada até as urnas. Cita redução de emissões do Tesouro + mais LFTs nos leilões como sinal de cautela fiscal.
+- Genial, Itaú BBA, Bradesco BBI, Santander, Safra, BB/Investalk, Ágora, Inter, Toro, Rico, Modal, C6, Órama, Nu Invest, Suno, Levante, Necton, TC Pulse: sem peça textual granular de hoje encontrada além do já citado (Itaú BBA com call de BPAC11, não é morning call).
 
-## Empresas (15/7)
-- **Engie Brasil (EGIE3):** follow-on precificado terça a R$30,50/ação, R$8,36bi captados, maior parte p/ incorporar 40% da Jirau Energia (R$5,74bi).
+## Empresas (16/7)
+- **Ânima Educação (ANIM3):** -33% na quarta após anunciar aquisição da FMU por R$410mi — leitura de venda forçada institucional.
+- **Oncoclínicas (ONCO3):** oferta da IG4 Capital de R$500mi em debêntures conversíveis.
+- **Brava Energia (BRAV3):** CVM aceitou recurso da Ecopetrol, destravando a OPA.
+- **Paranapanema (PMAM3):** proposta de US$40mi de holding de Dubai.
+- (contexto, não repetir): B3 (B3SA3) +2,83% quarta com upgrade BofA; Totvs (TOTS3) +3,97%; Itaú BBA recomenda compra de BPAC11, alvo R$63 fim-2026.
 
-## Política / tarifaço
-- Seção 301: prazo vence hoje 15/7, **sem decisão confirmada até ~09h45 BRT**. CONFERIR NA PRÓXIMA RODADA se saiu e qual percentual.
-- STF: Flávio Dino deu 30 dias ao Congresso p/ explicar irregularidades em emendas parlamentares (decisão publicada terça).
-- Congresso: pauta travada pré-recesso (bets, escala 6x1, imposto do pecado, Simples Nacional).
+## Política (16/7)
+- STF: Flávio Dino intimou presidentes de 21 partidos a explicar em 10 dias controle/repasse de emendas parlamentares (ADPF 854), motivado por entrevista de Valdemar Costa Neto (PL) admitindo interferência partidária.
+- Quaest: Lula abre vantagem de 45% a 37% sobre Flávio Bolsonaro (2º turno hipotético) — ampliou de 6 para 8 pontos.
 
-## Transcrições / vídeos 15/7 — FALHARAM (ambos os métodos bloqueados por IP)
-- yt-dlp: erro 429 + "Sign in to confirm you're not a bot" em todos os 3 vídeos tentados.
-- youtube-transcript-api (fallback): `IpBlocked` — bloqueio por IP de cloud provider, não por rate limit pontual. Provável bloqueio estrutural do sandbox na nuvem, não transitório.
-- Candidatos identificados (não transcritos): XP `czKoVsft6qc`, BTG `oukc3L6uobY`, Genial `5fNnS2cEmmg` (metadados via RSS, sem inferência de conteúdo pelo título). InfoMoney `CL7yDZXmM7s` (AO VIVO Irã/petróleo), Empiricus `Um59s5AdZb4` (Morning Crypto).
-- Edição publicada foi montada só com pesquisa em texto (morning calls textuais de BTG/Empiricus via Money Times/Seu Dinheiro) — sem contaminar com inferência de título.
-- **Ação sugerida:** se o bloqueio de IP persistir em rodadas futuras, considerar reportar ao operador que a transcrição de vídeo está estruturalmente indisponível no sandbox atual (não é um problema pontual de hoje).
+## Transcrições / vídeos 16/7 — SUCESSO PARCIAL (2 de 3)
+- **XP** (`xZR86FU0N_U`, Morning Call, 08:52 BRT): transcrito com sucesso via yt-dlp (legenda automática pt disponível ~1h após publicação). Convidado Lucas Jenoso (crédito privado/NTNB26).
+- **BTG** (`Z9Sf6TRQBZM`, Morning Call, 09:04 BRT): transcrito com sucesso via yt-dlp NA SEGUNDA TENTATIVA (falhou na primeira, ~15min após publicação; legenda ficou disponível pouco depois). Bruno + Lucas "Coxinha" Costa (análise técnica).
+- **Genial** (`NGMM28Ec_zo`, "Bolsas recuam com IA e tensão no Golfo", updated 09:01 BRT): FALHOU em 3 tentativas de yt-dlp — sem legenda automática disponível (provável vídeo ainda em processamento/live). youtube-transcript-api (fallback) continua bloqueado por IP (`RequestBlocked`) — mesma limitação estrutural já registrada em 15/7.
+- **Ação sugerida:** o padrão de hoje (XP ok na 1ª tentativa, BTG só na 2ª) sugere que retries espaçados por alguns minutos após a primeira falha aumentam a taxa de sucesso — vale manter esse retry na próxima rodada antes de desistir de um vídeo.
+
+## Publicação — nota operacional importante (mudança de fluxo)
+- O helper `agent/publish-edition.sh` NÃO fez push direto na main hoje — fez push na branch de trabalho da sessão (`claude/keen-brahmagupta-l1s1dd`) e instruiu abrir PR + merge via GitHub MCP. Isso é esperado: desde o incidente de 10/07, o proxy da sessão só libera push na branch de trabalho, não direto na main; o deploy só dispara com o MERGE do PR na main (não com o push na branch). Segui esse fluxo: PR #10 aberto e squash-merged para main (SHA 34b10a5).
+- **Próxima rodada: usar o mesmo fluxo (branch -> PR -> merge)**, não tentar push direto na main.
 
 ## Capa
-- Manchete: **"TARIFAÇO DOS EUA VENCE HOJE"**, subtítulo "Ormuz sob bloqueio naval; Warsh depõe no Senado". Kicker "CAFÉ COM MERCADO · QUARTA, 15/07".
-- Colagem: navio de guerra bloqueando petroleiros em estreito, contêineres BR/EUA sugerindo tarifaço, Capitólio ao fundo. Sem rosto de político real. Gerada com cinematic_studio_2_5, composta com fonte condensada (DejaVuSansCondensed-Bold).
+- Manchete: **"EUA CRAVAM TARIFA DE 25%"**, subtítulo "Chips tombam na Ásia; Irã eleva tensão no Golfo". Kicker "CAFÉ COM MERCADO · QUINTA, 16/07".
+- Colagem: contêineres com carimbo "CUSTOMS", chip/wafer de semicondutor trincando com faíscas (queda dos chips), navio de guerra bloqueando petroleiros num estreito ao entardecer (Ormuz). Sem rosto de político real. Gerada com cinematic_studio_2_5, composta com fonte condensada (DejaVuSansCondensed-Bold).
 
-## Próxima rodada (quinta 16/7)
-- **Seção 301:** confirmar se a decisão saiu em 15/7 (à tarde/noite) e qual percentual foi aplicado — prioridade máxima.
-- **PPI dos EUA (15/7, 8h30 NY):** conferir resultado vs. consenso (-0,1% m/m / núcleo +0,4%).
-- **Warsh no Senado:** ver se houve sinalização nova sobre o rumo do Fed além de "não é missão cumprida".
-- **DI brasileiro:** confirmar se a reversão de alta desta manhã (DI longos +0,49pp) se sustentou até o fechamento — pode ser o primeiro sinal de precificação do risco tarifário.
-- **Transcrição de vídeo:** testar de novo se o bloqueio de IP (yt-dlp + youtube-transcript-api) persiste; se sim, reportar como limitação estrutural do sandbox.
+## Próxima rodada (sexta 17/7 ou próximo dia útil)
+- **IBC-Br** (proxy do PIB, sai sexta): conferir resultado.
+- **Netflix (16/7 após fechamento):** conferir reação do mercado ao balanço 2T26 (LPA esp. US$0,79) — primeiro teste de humor de tech pós-rout de chips.
+- **PMC de maio (Brasil, saiu 16/7 9h):** conferir resultado vs. esperado (+0,5% m/m).
+- **Selloff de chips:** ver se persiste ou se estabiliza — TSMC capex guidance foi o gatilho; monitorar se vira tema dominante por vários dias ou se é ruído de 1-2 pregões.
+- **Irã/Ormuz:** confirmar se a escalada (ataques recíprocos EUA-Irã, bases no Kuwait/Jordânia) segue ou esfria; petróleo tem resistência em ~US$85-87 — testar se rompe.
+- **Fluxo de publicação:** confirmar se o próximo push do helper ainda exige PR+merge (branch de trabalho) ou se a permissão de push direto na main foi restaurada.
