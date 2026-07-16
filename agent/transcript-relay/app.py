@@ -29,6 +29,20 @@ from fastapi import FastAPI, Header, HTTPException
 RELAY_TOKEN = os.environ["RELAY_TOKEN"]  # obrigatório — falhar alto se faltar
 YTDLP_TIMEOUT = int(os.environ.get("YTDLP_TIMEOUT", "90"))
 
+# Cookies de conta Google (Netscape cookies.txt) — necessários quando o IP do
+# servidor também é bot-checkado pelo YouTube (caso Hetzner, 16/07/2026).
+# Exportar de janela anônima com conta DEDICADA (ver README-SETUP.md) e salvar
+# em /opt/transcript-relay/cookies/cookies.txt no host (montado rw: o yt-dlp
+# rotaciona os cookies e precisa reescrever o arquivo).
+COOKIES_FILE = "/srv/cookies/cookies.txt"
+
+
+def ytdlp(*args: str) -> list[str]:
+    cmd = ["yt-dlp"]
+    if os.path.exists(COOKIES_FILE):
+        cmd += ["--cookies", COOKIES_FILE]
+    return cmd + list(args)
+
 app = FastAPI(title="cafe-com-mercado transcript relay")
 
 VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{5,20}$")
@@ -53,7 +67,7 @@ def clean_vtt(path: pathlib.Path) -> list[str]:
 
 @app.get("/health")
 def health():
-    return {"ok": True}
+    return {"ok": True, "cookies": os.path.exists(COOKIES_FILE)}
 
 
 @app.get("/transcript/{video_id}")
@@ -68,7 +82,7 @@ def transcript(video_id: str, x_api_key: str | None = Header(default=None)):
     # 1) metadados (barato) — detecta transmissão ao vivo antes de tentar legenda
     try:
         meta_proc = subprocess.run(
-            ["yt-dlp", "--dump-json", "--skip-download", url],
+            ytdlp("--dump-json", "--skip-download", url),
             capture_output=True, text=True, timeout=YTDLP_TIMEOUT,
         )
         if meta_proc.returncode == 0:
@@ -82,13 +96,13 @@ def transcript(video_id: str, x_api_key: str | None = Header(default=None)):
     with tempfile.TemporaryDirectory() as tmp:
         try:
             sub_proc = subprocess.run(
-                [
-                    "yt-dlp", "--skip-download",
+                ytdlp(
+                    "--skip-download",
                     "--write-auto-sub", "--write-sub",
                     "--sub-lang", "pt,pt-BR,pt-orig",
                     "--sub-format", "vtt", "--convert-subs", "vtt",
                     "-o", "%(id)s.%(ext)s", url,
-                ],
+                ),
                 capture_output=True, text=True, timeout=YTDLP_TIMEOUT, cwd=tmp,
             )
         except subprocess.TimeoutExpired:

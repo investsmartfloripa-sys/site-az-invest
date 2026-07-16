@@ -35,6 +35,8 @@ for f in app.py Dockerfile docker-compose.yml Caddyfile; do
   echo "ok: $f"
 done
 
+mkdir -p cookies
+
 log "4/6 configuração (.env)"
 if [ -f .env ] && grep -q "^RELAY_TOKEN=." .env && grep -q "^DOMAIN=." .env; then
   echo "reaproveitando .env existente (mesma chave e domínio)"
