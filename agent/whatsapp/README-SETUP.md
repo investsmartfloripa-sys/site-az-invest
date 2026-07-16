@@ -38,6 +38,10 @@ Hostinger VPS, Contabo, Hetzner, DigitalOcean. Requisitos:
 ## Passo 2 — subir o gateway (colar no terminal do VPS)
 
 ```bash
+# 0) Swap de 2 GB (essencial em VPS de 1 GB; inofensivo nos maiores)
+fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+echo '/swapfile none swap sw 0 0' >> /etc/fstab
+
 # 1) Docker
 curl -fsSL https://get.docker.com | sh
 
