@@ -1,0 +1,38 @@
+# Relay de transcrição do "Café com Mercado" — standalone (servidor dedicado).
+#
+# Se for rodar NO MESMO VPS da Evolution API (WhatsApp), NÃO use este arquivo:
+# siga a opção B do README-SETUP.md (adiciona só o serviço `transcript-relay`
+# ao compose existente e uma linha no Caddyfile de lá).
+#
+# Antes do primeiro `docker compose up -d`:
+#   cp env.example .env   # e preencha RELAY_TOKEN e DOMAIN
+
+services:
+  transcript-relay:
+    build: .
+    container_name: transcript_relay
+    restart: always
+    environment:
+      - RELAY_TOKEN=${RELAY_TOKEN}
+    expose:
+      - "8000"
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: transcript_caddy
+    restart: always
+    depends_on:
+      - transcript-relay
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

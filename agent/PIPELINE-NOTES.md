@@ -224,6 +224,30 @@ fora do repo; colar lá):
     nunca inferir tese pelo título.
 ```
 
+### Relay de transcrição em servidor próprio (definitivo, 2026-07-16)
+
+O caminho direto (yt-dlp no sandbox) funciona "na maioria dos dias", mas o
+bloqueio do YouTube a IPs de datacenter é **intermitente**: em 15/07 derrubou
+TODOS os vídeos com bot-check/429, e mesmo em 16/07 as primeiras chamadas de
+teste falharam de forma transitória. A solução definitiva é um **relay num
+servidor próprio 24/7** (IP limpo): a rotina pede a legenda por HTTPS ao relay
+e o relay é quem fala com o YouTube.
+
+- Serviço: [`agent/transcript-relay/`](./transcript-relay/) — FastAPI + yt-dlp
+  em Docker, atrás do Caddy (HTTPS automático). Setup completo (servidor
+  dedicado OU aproveitando o VPS da Evolution/WhatsApp):
+  [`agent/transcript-relay/README-SETUP.md`](./transcript-relay/README-SETUP.md).
+- Cliente: o próprio `agent/fetch-transcript.sh` — se `TRANSCRIPT_RELAY_URL` e
+  `TRANSCRIPT_RELAY_TOKEN` existirem no environment da sessão (mesmo lugar do
+  `GITHUB_PAT_COWORK`), ele usa o relay primeiro e mantém o yt-dlp local como
+  reserva; sem as variáveis, comporta-se como antes. Nada muda no prompt.
+- Contrato do relay: `GET /transcript/<video_id>` com header `X-Api-Key`
+  retorna `{"status":"ok","text":...}` | `{"status":"live"}` |
+  `{"status":"no_subtitles"}` | `{"status":"error","detail":...}`.
+- Testado em 16/07 com o relay rodando localmente: XP via relay OK (598
+  linhas, idêntico ao direto); relay fora do ar → caiu no direto sem erro;
+  sem variáveis → comportamento original preservado; auth errada → 401.
+
 ## Canal WhatsApp (distribuição)
 
 Toda edição NOVA mergeada na `main` é anunciada automaticamente no grupo do
