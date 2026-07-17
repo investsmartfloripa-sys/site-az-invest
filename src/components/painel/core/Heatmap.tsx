@@ -128,8 +128,16 @@ export type HeatmapProps = {
   title?: string;
   /** Legenda curta sob a tabela (metodologia, unidade). */
   caption?: string;
-  /** Largura da célula em px (default 48). */
+  /** Largura da célula em px (default 48). Ignorada quando `stretch`. */
   cellWidth?: number;
+  /**
+   * ADITIVO (default false = comportamento atual). Quando true, a tabela ocupa
+   * 100% da largura do container (table-fixed) e as células dividem o espaço
+   * igualmente — p/ heatmaps largos que sobravam vazio no card.
+   */
+  stretch?: boolean;
+  /** Largura da coluna de rótulos em px quando `stretch` (default 150). */
+  labelWidth?: number;
 };
 
 /**
@@ -145,15 +153,21 @@ export function Heatmap({
   title,
   caption,
   cellWidth = 48,
+  stretch = false,
+  labelWidth = 150,
 }: HeatmapProps) {
+  const cellStyle = stretch ? undefined : { width: cellWidth };
   return (
     <div className="rounded-xl border border-[#132960]/10 bg-white p-3">
       {title ? <div className="mb-2 text-xs font-semibold text-[#132960]">{title}</div> : null}
       <div className="overflow-x-auto">
-        <table className="border-collapse text-[10px]">
+        <table className={`border-collapse text-[10px] ${stretch ? "w-full table-fixed" : ""}`}>
           <thead>
             <tr>
-              <th className="px-1 py-0.5 text-left font-medium text-zinc-500" />
+              <th
+                className="px-1 py-0.5 text-left font-medium text-zinc-500"
+                style={stretch ? { width: labelWidth } : undefined}
+              />
               {cols.map((c) => (
                 <th key={c} className="px-1 py-0.5 text-center font-medium text-zinc-500">
                   {c}
@@ -164,13 +178,13 @@ export function Heatmap({
           <tbody>
             {rows.map((r) => (
               <tr key={r}>
-                <td className="px-1 py-0.5 font-medium text-zinc-600">{r}</td>
+                <td className="truncate px-1 py-0.5 font-medium text-zinc-600">{r}</td>
                 {cols.map((c) => {
                   const v = data[r]?.[c];
                   if (v == null || !Number.isFinite(v)) {
                     return (
                       <td key={c} className="px-0.5 py-0.5 text-center">
-                        <div className="h-7 rounded-sm bg-zinc-100" style={{ width: cellWidth }} />
+                        <div className="h-7 rounded-sm bg-zinc-100" style={cellStyle} />
                       </td>
                     );
                   }
@@ -182,7 +196,7 @@ export function Heatmap({
                         className={`flex h-7 items-center justify-center rounded-sm font-semibold tabular-nums ${
                           dark ? "text-white" : "text-zinc-900"
                         }`}
-                        style={{ background: bg, width: cellWidth }}
+                        style={{ background: bg, ...cellStyle }}
                         title={`${r} ${c}: ${valueFmt(v)}`}
                       >
                         {valueFmt(v)}

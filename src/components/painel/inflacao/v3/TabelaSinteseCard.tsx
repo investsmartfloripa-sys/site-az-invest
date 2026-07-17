@@ -29,9 +29,12 @@ function celula(v: number | null, opts?: { pct?: boolean; destaque?: boolean }):
 export function TabelaSinteseCard({ sintese, geradoEm }: { sintese: TabelaSinteseBlock; geradoEm: string }) {
   const [m2, m1, m0] = sintese.meses;
 
+  // Núcleos ficam FORA da síntese (têm tabela própria na aba Núcleos & difusão).
+  const secoes = sintese.secoes.filter((sec) => sec.id !== "nucleos");
+
   const exportarCsv = () => {
     const header = ["Seção", "Linha", fmtMesCurto(m2), fmtMesCurto(m1), fmtMesCurto(m0), "No ano", "12 meses", "Peso (%)"];
-    const rows = sintese.secoes.flatMap((sec) =>
+    const rows = secoes.flatMap((sec) =>
       sec.linhas.map((linha) => [
         sec.titulo,
         linha.nome,
@@ -80,7 +83,7 @@ export function TabelaSinteseCard({ sintese, geradoEm }: { sintese: TabelaSintes
             </tr>
           </thead>
           <tbody className="bg-white">
-            {sintese.secoes.map((sec) => (
+            {secoes.map((sec) => (
               <FragmentoSecao key={sec.id} titulo={sec.titulo} linhas={sec.linhas} pct={sec.id === "difusao"} />
             ))}
           </tbody>

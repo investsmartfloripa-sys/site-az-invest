@@ -41,6 +41,16 @@ import { SurpresasCard } from "./v3/SurpresasCard";
 
 type Vista = "leitura" | "composicao" | "nucleos" | "tendencia";
 
+/** Subtítulo de seção dentro de uma tab — rótulo mínimo + filete (sem textinho). */
+function SubSecao({ rotulo }: { rotulo: string }) {
+  return (
+    <div className="flex items-center gap-3 pt-1">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">{rotulo}</span>
+      <div className="h-px flex-1 bg-zinc-200" />
+    </div>
+  );
+}
+
 const TABS: { value: Vista; label: string }[] = [
   { value: "leitura", label: "1. Leitura do mês" },
   { value: "composicao", label: "2. Composição" },
@@ -150,12 +160,20 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
       <div>
         {vista === "leitura" ? (
           <div className="space-y-6">
-            {data.tabela_sintese ? <TabelaSinteseCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} /> : null}
-            {data.abertura_hierarquica ? (
-              <GruposMesCard hierarquia={data.abertura_hierarquica} mesRef={mesRef} geradoEm={data.gerado_em} />
-            ) : null}
-            <InfluenciasCard data={data} />
-            <SazonalidadeCard data={data} />
+            {/* Síntese compacta (sem núcleos) divide a linha com a sazonalidade */}
+            <div className="grid gap-6 xl:grid-cols-2">
+              {data.tabela_sintese ? (
+                <TabelaSinteseCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
+              ) : null}
+              <SazonalidadeCard data={data} />
+            </div>
+            {/* Macro (grupos) ao lado do micro (subitens) */}
+            <div className="grid gap-6 xl:grid-cols-2">
+              {data.abertura_hierarquica ? (
+                <GruposMesCard hierarquia={data.abertura_hierarquica} mesRef={mesRef} geradoEm={data.gerado_em} />
+              ) : null}
+              <InfluenciasCard data={data} />
+            </div>
           </div>
         ) : null}
 
@@ -184,7 +202,9 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
 
         {vista === "tendencia" ? (
           <div className="space-y-6">
+            <SubSecao rotulo="Tendência" />
             {data.serie_longa ? <SerieLongaCard longa={data.serie_longa} geradoEm={data.gerado_em} /> : null}
+            <SubSecao rotulo="Expectativas" />
             {data.focus && Object.keys(data.focus).length > 0 ? (
               <FocusCard focus={data.focus} geradoEm={data.gerado_em} />
             ) : null}

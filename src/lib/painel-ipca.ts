@@ -51,6 +51,11 @@ export type Influencia = {
   /** schema v3: acumulados oficiais do subitem (v69/v2265 da SIDRA). */
   acum_ano?: number | null;
   acum_12m?: number | null;
+  /** schema v3.1: localização na hierarquia (código c315 + nomes dos níveis acima). */
+  codigo?: string;
+  grupo?: string | null;
+  subgrupo?: string | null;
+  item?: string | null;
 };
 
 export type FocusPonto = {

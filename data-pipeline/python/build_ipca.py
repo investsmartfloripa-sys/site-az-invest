@@ -730,10 +730,21 @@ def monta_hierarquia(abertura: list[dict]) -> dict:
 
 
 def influencias_de_abertura(abertura: list[dict]) -> list[dict]:
-    """Subitens ordenados por contribuição (contrato v2 + acum. ano/12m novos)."""
+    """Subitens ordenados por contribuição (contrato v2 + acum. ano/12m + a
+    localização na hierarquia: código e nomes de grupo/subgrupo/item — o
+    prefixo do código c315 codifica a árvore: 1 díg = grupo, 2 = subgrupo,
+    4 = item, 7 = subitem)."""
+    nomes: dict[str, dict[str, str]] = {
+        nivel: {x["codigo"]: x["nome"] for x in abertura if x["nivel"] == nivel}
+        for nivel in ("grupo", "subgrupo", "item")
+    }
     contrib = [
         {
             "subitem": x["nome"],
+            "codigo": x["codigo"],
+            "grupo": nomes["grupo"].get(x["codigo"][:1]),
+            "subgrupo": nomes["subgrupo"].get(x["codigo"][:2]),
+            "item": nomes["item"].get(x["codigo"][:4]),
             "var": x["var"],
             "peso": x["peso"],
             "contrib_pp": x["contrib_pp"],

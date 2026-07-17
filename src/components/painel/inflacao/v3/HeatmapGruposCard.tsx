@@ -53,7 +53,7 @@ export function HeatmapGruposCard({ indice, geradoEm }: { indice: IpcaIndice; ge
         data={data}
         colorScale={escala}
         valueFmt={(v) => fmtSignedNum(v, 2)}
-        cellWidth={72}
+        stretch
         caption="Células cinzas = sem observação. Passe o mouse para ver linha × mês."
       />
     </ChartCard>

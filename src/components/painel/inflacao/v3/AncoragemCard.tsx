@@ -30,7 +30,7 @@ export function AncoragemCard({ focus12m, geradoEm }: { focus12m: Focus12mPonto[
 
   return (
     <ChartCard
-      title="Ancoragem — expectativa 12 meses à frente"
+      title="Inflação esperada para os próximos 12 meses (Focus)"
       stampGiro={geradoEm}
       stampDado={ultimo.data}
     >
