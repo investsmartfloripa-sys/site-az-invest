@@ -1,0 +1,93 @@
+# Publisher → comunidade do WhatsApp (Evolution API no VPS).
+#
+# Disparado pelo cérebro do Publisher (scheduled task no PC) DEPOIS do OK
+# humano — decisão de produto: blog automático, WhatsApp com aprovação.
+# Irmão do whatsapp-notify.yml (Café com Mercado): espera a URL do post
+# responder 200 (nunca anuncia link quebrado), tenta imagem com legenda e
+# cai pra texto puro com preview se o sendMedia falhar.
+#
+# Segredos: EVOLUTION_URL, EVOLUTION_APIKEY, EVOLUTION_INSTANCE,
+# WHATSAPP_GROUP_JID (ver agent/whatsapp/README-SETUP.md). Sem eles o job
+# termina com aviso, sem falhar.
+#
+# Teste manual:
+#   gh workflow run publisher-whatsapp.yml \
+#     -f post_url=https://investimentosdeaz.com.br/blog/ipca-2026-06 \
+#     -f message="..." -f image_url=https://.../IPCA-00.png
+
+name: publisher-whatsapp
+
+on:
+  workflow_dispatch:
+    inputs:
+      post_url:
+        description: "URL pública do post (aguarda 200 antes de enviar)"
+        required: true
+      message:
+        description: "Texto da mensagem (a URL do post deve estar contida nele)"
+        required: true
+      image_url:
+        description: "URL pública do PNG de capa (opcional — sem ela vai texto puro)"
+        required: false
+        default: ""
+
+concurrency:
+  group: publisher-whatsapp
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Enviar para a comunidade
+        env:
+          EVOLUTION_URL: ${{ secrets.EVOLUTION_URL }}
+          EVOLUTION_APIKEY: ${{ secrets.EVOLUTION_APIKEY }}
+          EVOLUTION_INSTANCE: ${{ secrets.EVOLUTION_INSTANCE }}
+          WHATSAPP_GROUP_JID: ${{ secrets.WHATSAPP_GROUP_JID }}
+          POST_URL: ${{ github.event.inputs.post_url }}
+          MESSAGE: ${{ github.event.inputs.message }}
+          IMAGE_URL: ${{ github.event.inputs.image_url }}
+        run: |
+          set -euo pipefail
+          if [ -z "${EVOLUTION_URL}" ] || [ -z "${EVOLUTION_APIKEY}" ] || [ -z "${EVOLUTION_INSTANCE}" ] || [ -z "${WHATSAPP_GROUP_JID}" ]; then
+            echo "::warning::Segredos do WhatsApp ausentes — envio pulado. Configure: agent/whatsapp/README-SETUP.md"
+            exit 0
+          fi
+
+          # Espera o post estar no ar: até 10 min (ISR/deploy podem estar em curso).
+          echo "Aguardando ${POST_URL} ..."
+          ok=""
+          for i in $(seq 1 20); do
+            if curl -sfI -o /dev/null "$POST_URL"; then ok=1; break; fi
+            sleep 30
+          done
+          if [ -z "$ok" ]; then
+            echo "ERRO: post não respondeu 200 em 10 min — não vou anunciar link quebrado."
+            exit 1
+          fi
+
+          if [ -n "${IMAGE_URL}" ]; then
+            BODY=$(jq -n --arg n "$WHATSAPP_GROUP_JID" --arg m "$IMAGE_URL" --arg c "$MESSAGE" --arg f "release.png" \
+              '{number:$n, mediatype:"image", mimetype:"image/png", media:$m, fileName:$f, caption:$c}')
+            CODE=$(curl -s -o /tmp/resp.json -w '%{http_code}' -X POST \
+              -H "apikey: ${EVOLUTION_APIKEY}" -H "Content-Type: application/json" \
+              -d "$BODY" "${EVOLUTION_URL}/message/sendMedia/${EVOLUTION_INSTANCE}")
+            if [ "${CODE:0:1}" = "2" ]; then
+              echo "Enviado com imagem (HTTP $CODE)."
+              exit 0
+            fi
+            echo "::warning::sendMedia falhou (HTTP $CODE): $(cat /tmp/resp.json | head -c 400). Tentando texto puro..."
+          fi
+
+          BODY=$(jq -n --arg n "$WHATSAPP_GROUP_JID" --arg t "$MESSAGE" '{number:$n, text:$t, linkPreview:true}')
+          CODE=$(curl -s -o /tmp/resp.json -w '%{http_code}' -X POST \
+            -H "apikey: ${EVOLUTION_APIKEY}" -H "Content-Type: application/json" \
+            -d "$BODY" "${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}")
+          if [ "${CODE:0:1}" = "2" ]; then
+            echo "Enviado como texto (HTTP $CODE)."
+            exit 0
+          fi
+          echo "ERRO: sendText também falhou (HTTP $CODE): $(cat /tmp/resp.json | head -c 400)"
+          exit 1

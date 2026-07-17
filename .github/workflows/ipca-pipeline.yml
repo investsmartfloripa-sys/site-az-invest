@@ -44,3 +44,31 @@ jobs:
       - name: Build IGP-M JSON e upload pro Blob
         run: python data-pipeline/python/build_igpm.py --upload
         continue-on-error: true
+
+  # Fotografa os gráficos do catálogo do Publisher (rota /render/<id>) e
+  # arquiva PNGs numerados no Blob em releases/<indicador>/<mes_ref>/.
+  # Roda DEPOIS dos builds: o release novo já está no Blob e a página de
+  # render é force-dynamic (sem cache velho). Falha de um gráfico não
+  # derruba os demais (ragged-edge; ver manifest.json de cada divulgação).
+  render-charts:
+    needs: build-and-upload
+    runs-on: ubuntu-latest
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar Playwright (chromium)
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Renderizar e arquivar PNGs (IPCA + IGP-M)
+        run: node data-pipeline/render/render_charts.mjs --indicador all
