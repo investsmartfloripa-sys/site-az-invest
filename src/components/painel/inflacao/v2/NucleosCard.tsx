@@ -19,7 +19,7 @@ import type { NucleosBlock } from "@/lib/painel-ipca";
 import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum, fmtPct } from "@/lib/format-br";
-import { META, META_PISO, META_TETO, leituraMetaCurta, num } from "./shared";
+import { META, META_PISO, META_TETO, num } from "./shared";
 
 /**
  * Bloco 01 — "a inflação subjacente converge para a meta?".
@@ -49,16 +49,10 @@ export function NucleosCard({ nucleos, geradoEm }: { nucleos: NucleosBlock; gera
   );
 
   const ultimo = rows[rows.length - 1];
-  const mediaU = ultimo?.media_nucleos ?? null;
-  const titulo =
-    mediaU != null
-      ? `Núcleos em ${fmtPct(mediaU, 2)} em 12 meses — ${leituraMetaCurta(mediaU)}`
-      : "Núcleos de inflação";
 
   return (
     <ChartCard
-      title={titulo}
-      subtitle="A inflação subjacente está convergindo para a meta? Média dos 5 núcleos acompanhados pelo BC (EX0·EX3·MS·DP·P) com a amplitude mín–máx entre eles; IPCA cheio como referência."
+      title="Núcleos de inflação (12 meses)"
       toolbar={
         <button
           type="button"
@@ -75,7 +69,6 @@ export function NucleosCard({ nucleos, geradoEm }: { nucleos: NucleosBlock; gera
           EX3 (exclusão)
         </button>
       }
-      footer="Acumulado 12m por composição geométrica, calculado no pipeline. A meta é avaliada no IPCA cheio acumulado em 12 meses — os núcleos são leitura de tendência. Momentum 3m dessazonalizado (padrão do Relatório de Inflação) entra na próxima fase."
       stampGiro={geradoEm}
       stampDado={ultimo?.mes ?? null}
     >

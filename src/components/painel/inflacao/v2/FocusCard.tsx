@@ -19,7 +19,7 @@ import type { FocusPonto } from "@/lib/painel-ipca";
 import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtDataBR, fmtNum, fmtPct, formatAxisDate, isoFromUTC } from "@/lib/format-br";
-import { META, META_PISO, META_TETO, leituraMetaCurta } from "./shared";
+import { META, META_PISO, META_TETO } from "./shared";
 
 /**
  * Bloco 06 — "o mercado espera inflação dentro da meta?".
@@ -77,18 +77,11 @@ export function FocusCard({
     return null;
   }, [focus, anoCorrente]);
 
-  const titulo =
-    ultimoCorrente?.mediana != null
-      ? `Mercado espera ${fmtPct(ultimoCorrente.mediana, 2)} para ${anoCorrente} — ${leituraMetaCurta(ultimoCorrente.mediana)}`
-      : "Expectativas Focus";
-
   if (rows.length === 0) return null;
 
   return (
     <ChartCard
-      title={titulo}
-      subtitle="O mercado espera inflação dentro da meta? Mediana das projeções Focus por ano-referência, ao longo do tempo; banda = ±1 desvio-padrão das respostas para o ano corrente."
-      footer="BCB Olinda (ExpectativasMercadoAnuais). “Realizado × Focus — o mercado acerta?” entra na próxima fase, com a expectativa de 12 meses à frente (suavizada)."
+      title="Expectativas Focus por ano-referência"
       stampGiro={geradoEm}
       stampDado={ultimoCorrente?.data ?? null}
     >

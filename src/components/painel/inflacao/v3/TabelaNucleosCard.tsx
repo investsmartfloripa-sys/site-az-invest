@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import type { MomentumBlock, TabelaSinteseBlock } from "@/lib/painel-ipca";
 import { ChartCard } from "@/components/painel/core";
 import { AZ_CHART } from "@/lib/az-chart-theme";
-import { fmtMesCurto, fmtNum, fmtSignedNum } from "@/lib/format-br";
+import { fmtNum, fmtSignedNum } from "@/lib/format-br";
 
 /**
  * Núcleos por transformação (tabela do RTI/BCB): variação do mês, SAAR 3m e
@@ -58,6 +58,16 @@ export function TabelaNucleosCard({
         acum12: linha.acum_12m,
       });
     }
+    for (const linha of secoes.categorias ?? []) {
+      out.push({
+        id: linha.id,
+        nome: linha.nome,
+        mes: linha.m0,
+        saar3: ultimo(linha.id, "saar_3m"),
+        saar6: ultimo(linha.id, "saar_6m"),
+        acum12: linha.acum_12m,
+      });
+    }
     return out;
   }, [sintese, momentum]);
 
@@ -65,9 +75,7 @@ export function TabelaNucleosCard({
 
   return (
     <ChartCard
-      title={`Núcleos por transformação — ${fmtMesCurto(mesRef)}`}
-      subtitle="A mesma medida em quatro janelas: mês, 3m e 6m anualizados dessazonalizados (momentum) e 12 meses (retrovisor)."
-      footer="12m composto no builder (Π(1+v/100)−1); SAAR = janela dessazonalizada (STL) anualizada geometricamente. Vermelho = acima do teto da meta (4,5%); azul = abaixo do piso (1,5%). MA fica fora do SAAR e da média (versão não suavizada da MS)."
+      title="Núcleos e categorias por transformação"
       stampGiro={geradoEm}
       stampDado={mesRef}
     >

@@ -12,16 +12,15 @@ import { DifusaoCard } from "./v2/DifusaoCard";
 import { SazonalidadeCard } from "./v2/SazonalidadeCard";
 import { InfluenciasCard } from "./v2/InfluenciasCard";
 import { FocusCard } from "./v2/FocusCard";
-import { AnaliseCompleta } from "./v2/AnaliseCompleta";
 import { num } from "./v2/shared";
 import { TabelaSinteseCard } from "./v3/TabelaSinteseCard";
+import { BuscadorSubitensCard } from "./v3/BuscadorSubitensCard";
 import { GruposMesCard } from "./v3/GruposMesCard";
 import { HeatmapGruposCard } from "./v3/HeatmapGruposCard";
 import { TabelaHierarquicaCard } from "./v3/TabelaHierarquicaCard";
 import { MomentumCard } from "./v3/MomentumCard";
 import { TabelaNucleosCard } from "./v3/TabelaNucleosCard";
 import { SerieLongaCard } from "./v3/SerieLongaCard";
-import { AnualMetaCard } from "./v3/AnualMetaCard";
 import { AncoragemCard } from "./v3/AncoragemCard";
 import { FocusMensalCard } from "./v3/FocusMensalCard";
 import { SurpresasCard } from "./v3/SurpresasCard";
@@ -40,45 +39,18 @@ import { SurpresasCard } from "./v3/SurpresasCard";
  * "Leitura do mês" — o que se vê aqui é o que o robô lê lá.
  */
 
-type Vista = "leitura" | "composicao" | "nucleos" | "tendencia" | "expectativas" | "series";
+type Vista = "leitura" | "composicao" | "nucleos" | "tendencia";
 
-const TABS: { value: Vista; label: string; descr: string }[] = [
-  {
-    value: "leitura",
-    label: "1. Leitura do mês",
-    descr: "A última divulgação destrinchada: realizado × esperado (Focus da véspera), tabela-síntese por recorte, contribuição dos grupos, maiores influências e posição no padrão sazonal",
-  },
-  {
-    value: "composicao",
-    label: "2. Composição",
-    descr: "De onde vem a inflação acumulada: contribuições ao 12m por grupo, heatmap grupos × meses e a abertura hierárquica grupo → subgrupo → item",
-  },
-  {
-    value: "nucleos",
-    label: "3. Núcleos & difusão",
-    descr: "Tendência subjacente: 5 núcleos do BC em 12m, momentum dessazonalizado (SAAR 3m/6m), tabela por transformação, categorias econômicas e índice de difusão",
-  },
-  {
-    value: "tendencia",
-    label: "4. Tendência",
-    descr: "Séries longas desde 1999: IPCA 12m contra a meta escalonada do CMN e o fechamento de cada ano-calendário contra a banda",
-  },
-  {
-    value: "expectativas",
-    label: "5. Expectativas",
-    descr: "Focus completo: anos-calendário, 12 meses à frente (ancoragem), curtíssimo prazo mensal e o histórico de surpresas realizado × consenso",
-  },
-  {
-    value: "series",
-    label: "6. Série completa",
-    descr: "Explorador da série com múltiplas transformações e download dos dados em CSV",
-  },
+const TABS: { value: Vista; label: string }[] = [
+  { value: "leitura", label: "1. Leitura do mês" },
+  { value: "composicao", label: "2. Composição" },
+  { value: "nucleos", label: "3. Núcleos & difusão" },
+  { value: "tendencia", label: "4. Tendência & expectativas" },
 ];
 
 export function IpcaDashboardV3({ data }: { data: IpcaData }) {
   const [vista, setVista] = useState<Vista>("leitura");
   const mesRef = data.mes_recente;
-  const tabAtiva = TABS.find((t) => t.value === vista) ?? TABS[0];
 
   const derivados = useMemo(() => {
     const ultima = data.ipca_cheio.serie.find((r) => r.mes === mesRef);
@@ -98,38 +70,13 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
 
   const { ipcaM, ipca12m, medianaSaz, mediaNucleos, difusaoM, difMedia, esperado, surpresa } = derivados;
 
-  const stamps = [data.gerado_em].filter(Boolean);
-  const atualizadoEm = stamps.length
-    ? new Date(stamps[0]).toLocaleString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "UTC",
-      })
-    : null;
-
   return (
     <div className="space-y-5">
-      <header className="rounded-2xl border border-[#132960]/10 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-bold text-[#132960]">Painel IPCA</h1>
-            <p className="mt-1 text-sm text-zinc-600">
-              A série destrinchada em seis vistas: leitura da divulgação, composição, núcleos, tendência, expectativas e
-              a série completa.
-            </p>
-            <p className="mt-2 text-xs text-zinc-500">
-              Referência: {fmtMesLongo(mesRef)} · IPCA-15 até {fmtMesCurto(data.ipca_15.mes_recente)}
-            </p>
-          </div>
-          {atualizadoEm ? (
-            <span className="text-[10px] text-zinc-500" title="Última geração do JSON do pipeline">
-              Atualizado: {atualizadoEm} UTC · pipeline diário
-            </span>
-          ) : null}
-        </div>
+      <header>
+        <h1 className="text-2xl font-bold text-[#132960]">Painel IPCA</h1>
+        <p className="mt-1 text-xs text-zinc-500">
+          Referência: {fmtMesLongo(mesRef)} · IPCA-15 até {fmtMesCurto(data.ipca_15.mes_recente)}
+        </p>
       </header>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -198,7 +145,6 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
             );
           })}
         </div>
-        <p className="px-1 text-[11px] text-zinc-500">{tabAtiva.descr}</p>
       </div>
 
       <div>
@@ -220,6 +166,7 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
             {data.abertura_hierarquica ? (
               <TabelaHierarquicaCard hierarquia={data.abertura_hierarquica} mesRef={mesRef} geradoEm={data.gerado_em} />
             ) : null}
+            <BuscadorSubitensCard data={data} />
           </div>
         ) : null}
 
@@ -238,12 +185,6 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
         {vista === "tendencia" ? (
           <div className="space-y-6">
             {data.serie_longa ? <SerieLongaCard longa={data.serie_longa} geradoEm={data.gerado_em} /> : null}
-            {data.serie_longa ? <AnualMetaCard longa={data.serie_longa} geradoEm={data.gerado_em} /> : null}
-          </div>
-        ) : null}
-
-        {vista === "expectativas" ? (
-          <div className="space-y-6">
             {data.focus && Object.keys(data.focus).length > 0 ? (
               <FocusCard focus={data.focus} geradoEm={data.gerado_em} />
             ) : null}
@@ -256,12 +197,6 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
             {data.focus_mensal && data.focus_mensal.surpresas.length > 0 ? (
               <SurpresasCard focusMensal={data.focus_mensal} geradoEm={data.gerado_em} />
             ) : null}
-          </div>
-        ) : null}
-
-        {vista === "series" ? (
-          <div className="space-y-6">
-            <AnaliseCompleta data={data} />
           </div>
         ) : null}
       </div>

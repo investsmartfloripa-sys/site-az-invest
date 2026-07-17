@@ -48,9 +48,7 @@ export function TabelaSinteseCard({ sintese, geradoEm }: { sintese: TabelaSintes
 
   return (
     <ChartCard
-      title={`Tabela-síntese — ${fmtMesCurto(m0)}`}
-      subtitle="Variação % por recorte nos três últimos meses, acumulados oficiais e peso. O retrato completo da divulgação em uma tabela."
-      footer="Variações mensais (%) da SIDRA 7060/7062 e SGS; acumulado no ano = v69 oficial (grupos) ou composto no builder (núcleos/categorias); 12m = v2265 oficial ou composto Π(1+v/100)−1. Difusão em % de subitens em alta."
+      title="Tabela-síntese do mês"
       toolbar={
         <button
           type="button"

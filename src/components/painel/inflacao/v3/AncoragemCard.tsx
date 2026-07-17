@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import type { Focus12mPonto } from "@/lib/painel-ipca";
 import { ChartCard } from "@/components/painel/core";
 import { AzTimeSeriesChart, type AzTimeSeries } from "@/components/painel/charts/AzTimeSeriesChart";
-import { fmtMesCurto, fmtPct } from "@/lib/format-br";
 import { mesIso } from "../v2/shared";
 
 /**
@@ -32,16 +31,9 @@ export function AncoragemCard({ focus12m, geradoEm }: { focus12m: Focus12mPonto[
   return (
     <ChartCard
       title="Ancoragem — expectativa 12 meses à frente"
-      subtitle="Mediana Focus do IPCA acumulado nos próximos 12 meses (suavizada). A distância à meta de 3,0% mede a ancoragem."
-      footer="BCB/Olinda ExpectativasMercadoInflacao12Meses (Suavizada = S, baseCalculo = 0), última pesquisa de cada mês civil. Meta contínua 3,0% ± 1,5 p.p. desde 2025."
       stampGiro={geradoEm}
       stampDado={ultimo.data}
     >
-      <p className="mb-2 text-xs text-zinc-600">
-        Última leitura ({fmtMesCurto(ultimo.mes)}): <strong className="text-[#132960]">{fmtPct(ultimo.mediana, 2)}</strong>{" "}
-        — {(ultimo.mediana - 3).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: "always" })}{" "}
-        p.p. do centro da meta.
-      </p>
       <AzTimeSeriesChart
         series={series}
         unit="%"

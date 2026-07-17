@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import type { AberturaHierarquica, HierarquiaNo } from "@/lib/painel-ipca";
 import { ChartCard } from "@/components/painel/core";
 import { AZ_CHART } from "@/lib/az-chart-theme";
-import { fmtMesCurto, fmtNum, fmtSignedNum } from "@/lib/format-br";
+import { fmtNum, fmtSignedNum } from "@/lib/format-br";
 import { baixarCsv } from "../v2/shared";
 
 /**
@@ -107,9 +107,7 @@ export function TabelaHierarquicaCard({
 
   return (
     <ChartCard
-      title={`Abertura hierárquica — ${fmtMesCurto(mesRef)}`}
-      subtitle="Grupo → subgrupo → item, com variação do mês, acumulados oficiais, peso e contribuição. Clique numa linha para abrir o nível seguinte."
-      footer="SIDRA 7060 (c315 todos os níveis): v63 variação mensal, v69 acumulada no ano, v2265 acumulada 12m, v66 peso mensal. Contribuição = variação × peso ÷ 100. Subitens estão na tabela de maiores influências (busca + ordenação)."
+      title="Abertura hierárquica do mês"
       toolbar={
         <div className="flex items-center gap-1.5">
           <button

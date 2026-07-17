@@ -20,7 +20,7 @@ import { AzSegmented, AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisPr
 import { AzPeriodSelector, resolvePeriodRange, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AZ_BRAND, AZ_CHART, AZ_SERIES, AZ_SERIES_EXTRA, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum, fmtPct, fmtSignedNum } from "@/lib/format-br";
-import { META, META_PISO, META_TETO, leituraMetaCurta, mesIso, nomeGrupo, num } from "./shared";
+import { META, META_PISO, META_TETO, mesIso, nomeGrupo, num } from "./shared";
 
 /**
  * ÂNCORA do Painel IPCA v2 — "o que empurra a inflação e ela cabe na meta?".
@@ -71,32 +71,20 @@ export function AnchorContribuicoes({ indice, geradoEm }: { indice: IpcaIndice; 
   const linhaKey = visao === "12m" ? "IPCA 12m" : "IPCA cheio";
   const linhaNome = visao === "12m" ? "IPCA 12m (oficial)" : "IPCA do mês";
 
-  // Título afirmativo por regra (thresholds em shared.ts).
+  // Tabela de contribuição por grupo ao IPCA de 12 meses (último ponto).
   const ultimo = contrib12[contrib12.length - 1];
   const ipca12 = ultimo ? num(ultimo, "IPCA 12m") : null;
-  const topGrupo = useMemo(() => {
-    if (!ultimo) return null;
-    let melhor: { g: string; v: number } | null = null;
-    for (const g of grupos) {
-      const v = num(ultimo, g);
-      if (v != null && (melhor == null || v > melhor.v)) melhor = { g, v };
-    }
-    return melhor;
+  const tabelaGrupos = useMemo(() => {
+    if (!ultimo) return [] as Array<{ grupo: string; contrib: number }>;
+    return grupos
+      .map((g) => ({ grupo: nomeGrupo(g), contrib: num(ultimo, g) }))
+      .filter((r): r is { grupo: string; contrib: number } => r.contrib != null)
+      .sort((a, b) => b.contrib - a.contrib);
   }, [ultimo, grupos]);
-
-  const titulo =
-    ipca12 != null
-      ? `IPCA acumula ${fmtPct(ipca12, 2)} em 12 meses — ${leituraMetaCurta(ipca12)}`
-      : "IPCA — contribuição por grupo";
 
   return (
     <ChartCard
-      title={titulo}
-      subtitle={
-        topGrupo
-          ? `O que está empurrando a inflação — e ela cabe na meta? Contribuição de cada grupo em p.p.; maior pressão hoje: ${nomeGrupo(topGrupo.g)} (${fmtSignedNum(topGrupo.v, 2)} p.p.).`
-          : "O que está empurrando a inflação — e ela cabe na meta? Contribuição de cada grupo em p.p."
-      }
+      title="Contribuição por grupo ao IPCA"
       toolbar={
         <>
           <AzSegmented
@@ -116,11 +104,6 @@ export function AnchorContribuicoes({ indice, geradoEm }: { indice: IpcaIndice; 
             periods={["1y", "5y", "max"]}
           />
         </>
-      }
-      footer={
-        visao === "12m"
-          ? "Pilha encadeada no pipeline p/ fechar exatamente com o IPCA 12m oficial (v2265); resíduo de arredondamento realocado pró-rata. Banda 1,5–4,5% + meta contínua de 3,0% (CMN)."
-          : "Contribuição = variação × peso ÷ 100 (convenção do release do IBGE). A meta é avaliada no acumulado em 12 meses — não se aplica à variação mensal."
       }
       stampGiro={geradoEm}
       stampDado={rows.length > 0 ? rows[rows.length - 1].mes : null}
@@ -196,6 +179,35 @@ export function AnchorContribuicoes({ indice, geradoEm }: { indice: IpcaIndice; 
           </ResponsiveContainer>
         </div>
       )}
+      {tabelaGrupos.length > 0 ? (
+        <div className="mt-4 overflow-x-auto rounded-lg border border-zinc-100">
+          <table className="min-w-full text-xs">
+            <thead className="bg-zinc-50">
+              <tr>
+                <th className="px-3 py-2 text-left font-semibold text-zinc-700">Grupo</th>
+                <th className="whitespace-nowrap px-3 py-2 text-right font-semibold text-zinc-700">Contrib. 12m (p.p.)</th>
+                <th className="whitespace-nowrap px-3 py-2 text-right font-semibold text-zinc-700">Share do IPCA (%)</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white">
+              {tabelaGrupos.map((r) => (
+                <tr key={r.grupo} className="border-t border-zinc-50 hover:bg-zinc-50/60">
+                  <td className="whitespace-nowrap px-3 py-1.5 text-zinc-800">{r.grupo}</td>
+                  <td
+                    className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums"
+                    style={{ color: r.contrib > 0 ? AZ_CHART.negText : r.contrib < 0 ? AZ_CHART.neutral : undefined }}
+                  >
+                    {fmtSignedNum(r.contrib, 3)}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums text-zinc-600">
+                    {ipca12 != null && ipca12 !== 0 ? fmtNum((r.contrib / ipca12) * 100, 1) : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
     </ChartCard>
   );
 }

@@ -9,7 +9,7 @@ import { fmtMesCurto, fmtSignedNum } from "@/lib/format-br";
 import { nomeGrupo, num } from "../v2/shared";
 
 /** Nº de meses exibidos no heatmap (18 = um ciclo e meio de calendário). */
-const MESES_HEATMAP = 18;
+const MESES_HEATMAP = 12;
 
 /**
  * Heatmap grupos × meses (estilo boletim FGV/IBRE): a variação mensal de cada
@@ -43,9 +43,7 @@ export function HeatmapGruposCard({ indice, geradoEm }: { indice: IpcaIndice; ge
 
   return (
     <ChartCard
-      title={`Grupos × meses — últimos ${MESES_HEATMAP} meses`}
-      subtitle="Variação mensal (%) de cada grupo. A linha de cima é o IPCA cheio, como régua de comparação."
-      footer="Escala discreta divergente com degraus em ±0,25 / ±0,75 / ±1,5 p.p. Vermelho = alta (pressão inflacionária), azul = queda — semântica de inflação do painel. Fonte: SIDRA 7060 (v63)."
+      title="Grupos × meses (últimos 12 meses)"
       stampGiro={geradoEm}
       stampDado={indice.mes_recente}
     >
@@ -55,7 +53,7 @@ export function HeatmapGruposCard({ indice, geradoEm }: { indice: IpcaIndice; ge
         data={data}
         colorScale={escala}
         valueFmt={(v) => fmtSignedNum(v, 2)}
-        cellWidth={54}
+        cellWidth={72}
         caption="Células cinzas = sem observação. Passe o mouse para ver linha × mês."
       />
     </ChartCard>

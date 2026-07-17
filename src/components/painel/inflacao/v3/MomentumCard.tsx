@@ -54,7 +54,6 @@ export function MomentumCard({ momentum, geradoEm }: { momentum: MomentumBlock; 
         data: momentum.media_nucleos_saar3m.map((p) => [mesIso(p.mes), p.saar_3m] as [string, number]),
       });
     }
-    out.push({ id: "servicos", label: "Serviços", color: "#027DFC", data: pontos(momentum, "servicos", campo) });
     return out.filter((s) => s.data.length > 0);
   }, [momentum, modo]);
 
@@ -65,8 +64,6 @@ export function MomentumCard({ momentum, geradoEm }: { momentum: MomentumBlock; 
   return (
     <ChartCard
       title="Momentum dessazonalizado (SAAR)"
-      subtitle="Taxa anualizada da janela recente, sem sazonalidade — a inflação corrente, não a dos últimos 12 meses."
-      footer={`Dessazonalização ${momentum.metodo}. Ajuste desde ${momentum.ajuste_desde}; publicado desde ${momentum.publica_desde}. NÃO é o X-13 do BCB — método próprio, documentado no pipeline. Meta contínua 3,0% ± 1,5 p.p. como régua.`}
       toolbar={
         <div className="flex flex-wrap items-center gap-2">
           <AzSegmented options={MODOS} value={modo} onChange={(id) => setModo(id as Modo)} ariaLabel="Janela do SAAR" />
@@ -81,6 +78,7 @@ export function MomentumCard({ momentum, geradoEm }: { momentum: MomentumBlock; 
         unit="%"
         period={period}
         height={320}
+        dots
         refLines={[{ y: 3.0, label: "Meta 3,0%", color: "#132960" }]}
         refAreas={[{ y1: 1.5, y2: 4.5, label: "Banda da meta", opacity: 0.05 }]}
       />

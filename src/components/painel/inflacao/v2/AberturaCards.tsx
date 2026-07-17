@@ -6,8 +6,7 @@ import type { CategoriasBlock, NucleosBlock } from "@/lib/painel-ipca";
 import { ChartCard } from "@/components/painel/core";
 import { AzTimeSeriesChart } from "@/components/painel/charts/AzTimeSeriesChart";
 import { AZ_BRAND, AZ_CHART, AZ_SERIES } from "@/lib/az-chart-theme";
-import { fmtPct } from "@/lib/format-br";
-import { META, META_PISO, META_TETO, num, toPoints } from "./shared";
+import { META, META_PISO, META_TETO, toPoints } from "./shared";
 
 /**
  * Bloco 02 — abertura do IPCA em DOIS cards com perguntas distintas (regra da
@@ -37,9 +36,6 @@ export function AberturaCards({
   const ipca12 = useMemo(() => toPoints(nucleos.serie_12m ?? [], "IPCA cheio"), [nucleos.serie_12m]);
 
   const ultimo = serie12[serie12.length - 1];
-  const livresU = ultimo ? num(ultimo, "Livres") : null;
-  const monitU = ultimo ? num(ultimo, "Monitorados") : null;
-  const servU = ultimo ? num(ultimo, "Servicos") : null;
 
   if (serie12.length === 0) {
     return (
@@ -65,13 +61,7 @@ export function AberturaCards({
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <ChartCard
-        title={
-          livresU != null && monitU != null
-            ? `Monitorados em ${fmtPct(monitU, 1)} × livres em ${fmtPct(livresU, 1)} (12m)`
-            : "Livres × Monitorados (12m)"
-        }
-        subtitle="Quanto da inflação vem de preços administrados (energia, combustíveis, tarifas), que a política de juros não alcança diretamente?"
-        footer="Acumulado 12m por composição geométrica (BCB SGS 4448 e 4449), calculado no pipeline."
+        title="Preços livres × monitorados (12 meses)"
         stampGiro={geradoEm}
         stampDado={ultimo?.mes ?? null}
       >
@@ -88,9 +78,7 @@ export function AberturaCards({
       </ChartCard>
 
       <ChartCard
-        title={servU != null ? `Serviços em ${fmtPct(servU, 1)} em 12 meses` : "Serviços (12m)"}
-        subtitle="A inflação de serviços — a mais sensível ao ciclo e ao juro — está cedendo? IPCA cheio como referência."
-        footer="BCB SGS 11428, 12m composto no pipeline. Serviços subjacentes (cesta do RI) entram quando houver série oficial vigente; momentum dessazonalizado na próxima fase."
+        title="Serviços (12 meses)"
         stampGiro={geradoEm}
         stampDado={ultimo?.mes ?? null}
       >

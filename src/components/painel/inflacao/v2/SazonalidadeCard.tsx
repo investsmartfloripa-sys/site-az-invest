@@ -19,8 +19,8 @@ import {
 import type { IpcaData } from "@/lib/painel-ipca";
 import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
-import { fmtMesCurto, fmtNum, fmtSignedPct } from "@/lib/format-br";
-import { leituraSazonal, num } from "./shared";
+import { fmtNum, fmtSignedPct } from "@/lib/format-br";
+import { num } from "./shared";
 
 /**
  * Bloco 04 — "0,67% no mês é muito?" — depende do PADRÃO do mês civil
@@ -81,25 +81,9 @@ export function SazonalidadeCard({ data }: { data: IpcaData }) {
     );
   }
 
-  const ipcaMes = num(
-    data.ipca_cheio.serie.find((r) => r.mes === mesRef),
-    "IPCA cheio",
-  );
-  const medianaRef = saz.por_mes[mmRef]?.mediana ?? null;
-  const rel = ipcaMes != null && medianaRef != null ? leituraSazonal(ipcaMes, medianaRef) : null;
-  const relTexto =
-    rel === "acima"
-      ? "acima do padrão do mês"
-      : rel === "abaixo"
-        ? "abaixo do padrão do mês"
-        : "em linha com o padrão do mês";
-  const titulo = rel != null ? `IPCA de ${fmtMesCurto(mesRef)} veio ${relTexto}` : "Sazonalidade do IPCA";
-
   return (
     <ChartCard
-      title={titulo}
-      subtitle={`O IPCA deste mês veio forte ou fraco para o padrão histórico do próprio mês civil? Barras = mediana ${saz.janela}; hastes = mín–máx; pontos = últimos 12 meses realizados.`}
-      footer="Janeiro e fevereiro são historicamente altos (reajustes de tarifas, educação); o meio do ano é baixo. Mediana em vez de média: robusta aos choques de 2020-22 sem excluir anos da amostra."
+      title="IPCA do mês vs padrão sazonal"
       stampGiro={data.gerado_em}
       stampDado={mesRef}
     >
@@ -145,10 +129,6 @@ export function SazonalidadeCard({ data }: { data: IpcaData }) {
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <p className="mt-1 text-[11px] text-zinc-500">
-        Ponto <span className="font-semibold" style={{ color: AZ_BRAND.rust }}>laranja</span> = mês de referência (
-        {fmtMesCurto(mesRef)}: {fmtSignedPct(ipcaMes, 2)} vs mediana de {fmtSignedPct(medianaRef, 2)} para o mês).
-      </p>
     </ChartCard>
   );
 }

@@ -30,15 +30,6 @@ const BANDA_EM_LINHA = 0.05;
 export function SurpresasCard({ focusMensal, geradoEm }: { focusMensal: FocusMensalBlock; geradoEm: string }) {
   const surpresas = focusMensal.surpresas;
 
-  const stats = useMemo(() => {
-    if (surpresas.length === 0) return null;
-    const acima = surpresas.filter((s) => s.surpresa_pp > BANDA_EM_LINHA).length;
-    const abaixo = surpresas.filter((s) => s.surpresa_pp < -BANDA_EM_LINHA).length;
-    const emLinha = surpresas.length - acima - abaixo;
-    const mediaAbs = surpresas.reduce((acc, s) => acc + Math.abs(s.surpresa_pp), 0) / surpresas.length;
-    return { acima, abaixo, emLinha, mediaAbs, n: surpresas.length };
-  }, [surpresas]);
-
   const rows = useMemo(
     () =>
       surpresas.map((s) => ({
@@ -50,22 +41,14 @@ export function SurpresasCard({ focusMensal, geradoEm }: { focusMensal: FocusMen
     [surpresas],
   );
 
-  if (rows.length === 0 || !stats) return null;
+  if (rows.length === 0) return null;
 
   return (
     <ChartCard
-      title={`Surpresa inflacionária — últimos ${stats.n} meses`}
-      subtitle="Realizado menos a mediana Focus da véspera da divulgação, em pontos percentuais."
-      footer={`Esperado = mediana da última pesquisa Focus (baseCalculo = 0) antes do release do IBGE. "Em linha" = |surpresa| ≤ ${BANDA_EM_LINHA.toLocaleString("pt-BR")} p.p. Vermelho = acima do consenso (pressão); azul = abaixo.`}
+      title="Surpresa inflacionária"
       stampGiro={geradoEm}
       stampDado={surpresas.at(-1)?.mes ?? null}
     >
-      <p className="mb-2 text-xs text-zinc-600">
-        <strong className="text-[#132960]">{stats.acima}</strong> acima ·{" "}
-        <strong className="text-[#132960]">{stats.emLinha}</strong> em linha ·{" "}
-        <strong className="text-[#132960]">{stats.abaixo}</strong> abaixo do consenso · desvio absoluto médio{" "}
-        <strong className="text-[#132960]">{fmtNum(stats.mediaAbs, 3)} p.p.</strong>
-      </p>
       <div className="h-[260px] w-full">
         <ResponsiveContainer>
           <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>

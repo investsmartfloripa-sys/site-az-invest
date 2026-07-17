@@ -40,28 +40,11 @@ export function DifusaoCard({ difusao, geradoEm }: { difusao: DifusaoBlock; gera
   const media = mh?.media ?? null;
   const dp = mh?.dp ?? null;
 
-  const ultimoMm3 = mm3.length > 0 ? mm3[mm3.length - 1][1] : null;
   const ultimoMes = difusao.serie[difusao.serie.length - 1]?.mes ?? null;
-
-  let leitura = "—";
-  if (ultimoMm3 != null && media != null && dp != null) {
-    if (ultimoMm3 > media + dp) leitura = "alta espalhada acima do normal";
-    else if (ultimoMm3 < media - dp) leitura = "alta concentrada em poucos itens";
-    else leitura = "dentro da faixa histórica normal";
-  }
-
-  const titulo =
-    ultimoMm3 != null ? `Difusão em ${fmtPct(ultimoMm3, 1)} — ${leitura}` : "Índice de difusão";
 
   return (
     <ChartCard
-      title={titulo}
-      subtitle={`A alta de preços está espalhada ou concentrada em poucos itens? % de subitens do IPCA com variação positiva no mês; régua = média histórica${mh ? ` desde ${mh.desde.slice(0, 4)}` : ""}.`}
-      footer={
-        media != null
-          ? `Média móvel de 3 meses em destaque (a leitura mensal é ruidosa e sazonal — picos de janeiro por reajustes). Faixa normal = média ${fmtPct(media, 1)} ± 1 dp (${fmtPct(dp, 1)}), calculada no pipeline sobre o regime de metas maduro.`
-          : "Média móvel de 3 meses em destaque; mensal esmaecida ao fundo."
-      }
+      title="Índice de difusão"
       stampGiro={geradoEm}
       stampDado={ultimoMes}
     >

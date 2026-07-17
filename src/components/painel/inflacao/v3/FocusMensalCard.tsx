@@ -26,8 +26,6 @@ export function FocusMensalCard({
   return (
     <ChartCard
       title="Curtíssimo prazo — IPCA mensal no Focus"
-      subtitle="Mediana e dispersão das projeções p/ os próximos meses; primeira linha = o mês já divulgado, contra o que o mercado esperava na véspera."
-      footer="BCB/Olinda ExpectativaMercadoMensais (baseCalculo = 0 — respondentes dos últimos 30 dias, convenção do boletim Focus). 'Véspera' = última pesquisa antes da divulgação do IBGE (o BC para de coletar o mês após o release). Surpresa = realizado − mediana da véspera."
       stampGiro={geradoEm}
       stampDado={vespera?.data_pesquisa ?? null}
     >
