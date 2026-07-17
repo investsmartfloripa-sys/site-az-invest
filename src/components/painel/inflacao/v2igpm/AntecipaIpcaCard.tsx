@@ -7,7 +7,7 @@ import { AzSegmented, ChartCard } from "@/components/painel/core";
 import { AzTimeSeriesChart, type AzSeriesPoint } from "@/components/painel/charts/AzTimeSeriesChart";
 import { AZ_BRAND, AZ_CHART } from "@/lib/az-chart-theme";
 import { addMonthsUTC, fmtNum } from "@/lib/format-br";
-import { CORR_FORTE, mesIso } from "./shared";
+import { mesIso } from "./shared";
 
 /**
  * Bloco 02 — "o IGP-M antecipa o IPCA — o atacado de hoje é o varejo de amanhã?".
@@ -48,18 +48,9 @@ export function AntecipaIpcaCard({
     return { ipaCru: cru, ipaDeslocado: desl, ipca: ip };
   }, [antecipacao.serie, lagOtimo]);
 
-  const corrForte = corrOtima != null && corrOtima >= CORR_FORTE;
-  const titulo = corrForte
-    ? `O atacado tende a anteceder o IPCA em ~${lagOtimo} meses`
-    : "IGP-M e IPCA medem inflações diferentes — relação fraca";
-  const subtitulo = corrForte
-    ? `O IPA de hoje aparece no varejo de amanhã? A correlação máxima entre IPA-M 12m e IPCA 12m ocorre com o IPCA defasado em ${lagOtimo} meses (${fmtNum(corrOtima, 2)} desde ${antecipacao.janela_recente.slice(0, 4)}).`
-    : "O IPA de hoje aparece no varejo de amanhã? A correlação defasada é baixa — o gráfico responde melhor por que os dois índices descolam (câmbio e commodities no atacado).";
-
   return (
     <ChartCard
-      title={titulo}
-      subtitle={subtitulo}
+      title="IPA-M × IPCA por defasagem"
       toolbar={
         <AzSegmented
           ariaLabel="Deslocamento do IPA"

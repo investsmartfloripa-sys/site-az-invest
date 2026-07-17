@@ -6,7 +6,7 @@ import type { AluguelBlock } from "@/lib/painel-igpm";
 import { ChartCard } from "@/components/painel/core";
 import { AZ_CHART, variationText } from "@/lib/az-chart-theme";
 import { fmtBRL, fmtMesCurto, fmtPct, fmtSignedPct } from "@/lib/format-br";
-import { ALUGUEL_ILUSTRATIVO, leituraAluguel } from "./shared";
+import { ALUGUEL_ILUSTRATIVO } from "./shared";
 
 /**
  * Bloco 03 — "IGP-M na vida real": o leigo chega ao painel por UMA razão —
@@ -42,13 +42,10 @@ export function AluguelCard({ aluguel, geradoEm }: { aluguel: AluguelBlock; gera
   const atual = rows[0];
   if (!atual) return null;
 
-  const titulo = `Reajuste pelo IGP-M hoje: ${leituraAluguel(atual.igpm_12m)}`;
-
   return (
     <ChartCard
-      title={titulo}
-      subtitle={`Quem tem contrato corrigido pelo IGP-M paga quanto a mais — e quanto seria pelo IPCA? Reajustes anuais no aniversário de ${fmtMesCurto(aluguel.mes_referencia)} sobre um aluguel ilustrativo de ${fmtBRL(ALUGUEL_ILUSTRATIVO, 0)}.`}
-      footer={`Cláusula de não-redução (padrão de mercado): IGP-M 12m negativo congela o aluguel — por isso 2023 e 2024 aplicam 0%. Acumulado dos ${rows.length} reajustes: IGP-M ${fmtSignedPct(acumulado.igpm, 1)} vs IPCA ${fmtSignedPct(acumulado.ipca, 1)}.`}
+      title="Reajuste de aluguel na prática"
+      footer={`Reajustes anuais no aniversário de ${fmtMesCurto(aluguel.mes_referencia)} sobre um aluguel ilustrativo de ${fmtBRL(ALUGUEL_ILUSTRATIVO, 0)}. Cláusula de não-redução (padrão de mercado): IGP-M 12m negativo congela o aluguel. Acumulado dos ${rows.length} reajustes: IGP-M ${fmtSignedPct(acumulado.igpm, 1)} vs IPCA ${fmtSignedPct(acumulado.ipca, 1)}.`}
       stampGiro={geradoEm}
       stampDado={aluguel.mes_referencia}
     >
