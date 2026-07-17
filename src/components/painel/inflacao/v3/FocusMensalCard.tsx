@@ -14,10 +14,13 @@ export function FocusMensalCard({
   focusMensal,
   realizadoMes,
   geradoEm,
+  indicador = "IPCA",
 }: {
   focusMensal: FocusMensalBlock;
   realizadoMes: number | null;
   geradoEm: string;
+  /** Nome do índice no título (default "IPCA") — reuso pelo painel IGP-M. */
+  indicador?: string;
 }) {
   const vespera = focusMensal.vespera;
   const surpresa =
@@ -25,7 +28,7 @@ export function FocusMensalCard({
 
   return (
     <ChartCard
-      title="Curtíssimo prazo — IPCA mensal no Focus"
+      title={`Curtíssimo prazo — ${indicador} mensal no Focus`}
       stampGiro={geradoEm}
       stampDado={vespera?.data_pesquisa ?? null}
     >

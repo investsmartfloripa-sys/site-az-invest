@@ -27,7 +27,16 @@ import { fmtMesCurto, fmtNum, fmtSignedNum } from "@/lib/format-br";
 
 const BANDA_EM_LINHA = 0.05;
 
-export function SurpresasCard({ focusMensal, geradoEm }: { focusMensal: FocusMensalBlock; geradoEm: string }) {
+export function SurpresasCard({
+  focusMensal,
+  geradoEm,
+  indicador = "IPCA",
+}: {
+  focusMensal: FocusMensalBlock;
+  geradoEm: string;
+  /** Nome do índice no rodapé metodológico (default "IPCA") — reuso pelo painel IGP-M. */
+  indicador?: string;
+}) {
   const surpresas = focusMensal.surpresas;
 
   const rows = useMemo(
@@ -46,6 +55,7 @@ export function SurpresasCard({ focusMensal, geradoEm }: { focusMensal: FocusMen
   return (
     <ChartCard
       title="Surpresa inflacionária"
+      footer={`Surpresa = ${indicador} realizado − mediana da última pesquisa Focus (baseCalculo = 0) antes da divulgação. Barra vermelha = veio acima do consenso; azul = abaixo; cinza = em linha (±0,05 p.p.).`}
       stampGiro={geradoEm}
       stampDado={surpresas.at(-1)?.mes ?? null}
     >

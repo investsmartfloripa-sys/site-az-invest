@@ -17,7 +17,15 @@
  * resíduo explícito (`decomposicao`), correlação IPA->IPCA (`antecipacao`),
  * reajustes de aluguel (`aluguel`), série completa p/ tabela/CSV (`analise`)
  * e estatísticas pós-1996 — tudo calculado no builder, nunca no front.
+ *
+ * schema_version 3 (2026-07): tabs de escrutínio — tabela-síntese (família
+ * IGP + componentes + origem do IPA), transformações e momentum por índice
+ * (STL/SAAR; IPA anualizado SEM dessaz), decomposição do 12m com resíduo
+ * como fatia própria, série longa pós-96 com réguas PRÓPRIAS (o IGP não tem
+ * meta), origem agro×industrial do IPA (identificação revalidada por build)
+ * e Focus IGP-M (anuais + mensal com surpresas, mesmo shape do IPCA).
  */
+import type { FocusMensalBlock } from "@/lib/painel-ipca";
 import { painelBlobUrl } from "@/lib/painel-blob";
 
 export const IGPM_REVALIDATE_SECONDS = 3600;
@@ -175,8 +183,137 @@ export type SubPainelComponente = {
   ultimo_ano: number | null;
 };
 
+// ---------------------------------------------------------------------------
+// schema v3 (jul/2026) — blocos das tabs de escrutínio. TODO cálculo (12m
+// composto, dessaz STL, SAAR, encadeamentos, réguas) nasce no builder.
+// ---------------------------------------------------------------------------
+
+/** Linha da tabela-síntese (família IGP, componentes ou origem do IPA). */
+export type SinteseIgpmLinha = {
+  id: string;
+  nome: string;
+  m2: number | null;
+  m1: number | null;
+  m0: number | null;
+  acum_ano: number | null;
+  acum_12m: number | null;
+  /** Peso EFETIVO encadeado (%) do componente no mês — só na seção componentes. */
+  peso: number | null;
+  contrib_pp: number | null;
+  /** Série com janela própria (IGP-10, IGP-DI, origem do IPA): mês de referência dela. */
+  mes_proprio?: string;
+};
+
+export type SinteseIgpmSecao = {
+  id: "familia" | "componentes" | "origem";
+  titulo: string;
+  linhas: SinteseIgpmLinha[];
+};
+
+export type TabelaSinteseIgpmBlock = {
+  mes_recente: string;
+  meses: [string, string, string];
+  secoes: SinteseIgpmSecao[];
+};
+
+/** Linha da tabela de transformações por índice (IGP-M, IPA-M, IPC-M, INCC-M). */
+export type TransformacaoIgpm = {
+  id: string;
+  nome: string;
+  mes: number | null;
+  saar_3m: number | null;
+  saar_6m: number | null;
+  /** true = 3m/6m sobre série dessazonalizada (STL); false = anualizado cru (IPA). */
+  dessaz: boolean;
+  acum_ano: number | null;
+  acum_12m: number | null;
+};
+
+export type IgpmMomentumPonto = {
+  mes: string;
+  /** Variação-base da janela: dessazonalizada (STL) ou crua, conforme `dessaz`. */
+  var_base: number;
+  saar_3m: number | null;
+  saar_6m: number | null;
+  dessaz: boolean;
+};
+
+export type IgpmMomentumBlock = {
+  metodo: string;
+  ajuste_desde: string;
+  publica_desde: string;
+  /** Chaves: "IGP-M", "IPA-M", "IPC-M", "INCC-M". */
+  series: Record<string, IgpmMomentumPonto[]>;
+};
+
+/** Ponto da decomposição do acumulado 12m — resíduo é fatia PRÓPRIA (nunca realocado). */
+export type Decomposicao12mPonto = {
+  mes: string;
+  "IPA-M": number;
+  "IPC-M": number;
+  "INCC-M": number;
+  residuo: number;
+  "IGP-M 12m": number;
+};
+
+export type Decomposicao12mBlock = {
+  serie: Decomposicao12mPonto[];
+  componentes: string[];
+};
+
+export type SerieLongaIgpmPonto = {
+  mes: string;
+  var: number | null;
+  acum_12m: number | null;
+  ipca_12m: number | null;
+};
+
+/** IGP-M pós-Real com réguas PRÓPRIAS (mediana e p10–p90 do 12m — sem meta). */
+export type SerieLongaIgpmBlock = {
+  desde: string;
+  serie: SerieLongaIgpmPonto[];
+  reguas: {
+    desde: string;
+    mediana_12m: number | null;
+    p10_12m: number | null;
+    p90_12m: number | null;
+    n: number;
+  };
+};
+
+export type OrigemIpaPonto = {
+  mes: string;
+  agro: number | null;
+  ind: number | null;
+  agro_12m: number | null;
+  ind_12m: number | null;
+};
+
+/** Abertura agro×industrial do atacado (família IPA-DI) — só publica se a identificação passar. */
+export type OrigemIpaBlock = {
+  familia: string;
+  identificacao: {
+    metodo: string;
+    codigo_agro: number;
+    codigo_ind: number;
+    w_agro: number;
+    r2: number;
+  };
+  serie: OrigemIpaPonto[];
+  ultimo: OrigemIpaPonto | null;
+};
+
+export type FocusAnualIgpmPonto = {
+  data: string;
+  mediana: number | null;
+  media: number | null;
+  dp: number | null;
+  min: number | null;
+  max: number | null;
+};
+
 export type IgpmData = {
-  /** 2 = builder com 12m composto, pesos efetivos e blocos novos (jun/2026). */
+  /** 2 = 12m composto + pesos efetivos (jun/2026); 3 = tabs de escrutínio (jul/2026). */
   schema_version?: number;
   gerado_em: string;
   mes_recente: string;
@@ -190,7 +327,25 @@ export type IgpmData = {
   comparativo_ipca: ComparativoPonto[];
   componentes: Record<string, SubPainelComponente>;
   igpm: OverviewBlock;
+  /** schema v3 ↓ — opcionais p/ tolerar JSON antigo em cache. */
+  tabela_sintese?: TabelaSinteseIgpmBlock;
+  transformacoes?: TransformacaoIgpm[];
+  momentum?: IgpmMomentumBlock;
+  decomposicao_12m?: Decomposicao12mBlock;
+  serie_longa?: SerieLongaIgpmBlock;
+  origem_ipa?: OrigemIpaBlock | null;
+  /** Chave = ano-referência ("2026"...) — shape idêntico ao Focus anual do IPCA. */
+  focus_anuais?: Record<string, FocusAnualIgpmPonto[]>;
+  /** Mesmo shape do bloco mensal do IPCA (vespera + próximos + surpresas). */
+  focus_mensal?: FocusMensalBlock | null;
 };
+
+/**
+ * Contrato do robô de publicação (data/igpm_release.json, schema v1) —
+ * resumo legível por máquina da última divulgação. Campos: ver
+ * `release_igpm_build` em data-pipeline/python/build_igpm.py.
+ */
+export const IGPM_RELEASE_BLOB_PATH = "data/igpm_release.json";
 
 async function fetchBlobJson<T>(path: string): Promise<T | null> {
   const url = painelBlobUrl(path);

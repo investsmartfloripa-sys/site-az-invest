@@ -167,6 +167,7 @@ export const DATA_SOURCES: DataSourceDef[] = [
   { key: "ipca", label: "IPCA", blobPath: "data/ipca.json", workflowName: "ipca-pipeline.yml", cadence: "diario", painel: "inflacao", pagePath: "/painel-economico/economia/brasil/inflacao/ipca", dataDateField: "mes_recente" },
   { key: "ipca_release", label: "IPCA release (contrato do robô)", blobPath: "data/ipca_release.json", workflowName: "ipca-pipeline.yml", cadence: "diario", painel: "inflacao", pagePath: "/painel-economico/economia/brasil/inflacao/ipca", dataDateField: "mes_referencia" },
   { key: "igpm", label: "IGP-M", blobPath: "data/igpm.json", workflowName: "ipca-pipeline.yml", cadence: "diario", painel: "inflacao", pagePath: "/painel-economico/economia/brasil/inflacao/igp-m", dataDateField: "mes_recente" },
+  { key: "igpm_release", label: "IGP-M release (contrato do robô)", blobPath: "data/igpm_release.json", workflowName: "ipca-pipeline.yml", cadence: "diario", painel: "inflacao", pagePath: "/painel-economico/economia/brasil/inflacao/igp-m", dataDateField: "mes_referencia" },
 
   // ── Emprego (emprego-pipeline.yml, janelas mensais dias 16 e 25-30) ────────
   { key: "emprego_pnad", label: "PNAD Contínua", blobPath: "data/emprego_pnad.json", workflowName: "emprego-pipeline.yml", cadence: "mensal", painel: "emprego", pagePath: "/painel-economico/economia/brasil/emprego/pnad" },

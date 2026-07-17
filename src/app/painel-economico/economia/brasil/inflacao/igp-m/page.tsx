@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 
 import { IgpmDashboard } from "@/components/painel/inflacao/IgpmDashboard";
 import { IgpmDashboardV2 } from "@/components/painel/inflacao/IgpmDashboardV2";
+import { IgpmDashboardV3 } from "@/components/painel/inflacao/IgpmDashboardV3";
 import { loadIgpmData } from "@/lib/painel-igpm";
 
 export const metadata: Metadata = {
   title: "Inflação — IGP-M",
   description:
-    "IGP-M esmiuçado: decomposição por componente com pesos efetivos, IGP-M × IPCA com defasagem, reajuste de aluguel na prática e série mensal completa. Atualizado via FGV/BCB-SGS.",
+    "IGP-M esmiuçado em tabs: tabela-síntese da família IGP, IPA/IPC/INCC destrinchados (momentum SAAR, sazonalidade, rankings, contribuições com pesos efetivos), IPA por origem agrícola × industrial, série longa pós-96, reajuste de aluguel e Focus com surpresas. Atualizado via FGV/BCB-SGS.",
 };
 
 // ISR puro: o dado é mensal; force-dynamic anularia o revalidate (plano de economia, P2).
@@ -30,9 +31,14 @@ export default async function PainelIgpmPage() {
     return <IgpmDashboard data={data} />;
   }
 
+  // JSON v2 em cache (sem os blocos de escrutínio): dashboard narrativo v2.
+  if (data.schema_version < 3 || !data.tabela_sintese) {
+    return <IgpmDashboardV2 data={data} />;
+  }
+
   // Sem <Suspense>: o AzPeriodSelector não usa mais useSearchParams (ver
   // useDeferredSearchParams), então a rota estática não faz CSR bailout e o
   // dashboard hidrata normalmente. Um boundary <Suspense> aqui, ao contrário,
   // QUEBRARIA a hidratação do conteúdo neste build (Next 16.2.4).
-  return <IgpmDashboardV2 data={data} />;
+  return <IgpmDashboardV3 data={data} />;
 }
