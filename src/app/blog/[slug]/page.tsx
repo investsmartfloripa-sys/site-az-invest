@@ -9,6 +9,15 @@ import { PostMarkdownBody } from "@/components/blog/PostMarkdownBody";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { formatPostCategoryLabel, getPostCategorySoftPillClasses } from "@/data/blog-categories";
 import { addCommentAction } from "@/lib/comment-actions";
+import {
+  ChartById,
+  type IgpmRelease,
+  type IpcaRelease,
+} from "@/components/painel/publisher/ChartById";
+import { loadIgpmData } from "@/lib/painel-igpm";
+import { loadIpcaData } from "@/lib/painel-ipca";
+import { painelBlobUrl } from "@/lib/painel-blob";
+import { RELEASE_BLOB_PATH, getChartDef } from "@/lib/publisher/chart-catalog";
 import { prisma } from "@/lib/prisma";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -66,6 +75,48 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * Gráficos VIVOS nos posts do Publisher: o corpo markdown carrega marcadores
+ * `[az-chart:IPCA-08]` (um por parágrafo). Aqui a página detecta os ids,
+ * carrega os dados dos indicadores envolvidos (mesmos loaders do painel) e
+ * entrega ao PostMarkdownBody o card interativo real de cada marcador.
+ */
+async function fetchReleaseJson<T>(path: string): Promise<T | null> {
+  const url = painelBlobUrl(path);
+  if (!url) return null;
+  try {
+    const res = await fetch(url, { next: { revalidate: 300 } });
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+async function buildChartSlots(
+  content: string,
+): Promise<Record<string, React.ReactNode> | undefined> {
+  const ids = [
+    ...new Set(
+      [...content.matchAll(/\\?\[az-chart:([A-Za-z0-9-]+)\\?\]/g)].map((m) =>
+        m[1].toUpperCase(),
+      ),
+    ),
+  ].filter((id) => getChartDef(id) !== null);
+  if (ids.length === 0) return undefined;
+
+  const precisaIpca = ids.some((id) => getChartDef(id)?.indicador === "ipca");
+  const precisaIgpm = ids.some((id) => getChartDef(id)?.indicador === "igpm");
+  const [ipca, ipcaRelease, igpm, igpmRelease] = await Promise.all([
+    precisaIpca ? loadIpcaData() : Promise.resolve(null),
+    precisaIpca ? fetchReleaseJson<IpcaRelease>(RELEASE_BLOB_PATH.ipca) : Promise.resolve(null),
+    precisaIgpm ? loadIgpmData() : Promise.resolve(null),
+    precisaIgpm ? fetchReleaseJson<IgpmRelease>(RELEASE_BLOB_PATH.igpm) : Promise.resolve(null),
+  ]);
+  const bundle = { ipca, ipcaRelease, igpm, igpmRelease };
+  return Object.fromEntries(ids.map((id) => [id, ChartById({ id, data: bundle })]));
+}
+
 function initials(name: string) {
   return name
     .split(" ")
@@ -88,6 +139,7 @@ export default async function BlogPostPage({
   }
 
   const siteUrl = getSiteUrl();
+  const chartSlots = await buildChartSlots(post.content);
 
   return (
     <div className="min-h-screen text-[#132960]">
@@ -190,7 +242,7 @@ export default async function BlogPostPage({
             )}
           </div>
 
-          <PostMarkdownBody markdown={post.content} />
+          <PostMarkdownBody markdown={post.content} chartSlots={chartSlots} />
         </article>
 
         <section id="comentarios" className="az-card mt-8 space-y-6 p-6 md:p-10">

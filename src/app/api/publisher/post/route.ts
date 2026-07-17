@@ -40,6 +40,12 @@ type PublisherPostBody = {
   coverImage?: string;
   /** Metadados de auditoria (indicador, mes_referencia, run...). */
   meta?: Record<string, unknown>;
+  /**
+   * true = se o slug já existir, ATUALIZA título/excerpt/corpo/capa em vez de
+   * retornar `already`. Uso excepcional (correção de release publicado) —
+   * a doutrina exige instrução explícita do usuário para reescrever post no ar.
+   */
+  overwrite?: boolean;
 };
 
 function tokenOk(header: string | null): boolean {
@@ -92,7 +98,7 @@ export async function POST(req: Request) {
   const siteUrl = getSiteUrl();
 
   const existing = await prisma.post.findUnique({ where: { slug } });
-  if (existing) {
+  if (existing && !body.overwrite) {
     return NextResponse.json({
       ok: true,
       already: true,
@@ -105,6 +111,37 @@ export async function POST(req: Request) {
   const { content, contentHtml: cleanHtml } = preparePostContent(contentHtml);
   if (!content.trim()) {
     return NextResponse.json({ ok: false, error: "empty-content-after-sanitize" }, { status: 422 });
+  }
+
+  if (existing) {
+    const updated = await prisma.post.update({
+      where: { id: existing.id },
+      data: {
+        title,
+        category,
+        excerpt: body.excerpt?.trim() || null,
+        content,
+        contentHtml: cleanHtml,
+        coverImage: body.coverImage?.trim() || existing.coverImage,
+      },
+    });
+    await writeAuditLog({
+      action: "post.publisher_update",
+      entity: "Post",
+      entityId: updated.id,
+      meta: { source: "publisher", authorSlug, category, ...(body.meta ?? {}) },
+    });
+    revalidatePath("/");
+    revalidatePath("/blog");
+    revalidatePath(`/blog/${updated.slug}`);
+    return NextResponse.json({
+      ok: true,
+      already: false,
+      updated: true,
+      id: updated.id,
+      slug: updated.slug,
+      url: `${siteUrl}/blog/${updated.slug}`,
+    });
   }
 
   const now = new Date();
