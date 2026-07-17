@@ -122,7 +122,7 @@ export const CHART_CATALOG: ChartDef[] = [
     titulo: "Realizado vs Focus + próximos meses",
     descricao:
       "Expectativa de curtíssimo prazo: o realizado contra a mediana da véspera e o Focus dos próximos meses.",
-    waitFor: "chart",
+    waitFor: "dom",
   },
   {
     id: "IPCA-09",
@@ -233,7 +233,7 @@ export const CHART_CATALOG: ChartDef[] = [
     titulo: "Reajuste de aluguel pelo IGP-M",
     descricao:
       "Tradução prática: reajuste no aniversário do contrato (com cláusula de não-redução).",
-    waitFor: "chart",
+    waitFor: "dom",
   },
   {
     id: "IGPM-10",
@@ -241,7 +241,7 @@ export const CHART_CATALOG: ChartDef[] = [
     titulo: "Realizado vs Focus + próximos meses",
     descricao:
       "Expectativa de curtíssimo prazo do IGP-M: véspera, surpresa e meses à frente.",
-    waitFor: "chart",
+    waitFor: "dom",
   },
   {
     id: "IGPM-11",

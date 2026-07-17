@@ -45,18 +45,33 @@ async function uploadBlob(path, body, contentType) {
     log(`  [upload] SKIP (sem BLOB_READ_WRITE_TOKEN): ${path}`);
     return false;
   }
+  // Headers espelham shared/blob_upload.py (x-api-version 7 é o que garante o
+  // path FIXO — sem ele a API antiga aplica sufixo aleatório e o GET dá 404).
   const url = `${BLOB_WRITE}/${path}?addRandomSuffix=false&allowOverwrite=true`;
   const res = await fetch(url, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${TOKEN}`,
-      "x-content-type": contentType,
+      "x-api-version": "7",
+      "x-add-random-suffix": "0",
+      "x-allow-overwrite": "1",
+      "Content-Type": contentType,
     },
     body,
   });
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`PUT ${path} -> HTTP ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  // A resposta traz a URL final — se vier com sufixo, o contrato de path fixo quebrou.
+  try {
+    const info = await res.json();
+    if (info?.url && !info.url.endsWith(`/${path}`)) {
+      throw new Error(`PUT ${path} salvou em URL divergente: ${info.url}`);
+    }
+  } catch (e) {
+    if (String(e?.message || "").includes("divergente")) throw e;
+    // resposta sem JSON legível: seguir — o verify pós-upload pega qualquer 404.
   }
   return true;
 }
@@ -66,9 +81,8 @@ async function waitForContent(page, waitFor) {
   if (waitFor === "chart") {
     await page.waitForSelector("#render-stage .recharts-surface", { timeout: 30000 });
   } else {
-    await page.waitForSelector("#render-stage table, #render-stage [class*='grid']", {
-      timeout: 30000,
-    });
+    // Qualquer conteúdo montado dentro do corpo do stage (tabela, grid, kpi...).
+    await page.waitForSelector("#render-stage .p-5 > *", { timeout: 30000 });
   }
   // Settle: animação inicial do Recharts + fontes.
   await page.waitForTimeout(1200);
@@ -187,7 +201,13 @@ async function main() {
   let fatal = false;
   for (const r of resultados) {
     if (!r.mes) continue;
-    const latest = await fetchJson(`${BLOB_BASE}/releases/${r.indicador}/latest.json?ts=${Date.now()}`);
+    // Propagação do Blob público leva alguns segundos após o PUT — retry curto.
+    let latest = null;
+    for (let i = 0; i < 4; i += 1) {
+      latest = await fetchJson(`${BLOB_BASE}/releases/${r.indicador}/latest.json?ts=${Date.now()}`);
+      if (latest?.mes_referencia === r.mes) break;
+      await new Promise((ok) => setTimeout(ok, 8000));
+    }
     const confere = latest?.mes_referencia === r.mes;
     log(
       `[verify] ${indicadorUp(r.indicador)}: latest.json ${confere ? "OK" : "DIVERGENTE"} (${latest?.mes_referencia ?? "ausente"})`,
