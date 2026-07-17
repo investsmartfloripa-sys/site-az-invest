@@ -163,8 +163,9 @@ export const DATA_SOURCES: DataSourceDef[] = [
   { key: "atividade_pmc", label: "PMC (comércio)", blobPath: "data/atividade_pmc.json", workflowName: "atividade-pipeline.yml", cadence: "mensal", painel: "atividade", pagePath: "/painel-economico/economia/brasil/atividade/pmc", dataDateField: "mes_recente" },
   { key: "atividade_pms", label: "PMS (serviços)", blobPath: "data/atividade_pms.json", workflowName: "atividade-pipeline.yml", cadence: "mensal", painel: "atividade", pagePath: "/painel-economico/economia/brasil/atividade/pms", dataDateField: "mes_recente" },
 
-  // ── Inflação (ipca-pipeline.yml, diário 12:00 UTC) ─────────────────────────
+  // ── Inflação (ipca-pipeline.yml, diário 12:20 + 15:00 UTC) ─────────────────
   { key: "ipca", label: "IPCA", blobPath: "data/ipca.json", workflowName: "ipca-pipeline.yml", cadence: "diario", painel: "inflacao", pagePath: "/painel-economico/economia/brasil/inflacao/ipca", dataDateField: "mes_recente" },
+  { key: "ipca_release", label: "IPCA release (contrato do robô)", blobPath: "data/ipca_release.json", workflowName: "ipca-pipeline.yml", cadence: "diario", painel: "inflacao", pagePath: "/painel-economico/economia/brasil/inflacao/ipca", dataDateField: "mes_referencia" },
   { key: "igpm", label: "IGP-M", blobPath: "data/igpm.json", workflowName: "ipca-pipeline.yml", cadence: "diario", painel: "inflacao", pagePath: "/painel-economico/economia/brasil/inflacao/igp-m", dataDateField: "mes_recente" },
 
   // ── Emprego (emprego-pipeline.yml, janelas mensais dias 16 e 25-30) ────────

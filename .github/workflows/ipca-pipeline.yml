@@ -1,9 +1,12 @@
 name: Inflação pipeline (IPCA + IGP-M)
 
 on:
-  # 9h BRT (UTC-3) = 12h UTC
+  # 12:20 UTC = 9:20 BRT — logo APÓS a divulgação do IBGE (~9h BRT no dia de
+  # release); 15:00 UTC = segunda chance no mesmo dia (throttle do cron do GH
+  # pode atrasar a primeira janela; SIDRA/Olinda às vezes propagam com lag).
   schedule:
-    - cron: "0 12 * * *"
+    - cron: "20 12 * * *"
+    - cron: "0 15 * * *"
   workflow_dispatch:
 
 concurrency:

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
-import { IpcaDashboardV2 } from "@/components/painel/inflacao/IpcaDashboardV2";
+import { IpcaDashboardV3 } from "@/components/painel/inflacao/IpcaDashboardV3";
 import { loadIpcaData } from "@/lib/painel-ipca";
 
 export const metadata: Metadata = {
   title: "Inflação — IPCA",
   description:
-    "IPCA esmiuçado: contribuição por grupo encadeada no 12m oficial, núcleos do BC, difusão com régua histórica, sazonalidade, expectativas Focus e tabela completa de influências. Atualizado via IBGE/SIDRA e BCB.",
+    "IPCA em seis vistas de escrutínio: leitura da divulgação (realizado × Focus), tabela-síntese, composição hierárquica, núcleos e momentum dessazonalizado, tendência desde 1999 contra a meta e expectativas completas. IBGE/SIDRA e BCB.",
 };
 
 // ISR puro: o dado é mensal; force-dynamic anularia o revalidate (plano de economia, P2).
@@ -25,5 +25,5 @@ export default async function PainelIpcaPage() {
 
   // Sem <Suspense>: AzPeriodSelector não usa mais useSearchParams (sem CSR
   // bailout) e um boundary aqui quebraria a hidratação no Next 16.2.4.
-  return <IpcaDashboardV2 data={data} />;
+  return <IpcaDashboardV3 data={data} />;
 }
