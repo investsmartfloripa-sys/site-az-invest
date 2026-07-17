@@ -66,3 +66,9 @@ Contágio do selloff de chips: TSMC bateu lucro no 2T mas elevou capex 2026 para
 - **Selloff de chips:** checar se persiste na segunda-feira (Nikkei já em correção técnica) ou se estabiliza.
 - **Fluxo de publicação:** confirmar se o push direto na branch de trabalho (sem exigir PR+merge) segue funcionando, ou se ainda é preciso abrir PR — ver nota da rodada 17/7 abaixo.
 - **YouTube/transcrição:** falha total (3 de 3 vídeos) hoje, pior que rodadas anteriores — reavaliar se é bloqueio pontual ou mais persistente.
+
+## Addendum — rodada de verificação 10:06 BRT (17/7)
+Segunda disparada do dia, às **10:06 BRT** (~45min após a rodada principal de ~09:21-09:45). Verificou que a edição 17/7 já estava concluída e NÃO duplicou nada:
+- **Site:** página e capa no ar (HTTP 200); deploy `success` (commit `ccb3891`, 09:21 BRT / 12:21 UTC).
+- **WhatsApp: JÁ POSTADO** — confirmado na Comunidade "Investimentos de A-Z" (grupo Avisos) às **09:32 BRT**, autor Bernardo, URL exata `https://investimentosdeaz.com.br/cafe-com-mercado/2026-07-17` (lida via árvore de acessibilidade do WhatsApp Web). Antiduplicata OK — não repostou.
+- **Ação da rodada 10:06:** apenas verificação e relatório. Sem republicação, sem repost, sem novo snapshot de conteúdo.
