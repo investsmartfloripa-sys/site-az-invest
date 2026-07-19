@@ -216,8 +216,9 @@ export function IgpmDashboardV3({ data }: { data: IgpmData }) {
         </summary>
         <div className="mt-3 space-y-2 text-xs leading-relaxed text-zinc-600">
           <p>
-            <strong>Fontes e séries.</strong> FGV via BCB/SGS: 189 (IGP-M variação mensal), 7450 (IPA-M), 7456
-            (IPC-M), 7465 (INCC-M), 7447 (IGP-10), 190 (IGP-DI); origem do atacado via família IPA-DI: 225 (IPA-DI
+            <strong>Fontes e séries.</strong> FGV via BCB/SGS: 189 (IGP-M variação mensal), 7450 (IPA-M), 7453
+            (IPC-M), 7456 (INCC-M) — códigos conferidos contra o nome oficial da série no SGS e validados por
+            spot-check contra o release FGV a cada build —, 7447 (IGP-10), 190 (IGP-DI); origem do atacado via família IPA-DI: 225 (IPA-DI
             cheio) e 7459/7460 (agro × industrial, com IDENTIFICAÇÃO revalidada a cada build — os rótulos no BCB são
             ambíguos; se a validação falha, o bloco não é publicado). Referência cruzada IBGE via SGS 433 (IPCA
             mensal) e 13522 (IPCA 12m). BCB/Olinda: ExpectativasMercadoAnuais e ExpectativaMercadoMensais

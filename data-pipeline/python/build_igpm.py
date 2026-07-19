@@ -3,10 +3,18 @@
 Códigos SGS:
 - 189   IGP-M variação mensal (fonte única do índice cheio)
 - 7450  IPA-M cheio (peso de origem 60% do IGP-M)
-- 7456  IPC-M cheio (30%)
-- 7465  INCC-M cheio (10%)
+- 7453  IPC-M cheio (30%)
+- 7456  INCC-M cheio (10%)
 - 433   IPCA mensal (referência cruzada)
 - 13522 IPCA 12m (referência cruzada + validação da rotina de composição)
+
+ATENÇÃO — CÓDIGOS 7456/7465 CORRIGIDOS (2026-07): o builder nasceu usando
+7456 como IPC-M e 7465 como INCC-M, mas os nomes oficiais no SGS são
+7453 = "Consumer Price Index-Market (IPC-M)", 7456 = "National Index of
+Building Costs-Market (INCC-M)" e 7465 = "IPC-Fipe - Food stuffs" (nem é
+FGV). Confirmado contra o release oficial FGV de jun/2026 (IPC +0,47 = 7453;
+INCC +0,85 = 7456; mai/2026 idem: 0,61/0,77). O spot-check
+COMPONENTES_MENSAL_OFICIAL trava essa identificação a cada build.
 
 ATENÇÃO — SGS 192 APOSENTADO (2026-06): o builder v1 usava o código 192
 rotulado como "IGP-M acumulado 12 meses", mas a série NÃO é isso (em
@@ -23,16 +31,16 @@ no front (PLANO-GRAFICOS-ECONOMIA-2026-06-11.md, área de inflação):
 - `decomposicao`: contribuição mensal de cada componente com PESOS EFETIVOS
   ENCADEADOS (não os fixos 60/30/10, que deixavam resíduo invisível de
   0,24 p.p. já na leitura mensal de abr/26). O SGS não publica número-índice
-  dos componentes FGV e o INCC-M só começa em jan/1997 (depois da base
-  ago/1994 do IGP-M), então os pesos exatos são irreconstruíveis — método
+  dos componentes FGV, então os pesos exatos são irreconstruíveis — método
   adotado (crítica do revisor): encadear os números-índice das variações a
-  partir do 1º mês comum (jan/1997) com pesos de origem 60/30/10 e
+  partir do 1º mês comum (set/1994, logo após a base ago/1994) com pesos de
+  origem 60/30/10 e
   renormalizar mês a mês: w_c,t = 0,6·I_c,t−1 / Σ(w_c0·I_c,t−1). Sem
   parâmetro estimado (reproduzível build a build). O resíduo restante é
-  ESTRUTURAL (base ago/1994 anterior ao INCC-M + janelas decendiais FGV) e
-  fica em campo próprio (`residuo_pp`), nunca escondido nem realocado.
-  Medido: resíduo |médio| 72m cai de 0,130 (fixos) p/ 0,075 p.p.; em
-  abr/2026, de 0,243 p/ 0,028 p.p.
+  ESTRUTURAL (um mês de defasagem da base ago/1994 + janelas decendiais
+  FGV + arredondamento a 2 casas) e fica em campo próprio (`residuo_pp`),
+  nunca escondido nem realocado. A validação exige que o resíduo dos pesos
+  efetivos seja MENOR que o dos fixos 60/30/10 (números impressos no build).
 - `antecipacao`: correlação cruzada IPA-M 12m × IPCA 12m com defasagens
   0–6 meses, em duas janelas (pós-1996 e pós-2016) — base do bloco
   "IGP-M antecipa o IPCA?"; correlação baixa pós-2016 reformula o título.
@@ -71,7 +79,21 @@ BLOB_PATH_RELEASE = "data/igpm_release.json"
 RELEASE_SCHEMA_VERSION = 1
 
 PESOS_IGPM = {"IPA-M": 60.0, "IPC-M": 30.0, "INCC-M": 10.0}
-CODIGOS_COMPONENTES = {"IPA-M": 7450, "IPC-M": 7456, "INCC-M": 7465}
+CODIGOS_COMPONENTES = {"IPA-M": 7450, "IPC-M": 7453, "INCC-M": 7456}
+
+#: Spot-check dos componentes contra o release oficial FGV (jun e mai/2026,
+#: portalibre.fgv.br) — trava a identificação código↔componente. O builder
+#: já usou 7456 como IPC-M e 7465 como INCC-M por rótulo errado de terceiros;
+#: 7465 é IPC-Fipe Alimentação. Falhou o spot-check → série trocada → não
+#: publica.
+COMPONENTES_MENSAL_OFICIAL = {
+    ("IPA-M", "2026-06"): -0.97,
+    ("IPA-M", "2026-05"): 0.91,
+    ("IPC-M", "2026-06"): 0.47,
+    ("IPC-M", "2026-05"): 0.61,
+    ("INCC-M", "2026-06"): 0.85,
+    ("INCC-M", "2026-05"): 0.77,
+}
 
 #: Família IGP (janelas de coleta deslocadas) — IGP-10 sai ~dia 10 do mês
 #: SEGUINTE ao da coleta 11→10; IGP-DI fecha o mês civil e sai ~dia 10.
@@ -623,8 +645,8 @@ def decompoe_pesos_efetivos(
     Os pesos 60/30/10 valem no NÍVEL dos números-índice na base (ago/1994);
     como o IPA inflacionou muito mais acumuladamente, o peso efetivo dele na
     variação mensal hoje passa de 60%. Sem número-índice publicado no SGS,
-    encadeamos as variações a partir do 1º mês comum (jan/1997, início do
-    INCC-M) e renormalizamos mês a mês:
+    encadeamos as variações a partir do 1º mês comum (set/1994, logo após a
+    base ago/1994) e renormalizamos mês a mês:
 
         w_c,t = w_c0 * I_c,t-1 / SOMA_c(w_c0 * I_c,t-1)
 
@@ -878,7 +900,7 @@ def main():
     print("== IGP-M ==")
     igpm_m = sgs_fetch(189)
 
-    print("== Componentes (7450/7456/7465) ==")
+    print(f"== Componentes ({'/'.join(str(c) for c in CODIGOS_COMPONENTES.values())}) ==")
     componentes = {nome: sgs_fetch(cod) for nome, cod in CODIGOS_COMPONENTES.items()}
 
     print("== IPCA pra comparacao ==")
@@ -1151,9 +1173,9 @@ def main():
         "mes_recente": mes_recente,
         "fontes": {
             "IGP-M mensal": 189,
-            "IPA-M": 7450,
-            "IPC-M": 7456,
-            "INCC-M": 7465,
+            "IPA-M": CODIGOS_COMPONENTES["IPA-M"],
+            "IPC-M": CODIGOS_COMPONENTES["IPC-M"],
+            "INCC-M": CODIGOS_COMPONENTES["INCC-M"],
             "IPCA mensal": 433,
             "IPCA 12m": 13522,
             # "IGP-M 12m" não tem código SGS: é composto aqui do 189 (o
@@ -1353,6 +1375,21 @@ def valida_schema_v2(
         print(f"  [2] spot-check {m}: composto {calc:.2f} vs oficial FGV {oficial:.2f} (dif {dif:.4f})")
         if dif > 0.05:
             erros.append(f"12m composto diverge do oficial FGV em {m} ({calc:.2f} vs {oficial:.2f})")
+
+    # 2b. componentes vs release oficial FGV (trava a identificação dos códigos
+    # SGS — o builder já publicou INCC como IPC por rótulo errado; nunca mais)
+    for (comp, m), oficial in COMPONENTES_MENSAL_OFICIAL.items():
+        calc = (out["componentes"].get(comp) or {}).get("serie_longa")
+        v = None
+        if calc:
+            v = next((r["mensal"] for r in calc if r["mes"] == m), None)
+        if v is None:
+            print(f"  [2b] spot-check {comp} {m}: fora da janela publicada — pulado")
+            continue
+        dif = abs(v - oficial)
+        print(f"  [2b] spot-check {comp} {m}: SGS {v:.2f} vs release FGV {oficial:.2f} (dif {dif:.4f})")
+        if dif > 0.005:
+            erros.append(f"{comp} em {m} diverge do release FGV ({v:.2f} vs {oficial:.2f}) — codigo SGS trocado?")
 
     # 3. decomposição: identidade contrib+resíduo = cheio e resíduo menor que o legado
     nomes = out["decomposicao"]["componentes"]

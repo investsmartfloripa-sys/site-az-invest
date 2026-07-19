@@ -8,8 +8,9 @@
  *  189   IGP-M variação mensal (o 12m é COMPOSTO no builder — o antigo
  *        SGS 192 NÃO era IGP-M 12m e foi aposentado no schema v2)
  *  7450  IPA-M cheio (peso de origem 60%)
- *  7456  IPC-M cheio (30%)
- *  7465  INCC-M cheio (10%)
+ *  7453  IPC-M cheio (30%) — corrigido 2026-07 (era 7456, que é o INCC-M)
+ *  7456  INCC-M cheio (10%) — corrigido 2026-07 (era 7465, que é IPC-Fipe
+ *        Alimentação); identificação travada por spot-check no builder
  *  433   IPCA mensal (referência)
  *  13522 IPCA 12m (referência)
  *

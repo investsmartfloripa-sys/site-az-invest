@@ -230,8 +230,8 @@ export function IgpmDashboardV2({ data }: { data: IgpmData }) {
       fichaTecnica={
         <div className="space-y-2">
           <p>
-            <strong>Fontes e séries.</strong> FGV via BCB/SGS: 189 (IGP-M variação mensal), 7450 (IPA-M), 7456
-            (IPC-M), 7465 (INCC-M); referência cruzada IBGE via SGS 433 (IPCA mensal) e 13522 (IPCA 12m).
+            <strong>Fontes e séries.</strong> FGV via BCB/SGS: 189 (IGP-M variação mensal), 7450 (IPA-M), 7453
+            (IPC-M), 7456 (INCC-M); referência cruzada IBGE via SGS 433 (IPCA mensal) e 13522 (IPCA 12m).
             Pesos de origem do IGP-M: IPA 60%, IPC 30%, INCC 10% (base ago/1994). Última observação:{" "}
             {fmtMesLongo(mesRef)}. Nota de auditoria: o código SGS 192, usado pela versão anterior como
             “IGP-M 12m”, NÃO corresponde a essa série e foi aposentado.

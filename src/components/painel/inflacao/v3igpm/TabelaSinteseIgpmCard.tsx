@@ -60,7 +60,7 @@ export function TabelaSinteseIgpmCard({ sintese, geradoEm }: { sintese: TabelaSi
           Baixar CSV
         </button>
       }
-      footer="Fontes: FGV via BCB/SGS — 189 (IGP-M), 7447 (IGP-10), 190 (IGP-DI), 7450 (IPA-M), 7456 (IPC-M), 7465 (INCC-M). Peso (%) e contribuição dos componentes usam pesos EFETIVOS encadeados no pipeline (não os 60/30/10 de origem); o resíduo estrutural da aproximação é linha própria. Origem do IPA: família IPA-DI (SGS 7459/7460), identificação revalidada a cada build contra o IPA-DI cheio (SGS 225) — a seção só aparece quando a validação passa. Meses entre parênteses = série com janela de coleta própria."
+      footer="Fontes: FGV via BCB/SGS — 189 (IGP-M), 7447 (IGP-10), 190 (IGP-DI), 7450 (IPA-M), 7453 (IPC-M), 7456 (INCC-M). Peso (%) e contribuição dos componentes usam pesos EFETIVOS encadeados no pipeline (não os 60/30/10 de origem); o resíduo estrutural da aproximação é linha própria. Origem do IPA: família IPA-DI (SGS 7459/7460), identificação revalidada a cada build contra o IPA-DI cheio (SGS 225) — a seção só aparece quando a validação passa. Meses entre parênteses = série com janela de coleta própria."
       stampGiro={geradoEm}
       stampDado={m0}
     >

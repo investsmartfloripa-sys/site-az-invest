@@ -141,7 +141,7 @@ function VisaoGeral({ overview, giro }: { overview: OverviewBlock; giro?: string
           <h2 className="text-lg font-semibold text-[#027DFC]">
             IGP-M — Contribuição por componente
             <MethodInfo className="ml-1.5 align-middle">
-              Pesos no IGP-M: IPA-M 60% · IPC-M 30% · INCC-M 10%. Fonte: FGV via BCB SGS (códigos 7450 / 7456 / 7465).
+              Pesos no IGP-M: IPA-M 60% · IPC-M 30% · INCC-M 10%. Fonte: FGV via BCB SGS (códigos 7450 / 7453 / 7456).
             </MethodInfo>
           </h2>
           <p className="mt-1 text-xs text-zinc-600">
@@ -402,7 +402,7 @@ export function IgpmDashboard({ data }: { data: IgpmData }) {
 
       <footer className="flex items-center gap-1.5 border-t border-zinc-200 pt-4 text-xs text-zinc-500">
         <MethodInfo>
-          Fontes: FGV (IGP-M e componentes IPA-M, IPC-M, INCC-M) via BCB SGS códigos 189/7450/7456/7465 (12m composto
+          Fontes: FGV (IGP-M e componentes IPA-M, IPC-M, INCC-M) via BCB SGS códigos 189/7450/7453/7456 (12m composto
           no pipeline). IPCA pra comparação cruzada: 433/13522.
         </MethodInfo>
         <span>Dados gerados em {data.gerado_em}.</span>
