@@ -313,6 +313,77 @@ export type FocusAnualIgpmPonto = {
   max: number | null;
 };
 
+// ---- contexto por componente (aditivo jul/2026) — músculo dos tabs 2/3/4 ----
+
+export type IpaDriversPonto = {
+  mes: string;
+  ipa_12m: number | null;
+  icbr_12m: number | null;
+  agro_12m: number | null;
+  metal_12m: number | null;
+  energia_12m: number | null;
+  cambio_12m: number | null;
+};
+
+export type CambioLag = {
+  lag: number;
+  corr_pos96: number | null;
+  n_pos96: number;
+  corr_pos2016: number | null;
+  n_pos2016: number;
+};
+
+export type IpaDriversBlock = {
+  serie: IpaDriversPonto[];
+  cambio_lags: { lags: CambioLag[]; melhor_lag: number | null; melhor_corr_pos96: number | null };
+  fontes: Record<string, number>;
+  ultimo_mes: string | null;
+};
+
+export type IpcMedidasPonto = {
+  mes: string;
+  ipcm_12m: number | null;
+  ipcbr_12m: number | null;
+  fipe_12m: number | null;
+  ipca_12m: number | null;
+};
+
+export type IpcMedidasBlock = {
+  serie: IpcMedidasPonto[];
+  spreads_mes: { mes: string | null; vs_ipca: number | null; vs_ipcbr: number | null; vs_fipe: number | null };
+  fontes: Record<string, number>;
+  nota: string;
+};
+
+export type InccContextoPonto = {
+  mes: string;
+  inccm_12m: number | null;
+  inccdi_12m: number | null;
+  ivgr_12m: number | null;
+  ipca_12m: number | null;
+  spread_ipca: number | null;
+};
+
+export type InccContextoBlock = {
+  serie: InccContextoPonto[];
+  spread_stats: {
+    desde: string;
+    percentil_atual: number | null;
+    mediana: number | null;
+    p10: number | null;
+    p90: number | null;
+    n: number;
+  };
+  ivgr_ultimo_mes: string | null;
+  fontes: Record<string, number>;
+};
+
+export type ContextoIgpmBlock = {
+  ipa_drivers?: IpaDriversBlock;
+  ipc_medidas?: IpcMedidasBlock;
+  incc_contexto?: InccContextoBlock;
+};
+
 export type IgpmData = {
   /** 2 = 12m composto + pesos efetivos (jun/2026); 3 = tabs de escrutínio (jul/2026). */
   schema_version?: number;
@@ -339,6 +410,8 @@ export type IgpmData = {
   focus_anuais?: Record<string, FocusAnualIgpmPonto[]>;
   /** Mesmo shape do bloco mensal do IPCA (vespera + próximos + surpresas). */
   focus_mensal?: FocusMensalBlock | null;
+  /** Contexto dos tabs por componente (aditivo jul/2026). */
+  contexto?: ContextoIgpmBlock;
 };
 
 /**

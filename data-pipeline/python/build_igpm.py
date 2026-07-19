@@ -16,14 +16,15 @@ FGV). Confirmado contra o release oficial FGV de jun/2026 (IPC +0,47 = 7453;
 INCC +0,85 = 7456; mai/2026 idem: 0,61/0,77). O spot-check
 COMPONENTES_MENSAL_OFICIAL trava essa identificação a cada build.
 
-ATENÇÃO — SGS 192 APOSENTADO (2026-06): o builder v1 usava o código 192
-rotulado como "IGP-M acumulado 12 meses", mas a série NÃO é isso (em
-mai/2021 o 192 dá 2,22 quando o IGP-M 12m oficial era 37,04%; a série
-começa em 1944, antes do IGP-M existir). O acumulado 12m do IGP-M passa a
-ser COMPOSTO aqui das variações mensais oficiais (SGS 189) — exatamente a
-convenção da FGV — e é validado por spot-check contra valores publicados
-(dez/2020 23,14; mai/2021 37,04; dez/2023 −3,18...) e pela rotina de
-composição aplicada ao IPCA (433 composto vs 13522 oficial).
+ATENÇÃO — SGS 192 NÃO É IGP-M 12m (2026-06): o builder v1 usava o 192
+rotulado como "IGP-M acumulado 12 meses", mas o nome OFICIAL da série no
+SGS é "National Index of Building Costs (INCC)" — é o INCC-DI mensal,
+desde 1944 (por isso mai/2021 dava 2,22 quando o IGP-M 12m era 37,04%).
+O acumulado 12m do IGP-M é COMPOSTO aqui das variações mensais oficiais
+(SGS 189) — exatamente a convenção da FGV — e validado por spot-check
+contra valores publicados (dez/2020 23,14; mai/2021 37,04; dez/2023
+−3,18...) e pela rotina de composição aplicada ao IPCA (433 vs 13522).
+Desde jul/2026 o 192 é usado NO PAPEL CERTO: INCC-DI no bloco `contexto`.
 
 schema_version 2 (2026-06): transformações canônicas calculadas AQUI, nunca
 no front (PLANO-GRAFICOS-ECONOMIA-2026-06-11.md, área de inflação):
@@ -548,6 +549,207 @@ def origem_ipa_build(
         },
         "serie": serie,
         "ultimo": serie[-1] if serie else None,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Contexto por componente (aditivo ao schema v3) — músculo dos tabs 2/3/4.
+# SÓ fontes abertas e VIVAS no SGS/BCB (as aberturas FGV morreram jul/2025):
+#   IPA  → IC-Br (commodities em BRL, com aberturas) + câmbio médio mensal
+#   IPC  → IPC-Br (FGV), IPC-Fipe (SP) e IPCA: o varejo em 4 medidas
+#   INCC → INCC-DI (SGS 192 — o nome oficial é INCC, não "IGP-M 12m"),
+#          IVG-R (valor de garantia residencial, defasagem ~2m) e INCC real
+# ---------------------------------------------------------------------------
+CODIGOS_CONTEXTO = {
+    "IC-Br": 27574,
+    "IC-Br agro": 27575,
+    "IC-Br metal": 27576,
+    "IC-Br energia": 27577,
+    "cambio": 3698,
+    "IPC-Br": 191,
+    "IPC-Fipe": 193,
+    "INCC-DI": 192,
+    "IVG-R": 21340,
+}
+
+#: Janela dos gráficos de contexto (meses) e lags do repasse cambial.
+CONTEXTO_MESES = 120
+LAGS_CAMBIO = 6
+
+
+def yoy_nivel(serie: dict[str, float | None]) -> dict[str, float | None]:
+    """Var. 12m (%) de série de NÍVEL (número-índice/câmbio): I_t/I_{t-12}−1."""
+    out: dict[str, float | None] = {}
+    for m, v in serie.items():
+        v0 = serie.get(add_meses(m, -12))
+        out[m] = round((v / v0 - 1) * 100.0, 4) if v is not None and v0 else None
+    return out
+
+
+def _rolling12_de(serie: dict[str, float | None]) -> dict[str, float | None]:
+    return rolling12(serie, sorted(m for m, v in serie.items() if v is not None))
+
+
+def _corr_pares(pares: list[tuple[float, float]]) -> float | None:
+    if len(pares) < 24:
+        return None
+    xs = [p[0] for p in pares]
+    ys = [p[1] for p in pares]
+    mx, my = statistics.mean(xs), statistics.mean(ys)
+    sx = math.sqrt(sum((x - mx) ** 2 for x in xs))
+    sy = math.sqrt(sum((y - my) ** 2 for y in ys))
+    if sx == 0 or sy == 0:
+        return None
+    return round(sum((xs[i] - mx) * (ys[i] - my) for i in range(len(xs))) / (sx * sy), 3)
+
+
+def contexto_igpm_build(
+    componentes: dict[str, dict[str, float | None]],
+    ipca_12m: dict[str, float | None],
+    raw: dict[str, dict[str, float | None]],
+) -> dict:
+    """Blocos de contexto dos tabs por componente. Transformações AQUI (nunca
+    no front); janelas de coleta distintas ficam explícitas nos metadados."""
+    ipa_12m = _rolling12_de(componentes["IPA-M"])
+    ipcm_12m = _rolling12_de(componentes["IPC-M"])
+    inccm_12m = _rolling12_de(componentes["INCC-M"])
+
+    icbr_12m = yoy_nivel(raw["IC-Br"])
+    agro_12m = yoy_nivel(raw["IC-Br agro"])
+    metal_12m = yoy_nivel(raw["IC-Br metal"])
+    energia_12m = yoy_nivel(raw["IC-Br energia"])
+    cambio_12m = yoy_nivel(raw["cambio"])
+    ipcbr_12m = _rolling12_de(raw["IPC-Br"])
+    fipe_12m = _rolling12_de(raw["IPC-Fipe"])
+    inccdi_12m = _rolling12_de(raw["INCC-DI"])
+    ivgr_12m = yoy_nivel(raw["IVG-R"])
+
+    # ---- IPA: drivers do atacado ----
+    meses_ipa = sorted(m for m, v in ipa_12m.items() if v is not None)[-CONTEXTO_MESES:]
+    serie_ipa = [
+        {
+            "mes": m,
+            "ipa_12m": ipa_12m.get(m),
+            "icbr_12m": icbr_12m.get(m),
+            "agro_12m": agro_12m.get(m),
+            "metal_12m": metal_12m.get(m),
+            "energia_12m": energia_12m.get(m),
+            "cambio_12m": cambio_12m.get(m),
+        }
+        for m in meses_ipa
+    ]
+    # Repasse cambial: corr(câmbio 12m em t, IPA 12m em t+k) — câmbio ANTECIPA.
+    lags_cambio = []
+    for k in range(LAGS_CAMBIO + 1):
+        pares96, pares16 = [], []
+        for m, v in cambio_12m.items():
+            if v is None or m < POS_REAL_INICIO:
+                continue
+            alvo = ipa_12m.get(add_meses(m, k))
+            if alvo is None:
+                continue
+            pares96.append((v, alvo))
+            if m >= JANELA_RECENTE_INICIO:
+                pares16.append((v, alvo))
+        lags_cambio.append({
+            "lag": k,
+            "corr_pos96": _corr_pares(pares96),
+            "n_pos96": len(pares96),
+            "corr_pos2016": _corr_pares(pares16),
+            "n_pos2016": len(pares16),
+        })
+    validos = [l for l in lags_cambio if l["corr_pos96"] is not None]
+    melhor = max(validos, key=lambda l: l["corr_pos96"]) if validos else None
+
+    # ---- IPC: o varejo em 4 medidas ----
+    meses_ipc = sorted(m for m, v in ipcm_12m.items() if v is not None)[-CONTEXTO_MESES:]
+    serie_ipc = [
+        {
+            "mes": m,
+            "ipcm_12m": ipcm_12m.get(m),
+            "ipcbr_12m": ipcbr_12m.get(m),
+            "fipe_12m": fipe_12m.get(m),
+            "ipca_12m": ipca_12m.get(m),
+        }
+        for m in meses_ipc
+    ]
+    u_ipc = serie_ipc[-1] if serie_ipc else {}
+    spreads_mes = {
+        "mes": u_ipc.get("mes"),
+        "vs_ipca": round(u_ipc["ipcm_12m"] - u_ipc["ipca_12m"], 3)
+        if u_ipc.get("ipcm_12m") is not None and u_ipc.get("ipca_12m") is not None else None,
+        "vs_ipcbr": round(u_ipc["ipcm_12m"] - u_ipc["ipcbr_12m"], 3)
+        if u_ipc.get("ipcm_12m") is not None and u_ipc.get("ipcbr_12m") is not None else None,
+        "vs_fipe": round(u_ipc["ipcm_12m"] - u_ipc["fipe_12m"], 3)
+        if u_ipc.get("ipcm_12m") is not None and u_ipc.get("fipe_12m") is not None else None,
+    }
+
+    # ---- INCC: custo de construir em contexto ----
+    meses_incc = sorted(m for m, v in inccm_12m.items() if v is not None)[-CONTEXTO_MESES:]
+    serie_incc = []
+    for m in meses_incc:
+        v12 = inccm_12m.get(m)
+        ip12 = ipca_12m.get(m)
+        serie_incc.append({
+            "mes": m,
+            "inccm_12m": v12,
+            "inccdi_12m": inccdi_12m.get(m),
+            "ivgr_12m": ivgr_12m.get(m),
+            "ipca_12m": ip12,
+            "spread_ipca": round(v12 - ip12, 3) if v12 is not None and ip12 is not None else None,
+        })
+    spreads_hist = sorted(
+        inccm_12m[m] - ipca_12m[m]
+        for m in inccm_12m
+        if m >= POS_REAL_INICIO and inccm_12m.get(m) is not None and ipca_12m.get(m) is not None
+    )
+    spread_atual = next((r["spread_ipca"] for r in reversed(serie_incc) if r["spread_ipca"] is not None), None)
+
+    def _pct_de(vals: list[float], p: float) -> float | None:
+        if not vals:
+            return None
+        k = max(0, min(len(vals) - 1, int(round(p / 100.0 * (len(vals) - 1)))))
+        return round(vals[k], 3)
+
+    percentil_atual = None
+    if spread_atual is not None and spreads_hist:
+        abaixo = sum(1 for v in spreads_hist if v <= spread_atual)
+        percentil_atual = round(100.0 * abaixo / len(spreads_hist), 1)
+    ivgr_ultimo = next((m for m in sorted(ivgr_12m, reverse=True) if ivgr_12m[m] is not None), None)
+
+    return {
+        "ipa_drivers": {
+            "serie": serie_ipa,
+            "cambio_lags": {
+                "lags": lags_cambio,
+                "melhor_lag": melhor["lag"] if melhor else None,
+                "melhor_corr_pos96": melhor["corr_pos96"] if melhor else None,
+            },
+            "fontes": {k: CODIGOS_CONTEXTO[k] for k in ("IC-Br", "IC-Br agro", "IC-Br metal", "IC-Br energia", "cambio")},
+            "ultimo_mes": meses_ipa[-1] if meses_ipa else None,
+        },
+        "ipc_medidas": {
+            "serie": serie_ipc,
+            "spreads_mes": spreads_mes,
+            "fontes": {k: CODIGOS_CONTEXTO[k] for k in ("IPC-Br", "IPC-Fipe")} | {"IPCA": 433},
+            "nota": (
+                "Janelas de coleta distintas: IPC-M dia 21 do mes anterior ao dia 20; "
+                "IPC-Br e IPCA mes civil; IPC-Fipe quadrissemanas (municipio de Sao Paulo)"
+            ),
+        },
+        "incc_contexto": {
+            "serie": serie_incc,
+            "spread_stats": {
+                "desde": POS_REAL_INICIO,
+                "percentil_atual": percentil_atual,
+                "mediana": _pct_de(spreads_hist, 50),
+                "p10": _pct_de(spreads_hist, 10),
+                "p90": _pct_de(spreads_hist, 90),
+                "n": len(spreads_hist),
+            },
+            "ivgr_ultimo_mes": ivgr_ultimo,
+            "fontes": {k: CODIGOS_CONTEXTO[k] for k in ("INCC-DI", "IVG-R")} | {"IPCA": 433},
+        },
     }
 
 
@@ -1116,6 +1318,18 @@ def main():
     origem_b = sgs_fetch(CODIGOS_IPA_ORIGEM[1])
     origem_ipa = origem_ipa_build(componentes["IPA-M"], origem_a, origem_b, ipa_di)
 
+    print("== Contexto dos componentes (IC-Br / cambio / IPC-Br / Fipe / INCC-DI / IVG-R) ==")
+    contexto_raw = {nome: sgs_fetch(cod) for nome, cod in CODIGOS_CONTEXTO.items()}
+    contexto = contexto_igpm_build(componentes, ipca_12m, contexto_raw)
+    print(
+        f"  ipa_drivers: {len(contexto['ipa_drivers']['serie'])}m | "
+        f"melhor lag cambio->IPA: {contexto['ipa_drivers']['cambio_lags']['melhor_lag']}m "
+        f"(corr {contexto['ipa_drivers']['cambio_lags']['melhor_corr_pos96']}) | "
+        f"ipc_medidas: {len(contexto['ipc_medidas']['serie'])}m | "
+        f"incc_contexto: {len(contexto['incc_contexto']['serie'])}m "
+        f"(IVG-R ate {contexto['incc_contexto']['ivgr_ultimo_mes']})"
+    )
+
     print("== Decomposicao 12m (residuo como fatia explicita) ==")
     decomp_12m = contrib_12m_com_residuo(serie_decomp_full, igpm_12m, list(PESOS_IGPM.keys()))[-ANCORA_MESES:]
     if decomp_12m:
@@ -1224,6 +1438,9 @@ def main():
         "origem_ipa": origem_ipa,
         "focus_anuais": focus_anos,
         "focus_mensal": focus_mensal,
+        # aditivo (jul/2026): contexto dos tabs por componente — fontes
+        # abertas vivas (IC-Br, cambio, IPC-Br, IPC-Fipe, INCC-DI, IVG-R)
+        "contexto": contexto,
     }
 
     print("== Release (contrato do robo) ==")
@@ -1312,6 +1529,31 @@ def valida_schema_v3(out: dict, release: dict) -> list[str]:
     if (release.get("expectativa_mes") or {}).get("mediana") is None:
         print("  [WARN] release sem expectativa da vespera (Olinda fora?) — publica com null", file=sys.stderr)
     print(f"  [4] release {release.get('mes_referencia')}: headline ok | aluguel {release['aluguel'].get('aplicado_pct')}%")
+
+    # 6. contexto dos componentes: contagens minimas + frescor das fontes vivas
+    ctx = out.get("contexto") or {}
+    mes_ref = out["mes_recente"]
+    for bloco, minimo in (("ipa_drivers", 100), ("ipc_medidas", 100), ("incc_contexto", 100)):
+        serie = (ctx.get(bloco) or {}).get("serie") or []
+        print(f"  [6] contexto.{bloco}: {len(serie)} meses")
+        if len(serie) < minimo:
+            erros.append(f"contexto.{bloco} com {len(serie)} meses (<{minimo})")
+    u_ipa = ((ctx.get("ipa_drivers") or {}).get("serie") or [{}])[-1]
+    if u_ipa.get("icbr_12m") is None:
+        erros.append(f"contexto.ipa_drivers sem IC-Br 12m no mes recente ({u_ipa.get('mes')})")
+    if u_ipa.get("cambio_12m") is None:
+        erros.append(f"contexto.ipa_drivers sem cambio 12m no mes recente ({u_ipa.get('mes')})")
+    u_ipc = ((ctx.get("ipc_medidas") or {}).get("serie") or [{}])[-1]
+    if u_ipc.get("ipcbr_12m") is None or u_ipc.get("fipe_12m") is None:
+        erros.append(f"contexto.ipc_medidas sem IPC-Br/Fipe no mes recente ({u_ipc.get('mes')})")
+    u_incc = ((ctx.get("incc_contexto") or {}).get("serie") or [{}])[-1]
+    if u_incc.get("inccdi_12m") is None:
+        erros.append(f"contexto.incc_contexto sem INCC-DI no mes recente ({u_incc.get('mes')})")
+    ivgr_u = (ctx.get("incc_contexto") or {}).get("ivgr_ultimo_mes")
+    if ivgr_u is None or add_meses(mes_ref, -6) > ivgr_u:
+        erros.append(f"contexto.incc_contexto: IVG-R velho demais ({ivgr_u} vs ref {mes_ref})")
+    print(f"  [6] frescor: IC-Br/cambio no mes ref | IVG-R ate {ivgr_u} (tolerancia 6m)")
+
     if not erros:
         print("  OK — validacoes v3 passaram.")
     return erros

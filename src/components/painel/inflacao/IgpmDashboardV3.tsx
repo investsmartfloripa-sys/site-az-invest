@@ -12,8 +12,11 @@ import { SurpresasCard } from "./v3/SurpresasCard";
 import { ComponentePane } from "./v3igpm/ComponentePane";
 import { Decomposicao12mCard } from "./v3igpm/Decomposicao12mCard";
 import { DecomposicaoMesCard } from "./v3igpm/DecomposicaoMesCard";
+import { DriversIpaCards } from "./v3igpm/DriversIpaCards";
 import { FocusAnosIgpmCard } from "./v3igpm/FocusAnosIgpmCard";
+import { InccContextoCards } from "./v3igpm/InccContextoCards";
 import { OrigemIpaCard } from "./v3igpm/OrigemIpaCard";
+import { VarejoMedidasCard } from "./v3igpm/VarejoMedidasCard";
 import { SazonalidadeIgpmCard } from "./v3igpm/SazonalidadeIgpmCard";
 import { SerieLongaIgpmCard } from "./v3igpm/SerieLongaIgpmCard";
 import { TabelaSinteseIgpmCard } from "./v3igpm/TabelaSinteseIgpmCard";
@@ -170,6 +173,10 @@ export function IgpmDashboardV3({ data }: { data: IgpmData }) {
         {vista === "ipa" ? (
           <div className="space-y-6">
             <ComponentePane data={data} comp="IPA-M" geradoEm={data.gerado_em} />
+            <SubSecao rotulo="Drivers do atacado" />
+            {data.contexto?.ipa_drivers ? (
+              <DriversIpaCards drivers={data.contexto.ipa_drivers} geradoEm={data.gerado_em} />
+            ) : null}
             {data.origem_ipa ? <OrigemIpaCard origem={data.origem_ipa} geradoEm={data.gerado_em} /> : null}
             {data.antecipacao ? (
               <AntecipaIpcaCard antecipacao={data.antecipacao} geradoEm={data.gerado_em} mesRecente={mesRef} />
@@ -177,9 +184,29 @@ export function IgpmDashboardV3({ data }: { data: IgpmData }) {
           </div>
         ) : null}
 
-        {vista === "ipc" ? <ComponentePane data={data} comp="IPC-M" geradoEm={data.gerado_em} /> : null}
+        {vista === "ipc" ? (
+          <div className="space-y-6">
+            <ComponentePane data={data} comp="IPC-M" geradoEm={data.gerado_em} />
+            {data.contexto?.ipc_medidas ? (
+              <>
+                <SubSecao rotulo="Referência cruzada" />
+                <VarejoMedidasCard medidas={data.contexto.ipc_medidas} geradoEm={data.gerado_em} />
+              </>
+            ) : null}
+          </div>
+        ) : null}
 
-        {vista === "incc" ? <ComponentePane data={data} comp="INCC-M" geradoEm={data.gerado_em} /> : null}
+        {vista === "incc" ? (
+          <div className="space-y-6">
+            <ComponentePane data={data} comp="INCC-M" geradoEm={data.gerado_em} />
+            {data.contexto?.incc_contexto ? (
+              <>
+                <SubSecao rotulo="Custo de construir em contexto" />
+                <InccContextoCards contexto={data.contexto.incc_contexto} geradoEm={data.gerado_em} />
+              </>
+            ) : null}
+          </div>
+        ) : null}
 
         {vista === "tendencia" ? (
           <div className="space-y-6">
