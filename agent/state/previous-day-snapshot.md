@@ -55,3 +55,12 @@ Wall Street fechou sexta em baixa (S&P -1,01% a 7.457,69; Nasdaq -1,4% a 25.520,
 - **Petróleo:** ver se o recuo de Brent para ~US$87,77 se mantém ou se a escalada Irã-EUA (Kuwait, Jordânia, Ormuz) reacende o rali.
 - **Tarifa 25%:** vigência em 22/7 (2 dias) — checar sinais de negociação de última hora.
 - **YouTube/transcrição:** quarto bloqueio consecutivo (17/7, e agora 20/7 — verificar se houve bloqueio nos dias 18-19, mas foram fim de semana sem rodada). Considerar retomar o relay de transcrição em servidor próprio (commits já em `agent/`, status "pausado, retomar dos cookies").
+
+---
+
+## Verificação — segunda 20/07, ~09:33 BRT (GATILHO DUPLICADO do agendador)
+- O agendador disparou o Café com Mercado **uma segunda vez** hoje (~09:31 BRT), ~10 min depois de a rodada principal (~09:21 BRT) já ter publicado a edição. **Não houve reexecução nem republicação** — regra de antiduplicata respeitada.
+- **Edição 20/07 confirmada no ar:** commit `2279c921` em `main`, deploy `deploy-vercel.yml` = `success`, página `https://investimentosdeaz.com.br/cafe-com-mercado/2026-07-20` = **200** e capa `.jpg` = **200**.
+- **WhatsApp:** nesta verificação, o **WhatsApp Web estava DESLOGADO** (tela de QR "Escaneie para entrar"). Não foi possível conferir a antiduplicata nem postar. **Status do post da rodada principal: não registrado no snapshot / não confirmado.** Ação para o usuário: reescanear o QR no celular e conferir/postar manualmente no grupo Avisos, se ainda não houver o link de hoje lá.
+- Nenhuma outra alteração — os níveis e o diff acima permanecem a base para a próxima rodada (terça 21/07).
+
