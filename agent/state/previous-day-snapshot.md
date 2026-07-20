@@ -1,74 +1,57 @@
 # Snapshot do dia anterior — Café com Mercado
 
-**Rodada:** 2026-07-17 (sexta-feira), ~09:45 BRT — rodada única do dia. Publicação em `content/cafe-com-mercado/2026-07-17.md` + capa `/capas/cafe-com-mercado/2026-07-17.jpg`.
+**Rodada:** 2026-07-20 (segunda-feira), ~09:30 BRT — rodada única do dia. Publicação em `content/cafe-com-mercado/2026-07-20.md` + capa `/capas/cafe-com-mercado/2026-07-20.jpg`.
 
-## Narrativa-mãe do dia (17/7)
-Contágio do selloff de chips: TSMC bateu lucro no 2T mas elevou capex 2026 para US$60-64bi e anunciou +US$100bi no Arizona (total EUA US$265bi, 4+ fábricas de 2nm), reacendendo medo de superinvestimento em IA. Efeito se espalhou hoje pela própria Ásia que já sangrava desde quinta: Nikkei -4% (intraday -5,3%), entrou em correção técnica (>10% abaixo do topo de 25/6), com a própria TSMC -7,3% em Taiwan, Tokyo Electron -9,3%, Advantest -10,5%, SoftBank -11,4%. Kospi/Kosdaq FECHADOS hoje (feriado Dia da Constituição) após tombo de quinta (Kospi -6,4/-8%, SK Hynix -11,5/-15%, Samsung -9,1%, US$290bi perdidos, 37º sidecar do ano). Shanghai -3,1% (mínima 11 meses); Hang Seng -2%. Futuros EUA: S&P -0,8%, Nasdaq-100 -1,6%, Dow -0,5%.
+## Narrativa-mãe do dia (20/7)
+O fim de semana marcou a virada mais aguda do conflito Irã-EUA até aqui: ataque iraniano a instalação petrolífera e usina de dessalinização no Kuwait, dois militares dos EUA mortos em ataque na Jordânia, drones iranianos contra as bases de Camp Udairi e Ali Al Salem (Kuwait), e a Guarda Revolucionária afirmando ter minado e explodido dois petroleiros no Estreito de Ormuz, além de deter quatro navios. O Brent chegou a tocar **US$91** (máxima desde meados de junho, +18% na semana passada) antes de recuar a **US$87,77** depois de o porta-voz do Itamaraty iraniano, Esmail Baghaei, sinalizar disposição para negociar; WTI ~US$81,74.
 
-**Petróleo rompeu resistência:** depois de dias "dessensibilizado", o Brent finalmente reagiu à escalada Irã-EUA — rompeu US$85-87 e subiu a **US$85,95 (+2,04%)**, +11% na semana (melhor desde abril); WTI ~US$79,74 (+1%). Irã atirou contra navio comercial, ameaçou fechar Ormuz; EUA retaliaram múltiplos alvos; Irã revidou contra Jordânia, Catar, Kuwait, Omã — tráfego no estreito caiu >50% na semana. Trump recuou do pedágio de 20% mas Irã ameaça infra regional.
+Wall Street fechou sexta em baixa (S&P -1,01% a 7.457,69; Nasdaq -1,4% a 25.520,24; Dow -0,77% a 52.146,42) sob o medo de comoditização da IA, acentuado pelo modelo aberto da chinesa Moonshot AI (SMH -4%+). Hoje o quadro é de estabilização parcial: Tóquio fechada (feriado Marine Day, sem teste fresco do Nikkei); Kospi fez um "V" de -4% intradiário para -0,54%, com Samsung/SK Hynix virando ao positivo; Hang Seng +2,08%; futuros dos EUA positivos (S&P +0,3-0,5%, Nasdaq +0,7-1%, Dow +185-203pts), VIX caindo a 17,96. Fed sob a nova presidência de Kevin Warsh manteve juros em 3,50-3,75% em junho (votação dividida 9-8); próximo FOMC 28-29/7, ~80-88% de chance de manutenção.
 
-**Netflix decepcionou:** EPS US$0,80 bateu (esp. US$0,79), receita US$12,56bi levemente abaixo do consenso, mas guidance fraco pro 3T (crescimento de receita 11,7% vs ~13% esperado) e engajamento fraco (97bi horas 1S26, +2% a/a) — ação caiu ~8,6-9% no after-hours (US$74,35 → ~US$67,97).
+**Brasil:** Ibovespa fechou sexta praticamente estável (-0,06%, 173.714 pts, mas -2,33% na semana), Petrobras (+2,5%) compensando bancos no vermelho. Futuro abre em alta hoje (174.600-175.870). Dólar ancorado ~R$5,11. Dois catalisadores locais hoje: Boletim Focus às 11h25 (mercado já discutindo menos cortes de Selic no ciclo — XP/BTG citados por fonte secundária, tratar com cautela) e leilão da OPA da T4F (SHOW3) às 15h na B3. Tarifa de 25% dos EUA entra em vigor em 22/7 (2 dias); negociações não avançaram no fim de semana, governo aposta em retomada só após eleição americana + Lei da Reciprocidade + OMC.
 
-**Brasil blindado, dado positivo:** IBC-Br de maio +0,1% m/m vs. expectativa de -0,2% (surpresa positiva). IGP-10 de julho -1,13% vs. consenso -0,99% (mais negativo), acumulado 12m 2,68%. Ibovespa fechou quinta 16/7 em 173.825 pts (-1,24%), pressionado por retórica hawkish de dirigentes regionais do Fed (Lorie Logan/Dallas, Jeff Schmid/KC defenderam juros mais altos) e contágio de Wall Street (S&P -0,87%, Dow -0,59%, VIX +9,32%) mais do que pela tarifa (já precificada). Dólar fechou ~R$5,10, abre sexta em R$5,0788.
-
-**Copom:** probabilidade implícita (opções B3) de corte de 0,25pp em 4-5/8 subiu para ~86% (de ~75-80% no início da semana). Só 2,3% apostam em 0,5pp; manutenção caiu a ~13%.
-
-**Tarifa 25% (contexto, sem fato novo hoje):** chanceler Mauro Vieira chamou declarações de Rubio de "inaceitáveis"/"ofensivas"; STF (Fachin) disse que não aceita pressão externa. Governo adiou retaliação formal (Lei de Reciprocidade), aposta em diplomacia + Brasil Soberano. Vigência da tarifa: 22/7.
-
-## Níveis (diff p/ próxima rodada) — 17/7
+## Níveis (diff p/ próxima rodada) — 20/7
 | Ativo | Nível |
 |---|---|
-| Ibov | fech. quinta 16/7 **173.825 (-1,24%)**; futuro sexta indicando abertura estável/levemente positiva |
-| Dólar | fech. quinta ~R$5,10; sexta manhã abertura R$5,0788 |
-| UST | 2a 4,16%; 10a 4,57%; 30a 5,09% (fech. quinta) |
-| DXY | ~100,8 (+0,06%) |
-| EUR/USD ~1,14; USD/JPY ~162,4 (iene em mínima de décadas, "crise do iene"); USD/CNY ~6,77 |
-| Petróleo | Brent US$85,95 (+2,04%, rompeu resistência); WTI ~US$79,74 (+1%) — ambos +11% na semana |
-| Ouro / Prata / Cobre | Ouro ~US$3.984 (+0,19%); Prata ~US$56; Cobre US$6,19/lb (-1,65%, mínima semana) |
-| Bitcoin | ~US$63.394 (-1,86% 24h) |
-| Ásia (fech. 17/7) | Nikkei -4% a 64.141 (correção técnica); Kospi/Kosdaq FECHADOS (feriado); Shanghai -3,1% a 3.764 (mínima 11m); Hang Seng -2% a 24.505 |
-| Ásia (fech. 16/7, referência) | Kospi -6,4/-8%; SK Hynix -11,5/-15%; Samsung -9,1% |
-| Europa (17/7, intraday) | Stoxx 600 ~642,7 (estável); DAX -0,3% a 24.841; CAC -0,4% a 8.346; FTSE +0,4% a 10.616 |
-| Selic | 14,25%; Copom 4-5/8; mercado precificando ~86% de chance de corte de 0,25pp (subiu de 75-80%) |
+| Ibov | fech. sexta 17/7 **173.714 (-0,06%, semana -2,33%)**; futuro segunda 174.600-175.870 |
+| Dólar | ~R$5,1119-5,1126 (estável, longe do gatilho R$5,20) |
+| UST | 2a ~4,18%; 10a ~4,55%; 30a n/d hoje (ref. sexta ~5,06-5,07%) |
+| DXY | ~100,74 (-0,02%) |
+| EUR/USD ~1,14 (ref.); USD/JPY ~162,36 (perto de mínima de décadas, risco de intervenção do BoJ); USD/CNY n/d |
+| Petróleo | Brent tocou US$91 intraday, recuou a US$87,77 (-0,4%) após sinal de negociação do Irã; WTI ~US$81,74 (-0,9%) |
+| Ouro / Prata / Cobre | Ouro ~US$4.020-4.025; Prata ~US$57,25; Cobre ~US$6,23-6,26/lb |
+| Bitcoin | ~US$63.990 (-1,5% 24h); risco técnico de teste de US$56-62 mil até o FOMC de 28-29/7 |
+| Ásia (20/7) | Tóquio fechada (feriado); Kospi -0,54% (recuperação em V de -4% intraday); Hang Seng +2,08%; Shanghai n/d fresco |
+| Europa (20/7) | Stoxx 600 ~-0,2% na abertura, cauteloso; DAX/CAC/FTSE n/d |
+| EUA futuros | S&P +0,3-0,5%; Nasdaq +0,7-1%; Dow +185-203pts; VIX 17,96 |
+| Selic | 14,25%; Copom 4-5/8; Focus de hoje (11h25) é o termômetro-chave pós-escalada no Golfo |
 
-## Divergência entre casas (Mercado) — 17/7
-- **Safra:** mais otimista, projeção Ibovespa fim-2026 em 220 mil pontos; manteve Top 10 (Itaúsa, Vale, Petrobras, Bradesco, Multiplan, Copel, Equatorial, Direcional, Porto, Motiva), +11,04% em 2026.
-- **BB Investimentos:** projeção 205 mil pontos.
-- **XP:** revisou de 196 mil para 205 mil pontos (mais construtiva).
-- **BTG:** destaca sazonalidade — julho historicamente um dos melhores meses para o Ibovespa; trocou Banco Pine e SBF por Banco Inter e Marcopolo na carteira de small caps de julho.
-- **Genial:** trocou 5 papéis na carteira (saem Ambev, Ultrapar, Usiminas, Vale, Vibra; entram BB Seguridade, Copel, Caixa Seguridade, Eneva, Tenda); carteira -0,38% em junho vs. -1,01% do Ibovespa.
-- **Bradesco BBI/Ágora:** prefere Itaú entre bancões; cortou preço-alvo de BB e Santander.
-- **Empiricus:** vê impacto macro da tarifa limitado dada lista de isenções + possibilidade de redirecionar exportações à China.
-- **Inter:** incluiu Vale, BrasilAgro, Fleury e Aura na carteira de julho.
-- Demais casas (Itaú BBA, Santander, Ágora fora do BBI, Toro, Rico, Modal, C6, Órama, Nu Invest, Suno, Levante, Necton, TC Pulse): sem peça textual granular de hoje encontrada.
+## Divergência entre casas (Mercado) — 20/7 (carteiras de julho, sourced em texto)
+- **BTG:** reduziu risco marginalmente na 10SIM; trocou Vibra por Caixa Seguridade nos dividendos; small caps trocou Pine/SBF por Inter/Marcopolo.
+- **Genial:** viés defensivo — saíram Ambev, Ultrapar, Usiminas, Vale, Vibra; entraram BB Seguridade, Copel, Caixa Seguridade, Eneva, Tenda.
+- **Santander:** incluiu Sabesp no lugar de RD Saúde, buscando defensivos.
+- **Safra:** manteve Top 10 inalterada, viés defensivo/dividendos para o ciclo eleitoral.
+- **Itaú BBA:** mais otimista — mantém Ibovespa 185 mil pontos p/ 2026, corte de juros como gatilho principal.
+- **Empiricus:** trocou Direcional por Cyrela nos dividendos de julho.
+- Demais casas (XP, Bradesco BBI/Ágora, Inter, Toro, Rico, Modal, C6, Órama, Nu Invest, Suno, Levante, Necton, TC Pulse): sem peça textual granular nova hoje além de menções agregadas sobre Focus/Selic.
 
-## Empresas (17/7)
-- **T4F Entretenimento (SHOW3):** CVM aprovou OPA de fechamento de capital pelo controlador Fernando Luiz Alterio a R$5,59/ação (prêmio ~34,5%); prazo de habilitação encerra hoje, leilão 20/7 na B3.
+## Empresas (20/7)
+- **T4F Entretenimento (SHOW3):** leilão da OPA de fechamento de capital hoje às 15h na B3, preço-base R$5,59 (R$5,97 corrigido); precisa 2/3 do free float p/ cancelamento de registro ou 1/3 p/ saída do Novo Mercado — resultado pendente no momento da publicação.
 
-## Política (17/7)
-- Chanceler Mauro Vieira classificou declarações de Rubio (sobre o Judiciário brasileiro) de "inaceitáveis"/"ofensivas".
-- STF (Fachin) reiterou que não aceitará pressão externa sobre suas decisões.
-- Governo adiou retaliação formal (Lei de Reciprocidade), reforça Brasil Soberano.
+## Política (20/7)
+- Tarifa de 25% dos EUA entra em vigor em 22/7; negociações Brasil-EUA sem avanço no fim de semana; governo acredita que EUA só retomam diálogo pós-eleição americana; aciona Lei da Reciprocidade + recurso à OMC.
 
-## Transcrições / vídeos 17/7 — FALHA TOTAL (0 de 3)
-- **XP** (`slg5vC_7wI0`, "Efeitos das TARIFAS dos EUA no AGRO e análise técnica", 08:52 BRT), **BTG** (`yD8lDPlKpeU`, "EUA e Irã trocam ataques por 6ª noite seguida", 09:05 BRT) e **Genial** (`ov46dMxTdIs`, "Chips derrubam mercados | Petróleo sobe com ataques ao Irã", campo published do feed não confiável p/ este canal): as 3 tentativas de yt-dlp falharam com HTTP 429 + "Sign in to confirm you're not a bot" em MÚLTIPLOS player clients (default, android+web, tv [bloqueado por DRM], ios) e após retries espaçados por ~5min (diferente de 16/7, quando retry funcionou). youtube-transcript-api também falhou nos 3 vídeos com `IpBlocked`. yt-dlp já estava na versão mais recente disponível (2026.07.04). Parece ser um bloqueio de IP mais amplo/persistente do sandbox hoje, não específico de 1 vídeo como em rodadas anteriores.
-- **Ação sugerida:** se o bloqueio persistir amanhã, considerar que o IP do pool de sandboxes da nuvem pode ter sido flagged de forma mais ampla pelo YouTube — não é mais um problema pontual por vídeo. Vale investigar `--cookies` via variável de ambiente/secret dedicado se isso continuar recorrente.
-- Apesar da falha de vídeo, a seção Mercado da edição usou divergências sourced em TEXTO (InfoMoney, Money Times, Seu Dinheiro) sobre projeções de Ibovespa e trocas de carteira — não são teses de morning call em vídeo, mas achados de reportagem escrita, então não violam a regra de "nunca inferir tese só do título".
+## Transcrições / vídeos 20/7 — FALHA TOTAL (0 de 3), quarto dia consecutivo de bloqueio
+- **XP** (`UiGJnaV901M`, "20/07/2026 | BOLSAS hoje e economia americana | Morning Call", 08:56 BRT), **BTG** (`KN3elZkHF4A`, "20/07 - Mercados operam mistos com escalada no Irã e na Ucrânia | Morning Call BTG Pactual", 09:00 BRT) e **Genial** (`PnjOjnyUlng`, "20/07 Petróleo recua com mediação no Irã | Morning Call" — timestamp `published` do feed suspeito, registrado em 15/7): as 3 tentativas de yt-dlp falharam com HTTP 429 + "Sign in to confirm you're not a bot" (yt-dlp 2026.07.04, sem JS runtime disponível). youtube-transcript-api também falhou nos 3 vídeos com `IpBlocked`. Este é o quarto bloqueio consecutivo (após a falha total de 17/7), confirmando que o bloqueio de IP do pool de sandboxes da nuvem é persistente, não pontual. Repositório já tem trabalho em andamento (commits `f3e0aca`..`5910810` em `agent/`) sobre um relay de transcrição em servidor próprio com suporte a cookies — status "pausado, retomar dos cookies" conforme último commit em main antes desta rodada. Vale investigar/retomar esse relay nas próximas rodadas em vez de tentar yt-dlp direto do sandbox.
+- Apesar da falha de vídeo, a seção Mercado usou divergências sourced em TEXTO (carteiras de julho via SeuDinheiro, MoneyTimes, Genial/Santander/Safra/Itaú BBA/Empiricus diretamente) — não violam a regra de nunca inferir tese só do título.
 
 ## Capa
-- Manchete: **"CHIPS AFUNDAM, PETRÓLEO DISPARA"**, subtítulo "Nikkei entra em correção; Brent sobe 2% com escalada no Golfo Pérsico". Kicker "CAFÉ COM MERCADO · SEXTA, 17/07".
-- Colagem: chip/wafer de semicondutor trincado com faíscas vermelhas (selloff de chips), mesa de operações/bolsa de Tóquio ao fundo com seta vermelha de queda projetada em prédios de vidro, petroleiro em estreito ao entardecer com fumaça e labaredas ao longe (Ormuz). Sem rosto de político real. Gerada com cinematic_studio_2_5, composta com fonte condensada (DejaVuSansCondensed-Bold) — sem fallback largo.
+- Manchete: **"PETRÓLEO TOCA US$91 COM ESCALADA NO GOLFO"**, subtítulo "Ataques deixam militares dos EUA mortos no fim de semana; Ibovespa futuro abre em alta". Kicker "CAFÉ COM MERCADO · SEGUNDA, 20/07".
+- Colagem: petroleiro em chamas em estreito ao entardecer com fumaça densa (Ormuz), poço de petróleo/pumpjack contra céu alaranjado, mesa de operações ao fundo com gráfico de linha vermelho em queda projetado em torres de vidro. Sem rosto de político real (silhuetas de costas/encapuzadas). Gerada com cinematic_studio_2_5, composta com fonte condensada (DejaVuSansCondensed-Bold) — sem fallback largo.
 
-## Próxima rodada (próximo dia útil, segunda 20/7)
-- **Kospi/Kosdaq reabrem segunda** — primeiro teste de continuidade do selloff coreano de chips após o feriado.
-- **T4F (SHOW3):** leilão da OPA de fechamento de capital em 20/7 na B3 — conferir desfecho.
-- **Petróleo:** ver se o rompimento de resistência (US$85-87) se sustenta ou se é reversão pontual pós-notícia de Ormuz.
-- **Selloff de chips:** checar se persiste na segunda-feira (Nikkei já em correção técnica) ou se estabiliza.
-- **Fluxo de publicação:** confirmar se o push direto na branch de trabalho (sem exigir PR+merge) segue funcionando, ou se ainda é preciso abrir PR — ver nota da rodada 17/7 abaixo.
-- **YouTube/transcrição:** falha total (3 de 3 vídeos) hoje, pior que rodadas anteriores — reavaliar se é bloqueio pontual ou mais persistente.
-
-## Addendum — rodada de verificação 10:06 BRT (17/7)
-Segunda disparada do dia, às **10:06 BRT** (~45min após a rodada principal de ~09:21-09:45). Verificou que a edição 17/7 já estava concluída e NÃO duplicou nada:
-- **Site:** página e capa no ar (HTTP 200); deploy `success` (commit `ccb3891`, 09:21 BRT / 12:21 UTC).
-- **WhatsApp: JÁ POSTADO** — confirmado na Comunidade "Investimentos de A-Z" (grupo Avisos) às **09:32 BRT**, autor Bernardo, URL exata `https://investimentosdeaz.com.br/cafe-com-mercado/2026-07-17` (lida via árvore de acessibilidade do WhatsApp Web). Antiduplicata OK — não repostou.
-- **Ação da rodada 10:06:** apenas verificação e relatório. Sem republicação, sem repost, sem novo snapshot de conteúdo.
+## Próxima rodada (próximo dia útil, terça 21/7)
+- **Boletim Focus de hoje (11h25):** conferir se confirmou a leitura de menos cortes de Selic no ciclo — citada por fonte secundária hoje, precisa verificação direta na próxima rodada.
+- **T4F (SHOW3):** desfecho do leilão da OPA de hoje 15h — conferir se atingiu 2/3 (cancelamento de registro) ou só 1/3 (saída do Novo Mercado).
+- **Nikkei:** Tóquio estava fechada hoje (feriado) — terça é o primeiro teste real de continuidade/estabilização do selloff de chips no Japão.
+- **Petróleo:** ver se o recuo de Brent para ~US$87,77 se mantém ou se a escalada Irã-EUA (Kuwait, Jordânia, Ormuz) reacende o rali.
+- **Tarifa 25%:** vigência em 22/7 (2 dias) — checar sinais de negociação de última hora.
+- **YouTube/transcrição:** quarto bloqueio consecutivo (17/7, e agora 20/7 — verificar se houve bloqueio nos dias 18-19, mas foram fim de semana sem rodada). Considerar retomar o relay de transcrição em servidor próprio (commits já em `agent/`, status "pausado, retomar dos cookies").
