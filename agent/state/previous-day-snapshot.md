@@ -55,3 +55,11 @@ A escalada Irã-EUA no Golfo deu mais um salto: navio-tanque atingido por projé
 - **Resultados dos EUA:** Alphabet e Tesla reportam hoje — efeito sobre a narrativa de comoditização de IA.
 - **Petróleo/Ormuz:** ver se a trégua de 10 dias proposta pelos mediadores avança ou se a escalada (Bab-el-Mandeb, novos ataques) continua.
 - **Selic/Focus:** acompanhar se a piora do IPCA 2028 (3,70%→3,78%) ganha tração nas casas como sinal de menos cortes à frente.
+
+---
+
+## Verificação — gatilho duplicado (21/07, 09:35 BRT)
+- Segunda invocação do dia (a rodada de produção rodou ~09:21 BRT). **Não republicado** — antiduplicata.
+- Edição `content/cafe-com-mercado/2026-07-21.md` e capa `/capas/cafe-com-mercado/2026-07-21.jpg` confirmadas no main (HTTP 200).
+- Deploy `deploy-vercel` do HEAD `8231215e` = **success**; main HEAD == head_sha do run (sem race da capa). Edição no ar.
+- **WhatsApp: NÃO postado — WhatsApp Web deslogado** (tela de QR "Escaneie para entrar"). Reescanear o QR pelo celular; post manual hoje. Sem tentativa de login (ação de credencial não permitida).
