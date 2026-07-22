@@ -1,3 +1,7 @@
+> **Verificação de gatilho duplicado — 2026-07-22, 09:31 BRT.** Esta rodada das ~09:31 foi um GATILHO DUPLICADO (mesmo padrão de 20/07 e 21/07). A edição de hoje já havia sido produzida e publicada pela rodada primária: commit `content(cafe-com-mercado): edição 2026-07-22 + capa` às **12:24:47Z (09:24 BRT)**, deploy `deploy-vercel.yml` **success** às 12:24:50Z. Confirmado no ar: `https://investimentosdeaz.com.br/cafe-com-mercado/2026-07-22` → HTTP **200**; capa `/capas/cafe-com-mercado/2026-07-22.jpg` → HTTP **200**; `<title>` e `og:image` corretos. **Não houve republicação nem regeração de capa.** WhatsApp Web: **deslogado** (tela de QR "Escaneie para entrar") — não postado automaticamente, requer post manual (reescanear QR no celular). O snapshot rico da rodada primária segue preservado abaixo para o diff overnight de quinta (23/07).
+
+---
+
 # Snapshot do dia anterior — Café com Mercado
 
 **Rodada:** 2026-07-22 (quarta-feira), ~09:45 BRT. Publicação em `content/cafe-com-mercado/2026-07-22.md` + capa `/capas/cafe-com-mercado/2026-07-22.jpg`.
