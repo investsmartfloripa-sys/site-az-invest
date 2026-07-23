@@ -59,3 +59,13 @@ Escalada Irã-EUA na 12ª noite consecutiva de ataques americanos; houthis ataca
 - **Alphabet/Tesla:** ver se a reação negativa do pré-mercado se sustenta no pregão regular de hoje (23/7) e efeito sobre Nasdaq.
 - **Transcrição de vídeos:** bloqueio de IP persiste há vários dias seguidos; considerar reativar relay (pendência: cookies de conta Google no VPS) ou revisar API `youtube-transcript-api` (interface mudou, `get_transcript` não existe mais na versão instalada).
 - **Pesquisa eleitoral:** não repetir Real Time Big Data (campo 18-20/7) — já usada em 22/7 e 23/7; só citar de novo se houver pesquisa com campo mais recente.
+
+---
+
+## VERIFICAÇÃO — gatilho duplicado (2ª disparada)
+**23/07/2026, 09:31 BRT.** Esta rodada detectou que a edição de hoje JÁ estava publicada e no ar — **NÃO republicou nem repostou**.
+- Edição `content/cafe-com-mercado/2026-07-23.md` + capa commitadas às **09:23:47 BRT (12:23:47Z)**; deploy `deploy-vercel.yml` = **success** (evento push, head 4673507); página `https://investimentosdeaz.com.br/cafe-com-mercado/2026-07-23` = **HTTP 200**; capa `.../capas/cafe-com-mercado/2026-07-23.jpg` = **HTTP 200**.
+- `.md` validado: 53 linhas, frontmatter completo (title/hora/dek/image/imageAlt), corpo Overview→Brasil→Global→Agenda→Fontes, encerrando na linha `Fontes:`. Edição íntegra.
+- Mesmo padrão de gatilho duplicado de 20, 21 e 22/07 (1ª disparada ~09:21-09:24 publica; 2ª ~09:31-09:35 apenas verifica).
+- **WhatsApp:** não postado por esta rodada (regra antiduplicata — post só na rodada que publica). Nos dias anteriores a sessão do WhatsApp Web estava deslogada; confirmar/postar manualmente se ainda não foi feito hoje.
+- Diff completo do dia (níveis, narrativa, divergências, empresas) preservado acima para a rodada de sexta **24/07**.
