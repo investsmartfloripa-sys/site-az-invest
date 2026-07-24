@@ -1,71 +1,67 @@
 # Snapshot do dia anterior — Café com Mercado
 
-**Rodada:** 2026-07-23 (quinta-feira), ~09:45 BRT. Publicação em `content/cafe-com-mercado/2026-07-23.md` + capa `/capas/cafe-com-mercado/2026-07-23.jpg`.
+**Rodada:** 2026-07-24 (sexta-feira), ~09:45 BRT. Publicação em `content/cafe-com-mercado/2026-07-24.md` + capa `/capas/cafe-com-mercado/2026-07-24.jpg`.
 
-## Narrativa-mãe do dia (23/7)
-Escalada Irã-EUA na 12ª noite consecutiva de ataques americanos; houthis atacaram dois petroleiros sauditas no Mar Vermelho (Encelia, incêndio confirmado na proa; Layla), ameaçando o fluxo de ~6 milhões de barris/dia pelo estreito de Bab-el-Mandeb. Guarda Revolucionária iraniana reportou incêndio em petroleiro que tentou cruzar rota minada ao sul de Ormuz; Trump ameaçou novos ataques. Brent na faixa de **US$96-98** (máxima desde maio), WTI **US$88-90** (máxima desde 8/6); gasolina EUA +36%, diesel +38% desde início do conflito. Wall Street reage a "choque de gastos" em IA: Alphabet bateu receita/lucro (nuvem +82%) mas elevou capex 2026 para US$195-205bi e FCF negativo em US$5,9bi (ação -3% a -4% after-hours); Tesla bateu receita (US$28,24bi) mas errou EPS (US$0,33 vs US$0,51 esperado), capex +142%, primeiro FCF negativo em 2+ anos (ação -5,5% a -6,2%). Futuros NY em leve baixa (~0,3%-0,4%). Fed (Kevin Warsh) sem sinalizar decisão de 28-29/7; mercado precifica ~61% de chance de novo movimento em setembro. BCE decide hoje (manutenção esperada em 2,25%), coletiva de Lagarde.
+## Narrativa-mãe do dia (24/7)
+Wall Street tombou na quinta (23/7): S&P 500 -1,21% (7.408,30), Nasdaq -2,15% (25.137,69), Dow -0,97% (51.711,65), após Alphabet (-7%) e Tesla (-14% a -15%) reportarem capex elevado e FCF negativo — "Magnificent 7" perderam ~US$800bi em valor de mercado. Intel foi exceção positiva (lucro US$0,42/ação vs US$0,21 esperado, receita US$16,1bi vs US$14,42bi) mas segue -28% no mês. Petróleo Brent rompeu US$100 pela 1ª vez em 2 meses, fechando +7% a US$100,69 (tocou US$102 intraday), com a 13ª noite seguida de ataques dos EUA ao Irã, ataque houthi a 2 petroleiros sauditas no Mar Vermelho, e a Guarda Revolucionária iraniana atingindo bases americanas no Golfo (Kuwait, Bahrein, Jordânia, Catar); Trump prometeu bombardear infraestrutura energética iraniana a cada ataque a navio. Nesta sexta de manhã Brent recuou para US$97-98 (WTI ~US$89-90) — alívio parcial, não trégua confirmada. Ásia desabou: Kospi -5,72% (circuit breaker, Samsung/SK Hynix -8%), Nikkei -2,7% a -2,73%, Hang Seng -0,98% a -1%, Shanghai -1,6%/CSI300 -1,67%. Europa em leve alta (Stoxx 600 +0,2-0,5%, DAX +0,4-0,89%). BCE manteve juros em 2,25% (unânime); Lagarde sinalizou espaço para ALTA em setembro por risco energético. Fed: mercado agora precifica ALTA (não corte) em setembro, 73-82% via CME FedWatch, às vésperas do FOMC 28-29/7 — primeira reunião sob novo presidente Kevin Warsh ("inflation is a choice"); Williams e Kashkari citaram conflito Irã-EUA como fator inflacionário. Futuros EUA hoje sinalizam recuperação tímida (S&P +0,20%, Dow +0,40%, Nasdaq-100 +0,09%).
 
-**Brasil:** Ibovespa rompeu 5 pregões seguidos de queda com salto de **+2,44%** na quarta (22/7), a **177.548 pontos** (72/78 ações em alta; Petrobras PETR3 +2,4%, PETR4 +2,2%, Prio +2,7%) — reversão importante frente à sequência de queda reportada no snapshot de 22/7 (Ibov havia fechado 21/7 em 173.326, -0,03%). Dólar fechou a **R$5,053** (-0,42%), menor desde 2/6, 3ª queda seguida; fluxo cambial 2026 positivo em US$17,946bi até julho (BC); real acumula -7,95% no ano. Tarifa de 25% dos EUA (vigente desde madrugada de 22/7) parece precificada — citada como fator da disparada do Ibovespa apesar do tarifaço. Segunda sobretaxa de 12,5% (trabalho forçado, Seção 301) segue esperada para amanhã, sexta 24/7 — SEM confirmação de antecipação; dúvida se cumulativa (37,5%) ou substitutiva; afeta ~18% das exportações BR aos EUA (~US$7,4bi base 2024). MDIC (Durigan) reafirma que Brasil não sai da mesa de negociação. STF concluiu hoje, por unanimidade, ADPF 342 (restrição a compra de terras rurais por empresas controladas por estrangeiros). Pesquisa Real Time Big Data recirculada hoje (mesmo campo 18-20/7 já usado em 22/7) trouxe framing ligeiramente diferente (Lula 43% x Caiado 44%, "empate técnico") vs. o citado em 22/7 (Caiado à frente) — tratado como MESMA pesquisa, não repetido na edição de hoje para evitar duplicar fato já publicado.
+**Brasil:** Ibovespa fechou quinta 23/7 em queda de -0,46%, a 176.723 pontos (interrompendo alta de +2,44% de quarta), pressionado pelo humor externo. Dólar fechou em alta de 0,65%, a R$5,0839 (abertura desta manhã ~R$5,05). **Segunda tarifa dos EUA CONFIRMADA:** sobretaxa adicional de 12,5% por trabalho forçado (Seção 301) entrou em vigor à meia-noite de sexta em Washington, **CUMULATIVA** com os 25% já vigentes desde terça — total até **37,5%** sobre ~85,3% das exportações BR aos EUA (~US$10,7bi, base Amcham). 471 itens isentos (aeronaves civis, aço/alumínio Seção 232, ferro-gusa, café solúvel não aromatizado, mel orgânico, alguns cortes de carne, madeira tropical). Governo Lula chamou de "injusta e arbitrária", acionou Lei de Reciprocidade, vai à OMC. Selic 14,25%, Copom só volta início de agosto; DI a partir de 2032/33 abrindo (preocupação fiscal citada por gestores, analogia Argentina via Thiago Salomão/BTG, referenciando conversa com Niall Ferguson). Política: Flávio e Michelle Bolsonaro reconciliaram-se (pedido de desculpas do senador, aceito por Michelle, que sinalizou mobilizar apoio à candidatura presidencial de Flávio em outubro) — Datafolha sai à tarde de hoje mas com campo ANTERIOR a esse episódio (não usar números ainda). Expert XP 2026 (2º dia): Galípolo (BC) fala sobre petróleo/Selic, Durigan (Fazenda) sobre fiscal; Caio Megalho (XP) relatou conversa com Janet Yellen preocupada com postura geopolítica dos EUA.
 
-## Níveis (diff p/ próxima rodada) — 23/7
+## Níveis (diff p/ próxima rodada) — 24/7
 | Ativo | Nível |
 |---|---|
-| Ibov | fech. quarta 22/7 **177.548 (+2,44%)**, rompeu 5 pregões de queda; futuro (WINQ26) abre manhã de 23/7 perto de 178.300-178.775, viés levemente negativo (suportes 178.700/177.985, resistências 179.220/179.490) |
-| Dólar | fech. quarta 22/7 R$5,053 (-0,42%, menor desde 2/6); abertura manhã 23/7 ~R$5,08 |
-| UST | 2a ~4,26%; 10a ~4,63-4,66% (máxima 2 meses); 30a n/d |
-| DXY | ~101,27 (+0,15%) — CONFIRMADO via TradingEconomics após agente de pesquisa reportar número divergente (~98,18); usar ~101 como referência |
-| EUR/USD ~1,1418; USD/JPY ~163,06 (perto de mínima de ~40 anos, rompeu 163); USD/CNY ~6,7706 (PBoC fixou em 6,7906, mais forte desde fev/2023) |
-| Petróleo | Brent ~US$96-98 (máxima desde maio); WTI ~US$88-90 (máxima desde 8/6) |
-| Ouro / Prata / Cobre | Ouro US$4.089,80 (-0,99%); Prata US$58,77 (-1,59%); Cobre US$6,44/lb (-1,02%, dado de 22/7) |
-| Bitcoin | ~US$65.659 |
-| Ásia (23/7, fech.) | Nikkei ~66.500 (+~380pts, semicondutores); Kospi 7.096,89 (+4,40%, maior rali do ano, tech/semis); Hang Seng 24.892,66 (-0,95%, realização de lucro em chips/tech — CONFIRMADO via busca própria após agente reportar +1,3% divergente); Shanghai 3.876,78 (+0,3%) |
-| Europa (23/7, manhã/fech. parcial) | Stoxx 600 643,32 (-0,56%); DAX 25.042 (-0,45%); CAC 40 ~8.353 (-1%, CONFIRMADO via busca própria — dia de resultados: STMicro -14%, Eurofins -5,3%, TotalEnergies +2,2%, Thales +1,5%); FTSE 10.710 (-0,17%) |
-| EUA futuros | S&P/Nasdaq/Dow em leve baixa ~0,3%-0,4%; fech. quarta S&P 7.498,96 (-0,14%), Nasdaq 25.690,90 (-0,57%), Dow 52.218,58 (-0,01%); VIX fech. terça 16,64 (-2,40%) |
-| Selic | 14,25%; Copom só volta em 4-5/8 |
+| Ibov | fech. quinta 23/7 **176.723 (-0,46%)**; abertura sexta indicada mais fraca |
+| Dólar | fech. quinta 23/7 R$5,0839 (+0,65%); abertura manhã sexta ~R$5,05 |
+| UST | 2a ~4,33-4,34%; 10a ~4,69-4,70%; 30a ~5,16-5,17% |
+| DXY | ~101,25-101,30 (-0,15%) |
+| EUR/USD ~1,14; USD/JPY ~163,8 (mínima ~40 anos); USD/CNY ~6,77 |
+| Petróleo | Brent fech. quinta US$100,69 (+7%, rompeu US$100 1ª vez em 2 meses, tocou US$102 intraday); manhã sexta recuando p/ US$97-98; WTI ~US$89-90 |
+| Ouro / Prata / Cobre | Ouro ~US$4.044-4.063 (estável); Prata US$58,54 (+1,57%); Cobre US$6,28/lb (-2,7%) |
+| Bitcoin | ~US$65.030 |
+| Ásia (24/7, fech. manhã local) | Nikkei ~64.611-64.634 (-2,69% a -2,73%); Kospi 6.690,62 (-5,72%, circuit breaker/sidecar, Samsung/SK Hynix -8%); Hang Seng ~24.963 (-0,98% a -1%); Shanghai 3.814,20 (-1,6%); CSI300 4.649 (-1,67%) |
+| Europa (24/7, manhã) | Stoxx 600 +0,2-0,5%; DAX +0,4-0,89%; CAC 40 +0,1-0,41%; FTSE ~estável a +0,41% |
+| EUA futuros | S&P +0,20% (7.460,25); Dow +0,40% (52.099); Nasdaq-100 +0,09% (28.647,50); fech. quinta S&P 7.408,30 (-1,21%), Nasdaq Comp. 25.137,69 (-2,15%), Dow 51.711,65 (-0,97%) |
+| Selic | 14,25%; Copom só volta início de agosto |
 
-## Divergência entre casas (Mercado) — 23/7 (carteiras de julho)
-- **Genial:** reforçou viés defensivo — retirou Ambev, Ultrapar, Usiminas, Vale e Vibra; incluiu BB Seguridade, Copel, Caixa Seguridade, Eneva e Tenda.
-- **Itaú BBA:** projeção mais otimista do mercado — Ibovespa a 185 mil pontos até fim de 2026 (~22% retorno total); cortou lucro estimado do BB (BBAS3) 2026 de R$21,2bi para R$18,4bi, preço-alvo de R$22 para R$21 (neutro).
-- **Empiricus:** trocou Direcional por Cyrela na carteira de dividendos de julho; manteve Petrobras, Vale, Itaú, B3, Telefônica.
-- **Inter Invest:** alfa de 3,1pp sobre o Ibovespa no acumulado do ano.
-- XP: Morning Call ao vivo (8h20) cobrindo decisão do BCE, inflação/PMIs do Japão, e início do Expert XP 2026; sem nota escrita detalhada de trades/alvos localizada hoje. BTG, Bradesco BBI, Santander, Safra, Ágora, Toro, Rico, Modal, C6, Órama, Nu Invest, Suno, Levante, Necton, TC Pulse: sem nota textual granular nova localizada hoje.
+## Divergência entre casas (Mercado) — 24/7
+- **Itaú BBA:** mais otimista — Ibovespa a 185 mil pontos fim de 2026 (~22% retorno total); buy list Equatorial, Axia Energia, Multiplan como bond proxies.
+- **Bradesco BBI:** Itaú Unibanco Top Pick entre bancões (alvo R$25); cortou alvo Santander Brasil de R$33 para R$29 (neutro); cortou alvo JBS.
+- **BTG (Thiago Salomão, convidado):** cauteloso — juros longos abrindo, analogia Argentina ("as coisas precisam piorar antes de melhorar"), referenciando Niall Ferguson.
+- **Toro:** postura mais conservadora, citando precificação antecipada das eleições 2026, viés commodities.
+- **XP (Giba, análise técnica):** Ibovespa ainda em bull market de longo prazo (média móvel 200); compra em Brava, Prio, Petrobras; cautela em MRV.
+- **BB Investimentos:** trocou B3 por Caixa Seguridade na carteira fundamentalista de julho.
+- **Empiricus:** manteve carteira dividendos (trocou Direcional por Cyrela em rodada anterior).
+- **Inter Invest:** +10,09% no ano, alpha 3,1pp sobre IDIV. **Safra:** Top 5 semanal + FIIs DY 12,9%. **C6:** renda variável ganha espaço com juros em queda.
+- Genial, Santander (Carteira Valor), Ágora, Rico, Modal, Órama, Nu Invest, Suno, Levante, Necton, TC Pulse: sem nota textual granular nova localizada hoje.
 
-## Empresas (23/7)
-- **Simpar (SIMH3):** vendeu 100% da operação portuária CS Porto Aratu (terminais ATU-12 e ATU-18, Bahia — agronegócio, cobre, minério, magnesita) por R$1,8bi.
+## Empresas (24/7)
+- **Simpar (SIMH3):** vendeu 100% CS Porto Aratu por R$1,8bi (ação +4,9%) — mesmo fato já citado 23/7, reação de preço nova.
+- **PicPay:** aprovação do BC para comprar a seguradora Cover.
+- **Ânima Educação:** aquisição da FMU confirmada, pendente Cade/RJ/MEC.
+- **Bradsaúde:** prepara o maior IPO reverso do Brasil.
+- **Sabesp (SBSP3):** R$1,05bi em volume, ligado a privatização/revisão tarifária.
 
-## Política (23/7)
-- Tarifa de 25% dos EUA em vigor desde madrugada de 22/7 — parece precificada pelo mercado.
-- Segunda sobretaxa de 12,5% (trabalho forçado) esperada para amanhã, sexta 24/7 — SEM confirmação de antecipação; checar amanhã se saiu e se é cumulativa (37,5%) ou substitutiva.
-- STF concluiu hoje, por unanimidade, ADPF 342 (restrição a compra de terras rurais por empresas controladas por estrangeiros).
-- MDIC (Durigan): Brasil não sai da mesa de negociação; empresariado pressiona por Lei de Reciprocidade Comercial.
-- Pesquisa eleitoral Real Time Big Data (campo 18-20/7) é a MESMA já reportada em 22/7 — não repetir como notícia nova amanhã; só citar se houver pesquisa com campo mais recente.
+## Política (24/7)
+- Segunda tarifa dos EUA (12,5%, trabalho forçado) CONFIRMADA em vigor desde meia-noite de sexta (Washington), CUMULATIVA (total 37,5%). Não repetir como "esperada" — já é fato consumado.
+- Flávio e Michelle Bolsonaro reconciliados; Datafolha sai à tarde de hoje com campo anterior ao episódio — CONFERIR na próxima rodada se saiu e se já reflete a reconciliação.
+- Expert XP 2026 segue até quando? Conferir se é o último dia ou se continua.
 
-## Transcrições / vídeos 23/7 — FALHA (0 de 2 tentados), mesmo bloqueio estrutural de IP dos dias anteriores
-- **XP** (`DoeuExOSqnQ`, "23/07/2026 | EXPERT XP: mercados e BOLSA brasileira com Fernando Ferreira | Morning Call", 11:48 UTC) e **BTG** (`9mg_NjYIhbY`, "23/07 - Petróleo dispara com ataque a petroleiros; Balanços EUA | Morning Call BTG Pactual", 11:59 UTC): ambos falharam via yt-dlp direto com **HTTP 429 "Sign in to confirm you're not a bot"** — mesmo bloqueio de IP de datacenter documentado em rodadas anteriores (15/07, 17-22/07). Fallback `youtube-transcript-api` também falhou (erro de API: método `get_transcript` não existe mais na versão instalada — biblioteca pode ter mudado de interface; revisar versão/uso em rodada futura). Sem relay configurado nesta sessão.
-- **Genial:** 2 vídeos candidatos com título citando "23/07/26" mas `<published>` do feed RSS datado de 15/07 (`updated` = 23/07) — sinalizado como possível quirk de premiere/live; NÃO usado como fonte por ambiguidade de data.
-- **Pablo Spyer:** vídeos de hoje cobrem início da Expert XP 2026 em São Paulo e comentário rápido sobre exterior negativo — não morning call estruturado, usado apenas para o item de agenda (Expert XP).
-- **Money Times, Suno, InfoMoney, Empiricus:** sem morning call estruturado de hoje identificado no feed (InfoMoney trouxe vídeo de orçamento de viagem, não de mercado; Suno sem vídeo de hoje; Empiricus vídeo das 22h34 BRT de ontem, fora da janela de hoje).
-- Narrativa do dia montada a partir de fontes escritas: InfoMoney, Money Times, eJornais, Agência Brasil, Poder360, CNN Brasil, Portal STF, CNBC, Benzinga, Bloomberg, DNYUZ, CNN, WSLS/AP, Asia Business Daily, FXLeaders, TradingEconomics, exchangerates.org.uk, Fortune, Rio Times, BBN Times.
+## Transcrições / vídeos 24/7 — SUCESSO nas 3 tentativas (XP, BTG, Pablo Spyer), 1ª tentativa cada
+- **XP** (`C2adgZ8R12U`, "24/07/2026 | 2º dia na EXPERT XP 2026: ECONOMIA e ANÁLISE TÉCNICA | Morning Call"): OK direto, 1ª tentativa. Apresentado por Rafi, com Caio Megalho (economista-chefe) e Gilberto "Giba" Coelho (técnico). Caio relatou conversa com Janet Yellen preocupada com postura geopolítica dos EUA; defendeu Selic conservadora agora para corte mais consistente em 2027. Giba: Ibov em bull market respeitando média móvel 200; dólar mais perto de romper R$5 para baixo que voltar a R$6,20; compra em Brava, Prio, Petrobras; cautela em MRV.
+- **BTG** (`eQlFOfbSusE`, "24/07 - Ibovespa recua e EUA confirmam nova tarifa de 12,5% ao Brasil | Morning Call BTG Pactual"): OK direto, 1ª tentativa. Apresentado por Costinho, convidado Thiago Salomão (Market Makers). Tese central: juros longos brasileiros abrindo, analogia Argentina, referência a conversa com Niall Ferguson; gestores (João Braga/Encore, André London/Ibiúna, Otávio Magalhães/Guepardo) confortáveis com TIRs reais 14-15% em ações. Confirmou tarifa 12,5% cumulativa. Simpar +4,92%; PicPay/Cover.
+- **Pablo Spyer** (`5itH_6UMUQw`, "Mercado olha recuperação no exterior, Durigan na Expert, Datafolha e Michelle: Minuto Touro de Ouro"): OK direto, 1ª tentativa. Confirmou reconciliação Flávio-Michelle Bolsonaro (ontem) e que Datafolha desta tarde tem campo anterior ao episódio. Galípolo falará sobre petróleo/Selic, Durigan sobre fiscal.
+- **Genial, Empiricus:** sem vídeo novo publicado em 24/7 no feed RSS (Genial: último é 23/7; Empiricus: série "Morning Crypto" de 23/7, sem morning call de mercado hoje) — não usados.
+- Relay de transcrição (`TRANSCRIPT_RELAY_URL`/`TRANSCRIPT_RELAY_TOKEN`) segue NÃO configurado no environment desta rotina; caminho direto (yt-dlp local) funcionou de primeira nas 3 tentativas de hoje — sem bloqueio de IP hoje.
 
 ## Capa
-- Manchete: **"PETROLEIROS SOB ATAQUE, PETRÓLEO DISPARA"**, subtítulo "Houthis atingem navios sauditas; Ibovespa rompe 5 pregões de queda". Kicker "CAFÉ COM MERCADO · QUINTA, 23/07".
-- Colagem: petroleiro em chamas no Mar Vermelho à noite com fumaça densa, silhuetas de navios de guerra ao fundo, hologram de ticker de petróleo em vermelho, skyline de Wall Street com gráfico de queda sobreposto. Sem rosto de político real. Gerada com cinematic_studio_2_5, composta com fonte condensada (DejaVuSansCondensed-Bold) confirmada pelo script — sem fallback largo.
+- Manchete: **"PETRÓLEO DISPARA, BOLSAS TOMBAM"**, subtítulo "Wall Street cai com IA, Ásia desaba e tarifa dos EUA sobe a 37,5%". Kicker "CAFÉ COM MERCADO · SEXTA, 24/07".
+- Colagem: petroleiro em chamas no Mar Vermelho à noite (fumaça densa, silhuetas de navios de guerra ao fundo) de um lado; pregão de Wall Street ao entardecer com telas de gráfico em queda e piso de negociação asiático com números vermelhos refletidos em torres de vidro do outro. Sem rosto de político real, silhuetas de operadores de costas/de lado. Gerada com cinematic_studio_2_5 (16:9, 2k), composta com fonte condensada (DejaVuSansCondensed-Bold) confirmada pelo script — sem fallback largo.
 
-## Próxima rodada (próximo dia útil, sexta 24/7)
-- **Segunda sobretaxa dos EUA (12,5%, trabalho forçado):** verificar se saiu hoje/amanhã conforme esperado, e se é cumulativa (37,5%) ou substitutiva com os 25% já em vigor.
-- **BCE:** conferir desdobramento da decisão de hoje e leitura de mercado sobre sinalização de Lagarde para o resto do ano.
-- **Petróleo/Golfo/Mar Vermelho:** acompanhar se o bloqueio dos houthis contra a Arábia Saudita se agrava ou há trégua; Brent pode testar US$100 se escalar mais.
-- **FOMC (28-29/7):** acompanhar se a probabilidade de movimento em setembro muda com o petróleo em alta.
-- **Alphabet/Tesla:** ver se a reação negativa do pré-mercado se sustenta no pregão regular de hoje (23/7) e efeito sobre Nasdaq.
-- **Transcrição de vídeos:** bloqueio de IP persiste há vários dias seguidos; considerar reativar relay (pendência: cookies de conta Google no VPS) ou revisar API `youtube-transcript-api` (interface mudou, `get_transcript` não existe mais na versão instalada).
-- **Pesquisa eleitoral:** não repetir Real Time Big Data (campo 18-20/7) — já usada em 22/7 e 23/7; só citar de novo se houver pesquisa com campo mais recente.
-
----
-
-## VERIFICAÇÃO — gatilho duplicado (2ª disparada)
-**23/07/2026, 09:31 BRT.** Esta rodada detectou que a edição de hoje JÁ estava publicada e no ar — **NÃO republicou nem repostou**.
-- Edição `content/cafe-com-mercado/2026-07-23.md` + capa commitadas às **09:23:47 BRT (12:23:47Z)**; deploy `deploy-vercel.yml` = **success** (evento push, head 4673507); página `https://investimentosdeaz.com.br/cafe-com-mercado/2026-07-23` = **HTTP 200**; capa `.../capas/cafe-com-mercado/2026-07-23.jpg` = **HTTP 200**.
-- `.md` validado: 53 linhas, frontmatter completo (title/hora/dek/image/imageAlt), corpo Overview→Brasil→Global→Agenda→Fontes, encerrando na linha `Fontes:`. Edição íntegra.
-- Mesmo padrão de gatilho duplicado de 20, 21 e 22/07 (1ª disparada ~09:21-09:24 publica; 2ª ~09:31-09:35 apenas verifica).
-- **WhatsApp:** não postado por esta rodada (regra antiduplicata — post só na rodada que publica). Nos dias anteriores a sessão do WhatsApp Web estava deslogada; confirmar/postar manualmente se ainda não foi feito hoje.
-- Diff completo do dia (níveis, narrativa, divergências, empresas) preservado acima para a rodada de sexta **24/07**.
+## Próxima rodada (próximo dia útil, segunda 27/7)
+- **Segunda tarifa de 12,5% (37,5% total):** já é fato consumado desde 24/7 — acompanhar desdobramentos (reação de exportadores, resposta formal do Brasil na OMC, possível retaliação).
+- **Petróleo/Irã:** verificar se o recuo de sexta de manhã (Brent ~US$97-98) se consolida como alívio ou se a escalada volta a intensificar no fim de semana.
+- **Kospi/Ásia:** verificar se o tombo de -5,72% (circuit breaker) foi um evento isolado ou se o sell-off de semicondutores/IA continua na segunda.
+- **FOMC (28-29/7):** primeira reunião sob Kevin Warsh — acompanhar decisão e comunicado, dado que o mercado agora precifica ALTA (não corte) em setembro.
+- **Datafolha:** conferir resultado divulgado à tarde de 24/7 e se já capta o efeito da reconciliação Flávio-Michelle Bolsonaro.
+- **Expert XP 2026:** conferir se o evento se encerrou em 24/7 (2º dia) ou se continua; e o teor das falas de Galípolo e Durigan.
+- **Wall Street:** verificar se o tombo de quinta (Nasdaq -2,15%) teve continuidade ou reversão no pregão de sexta.
