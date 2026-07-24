@@ -65,3 +65,8 @@ Wall Street tombou na quinta (23/7): S&P 500 -1,21% (7.408,30), Nasdaq -2,15% (2
 - **Datafolha:** conferir resultado divulgado à tarde de 24/7 e se já capta o efeito da reconciliação Flávio-Michelle Bolsonaro.
 - **Expert XP 2026:** conferir se o evento se encerrou em 24/7 (2º dia) ou se continua; e o teor das falas de Galípolo e Durigan.
 - **Wall Street:** verificar se o tombo de quinta (Nasdaq -2,15%) teve continuidade ou reversão no pregão de sexta.
+
+---
+
+## Verificação — gatilho duplicado 24/07 (~09:32 BRT)
+Segundo disparo da rotina hoje (09:32 BRT), ~11 min após a run real que publicou às 09:21 BRT (commit 12:21:33Z). Edição **confirmada no ar**: página `https://investimentosdeaz.com.br/cafe-com-mercado/2026-07-24` → HTTP 200; capa `/capas/cafe-com-mercado/2026-07-24.jpg` → HTTP 200; título "Café com Mercado — Sexta, 24/07/2026". **Nenhuma ação de escrita**: não regerado, não republicado, não repostado no WhatsApp (antiduplicata — o post do dia é responsabilidade da run das 09:21). Snapshot de mercado 24/07 preservado acima para o diff de segunda 27/07. Mesmo padrão do gatilho duplicado registrado em 23/07.
