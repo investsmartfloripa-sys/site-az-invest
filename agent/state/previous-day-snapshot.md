@@ -1,72 +1,59 @@
 # Snapshot do dia anterior — Café com Mercado
 
-**Rodada:** 2026-07-24 (sexta-feira), ~09:45 BRT. Publicação em `content/cafe-com-mercado/2026-07-24.md` + capa `/capas/cafe-com-mercado/2026-07-24.jpg`.
+**Rodada:** 2026-07-27 (segunda-feira), ~09:30 BRT. Publicação em `content/cafe-com-mercado/2026-07-27.md` + capa `/capas/cafe-com-mercado/2026-07-27.jpg`.
 
-## Narrativa-mãe do dia (24/7)
-Wall Street tombou na quinta (23/7): S&P 500 -1,21% (7.408,30), Nasdaq -2,15% (25.137,69), Dow -0,97% (51.711,65), após Alphabet (-7%) e Tesla (-14% a -15%) reportarem capex elevado e FCF negativo — "Magnificent 7" perderam ~US$800bi em valor de mercado. Intel foi exceção positiva (lucro US$0,42/ação vs US$0,21 esperado, receita US$16,1bi vs US$14,42bi) mas segue -28% no mês. Petróleo Brent rompeu US$100 pela 1ª vez em 2 meses, fechando +7% a US$100,69 (tocou US$102 intraday), com a 13ª noite seguida de ataques dos EUA ao Irã, ataque houthi a 2 petroleiros sauditas no Mar Vermelho, e a Guarda Revolucionária iraniana atingindo bases americanas no Golfo (Kuwait, Bahrein, Jordânia, Catar); Trump prometeu bombardear infraestrutura energética iraniana a cada ataque a navio. Nesta sexta de manhã Brent recuou para US$97-98 (WTI ~US$89-90) — alívio parcial, não trégua confirmada. Ásia desabou: Kospi -5,72% (circuit breaker, Samsung/SK Hynix -8%), Nikkei -2,7% a -2,73%, Hang Seng -0,98% a -1%, Shanghai -1,6%/CSI300 -1,67%. Europa em leve alta (Stoxx 600 +0,2-0,5%, DAX +0,4-0,89%). BCE manteve juros em 2,25% (unânime); Lagarde sinalizou espaço para ALTA em setembro por risco energético. Fed: mercado agora precifica ALTA (não corte) em setembro, 73-82% via CME FedWatch, às vésperas do FOMC 28-29/7 — primeira reunião sob novo presidente Kevin Warsh ("inflation is a choice"); Williams e Kashkari citaram conflito Irã-EUA como fator inflacionário. Futuros EUA hoje sinalizam recuperação tímida (S&P +0,20%, Dow +0,40%, Nasdaq-100 +0,09%).
+## Narrativa-mãe do dia (27/7)
+Trégua entre EUA e Irã em vigor desde sexta-feira (24/7) após quase duas semanas de ataques recíprocos no estreito de Ormuz — comando central americano recomendou suspender a campanha por considerar os alvos iranianos praticamente esgotados; Irã sinalizou reciprocidade, com mediação chinesa tentando reatar negociações no Paquistão. Resultado: Brent caiu até ~12% intraday nesta segunda, operando na faixa de US$85-90 (havia tocado US$100 na semana passada); WTI recuou ~8%. Mas a trégua tem fissuras: Arábia Saudita atacou posições houthis no Iêmen no fim de semana (retaliação a ataques a petroleiros sauditas no Mar Vermelho); Ucrânia atingiu embarcação comercial iraniana no Cáspio. Pontos que travam paz duradoura — administração do estreito de Ormuz e dossiê nuclear iraniano — seguem sem solução. Wall Street: sexta 24/7 fechou com recuperação parcial (S&P +0,05% a 7.411,98; Dow +0,46% a 51.947,25; Nasdaq -0,64% a 24.975,82). Futuros desta segunda fortes: S&P +0,89-0,94%, Nasdaq-100/Nasdaq +1,30-1,60%, Dow ~+1,10%. Ásia reverteu tombo de sexta: Nikkei +0,24% a +0,97%, Kospi +0,97% a +1,28% (havia caído -5,72% sexta), Xangai +1,15%. Europa positiva, Frankfurt +1,5-1,63%. Ouro ~US$4.090-4.097 (+~1%). Bitcoin ~US$65.000-65.358 estável. Minério de ferro em Dalian quase estável (-0,01% a -0,3%). China: lucro industrial +15,1% em junho (desaceleração ante +21,1% maio); acumulado 1º semestre +18,7% (vs 18,8% até maio). FOMC decide quarta 29/7 (14h ET / 15h BRT), 2ª reunião sob Kevin Warsh, que abandonou forward guidance tradicional; consenso de mercado prevê manutenção da taxa com viés de alta; BTG projeta 3 altas ao todo (2 em 2026 + 1 em 2027) — leitura mais hawkish que o consensus. PCE sai só quinta (29/7→ dia seguinte à decisão, fora da janela). Earnings da semana: Meta e Microsoft quarta; Amazon e Apple quinta.
 
-**Brasil:** Ibovespa fechou quinta 23/7 em queda de -0,46%, a 176.723 pontos (interrompendo alta de +2,44% de quarta), pressionado pelo humor externo. Dólar fechou em alta de 0,65%, a R$5,0839 (abertura desta manhã ~R$5,05). **Segunda tarifa dos EUA CONFIRMADA:** sobretaxa adicional de 12,5% por trabalho forçado (Seção 301) entrou em vigor à meia-noite de sexta em Washington, **CUMULATIVA** com os 25% já vigentes desde terça — total até **37,5%** sobre ~85,3% das exportações BR aos EUA (~US$10,7bi, base Amcham). 471 itens isentos (aeronaves civis, aço/alumínio Seção 232, ferro-gusa, café solúvel não aromatizado, mel orgânico, alguns cortes de carne, madeira tropical). Governo Lula chamou de "injusta e arbitrária", acionou Lei de Reciprocidade, vai à OMC. Selic 14,25%, Copom só volta início de agosto; DI a partir de 2032/33 abrindo (preocupação fiscal citada por gestores, analogia Argentina via Thiago Salomão/BTG, referenciando conversa com Niall Ferguson). Política: Flávio e Michelle Bolsonaro reconciliaram-se (pedido de desculpas do senador, aceito por Michelle, que sinalizou mobilizar apoio à candidatura presidencial de Flávio em outubro) — Datafolha sai à tarde de hoje mas com campo ANTERIOR a esse episódio (não usar números ainda). Expert XP 2026 (2º dia): Galípolo (BC) fala sobre petróleo/Selic, Durigan (Fazenda) sobre fiscal; Caio Megalho (XP) relatou conversa com Janet Yellen preocupada com postura geopolítica dos EUA.
+**Brasil:** Ibovespa fechou sexta 24/7 em queda de 1,52%, a 174.042 pontos (mínima do fechamento, máxima intraday 176.720), voltando a ficar abaixo de 175 mil — puxado por bancos e Petrobras (pressionada pelo tombo do petróleo); na semana ficou praticamente estável (+0,19%). Futuros desta segunda: Ibovespa +0,3% a +0,36%, ~175.300-175.360 pontos. Dólar fechou sexta -0,06% a -0,59% (fontes divergem no dígito exato), em torno de R$5,08; EUR/BRL ~5,7769. Focus (segunda): IPCA 2026 mediana caiu de 5,15% para 5,12%; 2027 subiu a 4,22% (mediana últimos 5 dias 4,24%); 2028 a 3,80% (ante 3,78%); 2029 estável 3,50%. Selic 2026 projetada em 14% (Focus) vs BTG vendo espaço para 2 cortes cautelosos até 13,75%. Dólar 2026 projetado em R$5,20. FGV Confiança do Consumidor caiu 3º mês seguido a 88,3 pontos (consenso 88,5, ante 88,7). Copom só reúne início de agosto; Selic em 14,25%. Política: PL homologou candidatura de Flávio Bolsonaro sábado (convenção com presença de Javier Milei), ainda sem vice — prazo até 5/8 (fim das convenções), registro TSE 15/8; PSD homologou Ronaldo Caiado (vice Gilberto Cassab); Zema confirmado por seu partido sem chapa fechada. Datafolha (campo sexta, antes de consolidar reconciliação Michelle-Flávio) trouxe Lula 48% x Flávio 43% no 2º turno (estável ante junho); NOVA pesquisa BTG Nexus (divulgada hoje) mostrou empate técnico 47%-43% — divergência relevante entre os institutos, registrar na próxima rodada se convergem. Congresso volta 3/8 mas 2/3 do Senado + 513 deputados focados em bases eleitorais. Corporativo: conselho da Brava Energia (BRAV3) deu parecer favorável à OPA da Ecopetrol pelo controle da companhia (comunicado sexta à noite) — acompanhar desdobramento/prazo da oferta. ISA Energia (ISAE4) precificou follow-on a R$27/ação (desconto ~5%), dobrou tamanho para 44,4 milhões de ações preferenciais, captou R$1,2bi; negociação regular nesta segunda, liquidação 17/8.
 
-## Níveis (diff p/ próxima rodada) — 24/7
+## Níveis (diff p/ próxima rodada) — 27/7
 | Ativo | Nível |
 |---|---|
-| Ibov | fech. quinta 23/7 **176.723 (-0,46%)**; abertura sexta indicada mais fraca |
-| Dólar | fech. quinta 23/7 R$5,0839 (+0,65%); abertura manhã sexta ~R$5,05 |
-| UST | 2a ~4,33-4,34%; 10a ~4,69-4,70%; 30a ~5,16-5,17% |
-| DXY | ~101,25-101,30 (-0,15%) |
-| EUR/USD ~1,14; USD/JPY ~163,8 (mínima ~40 anos); USD/CNY ~6,77 |
-| Petróleo | Brent fech. quinta US$100,69 (+7%, rompeu US$100 1ª vez em 2 meses, tocou US$102 intraday); manhã sexta recuando p/ US$97-98; WTI ~US$89-90 |
-| Ouro / Prata / Cobre | Ouro ~US$4.044-4.063 (estável); Prata US$58,54 (+1,57%); Cobre US$6,28/lb (-2,7%) |
-| Bitcoin | ~US$65.030 |
-| Ásia (24/7, fech. manhã local) | Nikkei ~64.611-64.634 (-2,69% a -2,73%); Kospi 6.690,62 (-5,72%, circuit breaker/sidecar, Samsung/SK Hynix -8%); Hang Seng ~24.963 (-0,98% a -1%); Shanghai 3.814,20 (-1,6%); CSI300 4.649 (-1,67%) |
-| Europa (24/7, manhã) | Stoxx 600 +0,2-0,5%; DAX +0,4-0,89%; CAC 40 +0,1-0,41%; FTSE ~estável a +0,41% |
-| EUA futuros | S&P +0,20% (7.460,25); Dow +0,40% (52.099); Nasdaq-100 +0,09% (28.647,50); fech. quinta S&P 7.408,30 (-1,21%), Nasdaq Comp. 25.137,69 (-2,15%), Dow 51.711,65 (-0,97%) |
-| Selic | 14,25%; Copom só volta início de agosto |
+| Ibov | fech. sexta 24/7 **174.042 (-1,52%)**; semana quase estável (+0,19%); futuro segunda +0,3-0,36% a ~175.300-175.360 |
+| Dólar | fech. sexta ~R$5,08 (-0,06 a -0,59% conforme fonte); EUR/BRL ~5,7769 |
+| UST | 10a fechamento sexta ~4,64%; contexto BTG "queda de 0,90%" (variação, não nível absoluto claro); 2a/30a não confirmados hoje |
+| DXY | ~101,3 (-0,15 a -0,20%) |
+| Petróleo | Brent caiu até ~12% intraday segunda, operando US$85-90 (havia tocado US$100 semana passada); WTI ~-8%, ~US$83-89 conforme momento do dia |
+| Ouro / Bitcoin | Ouro ~US$4.090-4.097 (+~1%); Bitcoin ~US$65.000-65.358 |
+| Ásia (27/7) | Nikkei +0,24 a +0,97%; Kospi +0,97 a +1,28% (reverteu -5,72% de sexta); Xangai +1,15% |
+| Europa (27/7) | Frankfurt +1,5-1,63%; Londres +0,67%; Paris +0,86%; Suécia +1,30% |
+| EUA futuros | S&P +0,89-0,94%; Nasdaq/Nasdaq-100 +1,30-1,60%; Dow ~+1,10% |
+| Selic | 14,25%; Copom só volta início de agosto; Focus vê 14% fim de 2026, BTG vê 13,75% |
 
-## Divergência entre casas (Mercado) — 24/7
-- **Itaú BBA:** mais otimista — Ibovespa a 185 mil pontos fim de 2026 (~22% retorno total); buy list Equatorial, Axia Energia, Multiplan como bond proxies.
-- **Bradesco BBI:** Itaú Unibanco Top Pick entre bancões (alvo R$25); cortou alvo Santander Brasil de R$33 para R$29 (neutro); cortou alvo JBS.
-- **BTG (Thiago Salomão, convidado):** cauteloso — juros longos abrindo, analogia Argentina ("as coisas precisam piorar antes de melhorar"), referenciando Niall Ferguson.
-- **Toro:** postura mais conservadora, citando precificação antecipada das eleições 2026, viés commodities.
-- **XP (Giba, análise técnica):** Ibovespa ainda em bull market de longo prazo (média móvel 200); compra em Brava, Prio, Petrobras; cautela em MRV.
-- **BB Investimentos:** trocou B3 por Caixa Seguridade na carteira fundamentalista de julho.
-- **Empiricus:** manteve carteira dividendos (trocou Direcional por Cyrela em rodada anterior).
-- **Inter Invest:** +10,09% no ano, alpha 3,1pp sobre IDIV. **Safra:** Top 5 semanal + FIIs DY 12,9%. **C6:** renda variável ganha espaço com juros em queda.
-- Genial, Santander (Carteira Valor), Ágora, Rico, Modal, Órama, Nu Invest, Suno, Levante, Necton, TC Pulse: sem nota textual granular nova localizada hoje.
+## Divergência entre casas (Mercado) — 27/7
+- **BTG:** Fed mais hawkish que consenso — 3 altas ao todo (2 em 2026 + 1 em 2027); mas domesticamente vê espaço para 2 cortes cautelosos da Selic este ano até 13,75% (destoa do Focus, que trava em 14%).
+- **Bradesco BBI:** Itaú Unibanco preferida entre bancões (8,8x P/L 2026E, div yield 8,2%); cortou alvo BB para R$20 (neutro) e Santander Brasil para R$29 (neutro).
+- **Itaú BBA:** elegeu BTG Pactual, Bradesco e Nubank como preferidas bancárias para o 2º semestre; elevou alvo de WEGE3 para R$50.
+- **XP (Rafael Ferreira, morning call):** Brasil como alternativa "não-AI" para rotação global; destaca retorno do capital estrangeiro em julho (R$4,6bi líquido no mês, R$38bi acumulado no ano); defende tratar renda variável com mesmo peso da renda fixa.
+- Genial, Santander, Ágora, Rico, Modal, Órama, Nu Invest, Suno, Empiricus, Levante, Necton, TC Pulse: sem nota textual granular nova localizada hoje.
 
-## Empresas (24/7)
-- **Simpar (SIMH3):** vendeu 100% CS Porto Aratu por R$1,8bi (ação +4,9%) — mesmo fato já citado 23/7, reação de preço nova.
-- **PicPay:** aprovação do BC para comprar a seguradora Cover.
-- **Ânima Educação:** aquisição da FMU confirmada, pendente Cade/RJ/MEC.
-- **Bradsaúde:** prepara o maior IPO reverso do Brasil.
-- **Sabesp (SBSP3):** R$1,05bi em volume, ligado a privatização/revisão tarifária.
+## Empresas (27/7)
+- **Brava Energia (BRAV3):** conselho deu parecer favorável à OPA da Ecopetrol pelo controle da companhia (comunicado sexta à noite, pós-fechamento) — acompanhar prazo/termos da oferta na próxima rodada.
+- **ISA Energia (ISAE4):** follow-on precificado a R$27/ação, R$1,2bi captado, 44,4 milhões de ações preferenciais (dobrou de tamanho); negociação regular a partir de hoje, liquidação 17/8.
+- **Petrobras:** conselho aprovou William Vela como diretor executivo interino de transição energética e sustentabilidade (item menor, não usado na edição por não ser M&A/IPO/OPA).
 
-## Política (24/7)
-- Segunda tarifa dos EUA (12,5%, trabalho forçado) CONFIRMADA em vigor desde meia-noite de sexta (Washington), CUMULATIVA (total 37,5%). Não repetir como "esperada" — já é fato consumado.
-- Flávio e Michelle Bolsonaro reconciliados; Datafolha sai à tarde de hoje com campo anterior ao episódio — CONFERIR na próxima rodada se saiu e se já reflete a reconciliação.
-- Expert XP 2026 segue até quando? Conferir se é o último dia ou se continua.
+## Política (27/7)
+- PL homologou Flávio Bolsonaro (sábado), ainda sem vice — CONFERIR na próxima rodada se vice foi definido antes do prazo de 5/8.
+- Datafolha (Lula 48 x Flávio 43) vs BTG Nexus (empate técnico 47-43) — divergência entre institutos; CONFERIR se surge pesquisa nova que já capte totalmente o efeito da reconciliação Michelle-Flávio.
+- Registro de candidaturas no TSE em 15/8 — datas-chave a monitorar.
 
-## Transcrições / vídeos 24/7 — SUCESSO nas 3 tentativas (XP, BTG, Pablo Spyer), 1ª tentativa cada
-- **XP** (`C2adgZ8R12U`, "24/07/2026 | 2º dia na EXPERT XP 2026: ECONOMIA e ANÁLISE TÉCNICA | Morning Call"): OK direto, 1ª tentativa. Apresentado por Rafi, com Caio Megalho (economista-chefe) e Gilberto "Giba" Coelho (técnico). Caio relatou conversa com Janet Yellen preocupada com postura geopolítica dos EUA; defendeu Selic conservadora agora para corte mais consistente em 2027. Giba: Ibov em bull market respeitando média móvel 200; dólar mais perto de romper R$5 para baixo que voltar a R$6,20; compra em Brava, Prio, Petrobras; cautela em MRV.
-- **BTG** (`eQlFOfbSusE`, "24/07 - Ibovespa recua e EUA confirmam nova tarifa de 12,5% ao Brasil | Morning Call BTG Pactual"): OK direto, 1ª tentativa. Apresentado por Costinho, convidado Thiago Salomão (Market Makers). Tese central: juros longos brasileiros abrindo, analogia Argentina, referência a conversa com Niall Ferguson; gestores (João Braga/Encore, André London/Ibiúna, Otávio Magalhães/Guepardo) confortáveis com TIRs reais 14-15% em ações. Confirmou tarifa 12,5% cumulativa. Simpar +4,92%; PicPay/Cover.
-- **Pablo Spyer** (`5itH_6UMUQw`, "Mercado olha recuperação no exterior, Durigan na Expert, Datafolha e Michelle: Minuto Touro de Ouro"): OK direto, 1ª tentativa. Confirmou reconciliação Flávio-Michelle Bolsonaro (ontem) e que Datafolha desta tarde tem campo anterior ao episódio. Galípolo falará sobre petróleo/Selic, Durigan sobre fiscal.
-- **Genial, Empiricus:** sem vídeo novo publicado em 24/7 no feed RSS (Genial: último é 23/7; Empiricus: série "Morning Crypto" de 23/7, sem morning call de mercado hoje) — não usados.
-- Relay de transcrição (`TRANSCRIPT_RELAY_URL`/`TRANSCRIPT_RELAY_TOKEN`) segue NÃO configurado no environment desta rotina; caminho direto (yt-dlp local) funcionou de primeira nas 3 tentativas de hoje — sem bloqueio de IP hoje.
+## Transcrições / vídeos 27/7 — SUCESSO em 3 de 3 tentativas (XP, BTG, Pablo Spyer)
+- **XP** (`dX3Dh0jUbPI`, "27/07/2026 | EXPERT 2026 e o que esperar para a BOLSA na semana | Morning Call"): OK direto via yt-dlp (legenda pt), 1ª tentativa. Apresentado por Rafi (Rafael Ferreira), com recapitulação da Expert XP 2026 (16ª edição, convidados Will Smith, Mike Pompeo, Niall Ferguson, Janet Yellen). Cobertura de mercado: petróleo caindo para US$89,46 (WTI), futuros em alta, Fed quarta-feira, PL homologou Flávio Bolsonaro no fim de semana com presença de Milei, Datafolha (Lula 48 x Flávio 43). Visão construtiva sobre ações brasileiras como tema "não-AI"; fluxo estrangeiro retomando.
+- **BTG Pactual** (`iWFcKQLWyIE`, "27/07 - Petróleo derrete 7% e mercados globais reagem em recuperação | Morning Call BTG Pactual"): legenda não veio na 1ª tentativa (yt-dlp reportou "no subtitles"), mas 2ª tentativa idêntica funcionou (legendas pt disponíveis, sem necessidade de fallback via youtube-transcript-api). Apresentado por Costinha com Lorena Loudares (analista política). Detalhou trégua EUA-Irã, ataque saudita a houthis no Iêmen, ataque ucraniano a navio iraniano no Cáspio, Fed (call do banco: 3 altas de juros), Focus, fechamento do Ibovespa sexta, e M&A (Brava/Ecopetrol, ISA Energia).
+- **Pablo Spyer** (`xSopys_drXw`, "Mercado olha exterior positivo, petróleo, Datafolha e BTG/Nexus e Caiado: Minuto Touro de Ouro"): OK direto, 1ª tentativa (vídeo curto, ~350 palavras). Confirmou pesquisa BTG Nexus (47% Lula x 43% Flávio, empate técnico) como fato novo distinto do Datafolha.
+- **Genial, InfoMoney, Empiricus:** sem morning call/vídeo novo publicado em 27/7 no feed RSS até o horário da pesquisa (Genial: último em 24/7; InfoMoney: último 26/7 à noite, cobertura Expert; Empiricus: último 25/7, série Morning Crypto). Money Times e Suno publicaram vídeos hoje, mas sem formato de giro de mercado matinal (temas pontuais / short).
+- Relay de transcrição (`TRANSCRIPT_RELAY_URL`/`TRANSCRIPT_RELAY_TOKEN`) segue não configurado; caminho direto (yt-dlp local) funcionou para os 3 vídeos-alvo, com uma segunda tentativa necessária apenas para o BTG.
 
 ## Capa
-- Manchete: **"PETRÓLEO DISPARA, BOLSAS TOMBAM"**, subtítulo "Wall Street cai com IA, Ásia desaba e tarifa dos EUA sobe a 37,5%". Kicker "CAFÉ COM MERCADO · SEXTA, 24/07".
-- Colagem: petroleiro em chamas no Mar Vermelho à noite (fumaça densa, silhuetas de navios de guerra ao fundo) de um lado; pregão de Wall Street ao entardecer com telas de gráfico em queda e piso de negociação asiático com números vermelhos refletidos em torres de vidro do outro. Sem rosto de político real, silhuetas de operadores de costas/de lado. Gerada com cinematic_studio_2_5 (16:9, 2k), composta com fonte condensada (DejaVuSansCondensed-Bold) confirmada pelo script — sem fallback largo.
+- Manchete: **"PETRÓLEO TOMBA, BOLSAS RESPIRAM"**, subtítulo "Trégua entre EUA e Irã derruba o Brent, mas Ibovespa segue abaixo dos 175 mil". Kicker "CAFÉ COM MERCADO · SEGUNDA, 27/07".
+- Colagem: petroleiro sob céu que clareia ao amanhecer (contraste com a fumaça da capa de sexta 24/7) à esquerda; pregão em alta com candles verdes ao entardecer/amanhecer no centro; Congresso Nacional com bandeira do Brasil e silhuetas de multidão (convenção partidária) à direita. Sem rosto de político real. Gerada com cinematic_studio_2_5 (16:9, 2k), composta com fonte condensada (DejaVuSansCondensed-Bold) confirmada pelo script — sem fallback largo.
 
-## Próxima rodada (próximo dia útil, segunda 27/7)
-- **Segunda tarifa de 12,5% (37,5% total):** já é fato consumado desde 24/7 — acompanhar desdobramentos (reação de exportadores, resposta formal do Brasil na OMC, possível retaliação).
-- **Petróleo/Irã:** verificar se o recuo de sexta de manhã (Brent ~US$97-98) se consolida como alívio ou se a escalada volta a intensificar no fim de semana.
-- **Kospi/Ásia:** verificar se o tombo de -5,72% (circuit breaker) foi um evento isolado ou se o sell-off de semicondutores/IA continua na segunda.
-- **FOMC (28-29/7):** primeira reunião sob Kevin Warsh — acompanhar decisão e comunicado, dado que o mercado agora precifica ALTA (não corte) em setembro.
-- **Datafolha:** conferir resultado divulgado à tarde de 24/7 e se já capta o efeito da reconciliação Flávio-Michelle Bolsonaro.
-- **Expert XP 2026:** conferir se o evento se encerrou em 24/7 (2º dia) ou se continua; e o teor das falas de Galípolo e Durigan.
-- **Wall Street:** verificar se o tombo de quinta (Nasdaq -2,15%) teve continuidade ou reversão no pregão de sexta.
-
----
-
-## Verificação — gatilho duplicado 24/07 (~09:32 BRT)
-Segundo disparo da rotina hoje (09:32 BRT), ~11 min após a run real que publicou às 09:21 BRT (commit 12:21:33Z). Edição **confirmada no ar**: página `https://investimentosdeaz.com.br/cafe-com-mercado/2026-07-24` → HTTP 200; capa `/capas/cafe-com-mercado/2026-07-24.jpg` → HTTP 200; título "Café com Mercado — Sexta, 24/07/2026". **Nenhuma ação de escrita**: não regerado, não republicado, não repostado no WhatsApp (antiduplicata — o post do dia é responsabilidade da run das 09:21). Snapshot de mercado 24/07 preservado acima para o diff de segunda 27/07. Mesmo padrão do gatilho duplicado registrado em 23/07.
+## Próxima rodada (próximo dia útil, terça 28/7)
+- **FOMC (quarta 29/7, 15h BRT):** acompanhar decisão e comunicado de Kevin Warsh — mercado precifica manutenção com viés de alta; BTG destoa com call de 3 altas ao todo.
+- **Trégua Irã-EUA:** verificar se se mantém ou se as frentes secundárias (Arábia Saudita-Houthis no Iêmen, Ucrânia-Irã no Cáspio) escalam.
+- **Petróleo:** conferir se o recuo para US$85-90 se consolida ou se há reversão.
+- **IPCA-15 (terça):** prévia da inflação de julho — evento macro do dia.
+- **Brava Energia / Ecopetrol:** acompanhar prazo e termos da OPA.
+- **Pesquisas eleitorais:** Datafolha (48-43) vs BTG Nexus (47-43, empate técnico) — conferir se sai pesquisa nova já plenamente pós-reconciliação Michelle-Flávio.
+- **PL:** conferir se vice de Flávio Bolsonaro foi definido.
