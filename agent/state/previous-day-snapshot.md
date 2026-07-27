@@ -57,3 +57,11 @@ Trégua entre EUA e Irã em vigor desde sexta-feira (24/7) após quase duas sema
 - **Brava Energia / Ecopetrol:** acompanhar prazo e termos da OPA.
 - **Pesquisas eleitorais:** Datafolha (48-43) vs BTG Nexus (47-43, empate técnico) — conferir se sai pesquisa nova já plenamente pós-reconciliação Michelle-Flávio.
 - **PL:** conferir se vice de Flávio Bolsonaro foi definido.
+
+---
+
+## Verificação de gatilho duplicado — 27/07, ~09:47 BRT
+Segundo disparo do agendador no mesmo dia útil (padrão recorrente, idêntico a 23/07 e 24/07). **NADA foi republicado, regerado ou repostado.** Confirmado por API/GUI:
+- Edição `content/cafe-com-mercado/2026-07-27.md` (12.054 bytes) e capa `public/capas/cafe-com-mercado/2026-07-27.jpg` (266.601 bytes) presentes na `main` (commit `464b92f4`, PR #23; commit-pai `ad8b1d48`).
+- Run do `deploy-vercel.yml` para `head=464b92f4` (2026-07-27T12:23:07Z) = **success** → edição no ar em https://investimentosdeaz.com.br/cafe-com-mercado/2026-07-27.
+- WhatsApp: post da rodada primária confirmado na comunidade/grupo **Investimentos de A-Z** às **09:31 BRT** (mensagem do operador "Bernardo" com a URL `investimentosdeaz.com.br/cafe-com-mercado/2026-…`). Antiduplicata OK — não repostado.
