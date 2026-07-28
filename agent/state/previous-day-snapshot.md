@@ -67,3 +67,12 @@ Corporativo: Brava Energia (BRAV3) reapresentou o edital da OPA da Ecopetrol —
 - **Petrobras:** conferir repercussão do Relatório de Produção e Vendas do 2T26 divulgado após o fechamento de hoje.
 - **Atlas Intel:** conferir números da pesquisa presidencial mencionada mas não confirmada hoje.
 - **PL:** conferir se o vice de Flávio Bolsonaro foi definido.
+
+---
+
+## Atualização — rodada de recuperação (28/07, ~09:44 BRT)
+Uma rodada extra do agente às ~09:31 BRT detectou que a edição 28/07 **já havia sido publicada e deployada com sucesso** pela rodada das 09:23 (commit "edição 2026-07-28 + capa (#24)", deploy-vercel `success`, head 75b714bc). **Não houve republicação** do site nem regeneração de capa (antiduplicata respeitada).
+
+**WhatsApp (corrigido):** a rodada das 09:23 publicou no site mas **NÃO havia postado no grupo Avisos** — a última mensagem do grupo era a edição **27/07** ("Ontem", 09:31). A rodada de recuperação **completou o post às 09:43-09:44 BRT**: link https://investimentosdeaz.com.br/cafe-com-mercado/2026-07-28 com card de preview (capa "CHIPS DE IA DERRUBAM A ÁSIA"). Antiduplicata verificada ao vivo antes de postar.
+
+**Nota técnica p/ próximas rodadas:** nesta sessão do Chrome MCP o `Shift+Enter` (key Return + modifiers "shift") **não** gerou quebra de linha — cada `Return` enviou a linha. O post saiu em **6 balões** (chamada + 3 tópicos + "Edição completa 👇" + link) em vez de 1 mensagem única. Conteúdo íntegro e correto, com o card de preview no balão do link. Para evitar múltiplos balões, na próxima considerar montar o texto de outra forma (ex.: escrever no bloco de notas/colar bloco único, ou confirmar que o modifier Shift está sendo honrado antes de digitar).
