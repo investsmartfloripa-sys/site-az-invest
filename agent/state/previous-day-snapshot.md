@@ -47,11 +47,13 @@ Dia pós-FOMC. Ontem (29/7) o Fed manteve os juros em **3,50%-3,75%** (5º hold)
 - Manchete: **"FED DIVIDIDO, JUROS LONGOS DISPARAM"**; subtítulo "Três diretores querem alta e o PCE vem quente"; kicker "CAFÉ COM MERCADO · QUINTA, 30/07".
 - Base cinematic_studio_2_5 (16:9, 2k), seed 26566, id `927bbb07` (escolhida entre 2; a outra tinha texto "BANK" e topo irregular). Colagem: banco central neoclássico + chip rachado com raios azuis (semis Ásia) à esquerda; parede de telas vermelhas ao centro (juros/estresse); refinaria + petroleiro + caminhão de minério com bandeira do Brasil à direita. Faixa escura no topo confirmada; fonte DejaVuSansCondensed-Bold. Cuidado recorrente: o subtítulo NÃO quebra linha no compose-capa.py — manter curto (~45 caracteres) senão corta na borda direita (aconteceu e foi corrigido nesta rodada).
 
-## WhatsApp (grupo Avisos · Comunidade Investimentos de A-Z) — NÃO POSTADO (renderer travou)
-- **Status: NÃO POSTADO hoje.** A extensão do Chrome estava conectada e o WhatsApp **Business** Web estava LOGADO (sem QR). Porém, ao abrir Comunidades, o renderer da instância Business (pesada, 84 não lidas) **congelou o canal de input do CDP** (clique/screenshot com timeout de 30s), embora o JS ainda executasse. Cliquei "Comunidades" via JS; em seguida a página entrou em **"Desconectando — Não feche esta janela"** e não se recuperou (JS também passou a dar timeout). Sessão caiu sozinha.
-- **Antiduplicata:** confirmado que **30/07 ainda NÃO havia sido postado** (a última publicação no grupo Avisos era a edição de 29/07). Logo, **falta postar hoje manualmente**.
-- **Aprendizado (reforço do já conhecido):** a instância **Business** com muitas não lidas trava o renderer/CDP. Para a próxima: considerar recarregar a aba e esperar a sincronização terminar ANTES de abrir Comunidades; ou postar cedo, antes do acúmulo de não lidas. A receita de clipboard+Ctrl+V só funciona com o CDP de input responsivo — inútil enquanto o renderer estiver congelado.
-- **Ação manual necessária hoje:** postar no grupo Avisos o texto (chamada + 3 tópicos + link) com a URL https://investimentosdeaz.com.br/cafe-com-mercado/2026-07-30
+## WhatsApp (grupo Avisos · Comunidade Investimentos de A-Z) — POSTADO (após correção com o usuário presente)
+- **Status: POSTADO em 2 mensagens**, conforme nova preferência do usuário: **(1) o LINK sozinho** (11:15, card com a capa do dia) e **(2) o TEXTO** (11:21, chamada + 3 tópicos, balão ÚNICO com negritos).
+- **Antiduplicata:** confirmado antes de postar que 30/07 ainda não estava no grupo (última era 29/07).
+- **CAUSA RAIZ dos tropeços de hoje (importante):** a tarefa agendada estava rodando um **SKILL.md DESATUALIZADO (17/07)**, que mandava usar `Shift+Enter` entre linhas. A correção de 28/07 existia só no `SKILL-cloud.md` do projeto e **nunca foi propagada** para `C:\Users\Borux\OneDrive\Documentos\Claude\Scheduled\briefing-macro-diario\SKILL.md`. Corrigido HOJE direto no arquivo da tarefa (via Desktop Commander) + no `SKILL-cloud.md`.
+- **DESCOBERTA TÉCNICA DECISIVA:** o parâmetro **`modifiers` do `computer` `key` é IGNORADO** nesta sessão. `Return`+`modifiers:"shift"` **envia** (fragmentou o post em 3 balões, apagados depois); `v`+`modifiers:"ctrl"` **digita a letra "v"** em vez de colar. A sintaxe que funciona é o combo no próprio `text`: **`key "v+ctrl"`**.
+- **RECEITA VALIDADA (multi-linha em 1 balão):** clique real na caixa → `javascript_tool` com `navigator.clipboard.writeText(texto)` (NÃO usar `readText`, bloqueado por permissions policy) → `key "v+ctrl"` → conferir `innerText` do composer + screenshot → UM `Return`. Para limpar a caixa: `execCommand('delete')` e `Ctrl+A` NÃO funcionam (Lexical); use `key "End"` + `key "BackSpace"` com `repeat` (máx. 100 por chamada).
+- **Abrir o grupo:** NÃO usar o painel Comunidades (congelou o renderer da instância Business e derrubou a sessão em "Desconectando"). Usar a **busca** por `Café com Mercado` → resultado **"Investimentos de A-Z" / Avisos**. Buscar por "Avisos" não acha (grupos homônimos de terceiros).
 - Link no ar (200): https://investimentosdeaz.com.br/cafe-com-mercado/2026-07-30
 
 ## Próxima rodada (próximo dia útil, sexta 31/7)
@@ -60,4 +62,4 @@ Dia pós-FOMC. Ontem (29/7) o Fed manteve os juros em **3,50%-3,75%** (5º hold)
 - **PNAD desemprego (BR):** conferir o número divulgado hoje.
 - **Copom (4-5/8), leilão OPA Brava/Ecopetrol (5/8), prazo tarifaço Brasil-EUA (6/8):** catalisadores da próxima semana.
 - **Petróleo:** ver se a reversão para ~US$87 se sustenta.
-- **WhatsApp:** VERIFICAR se 30/07 foi postado manualmente; se não, postar (antiduplicata primeiro). Se a instância Business travar de novo, recarregar a aba e aguardar sincronização antes de abrir Comunidades.
+- **WhatsApp:** seguir o Passo 7-tri JÁ CORRIGIDO (2 mensagens: link, depois texto; abrir por busca; `key "v+ctrl"` e nunca `modifiers`). Antiduplicata primeiro.
