@@ -520,7 +520,6 @@ export async function PainelPanoramaPage() {
         treasuryLabels={treasuryLabels}
         fedLabels={fedLabels}
         selicVol={ratesVol}
-        brRefDate={preD1?.date ?? ipcaD1?.date ?? null}
       />
 
       <section id="analises" className="space-y-4">

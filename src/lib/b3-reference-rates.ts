@@ -92,9 +92,17 @@ type GetListResponse = {
  * O vencimento de cada vertice sai de `day360` (dias corridos) somado a data
  * de referencia — `day252` e o prazo em dias uteis, base da taxa.
  */
+/**
+ * `revalidate` de 15 min: a ETTJ vira UMA vez por dia, mas so no fim da noite
+ * (em 04/08/2026 a curva do dia apareceu por volta das 19h40). Com 1 hora de
+ * cache o painel ficava ate 60 min anunciando o pregao anterior depois da
+ * publicacao — e, pior, as curvas PRE e DIC revalidavam em momentos diferentes
+ * e o bloco exibia duas datas ao mesmo tempo. 15 min encurta essa janela sem
+ * pesar na fonte (~96 chamadas/dia).
+ */
 export async function fetchB3ReferenceCurve(
   id: B3CurveId,
-  revalidate = 3600,
+  revalidate = 900,
 ): Promise<B3ReferenceCurve | null> {
   const dates = await getJson<string[]>(
     `GetDate/${encodeParams({ language: "pt-br", id })}`,

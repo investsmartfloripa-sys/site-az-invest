@@ -243,9 +243,20 @@ type Props = {
   /** Vol de regime da renda fixa pré (IRF-M): percentil da vol-15d atual no
    *  histórico → escala o ajuste de prêmio de prazo da Selic D+0. Server, diário. */
   selicVol?: { vol15dAnn: number; pct: number; mult: number } | null;
-  /** Pregão de referência da ponta D-1 das curvas BR (ISO), p/ rotular tudo. */
-  brRefDate?: string | null;
 };
+
+/**
+ * Data de referencia dentro de um rotulo de corte ("D-1 (03/08/2026)").
+ *
+ * Cada curva (pre, IPCA+, Selic) tem seu proprio ciclo de cache e a B3 nao
+ * publica todas no mesmo instante — entao as abas PODEM estar em pregoes
+ * diferentes por alguns minutos. Por isso o cabecalho tira a data do rotulo da
+ * ABA ATIVA, em vez de cravar uma data unica para o bloco inteiro.
+ */
+function labelDate(label?: string): string | null {
+  const m = label?.match(/(\d{2}\/\d{2}\/\d{4})/);
+  return m ? m[1] : null;
+}
 
 type ChartPoint = {
   t: number;
@@ -786,7 +797,6 @@ export function JurosLiveBlock({
   treasuryLabels = {},
   fedLabels = {},
   selicVol = null,
-  brRefDate = null,
 }: Props) {
   const isNarrow = useIsNarrow();
   const [country, setCountry] = useState<CountrySel>("br");
@@ -1004,8 +1014,10 @@ export function JurosLiveBlock({
     (ipcaCuts.d30?.length ?? 0) === 0 &&
     (ipcaCuts.d90?.length ?? 0) === 0 &&
     selicMeetings.length === 0;
-  /** "2026-08-03" → "03/08/2026". */
-  const refLabel = brRefDate ? brRefDate.split("-").reverse().join("/") : null;
+  /** Pregao de referencia da ABA ATIVA (ver labelDate) — nunca de outra aba. */
+  const refLabel = labelDate(
+    tab === "selic" ? selicLabels.recent : tab === "ipca" ? ipcaLabels.recent : preLabels.recent,
+  );
 
   // Badge: sem intraday NAO existe ponto verde pulsante — anunciar "ao vivo"
   // sobre fechamento do dia anterior seria enganoso.
