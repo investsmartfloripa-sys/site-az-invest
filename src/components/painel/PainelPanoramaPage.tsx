@@ -13,6 +13,7 @@ import { KpiStrip, type KpiCard } from "@/components/painel/panorama/KpiStrip";
 import { MarketTape, type TapeItem } from "@/components/painel/panorama/MarketTape";
 import { PeriodicosChips } from "@/components/painel/panorama/PeriodicosChips";
 import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection";
+import { fetchB3ReferenceCurve, refDateLabel } from "@/lib/b3-reference-rates";
 import { getPanoramaData, painelBlobConfigured, type PanoramaData } from "@/lib/painel-data";
 import { getRatesVolMult, type RatesVol } from "@/lib/painel-market-data";
 import { SELIC_TERM_PREMIUM, termPremiumLevel } from "@/lib/selic-forward";
@@ -273,10 +274,15 @@ export async function PainelPanoramaPage() {
   } catch (err) {
     console.error("[PainelPanoramaPage] findPosts falhou; seguindo sem analises", err);
   }
-  const [data, selicAtual, ratesVol] = await Promise.all([
+  // ETTJ oficial da B3 (D-1). Substitui a serie intraday que morreu com o
+  // desligamento de cotacao.b3.com.br — ver cabecalho de b3-reference-rates.
+  // Falha aqui NAO quebra a pagina: as curvas seguem com os cortes D-30/D-90.
+  const [data, selicAtual, ratesVol, preD1, ipcaD1] = await Promise.all([
     getPanoramaData(),
     fetchSelicAtual(),
     getRatesVolMult(),
+    fetchB3ReferenceCurve("PRE"),
+    fetchB3ReferenceCurve("DIC"),
   ]);
 
   const blobConfigured = painelBlobConfigured();
@@ -298,8 +304,19 @@ export async function PainelPanoramaPage() {
   const blobDataPartial =
     blobConfigured && blobJsonLoadedCount > 0 && blobJsonLoadedCount < blobJsonBlocks.length;
 
-  const preCuts = extractCurveCutSet(data.tablePrefixado.data);
-  const ipcaCuts = extractCurveCutSet(data.tableIpca.data);
+  // Ponta D-1 das curvas: o pipeline R parou de emitir a coluna "Hoje" quando o
+  // intraday da B3 passou a cobrir essa ponta ("Agora"/"Ajuste D-1"). Com o
+  // intraday desligado, a ponta volta a vir da ETTJ oficial da B3 — mesma
+  // familia (TaxaSwap) dos cortes D-30/D-90, entao a curva fica homogenea.
+  // Se a ETTJ falhar, cai para a coluna do pipeline (quando existir).
+  const preCuts: CurveCutSet = {
+    ...extractCurveCutSet(data.tablePrefixado.data),
+    ...(preD1 ? { recent: preD1.points } : {}),
+  };
+  const ipcaCuts: CurveCutSet = {
+    ...extractCurveCutSet(data.tableIpca.data),
+    ...(ipcaD1 ? { recent: ipcaD1.points } : {}),
+  };
   const selicMeetings = extractSelicMeetings(data, ratesVol);
   const treasuryTenors = extractTreasury(data);
   const fedMeetings = extractFedMeetings(data);
@@ -307,18 +324,27 @@ export async function PainelPanoramaPage() {
   /** Key da coluna do JSON ja vem com a data de referencia: "D-30 (05/05/2026)". */
   const colLabel = (cols: { key: string }[] | undefined, prefix: string): string | undefined =>
     cols?.find((c) => c.key.startsWith(prefix))?.key;
+  // Rotulo da ponta: sempre explicita que e D-1 e de QUE pregao — o leitor
+  // precisa saber que nao esta olhando o mercado deste instante.
   const preLabels: CutLabels = {
-    recent: colLabel(data.tablePrefixado.data?.columns, "Recente") ?? colLabel(data.tablePrefixado.data?.columns, "Hoje"),
+    recent: preD1
+      ? `D-1 (${refDateLabel(preD1.date)})`
+      : (colLabel(data.tablePrefixado.data?.columns, "Recente") ?? colLabel(data.tablePrefixado.data?.columns, "Hoje")),
     d30: colLabel(data.tablePrefixado.data?.columns, "D-30"),
     d90: colLabel(data.tablePrefixado.data?.columns, "D-90"),
   };
   const ipcaLabels: CutLabels = {
-    recent: colLabel(data.tableIpca.data?.columns, "Recente") ?? colLabel(data.tableIpca.data?.columns, "Hoje"),
+    recent: ipcaD1
+      ? `D-1 (${refDateLabel(ipcaD1.date)})`
+      : (colLabel(data.tableIpca.data?.columns, "Recente") ?? colLabel(data.tableIpca.data?.columns, "Hoje")),
     d30: colLabel(data.tableIpca.data?.columns, "D-30"),
     d90: colLabel(data.tableIpca.data?.columns, "D-90"),
   };
   const selicLabels: CutLabels = {
-    recent: colLabel(data.tableSelic.data?.columns, "Recente") ?? colLabel(data.tableSelic.data?.columns, "Hoje"),
+    // O pipeline nomeia a ponta de "Recente (dd/mm/aaaa)"; sem o intraday, ela
+    // E o D-1 — o rotulo passa a dizer isso, mantendo a data de referencia.
+    recent: (colLabel(data.tableSelic.data?.columns, "Recente") ?? colLabel(data.tableSelic.data?.columns, "Hoje"))
+      ?.replace(/^(Recente|Hoje)/, "D-1"),
     d30: colLabel(data.tableSelic.data?.columns, "D-30"),
     d90: colLabel(data.tableSelic.data?.columns, "D-90"),
   };
@@ -494,6 +520,7 @@ export async function PainelPanoramaPage() {
         treasuryLabels={treasuryLabels}
         fedLabels={fedLabels}
         selicVol={ratesVol}
+        brRefDate={preD1?.date ?? ipcaD1?.date ?? null}
       />
 
       <section id="analises" className="space-y-4">

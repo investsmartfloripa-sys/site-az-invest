@@ -30,8 +30,6 @@ import { GLOBAL_COUNTRIES, countryById, type CountryRatesPayload, type GlobalCou
 import { GlobalCountryPane } from "@/components/painel/juros-globais/GlobalCountryPane";
 import { PolicyStepChart } from "@/components/painel/juros-globais/PolicyStepChart";
 
-const REFRESH_MS = 60_000;
-
 /** País selecionado no bloco unificado (Brasil + internacionais). */
 type CountrySel = "br" | GlobalCountryId;
 
@@ -48,8 +46,11 @@ const SWITCHER_COUNTRIES: { id: CountrySel; flag: string; name: string }[] = [
 /** Títulos (fora do gráfico) e legenda de fonte por país. */
 const COUNTRY_HEAD: Record<CountrySel, { title: string; subtitle: string }> = {
   br: {
-    title: "Renda fixa ao vivo — Brasil (B3)",
-    subtitle: "Curvas DI e IPCA+ e Selic implícita, intraday da B3 (~15 min).",
+    // Deixou de ser "ao vivo": a B3 desligou o feed intraday publico em 04/08/2026
+    // (ver src/lib/b3-reference-rates.ts). A ponta agora e o fechamento do pregao
+    // anterior — o subtitulo ganha a data de referencia em runtime.
+    title: "Renda fixa — Brasil (B3)",
+    subtitle: "Curvas DI e IPCA+ e Selic implícita, no fechamento do pregão anterior (D-1).",
   },
   us: {
     title: "Juros EUA — Treasury & Fed",
@@ -242,12 +243,16 @@ type Props = {
   /** Vol de regime da renda fixa pré (IRF-M): percentil da vol-15d atual no
    *  histórico → escala o ajuste de prêmio de prazo da Selic D+0. Server, diário. */
   selicVol?: { vol15dAnn: number; pct: number; mult: number } | null;
+  /** Pregão de referência da ponta D-1 das curvas BR (ISO), p/ rotular tudo. */
+  brRefDate?: string | null;
 };
 
 type ChartPoint = {
   t: number;
   agora?: number | null;
   d1?: number | null;
+  /** Ponta D-1 da ETTJ oficial da B3 (fechamento do pregao anterior). */
+  recent?: number | null;
   d30?: number | null;
   d90?: number | null;
 };
@@ -280,7 +285,7 @@ function liquidContracts(contracts: LiveContract[], showAll: boolean): LiveContr
   return withRate.filter((c) => /F\d{2}$/.test(c.symbol) || c.trades > 2000);
 }
 
-type ShowState = { agora: boolean; d1: boolean; d30: boolean; d90: boolean };
+type ShowState = { agora: boolean; d1: boolean; recent: boolean; d30: boolean; d90: boolean };
 
 /** Janela [min,max] de vencimentos da base de titulos (TaxaSwap). */
 function cutBounds(cuts: CurveCutSet): { min: number; max: number } | null {
@@ -340,6 +345,22 @@ function buildCurveChart(
         p.d1 = c.prevAdjust;
         see(c.prevAdjust);
       }
+    }
+  }
+
+  // Ponta D-1 (ETTJ oficial da B3): traz ~269 vertices, indo ate ~34 anos.
+  // Sem recorte o eixo X estica e esmaga a parte util da curva, entao ela usa a
+  // MESMA janela de vencimentos dos cortes do pipeline (com a folga de 45 dias).
+  // Sem cortes para delimitar, corta em ~11 anos — alem disso a curva vira ruido
+  // visual para o leitor do painel.
+  if (show.recent) {
+    const fallbackMax = Date.now() + 11 * 365 * 86_400_000;
+    for (const c of cuts.recent ?? []) {
+      const t = Date.parse(c.maturity);
+      if (!Number.isFinite(t)) continue;
+      if (bounds ? t < bounds.min - SLACK || t > bounds.max + SLACK : t > fallbackMax) continue;
+      at(t).recent = c.rate;
+      see(c.rate);
     }
   }
 
@@ -765,45 +786,43 @@ export function JurosLiveBlock({
   treasuryLabels = {},
   fedLabels = {},
   selicVol = null,
+  brRefDate = null,
 }: Props) {
   const isNarrow = useIsNarrow();
   const [country, setCountry] = useState<CountrySel>("br");
   const [tab, setTab] = useState<TabId>("pre");
   const [showAll, setShowAll] = useState(false);
   // Todas as series ligadas por default — quem quiser enxugar, desliga.
-  const [show, setShow] = useState<ShowState>({ agora: true, d1: true, d30: true, d90: true });
+  const [show, setShow] = useState<ShowState>({ agora: true, d1: true, recent: true, d30: true, d90: true });
   const [di, setDi] = useState<LiveCurve | null>(null);
   const [dap, setDap] = useState<LiveCurve | null>(null);
-  const [error, setError] = useState(false);
 
+  /**
+   * Tentativa UNICA do feed intraday da B3, sem polling.
+   *
+   * O endpoint foi desligado (cotacao.b3.com.br → HTTP 520 em toda a origem),
+   * entao repetir de minuto em minuto so queimaria requisicao no navegador de
+   * cada visitante. Mantemos uma tentativa por carregamento: se a B3 religar,
+   * as series "Agora"/"Ajuste D-1" voltam a aparecer sozinhas por cima do D-1;
+   * enquanto nao religa, o painel se sustenta inteiro nos dados do servidor.
+   */
   useEffect(() => {
     const ctrl = new AbortController();
     let cancelled = false;
 
-    async function load() {
-      try {
-        const [diCurve, dapCurve] = await Promise.all([
-          fetchLiveCurve("DI1", ctrl.signal),
-          fetchLiveCurve("DAP", ctrl.signal).catch(() => null),
-        ]);
-        if (cancelled) return;
-        setDi(diCurve);
-        setDap(dapCurve);
-        setError(false);
-      } catch {
-        if (!cancelled) setError(true);
-      }
-    }
-
-    load();
-    const id = window.setInterval(() => {
-      if (document.visibilityState === "visible") load();
-    }, REFRESH_MS);
+    (async () => {
+      const [diCurve, dapCurve] = await Promise.all([
+        fetchLiveCurve("DI1", ctrl.signal).catch(() => null),
+        fetchLiveCurve("DAP", ctrl.signal).catch(() => null),
+      ]);
+      if (cancelled) return;
+      setDi(diCurve);
+      setDap(dapCurve);
+    })();
 
     return () => {
       cancelled = true;
       ctrl.abort();
-      window.clearInterval(id);
     };
   }, []);
 
@@ -903,13 +922,14 @@ export function JurosLiveBlock({
       maturity: string;
       d90: number | null;
       d30: number | null;
+      d1: number | null;
       agora: number | null;
     };
     const map = new Map<number, CurveRow>();
     const upsert = (t: number, maturity: string): CurveRow => {
       let r = map.get(t);
       if (!r) {
-        r = { t, maturity, d90: null, d30: null, agora: null };
+        r = { t, maturity, d90: null, d30: null, d1: null, agora: null };
         map.set(t, r);
       }
       return r;
@@ -923,6 +943,29 @@ export function JurosLiveBlock({
     };
     put("d90", activeCuts.d90);
     put("d30", activeCuts.d30);
+
+    // D-1 vem da ETTJ, que tem vertice quase diario — colocar cada um como LINHA
+    // estouraria a tabela. Em vez disso, casa o vertice mais proximo do
+    // vencimento de cada titulo ja listado (tolerancia de 10 dias), sem criar
+    // linha nova.
+    const d1Points = (activeCuts.recent ?? [])
+      .map((c) => ({ t: Date.parse(c.maturity), rate: c.rate }))
+      .filter((p) => Number.isFinite(p.t));
+    if (d1Points.length > 0) {
+      const D1_GAP = 10 * 86_400_000;
+      for (const row of map.values()) {
+        let best: number | null = null;
+        let bestGap = Infinity;
+        for (const p of d1Points) {
+          const gap = Math.abs(p.t - row.t);
+          if (gap < bestGap) {
+            bestGap = gap;
+            best = p.rate;
+          }
+        }
+        if (best != null && bestGap <= D1_GAP) row.d1 = best;
+      }
+    }
 
     const MAX_GAP = 25 * 86_400_000;
     const liveArr = tab === "ipca" ? dapLiquid : diLiquid;
@@ -948,34 +991,61 @@ export function JurosLiveBlock({
     return [...map.values()].sort((a, b) => a.t - b.t);
   }, [isCurve, activeCuts, diLiquid, dapLiquid, tab]);
 
-  // Erro do feed B3 NÃO derruba o bloco inteiro: só troca o pane do Brasil pela
-  // mensagem de fallback (os panes internacionais seguem funcionando).
-  const brErrored = error && !di;
+  // Com o intraday da B3 desligado, a ponta das curvas passa a ser o D-1 da ETTJ
+  // oficial. O pane brasileiro so cai quando NAO ha absolutamente nada — a
+  // ausencia do feed intraday, sozinha, nao derruba mais o bloco.
+  const hasLive = di != null;
+  const brBlackout =
+    !hasLive &&
+    (preCuts.recent?.length ?? 0) === 0 &&
+    (ipcaCuts.recent?.length ?? 0) === 0 &&
+    (preCuts.d30?.length ?? 0) === 0 &&
+    (preCuts.d90?.length ?? 0) === 0 &&
+    (ipcaCuts.d30?.length ?? 0) === 0 &&
+    (ipcaCuts.d90?.length ?? 0) === 0 &&
+    selicMeetings.length === 0;
+  /** "2026-08-03" → "03/08/2026". */
+  const refLabel = brRefDate ? brRefDate.split("-").reverse().join("/") : null;
 
-  const statusBadge = di ? (
+  // Badge: sem intraday NAO existe ponto verde pulsante — anunciar "ao vivo"
+  // sobre fechamento do dia anterior seria enganoso.
+  const statusBadge = hasLive ? (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-        di.isToday ? "bg-[#0c3d22] text-[#39d98a]" : "bg-zinc-800 text-zinc-300"
+        di!.isToday ? "bg-[#0c3d22] text-[#39d98a]" : "bg-zinc-800 text-zinc-300"
       }`}
     >
       <span
-        className={`inline-block h-1.5 w-1.5 rounded-full ${di.isToday ? "animate-pulse bg-[#39d98a]" : "bg-zinc-400"}`}
+        className={`inline-block h-1.5 w-1.5 rounded-full ${di!.isToday ? "animate-pulse bg-[#39d98a]" : "bg-zinc-400"}`}
         aria-hidden
       />
-      {di.isToday ? "Pregão de hoje · atraso ~15 min" : "Último fechamento"}
+      {di!.isToday ? "Pregão de hoje · atraso ~15 min" : "Último fechamento"}
     </span>
-  ) : null;
+  ) : (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-800 px-2.5 py-1 text-[11px] font-semibold text-zinc-300">
+      <span className="inline-block h-1.5 w-1.5 rounded-full bg-zinc-400" aria-hidden />
+      D-1{refLabel ? ` · fechamento de ${refLabel}` : " · fechamento anterior"}
+    </span>
+  );
 
   const isCurveTab = tab === "pre" || tab === "ipca";
   const pal = tab === "ipca" ? PAL_IPCA : PAL_PRE;
   const labels = tab === "ipca" ? ipcaLabels : preLabels;
   const cuts = tab === "ipca" ? ipcaCuts : preCuts;
 
-  // "Agora" (live, preto) e "Ajuste D-1" (preto tracejado) lideram a legenda;
-  // "Recente" foi removida. Restam os cortes historicos D-30 / D-90.
+  /** Ha serie intraday NA ABA ATIVA (o DAP pode falhar sozinho, sem o DI1). */
+  const hasLiveForTab = (tab === "ipca" ? dapLiquid : diLiquid).length > 0;
+  /** Ponta D-1 (ETTJ oficial) da aba ativa. */
+  const hasD1ForTab = (cuts.recent?.length ?? 0) > 0;
+  /** Nome da serie D-1 na legenda: ja vem com a data ("D-1 (03/08/2026)"). */
+  const d1Name = labels.recent ?? "D-1";
+
+  // D-1 lidera a legenda (e a ponta da curva hoje). "Agora"/"Ajuste D-1" so
+  // aparecem se o intraday da B3 responder — enquanto descontinuado, somem.
   const cutToggles: { key: keyof ShowState; label: string; color: string; available: boolean }[] = [
-    { key: "agora", label: "Agora", color: LIVE_COLOR, available: true },
-    { key: "d1", label: "Ajuste D-1", color: "#000000", available: true },
+    { key: "agora", label: "Agora", color: LIVE_COLOR, available: hasLiveForTab },
+    { key: "d1", label: "Ajuste D-1", color: "#000000", available: hasLiveForTab },
+    { key: "recent", label: "D-1", color: "#000000", available: hasD1ForTab },
     { key: "d30", label: "D-30", color: pal.d30, available: (cuts.d30?.length ?? 0) > 0 },
     { key: "d90", label: "D-90", color: pal.d90, available: (cuts.d90?.length ?? 0) > 0 },
   ];
@@ -988,7 +1058,11 @@ export function JurosLiveBlock({
       {/* Título FORA do gráfico */}
       <header className="space-y-0.5">
         <h2 className="text-xl font-semibold text-[#132960] md:text-2xl">{COUNTRY_HEAD[country].title}</h2>
-        <p className="text-sm text-zinc-500">{COUNTRY_HEAD[country].subtitle}</p>
+        <p className="text-sm text-zinc-500">
+          {country === "br" && !hasLive && refLabel
+            ? `Curvas DI e IPCA+ e Selic implícita, no fechamento do pregão de ${refLabel} (D-1).`
+            : COUNTRY_HEAD[country].subtitle}
+        </p>
       </header>
 
       {/* Card único: o header (navy) traz as BANDEIRAS no lugar do antigo título. */}
@@ -999,20 +1073,31 @@ export function JurosLiveBlock({
             <div className="flex flex-wrap items-center gap-2">
               {statusBadge}
               <span className="text-[11px] text-[#9db8e8]">
-                {di?.quotedAt ? `Cotado às ${fmtQuotedAt(di.quotedAt)}` : "Carregando cotações..."}
+                {hasLive && di?.quotedAt
+                  ? `Cotado às ${fmtQuotedAt(di.quotedAt)}`
+                  : "Intraday público da B3 descontinuado"}
               </span>
             </div>
           ) : null}
         </div>
 
-        {country === "br" && brErrored ? (
+        {country === "br" && brBlackout ? (
           <div className="border-t border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            Cotações intraday da B3 indisponíveis no momento — os dados D-1 do pipeline seguem valendo nas
-            trilhas de renda fixa.
+            Curvas de renda fixa indisponíveis no momento — nem a ETTJ da B3 nem os cortes do pipeline
+            responderam. A página tenta de novo na próxima atualização.
           </div>
         ) : null}
 
-        {country === "br" && !brErrored ? (
+        {country === "br" && !hasLive && !brBlackout ? (
+          <p className="border-t border-zinc-100 bg-[#f7f9fc] px-4 py-2 text-[11px] leading-snug text-zinc-600 md:px-5">
+            <strong className="font-semibold text-[#132960]">Dados D-1.</strong> A B3 descontinuou o feed
+            intraday público de cotações em 04/08/2026, então a ponta das curvas passou a ser o fechamento
+            do pregão anterior{refLabel ? ` (${refLabel})` : ""}, pela ETTJ oficial da B3 — a mesma base dos
+            cortes D-30 e D-90.
+          </p>
+        ) : null}
+
+        {country === "br" && !brBlackout ? (
       <>
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 px-4 pt-3 md:px-5">
         <PanelTabs
@@ -1053,15 +1138,18 @@ export function JurosLiveBlock({
                   ) : null,
                 )}
               </div>
-              <label className="flex cursor-pointer items-center gap-1.5 text-xs text-zinc-600">
-                <input
-                  type="checkbox"
-                  checked={showAll}
-                  onChange={(e) => setShowAll(e.target.checked)}
-                  className="h-3.5 w-3.5 accent-[#027DFC]"
-                />
-                Todos os vencimentos
-              </label>
+              {/* So filtra CONTRATOS do feed intraday — sem ele, nao tem o que expandir. */}
+              {hasLiveForTab ? (
+                <label className="flex cursor-pointer items-center gap-1.5 text-xs text-zinc-600">
+                  <input
+                    type="checkbox"
+                    checked={showAll}
+                    onChange={(e) => setShowAll(e.target.checked)}
+                    className="h-3.5 w-3.5 accent-[#027DFC]"
+                  />
+                  Todos os vencimentos
+                </label>
+              ) : null}
             </>
           ) : null}
         </div>
@@ -1070,9 +1158,11 @@ export function JurosLiveBlock({
       <div className="grid gap-5 p-4 md:p-5 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
         <div className="min-w-0">
           <div className="h-[300px] w-full md:h-[340px]">
-            {!di ? (
+            {/* O grafico NAO depende mais do feed intraday: desenha com o D-1 e
+                os cortes que vieram do servidor. So fica vazio se nao houver nada. */}
+            {!hasLive && !hasD1ForTab && tab !== "selic" && (cuts.d30?.length ?? 0) === 0 && (cuts.d90?.length ?? 0) === 0 ? (
               <div className="flex h-full items-center justify-center text-sm text-zinc-400">
-                Carregando curvas...
+                Sem dados para esta curva no momento.
               </div>
             ) : tab === "selic" ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -1143,7 +1233,7 @@ export function JurosLiveBlock({
                     name={
                       hasSelicAgora
                         ? (selicLabels.recent ?? "D-1").replace(/^Recente/i, "Ajuste D-1")
-                        : (selicLabels.recent ?? "Recente (D-1)")
+                        : (selicLabels.recent ?? "D-1 (fechamento anterior)")
                     }
                     stroke={PAL_SELIC.recent}
                     strokeWidth={hasSelicAgora ? 1.5 : 2.2}
@@ -1194,10 +1284,27 @@ export function JurosLiveBlock({
                   {show.d30 ? (
                     <Line type="monotone" dataKey="d30" name={labels.d30 ?? "D-30"} stroke={pal.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   ) : null}
-                  {show.agora && show.d1 ? (
+                  {/* Ponta D-1 (ETTJ oficial da B3): e a linha PRINCIPAL enquanto o
+                      intraday esta descontinuado. Sem dots — sao ~dezenas de vertices
+                      na janela, e a marcacao viraria borrao. Se o "Agora" voltar a
+                      existir, ela recua para tracejada e cede a frente. */}
+                  {show.recent && hasD1ForTab ? (
+                    <Line
+                      type="monotone"
+                      dataKey="recent"
+                      name={d1Name}
+                      stroke="#000000"
+                      strokeWidth={hasLiveForTab ? 1.5 : 2.2}
+                      strokeDasharray={hasLiveForTab ? "6 4" : undefined}
+                      dot={false}
+                      connectNulls
+                      isAnimationActive={false}
+                    />
+                  ) : null}
+                  {hasLiveForTab && show.agora && show.d1 ? (
                     <Line type="monotone" dataKey="d1" name="Ajuste D-1 (B3)" stroke="#000000" strokeWidth={1.6} strokeDasharray="6 4" dot={false} connectNulls isAnimationActive={false} />
                   ) : null}
-                  {show.agora ? (
+                  {hasLiveForTab && show.agora ? (
                     <Line type="monotone" dataKey="agora" name={liveName} stroke={LIVE_COLOR} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
                   ) : null}
                 </LineChart>
@@ -1209,10 +1316,12 @@ export function JurosLiveBlock({
               {tab === "selic"
                 ? hasSelicAgora
                   ? `Selic implícita por reunião COPOM — modelo forward sobre a curva PRE. “Agora” (preto): curva DI AO VIVO da B3 (~15 min, D+0), recalculada no navegador com o mesmo modelo do pipeline. “Ajuste D-1” (tracejado): fechamento do pregão anterior. Degraus arredondados a 0,25%. Ajuste de prêmio de prazo (experimental, em todas as séries BR, linear a partir de 3m): base ${SELIC_TP_BASE_BPS} bps a 12m × ${selicTp.source === "irfm" ? `vol IRF-M 15d ${(selicTp.vol15d! * 100).toFixed(1)}% (percentil ${selicTp.pct!.toFixed(0)}% em 5a)` : "vol do dia (proxy)"} (×${selicTp.volMult.toFixed(2)}) → −${selicTp.bpsAt12m.toFixed(0)} bps na cauda. Um eventual sobe-e-desce no longo é o pico de juro terminal precificado pelo mercado (não erro): prêmio crescente sobre forward que aplaina implica leve alívio esperado.`
-                  : "Selic implícita por reunião COPOM — modelo forward do pipeline AZ (B3 PRE, D-1), mesmos valores da trilha de política monetária."
-                : tab === "ipca"
-                  ? "D-30/D-90: títulos IPCA+ (cupom limpo NTN-B, TaxaSwap B3) em janelas anteriores. “Agora” (preto): futuros DAP da B3 (~15 min); “Ajuste D-1” (preto tracejado): ajuste do pregão anterior."
-                  : "D-30/D-90: títulos prefixados (TaxaSwap B3) em janelas anteriores. “Agora” (preto): futuros DI1 da B3 (~15 min); “Ajuste D-1” (preto tracejado): ajuste do pregão anterior."}
+                  : `Selic implícita por reunião COPOM — modelo forward do pipeline AZ sobre a curva PRE da B3 no fechamento do pregão anterior (D-1${refLabel ? `, ${refLabel}` : ""}), mesmos valores da trilha de política monetária. Não há série intraday: a B3 descontinuou o feed público de cotações em 04/08/2026.`
+                : !hasLiveForTab
+                  ? `Ponta D-1 (preta): ETTJ oficial da B3 — “Taxas Referenciais”, curva ${tab === "ipca" ? "DI x IPCA" : "DI x pré"} no fechamento do pregão anterior${refLabel ? ` (${refLabel})` : ""}, base 252 dias úteis. D-30/D-90: ${tab === "ipca" ? "títulos IPCA+ (cupom limpo NTN-B, TaxaSwap B3)" : "títulos prefixados (TaxaSwap B3)"} em janelas anteriores — mesma família de dado, então a curva é homogênea. A série intraday (~15 min) saiu do ar em 04/08/2026, quando a B3 desligou o feed público de cotações (Comunicado Externo 001/2026-VTEC); volta a aparecer aqui se o acesso a dados D+0 for restabelecido.`
+                  : tab === "ipca"
+                    ? "D-30/D-90: títulos IPCA+ (cupom limpo NTN-B, TaxaSwap B3) em janelas anteriores. “Agora” (preto): futuros DAP da B3 (~15 min); “Ajuste D-1” (preto tracejado): ajuste do pregão anterior."
+                    : "D-30/D-90: títulos prefixados (TaxaSwap B3) em janelas anteriores. “Agora” (preto): futuros DI1 da B3 (~15 min); “Ajuste D-1” (preto tracejado): ajuste do pregão anterior."}
             </MethodInfo>
           </div>
         </div>
@@ -1225,7 +1334,7 @@ export function JurosLiveBlock({
                   <th className="py-2 pr-2 text-left font-semibold">Reunião</th>
                   <th className={thClass}>D-90</th>
                   <th className={thClass}>D-30</th>
-                  <th className={thClass}>{hasSelicAgora ? "Ajuste D-1" : "Recente"}</th>
+                  <th className={thClass}>D-1</th>
                   {hasSelicAgora ? <th className={thClass}>Agora (D+0)</th> : null}
                 </tr>
               </thead>
@@ -1251,7 +1360,8 @@ export function JurosLiveBlock({
                     <th className="py-2 pr-2 text-left font-semibold">Venc.</th>
                     <th className={thClass}>D-90</th>
                     <th className={thClass}>D-30</th>
-                    <th className={thClass}>Agora</th>
+                    {hasD1ForTab ? <th className={thClass}>D-1</th> : null}
+                    {hasLiveForTab ? <th className={thClass}>Agora</th> : null}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
@@ -1260,14 +1370,26 @@ export function JurosLiveBlock({
                       <td className="py-1.5 pr-2 font-semibold text-[#132960]">{maturityLabel(r.maturity)}</td>
                       <td className={`${tdClass} text-zinc-400`}>{fmtRate(r.d90)}</td>
                       <td className={`${tdClass} text-zinc-500`}>{fmtRate(r.d30)}</td>
-                      <td className={`${tdClass} font-semibold text-[#000000]`}>{fmtRate(r.agora)}</td>
+                      {hasD1ForTab ? (
+                        <td className={`${tdClass} ${hasLiveForTab ? "text-zinc-600" : "font-semibold text-[#000000]"}`}>
+                          {fmtRate(r.d1)}
+                        </td>
+                      ) : null}
+                      {hasLiveForTab ? (
+                        <td className={`${tdClass} font-semibold text-[#000000]`}>{fmtRate(r.agora)}</td>
+                      ) : null}
                     </tr>
                   ))}
                 </tbody>
               </table>
               <p className="mt-2 text-[11px] text-zinc-400">
-                D-90/D-30: títulos (TaxaSwap B3) em janelas anteriores. Agora: futuro{" "}
-                {tab === "ipca" ? "DAP" : "DI1"} de vencimento mais próximo (B3 ~15 min).
+                D-90/D-30: títulos (TaxaSwap B3) em janelas anteriores.
+                {hasD1ForTab
+                  ? ` D-1: ETTJ oficial da B3${refLabel ? ` (${refLabel})` : ""}, vértice mais próximo de cada vencimento.`
+                  : ""}
+                {hasLiveForTab
+                  ? ` Agora: futuro ${tab === "ipca" ? "DAP" : "DI1"} de vencimento mais próximo (B3 ~15 min).`
+                  : ""}
               </p>
             </>
           )}
