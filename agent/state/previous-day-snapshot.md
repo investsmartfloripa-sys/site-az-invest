@@ -1,72 +1,81 @@
 # Snapshot do dia anterior — Café com Mercado
 
-**Rodada:** 2026-08-04 (terça-feira), ~10:00 BRT. Publicação em `content/cafe-com-mercado/2026-08-04.md` + capa `/capas/cafe-com-mercado/2026-08-04.jpg`. Deploy `deploy-vercel` = **success** (run 30911753627, head_sha 126275bb). Página e capa = 200; og:image, og:title e og:description confirmados. WhatsApp (grupo Avisos) = **POSTADO** em 2 mensagens (link 10:09 com card da capa, texto 10:10 em balão único com placar alinhado).
+**Rodada:** 2026-08-05 (quarta-feira), ~10:17 BRT (post no zap às 13:50). Publicação em `content/cafe-com-mercado/2026-08-05.md` + capa `/capas/cafe-com-mercado/2026-08-05.jpg`. Deploy `deploy-vercel` = **success** (run 31010111886, head_sha d460c51a). Página e capa = 200. WhatsApp (grupo Avisos) = **POSTADO** em 2 mensagens às 13:50.
 
-## Narrativa-mãe do dia (4/8)
-Véspera do Copom com o corte contratado e a discussão inteira deslocada para setembro. A curva embute ~99% de corte de 25 pb para **14,00%** amanhã (opções da B3: 89,5%) e cerca de metade de um segundo corte em setembro. A produção industrial de junho, divulgada às 9h, veio **-1,8% m/m** contra consenso de -0,9% (a/a +1,7%; ano +1,5%; 12m +0,7%), com **4 de 4 grandes categorias** e **16 de 25 atividades** em queda, e maio revisado de -0,2% para -0,9% — dado que reforça o argumento de espaço para cortes. Somado ao PMI industrial de julho em 47,5 (de 50,8), a indústria acumula dois meses de contração. Lá fora, **Dow em máxima histórica (53.178, +1,32% na segunda)**, S&P 500 a 7.600 (+1,48%) e Nasdaq +2,1%, sustentados pela temporada de balanços: ~85% batendo, e a **Goldman elevou o crescimento de lucro do S&P de 22% para 45%** anualizado (remarcações de OpenAI, Anthropic, SpaceX). Contraponto na renda fixa: ISM industrial 55,6 (vs 53,9), preços pagos 71,1, T10 ~4,69% e T30 ~5,24%, com **62,7% de chance de ALTA do Fed em setembro** (CME).
+## Narrativa-mãe do dia (5/8) — DIA DO COPOM
+Wall Street em máxima histórica com o petróleo abaixo de US$ 80, e o Ibovespa parado. **Dow 54.085,88 (+1,71%)**, primeira vez acima de 54 mil; **S&P 500 7.736,52 (+1,79%)**, primeiro fechamento acima de 7.700; Nasdaq 26.584,99 (+2,59%). O motor foi Bessent dizendo que o acordo de Ormuz sairia em dias: **Brent -5,26% a US$ 79,36** (WTI -5,7% a 75,77), ~10% de queda na semana. Efeito na precificação do Fed: o CME passou a embutir **UMA** alta em setembro, não duas (**58,4%** vs 62,7% na véspera). **ADP de julho = 44 mil** (junho 98 mil; consenso 68-75 mil), contrastando com ISM industrial 55,6 (máxima em 4 anos). Ásia disparou: **Nikkei 66.217 (+3,53%)**, Kospi ~+4,2% a 6.626 (short squeeze depois de -22% em julho), CSI 300 +0,98%, ASX recorde. Na manhã de 5/8 o Brent virou **+1,9% a US$ 80,87** com houthis atacando petroleiro saudita ao largo de Yanbu — a normalização não é linear.
 
-## Níveis (diff p/ próxima rodada) — 4/8
+## Níveis (diff p/ próxima rodada) — fech. 04/08
 | Ativo | Nível |
 |---|---|
-| Ibov | fech. 03/8 **178.000,24 (0,00%, +1,24 pt)**; giro R$ 16,2 bi; máx 178.556,60 |
-| Dólar | fech. 03/8 comercial **R$ 5,087 (+0,34%)**; PTAX venda 5,0723 |
-| DI | curva toda cedeu em 3/8: F31 -20 pb, F33 -21 pb, **F35 -22,5 pb** (ponta longa mais que a curta) |
-| EUA (fech. 03/8) | **Dow 53.178,41 (+1,32%, recorde)**; S&P 500 7.600,50 (+1,48%); Nasdaq 25.913,9 (+2,1%) |
-| Futuros 4/8 | S&P +0,1/0,3%; Nasdaq 100 +0,76/0,9%; VIX 15,70 |
-| UST | 2a 4,26%; **10a ~4,69%**; **30a ~5,24%** |
-| DXY / câmbio | DXY ~100,0; EUR/USD 1,1509; **USD/JPY ~157** (intervenção coordenada); fixing PBoC 6,7917 |
-| Petróleo | Brent chegou a ~US$ 85 (+2,7%) com ataque a cargueiro perto de Al Khasab e **virou p/ ~US$ 82** (contrato out/26) quando o Qatar sinalizou avanço EUA-Irã; WTI ~82 |
-| Metais/BTC | ouro US$ 4.108 (+0,43%); **prata US$ 59,18 (+2,29%)**; cobre +2,66%; minério 702,50 CNY (-0,4%); BTC ~US$ 63,5 mil |
-| Ásia (4/8) | **Kospi +1,62% (rebote)**; Nikkei +0,32%; CSI 300 +1%; Hang Seng -0,6%; ASX +1,4% |
-| Selic | 14,25%; **Copom decide 5/8** — corte p/ 14,00% contratado |
+| Ibov | **177.894,97 (-0,06%)**; máx +1,51% (180.679); ITUB4 -2,57%, PETR4 -1,21%, VALE3 +2,28%, **CSNA3 +6,2%**, **POMO4 -10,4%**; IFIX 3.784,38 |
+| Dólar | comercial **R$ 5,1309 (+0,86%)**; PTAX 5,1047; futuro set. 5,1575. Em 5/8 cedo: R$ 5,11/5,121 |
+| DI | **jan/27 13,79% (-2 pb)**, **jan/29 14,02% (+4 pb)**, **jan/31 14,21% (+2 pb)** — ponta longa ABRINDO com Treasuries fechando |
+| NTN-B | 2029 **8,24%** (vs 8,20); 2035 **8,09%**; 2050 **7,63%** |
+| EUA | **Dow 54.085,88 (+1,71%)**; **S&P 500 7.736,52 (+1,79%)**; Nasdaq 26.584,99 (+2,59%); Nasdaq 100 29.733 (+3,32%); Russell 3.037 (+1,85%) |
+| UST | 2a **4,20% (-6 pb)**; 10a **4,62% (-7 pb)**; 30a **5,18% (-5 pb)** |
+| Câmbio | DXY 99,854; EUR/USD 1,1543; **USD/JPY 157,38**; USD/CNY 6,7459 |
+| Petróleo | **Brent US$ 79,36 (-5,26%)**; WTI 75,77 (-5,7%). Em 5/8: Brent 80,87 (+1,9%) |
+| Metais/BTC | ouro US$ 4.073 → **4.095 (+0,44%)** em 5/8; prata ~US$ 60; cobre +2%; minério 706 CNY (Dalian, +0,93%); **BTC US$ 64.074** |
+| Europa (fech. 4/8) | Stoxx 600 656,86 (+0,73%, recorde); DAX 26.202 (+0,77%); CAC 8.667; FTSE 10.879; VIX 16,50 |
+| Selic | **14,25% → decisão 5/8 às 18h30**, corte p/ 14,00% contratado (opções B3 95%) |
 
 ## Divergência entre casas (Mercado) — Copom 5/8
-- **Corte agora + corte em setembro → 13,75%:** JP Morgan, Santander, BofA, Itaú, **BTG** (confirmado no morning call de hoje: curva com ~50% do 2º corte), Polo Capital.
-- **Corte agora + pausa:** Morgan Stanley (abandonou a previsão de manutenção; novos cortes só em jan/27), HSBC, **XP**, Fórum Investimentos.
-- **Este é o último corte:** Rio Bravo (José Alfaix), MAG Investimentos.
-- **Deveria manter em 14,25%:** Warren Rena, Bossa Invest, SulAmérica (Natalie Victal).
-- **Tese divergente da XP (do call de hoje):** a inflação implícita para o fim do ano comportaria **ALTA de juros** mais adiante — hipótese que a curva não precifica.
-- **Consenso sobre o comunicado:** HSBC, XP, Santander e Itaú esperam que o Copom não antecipe passos e preserve a decisão reunião a reunião.
-- **Focus 03/8:** 1ª queda da projeção de Selic desde março — 14,00% → **13,75%** (2026); IPCA 5,12% → **5,03%** (5ª queda); PIB 1,99%; dólar 5,20. Galípolo em silêncio desde 24/7 (Expert XP: juros restritivos por mais tempo).
-- **Assimetria de posicionamento (XP):** estrangeiro em renda variável, local em renda fixa longa.
+- **Mapa de Selic fim/2026 (17 casas, Money Times):** 13,25% JP Morgan e Inter · 13,50% Safra e BB Investimentos · **13,75% BTG, Santander, Bradesco, Itaú, UBS BB, BofA** · **14,00% XP, Genial, C6, Goldman, ASA, HSBC** · 14,25% **Citi (único a projetar manutenção hoje)**.
+- **XP (call transcrito + "Esquenta do Copom: sem surpresas ou sinais"):** corte de 25 pb + **PAUSA**; comunicado **neutro**, sem sinalizar próximos passos; projeções do BC caindo de 5,2% p/ 4,9% em 2026, 3,7% em 2027 e 3,2% no 1T28; ajustes maiores só em 2027 e condicionados ao fiscal; Selic 11,50% no fim de 2027.
+- **BTG (call transcrito, Mateus Spies):** corte hoje + **mais 25 pb em setembro** → freio em **13,75%**, totalizando 125 pb desde os 15% do início do ano. Enquadramento: o mercado começou o ano precificando 300 pb e em março temia não haver nem 50; o ciclo real ficou no meio, e o Ibov "nem 200 mil nem 170 mil".
+- **Consenso sobre o comunicado:** HSBC, XP, Santander e Itaú esperam decisão reunião a reunião, sem antecipar passos.
+- **Pesquisa pré-Copom XP (23 gestores macro, 27-31/07):** 96% projetam 25 pb; visão negativa sobre o Brasil **40% → 54% (RECORDE)**; positiva 24% → 8%; expectativa de inflação 12m 4,10% → **4,19%**.
+- **Alocação XP (agosto):** reduziu multimercados, elevou renda variável internacional (moderado e sofisticado) tratando a realização em tecnologia como ponto de entrada; mínimo **15% na carteira global** / máx. 85% Brasil. Renda fixa: Raposo Castelo IPCA+10, Águas do Rio IPCA+13, CPR Suzano IPCA+9,10; global incluiu **bond da Nvidia a 4,6%** e **da Meta a 5%** em dólar.
 
-## Empresas (4/8)
-- **Itaú (ITUB4):** reporta hoje após fech.; consenso Bloomberg R$ 12,4 bi de lucro recorrente, ROE 24,2%. Bradesco 5/8, BB na semana seguinte.
-- **Gerdau (GGBR4):** hoje; lucro ~R$ 1,48 bi (+71% a/a), Ebitda +11% t/t (Itaú BBA); Citi elevou alvo de R$ 27 p/ R$ 29.
-- **PRIO (PRIO3):** hoje; Ebitda US$ 869 mi (BTG). Também hoje: GPA, Iguatemi, RD Saúde, C&A, Tenda.
-- **CSN (CSNA3):** **-6,82%** em 3/8 (R$ 4,51) — prévia do 2T com dívida líquida +R$ 3,5 bi (vs +R$ 1,2 bi esperado) e Fitch rebaixando de B p/ **CCC+** em 31/7; avalia manter fatia minoritária em cimento (Huaxin ~R$ 12 bi; Votorantim+Cementir e Polimix na disputa).
-- **Brava (BRAV3):** leilão da OPA **5/8, 15h, R$ 23,00/ação**, 116,1 mi ON (~25%), liquidação 17/8, Ecopetrol → 51%.
-- **Randoncorp (RAPT3):** **+46%** em 3/8 — OPA da DRAMD paga em ações da Frasle (1 FRAS3 : 2,7 RAPT3, R$ 8,52/ação, prêmio 45,5%).
-- **Santander (SANB11):** OPA de permuta 0,2028 BDR por ON/PN e 0,4056 por unit, prêmio ~15%; **não busca deslistagem da B3**; BTG calcula implícito de R$ 29,04.
-- **BB Seguridade (BBSE3):** lucro aj. R$ 2,2 bi (-3,9% a/a), seguro agrícola -42,5%, R$ 3,8 bi em dividendos. ISA Energia R$ 174 mi (-32%); Marcopolo R$ 271,2 mi (-15,5%).
-- **EUA:** Palantir receita US$ 1,935 bi (+93%), comercial EUA +149%, guia 2026 p/ US$ 8,15 bi, ação +17% no pré; Caterpillar +9% (receita >US$ 20 bi, energia p/ data center); hoje AMD e **SpaceX (1º balanço pós-IPO; ação -15% desde o IPO)**.
+## Empresas (5/8)
+- **Itaú (ITUB4):** 2T26 lucro recorrente **R$ 12,4 bi (+7,8% a/a)**, **ROE 24,3%** (Brasil 25,7%), carteira R$ 1,5 tri (+9,6%), inadimplência 90d 1,9%. **Guidance de tarifas e seguros cortado de 5%-9% p/ 2%-5%.** BTG viu 1% abaixo do próprio número.
+- **Bradesco (BBDC4):** reporta **hoje APÓS o fechamento** (não de manhã — armadilha da rodada). Consenso Bloomberg R$ 6,99 bi / ROE 16%; XP R$ 7,0 bi e o aponta como principal surpresa positiva entre os grandes.
+- **PRIO (PRIO3):** lucro **US$ 413,3 mi (+169%)**, Ebitda ajustado recorde US$ 847,1 mi, receita US$ 1,22 bi. BTG: bom, mas em linha; destaque p/ lifting cost.
+- **Gerdau (GGBR4):** lucro ajustado R$ 1,46 bi (+69,7%), Ebitda R$ 3,43 bi (+33,9%), América do Norte puxando.
+- **Klabin (KLBN11):** lucro R$ 387 mi (-34%), Ebitda R$ 1,96 bi, receita R$ 5,15 bi.
+- **Tenda (TEND3):** lucro R$ 179,1 mi com guidance ELEVADO; BTG mantém baixa renda / MCMV como preferência em construção.
+- **Brava (BRAV3):** leilão da OPA **hoje 15h, R$ 23,00** (116,1 mi ON); Ecopetrol comprou bloco de ~26% a **R$ 24,00** (CVM questionou a diferença, colegiado manteve) → ~51%; liquidação 17/8.
+- **CSN (CSNA3):** +6,2% em 4/8. Propostas vinculantes pela CSN Cimentos em **7/8**, R$ 12-13 bi; Votorantim, Polimix, Anhui Conch e Huaxin ativos; J&F e Suzano saíram.
+- **EUA:** **AMD** receita US$ 11,54 bi (+50,1%), LPA aj. 1,66, guidance 3T acima, mas **-8,1%** por margem bruta travada em 56% e capex de US$ 808 mi (3x o modelado). **SpaceX** receita US$ 7,814 bi (+92%) e prejuízo menor, ambos acima, mas **-10%** no pré por capex de **US$ 18,37 bi** (15,83 bi em IA). Temporada: **86% batendo**, crescimento do 2T em **+47,4%** (era 23,2% em 30/06).
 
-## Política (4/8)
-- **TARIFAS — CORREÇÃO IMPORTANTE (o snapshot de 3/8 estava errado):** NÃO existe sobretaxa de 50% entrando em vigor em 6/8/2026. Isso era o tarifaço de **2025**, e as tarifas IEEPA foram **derrubadas pela Suprema Corte em 20/02/2026**. O que vigora em 2026 é a **Seção 301**: **25% desde 22/07** + **12,5%** (trabalho forçado) **desde 23-24/07**, somando **37,5%** sobre parte da pauta — US$ 6,6 bi / 16,5% das exportações ao EUA (MDIC). Sobrevivem ainda Seção 232 (aço/alumínio, até 50%, 24,2% da pauta) e Seção 122 global de 10%. Isentos: café, carnes, aeronaves, suco de laranja, celulose. **Nada muda em 6/8.** Alckmin: governo não sai da mesa.
-- **Fiscal:** arrecadação de junho R$ 264,44 bi (+7,72% real a/a), 1S26 R$ 1,587 tri (recorde). IFI: dívida bruta p/ **82,5% do PIB** em 2026, déficit primário R$ 128 bi, faltam R$ 72,3 bi p/ a meta. PLOA 2027 até 31/8. BTG: dívida bruta 81,6% e alerta p/ LFT perto do teto de 50% do PAF.
-- **Congresso:** sem sessão deliberativa esta semana; esforço concentrado 10-14/8 e 31/8-03/9. Convenções até 5/8; registro de candidaturas até 15/8.
-- **Eleição:** BTG/Nexus (divulgada 3/8, 2.002 eleitores, ±2 pp): 1º turno **Lula 41% x Flávio Bolsonaro 37%** (era 42x33); 2º turno **46% x 45%** (empate técnico).
-- **Fed:** sem reunião em agosto; Jackson Hole 27-29/8; ata 9-3 (dissensos por alta); Warsh propôs 6 reuniões de juros/ano + 2 temáticas; Schmid (KC) fala hoje 21h15. **BoJ** manteve 1% (maior desde 1995), iene ~157 após intervenção coordenada EUA-Japão.
-- **China:** Caixin de serviços **54,1** em julho (vs 52,5 esperado), contrastando com o PMI industrial oficial em contração.
+## Política (5/8)
+- **Visto da embaixadora:** EUA revogaram em 4/8 o visto de **Maria Luiza Ribeiro Viotti**, alegando demora no agrément de Daniel Perez. Planalto chamou as justificativas de **falsas** e falou em "escalada deliberada por razões ideológicas"; anunciou **reciprocidade**, com o Itamaraty ainda definindo o formato. Viotti segue em Washington e pode exercer funções, mas não reentra se sair.
+- **Tarifas (quadro vigente):** Seção 301 **25%** desde 22/07 (~3.000 itens, citando Pix e redes) + **12,5%** por trabalho forçado; alcançam **23,1%** das exportações ao EUA. Seção 232 (aço/alumínio) cobre 24,2% (US$ 9,8 bi).
+- **Eleição:** **Genial/Quaest (2.004 eleitores, 31/07-03/08, ±2 pp)** — 2º turno **Lula 44% x Flávio 39%** (era 45x37 em 15/07); 1º turno Lula 39%, Flávio 30%, Caiado 4%, Renan Santos 4%, Zema 2%; aprovação do governo **48% x 47%**. Meio/Ideia: Lula 43% x Flávio 35%. **Flávio anunciaria o vice às 11h de 5/8** (último dia de convenções; registro no TSE até 15/8) — nomes cotados: Rogério Marinho, Priscila Costa, Michelle Bolsonaro. **NÃO confirmei quem foi anunciado.**
+- **Congresso:** sem sessão deliberativa esta semana; esforços concentrados **10-14/8** e 31/8-03/9. **PLOA 2027 até 31/8**, com a LDO 2027 ainda não votada.
+- **Fed:** sem reunião em agosto. Schmid (KC) disse que pode ser preciso apertar mais; Cook e Daly falavam em 5/8. **Jackson Hole 27-29/8**, keynote de **Kevin Warsh** (defende menos reuniões de política monetária e fim da orientação futura, alegando que a comunicação do Fed virou ruído). **BoJ** manteve 1,00% (8x1), Ueda sinalizando alta possível em setembro. BCE depósito 2,25%; BoE 3,75%.
 
-## Transcrições / vídeos 4/8 — 3 de 4 (shell local via Desktop Commander)
-- yt-dlp (`python -m yt_dlp`, v2026.07.04) pelo PC baixou as legendas SEM bot check. **Transcritos e lidos:** XP `SmkbufBBFaI` (Rafi + João Rodrigues + Max — reforma tributária/IVA nos shoppings, carteira de FIIs de agosto, Goldman 22%→45%, ponta longa cedendo, tese de ALTA de juros no fim do ano); BTG `6MKaN-nJJ4o` (Gerson Zonorense + Vitor Melo — ISM 55,6, Copom 99%/setembro 50%, leilão de NTN-B, liquidação do fundo Situational Awareness US$ 45 bi explicando a correção de memória, Micron ~5x, Nvidia ~18x, Qatar sinalizando e Brent virando AO VIVO durante o call); Pablo Spyer `m37ZJ5MnRz0` (Dow recorde, Stoxx 600 recorde, 85% batendo, SpaceX -15% pós-IPO).
-- **FALHA:** Genial `9HFGUWG7xdk` — "There are no subtitles for the requested languages" nas duas tentativas. A live terminou pouco antes das 9h30 e o YouTube ainda não havia gerado a legenda automática. Não inferi tese pelo título. Se repetir, tentar de novo ~1h depois ou usar o vídeo de fechamento da véspera.
-- OBS. do inventário: no feed RSS do Genial o campo `published` traz a **data de criação do agendamento da live** (29/07), não a exibição. Julgar por `updated` + views.
+## Dados
+- **Produção industrial de junho -1,8% m/m** (2ª queda seguida), carrego de -1,5% p/ o 3T; XP cortou o PIB do 2T de 0,47% p/ **0,40%**, mantendo 2,0% em 2026. **PMI industrial de julho 47,5** (de 50,8).
+- **PMI de serviços e composto do Brasil de julho:** divulgados às 10h de 5/8, **não indexados a tempo** — publiquei só na Agenda, sem número. **ARMADILHA REGISTRADA:** as buscas devolvem "serviços 46,3 / composto 46,6" com citação da Pollyanna De Lima falando em "eleição de 2026" — isso é **JULHO DE 2025**. Base correta de junho/2026: serviços 51,3, composto 50,7. O PDF oficial em pmi.spglobal.com serve release de dezembro/2025. **Conferir sempre a data.**
+- **ISM de serviços dos EUA de julho:** saía às 11h BRT de 5/8, consenso 54,5 (anterior 54,0) — não peguei o número.
+- Europa (julho): serviços zona do euro 51,7 (máx. em 5 meses), RU 52,1, Alemanha 49,8, Japão 51,2.
+
+## Transcrições / vídeos 5/8 — 3 de 4 (shell local via Desktop Commander)
+- **Transcritos e lidos:** XP `WPHD4_lp38Q` (Mayara Rodrigues + Rodrigo Gavioli/alocação — carteiras de agosto, corte + pausa, juros altos por mais tempo lá fora, 15% mínimo global, bonds de Nvidia e Meta); BTG `TkhHhQsUB1I` (Bruno + Mateus Spies + Mateus Parisoto — Copom 25+25 → 13,75%, Brent abaixo de 80 como vetor de descompressão, Warsh e a comunicação do Fed, balanços BR, cripto: Uniswap 16-17x, Aave 12-13x, Sky 6x, Hyperliquid 30-40x caindo p/ 25-30 com o repasse da Circle a partir de outubro); Pablo Spyer `W4Z9MlQ36pc` (CME saiu de duas altas para UMA, Brent -10% na semana, Quaest, vice de Flávio às 11h, risco de reciprocidade).
+- **FALHA REPETIDA:** Genial `g-328xAElb4` — "There are no subtitles for the requested languages" em DUAS tentativas (10h e 10h50). Mesmo padrão de 4/8. A live termina ~9h30 e o YouTube demora a gerar a legenda. **Sugestão p/ a próxima:** tentar o vídeo de FECHAMENTO da véspera (`uSkzknSBtjU` em 4/8, que tinha legenda) em vez de insistir no morning call do dia.
+- OBS. do RSS do Genial: `published` traz a data de criação do agendamento da live (29/07), não a exibição. Julgar por `updated` + views.
 
 ## Capa
-- Manchete: **"INDÚSTRIA DESABA NA VÉSPERA DO COPOM"** (2 linhas); subtítulo "Corte de 25 pontos está contratado; a disputa é setembro"; kicker "CAFÉ COM MERCADO · TERÇA, 04/08".
-- Base cinematic_studio_2_5 (16:9, 2k), id `81d58795` (pedi 2 variantes; a segunda não completou a tempo). Colagem: chão de fábrica vazio com linha de montagem parada à esquerda; torre brutalista do BC ao centro com bandeira do Brasil; petroleiro em estreito + pregão com gráficos verdes à direita. compose-capa.py rodou limpo.
+- Manchete: **"COPOM CORTA HOJE, MAS A BRIGA É SETEMBRO"** (2 linhas); subtítulo "Wall Street renova recordes com o Brent abaixo de US$ 80"; kicker "CAFÉ COM MERCADO · QUARTA, 05/08".
+- Base cinematic_studio_2_5 (16:9, 2k), id `5a204f66` (2 variantes; escolhida a 1ª). Colagem: torre do BC com bandeira do Brasil à esquerda; seta de aço descendente com faíscas ao centro; velas verdes em máxima e petroleiro em chamas à direita. compose-capa.py rodou limpo.
+
+## Armadilhas técnicas desta rodada (IMPORTANTE)
+1. **`/tmp` do sandbox NÃO estava vazio:** `/tmp/edicao.md`, `/tmp/capa.jpg` e `/tmp/base.png` da rodada de 4/8 sobreviveram, com dono `nobody:nogroup` e **sem permissão de escrita**. `cat > /tmp/edicao.md` deu "Permission denied" e o `wc -w` seguinte contou o arquivo VELHO, mascarando o erro. **Solução adotada: trabalhar em `/tmp/az0508/` (pasta datada).** Fazer isso sempre.
+2. **`base64 -w0` da capa estoura o limite de argumento** do shell: `python3 -c "..." "$B64I"` deu "Argument list too long" e o PUT voltou 400. **Solução: montar o JSON com um heredoc Python que LÊ o arquivo** (`base64.b64encode(open(...,'rb').read())`) e gravar em `payload_capa.json`, depois `curl -d @payload_capa.json`.
+3. **`mcp__workspace__bash` tem teto de 45.000 ms de timeout** — `sleep 100` estoura. Usar `sleep 40` encadeado.
+4. **Chrome MCP travou ~2 min** logo após clicar no resultado da busca (o grupo carregando o histórico). Screenshot, javascript_tool e browser_batch retornaram "did not respond in time" e depois "não conectado". **Passou sozinho: esperar ~80s e refazer `tabs_context_mcp`.** Não recarregar a aba.
 
 ## WhatsApp (grupo Avisos · Comunidade Investimentos de A-Z) — POSTADO
-- **Status: POSTADO em 2 mensagens.** (1) LINK 10:09 (card com capa/título/dek). (2) TEXTO 10:10 (chamada + 3 tópicos + Placar em bloco de código, balão ÚNICO, negritos e tabela alinhados).
-- **Antiduplicata:** confirmado — a busca mostrava 03/08 como último post; 04/08 não existia.
-- **Receita validada mais uma vez:** busca "Café com Mercado" → resultado "Investimentos de A-Z" / Avisos (NÃO painel Comunidades); msg1 = digitar URL, ~8s p/ o card, UM Return; msg2 = clique real → `javascript clipboard.writeText` → `key "v+ctrl"` → conferir innerText → UM Return. `modifiers` segue IGNORADO. Sessão LOGADA (WhatsApp Business Web, sem QR). `computer wait` aceita no máx. **10s** por chamada.
-- Placar usado: Ibov / Dólar / Dow / S&P 500 / Brent, todos fechamento de 03/08, 24 caracteres por linha.
+- **Status: POSTADO em 2 mensagens às 13:50.** (1) LINK com card (capa, título e dek do og). (2) TEXTO em balão ÚNICO, negritos aplicados e placar alinhado.
+- **Antiduplicata:** confirmado — a busca mostrava 04/08 como último post ("Ontem"); 05/08 não existia.
+- **Receita validada de novo:** busca "Café com Mercado" → resultado "Investimentos de A-Z" / Avisos; msg1 = digitar URL, ~8s p/ o card, UM Return; msg2 = clique real → `javascript clipboard.writeText` → `key "v+ctrl"` → conferir innerText → UM Return. `modifiers` segue IGNORADO. Sessão LOGADA (WhatsApp Business Web).
+- Placar usado (fech. 04/08): Ibov / Dólar / S&P 500 / UST 10a / Brent, 24 caracteres por linha.
 
-## Próxima rodada (quarta 5/8)
-- **DIA DO COPOM:** decisão sai ao fim do dia (corte p/ 14,00% contratado). O que importa é o comunicado — se abre ou fecha a porta de setembro. Comparar com o mapa de divergência acima.
-- **Também em 5/8:** leilão da OPA da Brava/Ecopetrol às 15h (R$ 23,00); PMI de serviços e composto do Brasil (junho: 51,3 e 52,0); ISM de serviços dos EUA (projeção 53,0); balanços de Bradesco, Klabin, Copel, Engie, Totvs; reação ao balanço do Itaú e da AMD/SpaceX.
-- **Depois:** Petrobras 6/8 após fech.; **payroll de julho 7/8** (gatilho do Fed de setembro); IPCA 11/8; Jackson Hole 27-29/8.
-- **Acompanhar:** se o Brent volta a subir (Irã nega negociação direta; mercados de previsão dão 10-15% de reabertura do Ormuz até o fim de agosto); T10/T30 americanos e a aposta de ALTA do Fed; se o rebote de memória na Ásia se sustenta; leilão de NTN-B e o vencimento de ~R$ 258 bi em 15/8.
-- **WhatsApp:** seguir a receita (2 mensagens, abrir por busca, `key "v+ctrl"`, nunca `modifiers`). Antiduplicata primeiro.
+## Próxima rodada (quinta 6/8)
+- **O resultado do Copom saiu ontem à noite** — abrir a edição pelo comunicado: cortou para 14,00%? Como ficou a sinalização de setembro? Confrontar com o mapa de divergência acima (BTG 13,75% x XP pausa x Citi 14,25%) e ver quem acertou. A reação da curva DI e do câmbio na quinta é a matéria-prima do dia.
+- **Também de 5/8 para conferir:** balanço do Bradesco (saiu após o fechamento; consenso R$ 6,99 bi / ROE 16%); resultado do leilão da OPA da Brava às 15h; vice de Flávio anunciado às 11h; ISM de serviços dos EUA; PMI de serviços/composto BR de julho (usar a base junho/2026 = 51,3 e 50,7, NUNCA os números de 2025).
+- **Hoje 6/8:** Petrobras após o fechamento; jobless claims nos EUA (consenso ~202 mil).
+- **Depois:** **payroll de julho 7/8** e propostas vinculantes pela CSN Cimentos 7/8; IPCA 11/8; esforço concentrado no Congresso 10-14/8; vencimento de NTN-B em 15/8; Jackson Hole 27-29/8.
+- **Acompanhar:** se sai o acordo de Ormuz (Trump falou em quarta ou quinta) e o que o Brent faz; se o CME volta a precificar duas altas do Fed depois do payroll; a reciprocidade tarifária brasileira; se o rebote de memória na Ásia (Nikkei/Kospi) segura.
