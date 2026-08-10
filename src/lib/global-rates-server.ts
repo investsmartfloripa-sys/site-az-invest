@@ -1026,18 +1026,35 @@ export async function getFuturesPolicy(country: GlobalCountryId): Promise<Future
     if (p0.length === 0) return null;
     const p30 = fedFundsImpliedPath(stripAt(contracts, ref30), FOMC_DECISION_DATES, ref);
     const p90 = fedFundsImpliedPath(stripAt(contracts, ref90), FOMC_DECISION_DATES, ref);
+    // Degraus de 0,25 p.p. (cenário modal), como na Selic implícita. Os futuros
+    // liquidam pela EFFR, que roda DENTRO da faixa-alvo (ex.: 3,63% na faixa
+    // 3,50–3,75) — exibir a escada da EFFR daria valores "quebrados" (3,63/3,88).
+    // Convenção do painel: mostrar o TETO DA FAIXA-ALVO (padrão FRED/FedWatch),
+    // múltiplos redondos de 0,25 — mesmo espírito da Selic implícita, que exibe a
+    // META (15,00) e não o CDI que o DI liquida (14,90). k = nº de movimentos de
+    // 25 bps precificados vs a taxa vigente; âncora ÚNICA (vigente do D+0) p/ as
+    // 3 séries ficarem na mesma grade e comparáveis reunião a reunião.
+    const anchor = p0[0].level;
+    const rangeTop = (Math.floor(anchor / 0.25) + 1) * 0.25;
+    const snap = (segs: PolicySegment[]): PolicySegment[] =>
+      segs.map((s) => ({
+        fromISO: s.fromISO,
+        level: Math.round((rangeTop + Math.round((s.level - anchor) / 0.25) * 0.25) * 100) / 100,
+      }));
     return {
       label: "Fed implícita (futuros)",
       bank: "Fed",
-      rows: buildPolicyRows(p0, p30, p90),
+      rows: buildPolicyRows(snap(p0), snap(p30), snap(p90)),
       labels,
       meetings: futureMeetings(FOMC_DECISION_DATES, ref),
       asOf: ref,
       note:
         "Trajetória implícita do Fed precificada pelos FUTUROS de Fed Funds de 30 dias (CBOT, via Yahoo ~15 min) — a " +
         "MESMA fonte do CME FedWatch. Cada contrato mensal liquida pela média da Fed Funds effective no mês; decompondo " +
-        "os meses com reunião do FOMC isola-se a taxa esperada após cada decisão. D-30/D-90: a mesma tira precificada há " +
-        "~30 e ~90 dias (mostra como a expectativa se moveu). Taxa = 100 − preço.",
+        "os meses com reunião do FOMC isola-se a taxa esperada após cada decisão, arredondada a movimentos de 25 bps " +
+        "(cenário MAIS PROVÁVEL precificado, não a média ponderada — mesma convenção da Selic implícita). Exibe-se o " +
+        "TETO da faixa-alvo do FOMC (largura de 0,25 p.p.; padrão FRED/FedWatch) — a effective roda dentro da faixa. " +
+        "D-30/D-90: a mesma tira precificada há ~30 e ~90 dias (mostra como a expectativa se moveu). Taxa = 100 − preço.",
     };
   }
 
