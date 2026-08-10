@@ -1,5 +1,11 @@
 # Selic implicita (forward meeting-to-meeting) via rb3 + ggplot2 -> SVG + JSON opcional.
 # Falha se rb3 ou curva PRE indisponivel (CI usa `|| true`).
+#
+# NOTA: o fwd_raw exportado aqui e "CDI puro" (forward do DI, sem ajustes). O
+# frontend (PainelPanoramaPage/selic-forward.ts) soma o spread CDI->Selic
+# (meta SGS 432 - DI overnight, ~10 bps) antes de arredondar a 0,25% e ancora a
+# linha "Vigente" da coluna D-1 na meta oficial do BCB. O SVG estatico gerado
+# aqui NAO recebe esses ajustes (e fallback/diagnostico, nao a visao do site).
 
 suppressPackageStartupMessages({
   library(dplyr)
@@ -294,6 +300,30 @@ compute_series_data <- function(series_info) {
   grid_c <- grid_on_dates(yc_win, grid_dates)
   fwd <- calc_forward(grid_c)
   if (!nrow(fwd)) return(NULL)
+
+  # Trecho VIGENTE (chart_start -> 1a reuniao): a ETTJ e suavizada e os vertices
+  # perto da reuniao ja embutem parte do degrau esperado (a interpolacao entre os
+  # DIs mensais espalha o corte por ~2 semanas). Isso contamina um periodo cuja
+  # taxa e constante por construcao — em 07/08/2026 o forward vigente saiu
+  # 13.8688% (fronteira de arredondamento 13.875 -> exibiu 13.75 com a meta em
+  # 14.00). Remede-se medindo o trecho ate o vencimento de DI ANTERIOR a reuniao
+  # (1o dia util do mes dela): ali a curva ainda e 100% pre-reuniao. So aplica
+  # quando sobra janela util (>= 5 du); senao mantem a medicao cheia.
+  # O degrau do grafico continua na DATA da reuniao — muda so a JANELA de medida.
+  if (length(copom_in_window) && nrow(grid_c) >= 2) {
+    first_meeting <- min(copom_in_window)
+    clean_target <- lubridate::floor_date(first_meeting, "month")
+    start_row <- grid_c[1, ]
+    clean_vert <- yc_win |>
+      mutate(dist = abs(as.integer(forward_date - as.Date(clean_target)))) |>
+      slice_min(dist, n = 1, with_ties = FALSE)
+    if (nrow(clean_vert) &&
+        clean_vert$forward_date < first_meeting &&
+        clean_vert$biz_days >= start_row$biz_days + 5 &&
+        fwd$biz_days[1] == start_row$biz_days) {
+      fwd$fwd[1] <- (start_row$df / clean_vert$df)^(252 / (clean_vert$biz_days - start_row$biz_days)) - 1
+    }
+  }
 
   curve_label <- sprintf("%s (%s)", series_info$label_prefix, format(series_info$refdate, "%d/%m/%Y"))
   fwd |>

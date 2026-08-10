@@ -19,7 +19,13 @@ import {
   type LiveContract,
   type LiveCurve,
 } from "@/lib/painel-b3-live";
-import { selicForwardPath, selicLevelAt, SELIC_TERM_PREMIUM, type SelicSegment } from "@/lib/selic-forward";
+import {
+  selicForwardPath,
+  selicLevelAt,
+  SELIC_CDI_WEDGE_FALLBACK_FRAC,
+  SELIC_TERM_PREMIUM,
+  type SelicSegment,
+} from "@/lib/selic-forward";
 import { Landmark, Percent, LineChart as LineChartIcon } from "lucide-react";
 import {
   PanelTabs,
@@ -243,6 +249,10 @@ type Props = {
   /** Vol de regime da renda fixa pré (IRF-M): percentil da vol-15d atual no
    *  histórico → escala o ajuste de prêmio de prazo da Selic D+0. Server, diário. */
   selicVol?: { vol15dAnn: number; pct: number; mult: number } | null;
+  /** Spread CDI→Selic (fração) calculado no servidor: meta SGS 432 − DI overnight
+   *  da ETTJ. Somado aos forwards do D+0 antes do arredondamento — mesma régua
+   *  das colunas D-90/D-30/D-1 (ajustadas server-side). */
+  selicWedgeFrac?: number | null;
 };
 
 /**
@@ -797,6 +807,7 @@ export function JurosLiveBlock({
   treasuryLabels = {},
   fedLabels = {},
   selicVol = null,
+  selicWedgeFrac = null,
 }: Props) {
   const isNarrow = useIsNarrow();
   const [country, setCountry] = useState<CountrySel>("br");
@@ -885,8 +896,9 @@ export function JurosLiveBlock({
       volMult: selicTp.volMult,
       shapeExp: SELIC_TP_SHAPE_EXP,
       kneeFrac: SELIC_TP_KNEE,
+      wedgeFrac: selicWedgeFrac ?? SELIC_CDI_WEDGE_FALLBACK_FRAC,
     });
-  }, [di, selicTp.volMult]);
+  }, [di, selicTp.volMult, selicWedgeFrac]);
   const hasSelicAgora = selicAgora.length > 0;
 
   const selicChart = useMemo(
@@ -1327,8 +1339,8 @@ export function JurosLiveBlock({
             <MethodInfo align="right">
               {tab === "selic"
                 ? hasSelicAgora
-                  ? `Selic implícita por reunião COPOM — modelo forward sobre a curva PRE. “Agora” (preto): curva DI AO VIVO da B3 (~15 min, D+0), recalculada no navegador com o mesmo modelo do pipeline. “Ajuste D-1” (tracejado): fechamento do pregão anterior. Degraus arredondados a 0,25%. Ajuste de prêmio de prazo (experimental, em todas as séries BR, linear a partir de 3m): base ${SELIC_TP_BASE_BPS} bps a 12m × ${selicTp.source === "irfm" ? `vol IRF-M 15d ${(selicTp.vol15d! * 100).toFixed(1)}% (percentil ${selicTp.pct!.toFixed(0)}% em 5a)` : "vol do dia (proxy)"} (×${selicTp.volMult.toFixed(2)}) → −${selicTp.bpsAt12m.toFixed(0)} bps na cauda. Um eventual sobe-e-desce no longo é o pico de juro terminal precificado pelo mercado (não erro): prêmio crescente sobre forward que aplaina implica leve alívio esperado.`
-                  : `Selic implícita por reunião COPOM — modelo forward do pipeline AZ sobre a curva PRE da B3 no fechamento do pregão anterior (D-1${refLabel ? `, ${refLabel}` : ""}), mesmos valores da trilha de política monetária. Não há série intraday: a B3 descontinuou o feed público de cotações em 04/08/2026.`
+                  ? `Selic implícita por reunião COPOM — modelo forward sobre a curva PRE. “Agora” (preto): curva DI AO VIVO da B3 (~15 min, D+0), recalculada no navegador com o mesmo modelo do pipeline. “Ajuste D-1” (tracejado): fechamento do pregão anterior. Cada forward soma o spread CDI→Selic (meta BCB − DI overnight, ~10 bps) antes do arredondamento a 0,25% — o DI precifica CDI, não a meta. A linha “Vigente” da coluna D-1 é a meta OFICIAL do BCB (SGS 432), não estimativa. Ajuste de prêmio de prazo (experimental, em todas as séries BR, linear a partir de 3m): base ${SELIC_TP_BASE_BPS} bps a 12m × ${selicTp.source === "irfm" ? `vol IRF-M 15d ${(selicTp.vol15d! * 100).toFixed(1)}% (percentil ${selicTp.pct!.toFixed(0)}% em 5a)` : "vol do dia (proxy)"} (×${selicTp.volMult.toFixed(2)}) → −${selicTp.bpsAt12m.toFixed(0)} bps na cauda. Um eventual sobe-e-desce no longo é o pico de juro terminal precificado pelo mercado (não erro): prêmio crescente sobre forward que aplaina implica leve alívio esperado.`
+                  : `Selic implícita por reunião COPOM — modelo forward do pipeline AZ sobre a curva PRE da B3 no fechamento do pregão anterior (D-1${refLabel ? `, ${refLabel}` : ""}), mesmos valores da trilha de política monetária. Cada forward soma o spread CDI→Selic (meta BCB − DI overnight, ~10 bps) antes do arredondamento a 0,25% — o DI precifica CDI, não a meta. A linha “Vigente” da coluna D-1 é a meta OFICIAL do BCB (SGS 432), não estimativa. Não há série intraday: a B3 descontinuou o feed público de cotações em 04/08/2026.`
                 : !hasLiveForTab
                   ? `Ponta D-1 (preta): ETTJ oficial da B3 — “Taxas Referenciais”, curva ${tab === "ipca" ? "DI x IPCA" : "DI x pré"} no fechamento do pregão anterior${refLabel ? ` (${refLabel})` : ""}, base 252 dias úteis. D-30/D-90: ${tab === "ipca" ? "títulos IPCA+ (cupom limpo NTN-B, TaxaSwap B3)" : "títulos prefixados (TaxaSwap B3)"} em janelas anteriores — mesma família de dado, então a curva é homogênea. A série intraday (~15 min) saiu do ar em 04/08/2026, quando a B3 desligou o feed público de cotações (Comunicado Externo 001/2026-VTEC); volta a aparecer aqui se o acesso a dados D+0 for restabelecido.`
                   : tab === "ipca"
