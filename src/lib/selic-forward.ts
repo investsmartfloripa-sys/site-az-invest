@@ -121,6 +121,10 @@ export const COPOM_DECISION_DATES: string[] = [
   "2027-03-17",
   "2027-04-28",
   "2027-06-16",
+  "2027-08-04",
+  "2027-09-22",
+  "2027-10-27",
+  "2027-12-08",
 ];
 
 export type CurvePoint = { maturity: string; rate: number | null };

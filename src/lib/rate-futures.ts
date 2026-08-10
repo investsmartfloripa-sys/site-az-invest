@@ -111,13 +111,13 @@ export const FOMC_DECISION_DATES: readonly string[] = [
   "2027-07-28", "2027-09-15", "2027-10-27", "2027-12-08",
 ] as const;
 
-/** Datas de decisão do BoJ (2º dia). 2026 oficial; 2027 ESTIMADO (cadência usual,
- *  o BoJ ainda não publicou) — usado só p/ estender o horizonte da implícita. */
+/** Datas de decisão do BoJ (2º dia). 2026 e 2027 OFICIAIS (boj.or.jp,
+ *  calendário 2027 publicado em 2026). */
 export const BOJ_DECISION_DATES: readonly string[] = [
   "2026-01-23", "2026-03-19", "2026-04-28", "2026-06-16",
   "2026-07-31", "2026-09-18", "2026-10-30", "2026-12-18",
-  "2027-01-22", "2027-03-12", "2027-04-28", "2027-06-16",
-  "2027-07-30", "2027-09-17", "2027-10-28", "2027-12-17",
+  "2027-01-22", "2027-03-18", "2027-04-28", "2027-06-11",
+  "2027-07-22", "2027-09-22", "2027-10-29", "2027-12-17",
 ] as const;
 
 /** Datas de anúncio do BoE (MPC, quinta-feira) — calendário 2026-2027. */
