@@ -1064,12 +1064,14 @@ export function JurosLiveBlock({
   /** Nome da serie D-1 na legenda: ja vem com a data ("D-1 (03/08/2026)"). */
   const d1Name = labels.recent ?? "D-1";
 
-  // D-1 lidera a legenda (e a ponta da curva hoje). "Agora"/"Ajuste D-1" so
-  // aparecem se o intraday da B3 responder — enquanto descontinuado, somem.
+  // Com o intraday NO AR, a ponta e "Agora"/"Ajuste D-1" e a D-1 da ETTJ SOME
+  // (era o substituto durante o blackout; manter as duas = tres linhas pretas
+  // contando a mesma historia com ~5 bps de diferenca metodologica). Se o feed
+  // cair de novo, a ETTJ volta sozinha como linha principal.
   const cutToggles: { key: keyof ShowState; label: string; color: string; available: boolean }[] = [
     { key: "agora", label: "Agora", color: LIVE_COLOR, available: hasLiveForTab },
     { key: "d1", label: "Ajuste D-1", color: "#000000", available: hasLiveForTab },
-    { key: "recent", label: "D-1", color: "#000000", available: hasD1ForTab },
+    { key: "recent", label: "D-1", color: "#000000", available: !hasLiveForTab && hasD1ForTab },
     { key: "d30", label: "D-30", color: pal.d30, available: (cuts.d30?.length ?? 0) > 0 },
     { key: "d90", label: "D-90", color: pal.d90, available: (cuts.d90?.length ?? 0) > 0 },
   ];
@@ -1308,18 +1310,18 @@ export function JurosLiveBlock({
                   {show.d30 ? (
                     <Line type="monotone" dataKey="d30" name={labels.d30 ?? "D-30"} stroke={pal.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   ) : null}
-                  {/* Ponta D-1 (ETTJ oficial da B3): e a linha PRINCIPAL enquanto o
-                      intraday esta descontinuado. Sem dots — sao ~dezenas de vertices
-                      na janela, e a marcacao viraria borrao. Se o "Agora" voltar a
-                      existir, ela recua para tracejada e cede a frente. */}
-                  {show.recent && hasD1ForTab ? (
+                  {/* Ponta D-1 (ETTJ oficial da B3): linha PRINCIPAL apenas quando o
+                      intraday esta fora do ar. Com o feed vivo ela NAO e desenhada —
+                      "Ajuste D-1" ja conta o fechamento anterior direto dos contratos
+                      (manter as duas seria duplicidade). Sem dots — sao ~dezenas de
+                      vertices na janela, e a marcacao viraria borrao. */}
+                  {!hasLiveForTab && show.recent && hasD1ForTab ? (
                     <Line
                       type="monotone"
                       dataKey="recent"
                       name={d1Name}
                       stroke="#000000"
-                      strokeWidth={hasLiveForTab ? 1.5 : 2.2}
-                      strokeDasharray={hasLiveForTab ? "6 4" : undefined}
+                      strokeWidth={2.2}
                       dot={false}
                       connectNulls
                       isAnimationActive={false}
