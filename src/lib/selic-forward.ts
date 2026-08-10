@@ -75,6 +75,13 @@ function isBusinessDay(t: number): boolean {
   return !holidaysForYear(new Date(t).getUTCFullYear()).has(t);
 }
 
+/** 1º dia útil do mês da data — o vencimento do contrato DI1 daquele mês. */
+function firstBusinessDayOfMonth(t: number): number {
+  let x = Date.UTC(new Date(t).getUTCFullYear(), new Date(t).getUTCMonth(), 1);
+  while (!isBusinessDay(x)) x += DAY;
+  return x;
+}
+
 /** Dias úteis entre `from` (exclusivo) e `to` (inclusivo) — convenção do DU 252. */
 function businessDays(fromT: number, toT: number): number {
   if (toT <= fromT) return 0;
@@ -148,7 +155,36 @@ export type TermPremiumCfg = {
   /** Joelho: fração de 1 ano em que a rampa começa (prêmio = 0 antes disso).
    *  Ex.: 0.25 = 3 meses. Default 0. */
   kneeFrac?: number;
+  /** Spread CDI→Selic em fração (ex.: 0.0010 = 10 bps), SOMADO a cada forward
+   *  antes do arredondamento. O DI/CDI roda ~10 bps abaixo da META Selic, então
+   *  ler o forward do DI como nível de Selic desloca tudo pra baixo — num modelo
+   *  que arredonda a 0,25% isso deixa o cenário "sem mudança" a meros 2,5 bps da
+   *  fronteira (em 07/08/2026 derrubou o vigente de 14,00% p/ 13,75%). Calcule
+   *  com cdiSelicWedgeFrac. Default 0 (sem ajuste) p/ compat. */
+  wedgeFrac?: number;
 };
+
+/** Fallback do spread CDI→Selic (10 bps) quando faltar meta oficial ou overnight. */
+export const SELIC_CDI_WEDGE_FALLBACK_FRAC = 0.001;
+
+/**
+ * Spread CDI→Selic em fração: meta oficial (BCB SGS 432) − DI overnight (1º
+ * vértice da ETTJ PRE, % a.a.). Clampado a [0, 25 bps]: logo após um Copom a
+ * ETTJ pode ser do pregão ANTERIOR à decisão (overnight ainda na taxa velha) e
+ * o spread sairia negativo — aí é melhor não ajustar do que ajustar ao contrário.
+ */
+export function cdiSelicWedgeFrac(
+  selicMeta: number | null | undefined,
+  diOvernight: number | null | undefined,
+): number {
+  if (
+    selicMeta == null || !Number.isFinite(selicMeta) ||
+    diOvernight == null || !Number.isFinite(diOvernight)
+  ) {
+    return SELIC_CDI_WEDGE_FALLBACK_FRAC;
+  }
+  return Math.min(0.0025, Math.max(0, (selicMeta - diOvernight) / 100));
+}
 
 /**
  * Parâmetros do ajuste de prêmio de prazo — ÚNICA fonte (D+0 ao vivo e séries
@@ -244,10 +280,27 @@ export function selicForwardPath(
     if (b.du <= a.du) continue;
     // Forward sobre o período EXATO entre as duas reuniões (df interpolado).
     let fwd = Math.exp(((lndfAt(a.du) - lndfAt(b.du)) * 252) / (b.du - a.du)) - 1;
+    // Trecho VIGENTE (hoje → 1ª reunião): a curva perto da reunião já embute
+    // parte do degrau esperado (a interpolação entre DIs mensais espalha o corte
+    // por ~2 semanas), contaminando um período cuja taxa é CONSTANTE por
+    // construção. Mede até o vencimento de DI anterior à reunião (1º du do mês
+    // dela) — ali a curva ainda é 100% pré-reunião. Só quando sobra janela
+    // útil (≥ 5 du); senão mantém a medição cheia.
+    if (i === 0) {
+      const cleanT = firstBusinessDayOfMonth(b.t);
+      const duClean = businessDays(refT, cleanT);
+      if (cleanT < b.t && duClean >= a.du + 5 && duClean < b.du) {
+        fwd = Math.exp(((lndfAt(a.du) - lndfAt(duClean)) * 252) / (duClean - a.du)) - 1;
+      }
+    }
     if (!Number.isFinite(fwd)) continue;
-    // Prêmio de prazo (experimental): tira o wedge crescente da cauda ANTES de
-    // arredondar — mesma fórmula (premiumFrac) das séries históricas.
-    if (termPremium) fwd -= premiumFrac(a.du, du1y, termPremium);
+    // Spread CDI→Selic: recoloca o forward (nível de CDI) na régua da META antes
+    // de arredondar. Prêmio de prazo (experimental): tira o wedge crescente da
+    // cauda ANTES de arredondar — mesma fórmula (premiumFrac) das séries históricas.
+    if (termPremium) {
+      fwd += termPremium.wedgeFrac ?? 0;
+      fwd -= premiumFrac(a.du, du1y, termPremium);
+    }
     // Fração arredondada ao passo de 0,25% → PERCENTUAL (ex.: 0.1425 → 14.25).
     segs.push({ fromISO: utcToISO(a.t), level: Math.round(roundStep(fwd) * 10000) / 100 });
   }
@@ -280,6 +333,7 @@ export function termPremiumLevel(
   const refT = isoToUTC(refdateISO);
   const du = businessDays(refT, isoToUTC(meetingISO));
   const du1y = businessDays(refT, refT + 365 * DAY) || 252;
-  const frac = rawPct / 100 - premiumFrac(du, du1y, cfg);
+  // Mesmo par de ajustes do D+0: + spread CDI→Selic e − prêmio de prazo.
+  const frac = rawPct / 100 + (cfg.wedgeFrac ?? 0) - premiumFrac(du, du1y, cfg);
   return Math.round(roundStep(frac) * 10000) / 100;
 }

@@ -16,7 +16,7 @@ import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection
 import { fetchB3ReferenceCurve, refDateLabel } from "@/lib/b3-reference-rates";
 import { getPanoramaData, painelBlobConfigured, type PanoramaData } from "@/lib/painel-data";
 import { getRatesVolMult, type RatesVol } from "@/lib/painel-market-data";
-import { SELIC_TERM_PREMIUM, termPremiumLevel } from "@/lib/selic-forward";
+import { SELIC_TERM_PREMIUM, cdiSelicWedgeFrac, termPremiumLevel } from "@/lib/selic-forward";
 import { findPosts, mapPost } from "@/lib/posts";
 
 function parseNumber(value: string | number | null | undefined): number | null {
@@ -110,8 +110,14 @@ function extractCurveCutSet(table: CurveTable): CurveCutSet {
 /** Reunioes COPOM + cortes da selic implicita do pipeline (charts/tables/selic_implicita.json).
  *  Aplica o MESMO ajuste de premio de prazo do D+0 nas series historicas
  *  (D-90/D-30/D-1), sobre o forward BRUTO ("<curva>__raw" exportado pelo R),
- *  usando o multiplicador de vol do IRF-M. Fed/Treasury (EUA) NAO recebem. */
-function extractSelicMeetings(data: PanoramaData, ratesVol: RatesVol | null): SelicMeeting[] {
+ *  usando o multiplicador de vol do IRF-M, e SOMA o spread CDI→Selic (wedgeFrac)
+ *  antes do arredondamento — o forward do DI e nivel de CDI, ~10 bps abaixo da
+ *  meta. Fed/Treasury (EUA) NAO recebem nenhum dos dois. */
+function extractSelicMeetings(
+  data: PanoramaData,
+  ratesVol: RatesVol | null,
+  wedgeFrac: number,
+): SelicMeeting[] {
   const table = data.tableSelic.data;
   const cols = table?.columns ?? [];
   const keyOf = (prefix: string) => cols.find((c) => c.key.startsWith(prefix))?.key;
@@ -124,6 +130,7 @@ function extractSelicMeetings(data: PanoramaData, ratesVol: RatesVol | null): Se
     volMult: ratesVol?.mult ?? 1,
     shapeExp: SELIC_TERM_PREMIUM.shapeExp,
     kneeFrac: SELIC_TERM_PREMIUM.kneeFrac,
+    wedgeFrac,
   };
   // Ajusta pelo premio se houver raw + refToday; senao devolve o arredondado
   // original (fallback ate o pipeline R reexportar o "__raw").
@@ -317,7 +324,20 @@ export async function PainelPanoramaPage() {
     ...extractCurveCutSet(data.tableIpca.data),
     ...(ipcaD1 ? { recent: ipcaD1.points } : {}),
   };
-  const selicMeetings = extractSelicMeetings(data, ratesVol);
+  // Spread CDI→Selic do dia: meta oficial (SGS 432) − DI overnight (1º vértice
+  // da ETTJ). Mesmo valor para D+0 e séries históricas (mesma régua).
+  const selicWedge = cdiSelicWedgeFrac(selicAtual?.value, preD1?.points[0]?.rate);
+  const selicMeetings = extractSelicMeetings(data, ratesVol, selicWedge);
+  // A linha "Vigente" (âncora de hoje — não é reunião) tem taxa CONHECIDA: a meta
+  // oficial do BCB. O forward modelado sobre a ETTJ suavizada pode errar um degrau
+  // inteiro por ~1 bp na fronteira do arredondamento a 0,25% (em 07/08/2026 deu
+  // 13,8688% → 13,75% com a meta em 14,00%). Fato conhecido não se estima: a
+  // coluna D-1 do trecho vigente é ancorada no SGS 432. D-30/D-90 seguem o modelo
+  // (são a EXPECTATIVA de então para o período atual, não um fato).
+  const selicAnchor = selicMeetings[0];
+  if (selicAnchor && selicAtual && new Date(`${selicAnchor.date}T00:00:00Z`).getUTCDay() !== 3) {
+    selicAnchor.recent = selicAtual.value;
+  }
   const treasuryTenors = extractTreasury(data);
   const fedMeetings = extractFedMeetings(data);
 
@@ -520,6 +540,7 @@ export async function PainelPanoramaPage() {
         treasuryLabels={treasuryLabels}
         fedLabels={fedLabels}
         selicVol={ratesVol}
+        selicWedgeFrac={selicWedge}
       />
 
       <section id="analises" className="space-y-4">
