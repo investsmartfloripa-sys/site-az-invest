@@ -28,14 +28,16 @@ const PREGAO: Janela = {
 };
 
 /**
- * Janela de divulgação macro da manhã: 11h-15h UTC (8h-12h BRT), dias úteis.
- * IBGE solta o IPCA ~9h BRT e a FGV o IGP-M ~8h BRT — a janela cobre os dois
- * com folga dos dois lados. Fora dela o dado é mensal e não muda, então não há
- * o que disparar.
+ * Janela de divulgação macro da manhã: 11h-14h UTC (8h-11h BRT), dias úteis.
+ * IBGE solta o IPCA ~9h BRT e a FGV o IGP-M ~8h BRT — a janela abre junto com o
+ * IGP-M e fecha 2h depois do IPCA. Não vale alargar: cada disparo é um build
+ * completo batendo em SIDRA/Olinda, e depois das 11h BRT o cron de segurança do
+ * próprio workflow (14:43 UTC) já cobre. Fora da janela o dado é mensal e não
+ * muda, então não há o que disparar.
  */
 const DIVULGACAO_MANHA: Janela = {
   label: "fora da janela de divulgação",
-  check: (now) => isWeekday(now) && now.getUTCHours() >= 11 && now.getUTCHours() < 15,
+  check: (now) => isWeekday(now) && now.getUTCHours() >= 11 && now.getUTCHours() < 14,
 };
 
 /** Workflows de alta frequência que o GitHub schedule não sustenta. */
