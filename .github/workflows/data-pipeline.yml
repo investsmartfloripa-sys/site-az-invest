@@ -16,6 +16,7 @@ jobs:
       DATA_PIPELINE_OUT: ${{ github.workspace }}/data-pipeline/out
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
       FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      SITE_BASE: https://investimentosdeaz.com.br
 
     steps:
       - name: Checkout
@@ -78,3 +79,22 @@ jobs:
 
       - name: Upload SVGs to Blob
         run: python data-pipeline/python/upload_static_charts.py
+
+      # Último step: avisa o site para purgar Data Cache + ISR na hora (senão o
+      # painel serviria a curva velha por até ~2h). Os blobPaths extras são as
+      # tabelas lidas direto por src/lib/painel-data.ts, que não estão no
+      # data-manifest.ts e portanto não sairiam só pelo nome do workflow.
+      # Nunca derruba o pipeline, mas fica VERMELHO se o site não responder 200.
+      - name: Purgar cache do site (Painel Panorama)
+        if: always()
+        continue-on-error: true
+        run: |
+          code=$(curl -s -o resposta.json -w '%{http_code}' --max-time 30 \
+            -X POST "$SITE_BASE/api/revalidate" \
+            -H "Authorization: Bearer ${{ secrets.REVALIDATE_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{"workflow":"data-pipeline.yml","blobPaths":["charts/tables/juros_prefixado.json","charts/tables/juros_ipca.json","charts/tables/selic_implicita.json","charts/tables/juros_treasury_us.json","charts/tables/fed_implicita.json"]}' || true)
+          echo "HTTP ${code:-sem-resposta}"
+          cat resposta.json || true
+          echo
+          test "$code" = "200"

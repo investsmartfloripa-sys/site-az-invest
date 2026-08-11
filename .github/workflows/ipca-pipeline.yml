@@ -1,12 +1,20 @@
 name: Inflação pipeline (IPCA + IGP-M)
 
 on:
-  # 12:20 UTC = 9:20 BRT — logo APÓS a divulgação do IBGE (~9h BRT no dia de
-  # release); 15:00 UTC = segunda chance no mesmo dia (throttle do cron do GH
-  # pode atrasar a primeira janela; SIDRA/Olinda às vezes propagam com lag).
+  # ATENÇÃO: o cron do GitHub NÃO é o gatilho de verdade no dia da divulgação.
+  # Medido em 11/08/2026 sobre o histórico deste próprio workflow: a janela das
+  # 12:20 UTC atrasou 111 min em MÉDIA (n=18) e a das 15:00 UTC, 74 min (n=22).
+  # No release do IPCA de julho o cron das 12:20 só disparou 13:46 — o dado ficou
+  # ~4h atrasado no site. O gatilho pontual é o Vercel Cron, que bate em
+  # /api/cron/dispatch-pipelines a cada 15 min e dispara este workflow por
+  # `workflow_dispatch` (executa na hora) dentro da janela de divulgação.
+  #
+  # Os crons abaixo são REDE DE SEGURANÇA (se a Vercel cair, o dado ainda gira)
+  # e usam minuto quebrado de propósito: :00/:15/:30/:45 é onde o GitHub
+  # estrangula mais.
   schedule:
-    - cron: "20 12 * * *"
-    - cron: "0 15 * * *"
+    - cron: "17 12 * * *"
+    - cron: "43 14 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -16,8 +24,14 @@ concurrency:
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
+    outputs:
+      # "saiu divulgação nova?" — usado para não rodar o Playwright à toa.
+      changed: ${{ steps.depois.outputs.changed }}
     env:
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      # Público (leitura). Fallback = mesma constante de src/lib/painel-blob.ts.
+      BLOB_BASE: ${{ secrets.NEXT_PUBLIC_BLOB_BASE_URL || 'https://8ytqvgmik75vk1it.public.blob.vercel-storage.com' }}
+      SITE_BASE: https://investimentosdeaz.com.br
 
     steps:
       - name: Checkout
@@ -35,6 +49,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r data-pipeline/python/requirements.txt
 
+      # Foto do mês de referência ANTES de subir nada. O `cb=` fura o CDN do
+      # Blob (s-maxage=300) — sem isso a leitura "depois" poderia devolver a
+      # versão velha e o diff daria falso-negativo.
+      # O `|| true` é obrigatório: o shell do Actions roda com `bash -e` e o
+      # release pode não existir ainda (404 → curl -f sai != 0 → step abortado).
+      - name: Mês de referência ANTES do build
+        id: antes
+        run: |
+          ipca=$(curl -sf "$BLOB_BASE/data/ipca_release.json?cb=$(date +%s)" | jq -r '.mes_referencia // empty' || true)
+          igpm=$(curl -sf "$BLOB_BASE/data/igpm_release.json?cb=$(date +%s)" | jq -r '.mes_referencia // empty' || true)
+          echo "ipca=$ipca" >> "$GITHUB_OUTPUT"
+          echo "igpm=$igpm" >> "$GITHUB_OUTPUT"
+          echo "antes → IPCA=${ipca:-?} IGP-M=${igpm:-?}"
+
       # continue-on-error em cada build: falha do IPCA (ex. SIDRA fora do ar)
       # não pode derrubar o IGP-M em cascata (mesmo padrão do visao-geral-pipeline).
       - name: Build IPCA JSON e upload pro Blob
@@ -45,13 +73,53 @@ jobs:
         run: python data-pipeline/python/build_igpm.py --upload
         continue-on-error: true
 
+      # `if` em vez de `a && b`: com `bash -e`, uma lista AND que termina falsa
+      # derruba o step inteiro. Dentro da condição de um `if`, o -e é suspenso.
+      - name: Detectar divulgação nova
+        id: depois
+        if: always()
+        run: |
+          ipca=$(curl -sf "$BLOB_BASE/data/ipca_release.json?cb=$(date +%s)" | jq -r '.mes_referencia // empty' || true)
+          igpm=$(curl -sf "$BLOB_BASE/data/igpm_release.json?cb=$(date +%s)" | jq -r '.mes_referencia // empty' || true)
+          changed=false
+          if [ -n "$ipca" ] && [ "$ipca" != "${{ steps.antes.outputs.ipca }}" ]; then changed=true; fi
+          if [ -n "$igpm" ] && [ "$igpm" != "${{ steps.antes.outputs.igpm }}" ]; then changed=true; fi
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          echo "depois → IPCA=${ipca:-?} IGP-M=${igpm:-?} | divulgação nova: $changed"
+
+      # O passo que fecha o buraco de 11/08/2026: o Blob já está novo, mas o
+      # site serviria o mês anterior por até ~2h (Data Cache do fetch + ISR da
+      # página, dois TTLs de 1h independentes). Aqui o pipeline avisa o site,
+      # que purga tag + rota na hora. Roda SEMPRE (é barato e auto-cura
+      # defasagem de qualquer origem) e nunca derruba o pipeline — mas fica
+      # VERMELHO no Actions se o site não responder 200, senão a purga poderia
+      # morrer em silêncio e o sintoma voltaria sem ninguém perceber.
+      - name: Purgar cache do site (IPCA + IGP-M)
+        if: always()
+        continue-on-error: true
+        run: |
+          code=$(curl -s -o resposta.json -w '%{http_code}' --max-time 30 \
+            -X POST "$SITE_BASE/api/revalidate" \
+            -H "Authorization: Bearer ${{ secrets.REVALIDATE_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{"workflow":"ipca-pipeline.yml"}' || true)
+          echo "HTTP ${code:-sem-resposta}"
+          cat resposta.json || true
+          echo
+          test "$code" = "200"
+
   # Fotografa os gráficos do catálogo do Publisher (rota /render/<id>) e
   # arquiva PNGs numerados no Blob em releases/<indicador>/<mes_ref>/.
   # Roda DEPOIS dos builds: o release novo já está no Blob e a página de
   # render é force-dynamic (sem cache velho). Falha de um gráfico não
   # derruba os demais (ragged-edge; ver manifest.json de cada divulgação).
+  #
+  # Só roda quando há divulgação NOVA ou quando veio do cron de segurança.
+  # O Vercel Cron dispara este workflow de 15 em 15 min na janela da manhã:
+  # sem esse gate, o Playwright rodaria ~16x/dia refotografando o mesmo mês.
   render-charts:
     needs: build-and-upload
+    if: needs.build-and-upload.outputs.changed == 'true' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
     env:
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}

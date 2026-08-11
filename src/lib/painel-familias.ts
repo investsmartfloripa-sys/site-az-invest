@@ -10,7 +10,7 @@
  * Workflow GitHub Actions: familias-pipeline.yml (cron diário 23h30 UTC).
  */
 
-import { painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob, painelBlobUrl } from "@/lib/painel-blob";
 
 export const FAMILIAS_REVALIDATE_SECONDS = 3600; // 1h
 const BLOB_PATH_ENDIVIDAMENTO = "data/familias_endividamento.json";
@@ -375,11 +375,10 @@ async function fetchJson<T>(blobPath: string, label: string): Promise<T | null> 
     return null;
   }
   try {
-    const res = await fetch(url, {
-      next: { revalidate: FAMILIAS_REVALIDATE_SECONDS },
-    });
-    if (!res.ok) {
-      console.error(`[familias-${label}] fetch ${url}: ${res.status}`);
+    // TTL curto + cache tag `blob:<path>`, purgável pelo POST /api/revalidate
+    const res = await fetchPainelBlob(blobPath, FAMILIAS_REVALIDATE_SECONDS);
+    if (!res?.ok) {
+      console.error(`[familias-${label}] fetch ${url}: ${res?.status ?? "sem base"}`);
       return null;
     }
     return (await res.json()) as T;

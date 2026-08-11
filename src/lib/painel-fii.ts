@@ -14,7 +14,7 @@
  *
  * Toda função retorna null em caso de falha (mesmo padrão do painel-data.ts).
  */
-import { painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob, painelBlobUrl } from "@/lib/painel-blob";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -138,11 +138,10 @@ export type FiiEditorialPost = {
 // ---------------------------------------------------------------------------
 
 async function fetchBlobJson<T>(path: string): Promise<T | null> {
-  const url = painelBlobUrl(path);
-  if (!url) return null;
   try {
-    const res = await fetch(url, { next: { revalidate: FII_REVALIDATE_SECONDS } });
-    if (!res.ok) return null;
+    // Cache tag `blob:<path>` — POST /api/revalidate purga assim que o pipeline escreve.
+    const res = await fetchPainelBlob(path, FII_REVALIDATE_SECONDS);
+    if (!res?.ok) return null;
     return (await res.json()) as T;
   } catch {
     return null;

@@ -16,7 +16,7 @@ import {
 } from "@/components/painel/publisher/ChartById";
 import { loadIgpmData } from "@/lib/painel-igpm";
 import { loadIpcaData } from "@/lib/painel-ipca";
-import { painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob } from "@/lib/painel-blob";
 import { RELEASE_BLOB_PATH, getChartDef } from "@/lib/publisher/chart-catalog";
 import { prisma } from "@/lib/prisma";
 import { getSiteUrl } from "@/lib/site-url";
@@ -82,11 +82,10 @@ export async function generateMetadata({
  * entrega ao PostMarkdownBody o card interativo real de cada marcador.
  */
 async function fetchReleaseJson<T>(path: string): Promise<T | null> {
-  const url = painelBlobUrl(path);
-  if (!url) return null;
   try {
-    const res = await fetch(url, { next: { revalidate: 300 } });
-    if (!res.ok) return null;
+    // TTL curto + cache tag `blob:<path>` p/ o pipeline purgar ao gravar o arquivo.
+    const res = await fetchPainelBlob(path, 300);
+    if (!res?.ok) return null;
     return (await res.json()) as T;
   } catch {
     return null;

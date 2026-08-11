@@ -17,7 +17,7 @@
  * painel-data.ts): a página decide como degradar com honestidade.
  */
 
-import { painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob } from "@/lib/painel-blob";
 import { getMarketHistoryFull } from "@/lib/painel-market-data";
 
 /** Cache do fetch dos JSONs do panorama (gira a cada 15 min; mesmo valor do painel-data.ts). */
@@ -133,11 +133,10 @@ export function hojeIsoBrasilia(agora: Date = new Date()): string {
 // ---------------------------------------------------------------------------
 
 async function fetchPanoramaJson<T extends { status?: string }>(path: string): Promise<T | null> {
-  const url = painelBlobUrl(path);
-  if (!url) return null;
   try {
-    const res = await fetch(url, { next: { revalidate: PANORAMA_FETCH_REVALIDATE_SECONDS } });
-    if (!res.ok) return null;
+    // TTL curto + cache tag `blob:<path>` — o pipeline purga por tag ao publicar.
+    const res = await fetchPainelBlob(path, PANORAMA_FETCH_REVALIDATE_SECONDS);
+    if (!res?.ok) return null;
     const json = (await res.json()) as T;
     if (json && json.status && json.status !== "ok") return null;
     return json;

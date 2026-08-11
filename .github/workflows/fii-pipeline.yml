@@ -31,6 +31,7 @@ jobs:
     timeout-minutes: 25
     env:
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      SITE_BASE: https://investimentosdeaz.com.br
 
     steps:
       - name: Checkout
@@ -79,3 +80,21 @@ jobs:
             data-pipeline/out/fii_total_return.json
           if-no-files-found: warn
           retention-days: 7
+
+      # O Blob já está novo, mas o site serviria o dado velho por até ~2h (Data
+      # Cache do fetch + ISR da página). Aqui o pipeline avisa o site, que purga
+      # tag + rota na hora. Nunca derruba o pipeline, mas fica VERMELHO se o
+      # site não responder 200 — purga em silêncio foi a causa raiz de 11/08/2026.
+      - name: Purgar cache do site (FIIs — detalhe + macro + retorno total)
+        if: always()
+        continue-on-error: true
+        run: |
+          code=$(curl -s -o resposta.json -w '%{http_code}' --max-time 30 \
+            -X POST "$SITE_BASE/api/revalidate" \
+            -H "Authorization: Bearer ${{ secrets.REVALIDATE_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{"workflow":"fii-pipeline.yml","paths":["/painel-economico/mercado/brasil/fundos-imobiliarios/[ticker]"]}' || true)
+          echo "HTTP ${code:-sem-resposta}"
+          cat resposta.json || true
+          echo
+          test "$code" = "200"

@@ -6,7 +6,7 @@
  *  - build_anbima_debentures.py -> data/credit_spreads_history.json
  */
 
-import { painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob } from "@/lib/painel-blob";
 
 /** Cache ISR de 1 hora. */
 export const RENDA_FIXA_REVALIDATE_SECONDS = 3600;
@@ -64,11 +64,10 @@ export type CreditSpreadsHistory = {
 };
 
 async function fetchBlobJson<T>(path: string): Promise<T | null> {
-  const url = painelBlobUrl(path);
-  if (!url) return null;
   try {
-    const res = await fetch(url, { next: { revalidate: RENDA_FIXA_REVALIDATE_SECONDS } });
-    if (!res.ok) return null;
+    // TTL curto + cache tag `blob:<path>` — o pipeline purga por tag ao publicar.
+    const res = await fetchPainelBlob(path, RENDA_FIXA_REVALIDATE_SECONDS);
+    if (!res?.ok) return null;
     return (await res.json()) as T;
   } catch {
     return null;

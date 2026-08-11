@@ -25,6 +25,7 @@ jobs:
     timeout-minutes: 8
     env:
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      SITE_BASE: https://investimentosdeaz.com.br
 
     steps:
       - name: Checkout
@@ -51,3 +52,20 @@ jobs:
       - name: build_fii_screener (tabela 107 FIIs)
         run: python data-pipeline/python/build_fii_screener.py --upload
         continue-on-error: true
+
+      # Sem isso o preço novo esperaria o Data Cache do fetch + o ISR da página
+      # virarem — inútil num pipeline que roda de 15 em 15 min. A purga é barata
+      # e nunca derruba o pipeline, mas fica VERMELHA se o site não devolver 200.
+      - name: Purgar cache do site (FIIs ao vivo — IFIX + screener)
+        if: always()
+        continue-on-error: true
+        run: |
+          code=$(curl -s -o resposta.json -w '%{http_code}' --max-time 30 \
+            -X POST "$SITE_BASE/api/revalidate" \
+            -H "Authorization: Bearer ${{ secrets.REVALIDATE_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{"workflow":"fii-pipeline-live.yml"}' || true)
+          echo "HTTP ${code:-sem-resposta}"
+          cat resposta.json || true
+          echo
+          test "$code" = "200"

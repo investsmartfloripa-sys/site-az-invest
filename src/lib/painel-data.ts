@@ -3,7 +3,7 @@ import type { ByPeriodBlock } from "@/components/painel/DynamicReturnsBar";
 import type { SectorBrPayload } from "@/components/painel/DynamicSectorBr";
 import type { SectorGlobalPayload } from "@/components/painel/DynamicSectorGlobal";
 import type { StaticChartTablePayload } from "@/components/painel/StaticChartCard";
-import { painelBlobBase, painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob, painelBlobBase } from "@/lib/painel-blob";
 
 /** Cache dos JSON no edge; menor = volta mais rapido se o Blob falhou e foi corrigido. */
 export const PAINEL_REVALIDATE_SECONDS = 300;
@@ -40,11 +40,10 @@ export type PanoramaData = {
 };
 
 async function fetchBlobJson<T>(path: string): Promise<T | null> {
-  const url = painelBlobUrl(path);
-  if (!url) return null;
   try {
-    const res = await fetch(url, { next: { revalidate: PAINEL_REVALIDATE_SECONDS } });
-    if (!res.ok) return null;
+    // TTL curto + cache tag `blob:<path>` — o pipeline purga por tag ao publicar.
+    const res = await fetchPainelBlob(path, PAINEL_REVALIDATE_SECONDS);
+    if (!res?.ok) return null;
     return (await res.json()) as T;
   } catch {
     return null;

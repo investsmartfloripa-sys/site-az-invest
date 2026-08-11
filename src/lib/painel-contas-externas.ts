@@ -5,7 +5,7 @@
  * (workflow contas-externas-pipeline.yml, cron diário 23h30 UTC).
  */
 
-import { painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob } from "@/lib/painel-blob";
 
 export const CONTAS_EXTERNAS_REVALIDATE_SECONDS = 3600; // 1h
 const BLOB_PATH = "data/contas_externas.json";
@@ -287,30 +287,25 @@ export type CambioMacroData = {
 // Loaders
 // ---------------------------------------------------------------------------
 export async function loadContasExternas(): Promise<ContasExternasData | null> {
-  const url = painelBlobUrl(BLOB_PATH);
   try {
-    const res = await fetch(url, {
-      next: { revalidate: CONTAS_EXTERNAS_REVALIDATE_SECONDS },
-    });
-    if (!res.ok) {
-      console.error(`[contas-externas] fetch ${url}: ${res.status}`);
+    // TTL curto + cache tag `blob:<path>` (purgada pelo POST /api/revalidate)
+    const res = await fetchPainelBlob(BLOB_PATH, CONTAS_EXTERNAS_REVALIDATE_SECONDS);
+    if (!res?.ok) {
+      console.error(`[contas-externas] fetch ${BLOB_PATH}: ${res?.status ?? "sem base de Blob"}`);
       return null;
     }
     return (await res.json()) as ContasExternasData;
   } catch (e) {
-    console.error(`[contas-externas] fetch ${url}:`, e);
+    console.error(`[contas-externas] fetch ${BLOB_PATH}:`, e);
     return null;
   }
 }
 
 export async function loadContasExternasComex(): Promise<ContasExternasComexData | null> {
-  const url = painelBlobUrl(COMEX_BLOB_PATH);
   try {
-    const res = await fetch(url, {
-      next: { revalidate: CONTAS_EXTERNAS_REVALIDATE_SECONDS },
-    });
-    if (!res.ok) {
-      console.error(`[contas-externas-comex] fetch ${url}: ${res.status}`);
+    const res = await fetchPainelBlob(COMEX_BLOB_PATH, CONTAS_EXTERNAS_REVALIDATE_SECONDS);
+    if (!res?.ok) {
+      console.error(`[contas-externas-comex] fetch ${COMEX_BLOB_PATH}: ${res?.status ?? "sem base de Blob"}`);
       return null;
     }
     const data = (await res.json()) as ContasExternasComexData;
@@ -322,19 +317,16 @@ export async function loadContasExternasComex(): Promise<ContasExternasComexData
     }
     return data;
   } catch (e) {
-    console.error(`[contas-externas-comex] fetch ${url}:`, e);
+    console.error(`[contas-externas-comex] fetch ${COMEX_BLOB_PATH}:`, e);
     return null;
   }
 }
 
 export async function loadCambioMacro(): Promise<CambioMacroData | null> {
-  const url = painelBlobUrl(CAMBIO_MACRO_BLOB_PATH);
   try {
-    const res = await fetch(url, {
-      next: { revalidate: CONTAS_EXTERNAS_REVALIDATE_SECONDS },
-    });
-    if (!res.ok) {
-      console.error(`[cambio-macro] fetch ${url}: ${res.status}`);
+    const res = await fetchPainelBlob(CAMBIO_MACRO_BLOB_PATH, CONTAS_EXTERNAS_REVALIDATE_SECONDS);
+    if (!res?.ok) {
+      console.error(`[cambio-macro] fetch ${CAMBIO_MACRO_BLOB_PATH}: ${res?.status ?? "sem base de Blob"}`);
       return null;
     }
     const data = (await res.json()) as CambioMacroData;
@@ -351,7 +343,7 @@ export async function loadCambioMacro(): Promise<CambioMacroData | null> {
     }
     return data;
   } catch (e) {
-    console.error(`[cambio-macro] fetch ${url}:`, e);
+    console.error(`[cambio-macro] fetch ${CAMBIO_MACRO_BLOB_PATH}:`, e);
     return null;
   }
 }

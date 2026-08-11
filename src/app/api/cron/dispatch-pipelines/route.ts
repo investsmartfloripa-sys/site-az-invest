@@ -14,20 +14,42 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+type Janela = { check: (now: Date) => boolean; label: string };
+
+function isWeekday(now: Date): boolean {
+  const dow = now.getUTCDay();
+  return dow !== 0 && dow !== 6;
+}
+
+/** Pregão da B3: 13h-23h UTC (10h-20h BRT), dias úteis. */
+const PREGAO: Janela = {
+  label: "fora do pregão",
+  check: (now) => isWeekday(now) && now.getUTCHours() >= 13 && now.getUTCHours() < 23,
+};
+
+/**
+ * Janela de divulgação macro da manhã: 11h-15h UTC (8h-12h BRT), dias úteis.
+ * IBGE solta o IPCA ~9h BRT e a FGV o IGP-M ~8h BRT — a janela cobre os dois
+ * com folga dos dois lados. Fora dela o dado é mensal e não muda, então não há
+ * o que disparar.
+ */
+const DIVULGACAO_MANHA: Janela = {
+  label: "fora da janela de divulgação",
+  check: (now) => isWeekday(now) && now.getUTCHours() >= 11 && now.getUTCHours() < 15,
+};
+
 /** Workflows de alta frequência que o GitHub schedule não sustenta. */
-const PIPELINES: Array<{ file: string; onlyMarketHours?: boolean }> = [
+const PIPELINES: Array<{ file: string; janela?: Janela }> = [
   // Panorama (yfinance + R) — 24/7, igual ao cron original */15
   { file: "data-pipeline.yml" },
-  // FII live (IFIX + screener) — só faz sentido em pregão (13h-22h UTC, dias úteis)
-  { file: "fii-pipeline-live.yml", onlyMarketHours: true },
+  // FII live (IFIX + screener) — só faz sentido em pregão
+  { file: "fii-pipeline-live.yml", janela: PREGAO },
+  // Inflação (IPCA + IGP-M) — o cron do GitHub atrasa 74-111 min em MÉDIA
+  // (medido em 11/08/2026 sobre o histórico do workflow), e no release do IPCA
+  // de julho atrasou 86 min: o número saiu 9h BRT e o site só viraria ~12h40.
+  // Aqui o disparo é pontual, de 15 em 15 min na janela da divulgação.
+  { file: "ipca-pipeline.yml", janela: DIVULGACAO_MANHA },
 ];
-
-function inMarketWindow(now: Date): boolean {
-  const dow = now.getUTCDay();
-  if (dow === 0 || dow === 6) return false;
-  const hour = now.getUTCHours();
-  return hour >= 13 && hour < 23;
-}
 
 async function dispatchWorkflow(repo: string, token: string, file: string): Promise<string> {
   const res = await fetch(
@@ -67,8 +89,9 @@ export async function GET(request: Request) {
   const results: Record<string, string> = {};
   let failures = 0;
   for (const p of PIPELINES) {
-    if (p.onlyMarketHours && !inMarketWindow(now)) {
-      results[p.file] = "skipped (fora do pregão)";
+    if (p.janela && !p.janela.check(now)) {
+      // `continue` ANTES da contagem: pular por janela não é falha.
+      results[p.file] = `skipped (${p.janela.label})`;
       continue;
     }
     try {

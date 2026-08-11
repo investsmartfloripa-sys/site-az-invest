@@ -2,7 +2,7 @@
  * Loaders dos JSONs das rotas /painel-economico/economia/brasil/atividade/*.
  */
 
-import { painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob } from "@/lib/painel-blob";
 
 export const ATIVIDADE_REVALIDATE_SECONDS = 86400;
 
@@ -197,11 +197,10 @@ export type AtividadePmsData = {
 
 // --- Loaders ---
 async function fetchBlobJson<T>(path: string): Promise<T | null> {
-  const url = painelBlobUrl(path);
-  if (!url) return null;
   try {
-    const res = await fetch(url, { next: { revalidate: ATIVIDADE_REVALIDATE_SECONDS } });
-    if (!res.ok) return null;
+    // TTL curto + cache tag `blob:<path>`, purgável pelo POST /api/revalidate
+    const res = await fetchPainelBlob(path, ATIVIDADE_REVALIDATE_SECONDS);
+    if (!res?.ok) return null;
     return (await res.json()) as T;
   } catch {
     return null;

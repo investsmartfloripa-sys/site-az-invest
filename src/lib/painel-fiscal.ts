@@ -4,7 +4,7 @@
  * - fiscal-classicos.json: dados crus (BCB SGS + Tesouro RTN + Focus)
  * - fiscal-termometro.json: aplicacao das formulas de Ray Dalio (How Countries Go Broke)
  */
-import { painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob } from "@/lib/painel-blob";
 
 export const FISCAL_REVALIDATE_SECONDS = 60;
 
@@ -271,11 +271,10 @@ export type FiscalTermometroData = {
 };
 
 async function fetchBlobJson<T>(path: string): Promise<T | null> {
-  const url = painelBlobUrl(path);
-  if (!url) return null;
   try {
-    const res = await fetch(url, { next: { revalidate: FISCAL_REVALIDATE_SECONDS } });
-    if (!res.ok) return null;
+    // TTL curto + cache tag `blob:<path>`, purgável pelo POST /api/revalidate
+    const res = await fetchPainelBlob(path, FISCAL_REVALIDATE_SECONDS);
+    if (!res?.ok) return null;
     return (await res.json()) as T;
   } catch {
     return null;

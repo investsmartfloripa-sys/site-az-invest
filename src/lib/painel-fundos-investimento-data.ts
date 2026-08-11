@@ -10,7 +10,7 @@
  * Sharpe vem como razão pura (ex.: 0.27).
  */
 
-import { painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob } from "@/lib/painel-blob";
 
 /** Cache ISR de 1 hora (o pipeline atualiza no máx. 1x/dia). */
 export const FUNDOS_REVALIDATE_SECONDS = 3600;
@@ -60,11 +60,10 @@ export type FundosRanking = {
 };
 
 async function fetchBlobJson<T>(path: string): Promise<T | null> {
-  const url = painelBlobUrl(path);
-  if (!url) return null;
   try {
-    const res = await fetch(url, { next: { revalidate: FUNDOS_REVALIDATE_SECONDS } });
-    if (!res.ok) return null;
+    // TTL curto + cache tag `blob:<path>` — o pipeline purga por tag ao publicar.
+    const res = await fetchPainelBlob(path, FUNDOS_REVALIDATE_SECONDS);
+    if (!res?.ok) return null;
     return (await res.json()) as T;
   } catch {
     return null;

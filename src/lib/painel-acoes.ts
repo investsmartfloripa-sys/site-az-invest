@@ -16,7 +16,7 @@
  *
  * Toda função retorna null em caso de falha (mesmo padrão de painel-fii.ts).
  */
-import { painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob } from "@/lib/painel-blob";
 import { prisma } from "@/lib/prisma";
 
 /** Cache ISR — JSONs re-gerados pós-pregão; 60s equilibra frescor e carga no Blob. */
@@ -151,11 +151,10 @@ export type AcoesEditorialPost = {
 // ---------------------------------------------------------------------------
 
 async function fetchBlobJson<T>(path: string): Promise<T | null> {
-  const url = painelBlobUrl(path);
-  if (!url) return null;
   try {
-    const res = await fetch(url, { next: { revalidate: ACOES_REVALIDATE_SECONDS } });
-    if (!res.ok) return null;
+    // Cache tag `blob:<path>` — POST /api/revalidate purga assim que o pipeline escreve.
+    const res = await fetchPainelBlob(path, ACOES_REVALIDATE_SECONDS);
+    if (!res?.ok) return null;
     return (await res.json()) as T;
   } catch {
     return null;

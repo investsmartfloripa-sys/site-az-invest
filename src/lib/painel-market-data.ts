@@ -13,7 +13,7 @@
  * Toda funcao retorna null em caso de falha (mesmo padrao do painel-data.ts).
  */
 
-import { painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob } from "@/lib/painel-blob";
 
 /** Cache ISR de 1 hora para market data (atualiza 1x/dia, nao precisa ser tao agressivo). */
 export const MARKET_REVALIDATE_SECONDS = 3600;
@@ -156,11 +156,10 @@ export type MarketFundamentals = {
 };
 
 async function fetchBlobJson<T>(path: string): Promise<T | null> {
-  const url = painelBlobUrl(path);
-  if (!url) return null;
   try {
-    const res = await fetch(url, { next: { revalidate: MARKET_REVALIDATE_SECONDS } });
-    if (!res.ok) return null;
+    // Cache tag `blob:<path>` — POST /api/revalidate purga assim que o pipeline escreve.
+    const res = await fetchPainelBlob(path, MARKET_REVALIDATE_SECONDS);
+    if (!res?.ok) return null;
     return (await res.json()) as T;
   } catch {
     return null;

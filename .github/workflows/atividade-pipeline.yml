@@ -122,3 +122,27 @@ jobs:
       - name: Build PMS JSON e upload
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.job != 'pmc'
         run: python data-pipeline/python/build_atividade_pms.py --upload
+
+  # Fecha o buraco de 11/08/2026: o Blob já está novo, mas o site serviria o dado
+  # velho por até ~2h (Data Cache do fetch + ISR da página). Job à parte porque os
+  # jobs acima são mutuamente exclusivos por cron — em cada execução só um roda.
+  purgar-cache:
+    needs: [pib, pim, ibcbr, pmc-pms]
+    if: always()
+    runs-on: ubuntu-latest
+    env:
+      SITE_BASE: https://investimentosdeaz.com.br
+    steps:
+      - name: Purgar cache do site (PIB + IBC-Br + PIM + PMC + PMS)
+        if: always()
+        continue-on-error: true
+        run: |
+          code=$(curl -s -o resposta.json -w '%{http_code}' --max-time 30 \
+            -X POST "$SITE_BASE/api/revalidate" \
+            -H "Authorization: Bearer ${{ secrets.REVALIDATE_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{"workflow":"atividade-pipeline.yml"}' || true)
+          echo "HTTP ${code:-sem-resposta}"
+          cat resposta.json || true
+          echo
+          test "$code" = "200"

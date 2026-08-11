@@ -30,6 +30,7 @@ jobs:
     timeout-minutes: 20
     env:
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      SITE_BASE: https://investimentosdeaz.com.br
 
     steps:
       - name: Checkout
@@ -63,3 +64,22 @@ jobs:
           path: data-pipeline/out/br_ettj.json
           if-no-files-found: warn
           retention-days: 7
+
+      # O Blob já está novo, mas o site serviria a curva velha por até ~2h
+      # (Data Cache do fetch + ISR da página). Aqui o pipeline avisa o site,
+      # que purga tag + rota na hora. Nunca derruba o pipeline, mas fica
+      # VERMELHO no Actions se o site não responder 200 — purga que morre em
+      # silêncio foi a causa raiz do atraso de 11/08/2026.
+      - name: Purgar cache do site (curva BR ETTJ)
+        if: always()
+        continue-on-error: true
+        run: |
+          code=$(curl -s -o resposta.json -w '%{http_code}' --max-time 30 \
+            -X POST "$SITE_BASE/api/revalidate" \
+            -H "Authorization: Bearer ${{ secrets.REVALIDATE_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{"workflow":"br-ettj-pipeline.yml"}' || true)
+          echo "HTTP ${code:-sem-resposta}"
+          cat resposta.json || true
+          echo
+          test "$code" = "200"

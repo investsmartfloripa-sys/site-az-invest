@@ -8,7 +8,7 @@
  * - data/ipca.json (opcional, pra deflator) — gerado por build_ipca.py
  */
 
-import { painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob } from "@/lib/painel-blob";
 
 export const EMPREGO_REVALIDATE_SECONDS = 21600;
 
@@ -112,11 +112,10 @@ export type IpcaForEmprego = {
 // Loaders
 // ---------------------------------------------------------------------------
 async function fetchBlobJson<T>(path: string): Promise<T | null> {
-  const url = painelBlobUrl(path);
-  if (!url) return null;
   try {
-    const res = await fetch(url, { next: { revalidate: EMPREGO_REVALIDATE_SECONDS } });
-    if (!res.ok) return null;
+    // TTL curto + cache tag `blob:<path>` — o pipeline purga via POST /api/revalidate.
+    const res = await fetchPainelBlob(path, EMPREGO_REVALIDATE_SECONDS);
+    if (!res?.ok) return null;
     return (await res.json()) as T;
   } catch {
     return null;

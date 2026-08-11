@@ -1,4 +1,4 @@
-import { painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob } from "@/lib/painel-blob";
 
 export const VISAO_GERAL_REVALIDATE_SECONDS = 3600;
 
@@ -504,11 +504,10 @@ export type VisaoGeralPayload = {
 };
 
 async function fetchJson<T>(blobPath: string): Promise<T | null> {
-  const url = painelBlobUrl(blobPath);
-  if (!url) return null;
   try {
-    const r = await fetch(url, { next: { revalidate: VISAO_GERAL_REVALIDATE_SECONDS } });
-    if (!r.ok) return null;
+    // TTL curto + cache tag `blob:<path>` (purgada pelo POST /api/revalidate)
+    const r = await fetchPainelBlob(blobPath, VISAO_GERAL_REVALIDATE_SECONDS);
+    if (!r?.ok) return null;
     return (await r.json()) as T;
   } catch {
     return null;

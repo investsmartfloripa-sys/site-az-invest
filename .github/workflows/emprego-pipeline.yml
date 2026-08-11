@@ -76,3 +76,27 @@ jobs:
           else
             python data-pipeline/python/build_emprego_caged_quebras.py --upload
           fi
+
+  # Fecha o buraco de 11/08/2026: o Blob já está novo, mas o site serviria o dado
+  # velho por até ~2h (Data Cache do fetch + ISR da página). Job à parte porque os
+  # jobs acima são mutuamente exclusivos por cron — em cada execução só um roda.
+  purgar-cache:
+    needs: [pnad, caged]
+    if: always()
+    runs-on: ubuntu-latest
+    env:
+      SITE_BASE: https://investimentosdeaz.com.br
+    steps:
+      - name: Purgar cache do site (PNAD + CAGED)
+        if: always()
+        continue-on-error: true
+        run: |
+          code=$(curl -s -o resposta.json -w '%{http_code}' --max-time 30 \
+            -X POST "$SITE_BASE/api/revalidate" \
+            -H "Authorization: Bearer ${{ secrets.REVALIDATE_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{"workflow":"emprego-pipeline.yml"}' || true)
+          echo "HTTP ${code:-sem-resposta}"
+          cat resposta.json || true
+          echo
+          test "$code" = "200"

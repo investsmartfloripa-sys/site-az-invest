@@ -46,7 +46,7 @@ import {
   monthlySchedule,
   type FuturesQuote,
 } from "@/lib/rate-futures";
-import { painelBlobUrl } from "@/lib/painel-blob";
+import { fetchPainelBlob } from "@/lib/painel-blob";
 
 const UA = "Mozilla/5.0 (compatible; AZInvestBot/1.0; +https://investimentosdeaz.com.br)";
 
@@ -662,11 +662,10 @@ type BrEttjFile = {
 };
 
 async function fetchBlobJson<T>(path: string, revalidate: number): Promise<T | null> {
-  const url = painelBlobUrl(path);
-  if (!url) return null;
   try {
-    const res = await fetch(url, { next: { revalidate } });
-    if (!res.ok) return null;
+    // TTL curto + cache tag `blob:<path>` p/ o pipeline purgar ao gravar o arquivo.
+    const res = await fetchPainelBlob(path, revalidate);
+    if (!res?.ok) return null;
     return (await res.json()) as T;
   } catch {
     return null;
