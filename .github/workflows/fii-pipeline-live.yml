@@ -53,12 +53,13 @@ jobs:
         run: python data-pipeline/python/build_fii_screener.py --upload
         continue-on-error: true
 
-      # Sem isso o preço novo esperaria o Data Cache do fetch + o ISR da página
-      # virarem — inútil num pipeline que roda de 15 em 15 min. A purga é barata
-      # e nunca derruba o pipeline, mas fica VERMELHA se o site não devolver 200.
+      # O Blob ja esta novo mas o site serviria o dado velho por ate ~2h (Data Cache
+      # do fetch + ISR da pagina). Aqui o pipeline avisa o site que purga tag + rota
+      # na hora. Falhar aqui REPROVA a run de proposito: nenhum job depende deste
+      # step entao reprovar nao perde upload nenhum e purga morrendo em silencio foi
+      # a causa raiz de 11/08/2026.
       - name: Purgar cache do site (FIIs ao vivo — IFIX + screener)
         if: always()
-        continue-on-error: true
         run: |
           code=$(curl -s -o resposta.json -w '%{http_code}' --max-time 30 \
             -X POST "$SITE_BASE/api/revalidate" \
@@ -68,4 +69,7 @@ jobs:
           echo "HTTP ${code:-sem-resposta}"
           cat resposta.json || true
           echo
-          test "$code" = "200"
+          if [ "$code" != "200" ]; then
+            echo "::error::purga de cache falhou (HTTP ${code:-sem-resposta}) - o painel pode servir dado velho ate o TTL vencer"
+            exit 1
+          fi

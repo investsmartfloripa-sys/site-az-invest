@@ -31,7 +31,6 @@ jobs:
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
       # Público (leitura). Fallback = mesma constante de src/lib/painel-blob.ts.
       BLOB_BASE: ${{ secrets.NEXT_PUBLIC_BLOB_BASE_URL || 'https://8ytqvgmik75vk1it.public.blob.vercel-storage.com' }}
-      SITE_BASE: https://investimentosdeaz.com.br
 
     steps:
       - name: Checkout
@@ -87,16 +86,27 @@ jobs:
           echo "changed=$changed" >> "$GITHUB_OUTPUT"
           echo "depois → IPCA=${ipca:-?} IGP-M=${igpm:-?} | divulgação nova: $changed"
 
-      # O passo que fecha o buraco de 11/08/2026: o Blob já está novo, mas o
-      # site serviria o mês anterior por até ~2h (Data Cache do fetch + ISR da
-      # página, dois TTLs de 1h independentes). Aqui o pipeline avisa o site,
-      # que purga tag + rota na hora. Roda SEMPRE (é barato e auto-cura
-      # defasagem de qualquer origem) e nunca derruba o pipeline — mas fica
-      # VERMELHO no Actions se o site não responder 200, senão a purga poderia
-      # morrer em silêncio e o sintoma voltaria sem ninguém perceber.
+  # O passo que fecha o buraco de 11/08/2026: o Blob já está novo, mas o site
+  # serviria o mês anterior por até ~2h (Data Cache do fetch + ISR da página,
+  # dois TTLs de 1h independentes). Aqui o pipeline avisa o site, que purga tag
+  # + rota na hora.
+  #
+  # É JOB SEPARADO de propósito. A purga precisa REPROVAR a run quando falha —
+  # `continue-on-error` deixaria a run verde e a purga voltaria a morrer em
+  # silêncio, que é a causa raiz do incidente. Mas se ela fosse um step do
+  # build-and-upload, reprovar faria o `render-charts` (que tem
+  # `needs: build-and-upload`) ser PULADO justamente na divulgação nova, sem
+  # gerar os PNGs. Em job próprio ninguém depende dela: falha fica vermelha e
+  # não custa nada.
+  purgar-cache:
+    needs: build-and-upload
+    if: always()
+    runs-on: ubuntu-latest
+    env:
+      SITE_BASE: https://investimentosdeaz.com.br
+
+    steps:
       - name: Purgar cache do site (IPCA + IGP-M)
-        if: always()
-        continue-on-error: true
         run: |
           code=$(curl -s -o resposta.json -w '%{http_code}' --max-time 30 \
             -X POST "$SITE_BASE/api/revalidate" \
@@ -106,7 +116,10 @@ jobs:
           echo "HTTP ${code:-sem-resposta}"
           cat resposta.json || true
           echo
-          test "$code" = "200"
+          if [ "$code" != "200" ]; then
+            echo "::error::purga de cache falhou (HTTP ${code:-sem-resposta}) - o painel pode servir o mes anterior ate o TTL vencer"
+            exit 1
+          fi
 
   # Fotografa os gráficos do catálogo do Publisher (rota /render/<id>) e
   # arquiva PNGs numerados no Blob em releases/<indicador>/<mes_ref>/.

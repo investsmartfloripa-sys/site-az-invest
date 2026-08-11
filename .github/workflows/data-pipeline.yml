@@ -80,14 +80,13 @@ jobs:
       - name: Upload SVGs to Blob
         run: python data-pipeline/python/upload_static_charts.py
 
-      # Último step: avisa o site para purgar Data Cache + ISR na hora (senão o
-      # painel serviria a curva velha por até ~2h). Os blobPaths extras são as
-      # tabelas lidas direto por src/lib/painel-data.ts, que não estão no
-      # data-manifest.ts e portanto não sairiam só pelo nome do workflow.
-      # Nunca derruba o pipeline, mas fica VERMELHO se o site não responder 200.
+      # O Blob ja esta novo mas o site serviria o dado velho por ate ~2h (Data Cache
+      # do fetch + ISR da pagina). Aqui o pipeline avisa o site que purga tag + rota
+      # na hora. Falhar aqui REPROVA a run de proposito: nenhum job depende deste
+      # step entao reprovar nao perde upload nenhum e purga morrendo em silencio foi
+      # a causa raiz de 11/08/2026.
       - name: Purgar cache do site (Painel Panorama)
         if: always()
-        continue-on-error: true
         run: |
           code=$(curl -s -o resposta.json -w '%{http_code}' --max-time 30 \
             -X POST "$SITE_BASE/api/revalidate" \
@@ -97,4 +96,7 @@ jobs:
           echo "HTTP ${code:-sem-resposta}"
           cat resposta.json || true
           echo
-          test "$code" = "200"
+          if [ "$code" != "200" ]; then
+            echo "::error::purga de cache falhou (HTTP ${code:-sem-resposta}) - o painel pode servir dado velho ate o TTL vencer"
+            exit 1
+          fi
