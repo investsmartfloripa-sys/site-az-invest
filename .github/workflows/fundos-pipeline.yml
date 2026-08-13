@@ -54,6 +54,7 @@ jobs:
           pip install -r data-pipeline/python/requirements.txt
 
       - name: build_fundos_ranking (Mais Retorno)
+        id: ranking
         run: |
           python data-pipeline/python/build_fundos_ranking.py --upload \
             ${{ github.event.inputs.with_drawdown == '1' && '--with-drawdown' || '' }}
@@ -63,6 +64,7 @@ jobs:
       # disparo manual com with_quotes=1 (a série muda devagar; não precisa
       # rodar a cada 2 dias). No free, rodar com parcimônia.
       - name: build_fundos_quotes (séries p/ gráficos)
+        id: quotes
         if: ${{ github.event.inputs.with_quotes == '1' }}
         run: python data-pipeline/python/build_fundos_quotes.py --upload
         continue-on-error: true
@@ -98,3 +100,23 @@ jobs:
             echo "::error::purga de cache falhou (HTTP ${code:-sem-resposta}) - o painel pode servir dado velho ate o TTL vencer"
             exit 1
           fi
+
+      # DESCOBERTO EM 13/08/2026: a aba de Fundos servia dado de 16/06 ha 58 dias.
+      # O build morria em `MAISRETORNO_API_KEY ausente`, o continue-on-error acima
+      # segurava a falha e a run terminava VERDE - ninguem foi avisado. O
+      # continue-on-error continua certo (uma fonte quebrada nao pode derrubar a
+      # outra), mas agora o job REPROVA no fim, igual ao familias-pipeline.
+      - name: Falhar se algum build quebrou
+        if: always()
+        run: |
+          quebrou=0
+          if [ "${{ steps.ranking.outcome }}" = "failure" ]; then
+            echo "::error::build_fundos_ranking falhou - a aba de Fundos vai servir dado CONGELADO ate isso ser corrigido"
+            quebrou=1
+          fi
+          if [ "${{ steps.quotes.outcome }}" = "failure" ]; then
+            echo "::error::build_fundos_quotes falhou - graficos da pagina de detalhe ficam congelados"
+            quebrou=1
+          fi
+          if [ "$quebrou" = "1" ]; then exit 1; fi
+          echo "builds ok"
