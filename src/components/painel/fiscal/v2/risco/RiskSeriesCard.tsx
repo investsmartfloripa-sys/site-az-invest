@@ -124,7 +124,7 @@ export function RiskSeriesCard({
             onChange={setPeriod}
             min={minIso || undefined}
             max={maxIso || undefined}
-            periods={["1y", "5y", "max"]}
+            periods={["ytd", "1y", "5y", "max"]}
           />
         </>
       }

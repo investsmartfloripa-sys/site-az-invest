@@ -34,9 +34,11 @@ import {
   ultimoPct,
   yDomainDe,
 } from "./shared";
+import { StatChip } from "./StatChip";
 
 /**
- * 01 — Primário realizado × estabilizador × metas LDO, em DOIS MODOS que
+ * 01 — Primário realizado × estabilizador × metas LDO (formato cockpit:
+ * título FIXO, estado atual no chip, leitura no ?), em DOIS MODOS que
  * nunca misturam perímetro na mesma linha:
  * - "Consolidado (estabilizador)": primário do setor público consolidado
  *   (derivado no pipeline) contra o estabilizador — MESMO perímetro da DLSP.
@@ -118,49 +120,62 @@ export function PrimarioMetaCard({ data, codace }: { data: FiscalClassicosData; 
   const primUlt = ultimoPct(seriePrimario);
   const estabUlt = estabPts.length > 0 ? estabPts[estabPts.length - 1][1] : null;
 
-  const titulo = (() => {
+  const chip = (() => {
+    if (!primUlt) return null;
     if (modo === "consolidado") {
-      if (!primUlt) return "Primário consolidado × estabilizador da dívida";
-      if (estabUlt == null) return `Primário do setor público consolidado em ${fmtSignedPct(primUlt.valor, 2)} do PIB em 12 meses`;
-      const gap = estabUlt - primUlt.valor;
-      return gap > 0
-        ? `Primário consolidado de ${fmtSignedPct(primUlt.valor, 2)} do PIB roda ${fmtNum(gap, 1)} p.p. aquém do que estabiliza a dívida (${fmtSignedPct(estabUlt, 1)})`
-        : `Primário consolidado de ${fmtSignedPct(primUlt.valor, 2)} do PIB já supera o estabilizador da dívida (${fmtSignedPct(estabUlt, 1)})`;
+      const tone = estabUlt != null ? (primUlt.valor >= estabUlt ? "pos" : "neg") : "neutral";
+      return (
+        <StatChip tone={tone}>
+          {fmtSignedPct(primUlt.valor, 2)} (SP)
+          {estabUlt != null ? ` · estab. ${fmtSignedPct(estabUlt, 1)}` : ""}
+        </StatChip>
+      );
     }
-    if (!primUlt) return "Primário do governo central × metas LDO";
     const ano = primUlt.data.slice(0, 4);
     const meta = data.metas_ldo?.anos?.[ano];
-    if (!meta) return `Primário do governo central em ${fmtSignedPct(primUlt.valor, 2)} do PIB em 12 meses`;
-    const status =
-      primUlt.valor < meta.banda_inf
-        ? `abaixo do piso da banda da meta LDO de ${ano}`
-        : primUlt.valor > meta.banda_sup
-          ? `acima do teto da banda da meta LDO de ${ano}`
-          : `dentro da banda da meta LDO de ${ano}`;
-    return `Primário central de ${fmtSignedPct(primUlt.valor, 2)} do PIB em 12 meses roda ${status} (${fmtSignedPct(meta.banda_inf, 2)} a ${fmtSignedPct(meta.banda_sup, 2)})`;
+    const tone = meta ? (primUlt.valor < meta.banda_inf ? "neg" : "pos") : "neutral";
+    return (
+      <StatChip tone={tone}>
+        {fmtSignedPct(primUlt.valor, 2)} (GC)
+        {meta ? ` · banda ${fmtSignedPct(meta.banda_inf, 2)} a ${fmtSignedPct(meta.banda_sup, 2)}` : ""}
+      </StatChip>
+    );
   })();
 
-  const subtitulo =
-    modo === "consolidado"
-      ? "O resultado que o setor público entrega basta para a dívida parar de crescer? Primário consolidado (12m) contra o estabilizador histórico do pipeline — mesmo perímetro (DLSP), comparação limpa."
-      : "O governo central cabe na meta do ano? Primário central (12m, RTN) contra as bandas das metas LDO, ano a ano — sem o estabilizador, que é de outro perímetro.";
+  const interpretacao = (() => {
+    if (modo === "consolidado") {
+      const leitura =
+        primUlt && estabUlt != null
+          ? estabUlt - primUlt.valor > 0
+            ? ` Hoje o primário roda ${fmtNum(estabUlt - primUlt.valor, 1)} p.p. aquém do que estabiliza a dívida.`
+            : " Hoje o primário já supera o estabilizador da dívida."
+          : "";
+      return `O resultado que o setor público entrega basta para a dívida parar de crescer?${leitura}`;
+    }
+    return "O governo central cabe na meta do ano? O chip compara o 12m móvel com a banda LDO do ano corrente — a aferição oficial é no ano-calendário.";
+  })();
 
   return (
     <ChartCard
-      title={titulo}
-      subtitle={subtitulo}
+      title="Primário × estabilizador / meta"
+      subtitle={
+        modo === "consolidado"
+          ? "Setor público consolidado (SP) · primário 12m vs p* do pipeline · mesmo perímetro (DLSP)"
+          : "Governo central (GC) · primário 12m (RTN) vs bandas LDO por ano-calendário"
+      }
       toolbar={
         <div className="flex flex-wrap items-center gap-2">
+          {chip}
           <AzSegmented
             options={[...MODOS]}
             value={modo}
             onChange={(id) => setModo(id as ModoPrimario)}
             ariaLabel="Perímetro do primário"
           />
-          <AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["1y", "5y", "max"]} />
+          <AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["ytd", "1y", "5y", "max"]} />
         </div>
       }
-      footer={`Dois perímetros em dois modos, nunca na mesma linha: Consolidado = setor público consolidado (BCB, derivado no pipeline) contra o estabilizador; Central = governo central (RTN) contra a meta LDO. ${
+      footer={`${interpretacao} Dois perímetros em dois modos, nunca na mesma linha: Consolidado = setor público consolidado (BCB, derivado no pipeline) contra o estabilizador; Central = governo central (RTN) contra a meta LDO. ${
         modo === "consolidado"
           ? "Estabilizador (linha navy tracejada): p* = (r−g)/(1+g) × DLSP/PIB t−12, com r = taxa implícita da DLSP — calculado SÓ no pipeline, MESMO perímetro (DLSP) da linha realizada."
           : "Bandas verdes: metas LDO por ano-calendário (LC 200/2023, banda ±0,25 p.p., vigência 2024+); a aferição oficial é no ANO com abatimentos (ex.: precatórios) — o 12m móvel é aproximação."

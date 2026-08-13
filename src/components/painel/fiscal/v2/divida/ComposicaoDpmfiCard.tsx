@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Area,
   CartesianGrid,
   ComposedChart,
-  Legend,
   ReferenceDot,
   ResponsiveContainer,
   Tooltip,
@@ -18,13 +18,17 @@ import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@
 import { AzPeriodSelector, resolvePeriodRange, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtPct } from "@/lib/format-br";
-import { dataIso } from "./shared";
+import { CockpitChip, dataIso } from "./shared";
 
 /**
  * Composição da DPMFi por indexador — stacked area NORMALIZADA a 100% com as
  * SEIS fatias (o card antigo plotava 3 áreas SEM stackId e omitia a fatia de
  * índices de preços/NTN-B, ~27% do estoque — agora ela vem da SGS 12001 e o
  * stack fecha de verdade). Só entram meses em que as fatias somam ≈100%.
+ *
+ * Padrão cockpit: título FIXO técnico + chip da fatia Selic; leitura no
+ * footer (?). SEM <Legend>: os chips por fatia (cor + label + valor) já fazem
+ * o papel — legenda seria dupla.
  *
  * A fatia Selic/LFT fica na BASE da pilha: o topo dela é a própria
  * participação, e o pico histórico (derivado da série) é anotado no gráfico.
@@ -109,7 +113,7 @@ export function ComposicaoDpmfiCard({
 
   if (todasRows.length === 0) {
     return (
-      <ChartCard title="Composição da DPMFi por indexador" stampGiro={geradoEm}>
+      <ChartCard title="DPMFi por indexador (% do estoque)" stampGiro={geradoEm}>
         <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
           Sem meses em que as seis fatias fecham 97–103% — verifique a coleta da SGS 12001 no pipeline.
         </p>
@@ -120,24 +124,33 @@ export function ComposicaoDpmfiCard({
   const atual = todasRows[todasRows.length - 1];
   const maiorAtual = FATIAS.reduce((a, b) => (atual[b.key] > atual[a.key] ? b : a));
 
-  // Título afirmativo verificado contra o dado: nomeia a maior fatia atual.
-  const titulo =
+  // Leitura interpretativa verificada contra o dado — footer (?), nunca título.
+  const leitura =
     maiorAtual.key === "selic"
-      ? `Selic indexa ${fmtPct(atual.selic, 0)} da dívida mobiliária — cada alta de juro repassa direto ao estoque`
-      : `${maiorAtual.label} é a maior fatia da DPMFi (${fmtPct(atual[maiorAtual.key], 0)})`;
+      ? `Selic indexa ${fmtPct(atual.selic, 0)} da dívida mobiliária — cada alta de juro repassa direto ao estoque.`
+      : `${maiorAtual.label} é a maior fatia da DPMFi (${fmtPct(atual[maiorAtual.key], 0)}).`;
 
   const picoVisivel = picoSelic != null && rows.some((r) => r.iso === picoSelic.iso);
 
   return (
     <ChartCard
-      title={titulo}
+      title="DPMFi por indexador (% do estoque)"
       subtitle="Dívida Pública Mobiliária Federal interna por indexador, normalizada a 100%. A base da pilha é a fatia Selic/LFT — quanto maior, mais o custo da dívida acompanha o juro básico em tempo real."
       toolbar={
-        <AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["1y", "5y", "max"]} />
+        <>
+          <CockpitChip cor={AZ_BRAND.azure}>Selic {fmtPct(atual.selic, 1)} do estoque</CockpitChip>
+          <AzPeriodSelector
+            value={period}
+            onChange={setPeriod}
+            min={minIso}
+            max={maxIso}
+            periods={["ytd", "1y", "5y", "max"]}
+          />
+        </>
       }
       footer={
         <>
-          Vulnerabilidades por fatia: <strong>Selic/LFT</strong> repassa cada alta da Selic ao estoque imediatamente
+          <strong>Leitura.</strong> {leitura} Vulnerabilidades por fatia: <strong>Selic/LFT</strong> repassa cada alta da Selic ao estoque imediatamente
           (risco de juros); <strong>índices de preços/NTN-B</strong> indexa à inflação; <strong>câmbio</strong> expõe a
           desvalorização — hoje fatia residual (virtude estrutural do Brasil); <strong>prefixado</strong> trava o custo
           na emissão. Fontes: BCB SGS 4174–4178 e 12001 (índices de preços — a fatia NTN-B que faltava). Meses em que as
@@ -175,7 +188,6 @@ export function ComposicaoDpmfiCard({
               content={<AzTooltip labelFmt={(l) => fmtMesCurto(String(l))} valueFmt={(v) => fmtPct(v, 1)} />}
               cursor={AZ_TOOLTIP_PROPS.cursor}
             />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
 
             {FATIAS.map((f) => (
               <Area
@@ -212,6 +224,15 @@ export function ComposicaoDpmfiCard({
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+
+      <p className="mt-2 text-[11px]">
+        <Link
+          href="/painel-economico/economia/brasil/fiscal/indicadores-de-risco-fiscal#semaforo"
+          className="font-semibold text-[#027DFC] hover:underline"
+        >
+          estado de risco por indexador →
+        </Link>
+      </p>
     </ChartCard>
   );
 }

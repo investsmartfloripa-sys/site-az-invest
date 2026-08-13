@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 
+import Link from "next/link";
+
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import type { IndicadorSemaforo, Nivel } from "@/lib/painel-fiscal";
 import type { AzTimeSeries } from "@/components/painel/charts/AzTimeSeriesChart";
@@ -140,8 +142,8 @@ export function SemaforoTempoGrid({
                     {temSerie ? (
                       <div className="mt-1.5">
                         <MiniRiskSpark serie={ind.serie!} faixas={ind} nivel={ind.nivel} height={44} />
-                        <div className="mt-1 text-[9px] uppercase tracking-wide text-zinc-400 opacity-0 transition group-hover:opacity-100">
-                          {selecionado ? "fechar" : "abrir série completa"}
+                        <div className="mt-1 text-[9px] uppercase tracking-wide text-zinc-400 transition-colors group-hover:text-[#027DFC]">
+                          {selecionado ? "fechar" : "ver série ↗"}
                         </div>
                       </div>
                     ) : (
@@ -182,6 +184,14 @@ export function SemaforoTempoGrid({
                     </span>
                   }
                 />
+                {cat === "Estrutura" ? (
+                  <Link
+                    href="/painel-economico/economia/brasil/fiscal/divida"
+                    className="mt-2 inline-block text-[11px] font-semibold text-[#027DFC] hover:underline"
+                  >
+                    composição completa na aba Dívida →
+                  </Link>
+                ) : null}
               </div>
             ) : null}
           </div>

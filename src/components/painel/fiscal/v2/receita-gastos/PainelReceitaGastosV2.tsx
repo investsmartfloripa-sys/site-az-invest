@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 
 import type { AtividadeCodaceData } from "@/lib/painel-atividade";
 import type { FiscalClassicosData } from "@/lib/painel-fiscal";
-import { DashboardScaffold, KpiCard, type DashboardBloco } from "@/components/painel/core";
+import { KpiCard } from "@/components/painel/core";
+import { MethodInfo } from "@/components/painel/core/MethodInfo";
+import { FiscalTabs } from "@/components/painel/fiscal/v2/FiscalTabs";
 import { fmtMesLongo, fmtPct, fmtSignedPct } from "@/lib/format-br";
-import { deltaPp12m, ultimoPct, ultimoYoY } from "./shared";
+import { deltaPp12m, ultimoPct } from "./shared";
 import { TesouraCard } from "./TesouraCard";
 import { PrimarioMetaCard } from "./PrimarioMetaCard";
 import { MetaYtdCard } from "./MetaYtdCard";
@@ -19,14 +21,30 @@ import { NfspDecompostaCard } from "./NfspDecompostaCard";
 import { AnaliseCompletaFiscal } from "./AnaliseCompletaFiscal";
 
 /**
- * Painel Receita e Gastos v2 — template narrativo AZ (manchete em prosa →
- * 4 KPIs → âncora da tesoura → blocos numerados → ficha técnica).
+ * Painel Receita e Gastos v2 — COCKPIT de monitoramento (§10 do
+ * PADRAO-VISUAL, mesmo padrão do PainelRiscoFiscalV2): tab bar → header
+ * compacto → 4 KPIs → âncora da tesoura → grade densa por seção (Meta fiscal /
+ * Receita / Despesa / Regra fiscal e consolidado) → análise completa e ficha
+ * técnica em <details>. Títulos técnicos FIXOS; número dinâmico vira chip;
+ * todo texto editorial atrás de MethodInfo (?) ou da ficha.
  *
  * Princípios herdados da crítica do revisor: recessões CODACE no lugar de
  * regimes hardcoded; bandas LDO por ano; estabilizador SEMPRE do pipeline
  * (nunca recalculado no front); stacks fixos que fecham o total; séries
- * reais deflacionadas no builder; números da prosa interpolados do JSON.
+ * reais deflacionadas no builder.
  */
+
+function Divisor({ label, info }: { label: string; info?: ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 pt-1">
+      <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+        {label}
+        {info ? <MethodInfo className="ml-1.5 align-middle">{info}</MethodInfo> : null}
+      </span>
+      <div className="h-px flex-1 bg-[#132960]/10" />
+    </div>
+  );
+}
 
 export function PainelReceitaGastosV2({
   data,
@@ -43,7 +61,18 @@ export function PainelReceitaGastosV2({
     const primario = ultimoPct(rg.primario_central_pct_pib);
     const deltaReceita = deltaPp12m(rg.receita_liquida_pct_pib);
     const deltaDespesa = deltaPp12m(rg.despesa_total_pct_pib);
-    const deltaPrimario = deltaPp12m(rg.primario_central_pct_pib);
+
+    // Δ m/m do primário: último ponto válido vs o imediatamente anterior.
+    let deltaPrimarioMm: number | null = null;
+    {
+      const validos: number[] = [];
+      for (const p of rg.primario_central_pct_pib) {
+        if (p.valor_pct != null && Number.isFinite(p.valor_pct)) validos.push(p.valor_pct);
+      }
+      if (validos.length >= 2) {
+        deltaPrimarioMm = +(validos[validos.length - 1] - validos[validos.length - 2]).toFixed(4);
+      }
+    }
 
     // Estabilizador: SEMPRE o último ponto pronto do pipeline (perímetro consolidado).
     let estab: number | null = null;
@@ -56,211 +85,168 @@ export function PainelReceitaGastosV2({
       }
     }
 
-    // Tesoura em termos REAIS — séries deflacionadas do builder (arcabouco.*).
-    const despReal = ultimoYoY(data.arcabouco?.despesa_real_12m_yoy_pct);
-    const recReal = ultimoYoY(data.arcabouco?.receita_real_12m_yoy_pct);
-
-    // Meta LDO do ano corrente (se houver meta vigente).
-    const anoCorrente = data.mes_recente ? Number(data.mes_recente.slice(0, 4)) : null;
-    const meta = anoCorrente != null ? (data.metas_ldo?.anos?.[String(anoCorrente)] ?? null) : null;
-
-    return { receita, despesa, primario, deltaReceita, deltaDespesa, deltaPrimario, estab, despReal, recReal, anoCorrente, meta };
+    return { receita, despesa, primario, deltaReceita, deltaDespesa, deltaPrimarioMm, estab };
   }, [rg, data]);
 
-  const manchete = useMemo(() => {
-    const { receita, despesa, primario, despReal, recReal, anoCorrente, meta } = derivados;
-    if (!receita || !despesa || !primario) return null;
-    const partes: string[] = [];
-    partes.push(
-      `O governo central arrecada ${fmtPct(receita.valor, 1)} do PIB e gasta ${fmtPct(despesa.valor, 1)} em 12 meses — primário de ${fmtSignedPct(primario.valor, 2)}`,
-    );
-    if (despReal && recReal) {
-      partes.push(
-        despReal.valor > recReal.valor
-          ? `a tesoura abre: em termos reais, a despesa cresce ${fmtSignedPct(despReal.valor, 1)} em 12 meses contra ${fmtSignedPct(recReal.valor, 1)} da receita`
-          : `a tesoura fecha: em termos reais, a receita cresce ${fmtSignedPct(recReal.valor, 1)} em 12 meses contra ${fmtSignedPct(despReal.valor, 1)} da despesa`,
-      );
-    }
-    if (meta && anoCorrente != null) {
-      const status =
-        primario.valor < meta.banda_inf
-          ? `roda abaixo do piso da banda da meta LDO de ${anoCorrente} (${fmtSignedPct(meta.banda_inf, 2)} a ${fmtSignedPct(meta.banda_sup, 2)})`
-          : primario.valor > meta.banda_sup
-            ? `roda acima do teto da banda da meta LDO de ${anoCorrente} (${fmtSignedPct(meta.banda_inf, 2)} a ${fmtSignedPct(meta.banda_sup, 2)})`
-            : `cabe na banda da meta LDO de ${anoCorrente} (${fmtSignedPct(meta.banda_inf, 2)} a ${fmtSignedPct(meta.banda_sup, 2)})`;
-      partes.push(`no acumulado em 12 meses, o primário ${status} — a aferição oficial é no ano-calendário, com abatimentos`);
-    }
-    return `${partes.join("; ")}.`;
-  }, [derivados]);
-
-  const kpis = useMemo(() => {
-    const { receita, despesa, primario, deltaReceita, deltaDespesa, deltaPrimario, estab } = derivados;
-    return [
-      <KpiCard
-        key="receita"
-        label="Receita líquida (12m)"
-        value={fmtPct(receita?.valor ?? null, 1)}
-        unit="do PIB"
-        delta={deltaReceita}
-        deltaUnit="p.p."
-        deltaHint="vs 12m atrás"
-        hint="RTN, acumulado 12 meses"
-      />,
-      <KpiCard
-        key="despesa"
-        label="Despesa total (12m)"
-        value={fmtPct(despesa?.valor ?? null, 1)}
-        unit="do PIB"
-        delta={deltaDespesa}
-        deltaUnit="p.p."
-        deltaHint="vs 12m atrás"
-        invertColor
-        hint="RTN, acumulado 12 meses"
-      />,
-      <KpiCard
-        key="primario"
-        label="Primário central (12m)"
-        value={fmtSignedPct(primario?.valor ?? null, 2)}
-        unit="do PIB"
-        delta={deltaPrimario}
-        deltaUnit="p.p."
-        deltaHint="vs 12m atrás"
-        hint="positivo = superávit"
-        size="lg"
-      />,
-      <KpiCard
-        key="estabilizador"
-        label="Primário estabilizador"
-        value={fmtSignedPct(derivados.estab, 2)}
-        unit="do PIB"
-        hint={estab != null ? "p/ a dívida parar de crescer · perímetro consolidado (DLSP)" : "aguardando pipeline v2"}
-      />,
-    ];
-  }, [derivados]);
-
-  const blocos = useMemo<DashboardBloco[]>(() => {
-    const out: DashboardBloco[] = [
-      {
-        id: "primario-meta",
-        eyebrow: "Meta e sustentabilidade",
-        titulo: "Primário × estabilizador × metas LDO",
-        descricao:
-          "O resultado entregue contra a régua que importa (o primário que estabiliza a dívida, calculado no pipeline) e as bandas das metas por ano.",
-        children: <PrimarioMetaCard data={data} codace={codace} />,
-      },
-    ];
-    if (data.acompanhamento_meta?.primario_central_ytd_brl_mm) {
-      out.push({
-        id: "meta-no-ano",
-        eyebrow: "Ano-calendário",
-        titulo: "Acompanhamento da meta no ano",
-        descricao:
-          "A meta LDO é aferida no ano-calendário: o primário acumulado jan→mês do ano corrente contra o padrão sazonal dos cinco anteriores.",
-        children: <MetaYtdCard data={data} />,
-      });
-    }
-    if (data.receita_familias) {
-      out.push({
-        id: "receita",
-        eyebrow: "Receita",
-        titulo: "De onde vem a receita — e o que a puxou",
-        descricao:
-          "As famílias de receita do RTN em stack fixo de três fatias (incentivos fundidos na administrada; o total é a receita bruta) e o Δ de participação no PIB por tributo em 12 meses.",
-        children: (
-          <div className="grid gap-4 xl:grid-cols-2">
-            <ReceitaFamiliasCard data={data} />
-            <ContribuicoesTributoCard data={data} />
-          </div>
-        ),
-      });
-    }
-    if (data.despesa_rubricas_v2) {
-      out.push({
-        id: "despesa",
-        eyebrow: "Despesa",
-        titulo: "Onde o dinheiro vai — e quanto ainda é escolha",
-        descricao:
-          "As nove fatias que fecham a despesa total, do mais rígido ao discricionário, e a parcela do orçamento que sobra para decisão alocativa.",
-        children: (
-          <div className="grid gap-4 xl:grid-cols-2">
-            <DespesaRubricasCard data={data} />
-            <RigidezCard data={data} />
-          </div>
-        ),
-      });
-    }
-    if (data.arcabouco) {
-      out.push({
-        id: "arcabouco",
-        eyebrow: "Regra fiscal",
-        titulo: "Arcabouço: a despesa cabe no corredor?",
-        descricao:
-          "Crescimento real 12m de despesa e receita (deflacionados no builder) contra o corredor legal de 0,6–2,5% a.a. da LC 200/2023.",
-        children: <ArcaboucoCard data={data} />,
-      });
-    }
-    out.push({
-      id: "nfsp",
-      eyebrow: "Setor público consolidado",
-      titulo: "O nominal decomposto: primário × juros",
-      descricao:
-        "O formato canônico do resultado nominal — quanto do rombo é fluxo primário e quanto é serviço da dívida, com a identidade fechando por construção.",
-      children: <NfspDecompostaCard data={data} codace={codace} />,
-    });
-    out.push({
-      id: "analise-completa",
-      eyebrow: "Esmiuçamento",
-      titulo: "Análise completa",
-      descricao: "Os últimos 12 meses em tabela e a série completa em CSV — fluxo, famílias de receita e rubricas de despesa.",
-      children: <AnaliseCompletaFiscal data={data} />,
-    });
-    return out;
-  }, [data, codace]);
+  const temMetaYtd = Boolean(data.acompanhamento_meta?.primario_central_ytd_brl_mm);
 
   return (
-    <DashboardScaffold
-      header={{
-        titulo: "Receita e Gastos — Painel Fiscal",
-        subtitulo:
-          "O fluxo fiscal brasileiro em dois perímetros declarados: governo central (Tesouro/RTN) e setor público consolidado (BCB), sempre em 12 meses móveis sobre o PIB.",
-        referencia: data.mes_recente ? `Referência: ${fmtMesLongo(data.mes_recente)} · RTN/STN e BCB SGS` : undefined,
-      }}
-      manchete={manchete}
-      kpis={kpis}
-      anchor={<TesouraCard data={data} codace={codace} />}
-      blocos={blocos}
-      fichaTecnica={
-        <div className="space-y-2">
+    <div className="flex flex-col gap-4">
+      <FiscalTabs />
+
+      {/* ── Status geral ── */}
+      <header className="rounded-2xl border border-[#132960]/10 bg-white p-5 shadow-sm">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold text-[#132960]">
+            Receita e gastos
+            <MethodInfo className="ml-2 align-middle">
+              O fluxo fiscal brasileiro em dois perímetros declarados, nunca misturados na mesma linha: governo central
+              (GC — Tesouro/RTN) e setor público consolidado (SP — BCB), sempre em 12 meses móveis sobre o PIB. A
+              pergunta central é a tesoura: o governo arrecada menos do que gasta? O primário que ela produz é comparado
+              com duas réguas — a meta LDO (aferida no ano-calendário, com abatimentos; o 12m móvel é aproximação) e o
+              primário estabilizador p* calculado no pipeline (perímetro consolidado, DLSP). Convenção única: primário
+              positivo = superávit (STN); juros sempre como custo.
+            </MethodInfo>
+          </h1>
+          <p className="mt-1 text-xs text-zinc-500">
+            Referência: {data.mes_recente ? fmtMesLongo(data.mes_recente) : "—"} · Tesouro RTN/STN + BCB SGS · pipeline
+            fiscal AZ (diário)
+          </p>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KpiCard
+          label="Receita líquida (12m)"
+          value={fmtPct(derivados.receita?.valor ?? null, 1)}
+          unit="do PIB"
+          delta={derivados.deltaReceita ?? undefined}
+          deltaUnit="p.p."
+          deltaHint="12m"
+          hint="RTN, acumulado 12 meses"
+        />
+        <KpiCard
+          label="Despesa total (12m)"
+          value={fmtPct(derivados.despesa?.valor ?? null, 1)}
+          unit="do PIB"
+          delta={derivados.deltaDespesa ?? undefined}
+          deltaUnit="p.p."
+          deltaHint="12m"
+          invertColor
+          hint="RTN, acumulado 12 meses"
+        />
+        <KpiCard
+          label="Primário 12m (GC)"
+          value={fmtSignedPct(derivados.primario?.valor ?? null, 2)}
+          unit="do PIB"
+          delta={derivados.deltaPrimarioMm ?? undefined}
+          deltaUnit="p.p."
+          deltaHint="m/m"
+          hint="positivo = superávit"
+          size="lg"
+        />
+        <KpiCard
+          label="Estabilizador (SP)"
+          value={fmtSignedPct(derivados.estab, 1)}
+          unit="do PIB"
+          hint={
+            derivados.estab != null
+              ? "p/ a dívida parar de crescer · perímetro consolidado (DLSP)"
+              : "aguardando pipeline v2"
+          }
+        />
+      </div>
+
+      {/* ── Âncora: a tesoura ── */}
+      <TesouraCard data={data} codace={codace} />
+
+      {/* ── Meta fiscal ── */}
+      <Divisor
+        label="Meta fiscal"
+        info="O primário entregue contra as duas réguas: a meta LDO do ano-calendário (acumulado jan→mês vs padrão sazonal) e o estabilizador da dívida calculado no pipeline (perímetro consolidado). Perímetros declarados card a card."
+      />
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+        {temMetaYtd ? <MetaYtdCard data={data} /> : null}
+        <PrimarioMetaCard data={data} codace={codace} />
+      </div>
+
+      {/* ── Receita ── */}
+      <Divisor
+        label="Receita"
+        info="De onde vem a receita e o que puxou a variação: famílias do RTN em stack fixo (o total é a receita bruta; o vão até a linha é a transferência a estados e municípios) e o Δ de participação no PIB por tributo em 12 meses."
+      />
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+        <ReceitaFamiliasCard data={data} />
+        <ContribuicoesTributoCard data={data} />
+      </div>
+
+      {/* ── Despesa ── */}
+      <Divisor
+        label="Despesa"
+        info="Onde o dinheiro vai e quanto ainda é escolha: quatro macro-fatias que fecham a despesa total (previdência / pessoal / demais obrigatórias / discricionárias) e a parcela discricionária do orçamento no tempo."
+      />
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+        <DespesaRubricasCard data={data} />
+        <RigidezCard data={data} />
+      </div>
+
+      {/* ── Regra fiscal e consolidado ── */}
+      <Divisor
+        label="Regra fiscal e consolidado"
+        info="A despesa cabe no corredor do arcabouço (LC 200/2023, crescimento real deflacionado no builder)? E, no setor público consolidado, quanto do rombo nominal é fluxo primário e quanto é serviço da dívida (identidade que fecha por construção)?"
+      />
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+        <ArcaboucoCard data={data} />
+        <NfspDecompostaCard data={data} codace={codace} />
+      </div>
+
+      {/* ── Análise completa ── */}
+      <details className="group rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">
+        <summary className="cursor-pointer select-none text-sm font-semibold text-[#132960] marker:text-[#027DFC]">
+          Análise completa — tabela mensal e CSV
+        </summary>
+        <div className="mt-3">
+          <AnaliseCompletaFiscal data={data} />
+        </div>
+      </details>
+
+      {/* ── Ficha técnica ── */}
+      <details className="group rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">
+        <summary className="cursor-pointer select-none text-sm font-semibold text-[#132960] marker:text-[#027DFC]">
+          Ficha técnica — fontes e metodologia
+        </summary>
+        <div className="mt-3 space-y-2 text-xs leading-relaxed text-zinc-600">
           <p>
-            <strong>Fontes e séries.</strong> Tesouro Nacional — Resultado do Tesouro Nacional (RTN, XLSX da série histórica
-            desde 1997, leitura com validação de rótulo linha a linha): receita líquida, transferências a E&M, famílias de
-            receita (linhas 1.1–1.4), rubricas de despesa (4.x, incl. o residual &quot;demais obrigatórias&quot; e as obrigatórias com
-            controle de fluxo) e primário do governo central. BCB SGS: 13762 (DBGG), 4513 (DLSP), 5718 (juros nominais 12m % PIB do
-            setor público consolidado), 5727 (NFSP nominal 12m do consolidado), 5728 (juros do governo central), 5717 (NFSP
-            do governo central), 4382 (PIB nominal 12m), 12001 (composição da DPMFi), entre outras. O primário consolidado
-            não é coletado: é DERIVADO no pipeline (juros − NFSP nominal, isto é, 5718 − 5727).
-            Metas: LDOs 2024–2027 (trajetória vigente do PLDO 2025; banda ±0,25 p.p. da LC 200/2023). Recessões: cronologia
-            CODACE/FGV (mensal).
+            <strong>Fontes e séries.</strong> Tesouro Nacional — Resultado do Tesouro Nacional (RTN, XLSX da série
+            histórica desde 1997, leitura com validação de rótulo linha a linha): receita líquida, transferências a E&M,
+            famílias de receita (linhas 1.1–1.4), rubricas de despesa (4.x, incl. o residual &quot;demais
+            obrigatórias&quot; e as obrigatórias com controle de fluxo) e primário do governo central. BCB SGS: 13762
+            (DBGG), 4513 (DLSP), 5718 (juros nominais 12m % PIB do setor público consolidado), 5727 (NFSP nominal 12m do
+            consolidado), 5728 (juros do governo central), 5717 (NFSP do governo central), 4382 (PIB nominal 12m), 12001
+            (composição da DPMFi), entre outras. O primário consolidado não é coletado: é DERIVADO no pipeline (juros −
+            NFSP nominal, isto é, 5718 − 5727). Metas: LDOs 2024–2027 (trajetória vigente do PLDO 2025; banda ±0,25 p.p.
+            da LC 200/2023). Recessões: cronologia CODACE/FGV (mensal).
           </p>
           <p>
-            <strong>Convenções de sinal e perímetros.</strong> Primário positivo = superávit (convenção STN) em TODO o painel.
-            A NFSP do BCB publica déficit com sinal positivo — a série já vem convertida do pipeline para a convenção única.
-            Juros aparecem sempre como custo. Perímetros declarados gráfico a gráfico: governo central (RTN) na tesoura,
-            famílias, rubricas e meta; setor público consolidado (BCB) no estabilizador e no nominal decomposto — não são
-            comparáveis linha a linha.
+            <strong>Convenções de sinal e perímetros.</strong> Primário positivo = superávit (convenção STN) em TODO o
+            painel. A NFSP do BCB publica déficit com sinal positivo — a série já vem convertida do pipeline para a
+            convenção única. Juros aparecem sempre como custo. Perímetros declarados gráfico a gráfico e nos rótulos:
+            (GC) = governo central (RTN) na tesoura, famílias, rubricas e meta; (SP) = setor público consolidado (BCB)
+            no estabilizador e no nominal decomposto — não são comparáveis linha a linha.
           </p>
           <p>
-            <strong>Metodologia — honestidade de cálculo.</strong> Primário estabilizador: p* = (r − g)/(1 + g) × DLSP/PIB
-            t−12, com r = taxa implícita da DLSP (juros nominais 12m ÷ DLSP média) e g = crescimento nominal 12m do PIB — UMA
-            fórmula, calculada exclusivamente no pipeline; o front nunca recalcula. Crescimento real do arcabouço: deflação mês
-            a mês pelo índice composto do IPCA no builder (não pelo IPCA YoY sobre o agregado). Metas LDO valem por
-            ano-calendário e a aferição oficial admite abatimentos (ex.: precatórios EC 114) — comparações com o 12m móvel são
-            aproximação, sinalizada nos rodapés. No front, só razões e Δs de apresentação (rigidez, Δ por tributo) sobre séries
-            prontas do JSON.
+            <strong>Metodologia — honestidade de cálculo.</strong> Primário estabilizador: p* = (r − g)/(1 + g) ×
+            DLSP/PIB t−12, com r = taxa implícita da DLSP (juros nominais 12m ÷ DLSP média) e g = crescimento nominal
+            12m do PIB — UMA fórmula, calculada exclusivamente no pipeline; o front nunca recalcula. Crescimento real do
+            arcabouço: deflação mês a mês pelo índice composto do IPCA no builder (não pelo IPCA YoY sobre o agregado).
+            Metas LDO valem por ano-calendário e a aferição oficial admite abatimentos (ex.: precatórios EC 114) —
+            comparações com o 12m móvel são aproximação, sinalizada nas notas (?). No front, só razões, Δs e agrupamentos
+            de apresentação (rigidez, Δ por tributo, macro-fatias da despesa somadas ponto a ponto) sobre séries prontas
+            do JSON.
           </p>
           <p>Pipeline: data-pipeline/python/build_fiscal.py (schema v2) · GitHub Actions fiscal-pipeline.yml.</p>
         </div>
-      }
-    />
+      </details>
+    </div>
   );
 }

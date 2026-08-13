@@ -19,6 +19,7 @@ import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts
 import { AZ_BRAND, AZ_SERIES, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtNum, fmtPct, formatTimeTickLabel, isoFromUTC } from "@/lib/format-br";
 import { clipTimeRows, fmtTLabel, mergeTimeRows, mesIso, pctPoints, timeAxis, ultimoPct } from "./shared";
+import { StatChip } from "./StatChip";
 
 /**
  * 03a — Famílias de receita do RTN (linhas 1.1–1.4): stack FIXO e COMPLETO —
@@ -111,7 +112,7 @@ export function ReceitaFamiliasCard({ data }: { data: FiscalClassicosData }) {
 
   if (!rf) {
     return (
-      <ChartCard title="Famílias de receita" stampGiro={data.gerado_em} stampDado={null}>
+      <ChartCard title="Receita por família (% PIB, 12m)" stampGiro={data.gerado_em} stampDado={null}>
         <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
           O pipeline ainda não publicou as famílias de receita (schema v2). Rode o workflow fiscal-pipeline.yml.
         </p>
@@ -119,17 +120,24 @@ export function ReceitaFamiliasCard({ data }: { data: FiscalClassicosData }) {
     );
   }
 
-  const titulo =
-    totalUlt != null && liqUlt
-      ? `Arrecadação de ${fmtPct(totalUlt, 1)} do PIB vira ${fmtPct(liqUlt.valor, 1)} líquidos após as transferências a estados e municípios`
-      : "Famílias de receita do governo central";
+  const chip =
+    totalUlt != null && liqUlt ? (
+      <StatChip>
+        bruta {fmtPct(totalUlt, 1)} → líquida {fmtPct(liqUlt.valor, 1)} do PIB
+      </StatChip>
+    ) : null;
 
   return (
     <ChartCard
-      title={titulo}
-      subtitle="De onde vem a receita? As famílias do RTN em três fatias empilhadas (stack fixo — o total é sempre a receita bruta) e a receita líquida sobreposta."
-      toolbar={<AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["1y", "5y", "max"]} />}
-      footer='RTN em % do PIB 12m: "Administrada RFB (líq. de incentivos)" = linhas 1.1 + 1.2 somadas ponto a ponto (os incentivos fiscais são levemente negativos na maioria dos meses — fundi-los na administrada é agrupamento de apresentação que mantém todas as fatias ≥ 0); RGPS = linha 1.3; não administrada = linha 1.4 (dividendos, concessões, royalties...). O stack fecha com a receita TOTAL; o vão até a linha navy (receita líquida, linha III) são as transferências por repartição a estados e municípios (FPE/FPM, royalties...).'
+      title="Receita por família (% PIB, 12m)"
+      subtitle="Governo central (RTN) · stack fixo de 3 famílias = receita bruta · linha navy = receita líquida"
+      toolbar={
+        <>
+          {chip}
+          <AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["ytd", "1y", "5y", "max"]} />
+        </>
+      }
+      footer='Leitura: de onde vem a receita — e quanto sobra depois das transferências a estados e municípios? RTN em % do PIB 12m: "Administrada RFB (líq. de incentivos)" = linhas 1.1 + 1.2 somadas ponto a ponto (os incentivos fiscais são levemente negativos na maioria dos meses — fundi-los na administrada é agrupamento de apresentação que mantém todas as fatias ≥ 0); RGPS = linha 1.3; não administrada = linha 1.4 (dividendos, concessões, royalties...). O stack fecha com a receita TOTAL; o vão até a linha navy (receita líquida, linha III) são as transferências por repartição a estados e municípios (FPE/FPM, royalties...).'
       stampGiro={data.gerado_em}
       stampDado={liqUlt ? mesIso(liqUlt.data) : null}
     >

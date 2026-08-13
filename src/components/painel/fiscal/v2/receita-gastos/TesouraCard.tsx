@@ -35,9 +35,11 @@ import {
   ultimoPct,
   yDomainDe,
 } from "./shared";
+import { StatChip } from "./StatChip";
 
 /**
- * ÂNCORA do Painel Receita e Gastos v2 — "o governo gasta mais do que arrecada?".
+ * ÂNCORA do Painel Receita e Gastos v2 — formato COCKPIT: título técnico FIXO,
+ * primário atual como chip (GC), interpretação no (?).
  *
  * Dois painéis com o MESMO eixo X (travado pela mesma janela, mesmos ticks):
  * (a) tesoura receita líquida × despesa total (% PIB, 12m), com recessões
@@ -72,17 +74,13 @@ export function TesouraCard({ data, codace }: { data: FiscalClassicosData; codac
   const maxIso = rowsAll.length > 0 ? isoFromUTC(rowsAll[rowsAll.length - 1].t) : "";
 
   const recUlt = ultimoPct(rg.receita_liquida_pct_pib);
-  const despUlt = ultimoPct(rg.despesa_total_pct_pib);
   const primUlt = ultimoPct(rg.primario_central_pct_pib);
 
-  const titulo = (() => {
-    if (!recUlt || !despUlt || !primUlt) return "Receita × despesa do governo central";
-    const frente =
-      despUlt.valor > recUlt.valor
-        ? `Despesa de ${fmtPct(despUlt.valor, 1)} do PIB supera a receita de ${fmtPct(recUlt.valor, 1)}`
-        : `Receita de ${fmtPct(recUlt.valor, 1)} do PIB supera a despesa de ${fmtPct(despUlt.valor, 1)}`;
-    return `${frente} — primário de ${fmtSignedPct(primUlt.valor, 2)} em 12 meses`;
-  })();
+  const chip = primUlt ? (
+    <StatChip tone={primUlt.valor >= 0 ? "pos" : "neg"}>
+      Primário {fmtSignedPct(primUlt.valor, 2)} do PIB (GC)
+    </StatChip>
+  ) : null;
 
   const xAxisProps = {
     ...azXAxisProps(),
@@ -97,10 +95,15 @@ export function TesouraCard({ data, codace }: { data: FiscalClassicosData; codac
 
   return (
     <ChartCard
-      title={titulo}
-      subtitle="O governo central gasta mais do que arrecada? Receita líquida e despesa total acumuladas em 12 meses, em % do PIB; embaixo, o resultado primário que a tesoura produz, no MESMO eixo de tempo."
-      toolbar={<AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["1y", "5y", "max"]} />}
-      footer="Tesouro Nacional — RTN (séries 12m móveis ÷ PIB nominal 12m, BCB SGS 4382). Convenção: primário positivo = superávit. Faixas cinzas: recessões CODACE/FGV (cronologia mensal); linhas verticais: EC 95 (teto de gastos, dez/2016) e LC 200 (arcabouço fiscal, ago/2023)."
+      title="Receita líquida × despesa total (% PIB, 12m)"
+      subtitle="Governo central (RTN) · 12m móveis ÷ PIB nominal 12m · painel inferior: primário resultante no mesmo eixo"
+      toolbar={
+        <>
+          {chip}
+          <AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["ytd", "1y", "5y", "max"]} />
+        </>
+      }
+      footer="Leitura: o governo central gasta mais do que arrecada? Quando a linha navy (despesa) roda acima da azure (receita), a tesoura está aberta — e o painel inferior mostra o primário que ela produz (verde = superávit, vermelho = déficit). Fonte: Tesouro Nacional — RTN (séries 12m móveis ÷ PIB nominal 12m, BCB SGS 4382). Convenção: primário positivo = superávit. Faixas cinzas: recessões CODACE/FGV (cronologia mensal); linhas verticais: EC 95 (teto de gastos, dez/2016) e LC 200 (arcabouço fiscal, ago/2023)."
       stampGiro={data.gerado_em}
       stampDado={recUlt ? mesIso(recUlt.data) : null}
     >

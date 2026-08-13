@@ -19,12 +19,14 @@ import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtNum, fmtSignedNum } from "@/lib/format-br";
 import { yDomainDe } from "./shared";
+import { StatChip } from "./StatChip";
 
 /**
  * 02 — Acompanhamento da meta NO ANO-CALENDÁRIO (como o RTN publica e a LDO
  * afere): primário acumulado jan→mês, spaghetti do ano corrente (azure grosso)
  * contra os 5 anos anteriores (cinza fino), com o centro da meta LDO marcado
- * em dezembro quando existe meta vigente.
+ * em dezembro quando existe meta vigente. Cockpit: título fixo, acumulado no
+ * chip (GC), leitura no (?).
  */
 
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"] as const;
@@ -107,7 +109,7 @@ export function MetaYtdCard({ data }: { data: FiscalClassicosData }) {
 
   if (anoCorrente == null || anos.length === 0) {
     return (
-      <ChartCard title="Acompanhamento da meta no ano" stampGiro={data.gerado_em} stampDado={null}>
+      <ChartCard title="Primário acumulado no ano × meta LDO (R$ bi)" stampGiro={data.gerado_em} stampDado={null}>
         <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
           O pipeline ainda não publicou o acumulado no ano (schema v2). Rode o workflow fiscal-pipeline.yml.
         </p>
@@ -115,16 +117,19 @@ export function MetaYtdCard({ data }: { data: FiscalClassicosData }) {
     );
   }
 
-  const titulo = ultCorrente
-    ? `Até ${MESES[ultCorrente.mes - 1]}, primário acumulado de R$ ${fmtSignedNum(ultCorrente.acum_brl_mm / 1000, 1)} bi em ${anoCorrente}` +
-      (metaBrlMm != null ? ` — a meta do ano pede R$ ${fmtSignedNum(metaBrlMm / 1000, 0)} bi` : "")
-    : `Primário acumulado no ano — ${anoCorrente}`;
+  const chip = ultCorrente ? (
+    <StatChip tone={ultCorrente.acum_brl_mm >= 0 ? "pos" : "neg"}>
+      até {MESES[ultCorrente.mes - 1]}: R$ {fmtSignedNum(ultCorrente.acum_brl_mm / 1000, 1)} bi (GC)
+      {metaBrlMm != null ? ` · meta R$ ${fmtSignedNum(metaBrlMm / 1000, 0)} bi` : ""}
+    </StatChip>
+  ) : null;
 
   return (
     <ChartCard
-      title={titulo}
-      subtitle="O ano-calendário está no rumo da meta? Primário do governo central acumulado de janeiro até cada mês — o ano corrente contra os cinco anteriores."
-      footer={`RTN: primário acumulado jan→mês ("acima da linha"), em R$ correntes — a meta LDO é aferida no ano-calendário, não em 12m móveis. Aferição oficial da meta: resultado "abaixo da linha" (BCB); aqui usamos o "acima da linha" do RTN — diferenças típicas de R$ 10–30 bi/ano. O marcador de dezembro é o CENTRO da meta (banda ±0,25 p.p. do PIB) convertido ${
+      title="Primário acumulado no ano × meta LDO (R$ bi)"
+      subtitle={`Governo central (RTN) · acumulado jan→mês · ${anoCorrente} vs os cinco anos anteriores`}
+      toolbar={chip}
+      footer={`Leitura: o ano-calendário está no rumo da meta? A linha azure (ano corrente) contra o padrão sazonal dos cinco anteriores (cinza); o marcador de dezembro é o alvo. RTN: primário acumulado jan→mês ("acima da linha"), em R$ correntes — a meta LDO é aferida no ano-calendário, não em 12m móveis. Aferição oficial da meta: resultado "abaixo da linha" (BCB); aqui usamos o "acima da linha" do RTN — diferenças típicas de R$ 10–30 bi/ano. O marcador de dezembro é o CENTRO da meta (banda ±0,25 p.p. do PIB) convertido ${
         fatorFocus != null
           ? "pelo PIB nominal projetado do ano (PIB 12m corrente × medianas Focus de PIB real e IPCA, compostas)"
           : "pelo PIB nominal 12m corrente (medianas Focus do ano indisponíveis)"

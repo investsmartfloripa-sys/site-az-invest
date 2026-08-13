@@ -18,6 +18,7 @@ import type { DecomposicaoDlspAno } from "@/lib/painel-fiscal";
 import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtNum, fmtSignedNum } from "@/lib/format-br";
+import { CockpitChip } from "./shared";
 
 /**
  * "Por que a dívida subiu?" — decomposição ANUAL da variação da DLSP/PIB em
@@ -27,9 +28,10 @@ import { fmtNum, fmtSignedNum } from "@/lib/format-br";
  * (tipicamente negativo — o denominador cresce) e resíduo cinza (ajustes
  * patrimoniais/cambiais). O losango navy marca o Δ total do ano.
  *
- * O TÍTULO é verificado contra o dado: nomeia o maior fator médio da JANELA
- * dos últimos 10 anos (declarada no próprio título) — nunca afirma "foram os
- * juros" a priori. A média da série completa vai para o rodapé.
+ * Padrão cockpit: título FIXO técnico ("Decomposição anual da ΔDLSP"); o
+ * maior fator médio da JANELA dos últimos 10 anos — verificado no dado, nunca
+ * afirmado a priori — vira CHIP ao lado do título, e a leitura interpretativa
+ * vai para o footer (?), junto com a média da série completa.
  */
 
 const JANELA_ANOS = 10;
@@ -86,18 +88,19 @@ export function PorQueSubiuCard({ anos, geradoEm }: { anos: DecomposicaoDlspAno[
 
   const janelaLabel = janela.length > 0 ? `${janela[0].ano}–${janela[janela.length - 1].ano}` : "";
 
-  const titulo = (() => {
-    if (!fatorDominante) return "Por que a dívida subiu? A conta, fator a fator";
+  // Leitura interpretativa (quem empurrou a dívida) — footer (?), nunca título.
+  const leitura = (() => {
+    if (!fatorDominante) return null;
     if (fatorDominante.key === "juros")
-      return `Por que a dívida subiu? Juros — não gasto primário (maior fator médio ${janelaLabel}: ${fmtSignedNum(fatorDominante.media, 1)} p.p./ano)`;
+      return `Por que a dívida subiu: juros — não gasto primário (maior fator médio ${janelaLabel}: ${fmtSignedNum(fatorDominante.media, 1)} p.p./ano).`;
     if (fatorDominante.key === "primario")
-      return `Por que a dívida subiu? O resultado primário pesou mais que os juros (maior fator médio ${janelaLabel}: ${fmtSignedNum(fatorDominante.media, 1)} p.p./ano)`;
-    return `Por que a dívida subiu? Maior fator médio ${janelaLabel}: ${fatorDominante.label.toLowerCase()} (${fmtSignedNum(fatorDominante.media, 1)} p.p./ano)`;
+      return `Por que a dívida subiu: o resultado primário pesou mais que os juros (maior fator médio ${janelaLabel}: ${fmtSignedNum(fatorDominante.media, 1)} p.p./ano).`;
+    return `Maior fator médio ${janelaLabel}: ${fatorDominante.label.toLowerCase()} (${fmtSignedNum(fatorDominante.media, 1)} p.p./ano).`;
   })();
 
   if (rows.length === 0) {
     return (
-      <ChartCard title="Por que a dívida subiu?" stampGiro={geradoEm}>
+      <ChartCard title="Decomposição anual da ΔDLSP (p.p. do PIB)" stampGiro={geradoEm}>
         <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
           O pipeline ainda não publicou a decomposição anual (schema v2). Rode o workflow fiscal-pipeline.yml.
         </p>
@@ -109,9 +112,16 @@ export function PorQueSubiuCard({ anos, geradoEm }: { anos: DecomposicaoDlspAno[
 
   return (
     <ChartCard
-      title={titulo}
+      title="Decomposição anual da ΔDLSP (p.p. do PIB)"
       subtitle={`Variação anual da DLSP/PIB decomposta em pontos percentuais: barra acima de zero empurra a dívida p/ cima, abaixo puxa p/ baixo. O losango é o Δ total do ano (em ${ult.ano}: ${fmtSignedNum(ult.delta, 1)} p.p.).`}
-      footer={`Identidade contábil no perímetro CONSOLIDADO (DLSP, fórmula única do pipeline): Δ(dívida/PIB) = juros nominais − primário − efeito do crescimento do PIB nominal + resíduo (ajustes patrimoniais/cambiais, reconhecimento de passivos). O primário já vem com sinal p/ empilhar: déficit primário positivo = aumenta a dívida. O título usa a janela dos últimos ${JANELA_ANOS} anos (${janelaLabel}).${
+      toolbar={
+        fatorDominante ? (
+          <CockpitChip cor={fatorDominante.cor}>
+            maior fator {janelaLabel}: {fatorDominante.label.toLowerCase()}
+          </CockpitChip>
+        ) : undefined
+      }
+      footer={`${leitura ? `${leitura} ` : ""}Identidade contábil no perímetro CONSOLIDADO (DLSP, fórmula única do pipeline): Δ(dívida/PIB) = juros nominais − primário − efeito do crescimento do PIB nominal + resíduo (ajustes patrimoniais/cambiais, reconhecimento de passivos). O primário já vem com sinal p/ empilhar: déficit primário positivo = aumenta a dívida. O chip usa a janela dos últimos ${JANELA_ANOS} anos (${janelaLabel}).${
         fatorHistorico && rows.length > 0
           ? ` Na série completa (${rows[0].ano}–${rows[rows.length - 1].ano}), o maior fator médio é ${fatorHistorico.label.toLowerCase()} (${fmtSignedNum(fatorHistorico.media, 1)} p.p./ano).`
           : ""

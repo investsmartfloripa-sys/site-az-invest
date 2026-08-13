@@ -6,6 +6,7 @@ import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts
 import { AzTimeSeriesChart, type AzRefLine, type AzTimeSeries, type AzXRefArea } from "@/components/painel/charts/AzTimeSeriesChart";
 import { ChartCard } from "@/components/painel/core";
 import type { EmbiBlock, ProjecaoDbgg } from "@/lib/painel-fiscal";
+import { fmtNum } from "@/lib/format-br";
 import { toPoints } from "./shared";
 
 /**
@@ -67,7 +68,7 @@ export function EmbiCard({ embi, stampGiro }: { embi: EmbiBlock; stampGiro?: str
           onChange={setPeriod}
           min={minIso || undefined}
           max={maxIso || undefined}
-          periods={["5y", "max"]}
+          periods={["ytd", "1y", "5y", "max"]}
         />
       }
     >
@@ -129,9 +130,9 @@ export function ProjecaoDbggCard({ projecao, stampGiro }: { projecao: ProjecaoDb
       subtitle={`b(t+1) = (b(t)·(1+i) − primário) / (1+g) · medianas do Focus até ${ultimoAno?.ano ?? "—"}`}
       footer={
         <span>
-          {projecao._nota} Premissas atuais: i = {projecao.premissas.i_aa_pct.toLocaleString("pt-BR")}% a.a.; primário
-          12m = {projecao.premissas.primario_atual_pct_pib.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% do
-          PIB. A distância entre os dois cenários é o custo de não cumprir a meta.
+          {projecao._nota} Premissas atuais: i = {fmtNum(projecao.premissas.i_aa_pct)}% a.a.; primário 12m ={" "}
+          {fmtNum(projecao.premissas.primario_atual_pct_pib)}% do PIB. A distância entre os dois cenários é o custo de
+          não cumprir a meta.
         </span>
       }
       stampGiro={stampGiro}
@@ -141,7 +142,7 @@ export function ProjecaoDbggCard({ projecao, stampGiro }: { projecao: ProjecaoDb
           onChange={setPeriod}
           min={minIso || undefined}
           max={maxIso || undefined}
-          periods={["5y", "max"]}
+          periods={["ytd", "1y", "5y", "max"]}
         />
       }
     >

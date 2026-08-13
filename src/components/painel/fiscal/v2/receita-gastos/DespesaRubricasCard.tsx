@@ -13,54 +13,87 @@ import {
   YAxis,
 } from "recharts";
 
-import type { FiscalClassicosData } from "@/lib/painel-fiscal";
+import type { FiscalClassicosData, PontoMensalPct } from "@/lib/painel-fiscal";
 import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
 import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
-import { AZ_BRAND, AZ_SERIES, AZ_SERIES_EXTRA, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
+import { AZ_BRAND, AZ_SERIES, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtNum, fmtPct, formatTimeTickLabel, isoFromUTC } from "@/lib/format-br";
+import type { AzSeriesPoint } from "@/components/painel/charts/AzTimeSeriesChart";
 import { clipTimeRows, fmtTLabel, mergeTimeRows, mesIso, pctPoints, timeAxis, ultimoPct } from "./shared";
+import { StatChip } from "./StatChip";
 
 /**
- * 04a — Composição da despesa primária com as fatias que FECHAM o total
- * (o stack do dashboard antigo sub-somava ~4 p.p.): previdência, pessoal,
- * BPC, abono+seguro, FUNDEB, subsídios, DEMAIS obrigatórias (residual v2),
- * obrigatórias c/ controle de fluxo (v2) e discricionárias — ordenadas do
- * mais rígido ao discricionário. A linha navy da despesa total sobreposta é
- * a auto-validação visual: o topo do stack coincide com ela por construção.
+ * 04a — Composição da despesa primária em QUATRO MACRO-FATIAS que fecham o
+ * total (as 9 fatias originais com legenda 10px eram ilegíveis — revisão de
+ * 13/08): Previdência / Pessoal / Demais obrigatórias (soma ponto a ponto de
+ * abono+seguro, BPC/LOAS, FUNDEB, subsídios, demais obrigatórias residual e
+ * obrigatórias c/ controle de fluxo) / Discricionárias. A soma é feita AQUI no
+ * front (agrupamento de apresentação sobre as séries prontas do JSON); meses
+ * sem alguma sub-rubrica ficam fora da macro-fatia para o fechamento não
+ * mentir. A linha navy da despesa total sobreposta é a auto-validação visual:
+ * o topo do stack coincide com ela por construção.
  */
 
-const RUBRICAS = [
+const MACROS = [
   { id: "previdencia", label: "Previdência (RGPS)", color: AZ_SERIES[4] }, // violeta
   { id: "pessoal", label: "Pessoal", color: AZ_SERIES[0] }, // azure
-  { id: "bpc", label: "BPC/LOAS", color: AZ_SERIES[6] }, // ciano
-  { id: "abono", label: "Abono e seguro-desemprego", color: AZ_SERIES[3] }, // verde
-  { id: "fundeb", label: "FUNDEB", color: AZ_SERIES[5] }, // ocre
-  { id: "subsidios", label: "Subsídios", color: AZ_SERIES_EXTRA }, // rosa
-  { id: "demais", label: "Demais obrigatórias", color: AZ_SERIES[7] }, // slate
-  { id: "obrigFluxo", label: "Obrigatórias c/ controle de fluxo", color: AZ_SERIES[2] }, // rust
+  { id: "demaisObrig", label: "Demais obrigatórias", color: AZ_SERIES[5] }, // ocre
   { id: "discr", label: "Discricionárias", color: "#94A3B8" }, // slate claro
 ] as const;
+
+/** Soma ponto a ponto de N séries % PIB — só nos meses em que TODAS existem. */
+function somaPontoAPonto(series: ReadonlyArray<ReadonlyArray<PontoMensalPct> | undefined>): AzSeriesPoint[] {
+  const mapas = series.map((s) => new Map(pctPoints(s)));
+  if (mapas.length === 0) return [];
+  const out: AzSeriesPoint[] = [];
+  for (const [iso, primeiro] of mapas[0]) {
+    let soma = primeiro;
+    let completo = true;
+    for (let i = 1; i < mapas.length; i++) {
+      const v = mapas[i].get(iso);
+      if (v == null) {
+        completo = false;
+        break;
+      }
+      soma += v;
+    }
+    if (completo) out.push([iso, +soma.toFixed(4)]);
+  }
+  out.sort((a, b) => (a[0] < b[0] ? -1 : 1));
+  return out;
+}
 
 export function DespesaRubricasCard({ data }: { data: FiscalClassicosData }) {
   const [period, setPeriod] = useState<AzPeriodValue>({ id: "max" });
   const rg = data.receita_e_gastos;
   const dr = data.despesa_rubricas_v2;
 
+  // "Demais obrigatórias" (macro) = abono+seguro + BPC/LOAS + FUNDEB +
+  // subsídios + demais obrigatórias (residual v2) + obrigatórias c/ controle
+  // de fluxo (v2) — somadas ponto a ponto no front.
+  const demaisObrigPts = useMemo(
+    () =>
+      somaPontoAPonto([
+        rg.abono_seguro_12m_pct_pib,
+        rg.bpc_loas_12m_pct_pib,
+        rg.fundeb_12m_pct_pib,
+        rg.subsidios_12m_pct_pib,
+        dr?.demais_obrigatorias_12m_pct_pib,
+        dr?.obrig_controle_fluxo_12m_pct_pib,
+      ]),
+    [rg, dr],
+  );
+
   const rowsAll = useMemo(
     () =>
       mergeTimeRows({
         previdencia: pctPoints(rg.previdencia_12m_pct_pib),
         pessoal: pctPoints(rg.pessoal_12m_pct_pib),
-        bpc: pctPoints(rg.bpc_loas_12m_pct_pib),
-        abono: pctPoints(rg.abono_seguro_12m_pct_pib),
-        fundeb: pctPoints(rg.fundeb_12m_pct_pib),
-        subsidios: pctPoints(rg.subsidios_12m_pct_pib),
-        demais: pctPoints(dr?.demais_obrigatorias_12m_pct_pib),
-        obrigFluxo: pctPoints(dr?.obrig_controle_fluxo_12m_pct_pib),
+        demaisObrig: demaisObrigPts,
         discr: pctPoints(rg.discricionarias_12m_pct_pib),
         total: pctPoints(rg.despesa_total_pct_pib),
       }),
-    [rg, dr],
+    [rg, demaisObrigPts],
   );
 
   const rows = useMemo(() => clipTimeRows(rowsAll, period), [rowsAll, period]);
@@ -73,8 +106,8 @@ export function DespesaRubricasCard({ data }: { data: FiscalClassicosData }) {
     let lo = 0;
     for (const r of rows) {
       let soma = 0;
-      for (const rub of RUBRICAS) {
-        const v = r[rub.id];
+      for (const m of MACROS) {
+        const v = r[m.id];
         if (typeof v === "number" && Number.isFinite(v)) {
           if (v < 0) lo = Math.min(lo, v);
           else soma += v;
@@ -97,7 +130,7 @@ export function DespesaRubricasCard({ data }: { data: FiscalClassicosData }) {
 
   if (!dr) {
     return (
-      <ChartCard title="Composição da despesa primária" stampGiro={data.gerado_em} stampDado={null}>
+      <ChartCard title="Despesa primária por rubrica (% PIB, 12m)" stampGiro={data.gerado_em} stampDado={null}>
         <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
           O pipeline ainda não publicou as rubricas v2 (residual + controle de fluxo). Rode o workflow fiscal-pipeline.yml.
         </p>
@@ -105,17 +138,26 @@ export function DespesaRubricasCard({ data }: { data: FiscalClassicosData }) {
     );
   }
 
-  const titulo =
-    prevUlt && totUlt && totUlt.valor > 0
-      ? `Previdência leva ${fmtPct(prevUlt.valor, 1)} do PIB — ${fmtPct((prevUlt.valor / totUlt.valor) * 100, 0)} de uma despesa total de ${fmtPct(totUlt.valor, 1)}`
-      : "Composição da despesa primária do governo central";
+  const chip =
+    prevUlt && totUlt && totUlt.valor > 0 ? (
+      <StatChip>
+        Previdência {fmtPct(prevUlt.valor, 1)} do PIB · {fmtNum((prevUlt.valor / totUlt.valor) * 100, 0)}% da despesa
+      </StatChip>
+    ) : null;
 
   return (
     <ChartCard
-      title={titulo}
-      subtitle="Onde a despesa está alocada? Nove fatias que fecham o total, ordenadas do mais rígido (previdência) ao discricionário — stack fixo, sem toggle. A linha navy é a despesa total do RTN: o topo do stack coincide com ela."
-      toolbar={<AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["1y", "5y", "max"]} />}
-      footer={'RTN, % do PIB 12m. "Demais obrigatórias" = linha 4.3 menos as sub-rubricas já plotadas (abono, BPC, FUNDEB, subsídios) — residual que evita dupla contagem; "obrigatórias c/ controle de fluxo" = linha 4.4.1; "discricionárias" = 4.4.2. Com essas fatias o stack fecha com a despesa total por construção (linha navy = auto-validação) — o topo coincide com a despesa total a menos de raras fatias negativas (subsídios/Proagro, 2 meses históricos).'}
+      title="Despesa primária por rubrica (% PIB, 12m)"
+      subtitle="Governo central (RTN) · 4 macro-fatias que fecham o total · linha navy = despesa total (auto-validação)"
+      toolbar={
+        <>
+          {chip}
+          <AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["ytd", "1y", "5y", "max"]} />
+        </>
+      }
+      footer={
+        'Leitura: onde a despesa está alocada — e quanto ainda é escolha? Composição das macro-fatias (RTN, % do PIB 12m): "Previdência (RGPS)" = benefícios previdenciários; "Pessoal" = pessoal e encargos; "Demais obrigatórias" = abono e seguro-desemprego + BPC/LOAS + FUNDEB + subsídios + demais obrigatórias (residual da linha 4.3, sem dupla contagem) + obrigatórias c/ controle de fluxo (linha 4.4.1) — somadas ponto a ponto no front, só nos meses em que todas as sub-rubricas existem; "Discricionárias" = linha 4.4.2. Com essas fatias o stack fecha com a despesa total por construção (linha navy = auto-validação) — o topo coincide com a despesa total a menos de raras fatias negativas (subsídios/Proagro, 2 meses históricos). O detalhe das 9 sub-rubricas está no CSV da Análise completa.'
+      }
       stampGiro={data.gerado_em}
       stampDado={totUlt ? mesIso(totUlt.data) : null}
     >
@@ -139,18 +181,18 @@ export function DespesaRubricasCard({ data }: { data: FiscalClassicosData }) {
               content={<AzTooltip labelFmt={fmtTLabel} valueFmt={(v) => fmtPct(v, 2)} />}
               cursor={AZ_TOOLTIP_PROPS.cursor}
             />
-            <Legend wrapperStyle={{ fontSize: 10 }} />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
 
-            {RUBRICAS.map((rub) => (
+            {MACROS.map((m) => (
               <Area
-                key={rub.id}
+                key={m.id}
                 type="monotone"
-                dataKey={rub.id}
-                name={rub.label}
+                dataKey={m.id}
+                name={m.label}
                 stackId="despesa"
-                stroke={rub.color}
+                stroke={m.color}
                 strokeWidth={1}
-                fill={rub.color}
+                fill={m.color}
                 fillOpacity={0.55}
                 isAnimationActive={false}
               />

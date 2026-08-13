@@ -20,6 +20,7 @@ import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum, fmtPct, formatTimeTickLabel, isoFromUTC, parseIsoUTC } from "@/lib/format-br";
 import type { AzSeriesPoint } from "@/components/painel/charts/AzTimeSeriesChart";
 import { clipTimeRows, marcosVisiveis, mergeTimeRows, mesIso, timeAxis, yDomainDe } from "./shared";
+import { StatChip } from "./StatChip";
 
 /**
  * 04b — Rigidez orçamentária: % da despesa que é DISCRICIONÁRIA
@@ -72,20 +73,29 @@ export function RigidezCard({ data }: { data: FiscalClassicosData }) {
 
   const ult = points.length > 0 ? points[points.length - 1] : null;
 
-  const titulo = (() => {
-    if (!ult) return "Parcela discricionária da despesa";
-    const base = `Só ${fmtPct(ult[1], 1)} da despesa do governo central é discricionária`;
-    if (minimo && ult[1] - minimo.valor <= 1) return `${base} — perto do mínimo histórico (${fmtPct(minimo.valor, 1)})`;
-    if (minimo) return `${base} — o mínimo histórico foi ${fmtPct(minimo.valor, 1)} em ${fmtMesCurto(minimo.iso)}`;
-    return base;
-  })();
+  const chip = ult ? (
+    <StatChip tone={minimo && ult[1] - minimo.valor <= 1 ? "neg" : "neutral"}>
+      discricionária {fmtPct(ult[1], 1)} da despesa
+    </StatChip>
+  ) : null;
+
+  const leituraMinimo = minimo
+    ? ult && ult[1] - minimo.valor <= 1
+      ? ` Hoje a parcela livre roda perto do mínimo histórico (${fmtPct(minimo.valor, 1)} em ${fmtMesCurto(minimo.iso)}).`
+      : ` Mínimo histórico: ${fmtPct(minimo.valor, 1)} em ${fmtMesCurto(minimo.iso)}.`
+    : "";
 
   return (
     <ChartCard
-      title={titulo}
-      subtitle="Quanto do orçamento ainda é escolha? Participação das despesas discricionárias na despesa primária total (12m móveis) — o resto é obrigatório por lei ou Constituição."
-      toolbar={<AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["1y", "5y", "max"]} />}
-      footer={'"Discricionárias" = linha 4.4.2 do RTN (custeio e investimento sujeitos a escolha alocativa), em razão da despesa total do RTN — ambas as séries 12m % PIB do JSON; aqui só a divisão. Ressalva: parte do formalmente discricionário está na prática carimbada — emendas parlamentares impositivas (ECs 86/2015 e 100/2019) — então a rigidez efetiva é ainda maior. Linhas verticais: EC 95 (teto, dez/2016) e LC 200 (arcabouço, ago/2023).'}
+      title="Despesa obrigatória × discricionária (% da despesa)"
+      subtitle="Governo central (RTN) · discricionárias ÷ despesa total (12m móveis) · o complemento é obrigatório"
+      toolbar={
+        <>
+          {chip}
+          <AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["ytd", "1y", "5y", "max"]} />
+        </>
+      }
+      footer={`Leitura: quanto do orçamento ainda é escolha? A linha é a participação das despesas discricionárias na despesa primária total — o resto é obrigatório por lei ou Constituição.${leituraMinimo} "Discricionárias" = linha 4.4.2 do RTN (custeio e investimento sujeitos a escolha alocativa), em razão da despesa total do RTN — ambas as séries 12m % PIB do JSON; aqui só a divisão. Ressalva: parte do formalmente discricionário está na prática carimbada — emendas parlamentares impositivas (ECs 86/2015 e 100/2019) — então a rigidez efetiva é ainda maior. Linhas verticais: EC 95 (teto, dez/2016) e LC 200 (arcabouço, ago/2023).`}
       stampGiro={data.gerado_em}
       stampDado={ult ? ult[0] : null}
     >

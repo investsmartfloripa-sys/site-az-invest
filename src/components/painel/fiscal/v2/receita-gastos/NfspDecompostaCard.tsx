@@ -20,7 +20,7 @@ import type { FiscalClassicosData } from "@/lib/painel-fiscal";
 import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
 import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
-import { fmtNum, fmtPct, fmtSignedPct, formatTimeTickLabel, isoFromUTC } from "@/lib/format-br";
+import { fmtNum, fmtSignedPct, formatTimeTickLabel, isoFromUTC } from "@/lib/format-br";
 import type { AzSeriesPoint } from "@/components/painel/charts/AzTimeSeriesChart";
 import {
   clipTimeRows,
@@ -35,6 +35,7 @@ import {
   ultimoMensal,
   ultimoPct,
 } from "./shared";
+import { StatChip } from "./StatChip";
 
 /**
  * 06 — Resultado nominal do setor público CONSOLIDADO, decomposto no formato
@@ -92,25 +93,24 @@ export function NfspDecompostaCard({ data, codace }: { data: FiscalClassicosData
   const primUlt = ultimoPct(rg.primario_sp_12m_pct_pib);
   const jurosUlt = ultimoMensal(rg.juros_nominais_sp_12m_pct_pib);
 
-  const titulo = (() => {
-    if (!nomUlt || !primUlt || !jurosUlt) return "Resultado nominal do setor público decomposto";
-    const cabecalho =
-      nomUlt.valor < 0
-        ? `Déficit nominal de ${fmtPct(Math.abs(nomUlt.valor), 1)} do PIB`
-        : `Superávit nominal de ${fmtPct(nomUlt.valor, 1)} do PIB`;
-    const primTexto =
-      primUlt.valor >= 0
-        ? `superávit primário de ${fmtNum(primUlt.valor, 1)} p.p.`
-        : `déficit primário de ${fmtNum(Math.abs(primUlt.valor), 1)} p.p.`;
-    return `${cabecalho}: juros de ${fmtNum(jurosUlt.valor, 1)} p.p. e ${primTexto}`;
-  })();
+  const chip =
+    nomUlt && primUlt && jurosUlt ? (
+      <StatChip tone={nomUlt.valor >= 0 ? "pos" : "neg"}>
+        nominal {fmtSignedPct(nomUlt.valor, 1)} = {fmtSignedPct(primUlt.valor, 1)} − juros {fmtNum(jurosUlt.valor, 1)} (SP)
+      </StatChip>
+    ) : null;
 
   return (
     <ChartCard
-      title={titulo}
-      subtitle="Quanto do rombo é juro e quanto é fluxo primário? Setor público consolidado, 12m móveis: barras do primário (com sinal) e dos juros nominais (sempre custo, abaixo de zero); a linha navy é o resultado nominal."
-      toolbar={<AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["1y", "5y", "max"]} />}
-      footer="BCB SGS, setor público consolidado, % do PIB 12m. Identidade: nominal = primário − juros nominais — a linha coincide com a soma das barras POR CONSTRUÇÃO (auto-validação). Convenção única: positivo = superávit (a NFSP do BCB publica déficit com sinal positivo; a conversão é feita no pipeline). Juros nominais incluem o resultado dos swaps cambiais do BCB — meses de estresse cambial distorcem a série. Faixas cinzas: recessões CODACE."
+      title="NFSP decomposta (SP): primário + juros = nominal"
+      subtitle="Setor público consolidado (BCB) · 12m móveis % PIB · barras: primário (com sinal) e juros (sempre custo) · linha navy: nominal"
+      toolbar={
+        <>
+          {chip}
+          <AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["ytd", "1y", "5y", "max"]} />
+        </>
+      }
+      footer="Leitura: quanto do rombo é juro e quanto é fluxo primário? BCB SGS, setor público consolidado, % do PIB 12m. Identidade: nominal = primário − juros nominais — a linha coincide com a soma das barras POR CONSTRUÇÃO (auto-validação). Convenção única: positivo = superávit (a NFSP do BCB publica déficit com sinal positivo; a conversão é feita no pipeline). Juros nominais incluem o resultado dos swaps cambiais do BCB — meses de estresse cambial distorcem a série. Faixas cinzas: recessões CODACE."
       stampGiro={data.gerado_em}
       stampDado={nomUlt ? mesIso(nomUlt.data) : null}
     >

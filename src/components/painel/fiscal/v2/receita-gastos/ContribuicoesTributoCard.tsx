@@ -5,8 +5,9 @@ import { useMemo } from "react";
 import type { FiscalClassicosData, PontoMensalPct } from "@/lib/painel-fiscal";
 import { ChartCard } from "@/components/painel/core";
 import { DivergingReturnBars } from "@/components/painel/charts/DivergingReturnBars";
-import { fmtNum, fmtSignedNum } from "@/lib/format-br";
+import { fmtSignedNum } from "@/lib/format-br";
 import { deltaPp12m, mesIso, ultimoPct } from "./shared";
+import { StatChip } from "./StatChip";
 
 /**
  * 03b — "O que puxou a arrecadação?": Δ em pontos do PIB de cada tributo vs
@@ -57,15 +58,18 @@ export function ContribuicoesTributoCard({ data }: { data: FiscalClassicosData }
 
   const irUlt = ultimoPct(rg.imposto_renda_12m_pct_pib);
 
-  const titulo = top
-    ? `O que puxou a arrecadação: ${top.label} ${top.value >= 0 ? "ganhou" : "perdeu"} ${fmtNum(Math.abs(top.value), 2)} p.p. do PIB em 12 meses`
-    : "O que puxou a arrecadação em 12 meses";
+  const chip = top ? (
+    <StatChip tone={top.value >= 0 ? "pos" : "neg"}>
+      maior Δ: {top.label} {fmtSignedNum(top.value, 2)} p.p.
+    </StatChip>
+  ) : null;
 
   return (
     <ChartCard
-      title={titulo}
-      subtitle="Quais tributos explicam a variação da receita? Δ da participação no PIB (12m móveis) de cada tributo contra o mesmo mês do ano passado, em pontos percentuais."
-      footer="Δ calculado das séries do JSON: participação 12m/PIB atual − participação no mesmo mês 12 meses antes, por tributo (RTN/RFB; RGPS = arrecadação previdenciária; Divid.+Concessões = família consolidada do RTN). Verde = ganhou peso no PIB, vermelho = perdeu."
+      title="Contribuição por tributo à variação 12m (p.p.)"
+      subtitle="Governo central (RTN/RFB) · Δ da participação no PIB (12m móveis) vs mesmo mês do ano anterior"
+      toolbar={chip}
+      footer="Leitura: quais tributos explicam a variação da receita — quem ganhou e quem perdeu peso no PIB? Δ calculado das séries do JSON: participação 12m/PIB atual − participação no mesmo mês 12 meses antes, por tributo (RTN/RFB; RGPS = arrecadação previdenciária; Divid.+Concessões = família consolidada do RTN). Verde = ganhou peso no PIB, vermelho = perdeu."
       stampGiro={data.gerado_em}
       stampDado={irUlt ? mesIso(irUlt.data) : null}
     >

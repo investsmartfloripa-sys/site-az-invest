@@ -8,11 +8,13 @@ import { ChartCard } from "@/components/painel/core";
 import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AzTimeSeriesChart, type AzRefLine, type AzTimeSeries } from "@/components/painel/charts/AzTimeSeriesChart";
 import { AZ_BRAND } from "@/lib/az-chart-theme";
-import { fmtMesCurto, fmtNum, fmtPct } from "@/lib/format-br";
-import { codaceAreas, dataIso, deltaDozeMeses, maximoPonto, toPoints } from "./shared";
+import { fmtMesCurto, fmtNum, fmtPct, fmtSignedNum } from "@/lib/format-br";
+import { CockpitChip, codaceAreas, dataIso, deltaDozeMeses, maximoPonto, toPoints } from "./shared";
 
 /**
- * ÂNCORA do Painel Dívida v2 — "para onde a dívida pública está indo?".
+ * ÂNCORA do Painel Dívida v2 — padrão cockpit: título FIXO técnico
+ * ("DBGG × DLSP") com o nível e a direção 12m da DBGG num chip navy ao lado;
+ * a leitura interpretativa vive no footer (?).
  *
  * DBGG e DLSP em % do PIB com recessões CODACE e DUAS réguas honestas:
  * a referência ~70% do FMI p/ emergentes (Fiscal Monitor/DSA — com fonte no
@@ -106,22 +108,29 @@ export function TrajetoriaDividaCard({
     return out;
   }, [maxDbgg]);
 
-  // Título afirmativo VERIFICADO contra o dado: direção dos últimos 12 meses da DBGG.
-  const titulo = (() => {
-    if (!dbggInfo) return "Dívida pública em % do PIB — trajetória";
+  // Leitura interpretativa (direção 12m da DBGG) — vai para o footer (?), nunca para o título.
+  const leitura = (() => {
+    if (!dbggInfo) return null;
     const nivel = `Dívida bruta em ${fmtPct(dbggInfo.valor, 1)} do PIB`;
-    if (dbggInfo.delta12m == null) return nivel;
-    if (dbggInfo.delta12m > 0.1) return `${nivel} — alta de ${fmtNum(dbggInfo.delta12m, 1)} p.p. em 12 meses`;
-    if (dbggInfo.delta12m < -0.1) return `${nivel} — queda de ${fmtNum(Math.abs(dbggInfo.delta12m), 1)} p.p. em 12 meses`;
-    return `${nivel} — praticamente estável em 12 meses`;
+    if (dbggInfo.delta12m == null) return `${nivel}.`;
+    if (dbggInfo.delta12m > 0.1) return `${nivel}, em alta de ${fmtNum(dbggInfo.delta12m, 1)} p.p. em 12 meses.`;
+    if (dbggInfo.delta12m < -0.1)
+      return `${nivel}, em queda de ${fmtNum(Math.abs(dbggInfo.delta12m), 1)} p.p. em 12 meses.`;
+    return `${nivel}, praticamente estável em 12 meses.`;
   })();
 
   return (
     <ChartCard
-      title={titulo}
+      title="DBGG × DLSP (% do PIB)"
       subtitle="DBGG (métrica de comparação internacional) e DLSP (desconta os ativos do setor público), em % do PIB. As réguas: ~70% do PIB, referência do FMI para emergentes, e o máximo histórico da própria DBGG — calculado da série."
       toolbar={
         <>
+          {dbggInfo ? (
+            <CockpitChip>
+              DBGG {fmtPct(dbggInfo.valor, 1)}
+              {dbggInfo.delta12m != null ? ` · ${fmtSignedNum(dbggInfo.delta12m, 1)} p.p. 12m` : ""}
+            </CockpitChip>
+          ) : null}
           <ToggleChip
             ativo={mostraCentral}
             cor={COR_CENTRAL}
@@ -139,12 +148,17 @@ export function TrajetoriaDividaCard({
             onChange={setPeriod}
             min={dbggPts.length > 0 ? dbggPts[0][0] : undefined}
             max={dbggPts.length > 0 ? dbggPts[dbggPts.length - 1][0] : undefined}
-            periods={["1y", "5y", "max"]}
+            periods={["ytd", "1y", "5y", "max"]}
           />
         </>
       }
       footer={
         <>
+          {leitura ? (
+            <>
+              <strong>Leitura.</strong> {leitura}{" "}
+            </>
+          ) : null}
           DBGG (SGS 13762): governo geral — União, estados e municípios, padrão FMI. DLSP (SGS 4513): setor público
           consolidado, líquida de ativos (reservas internacionais, créditos ao BNDES). A régua de ~70% do PIB é a
           referência indicativa do FMI p/ emergentes (Fiscal Monitor/DSA) — limiar de atenção, não gatilho mecânico.

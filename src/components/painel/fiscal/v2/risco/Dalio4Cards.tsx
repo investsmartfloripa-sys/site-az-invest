@@ -2,14 +2,17 @@
 
 import { useMemo, useState } from "react";
 
+import Link from "next/link";
+
 import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AzTimeSeriesChart, type AzRefLine, type AzTimeSeries } from "@/components/painel/charts/AzTimeSeriesChart";
 import { ChartCard } from "@/components/painel/core";
-import { Toggle } from "@/components/painel/fiscal/FiscalShell";
+import { AzSegmented } from "@/components/painel/panorama/AzSegmented";
 import type { Dalio4, IndicadorSemaforo, Nivel } from "@/lib/painel-fiscal";
 import { AZ_BRAND } from "@/lib/az-chart-theme";
+import { fmtNum, fmtPct, fmtSignedNum } from "@/lib/format-br";
 import { RiskSeriesCard } from "./RiskSeriesCard";
-import { toPoints } from "./shared";
+import { NIVEL_RISCO, toPoints } from "./shared";
 
 /**
  * Os 4 indicadores que Dalio prioriza em "How Countries Go Broke", como séries
@@ -59,7 +62,7 @@ export function DividaRendaCard({
     () =>
       dr.referencias_pct_pib.map((r) => ({
         y: r.valor,
-        label: `pico ${r.valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`,
+        label: `pico ${fmtPct(r.valor, 1)}`,
         color: AZ_BRAND.navy,
       })),
     [dr.referencias_pct_pib],
@@ -70,14 +73,14 @@ export function DividaRendaCard({
   const valorAtual =
     ind?.valor != null
       ? ehReceita
-        ? `${(ind.valor / 100).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}× a receita`
-        : `${ind.valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% do PIB`
+        ? `${fmtNum(ind.valor / 100, 1)}× a receita`
+        : `${fmtPct(ind.valor, 1)} do PIB`
       : undefined;
 
   return (
     <RiskSeriesCard
       id="divida-renda"
-      title="1 · Dívida / Renda"
+      title="Dívida / Renda"
       subtitle={
         ehReceita
           ? "DBGG ÷ receita líquida 12m (gov. central) — o denominador do livro"
@@ -102,13 +105,14 @@ export function DividaRendaCard({
       stampGiro={stampGiro}
       stampDado={stampDado}
       toolbarExtra={
-        <Toggle
+        <AzSegmented
           size="sm"
+          ariaLabel="Base do indicador Dívida / Renda"
           value={base}
-          onChange={(v) => setBase(v)}
+          onChange={(id) => setBase(id as "receita" | "pib")}
           options={[
-            { value: "receita", label: "% Receita" },
-            { value: "pib", label: "% PIB" },
+            { id: "receita", label: "% Receita" },
+            { id: "pib", label: "% PIB" },
           ]}
         />
       }
@@ -153,7 +157,7 @@ export function JurosInflacaoCrescimentoCard({
   return (
     <ChartCard
       id="juro-inflacao-crescimento"
-      title="3 · Juro nominal vs inflação e crescimento"
+      title="Juro nominal vs inflação e crescimento"
       subtitle="r implícita (DLSP) × g nominal 12m × IPCA 12m — % a.a."
       footer={
         <span>
@@ -166,11 +170,13 @@ export function JurosInflacaoCrescimentoCard({
       toolbar={
         <>
           {indicadorGap?.valor != null ? (
-            <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-800">
-              r − g hoje: {gapAtual != null ? `${gapAtual >= 0 ? "+" : ""}${gapAtual.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} pp` : "—"}
+            <span
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-bold ${NIVEL_RISCO[indicadorGap.nivel].chip}`}
+            >
+              r − g hoje: {gapAtual != null ? `${fmtSignedNum(gapAtual, 1)} pp` : "—"}
             </span>
           ) : null}
-          <AzPeriodSelector value={period} onChange={setPeriod} min={minIso || undefined} max={maxIso || undefined} periods={["1y", "5y", "max"]} />
+          <AzPeriodSelector value={period} onChange={setPeriod} min={minIso || undefined} max={maxIso || undefined} periods={["ytd", "1y", "5y", "max"]} />
         </>
       }
     >
@@ -192,6 +198,12 @@ export function JurosInflacaoCrescimentoCard({
         showLegend={false}
         yAxisLabel="pp"
       />
+      <Link
+        href="/painel-economico/economia/brasil/fiscal/divida"
+        className="mt-2 inline-block text-[11px] font-semibold text-[#027DFC] hover:underline"
+      >
+        dinâmica e decomposição na aba Dívida →
+      </Link>
     </ChartCard>
   );
 }
@@ -229,7 +241,7 @@ export function PoupancaCard({
   return (
     <ChartCard
       id="divida-servico-poupanca"
-      title="4 · Dívida e serviço / Poupança"
+      title="Dívida e serviço / Poupança"
       subtitle="DBGG e juros nominais 12m ÷ poupança bruta 4T (IBGE CNT, trimestral)"
       footer={<span>{bloco._nota}</span>}
       stampGiro={stampGiro}
@@ -237,11 +249,11 @@ export function PoupancaCard({
       toolbar={
         <>
           {ult?.juros_pct_poupanca != null ? (
-            <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-800">
-              juros consomem {ult.juros_pct_poupanca.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}% da poupança
+            <span className="inline-flex items-center rounded-full border border-[#132960]/20 bg-[#132960]/5 px-2.5 py-1 text-[11px] font-bold text-[#132960]">
+              juros consomem {fmtPct(ult.juros_pct_poupanca, 0)} da poupança
             </span>
           ) : null}
-          <AzPeriodSelector value={period} onChange={setPeriod} min={minIso || undefined} max={maxIso || undefined} periods={["5y", "max"]} />
+          <AzPeriodSelector value={period} onChange={setPeriod} min={minIso || undefined} max={maxIso || undefined} periods={["ytd", "1y", "5y", "max"]} />
         </>
       }
     >
@@ -256,7 +268,7 @@ export function PoupancaCard({
         </div>
       </div>
       <p className="mt-2 text-[11px] text-zinc-500">
-        Poupança bruta 4T{ult ? `: ${ult.taxa_poupanca_pct_pib.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% do PIB (${ult.data})` : ""}.
+        Poupança bruta 4T{ult ? `: ${fmtPct(ult.taxa_poupanca_pct_pib, 1)} do PIB (${ult.data})` : ""}.
       </p>
     </ChartCard>
   );

@@ -4,6 +4,7 @@ import { useMemo, type ReactNode } from "react";
 
 import { KpiCard } from "@/components/painel/core";
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
+import { FiscalTabs } from "@/components/painel/fiscal/v2/FiscalTabs";
 import { SimuladorTrajetoria } from "@/components/painel/fiscal/SimuladorTrajetoria";
 import type { FiscalTermometroData, PontoMensal } from "@/lib/painel-fiscal";
 import { fmtMesCurto, fmtNum, fmtPct, fmtSignedNum } from "@/lib/format-br";
@@ -65,6 +66,8 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <FiscalTabs />
+
       {/* ── Status geral ── */}
       <header className="rounded-2xl border border-[#132960]/10 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -106,7 +109,7 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
           size="lg"
         />
         <KpiCard
-          label="Juros / Receita"
+          label="Juros / Receita (GC)"
           value={derivados.servico ? fmtPct(derivados.servico.valor, 1) : "—"}
           delta={derivados.servico?.delta12m ?? undefined}
           deltaUnit="p.p."
@@ -125,7 +128,7 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
           hint="taxa implícita DLSP − g nominal 12m"
         />
         <KpiCard
-          label="Juros / Poupança"
+          label="Juros / Poupança (GC)"
           value={derivados.jurosPoupanca?.valor != null ? fmtPct(derivados.jurosPoupanca.valor, 0) : "—"}
           delta={derivados.jurosPoupanca?.delta12m ?? undefined}
           deltaUnit="p.p."
@@ -149,7 +152,7 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
         />
         <RiskSeriesCard
           id="servico-renda"
-          title="2 · Serviço da dívida / Receita"
+          title="Serviço da dívida / Receita"
           subtitle="Juros nominais 12m ÷ receita líquida 12m (gov. central, RTN)"
           series={[
             {

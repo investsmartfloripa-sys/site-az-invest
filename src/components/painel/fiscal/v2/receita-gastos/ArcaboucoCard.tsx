@@ -9,6 +9,7 @@ import { AzTimeSeriesChart, type AzTimeSeries } from "@/components/painel/charts
 import { AZ_BRAND, AZ_CHART } from "@/lib/az-chart-theme";
 import { fmtNum, fmtSignedPct } from "@/lib/format-br";
 import { mesIso, ultimoYoY, yoyPoints } from "./shared";
+import { StatChip } from "./StatChip";
 
 /**
  * 05 — Arcabouço fiscal (LC 200/2023): crescimento REAL 12m da despesa e da
@@ -45,7 +46,7 @@ export function ArcaboucoCard({ data }: { data: FiscalClassicosData }) {
 
   if (!arc) {
     return (
-      <ChartCard title="Arcabouço fiscal — crescimento real" stampGiro={data.gerado_em} stampDado={null}>
+      <ChartCard title="Crescimento real da despesa × corredor LC 200" stampGiro={data.gerado_em} stampDado={null}>
         <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
           O pipeline ainda não publicou as séries reais do arcabouço (schema v2). Rode o workflow fiscal-pipeline.yml.
         </p>
@@ -56,17 +57,24 @@ export function ArcaboucoCard({ data }: { data: FiscalClassicosData }) {
   const minIso = series[0]?.data[0]?.[0] ?? "";
   const maxIso = series[0]?.data[series[0].data.length - 1]?.[0] ?? "";
 
-  const titulo =
-    despUlt && recUlt
-      ? `Despesa cresce ${fmtSignedPct(despUlt.valor, 1)} reais em 12 meses e receita ${fmtSignedPct(recUlt.valor, 1)} — o corredor do arcabouço é ${fmtNum(arc.corredor.piso_pct, 1)}–${fmtNum(arc.corredor.teto_pct, 1)}%`
-      : "Crescimento real de despesa e receita × corredor do arcabouço";
+  const chip =
+    despUlt && recUlt ? (
+      <StatChip tone={despUlt.valor > arc.corredor.teto_pct ? "neg" : "neutral"}>
+        desp. {fmtSignedPct(despUlt.valor, 1)} · rec. {fmtSignedPct(recUlt.valor, 1)} real 12m
+      </StatChip>
+    ) : null;
 
   return (
     <ChartCard
-      title={titulo}
-      subtitle="A despesa cabe no limite do arcabouço — e a receita acompanha? Crescimento real acumulado em 12 meses contra o corredor legal de 0,6% a 2,5% a.a. da LC 200/2023."
-      toolbar={<AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["1y", "5y", "max"]} />}
-      footer="Séries deflacionadas no BUILDER, mês a mês, pelo índice composto do IPCA (não pelo IPCA YoY no total 12m). Oscilações fortes (ex.: a virada de 2025 para 2026) refletem one-offs como o calendário de precatórios — a apuração OFICIAL do limite tem expurgos e o limite exato do ano sai na LDO/Relatório bimestral: o corredor 0,6–2,5% é a régua estrutural, não o teto vigente. Comparar despesa acima do corredor com receita fraca é a leitura da tesoura em termos reais."
+      title="Crescimento real da despesa × corredor LC 200"
+      subtitle={`Governo central (RTN) · crescimento real 12m (deflator IPCA composto) · corredor legal ${fmtNum(arc.corredor.piso_pct, 1)}–${fmtNum(arc.corredor.teto_pct, 1)}% a.a.`}
+      toolbar={
+        <>
+          {chip}
+          <AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["ytd", "1y", "5y", "max"]} />
+        </>
+      }
+      footer="Leitura: a despesa cabe no limite do arcabouço — e a receita acompanha? Despesa acima do corredor com receita fraca é a tesoura em termos reais. Séries deflacionadas no BUILDER, mês a mês, pelo índice composto do IPCA (não pelo IPCA YoY no total 12m). Oscilações fortes (ex.: a virada de 2025 para 2026) refletem one-offs como o calendário de precatórios — a apuração OFICIAL do limite tem expurgos e o limite exato do ano sai na LDO/Relatório bimestral: o corredor 0,6–2,5% é a régua estrutural, não o teto vigente."
       stampGiro={data.gerado_em}
       stampDado={despUlt ? mesIso(despUlt.data) : null}
     >
