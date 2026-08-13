@@ -45,8 +45,9 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
   const dado = data.fonte_base;
 
   const derivados = useMemo(() => {
-    const dividaReceita = deltaDozeMeses(dalio4.divida_renda.serie_pct_receita);
-    const servico = deltaDozeMeses(dalio4.servico_renda.serie_pct_receita);
+    // Séries lidas de indicadores_semaforo (fonte única — dalio4 não duplica mais).
+    const dividaReceita = deltaDozeMeses(indicadores.dbgg_pct_receita?.serie);
+    const servico = deltaDozeMeses(indicadores.juros_pct_receita?.serie);
     const gapSerie: PontoMensal[] = dalio4.juros_inflacao_crescimento.serie.map((p) => ({
       data: p.data,
       valor: p.r_menos_g_pp,
@@ -58,7 +59,7 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
     }));
     const jurosPoupanca = deltaDozeMeses(poupSerie);
     return { dividaReceita, servico, gap, jurosPoupanca };
-  }, [dalio4]);
+  }, [dalio4, indicadores]);
 
   const mesRef = dado ? fmtMesCurto(dataIso(dado)) : "—";
 
@@ -145,7 +146,6 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
           indicadorReceita={indicadores.dbgg_pct_receita}
           indicadorPib={indicadores.dbgg_pct_pib}
           stampGiro={giro}
-          stampDado={dado}
         />
         <RiskSeriesCard
           id="servico-renda"
@@ -156,7 +156,7 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
               id: "servico_receita",
               label: "Juros nominais 12m / Receita líquida",
               color: "#132960",
-              data: toPoints(dalio4.servico_renda.serie_pct_receita),
+              data: toPoints(indicadores.juros_pct_receita?.serie),
             },
           ]}
           faixas={dalio4.servico_renda.faixas}
@@ -174,15 +174,13 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
             </span>
           }
           stampGiro={giro}
-          stampDado={dado}
         />
         <JurosInflacaoCrescimentoCard
           dalio4={dalio4}
           indicadorGap={indicadores.r_menos_g_pp}
           stampGiro={giro}
-          stampDado={dado}
         />
-        <PoupancaCard dalio4={dalio4} stampGiro={giro} stampDado={dado} />
+        <PoupancaCard dalio4={dalio4} stampGiro={giro} />
       </div>
 
       {/* ── Todos os indicadores ── */}
@@ -215,7 +213,7 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
       {/* ── Ferramentas do livro ── */}
       <Divisor
         label="Ferramentas do livro"
-        info='Matrizes de sensibilidade e os 4 levers de "How Countries Go Broke". Leitura AZ: nenhum lever sozinho resolve o caso brasileiro em magnitude politicamente plausível — o livro prevê combinação de dois ou mais (caso análogo: Reino Unido 1976).'
+        info='Matrizes de sensibilidade e os 4 levers de "How Countries Go Broke". Leitura AZ: nenhum lever sozinho resolve o caso brasileiro em magnitude politicamente plausível — o livro prevê combinação de dois ou mais (caso análogo: Reino Unido 1976). Os levers usam o perímetro do livro (DBGG ÷ receita do governo central, estabilizando Dívida/Receita) e por isso pedem ajustes maiores que o primário estabilizador p* dos KPIs, calculado no perímetro consolidado sobre Dívida/PIB. Os dois números são consistentes entre si — medem alvos diferentes.'
       />
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
         <div className="rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">
@@ -308,20 +306,25 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
         </div>
       ) : null}
 
-      <SimuladorTrajetoria
-        defaults={{
-          debt_pct_receita: data.premissas.debt_pct_receita ?? 435,
-          debt_pct_pib: foto.divida.dbgg_pct_pib ?? 80,
-          custo_medio_aa: foto.juros.taxa_nominal_efetiva_aa,
-          pib_real_yoy: foto.macro.pib_real_yoy_pct,
-          ipca_12m: foto.macro.ipca_12m_pct,
-          primario_pct_pib:
-            foto.deficit_primario.primary_deficit_pct_pib != null
-              ? -foto.deficit_primario.primary_deficit_pct_pib
-              : -1,
-          receita_pct_pib: foto.receita.receita_liquida_pct_pib ?? 18,
-        }}
-      />
+      {/* Simulador só com insumos macro reais — foto.macro pode vir null (sem fallback inventado). */}
+      {foto.juros.taxa_nominal_efetiva_aa != null &&
+      foto.macro.pib_real_yoy_pct != null &&
+      foto.macro.ipca_12m_pct != null ? (
+        <SimuladorTrajetoria
+          defaults={{
+            debt_pct_receita: data.premissas.debt_pct_receita ?? 435,
+            debt_pct_pib: foto.divida.dbgg_pct_pib ?? 80,
+            custo_medio_aa: foto.juros.taxa_nominal_efetiva_aa,
+            pib_real_yoy: foto.macro.pib_real_yoy_pct,
+            ipca_12m: foto.macro.ipca_12m_pct,
+            primario_pct_pib:
+              foto.deficit_primario.primary_deficit_pct_pib != null
+                ? -foto.deficit_primario.primary_deficit_pct_pib
+                : -1,
+            receita_pct_pib: foto.receita.receita_liquida_pct_pib ?? 18,
+          }}
+        />
+      ) : null}
 
       {/* ── Ficha técnica ── */}
       <details className="group rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">

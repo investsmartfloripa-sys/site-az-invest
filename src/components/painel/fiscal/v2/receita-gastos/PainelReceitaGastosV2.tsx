@@ -165,7 +165,7 @@ export function PainelReceitaGastosV2({
         eyebrow: "Receita",
         titulo: "De onde vem a receita — e o que a puxou",
         descricao:
-          "As quatro famílias do RTN em stack fixo (o total é a receita bruta) e o Δ de participação no PIB por tributo em 12 meses.",
+          "As famílias de receita do RTN em stack fixo de três fatias (incentivos fundidos na administrada; o total é a receita bruta) e o Δ de participação no PIB por tributo em 12 meses.",
         children: (
           <div className="grid gap-4 xl:grid-cols-2">
             <ReceitaFamiliasCard data={data} />
@@ -235,8 +235,10 @@ export function PainelReceitaGastosV2({
             <strong>Fontes e séries.</strong> Tesouro Nacional — Resultado do Tesouro Nacional (RTN, XLSX da série histórica
             desde 1997, leitura com validação de rótulo linha a linha): receita líquida, transferências a E&M, famílias de
             receita (linhas 1.1–1.4), rubricas de despesa (4.x, incl. o residual &quot;demais obrigatórias&quot; e as obrigatórias com
-            controle de fluxo) e primário do governo central. BCB SGS: 13762 (DBGG), 4513 (DLSP), 5717/5718 (primário e juros do
-            setor público 12m), 5727/5728 (NFSP nominal), 4382 (PIB nominal 12m), 12001 (composição da DPMFi), entre outras.
+            controle de fluxo) e primário do governo central. BCB SGS: 13762 (DBGG), 4513 (DLSP), 5718 (juros nominais 12m % PIB do
+            setor público consolidado), 5727 (NFSP nominal 12m do consolidado), 5728 (juros do governo central), 5717 (NFSP
+            do governo central), 4382 (PIB nominal 12m), 12001 (composição da DPMFi), entre outras. O primário consolidado
+            não é coletado: é DERIVADO no pipeline (juros − NFSP nominal, isto é, 5718 − 5727).
             Metas: LDOs 2024–2027 (trajetória vigente do PLDO 2025; banda ±0,25 p.p. da LC 200/2023). Recessões: cronologia
             CODACE/FGV (mensal).
           </p>

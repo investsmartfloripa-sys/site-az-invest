@@ -60,7 +60,7 @@ export function ComposicaoDpmfiCard({
 }) {
   const [period, setPeriod] = useState<AzPeriodValue>({ id: "max" });
 
-  // Stack 100% VERDADEIRO: só meses em que as seis fatias fecham ≈100 (90–110),
+  // Stack 100% VERDADEIRO: só meses em que as seis fatias fecham ≈100 (97–103),
   // renormalizados a exatamente 100 — nunca uma pilha que não soma.
   const todasRows = useMemo<Row[]>(() => {
     const mapas: Record<FatiaKey, Map<string, number>> = {
@@ -81,7 +81,7 @@ export function ComposicaoDpmfiCard({
         brutos[f.key] = v;
         soma += v;
       }
-      if (soma < 90 || soma > 110) continue; // mês incompleto (ex.: antes da SGS 12001) — fora do stack
+      if (soma < 97 || soma > 103) continue; // mês incompleto (ex.: antes da SGS 12001) — fora do stack
       const row = { iso } as Row;
       for (const f of FATIAS) row[f.key] = +((100 * brutos[f.key]) / soma).toFixed(2);
       out.push(row);
@@ -111,7 +111,7 @@ export function ComposicaoDpmfiCard({
     return (
       <ChartCard title="Composição da DPMFi por indexador" stampGiro={geradoEm}>
         <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
-          Sem meses em que as seis fatias fecham ≈100% — verifique a coleta da SGS 12001 no pipeline.
+          Sem meses em que as seis fatias fecham 97–103% — verifique a coleta da SGS 12001 no pipeline.
         </p>
       </ChartCard>
     );
@@ -141,7 +141,7 @@ export function ComposicaoDpmfiCard({
           (risco de juros); <strong>índices de preços/NTN-B</strong> indexa à inflação; <strong>câmbio</strong> expõe a
           desvalorização — hoje fatia residual (virtude estrutural do Brasil); <strong>prefixado</strong> trava o custo
           na emissão. Fontes: BCB SGS 4174–4178 e 12001 (índices de preços — a fatia NTN-B que faltava). Meses em que as
-          fatias não fecham ≈100% ficam fora do stack.
+          fatias não fecham entre 97% e 103% ficam fora do stack (renormalizados a 100% quando entram).
           {picoSelic ? ` Pico histórico da fatia Selic: ${fmtPct(picoSelic.v, 1)} em ${fmtMesCurto(picoSelic.iso)}.` : ""}
         </>
       }

@@ -245,19 +245,21 @@ export type FaixasRisco = {
 /** Referência da literatura sobreposta a um gráfico (FMI, Reinhart-Rogoff...). */
 export type RefLiteratura = { valor: number; label: string };
 
-/** v3: os 4 indicadores prioritários de How Countries Go Broke, como séries. */
+/**
+ * v3: os 4 indicadores prioritários de How Countries Go Broke.
+ * As séries de dívida/renda e serviço/renda NÃO vivem aqui: o front lê
+ * indicadores_semaforo.{dbgg_pct_receita, dbgg_pct_pib, juros_pct_receita}.serie
+ * (o pipeline parou de duplicá-las byte a byte no dalio4).
+ */
 export type Dalio4 = {
   _nota: string;
   divida_renda: {
-    serie_pct_receita: PontoMensal[];
-    serie_pct_pib: PontoMensal[];
     faixas_pct_receita: FaixasRisco;
     faixas_pct_pib: FaixasRisco;
     referencias_pct_pib: RefLiteratura[];
     _nota: string;
   };
   servico_renda: {
-    serie_pct_receita: PontoMensal[];
     faixas: FaixasRisco;
     _nota: string;
   };
@@ -303,21 +305,17 @@ export type ProjecaoDbgg = {
     primario_cenario_meta_pct_pib: number;
     dbgg_cenario_meta_pct_pib: number;
     dbgg_cenario_primario_atual_pct_pib: number;
+    /** Ano além do horizonte legal da LDO (pós-2027) — meta extrapolada (hipótese AZ). */
+    meta_extrapolada?: boolean;
+    /** Ano parcial do próprio ano-base: fração decorrida (0–1). */
+    fracao_ano?: number;
   }[];
-};
-
-export type ScoreSemaforo = {
-  score_medio: number | null;
-  nivel_geral: Nivel;
-  n: number;
-  total: number;
 };
 
 export type FiscalTermometroData = {
   schema_version?: number;
   gerado_em: string;
   fonte_base: string | null;
-  score_semaforo?: ScoreSemaforo;
   indicadores_semaforo?: Record<string, IndicadorSemaforo>;
   categorias_ordem?: string[];
   foto_brasil: {
@@ -325,22 +323,20 @@ export type FiscalTermometroData = {
     receita: { receita_liquida_pct_pib: number | null };
     gastos: { despesa_total_pct_pib: number | null; despesa_total_pct_receita: number | null };
     deficit_primario: { primary_deficit_pct_pib: number | null; primary_deficit_pct_receita: number | null };
-    juros: { juros_pct_pib: number | null; juros_pct_receita: number | null; taxa_nominal_efetiva_aa: number };
+    juros: { juros_pct_pib: number | null; juros_pct_receita: number | null; taxa_nominal_efetiva_aa: number | null };
+    /** Fallbacks hardcoded eliminados no pipeline: pode vir null quando faltar insumo. */
     macro: {
-      pib_real_yoy_pct: number;
-      ipca_12m_pct: number;
-      selic_real_ex_post_pct: number;
+      pib_real_yoy_pct: number | null;
+      ipca_12m_pct: number | null;
+      selic_real_ex_post_pct: number | null;
       g_nominal_aa_pct: number;
       i_nominal_aa_pct: number;
       gap_i_menos_g_pp: number;
     };
   };
-  trajetoria_br_pct_receita: number[] | null;
   matrizes: {
     endlevel_por_deficit: Matriz;
-    change_por_deficit: Matriz;
     endlevel_por_gap: Matriz;
-    change_por_gap: Matriz;
   };
   levers: {
     gap_atual_pp: number;

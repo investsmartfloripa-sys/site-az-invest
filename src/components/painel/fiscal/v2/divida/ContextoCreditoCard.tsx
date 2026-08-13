@@ -67,7 +67,7 @@ export function ContextoCreditoCard({
           periods={["1y", "5y", "max"]}
         />
       }
-      footer="Ciclo de crédito privado ≠ sustentabilidade fiscal — por isso estas séries saíram do gráfico principal de dívida pública. 'Dívida total' = DBGG + crédito total à economia: soma indicativa (perímetros e metodologias diferentes), útil só p/ comparação internacional de endividamento agregado. Fontes: BCB SGS 20622 (crédito total) e 13762 (DBGG)."
+      footer="Ciclo de crédito privado ≠ sustentabilidade fiscal — por isso estas séries saíram do gráfico principal de dívida pública. 'Dívida total' = DBGG + crédito total à economia: soma indicativa (perímetros e metodologias diferentes). Atenção à dupla contagem: a SGS 20622 inclui crédito a entes públicos (sobreposição parcial com a DBGG) e, por outro lado, exclui mercado de capitais e dívida externa corporativa. Fontes: BCB SGS 20622 (crédito total) e 13762 (DBGG)."
       stampGiro={geradoEm}
       stampDado={ultCredito ? dataIso(ultCredito.data) : null}
     >

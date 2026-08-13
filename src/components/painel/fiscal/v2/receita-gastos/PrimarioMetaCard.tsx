@@ -18,6 +18,7 @@ import type { AtividadeCodaceData } from "@/lib/painel-atividade";
 import type { FiscalClassicosData } from "@/lib/painel-fiscal";
 import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
 import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
+import { AzSegmented } from "@/components/painel/panorama/AzSegmented";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtNum, fmtSignedPct, formatTimeTickLabel, isoFromUTC, parseIsoUTC } from "@/lib/format-br";
 import type { AzSeriesPoint } from "@/components/painel/charts/AzTimeSeriesChart";
@@ -35,7 +36,12 @@ import {
 } from "./shared";
 
 /**
- * 01 — Primário realizado × estabilizador × metas LDO.
+ * 01 — Primário realizado × estabilizador × metas LDO, em DOIS MODOS que
+ * nunca misturam perímetro na mesma linha:
+ * - "Consolidado (estabilizador)": primário do setor público consolidado
+ *   (derivado no pipeline) contra o estabilizador — MESMO perímetro da DLSP.
+ * - "Central (meta LDO)": primário do governo central (RTN) contra as bandas
+ *   LDO, SEM a linha do estabilizador (a meta é do central).
  *
  * O estabilizador vem PRONTO do pipeline (sustentabilidade.serie — taxa
  * implícita da DLSP, perímetro consolidado): o front NUNCA recalcula a
@@ -44,10 +50,20 @@ import {
  * década, como no dashboard antigo.
  */
 
+type ModoPrimario = "consolidado" | "central";
+
+const MODOS = [
+  { id: "consolidado", label: "Consolidado (estabilizador)" },
+  { id: "central", label: "Central (meta LDO)" },
+] as const;
+
 export function PrimarioMetaCard({ data, codace }: { data: FiscalClassicosData; codace: AtividadeCodaceData | null }) {
   const [period, setPeriod] = useState<AzPeriodValue>({ id: "5y" });
+  const [modo, setModo] = useState<ModoPrimario>("consolidado");
   const rg = data.receita_e_gastos;
   const sust = data.sustentabilidade;
+
+  const seriePrimario = modo === "consolidado" ? rg.primario_sp_12m_pct_pib : rg.primario_central_pct_pib;
 
   const estabPts = useMemo<AzSeriesPoint[]>(() => {
     const out: AzSeriesPoint[] = [];
@@ -61,20 +77,20 @@ export function PrimarioMetaCard({ data, codace }: { data: FiscalClassicosData; 
 
   const rowsAll = useMemo(
     () =>
-      mergeTimeRows({
-        primario: pctPoints(rg.primario_central_pct_pib),
-        estab: estabPts,
-      }),
-    [rg, estabPts],
+      modo === "consolidado"
+        ? mergeTimeRows({ primario: pctPoints(seriePrimario), estab: estabPts })
+        : mergeTimeRows({ primario: pctPoints(seriePrimario) }),
+    [modo, seriePrimario, estabPts],
   );
 
   const rows = useMemo(() => clipTimeRows(rowsAll, period), [rowsAll, period]);
   const { ticks, spanDays } = useMemo(() => timeAxis(rows), [rows]);
   const faixas = useMemo(() => clipXAreasT(codaceAreas(codace?.mensal), rows), [codace?.mensal, rows]);
 
-  // Bandas LDO por ano-calendário, clipadas à janela visível.
+  // Bandas LDO por ano-calendário, clipadas à janela visível — SÓ no modo
+  // central: a meta LDO é do governo central, não do consolidado.
   const bandas = useMemo(() => {
-    if (rows.length === 0) return [];
+    if (modo !== "central" || rows.length === 0) return [];
     const firstT = rows[0].t;
     const lastT = rows[rows.length - 1].t;
     const out: { ano: string; x1: number; x2: number; y1: number; y2: number }[] = [];
@@ -85,38 +101,70 @@ export function PrimarioMetaCard({ data, codace }: { data: FiscalClassicosData; 
       out.push({ ano, x1: Math.max(x1, firstT), x2: Math.min(x2, lastT), y1: m.banda_inf, y2: m.banda_sup });
     }
     return out;
-  }, [data.metas_ldo, rows]);
+  }, [modo, data.metas_ldo, rows]);
 
   const dom = useMemo(
     () =>
-      yDomainDe(rows, ["primario", "estab"], {
+      yDomainDe(rows, modo === "consolidado" ? ["primario", "estab"] : ["primario"], {
         incluirZero: true,
         extras: bandas.flatMap((b) => [b.y1, b.y2]),
       }),
-    [rows, bandas],
+    [rows, bandas, modo],
   );
 
   const minIso = rowsAll.length > 0 ? isoFromUTC(rowsAll[0].t) : "";
   const maxIso = rowsAll.length > 0 ? isoFromUTC(rowsAll[rowsAll.length - 1].t) : "";
 
-  const primUlt = ultimoPct(rg.primario_central_pct_pib);
+  const primUlt = ultimoPct(seriePrimario);
   const estabUlt = estabPts.length > 0 ? estabPts[estabPts.length - 1][1] : null;
 
   const titulo = (() => {
-    if (!primUlt) return "Primário do governo central × meta LDO × estabilizador";
-    if (estabUlt == null) return `Primário do governo central em ${fmtSignedPct(primUlt.valor, 2)} do PIB em 12 meses`;
-    const gap = estabUlt - primUlt.valor;
-    return gap > 0
-      ? `Primário de ${fmtSignedPct(primUlt.valor, 2)} do PIB roda ${fmtNum(gap, 1)} p.p. aquém do que estabiliza a dívida (${fmtSignedPct(estabUlt, 1)})`
-      : `Primário de ${fmtSignedPct(primUlt.valor, 2)} do PIB já supera o estabilizador da dívida (${fmtSignedPct(estabUlt, 1)})`;
+    if (modo === "consolidado") {
+      if (!primUlt) return "Primário consolidado × estabilizador da dívida";
+      if (estabUlt == null) return `Primário do setor público consolidado em ${fmtSignedPct(primUlt.valor, 2)} do PIB em 12 meses`;
+      const gap = estabUlt - primUlt.valor;
+      return gap > 0
+        ? `Primário consolidado de ${fmtSignedPct(primUlt.valor, 2)} do PIB roda ${fmtNum(gap, 1)} p.p. aquém do que estabiliza a dívida (${fmtSignedPct(estabUlt, 1)})`
+        : `Primário consolidado de ${fmtSignedPct(primUlt.valor, 2)} do PIB já supera o estabilizador da dívida (${fmtSignedPct(estabUlt, 1)})`;
+    }
+    if (!primUlt) return "Primário do governo central × metas LDO";
+    const ano = primUlt.data.slice(0, 4);
+    const meta = data.metas_ldo?.anos?.[ano];
+    if (!meta) return `Primário do governo central em ${fmtSignedPct(primUlt.valor, 2)} do PIB em 12 meses`;
+    const status =
+      primUlt.valor < meta.banda_inf
+        ? `abaixo do piso da banda da meta LDO de ${ano}`
+        : primUlt.valor > meta.banda_sup
+          ? `acima do teto da banda da meta LDO de ${ano}`
+          : `dentro da banda da meta LDO de ${ano}`;
+    return `Primário central de ${fmtSignedPct(primUlt.valor, 2)} do PIB em 12 meses roda ${status} (${fmtSignedPct(meta.banda_inf, 2)} a ${fmtSignedPct(meta.banda_sup, 2)})`;
   })();
+
+  const subtitulo =
+    modo === "consolidado"
+      ? "O resultado que o setor público entrega basta para a dívida parar de crescer? Primário consolidado (12m) contra o estabilizador histórico do pipeline — mesmo perímetro (DLSP), comparação limpa."
+      : "O governo central cabe na meta do ano? Primário central (12m, RTN) contra as bandas das metas LDO, ano a ano — sem o estabilizador, que é de outro perímetro.";
 
   return (
     <ChartCard
       title={titulo}
-      subtitle="O resultado que o governo entrega basta para a dívida parar de crescer — e cabe na meta do ano? Primário central (12m) contra o estabilizador histórico do pipeline e as bandas das metas LDO, ano a ano."
-      toolbar={<AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["1y", "5y", "max"]} />}
-      footer="Estabilizador (linha navy tracejada): p* = (r−g)/(1+g) × DLSP/PIB t−12, com r = taxa implícita da DLSP — calculado SÓ no pipeline, perímetro do setor público CONSOLIDADO (a linha realizada é o governo central/RTN: a comparação é indicativa). Bandas verdes: metas LDO por ano-calendário (LC 200/2023, banda ±0,25 p.p., vigência 2024+); a aferição oficial é no ANO com abatimentos (ex.: precatórios) — o 12m móvel é aproximação. Faixas cinzas: recessões CODACE."
+      subtitle={subtitulo}
+      toolbar={
+        <div className="flex flex-wrap items-center gap-2">
+          <AzSegmented
+            options={[...MODOS]}
+            value={modo}
+            onChange={(id) => setModo(id as ModoPrimario)}
+            ariaLabel="Perímetro do primário"
+          />
+          <AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["1y", "5y", "max"]} />
+        </div>
+      }
+      footer={`Dois perímetros em dois modos, nunca na mesma linha: Consolidado = setor público consolidado (BCB, derivado no pipeline) contra o estabilizador; Central = governo central (RTN) contra a meta LDO. ${
+        modo === "consolidado"
+          ? "Estabilizador (linha navy tracejada): p* = (r−g)/(1+g) × DLSP/PIB t−12, com r = taxa implícita da DLSP — calculado SÓ no pipeline, MESMO perímetro (DLSP) da linha realizada."
+          : "Bandas verdes: metas LDO por ano-calendário (LC 200/2023, banda ±0,25 p.p., vigência 2024+); a aferição oficial é no ANO com abatimentos (ex.: precatórios) — o 12m móvel é aproximação."
+      } Faixas cinzas: recessões CODACE.`}
       stampGiro={data.gerado_em}
       stampDado={primUlt ? mesIso(primUlt.data) : null}
     >
@@ -163,24 +211,26 @@ export function PrimarioMetaCard({ data, codace }: { data: FiscalClassicosData; 
             <Line
               type="monotone"
               dataKey="primario"
-              name="Primário central (12m)"
+              name={modo === "consolidado" ? "Primário consolidado (12m)" : "Primário central (12m)"}
               stroke={AZ_BRAND.azure}
               strokeWidth={2}
               dot={false}
               connectNulls
               isAnimationActive={false}
             />
-            <Line
-              type="monotone"
-              dataKey="estab"
-              name="Primário estabilizador (consolidado)"
-              stroke={AZ_BRAND.navy}
-              strokeWidth={1.8}
-              strokeDasharray="5 3"
-              dot={false}
-              connectNulls
-              isAnimationActive={false}
-            />
+            {modo === "consolidado" ? (
+              <Line
+                type="monotone"
+                dataKey="estab"
+                name="Primário estabilizador (consolidado)"
+                stroke={AZ_BRAND.navy}
+                strokeWidth={1.8}
+                strokeDasharray="5 3"
+                dot={false}
+                connectNulls
+                isAnimationActive={false}
+              />
+            ) : null}
           </ComposedChart>
         </ResponsiveContainer>
       </div>

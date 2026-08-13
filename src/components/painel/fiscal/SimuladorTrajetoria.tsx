@@ -87,11 +87,12 @@ function projetar(d: {
   // Convencao Dalio: primary_deficit positivo = deficit
   // primary_deficit_pct_receita = -(primario_pct_pib) / (receita_pct_pib) * 100
   const pd = (-d.primario_pct_pib / d.receita_pct_pib) * 100;
-  const mult = (1 + i) / (1 + g);
+  // Mesma equacao do pipeline: b(t+1) = (b(t)*(1+i) + pd) / (1+g)
+  // — o deficit do ano tambem e dividido pela receita que cresceu.
   const traj: number[] = [d.debt_pct_receita];
   let r = d.debt_pct_receita;
   for (let k = 0; k < anos; k++) {
-    r = r * mult + pd;
+    r = (r * (1 + i) + pd) / (1 + g);
     traj.push(r);
   }
   return traj;

@@ -63,11 +63,30 @@ export function MetaYtdCard({ data }: { data: FiscalClassicosData }) {
     return out;
   }, [ytd, anos]);
 
-  // Centro da meta LDO do ano corrente, convertido p/ R$ pelo PIB nominal 12m.
+  // Centro da meta LDO do ano corrente, convertido p/ R$ pelo PIB nominal
+  // PROJETADO do ano: PIB 12m corrente × (1 + PIB real Focus) × (1 + IPCA
+  // Focus), medianas mais recentes do ano-alvo. Sem Focus, cai no PIB 12m
+  // corrente (comportamento antigo, sinalizado no rodapé).
   const meta = anoCorrente != null ? data.metas_ldo?.anos?.[String(anoCorrente)] : undefined;
+
+  const fatorFocus = useMemo(() => {
+    if (anoCorrente == null) return null;
+    const ultimaMediana = (serie: { mediana: number | null }[] | undefined) => {
+      for (let i = (serie?.length ?? 0) - 1; i >= 0; i--) {
+        const v = serie![i].mediana;
+        if (v != null && Number.isFinite(v)) return v;
+      }
+      return null;
+    };
+    const pibReal = ultimaMediana(data.expectativas_focus?.pib_anuais?.[String(anoCorrente)]);
+    const ipca = ultimaMediana(data.expectativas_focus?.ipca_anuais?.[String(anoCorrente)]);
+    if (pibReal == null || ipca == null) return null;
+    return (1 + pibReal / 100) * (1 + ipca / 100);
+  }, [data.expectativas_focus, anoCorrente]);
+
   const metaBrlMm =
     meta != null && data.pib_nominal_12m_brl_milhoes != null && data.pib_nominal_12m_brl_milhoes > 0
-      ? (meta.centro / 100) * data.pib_nominal_12m_brl_milhoes
+      ? (meta.centro / 100) * data.pib_nominal_12m_brl_milhoes * (fatorFocus ?? 1)
       : null;
 
   const dom = useMemo(
@@ -105,7 +124,11 @@ export function MetaYtdCard({ data }: { data: FiscalClassicosData }) {
     <ChartCard
       title={titulo}
       subtitle="O ano-calendário está no rumo da meta? Primário do governo central acumulado de janeiro até cada mês — o ano corrente contra os cinco anteriores."
-      footer={`RTN: primário acumulado jan→mês ("acima da linha"), em R$ correntes — a meta LDO é aferida no ano-calendário, não em 12m móveis. O marcador de dezembro é o CENTRO da meta (banda ±0,25 p.p. do PIB) convertido pelo PIB nominal 12m corrente — aproximação; a aferição oficial considera abatimentos. Anos anteriores em cinza para padrão sazonal (superávits concentrados no início do ano).`}
+      footer={`RTN: primário acumulado jan→mês ("acima da linha"), em R$ correntes — a meta LDO é aferida no ano-calendário, não em 12m móveis. Aferição oficial da meta: resultado "abaixo da linha" (BCB); aqui usamos o "acima da linha" do RTN — diferenças típicas de R$ 10–30 bi/ano. O marcador de dezembro é o CENTRO da meta (banda ±0,25 p.p. do PIB) convertido ${
+        fatorFocus != null
+          ? "pelo PIB nominal projetado do ano (PIB 12m corrente × medianas Focus de PIB real e IPCA, compostas)"
+          : "pelo PIB nominal 12m corrente (medianas Focus do ano indisponíveis)"
+      } — aproximação; a aferição oficial considera abatimentos. Anos anteriores em cinza para padrão sazonal (superávits concentrados no início do ano).`}
       stampGiro={data.gerado_em}
       stampDado={ultCorrente ? `${anoCorrente}-${String(ultCorrente.mes).padStart(2, "0")}-01` : null}
     >
@@ -121,7 +144,13 @@ export function MetaYtdCard({ data }: { data: FiscalClassicosData }) {
               ticks={TICKS_MES}
               tickFormatter={(m: number) => MESES[Number(m) - 1] ?? String(m)}
             />
-            <YAxis {...azYAxisProps()} width={56} domain={dom} tickFormatter={(v: number) => fmtNum(v / 1000, 0)} />
+            <YAxis
+              {...azYAxisProps()}
+              width={56}
+              domain={dom}
+              tickFormatter={(v: number) => fmtNum(v / 1000, 0)}
+              label={{ value: "R$ bi", angle: -90, position: "insideLeft", fontSize: 10, fill: AZ_CHART.ticks }}
+            />
             <ReferenceLine y={0} stroke={AZ_CHART.zero} strokeOpacity={AZ_CHART.zeroOpacity} strokeWidth={1.5} />
 
             <Tooltip
@@ -182,7 +211,6 @@ export function MetaYtdCard({ data }: { data: FiscalClassicosData }) {
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <p className="mt-1 text-[10px] text-zinc-400">Eixo Y em R$ bilhões.</p>
     </ChartCard>
   );
 }

@@ -19,7 +19,7 @@ import argparse
 import json
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
 
@@ -229,6 +229,28 @@ def parse_rtn(xlsx_stream):
 FOCUS_BASE = "https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata"
 
 
+def _enxuga_focus(pontos):
+    """Reduz o histórico publicado: TODAS as observações dos últimos 90 dias +
+    apenas a ÚLTIMA observação de cada semana ISO no restante. O shape dos
+    pontos não muda — só a densidade do histórico antigo."""
+    if not pontos:
+        return pontos
+    corte = (date.today() - timedelta(days=90)).isoformat()
+    recentes = [p for p in pontos if p["data"] >= corte]
+    por_semana = {}
+    for p in pontos:  # já ordenados por data → fica a última da semana
+        if p["data"] >= corte:
+            continue
+        try:
+            y, m, d = (int(x) for x in p["data"].split("-"))
+            iso = date(y, m, d).isocalendar()
+        except (ValueError, TypeError):
+            continue
+        por_semana[(iso[0], iso[1])] = p
+    antigos = sorted(por_semana.values(), key=lambda p: p["data"])
+    return antigos + recentes
+
+
 def focus_anuais(indicador, ano_atual):
     indicador_url = indicador.replace(" ", "%20")
     url = (
@@ -260,7 +282,7 @@ def focus_anuais(indicador, ano_atual):
         })
     for ano in out:
         out[ano].sort(key=lambda x: x["data"])
-        out[ano] = out[ano][-365:]
+        out[ano] = _enxuga_focus(out[ano])
     return out
 
 
@@ -284,14 +306,21 @@ def divide_por_pib(serie_12m, pib_map):
     meses_pib = sorted(pib_map.keys())
     out = []
     ultimo_pib = None
+    ultimo_pib_mes = None
     cur_idx = 0
     for r in sorted(serie_12m, key=lambda x: x["data"]):
         while cur_idx < len(meses_pib) and meses_pib[cur_idx] <= r["data"]:
-            ultimo_pib = pib_map[meses_pib[cur_idx]]
+            ultimo_pib_mes = meses_pib[cur_idx]
+            ultimo_pib = pib_map[ultimo_pib_mes]
             cur_idx += 1
         if ultimo_pib is None or ultimo_pib == 0:
             continue
-        out.append({"data": r["data"], "valor_pct": round(r["valor_12m"] / ultimo_pib * 100, 4)})
+        ponto = {"data": r["data"], "valor_pct": round(r["valor_12m"] / ultimo_pib * 100, 4)}
+        if ultimo_pib_mes != r["data"]:
+            # PIB do próprio mês ainda não divulgado — forward-fill do último conhecido.
+            # Chave aditiva, só nos pontos afetados (não quebra consumidores).
+            ponto["pib_defasado"] = True
+        out.append(ponto)
     return out
 
 
@@ -304,6 +333,34 @@ def divide_por_receita(serie_12m, receita_12m):
             continue
         out.append({"data": r["data"], "valor_pct": round(r["valor_12m"] / rec * 100, 4)})
     return out
+
+
+def valida_identidade_12m(nome, total_12m, partes_12m):
+    """Identidade contábil validada em TODOS os meses 12m (não só o último):
+    desvio relativo >0.5% em qualquer mês → [WARN] listando os meses;
+    desvio >2% no ÚLTIMO mês → devolve mensagem de erro (o caller aborta com
+    sys.exit(1) antes do upload, com o arquivo local já escrito)."""
+    if not total_12m or not all(partes_12m):
+        return None
+    mapas = [{r["data"]: r["valor_12m"] for r in s} for s in partes_12m]
+    ultimo = total_12m[-1]["data"]
+    meses_warn = []
+    erro = None
+    for r in total_12m:
+        mes, total = r["data"], r["valor_12m"]
+        if not total:
+            continue
+        vals = [m.get(mes) for m in mapas]
+        if any(v is None for v in vals):
+            continue
+        desvio = abs(sum(vals) - total) / abs(total)
+        if desvio > 0.005:
+            meses_warn.append(f"{mes} ({desvio * 100:.2f}%)")
+        if mes == ultimo and desvio > 0.02:
+            erro = f"{nome}: desvio de {desvio * 100:.2f}% no ultimo mes ({ultimo})"
+    if meses_warn:
+        print(f"[WARN] {nome}: partes nao fecham com o total (desvio >0.5%) em: {', '.join(meses_warn)}", file=sys.stderr)
+    return erro
 
 
 def selic_real_ex_post(selic_diaria, ipca_mensal):
@@ -668,19 +725,16 @@ def main():
     incentivos_pct_pib = divide_por_pib(incentivos_12m, pib_map)
     nao_admin_pct_pib = divide_por_pib(nao_admin_12m, pib_map)
     receita_total_12m = soma_12m(rtn_data["receita_total"])
-    # validação de identidade: 1.1 + 1.2 + 1.3 + 1.4 ≈ receita total (12m, último mês)
-    if admin_12m and receita_total_12m:
-        u = receita_total_12m[-1]["data"]
-        partes = 0.0
-        for s in (admin_12m, incentivos_12m, soma_12m(rtn_data["rgps_arrecadacao"]), nao_admin_12m):
-            m = {r["data"]: r["valor_12m"] for r in s}
-            if m.get(u) is None:
-                partes = None
-                break
-            partes += m[u]
-        total = receita_total_12m[-1]["valor_12m"]
-        if partes is not None and total and abs(partes - total) / total > 0.005:
-            print(f"[WARN] famílias da receita não fecham com o total em {u}: {partes:.0f} vs {total:.0f}", file=sys.stderr)
+    # validação de identidade: 1.1 + 1.2 + 1.3 + 1.4 ≈ receita total — em TODOS
+    # os meses 12m (>0.5% em qualquer mês = WARN; >2% no último mês = ERROR
+    # coletado aqui e abortado antes do upload)
+    erros_identidade = []
+    err = valida_identidade_12m(
+        "familias da receita", receita_total_12m,
+        [admin_12m, incentivos_12m, rgps_12m, nao_admin_12m],
+    )
+    if err:
+        erros_identidade.append(err)
 
     # v2: dividendos + concessões NUMA série (o front rotulava 'Dividendos+Concessões' plotando só dividendos)
     div_map = {r["data"]: r["valor"] for r in rtn_data["dividendos"] if r["valor"] is not None}
@@ -708,20 +762,14 @@ def main():
     demais_obrig_pct_pib = divide_por_pib(soma_12m(demais_obrig_mensal), pib_map)
     obrig_fluxo_pct_pib = divide_por_pib(soma_12m(rtn_data["obrig_controle_fluxo"]), pib_map)
 
-    # validação de identidade da despesa: 4.1+4.2+4.3+4.4 ≈ despesa total (último 12m)
-    desp_partes_12m = [soma_12m(rtn_data[k]) for k in ("previdencia", "pessoal", "outras_obrigatorias", "despesa_prog_financeira")]
-    if despesa_total_12m and all(desp_partes_12m):
-        u = despesa_total_12m[-1]["data"]
-        soma_partes = 0.0
-        for s in desp_partes_12m:
-            m = {r["data"]: r["valor_12m"] for r in s}
-            if m.get(u) is None:
-                soma_partes = None
-                break
-            soma_partes += m[u]
-        total = despesa_total_12m[-1]["valor_12m"]
-        if soma_partes is not None and total and abs(soma_partes - total) / total > 0.005:
-            print(f"[WARN] rubricas da despesa não fecham com o total em {u}: {soma_partes:.0f} vs {total:.0f}", file=sys.stderr)
+    # validação de identidade da despesa: 4.1+4.2+4.3+4.4 ≈ despesa total — em
+    # TODOS os meses 12m (>0.5% = WARN; >2% no último mês = ERROR antes do upload)
+    err = valida_identidade_12m(
+        "rubricas da despesa", despesa_total_12m,
+        [previdencia_12m, pessoal_12m, outras_obrig_12m, soma_12m(rtn_data["despesa_prog_financeira"])],
+    )
+    if err:
+        erros_identidade.append(err)
 
     # ── v2: arcabouço — crescimento REAL deflacionado mês a mês pelo índice composto do 433 ──
     indice_ipca = compoe_indice_ipca(sgs["ipca_mensal_var"])
@@ -926,17 +974,27 @@ def main():
     size = out_file.stat().st_size
     print(f"\n  -> {out_file} ({size / 1024:.1f} KB)")
 
-    # Series essenciais: um dia ruim do api.bcb.gov.br nao pode zerar DBGG/DLSP
-    # no ar. Se alguma estiver vazia, recusa o upload (exit != 0; o retry diario
-    # do workflow cuida do resto) e o dado bom continua no Blob.
-    essenciais = {"dbgg": sgs["dbgg"], "dlsp_total": sgs["dlsp_total"]}
-    vazias = [nome for nome, serie in essenciais.items() if not serie]
+    # Um dia ruim do api.bcb.gov.br nao pode zerar NENHUMA serie no ar: se
+    # QUALQUER serie mensal do SGS (ou a Selic diaria) vier vazia, recusa o
+    # upload (exit != 0; o retry diario do workflow cuida do resto). O arquivo
+    # local acima ja foi escrito; o dado bom continua no Blob.
+    vazias = [nome for nome, serie in sgs.items() if not serie]
+    if not selic_diaria:
+        vazias.append("selic_diaria")
     if vazias:
         print(
-            f"[ERROR] series essenciais vazias ({', '.join(vazias)}) — upload abortado "
+            f"[ERROR] series vazias ({', '.join(vazias)}) — upload abortado "
             f"para preservar o dado existente no Blob",
             file=sys.stderr,
         )
+        sys.exit(1)
+
+    # Identidades contabeis com desvio >2% no ultimo mes: dado estrutural
+    # errado nao sobe (o WARN de >0.5% ja saiu mes a mes na validacao acima).
+    if erros_identidade:
+        print("[ERROR] identidades contabeis fora de tolerancia — upload abortado:", file=sys.stderr)
+        for e in erros_identidade:
+            print(f"  {e}", file=sys.stderr)
         sys.exit(1)
 
     if args.upload:

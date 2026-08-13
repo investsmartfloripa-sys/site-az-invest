@@ -81,7 +81,7 @@ THRESHOLDS = {
         "unidade": "%",
         "direcao": "maior_pior",
         "verde": 100, "amarelo": 150, "vermelho": 200, "break": 280,
-        "narrativa": "Dívida total = governo + privado (famílias+empresas). EUA ~250%, China ~290%, Japão ~410%.",
+        "narrativa": "Dívida total = DBGG + crédito total (SGS 20622), que inclui operações com o setor público (dupla contagem parcial com a DBGG) e exclui mercado de capitais e dívida externa corporativa (subestima a dívida privada). Comparação internacional exigiria a metodologia BIS, não disponível aqui.",
     },
     # === B. CAPACIDADE DE PAGAMENTO ===
     "juros_pct_pib": {
@@ -272,21 +272,18 @@ def calcular_score(indicadores):
 # Funções existentes mantidas
 # ============================================================================
 def projetar_debt_to_income(d0, i_aa, g_aa, pd, anos=10):
+    # Equação declarada na metodologia:
+    # Debt(t+1)/Income(t+1) = [Debt(t)·(1+i) + Primary_Deficit(t)] / [Income(t)·(1+g)]
     r = d0
-    mult = (1 + i_aa) / (1 + g_aa)
     traj = [r]
     for _ in range(anos):
-        r = r * mult + pd
+        r = (r * (1 + i_aa) + pd) / (1 + g_aa)
         traj.append(round(r, 2))
     return traj
 
 
 def matriz_debt_10y(starting, deficit_levels, i_aa, g_aa, anos=10):
     return [[round(projetar_debt_to_income(d0, i_aa, g_aa, pd, anos)[-1], 1) for pd in deficit_levels] for d0 in starting]
-
-
-def matriz_change_10y(starting, deficit_levels, i_aa, g_aa, anos=10):
-    return [[round(projetar_debt_to_income(d0, i_aa, g_aa, pd, anos)[-1] - d0, 1) for pd in deficit_levels] for d0 in starting]
 
 
 def matriz_debt_por_gap(starting, gap_levels, primary_def, g_base, anos=10):
@@ -447,12 +444,9 @@ def main():
             reer_var_12m = round((reer_map[data] / reer_map[ant] - 1) * 100, 2)
             break
 
-    # Defaults / fallbacks
-    if pib_real_yoy_pct is None: pib_real_yoy_pct = 2.0
-    if ipca_12m_pct is None: ipca_12m_pct = 4.5
-    if selic_real is None: selic_real = 9.0
+    # SEM fallbacks hardcoded: pib_real_yoy_pct / ipca_12m_pct / selic_real podem
+    # ser None — avaliar() devolve sem_dado e foto_brasil.macro publica null.
 
-    debt_pct_receita = (dbgg_pct_pib / receita_pct_pib * 100) if (dbgg_pct_pib and receita_pct_pib) else None
     pd_pct_receita = -primario_pct_receita if primario_pct_receita is not None else None
 
     # r, g, r−g e primário estabilizador: CONSUMIR do fiscal-classicos v2 (fórmula
@@ -468,27 +462,61 @@ def main():
     else:
         print("[WARN] classicos sem bloco v2 'sustentabilidade' — usando aproximações de fallback", file=sys.stderr)
         i_nominal = (juros_central_pct_pib / dbgg_pct_pib) if (juros_central_pct_pib and dbgg_pct_pib) else 0.10
-        g_nominal = (1 + pib_real_yoy_pct / 100) * (1 + ipca_12m_pct / 100) - 1
-        gap_pp = (i_nominal - g_nominal) * 100
+        if pib_real_yoy_pct is not None and ipca_12m_pct is not None:
+            g_nominal = (1 + pib_real_yoy_pct / 100) * (1 + ipca_12m_pct / 100) - 1
+        else:
+            g_nominal = None  # sem macro observada não se inventa g — matrizes/projeção/levers são pulados
+        gap_pp = (i_nominal - g_nominal) * 100 if g_nominal is not None else None
         primario_estab_pct_pib = None
         if dbgg_pct_pib and gap_pp is not None:
             primario_estab_pct_pib = (gap_pp / 100) * (dbgg_pct_pib / 100) * 100 / (1 + g_nominal)
 
+    # === Camada tempo: série histórica mensal de cada indicador (derivada do classicos) ===
+    # Construída ANTES dos escalares: debt_pct_receita sai do ÚLTIMO ponto da
+    # série joinada (numerador e denominador do MESMO mês).
+    dbgg_serie = _norm(cl["divida"]["dbgg_pct_pib"])
+    receita_pct_serie = _norm(cl["receita_e_gastos"]["receita_liquida_pct_pib"], "valor_pct")
+    juros_pct_pib_serie = _norm(cl["receita_e_gastos"]["juros_central_pct_pib"], "valor_pct")
+    credito_serie = _norm(cl.get("credito_economia", {}).get("credito_total_pct_pib"))
+    sust_norm = sorted((r for r in sust if r.get("r_aa_pct") is not None), key=lambda x: x["data"])
+
+    series_hist = {
+        "dbgg_pct_pib": dbgg_serie,
+        "dbgg_pct_receita": _join_ratio(dbgg_serie, receita_pct_serie),
+        "credito_total_pct_pib": credito_serie,
+        "divida_total_economia_pct_pib": _join_sum(dbgg_serie, credito_serie),
+        "juros_pct_pib": juros_pct_pib_serie,
+        "juros_pct_receita": _norm(cl["receita_e_gastos"]["juros_pct_receita"], "valor_pct"),
+        "custo_medio_aa_pct": [{"data": r["data"], "valor": r["r_aa_pct"]} for r in sust_norm],
+        "primario_estabilizador_pct_pib": [
+            {"data": r["data"], "valor": r["primario_estabilizador_pct_pib"]}
+            for r in sust_norm if r.get("primario_estabilizador_pct_pib") is not None
+        ],
+        "pct_indexado_selic": _norm(comp.get("selic_pct")),
+        "pct_prefixado": _norm(comp.get("prefixado_pct")),
+        "pct_cambio": _norm(comp.get("cambio_pct")),
+        "reer_var_12m_pct": _var_12m(_norm(reer_serie)),
+        "selic_real_ex_post_pct": _norm(cl["monetaria"].get("selic_real_ex_post_pct"), "selic_real_pct"),
+        "r_menos_g_pp": [{"data": r["data"], "valor": r["r_menos_g_pp"]} for r in sust_norm],
+        "primario_realizado_pct_pib": _norm(cl["receita_e_gastos"]["primario_central_pct_pib"], "valor_pct"),
+        "nfsp_pct_pib": _norm(cl["receita_e_gastos"]["nfsp_sp_12m_pct_pib"]),
+        # Levers são prescritivos (quanto falta), não estado de risco — ficam sem série.
+    }
+
+    # Escalar consistente com a série (último ponto da razão joinada)
+    _dbgg_rec_serie = series_hist["dbgg_pct_receita"]
+    debt_pct_receita = _dbgg_rec_serie[-1]["valor"] if _dbgg_rec_serie else None
+
     # Dívida total economia = DBGG + crédito total
     divida_total_pct_pib = (dbgg_pct_pib + credito_total_pct_pib) if (dbgg_pct_pib and credito_total_pct_pib) else None
 
-    # Levers
+    # Levers — só com IPCA observado (sem fallback) e g válido
     levers = None
-    if debt_pct_receita and pd_pct_receita is not None:
+    if debt_pct_receita and pd_pct_receita is not None and ipca_12m_pct is not None and g_nominal is not None:
         levers = calcular_levers(
             d=debt_pct_receita, i=i_nominal, g=g_nominal, pd=pd_pct_receita,
             despesa_pct_rec=despesa_pct_receita or 100.0, inflacao=ipca_12m_pct / 100,
         )
-
-    # Trajetoria 10y
-    traj_br = None
-    if debt_pct_receita is not None and pd_pct_receita is not None:
-        traj_br = projetar_debt_to_income(debt_pct_receita, i_nominal, g_nominal, pd_pct_receita, 10)
 
     # === Avaliar 20 indicadores semaforizados ===
     valores = {
@@ -519,39 +547,11 @@ def main():
         "lever_aumento_receita_pct": levers["lever_aumento_receita"]["aumento_pct_da_receita"] if levers and "lever_aumento_receita" in levers else None,
     }
 
-    # === Camada tempo: série histórica mensal de cada indicador (derivada do classicos) ===
-    dbgg_serie = _norm(cl["divida"]["dbgg_pct_pib"])
-    receita_pct_serie = _norm(cl["receita_e_gastos"]["receita_liquida_pct_pib"], "valor_pct")
-    juros_pct_pib_serie = _norm(cl["receita_e_gastos"]["juros_central_pct_pib"], "valor_pct")
-    credito_serie = _norm(cl.get("credito_economia", {}).get("credito_total_pct_pib"))
-    sust_norm = sorted((r for r in sust if r.get("r_aa_pct") is not None), key=lambda x: x["data"])
-
-    series_hist = {
-        "dbgg_pct_pib": dbgg_serie,
-        "dbgg_pct_receita": _join_ratio(dbgg_serie, receita_pct_serie),
-        "credito_total_pct_pib": credito_serie,
-        "divida_total_economia_pct_pib": _join_sum(dbgg_serie, credito_serie),
-        "juros_pct_pib": juros_pct_pib_serie,
-        "juros_pct_receita": _norm(cl["receita_e_gastos"]["juros_pct_receita"], "valor_pct"),
-        "custo_medio_aa_pct": [{"data": r["data"], "valor": r["r_aa_pct"]} for r in sust_norm],
-        "primario_estabilizador_pct_pib": [
-            {"data": r["data"], "valor": r["primario_estabilizador_pct_pib"]}
-            for r in sust_norm if r.get("primario_estabilizador_pct_pib") is not None
-        ],
-        "pct_indexado_selic": _norm(comp.get("selic_pct")),
-        "pct_prefixado": _norm(comp.get("prefixado_pct")),
-        "pct_cambio": _norm(comp.get("cambio_pct")),
-        "reer_var_12m_pct": _var_12m(_norm(reer_serie)),
-        "selic_real_ex_post_pct": _norm(cl["monetaria"].get("selic_real_ex_post_pct"), "selic_real_pct"),
-        "r_menos_g_pp": [{"data": r["data"], "valor": r["r_menos_g_pp"]} for r in sust_norm],
-        "primario_realizado_pct_pib": _norm(cl["receita_e_gastos"]["primario_central_pct_pib"], "valor_pct"),
-        "nfsp_pct_pib": _norm(cl["receita_e_gastos"]["nfsp_sp_12m_pct_pib"]),
-        # Levers são prescritivos (quanto falta), não estado de risco — ficam sem série.
-    }
-
     indicadores = {}
     for chave, t in THRESHOLDS.items():
         v = valores.get(chave)
+        if v is not None:
+            v = round(v, 2)  # publica/avalia em 2 casas (evita 15 casas de float no JSON)
         avali = avaliar(v, t)
         indicadores[chave] = {**t, "valor": v, **avali}
         hist = series_hist.get(chave)
@@ -607,8 +607,7 @@ def main():
             "crescimento nominal da renda; (4) dívida e serviço da dívida vs poupança."
         ),
         "divida_renda": {
-            "serie_pct_receita": series_hist["dbgg_pct_receita"],
-            "serie_pct_pib": dbgg_serie,
+            # séries em indicadores_semaforo.dbgg_pct_receita.serie e .dbgg_pct_pib.serie (front lê de lá)
             "faixas_pct_receita": _faixas("dbgg_pct_receita"),
             "faixas_pct_pib": _faixas("dbgg_pct_pib"),
             "referencias_pct_pib": (
@@ -621,7 +620,7 @@ def main():
             "_nota": "DBGG (governo geral) ÷ receita líquida 12m do governo central — proxy conservadora do Debt/Income do livro (perímetros distintos, declarado).",
         },
         "servico_renda": {
-            "serie_pct_receita": series_hist["juros_pct_receita"],
+            # série em indicadores_semaforo.juros_pct_receita.serie (front lê de lá)
             "faixas": _faixas("juros_pct_receita"),
             "_nota": (
                 "Serviço = juros nominais 12m do governo central (RTN). A rolagem de principal "
@@ -692,11 +691,38 @@ def main():
 
     metas_anos = ((cl.get("metas_ldo") or {}).get("anos")) or {}
     if dbgg_pct_pib is not None and sust_ult:
-        ano_base = int((cl.get("mes_recente") or "2026-01")[:4])
+        mes_recente = cl.get("mes_recente") or "2026-01"
+        ano_base = int(mes_recente[:4])
+        mes_base = int(mes_recente[5:7])
         b_meta = b_atual = dbgg_pct_pib
         prim_atual = primario_central_pct_pib or 0.0  # % PIB 12m, positivo = superávit
         ult_meta = None
         anos_proj = []
+
+        # (i) ANO-BASE PARCIAL: do estoque de mes_recente até dez/ano_base, com
+        # fração = meses_restantes/12 como EXPOENTE na dinâmica e fração do primário
+        # (meta vigente do ano-base, ex. 0,25 em 2026).
+        meta_base = (metas_anos.get(str(ano_base)) or {}).get("centro")
+        if meta_base is not None:
+            ult_meta = meta_base
+        fracao = (12 - mes_base) / 12
+        pib_focus0 = _focus_mediana("pib_anuais", ano_base)
+        ipca_focus0 = _focus_mediana("ipca_anuais", ano_base)
+        if fracao > 0 and pib_focus0 is not None and ipca_focus0 is not None:
+            g0 = (1 + pib_focus0 / 100) * (1 + ipca_focus0 / 100) - 1
+            p_meta0 = ult_meta if ult_meta is not None else prim_atual
+            dinamica = ((1 + i_nominal) / (1 + g0)) ** fracao
+            b_meta = b_meta * dinamica - p_meta0 * fracao
+            b_atual = b_atual * dinamica - prim_atual * fracao
+            anos_proj.append({
+                "ano": ano_base,
+                "fracao_ano": round(fracao, 4),
+                "g_nominal_focus_aa_pct": round(g0 * 100, 2),
+                "primario_cenario_meta_pct_pib": p_meta0,
+                "dbgg_cenario_meta_pct_pib": round(b_meta, 1),
+                "dbgg_cenario_primario_atual_pct_pib": round(b_atual, 1),
+            })
+
         for ano in range(ano_base + 1, ano_base + 4):
             pib_focus = _focus_mediana("pib_anuais", ano)
             ipca_focus = _focus_mediana("ipca_anuais", ano)
@@ -704,18 +730,24 @@ def main():
                 break  # sem Focus para o ano → não inventa premissa
             g_ano = (1 + pib_focus / 100) * (1 + ipca_focus / 100) - 1
             meta = (metas_anos.get(str(ano)) or {}).get("centro")
+            meta_extrapolada = False
             if meta is not None:
                 ult_meta = meta
+            elif ult_meta is not None:
+                meta_extrapolada = True  # (ii) pós-horizonte da LDO: repete a última meta, declarado
             p_meta = ult_meta if ult_meta is not None else prim_atual
             b_meta = b_meta * (1 + i_nominal) / (1 + g_ano) - p_meta
             b_atual = b_atual * (1 + i_nominal) / (1 + g_ano) - prim_atual
-            anos_proj.append({
+            ponto = {
                 "ano": ano,
                 "g_nominal_focus_aa_pct": round(g_ano * 100, 2),
                 "primario_cenario_meta_pct_pib": p_meta,
                 "dbgg_cenario_meta_pct_pib": round(b_meta, 1),
                 "dbgg_cenario_primario_atual_pct_pib": round(b_atual, 1),
-            })
+            }
+            if meta_extrapolada:
+                ponto["meta_extrapolada"] = True
+            anos_proj.append(ponto)
         hist_anual = [r for r in dbgg_serie if r["data"].endswith("-12")]
         if dbgg_serie and (not hist_anual or hist_anual[-1]["data"] != dbgg_serie[-1]["data"]):
             hist_anual = hist_anual + [dbgg_serie[-1]]
@@ -725,24 +757,50 @@ def main():
                     "Projeção ILUSTRATIVA: b(t+1) = b(t)·(1+i)/(1+g) − primário. i = taxa implícita da DLSP "
                     "(proxy declarada — os juros que acruam sobre a DBGG não são coletados); g composto "
                     "multiplicativamente do Focus (PIB real × IPCA, medianas mais recentes); SEM efeito câmbio/"
-                    "ajustes patrimoniais. Cenário A: metas LDO cumpridas (centro, % PIB); cenário B: primário 12m atual constante."
+                    "ajustes patrimoniais. Cenário A: metas LDO cumpridas (centro, % PIB); cenário B: primário 12m atual constante. "
+                    "O ano-base entra como fração (fracao_ano = meses restantes/12) a partir do estoque do mês mais recente. "
+                    "Após 2027, meta mantida em +0,50% (hipótese AZ, extrapolada — anos marcados com meta_extrapolada). "
+                    "i mantido constante (cenário juro não cede)."
                 ),
                 "historico_anual": hist_anual,
                 "premissas": {"i_aa_pct": round(i_nominal * 100, 2), "primario_atual_pct_pib": prim_atual},
                 "anos": anos_proj,
             }
 
-    # Matrizes (mantidas)
+    # Matrizes (endlevel; as change_* saíram do payload — o front não as lê mais)
     starting = [0, 100, 200, 300, 400, 500, 600, 700]
     deficit_levels = [0, 5, 10, 15, 20, 25, 30]
     gap_levels = [-3, -2, -1, 0, 1, 2, 3]
 
-    matriz_def_end = matriz_debt_10y(starting, deficit_levels, g_nominal, g_nominal)
-    matriz_def_chg = matriz_change_10y(starting, deficit_levels, g_nominal, g_nominal)
-
-    pd_br = pd_pct_receita if pd_pct_receita is not None else 12.0
-    matriz_gap_end = matriz_debt_por_gap(starting, gap_levels, pd_br, g_nominal)
-    matriz_gap_chg = [[round(v - starting[i], 1) for v in row] for i, row in enumerate(matriz_gap_end)]
+    matrizes_block = None
+    if g_nominal is not None:
+        matriz_def_end = matriz_debt_10y(starting, deficit_levels, g_nominal, g_nominal)
+        pd_br = pd_pct_receita if pd_pct_receita is not None else 12.0
+        matriz_gap_end = matriz_debt_por_gap(starting, gap_levels, pd_br, g_nominal)
+        matrizes_block = {
+            "endlevel_por_deficit": {
+                "titulo": "Debt-to-Income apos 10 anos",
+                "subtitulo": "Variando deficit primario (% Receita), assumindo i = g",
+                "eixo_y_starting": starting,
+                "eixo_x_deficit": deficit_levels,
+                "valores": matriz_def_end,
+                "brasil": {
+                    "starting": round(debt_pct_receita, 0) if debt_pct_receita else None,
+                    "deficit": round(pd_pct_receita, 0) if pd_pct_receita is not None else None,
+                },
+            },
+            "endlevel_por_gap": {
+                "titulo": "Debt-to-Income apos 10 anos",
+                "subtitulo": f"Variando (i - g), deficit primario constante {round(pd_br, 1)}% Receita",
+                "eixo_y_starting": starting,
+                "eixo_x_gap_pp": gap_levels,
+                "valores": matriz_gap_end,
+                "brasil": {
+                    "starting": round(debt_pct_receita, 0) if debt_pct_receita else None,
+                    "gap_pp": round(gap_pp, 0) if gap_pp is not None else None,
+                },
+            },
+        }
 
     foto = {
         "divida": {"dbgg_pct_pib": dbgg_pct_pib, "dbgg_pct_receita": round(debt_pct_receita, 2) if debt_pct_receita else None},
@@ -758,12 +816,13 @@ def main():
             "taxa_nominal_efetiva_aa": round(i_nominal * 100, 2),
         },
         "macro": {
+            # podem ser null quando faltar insumo — o front trata; não se inventa valor
             "pib_real_yoy_pct": pib_real_yoy_pct,
             "ipca_12m_pct": ipca_12m_pct,
             "selic_real_ex_post_pct": selic_real,
-            "g_nominal_aa_pct": round(g_nominal * 100, 2),
+            "g_nominal_aa_pct": round(g_nominal * 100, 2) if g_nominal is not None else None,
             "i_nominal_aa_pct": round(i_nominal * 100, 2),
-            "gap_i_menos_g_pp": round(gap_pp, 2),
+            "gap_i_menos_g_pp": round(gap_pp, 2) if gap_pp is not None else None,
         },
     }
 
@@ -772,55 +831,16 @@ def main():
         "gerado_em": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "fonte_base": cl.get("mes_recente"),
         "foto_brasil": foto,
-        "score_semaforo": score,
         "indicadores_semaforo": indicadores,
         "categorias_ordem": ["Carga", "Capacidade", "Estrutura", "Stress", "Levers"],
-        "trajetoria_br_pct_receita": traj_br,
-        "matrizes": {
-            "endlevel_por_deficit": {
-                "titulo": "Debt-to-Income apos 10 anos",
-                "subtitulo": "Variando deficit primario (% Receita), assumindo i = g",
-                "eixo_y_starting": starting,
-                "eixo_x_deficit": deficit_levels,
-                "valores": matriz_def_end,
-                "brasil": {
-                    "starting": round(debt_pct_receita, 0) if debt_pct_receita else None,
-                    "deficit": round(pd_pct_receita, 0) if pd_pct_receita is not None else None,
-                },
-            },
-            "change_por_deficit": {
-                "titulo": "Mudanca em 10 anos (pp)",
-                "subtitulo": "Variando deficit primario, assumindo i = g",
-                "eixo_y_starting": starting,
-                "eixo_x_deficit": deficit_levels,
-                "valores": matriz_def_chg,
-            },
-            "endlevel_por_gap": {
-                "titulo": "Debt-to-Income apos 10 anos",
-                "subtitulo": f"Variando (i - g), deficit primario constante {round(pd_br, 1)}% Receita",
-                "eixo_y_starting": starting,
-                "eixo_x_gap_pp": gap_levels,
-                "valores": matriz_gap_end,
-                "brasil": {
-                    "starting": round(debt_pct_receita, 0) if debt_pct_receita else None,
-                    "gap_pp": round(gap_pp, 0),
-                },
-            },
-            "change_por_gap": {
-                "titulo": "Mudanca em 10 anos (pp)",
-                "subtitulo": "Variando (i - g), deficit constante",
-                "eixo_y_starting": starting,
-                "eixo_x_gap_pp": gap_levels,
-                "valores": matriz_gap_chg,
-            },
-        },
+        "matrizes": matrizes_block,
         "levers": levers,
         "dalio4": dalio4,
         "embi": embi_block,
         "projecao_dbgg": projecao_dbgg,
         "premissas": {
             "i_nominal_aa": round(i_nominal * 100, 2),
-            "g_nominal_aa": round(g_nominal * 100, 2),
+            "g_nominal_aa": round(g_nominal * 100, 2) if g_nominal is not None else None,
             "primary_deficit_pct_receita": round(pd_pct_receita, 2) if pd_pct_receita is not None else None,
             "debt_pct_receita": round(debt_pct_receita, 2) if debt_pct_receita else None,
             "anos_projecao": 10,

@@ -27,9 +27,12 @@ import { fmtNum, fmtSignedNum } from "@/lib/format-br";
  * (tipicamente negativo — o denominador cresce) e resíduo cinza (ajustes
  * patrimoniais/cambiais). O losango navy marca o Δ total do ano.
  *
- * O TÍTULO é verificado contra o dado: nomeia o maior fator médio da série —
- * nunca afirma "foram os juros" a priori.
+ * O TÍTULO é verificado contra o dado: nomeia o maior fator médio da JANELA
+ * dos últimos 10 anos (declarada no próprio título) — nunca afirma "foram os
+ * juros" a priori. A média da série completa vai para o rodapé.
  */
+
+const JANELA_ANOS = 10;
 
 const COR_JUROS = AZ_BRAND.rust; // #FF5713
 const COR_PRIMARIO = AZ_BRAND.azure; // #027DFC
@@ -42,6 +45,18 @@ const FATORES = [
   { key: "crescimento", label: "Crescimento do PIB", cor: COR_CRESCIMENTO },
   { key: "residuo", label: "Ajustes patrimoniais/cambiais", cor: COR_RESIDUO },
 ] as const;
+
+type LinhaFator = Record<(typeof FATORES)[number]["key"], number>;
+
+/** Maior fator MÉDIO de um conjunto de anos — verificado no dado, não afirmado a priori. */
+function fatorDominanteDe(subset: ReadonlyArray<LinhaFator>) {
+  if (subset.length === 0) return null;
+  const medias = FATORES.map((f) => ({
+    ...f,
+    media: subset.reduce((acc, r) => acc + r[f.key], 0) / subset.length,
+  }));
+  return medias.reduce((a, b) => (b.media > a.media ? b : a));
+}
 
 /** Losango navy do Δ total — injetado como dot da Line (Recharts clona com cx/cy). */
 function DiamondDot({ cx, cy }: { cx?: number; cy?: number }) {
@@ -64,23 +79,20 @@ export function PorQueSubiuCard({ anos, geradoEm }: { anos: DecomposicaoDlspAno[
     [anos],
   );
 
-  // Maior fator MÉDIO da série — verificado no dado, não afirmado a priori.
-  const fatorDominante = useMemo(() => {
-    if (rows.length === 0) return null;
-    const medias = FATORES.map((f) => ({
-      ...f,
-      media: rows.reduce((acc, r) => acc + r[f.key], 0) / rows.length,
-    }));
-    return medias.reduce((a, b) => (b.media > a.media ? b : a));
-  }, [rows]);
+  // Janela dos últimos 10 anos p/ o título (declarada); série completa p/ o rodapé.
+  const janela = useMemo(() => rows.slice(-JANELA_ANOS), [rows]);
+  const fatorDominante = useMemo(() => fatorDominanteDe(janela), [janela]);
+  const fatorHistorico = useMemo(() => fatorDominanteDe(rows), [rows]);
+
+  const janelaLabel = janela.length > 0 ? `${janela[0].ano}–${janela[janela.length - 1].ano}` : "";
 
   const titulo = (() => {
     if (!fatorDominante) return "Por que a dívida subiu? A conta, fator a fator";
     if (fatorDominante.key === "juros")
-      return `Por que a dívida subiu? Juros — não gasto primário (${fmtSignedNum(fatorDominante.media, 1)} p.p./ano em média)`;
+      return `Por que a dívida subiu? Juros — não gasto primário (maior fator médio ${janelaLabel}: ${fmtSignedNum(fatorDominante.media, 1)} p.p./ano)`;
     if (fatorDominante.key === "primario")
-      return `Por que a dívida subiu? O resultado primário pesou mais que os juros (${fmtSignedNum(fatorDominante.media, 1)} p.p./ano em média)`;
-    return `Por que a dívida subiu? Maior fator médio: ${fatorDominante.label.toLowerCase()} (${fmtSignedNum(fatorDominante.media, 1)} p.p./ano)`;
+      return `Por que a dívida subiu? O resultado primário pesou mais que os juros (maior fator médio ${janelaLabel}: ${fmtSignedNum(fatorDominante.media, 1)} p.p./ano)`;
+    return `Por que a dívida subiu? Maior fator médio ${janelaLabel}: ${fatorDominante.label.toLowerCase()} (${fmtSignedNum(fatorDominante.media, 1)} p.p./ano)`;
   })();
 
   if (rows.length === 0) {
@@ -99,7 +111,11 @@ export function PorQueSubiuCard({ anos, geradoEm }: { anos: DecomposicaoDlspAno[
     <ChartCard
       title={titulo}
       subtitle={`Variação anual da DLSP/PIB decomposta em pontos percentuais: barra acima de zero empurra a dívida p/ cima, abaixo puxa p/ baixo. O losango é o Δ total do ano (em ${ult.ano}: ${fmtSignedNum(ult.delta, 1)} p.p.).`}
-      footer="Identidade contábil no perímetro CONSOLIDADO (DLSP, fórmula única do pipeline): Δ(dívida/PIB) = juros nominais − primário − efeito do crescimento do PIB nominal + resíduo (ajustes patrimoniais/cambiais, reconhecimento de passivos). O primário já vem com sinal p/ empilhar: déficit primário positivo = aumenta a dívida. A decomposição oficial da DBGG (Nota de Imprensa do BCB) entra quando coletada pelo pipeline."
+      footer={`Identidade contábil no perímetro CONSOLIDADO (DLSP, fórmula única do pipeline): Δ(dívida/PIB) = juros nominais − primário − efeito do crescimento do PIB nominal + resíduo (ajustes patrimoniais/cambiais, reconhecimento de passivos). O primário já vem com sinal p/ empilhar: déficit primário positivo = aumenta a dívida. O título usa a janela dos últimos ${JANELA_ANOS} anos (${janelaLabel}).${
+        fatorHistorico && rows.length > 0
+          ? ` Na série completa (${rows[0].ano}–${rows[rows.length - 1].ano}), o maior fator médio é ${fatorHistorico.label.toLowerCase()} (${fmtSignedNum(fatorHistorico.media, 1)} p.p./ano).`
+          : ""
+      } A decomposição oficial da DBGG (Nota de Imprensa do BCB) entra quando coletada pelo pipeline.`}
       stampGiro={geradoEm}
       stampDado={`${ult.ano}-12-01`}
     >

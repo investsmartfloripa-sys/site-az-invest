@@ -94,15 +94,21 @@ export function EmbiCard({ embi, stampGiro }: { embi: EmbiBlock; stampGiro?: str
 }
 
 export function ProjecaoDbggCard({ projecao, stampGiro }: { projecao: ProjecaoDbgg; stampGiro?: string | null }) {
-  const { hist, cenMeta, cenAtual, minIso, maxIso } = useMemo(() => {
+  const { hist, cenMeta, cenAtual, minIso, maxIso, anosExtrapolados } = useMemo(() => {
     const h = toPoints(projecao.historico_anual);
     const ultimo = h[h.length - 1];
     // Cenários ancorados no último ponto observado para as linhas conectarem.
     const meta: (readonly [string, number])[] = ultimo ? [ultimo] : [];
     const atual: (readonly [string, number])[] = ultimo ? [ultimo] : [];
     for (const a of projecao.anos) {
-      meta.push([`${a.ano}-12-01`, a.dbgg_cenario_meta_pct_pib]);
-      atual.push([`${a.ano}-12-01`, a.dbgg_cenario_primario_atual_pct_pib]);
+      // Ano parcial (fracao_ano 0–1): o ponto entra na linha na altura do ano
+      // já decorrida, em vez de fingir dezembro cheio.
+      const mes =
+        a.fracao_ano != null
+          ? String(Math.min(12, Math.max(1, Math.round(a.fracao_ano * 12)))).padStart(2, "0")
+          : "12";
+      meta.push([`${a.ano}-${mes}-01`, a.dbgg_cenario_meta_pct_pib]);
+      atual.push([`${a.ano}-${mes}-01`, a.dbgg_cenario_primario_atual_pct_pib]);
     }
     return {
       hist: [{ id: "dbgg_hist", label: "DBGG observada (dez. de cada ano)", color: NAVY, data: h }] as AzTimeSeries[],
@@ -110,6 +116,7 @@ export function ProjecaoDbggCard({ projecao, stampGiro }: { projecao: ProjecaoDb
       cenAtual: { id: "cen_atual", label: "cenário: primário atual constante", color: RUST, data: atual } as AzTimeSeries,
       minIso: h[0]?.[0] ?? "",
       maxIso: atual[atual.length - 1]?.[0] ?? "",
+      anosExtrapolados: projecao.anos.filter((a) => a.meta_extrapolada).map((a) => a.ano),
     };
   }, [projecao]);
 
@@ -119,7 +126,7 @@ export function ProjecaoDbggCard({ projecao, stampGiro }: { projecao: ProjecaoDb
   return (
     <ChartCard
       title="DBGG projetada — cenários com Focus"
-      subtitle={`b(t+1) = b(t)·(1+i)/(1+g) − primário · medianas do Focus até ${ultimoAno?.ano ?? "—"}`}
+      subtitle={`b(t+1) = (b(t)·(1+i) − primário) / (1+g) · medianas do Focus até ${ultimoAno?.ano ?? "—"}`}
       footer={
         <span>
           {projecao._nota} Premissas atuais: i = {projecao.premissas.i_aa_pct.toLocaleString("pt-BR")}% a.a.; primário
@@ -148,6 +155,14 @@ export function ProjecaoDbggCard({ projecao, stampGiro }: { projecao: ProjecaoDb
         yAxisLabel="% do PIB"
         refLines={[{ y: 70, label: "FMI 70%", color: NAVY }]}
       />
+      {anosExtrapolados.length > 0 ? (
+        <p className="mt-2 text-[11px] text-zinc-500">
+          {anosExtrapolados.length === 1
+            ? `${anosExtrapolados[0]}: meta extrapolada (hipótese AZ)`
+            : `${anosExtrapolados[0]}–${anosExtrapolados[anosExtrapolados.length - 1]}: meta extrapolada (hipótese AZ)`}{" "}
+          — além do horizonte legal da LDO.
+        </p>
+      ) : null}
     </ChartCard>
   );
 }

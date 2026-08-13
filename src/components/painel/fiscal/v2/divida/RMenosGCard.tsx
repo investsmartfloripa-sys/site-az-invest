@@ -117,7 +117,7 @@ export function RMenosGCard({
       toolbar={
         <AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["1y", "5y", "max"]} />
       }
-      footer="r = taxa implícita da DLSP (juros nominais 12m ÷ estoque médio); g = PIB nominal acumulado 12m, var. interanual. Painel nominal-nominal — o canônico p/ dinâmica de dívida (não confundir com a Selic real ex-post de outros cards). Perímetro único: setor público consolidado (DLSP), calculado SÓ no pipeline. Faixas cinzas: recessões CODACE/FGV (última datação: 2020)."
+      footer="r = taxa implícita da DLSP (juros nominais 12m ÷ estoque médio); g = PIB nominal acumulado 12m, var. interanual. Painel nominal-nominal — o canônico p/ dinâmica de dívida (não confundir com a Selic real ex-post de outros cards). Perímetro único: setor público consolidado (DLSP), calculado SÓ no pipeline. Ressalva: a taxa implícita da DLSP embute o resultado dos swaps cambiais do BCB e o custo de carregamento das reservas — em meses de estresse cambial, r salta por razões que não são custo estrutural da dívida. Faixas cinzas: recessões CODACE/FGV (última datação: 2020)."
       stampGiro={geradoEm}
       stampDado={dataIso(ult.data)}
     >

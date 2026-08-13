@@ -115,7 +115,7 @@ export function DespesaRubricasCard({ data }: { data: FiscalClassicosData }) {
       title={titulo}
       subtitle="Onde a despesa está alocada? Nove fatias que fecham o total, ordenadas do mais rígido (previdência) ao discricionário — stack fixo, sem toggle. A linha navy é a despesa total do RTN: o topo do stack coincide com ela."
       toolbar={<AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["1y", "5y", "max"]} />}
-      footer={'RTN, % do PIB 12m. "Demais obrigatórias" = linha 4.3 menos as sub-rubricas já plotadas (abono, BPC, FUNDEB, subsídios) — residual que evita dupla contagem; "obrigatórias c/ controle de fluxo" = linha 4.4.1; "discricionárias" = 4.4.2. Com essas fatias o stack fecha com a despesa total por construção (linha navy = auto-validação).'}
+      footer={'RTN, % do PIB 12m. "Demais obrigatórias" = linha 4.3 menos as sub-rubricas já plotadas (abono, BPC, FUNDEB, subsídios) — residual que evita dupla contagem; "obrigatórias c/ controle de fluxo" = linha 4.4.1; "discricionárias" = 4.4.2. Com essas fatias o stack fecha com a despesa total por construção (linha navy = auto-validação) — o topo coincide com a despesa total a menos de raras fatias negativas (subsídios/Proagro, 2 meses históricos).'}
       stampGiro={data.gerado_em}
       stampDado={totUlt ? mesIso(totUlt.data) : null}
     >

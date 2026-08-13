@@ -23,15 +23,17 @@ import { clipTimeRows, fmtTLabel, mergeTimeRows, mesIso, pctPoints, timeAxis, ul
 /**
  * 03a — Famílias de receita do RTN (linhas 1.1–1.4): stack FIXO e COMPLETO —
  * sem toggle de fatia (toggle muda o total e mente sobre a composição).
- * O stack fecha com a receita TOTAL; a linha navy é a receita LÍQUIDA: o vão
- * entre o topo do stack e a linha são as transferências a estados e municípios.
+ * Os incentivos fiscais (linha 1.2, levemente NEGATIVOS na maioria dos meses)
+ * são fundidos DENTRO da fatia administrada (soma ponto a ponto — agrupamento
+ * de apresentação): o stack tem 3 fatias sempre ≥ 0 e o topo continua sendo a
+ * receita TOTAL. A linha navy é a receita LÍQUIDA: o vão entre o topo do
+ * stack e a linha são as transferências a estados e municípios.
  */
 
 const FAMILIAS = [
-  { id: "adm", label: "Administrada RFB", color: AZ_SERIES[0] }, // azure
+  { id: "adm", label: "Administrada RFB (líq. de incentivos)", color: AZ_SERIES[0] }, // azure
   { id: "rgps", label: "RGPS (INSS)", color: AZ_SERIES[4] }, // violeta
   { id: "naoadm", label: "Não administrada", color: AZ_SERIES[6] }, // ciano
-  { id: "incent", label: "Incentivos fiscais", color: AZ_SERIES[7] }, // slate
 ] as const;
 
 export function ReceitaFamiliasCard({ data }: { data: FiscalClassicosData }) {
@@ -39,22 +41,36 @@ export function ReceitaFamiliasCard({ data }: { data: FiscalClassicosData }) {
   const rf = data.receita_familias;
   const rg = data.receita_e_gastos;
 
+  // Administrada LÍQUIDA de incentivos: soma ponto a ponto (linhas 1.1 + 1.2 do
+  // RTN) — agrupamento de apresentação que elimina a fatia negativa do stack.
+  const admLiqPts = useMemo(() => {
+    const incentMap = new Map(pctPoints(rf?.incentivos_fiscais_12m_pct_pib));
+    const out: [string, number][] = [];
+    for (const [iso, v] of pctPoints(rf?.administrada_rfb_12m_pct_pib)) {
+      const inc = incentMap.get(iso);
+      if (inc == null) continue; // sem incentivo no mês → fora, p/ o topo do stack seguir = receita total
+      out.push([iso, +(v + inc).toFixed(4)]);
+    }
+    return out;
+  }, [rf]);
+
   const rowsAll = useMemo(
     () =>
       mergeTimeRows({
-        adm: pctPoints(rf?.administrada_rfb_12m_pct_pib),
+        adm: admLiqPts,
         rgps: pctPoints(rf?.rgps_12m_pct_pib),
         naoadm: pctPoints(rf?.nao_administrada_12m_pct_pib),
-        incent: pctPoints(rf?.incentivos_fiscais_12m_pct_pib),
         liquida: pctPoints(rg.receita_liquida_pct_pib),
       }),
-    [rf, rg],
+    [admLiqPts, rf, rg],
   );
 
   const rows = useMemo(() => clipTimeRows(rowsAll, period), [rowsAll, period]);
   const { ticks, spanDays } = useMemo(() => timeAxis(rows), [rows]);
 
-  // Domain manual: topo = soma do stack (positivos) ou linha líquida; base = menor negativo (incentivos).
+  // Domain manual: topo = soma do stack (positivos) ou linha líquida; base = 0
+  // (com incentivos fundidos na administrada, as três fatias são sempre ≥ 0 —
+  // a guarda p/ negativos fica como cinto de segurança).
   const dom = useMemo<[number, number] | undefined>(() => {
     if (rows.length === 0) return undefined;
     let hi = -Infinity;
@@ -111,9 +127,9 @@ export function ReceitaFamiliasCard({ data }: { data: FiscalClassicosData }) {
   return (
     <ChartCard
       title={titulo}
-      subtitle="De onde vem a receita? As quatro famílias do RTN empilhadas (stack fixo — o total é sempre a receita bruta) e a receita líquida sobreposta."
+      subtitle="De onde vem a receita? As famílias do RTN em três fatias empilhadas (stack fixo — o total é sempre a receita bruta) e a receita líquida sobreposta."
       toolbar={<AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["1y", "5y", "max"]} />}
-      footer="RTN linhas 1.1 (administrada RFB), 1.2 (incentivos fiscais — pode ser levemente negativa), 1.3 (RGPS) e 1.4 (não administrada: dividendos, concessões, royalties...), em % do PIB 12m. O stack fecha com a receita TOTAL; o vão até a linha navy (receita líquida, linha III) são as transferências por repartição a estados e municípios (FPE/FPM, royalties...)."
+      footer='RTN em % do PIB 12m: "Administrada RFB (líq. de incentivos)" = linhas 1.1 + 1.2 somadas ponto a ponto (os incentivos fiscais são levemente negativos na maioria dos meses — fundi-los na administrada é agrupamento de apresentação que mantém todas as fatias ≥ 0); RGPS = linha 1.3; não administrada = linha 1.4 (dividendos, concessões, royalties...). O stack fecha com a receita TOTAL; o vão até a linha navy (receita líquida, linha III) são as transferências por repartição a estados e municípios (FPE/FPM, royalties...).'
       stampGiro={data.gerado_em}
       stampDado={liqUlt ? mesIso(liqUlt.data) : null}
     >

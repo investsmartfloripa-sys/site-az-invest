@@ -62,6 +62,7 @@ export function RiskSeriesCard({
   valorAtual?: string;
   footer?: ReactNode;
   stampGiro?: string | Date | null;
+  /** Default: última observação plotada (maxIso) — staleness honesto por card. */
   stampDado?: string | Date | null;
   height?: number;
   defaultPeriod?: AzPeriodValue;
@@ -113,7 +114,7 @@ export function RiskSeriesCard({
       subtitle={subtitle}
       footer={footer}
       stampGiro={stampGiro}
-      stampDado={stampDado}
+      stampDado={stampDado ?? (maxIso ? maxIso.slice(0, 7) : null)}
       toolbar={
         <>
           {chip}

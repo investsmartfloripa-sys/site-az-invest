@@ -42,13 +42,14 @@ export function DividaRendaCard({
   const [base, setBase] = useState<"receita" | "pib">("receita");
   const dr = dalio4.divida_renda;
 
+  // Séries vêm de indicadores_semaforo (fonte única — o dalio4 não duplica mais).
   const serieReceita = useMemo<AzTimeSeries[]>(
-    () => [{ id: "divida_receita", label: "DBGG / Receita líquida 12m", color: COR_R, data: toPoints(dr.serie_pct_receita) }],
-    [dr.serie_pct_receita],
+    () => [{ id: "divida_receita", label: "DBGG / Receita líquida 12m", color: COR_R, data: toPoints(indicadorReceita?.serie) }],
+    [indicadorReceita?.serie],
   );
   const seriePib = useMemo<AzTimeSeries[]>(
-    () => [{ id: "divida_pib", label: "DBGG / PIB", color: COR_R, data: toPoints(dr.serie_pct_pib) }],
-    [dr.serie_pct_pib],
+    () => [{ id: "divida_pib", label: "DBGG / PIB", color: COR_R, data: toPoints(indicadorPib?.serie) }],
+    [indicadorPib?.serie],
   );
 
   // Rótulos curtos — a margem direita do chart tem ~60px (a fonte completa
@@ -162,7 +163,7 @@ export function JurosInflacaoCrescimentoCard({
         </span>
       }
       stampGiro={stampGiro}
-      stampDado={stampDado}
+      stampDado={stampDado ?? (maxIso ? maxIso.slice(0, 7) : null)}
       toolbar={
         <>
           {indicadorGap?.valor != null ? (
@@ -233,7 +234,7 @@ export function PoupancaCard({
       subtitle="DBGG e juros nominais 12m ÷ poupança bruta 4T (IBGE CNT, trimestral)"
       footer={<span>{bloco._nota}</span>}
       stampGiro={stampGiro}
-      stampDado={stampDado}
+      stampDado={stampDado ?? (ult ? ult.data.slice(0, 7) : null)}
       toolbar={
         <>
           {ult?.juros_pct_poupanca != null ? (
