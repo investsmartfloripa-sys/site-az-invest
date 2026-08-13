@@ -79,11 +79,11 @@ export function DividaRendaCard({
   return (
     <RiskSeriesCard
       id="divida-renda"
-      title="1 · Dívida vs renda"
+      title="1 · Dívida / Renda"
       subtitle={
         ehReceita
-          ? "DBGG como % da receita líquida anual do governo central — o denominador de Dalio: a fonte real de pagamento."
-          : "DBGG como % do PIB — a métrica-padrão internacional, com as referências da literatura."
+          ? "DBGG ÷ receita líquida 12m (gov. central) — o denominador do livro"
+          : "DBGG em % do PIB — referências FMI e Reinhart-Rogoff"
       }
       series={ehReceita ? serieReceita : seriePib}
       faixas={ehReceita ? dr.faixas_pct_receita : dr.faixas_pct_pib}
@@ -91,7 +91,7 @@ export function DividaRendaCard({
       unit="%"
       nivel={ind?.nivel as Nivel | undefined}
       valorAtual={valorAtual}
-      height={340}
+      height={280}
       footer={
         <span>
           {dr._nota} Faixas: {dr.faixas_pct_receita.fonte} Referências no modo %PIB: FMI (Fiscal Monitor, ~70% p/
@@ -154,8 +154,13 @@ export function JurosInflacaoCrescimentoCard({
     <ChartCard
       id="juro-inflacao-crescimento"
       title="3 · Juro nominal vs inflação e crescimento"
-      subtitle="Quando o custo da dívida (r) corre acima do crescimento nominal (g), a dívida cresce sozinha — e a distância do juro à inflação mede o aperto real."
-      footer={<span>{bloco._nota ?? ""} Faixas do gap: {bloco.faixas_gap.fonte}</span>}
+      subtitle="r implícita (DLSP) × g nominal 12m × IPCA 12m — % a.a."
+      footer={
+        <span>
+          {bloco._nota ?? ""} Faixas do gap: {bloco.faixas_gap.fonte} Leitura: r &gt; g = a dívida cresce mesmo com
+          primário neutro (Domar); r − IPCA = aperto real.
+        </span>
+      }
       stampGiro={stampGiro}
       stampDado={stampDado}
       toolbar={
@@ -174,18 +179,16 @@ export function JurosInflacaoCrescimentoCard({
         benchmarks={benchmarks}
         unit="%"
         period={period}
-        height={280}
+        height={250}
         yAxisLabel="% a.a."
         seriesEndLabels
       />
-      <p className="mt-2 mb-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
-        O gap r − g (acima de zero, a dívida trabalha contra o governo)
-      </p>
+      <p className="mt-2 mb-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">Gap r − g (pp)</p>
       <AzTimeSeriesChart
         series={gapSerie}
         unit="none"
         period={period}
-        height={130}
+        height={110}
         showLegend={false}
         yAxisLabel="pp"
       />
@@ -226,8 +229,8 @@ export function PoupancaCard({
   return (
     <ChartCard
       id="divida-servico-poupanca"
-      title="4 · Dívida e serviço da dívida vs poupança"
-      subtitle="A poupança nacional é quem financia a dívida. Quanto dela o governo já toma — em estoque (anos de poupança) e em fluxo (juros)?"
+      title="4 · Dívida e serviço / Poupança"
+      subtitle="DBGG e juros nominais 12m ÷ poupança bruta 4T (IBGE CNT, trimestral)"
       footer={<span>{bloco._nota}</span>}
       stampGiro={stampGiro}
       stampDado={stampDado}
@@ -244,17 +247,16 @@ export function PoupancaCard({
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="min-w-0">
-          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">Estoque — DBGG ÷ poupança bruta anual</p>
-          <AzTimeSeriesChart series={divida} unit="none" period={period} height={230} showLegend={false} yAxisLabel="anos de poupança (×)" variant="hero" />
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">Estoque — anos de poupança (×)</p>
+          <AzTimeSeriesChart series={divida} unit="none" period={period} height={200} showLegend={false} yAxisLabel="×" variant="hero" />
         </div>
         <div className="min-w-0">
-          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">Fluxo — juros nominais 12m ÷ poupança bruta</p>
-          <AzTimeSeriesChart series={juros} unit="%" period={period} height={230} showLegend={false} yAxisLabel="% da poupança" variant="hero" />
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">Fluxo — juros ÷ poupança (%)</p>
+          <AzTimeSeriesChart series={juros} unit="%" period={period} height={200} showLegend={false} yAxisLabel="%" variant="hero" />
         </div>
       </div>
       <p className="mt-2 text-[11px] text-zinc-500">
-        Trimestral (IBGE, Contas Nacionais). Poupança bruta = renda disponível − consumo, acumulada em 4 trimestres
-        {ult ? ` — hoje ${ult.taxa_poupanca_pct_pib.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% do PIB` : ""}.
+        Poupança bruta 4T{ult ? `: ${ult.taxa_poupanca_pct_pib.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% do PIB (${ult.data})` : ""}.
       </p>
     </ChartCard>
   );

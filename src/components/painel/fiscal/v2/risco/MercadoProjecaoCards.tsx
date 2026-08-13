@@ -51,9 +51,14 @@ export function EmbiCard({ embi, stampGiro }: { embi: EmbiBlock; stampGiro?: str
 
   return (
     <ChartCard
-      title="O preço do risco no mercado — EMBI+"
-      subtitle="O spread soberano é o validador externo do semáforo: quando o mercado discorda do diagnóstico, o preço mostra."
-      footer={<span>{embi._fonte}</span>}
+      title="EMBI+ Brasil — spread soberano"
+      subtitle="IPEADATA/JPM · média mensal · pontos-base"
+      footer={
+        <span>
+          {embi._fonte} O spread soberano é o validador externo do semáforo: divergência entre preço de mercado e
+          diagnóstico é informação.
+        </span>
+      }
       stampGiro={stampGiro}
       stampDado={fimSerie}
       toolbar={
@@ -113,13 +118,13 @@ export function ProjecaoDbggCard({ projecao, stampGiro }: { projecao: ProjecaoDb
 
   return (
     <ChartCard
-      title="Para onde a dívida vai, se o Focus acertar"
-      subtitle={`DBGG projetada com a dinâmica do livro e as expectativas do mercado (Focus) — até ${ultimoAno?.ano ?? "—"}.`}
+      title="DBGG projetada — cenários com Focus"
+      subtitle={`b(t+1) = b(t)·(1+i)/(1+g) − primário · medianas do Focus até ${ultimoAno?.ano ?? "—"}`}
       footer={
         <span>
           {projecao._nota} Premissas atuais: i = {projecao.premissas.i_aa_pct.toLocaleString("pt-BR")}% a.a.; primário
           12m = {projecao.premissas.primario_atual_pct_pib.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% do
-          PIB.
+          PIB. A distância entre os dois cenários é o custo de não cumprir a meta.
         </span>
       }
       stampGiro={stampGiro}
@@ -138,15 +143,11 @@ export function ProjecaoDbggCard({ projecao, stampGiro }: { projecao: ProjecaoDb
         benchmarks={[cenMeta, cenAtual]}
         unit="%"
         period={period}
-        height={300}
+        height={280}
         dots={2.5}
         yAxisLabel="% do PIB"
-        refLines={[{ y: 70, label: "FMI ~70% (emergentes)", color: NAVY }]}
+        refLines={[{ y: 70, label: "FMI 70%", color: NAVY }]}
       />
-      <p className="mt-2 text-[11px] text-zinc-500">
-        Projeção ilustrativa — sem efeito câmbio nem ajustes patrimoniais; o g vem do Focus composto
-        multiplicativamente (PIB real × IPCA). A distância entre os dois cenários é o preço de não cumprir a meta.
-      </p>
     </ChartCard>
   );
 }
