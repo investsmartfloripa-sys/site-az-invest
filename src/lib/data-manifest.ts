@@ -178,6 +178,8 @@ export const DATA_SOURCES: DataSourceDef[] = [
   // ── Fiscal (fiscal-pipeline.yml, diário 12:00 UTC) ─────────────────────────
   { key: "fiscal_classicos", label: "Fiscal clássicos (dívida, primário, Focus)", blobPath: "data/fiscal-classicos.json", workflowName: "fiscal-pipeline.yml", cadence: "diario", painel: "fiscal", pagePath: "/painel-economico/economia/brasil/fiscal/divida" },
   { key: "fiscal_termometro", label: "Indicadores de risco fiscal", blobPath: "data/fiscal-termometro.json", workflowName: "fiscal-pipeline.yml", cadence: "diario", painel: "fiscal", pagePath: "/painel-economico/economia/brasil/fiscal/indicadores-de-risco-fiscal" },
+  { key: "fiscal_dbgg_fatores", label: "Fatores da DBGG (oficial)", blobPath: "data/fiscal-dbgg-fatores.json", workflowName: "fiscal-pipeline.yml", cadence: "diario", painel: "fiscal", pagePath: "/painel-economico/economia/brasil/fiscal/divida" },
+  { key: "fiscal_dpf_rmd", label: "DPF — prazo, rolagem e detentores (RMD)", blobPath: "data/fiscal-dpf-rmd.json", workflowName: "fiscal-pipeline.yml", cadence: "diario", painel: "fiscal", pagePath: "/painel-economico/economia/brasil/fiscal/divida" },
 
   // ── Contas externas (contas-externas-pipeline.yml, diário 23:30 UTC) ───────
   { key: "contas_externas", label: "Balanço de pagamentos (BPM6)", blobPath: "data/contas_externas.json", workflowName: "contas-externas-pipeline.yml", cadence: "diario", painel: "contas-externas" },

@@ -3,7 +3,7 @@
 import { useMemo, type ReactNode } from "react";
 
 import type { AtividadeCodaceData } from "@/lib/painel-atividade";
-import type { FiscalClassicosData, PontoMensal } from "@/lib/painel-fiscal";
+import type { FiscalClassicosData, FiscalDbggFatoresData, FiscalDpfRmdData, PontoMensal } from "@/lib/painel-fiscal";
 import { KpiCard } from "@/components/painel/core";
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { FiscalTabs } from "@/components/painel/fiscal/v2/FiscalTabs";
@@ -13,6 +13,9 @@ import { TrajetoriaDividaCard } from "./TrajetoriaDividaCard";
 import { PorQueSubiuCard } from "./PorQueSubiuCard";
 import { RMenosGCard } from "./RMenosGCard";
 import { ComposicaoDpmfiCard } from "./ComposicaoDpmfiCard";
+import { FatoresDbggCard } from "./FatoresDbggCard";
+import { DpfRmdCard } from "./DpfRmdCard";
+import { DetentoresDpmfiCard } from "./DetentoresDpmfiCard";
 import { AnaliseCompletaDivida } from "./AnaliseCompletaDivida";
 
 /**
@@ -40,7 +43,19 @@ function Divisor({ label, info }: { label: string; info?: ReactNode }) {
   );
 }
 
-export function PainelDividaV2({ data, codace }: { data: FiscalClassicosData; codace: AtividadeCodaceData | null }) {
+export function PainelDividaV2({
+  data,
+  codace,
+  fatoresDbgg,
+  dpfRmd,
+}: {
+  data: FiscalClassicosData;
+  codace: AtividadeCodaceData | null;
+  /** Onda 3 — decomposição oficial da ΔDBGG (blob pode ainda não existir → card não renderiza). */
+  fatoresDbgg?: FiscalDbggFatoresData | null;
+  /** Onda 3 — RMD/Tesouro (blob pode ainda não existir → cards não renderizam). */
+  dpfRmd?: FiscalDpfRmdData | null;
+}) {
   const sust = data.sustentabilidade?.serie ?? [];
   const ultSust = sust.length > 0 ? sust[sust.length - 1] : null;
 
@@ -181,24 +196,37 @@ export function PainelDividaV2({ data, codace }: { data: FiscalClassicosData; co
       {/* ── Dinâmica da dívida ── */}
       <Divisor
         label="Dinâmica da dívida"
-        info="Quem empurra e quem segura a dívida: a decomposição anual da ΔDLSP (juros, primário, crescimento, ajustes) e a aritmética r − g — quando o custo implícito supera o crescimento nominal, só superávit primário estabiliza."
+        info="Quem empurra e quem segura a dívida: a decomposição anual da ΔDLSP (calculada pelo pipeline), a decomposição OFICIAL da ΔDBGG (fatores condicionantes do BCB) e a aritmética r − g — quando o custo implícito supera o crescimento nominal, só superávit primário estabiliza."
       />
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
         {data.decomposicao_dlsp?.anos?.length ? (
           <PorQueSubiuCard anos={data.decomposicao_dlsp.anos} geradoEm={data.gerado_em} />
+        ) : null}
+        {fatoresDbgg?.anual?.length ? (
+          <FatoresDbggCard fatores={fatoresDbgg} geradoEm={fatoresDbgg.gerado_em} />
         ) : null}
         {sust.length > 0 ? (
           <RMenosGCard serie={sust} codaceMensal={codace?.mensal} geradoEm={data.gerado_em} />
         ) : null}
       </div>
 
-      {/* ── Estrutura ── */}
+      {/* ── Estrutura e rolagem (DPF) ── */}
       <Divisor
-        label="Estrutura"
-        info="De que é feita a dívida mobiliária: a DPMFi por indexador, com as seis fatias fechando 100% — onde mora a vulnerabilidade a juros, inflação e câmbio."
+        label={dpfRmd ? "Estrutura e rolagem (DPF)" : "Estrutura"}
+        info="De que é feita a dívida e quem a carrega: a DPMFi por indexador (vulnerabilidade a juros, inflação e câmbio), os detentores por categoria (RMD) e o perfil de rolagem da DPF — prazo médio, % vincendo em 12 meses e custo médio."
       />
-      {data.composicao_dpmfi ? (
+      {dpfRmd?.detentores_brl_bi?.length ? (
+        <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+          {data.composicao_dpmfi ? (
+            <ComposicaoDpmfiCard composicao={data.composicao_dpmfi} geradoEm={data.gerado_em} />
+          ) : null}
+          <DetentoresDpmfiCard detentores={dpfRmd.detentores_brl_bi} geradoEm={dpfRmd.gerado_em} />
+        </div>
+      ) : data.composicao_dpmfi ? (
         <ComposicaoDpmfiCard composicao={data.composicao_dpmfi} geradoEm={data.gerado_em} />
+      ) : null}
+      {dpfRmd && (dpfRmd.prazo_medio_dpf_anos?.length || dpfRmd.vincendo_12m_pct?.length) ? (
+        <DpfRmdCard dpf={dpfRmd} geradoEm={dpfRmd.gerado_em} />
       ) : null}
 
       {/* ── Análise completa ── */}
@@ -241,6 +269,13 @@ export function PainelDividaV2({ data, codace }: { data: FiscalClassicosData; co
           <p>
             <strong>Casa canônica.</strong> O crédito privado / endividamento agregado (Big Debt Cycle, SGS 20622) vive
             nos indicadores de Carga da aba Indicadores de risco — saiu desta aba p/ não misturar perímetros.
+          </p>
+          <p>
+            <strong>Onda 3 — fontes novas (cards condicionais).</strong> Decomposição oficial da ΔDBGG: fatores
+            condicionantes da Nota de Imprensa/BCB (build_fiscal_dbgg_fatores.py → data/fiscal-dbgg-fatores.json).
+            Prazo médio, % vincendo em 12m, custo médio e detentores da DPMFi: Relatório Mensal da Dívida — RMD/Tesouro
+            (build_dpf_rmd.py → data/fiscal-dpf-rmd.json). Enquanto o pipeline não publica esses blobs, os cards
+            correspondentes não aparecem.
           </p>
           <p>Pipeline: data-pipeline/python/build_fiscal.py (schema v2) · GitHub Actions fiscal-pipeline.yml.</p>
         </div>

@@ -10,7 +10,7 @@ import type { FiscalTermometroData, PontoMensal } from "@/lib/painel-fiscal";
 import { fmtMesCurto, fmtNum, fmtPct, fmtSignedNum } from "@/lib/format-br";
 import { DividaRendaCard, JurosInflacaoCrescimentoCard, PoupancaCard } from "./Dalio4Cards";
 import { LeverCard, MatrizDalio, viabilidadeLever } from "./LivroDalio";
-import { EmbiCard, ProjecaoDbggCard } from "./MercadoProjecaoCards";
+import { EmbiCard, ProjecaoDbggCard, SpreadSoberanoCard } from "./MercadoProjecaoCards";
 import { RiskSeriesCard } from "./RiskSeriesCard";
 import { DistribuicaoBar, SemaforoTempoGrid } from "./SemaforoTempo";
 import { dataIso, deltaDozeMeses, toPoints } from "./shared";
@@ -61,6 +61,16 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
     const jurosPoupanca = deltaDozeMeses(poupSerie);
     return { dividaReceita, servico, gap, jurosPoupanca };
   }, [dalio4, indicadores]);
+
+  // Onda 3: serviço TOTAL (juros + principal vincendo 12m) ÷ receita — benchmark
+  // tracejado no card de serviço; ausente enquanto o blob DPF não existir.
+  const servicoTotalPts = useMemo(
+    () =>
+      toPoints(
+        (data.servico_total?.serie ?? []).map((p) => ({ data: p.data, valor: p.valor_pct_receita })),
+      ),
+    [data.servico_total],
+  );
 
   const mesRef = dado ? fmtMesCurto(dataIso(dado)) : "—";
 
@@ -162,6 +172,18 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
               data: toPoints(indicadores.juros_pct_receita?.serie),
             },
           ]}
+          benchmarks={
+            servicoTotalPts.length > 0
+              ? [
+                  {
+                    id: "servico_total",
+                    label: "serviço total incl. rolagem de principal",
+                    color: "#94A3B8",
+                    data: servicoTotalPts,
+                  },
+                ]
+              : undefined
+          }
           faixas={dalio4.servico_renda.faixas}
           nivel={indicadores.juros_pct_receita?.nivel}
           valorAtual={
@@ -170,10 +192,11 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
               : undefined
           }
           height={280}
-          showLegend={false}
+          showLegend={servicoTotalPts.length > 0}
           footer={
             <span>
               {dalio4.servico_renda._nota} {dalio4.servico_renda.faixas.fonte}
+              {servicoTotalPts.length > 0 && data.servico_total ? <> {data.servico_total._nota}</> : null}
             </span>
           }
           stampGiro={giro}
@@ -198,17 +221,20 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
       ) : null}
 
       {/* ── Mercado e cenários ── */}
-      {data.embi?.serie?.length || data.projecao_dbgg?.anos?.length ? (
+      {data.spread_soberano?.serie?.length || data.embi?.serie?.length || data.projecao_dbgg?.anos?.length ? (
         <>
           <Divisor
             label="Mercado e cenários"
-            info="EMBI+ = o preço que o mercado cobrava do risco Brasil (fonte pública descontinuada em 2024 — o card mantém o histórico). Projeção da DBGG = dinâmica de dívida do livro alimentada pelas medianas do Focus; ilustrativa, sem efeito câmbio."
+            info="Spread soberano vivo = o preço ATUAL que o mercado cobra do risco Brasil (proxy declarada no card). EMBI+ = o preço que o mercado cobrava (fonte pública descontinuada em 2024 — o card mantém o histórico). Projeção da DBGG = dinâmica de dívida do livro alimentada pelas medianas do Focus; ilustrativa, sem efeito câmbio."
           />
           <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
-            {data.embi?.serie?.length ? <EmbiCard embi={data.embi} stampGiro={giro} /> : null}
+            {data.spread_soberano?.serie?.length ? (
+              <SpreadSoberanoCard spread={data.spread_soberano} stampGiro={giro} />
+            ) : null}
             {data.projecao_dbgg?.anos?.length ? (
               <ProjecaoDbggCard projecao={data.projecao_dbgg} stampGiro={giro} />
             ) : null}
+            {data.embi?.serie?.length ? <EmbiCard embi={data.embi} stampGiro={giro} /> : null}
           </div>
         </>
       ) : null}
@@ -353,7 +379,10 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
             receita líquida do governo central — proxy conservadora, declarada. r, g, r − g e o primário estabilizador
             vêm do bloco de sustentabilidade do pipeline (taxa implícita da DLSP × PIB nominal 12m, perímetro único do
             setor público consolidado) — calculados uma vez, nunca recalculados no front. Serviço da dívida = juros
-            nominais 12m (RTN); a rolagem de principal (% vincendo da DPF, RMD/Tesouro) entra numa fase 2.
+            nominais 12m (RTN);{" "}
+            {servicoTotalPts.length > 0
+              ? "o serviço TOTAL (juros + principal vincendo em 12m, RMD/Tesouro) entra como benchmark tracejado no mesmo card — as faixas de risco seguem calibradas para a série de juros."
+              : "a rolagem de principal (% vincendo da DPF, RMD/Tesouro) entra como série adicional (servico_total) assim que o pipeline publicar o blob DPF."}
           </p>
           <p>
             <strong>Poupança.</strong> IBGE, Contas Nacionais Trimestrais (SIDRA t/2072): poupança bruta e PIB somados

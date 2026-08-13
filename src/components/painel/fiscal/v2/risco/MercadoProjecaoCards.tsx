@@ -5,12 +5,15 @@ import { useMemo, useState } from "react";
 import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AzTimeSeriesChart, type AzRefLine, type AzTimeSeries, type AzXRefArea } from "@/components/painel/charts/AzTimeSeriesChart";
 import { ChartCard } from "@/components/painel/core";
-import type { EmbiBlock, ProjecaoDbgg } from "@/lib/painel-fiscal";
+import type { EmbiBlock, ProjecaoDbgg, SpreadSoberano } from "@/lib/painel-fiscal";
 import { fmtNum } from "@/lib/format-br";
+import { CockpitChip } from "../divida/shared";
 import { toPoints } from "./shared";
 
 /**
- * Os dois cards de contexto da aba de risco:
+ * Os cards de contexto de mercado da aba de risco:
+ * - Spread soberano VIVO (Onda 3) — o sucessor do EMBI+; proxy declarada na
+ *   _nota do bloco, com mediana e banda p25–p75 dos últimos 10 anos.
  * - EMBI+ — o preço que o mercado COBRAVA do risco Brasil (fonte pública
  *   descontinuada em 2024; o card diz isso com todas as letras).
  * - Projeção da DBGG com Focus — conecta o framework do livro à expectativa
@@ -27,6 +30,80 @@ const MARCOS_EMBI: AzXRefArea[] = [
   { x1: "2016-12-01", x2: "2017-02-01", label: "teto de gastos", color: "#132960", opacity: 0.1 },
   { x1: "2023-08-01", x2: "2023-10-01", label: "arcabouço fiscal", color: "#1E8A5C", opacity: 0.12 },
 ];
+
+export function SpreadSoberanoCard({ spread, stampGiro }: { spread: SpreadSoberano; stampGiro?: string | null }) {
+  const [period, setPeriod] = useState<AzPeriodValue>({ id: "max" });
+
+  const { serie, minIso, maxIso } = useMemo(() => {
+    const pts = toPoints(spread.serie);
+    return {
+      serie: [{ id: "spread_soberano", label: "Spread soberano (p.p.)", color: NAVY, data: pts }] as AzTimeSeries[],
+      minIso: pts[0]?.[0] ?? "",
+      maxIso: pts[pts.length - 1]?.[0] ?? "",
+    };
+  }, [spread.serie]);
+
+  const p = spread.percentis_10a;
+  const refAreas =
+    p.p25 != null && p.p75 != null
+      ? [{ y1: p.p25, y2: p.p75, color: AZURE, opacity: 0.07, label: "p25–p75 (últimos 10 anos)" }]
+      : [];
+  const refLines: AzRefLine[] =
+    p.p50 != null ? [{ y: p.p50, label: `mediana 10a: ${fmtNum(p.p50, 1)} p.p.`, color: AZURE }] : [];
+
+  // Posição do último valor contra a banda p25–p75 — verificada no dado, nunca afirmada.
+  const ult = spread.ultimo;
+  const posicao =
+    ult?.valor == null || p.p25 == null || p.p75 == null
+      ? null
+      : ult.valor > p.p75
+        ? "acima do p75"
+        : ult.valor < p.p25
+          ? "abaixo do p25"
+          : "dentro de p25–p75";
+
+  return (
+    <ChartCard
+      title="Spread soberano — vivo"
+      subtitle={`${spread._fonte} · média mensal · ${spread.unidade}`}
+      footer={
+        <span>
+          {spread._nota} O spread é o validador externo do semáforo: divergência entre o preço de mercado e o
+          diagnóstico dos indicadores é informação. Mediana e banda p25–p75 calculadas nos últimos 10 anos da série.
+        </span>
+      }
+      stampGiro={stampGiro}
+      stampDado={ult?.data ?? (maxIso || null)}
+      toolbar={
+        <>
+          {ult?.valor != null ? (
+            <CockpitChip cor={posicao === "acima do p75" ? RUST : NAVY}>
+              {fmtNum(ult.valor, 1)} p.p.{posicao ? ` · ${posicao}` : ""}
+            </CockpitChip>
+          ) : null}
+          <AzPeriodSelector
+            value={period}
+            onChange={setPeriod}
+            min={minIso || undefined}
+            max={maxIso || undefined}
+            periods={["ytd", "1y", "5y", "max"]}
+          />
+        </>
+      }
+    >
+      <AzTimeSeriesChart
+        series={serie}
+        unit="none"
+        period={period}
+        height={280}
+        refAreas={refAreas}
+        refLines={refLines}
+        showLegend={false}
+        yAxisLabel="p.p."
+      />
+    </ChartCard>
+  );
+}
 
 export function EmbiCard({ embi, stampGiro }: { embi: EmbiBlock; stampGiro?: string | null }) {
   const [period, setPeriod] = useState<AzPeriodValue>({ id: "max" });

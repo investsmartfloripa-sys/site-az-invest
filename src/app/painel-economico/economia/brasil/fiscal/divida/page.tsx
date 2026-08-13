@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { DividaDashboard } from "@/components/painel/fiscal/DividaDashboard";
 import { PainelDividaV2 } from "@/components/painel/fiscal/v2/divida/PainelDividaV2";
-import { loadFiscalClassicos } from "@/lib/painel-fiscal";
+import { loadFiscalClassicos, loadFiscalDbggFatores, loadFiscalDpfRmd } from "@/lib/painel-fiscal";
 import { loadAtividadeCodace } from "@/lib/painel-atividade";
 
 export const metadata: Metadata = {
@@ -14,7 +14,13 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function PainelDividaPage() {
-  const [data, codace] = await Promise.all([loadFiscalClassicos(), loadAtividadeCodace()]);
+  // Blobs da Onda 3 (fatores DBGG + RMD) podem ainda não existir → null → cards não renderizam.
+  const [data, codace, fatoresDbgg, dpfRmd] = await Promise.all([
+    loadFiscalClassicos(),
+    loadAtividadeCodace(),
+    loadFiscalDbggFatores(),
+    loadFiscalDpfRmd(),
+  ]);
   if (!data) {
     return (
       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
@@ -27,5 +33,5 @@ export default async function PainelDividaPage() {
   if (!data.schema_version || data.schema_version < 2 || !data.decomposicao_dlsp?.anos?.length) {
     return <DividaDashboard data={data} />;
   }
-  return <PainelDividaV2 data={data} codace={codace} />;
+  return <PainelDividaV2 data={data} codace={codace} fatoresDbgg={fatoresDbgg} dpfRmd={dpfRmd} />;
 }

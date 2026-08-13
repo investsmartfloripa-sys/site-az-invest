@@ -40,6 +40,16 @@ jobs:
         run: python data-pipeline/python/build_fiscal.py --upload
         continue-on-error: true
 
+      # Onda 3: DPF/RMD e fatores da DBGG ANTES do termômetro — o bloco
+      # servico_total do termômetro lê o blob fiscal-dpf-rmd recém-publicado.
+      - name: Build DPF/RMD (Tesouro) + upload Blob
+        run: python data-pipeline/python/build_dpf_rmd.py --upload
+        continue-on-error: true
+
+      - name: Build Fatores DBGG (BCB) + upload Blob
+        run: python data-pipeline/python/build_fiscal_dbgg_fatores.py --upload --no-backfill
+        continue-on-error: true
+
       - name: Build Termômetro Fiscal + upload Blob
         run: python data-pipeline/python/build_fiscal_termometro.py --upload
         continue-on-error: true

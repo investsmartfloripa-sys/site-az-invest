@@ -21,6 +21,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import requests
+
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from shared.blob_upload import maybe_upload_json
@@ -362,6 +364,138 @@ def coletar_classicos(out_dir):
 
 
 # ============================================================================
+# Onda 3 (a): spread soberano vivo — pré 5a (ANBIMA ETTJ) − Treasury 5a (FRED)
+# ============================================================================
+FRED_DGS5_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS5&cosd=2004-01-01"
+
+
+def _fred_dgs5():
+    """CSV keyless do FRED (observation_date,DGS5) -> {'YYYY-MM-DD': float}."""
+    r = requests.get(FRED_DGS5_URL, timeout=60, headers={"User-Agent": "Mozilla/5.0 (az-invest-fiscal)"})
+    r.raise_for_status()
+    out = {}
+    for line in r.text.splitlines()[1:]:
+        parts = line.strip().split(",")
+        if len(parts) != 2:
+            continue
+        d, v = parts
+        if v in ("", "."):
+            continue
+        try:
+            out[d] = float(v)
+        except ValueError:
+            continue
+    return out
+
+
+def montar_spread_soberano():
+    """Bloco spread_soberano: série mensal (média dos dias comuns) do spread
+    pré 5a BR − Treasury 5a EUA, com último valor e percentis de 10 anos.
+    Retorna None (bloco ausente) se uma das fontes falhar."""
+    ettj = download_json("data/br_ettj.json")
+    dates = (ettj or {}).get("dates") or {}
+    if not dates:
+        print("[WARN] br_ettj indisponível — spread_soberano ficará ausente", file=sys.stderr)
+        return None
+    try:
+        dgs5 = _fred_dgs5()
+    except Exception as e:  # noqa: BLE001
+        print(f"[WARN] FRED DGS5 falhou ({e}) — spread_soberano ficará ausente", file=sys.stderr)
+        return None
+    if not dgs5:
+        print("[WARN] FRED DGS5 vazio — spread_soberano ficará ausente", file=sys.stderr)
+        return None
+
+    # spread diário nas datas comuns; tenor 5a = pre[2] no shape do br_ettj
+    por_mes: dict[str, list[float]] = {}
+    for d, row in dates.items():
+        pre = (row or {}).get("pre")
+        us = dgs5.get(d)
+        if not pre or len(pre) < 3 or pre[2] is None or us is None:
+            continue
+        por_mes.setdefault(d[:7], []).append(pre[2] - us)
+    if not por_mes:
+        print("[WARN] nenhuma data comum ETTJ×FRED — spread_soberano ficará ausente", file=sys.stderr)
+        return None
+
+    serie = [
+        {"data": mes, "valor": round(sum(vals) / len(vals), 2)}
+        for mes, vals in sorted(por_mes.items())
+    ]
+    ult = serie[-1]
+    corte = f"{int(ult['data'][:4]) - 10}-01"
+    vals_10a = sorted(r["valor"] for r in serie if r["data"] >= corte)
+
+    def _pct(p):
+        if not vals_10a:
+            return None
+        k = max(0, min(len(vals_10a) - 1, int(round(p / 100 * (len(vals_10a) - 1)))))
+        return round(vals_10a[k], 2)
+
+    return {
+        "_fonte": (
+            "Curva pré ANBIMA (ETTJ, vértice 5 anos — blob br_ettj) menos US Treasury 5 anos "
+            "(FRED DGS5, constant maturity). Spread diário nas datas comuns, agregado em média mensal."
+        ),
+        "_nota": (
+            "Spread NOMINAL entre moedas distintas (BRL vs USD): embute inflação esperada relativa, "
+            "prêmio cambial e risco fiscal/de crédito — não é um credit spread puro (para isso seria "
+            "preciso CDS ou soberano BRL vs USD no mesmo emissor). Tenor de 5 anos segue a convenção "
+            "do CDS 5y, a referência usual de risco soberano."
+        ),
+        "unidade": "p.p.",
+        "serie": serie,
+        "ultimo": ult,
+        "percentis_10a": {"p25": _pct(25), "p50": _pct(50), "p75": _pct(75)},
+    }
+
+
+# ============================================================================
+# Onda 3 (b): serviço total da dívida — juros 12m + principal vincendo 12m
+# ============================================================================
+def montar_servico_total(cl, out_dir):
+    """(juros_central_12m + % vincendo 12m × estoque DPF) ÷ receita líquida 12m.
+    Lê o blob data/fiscal-dpf-rmd.json (ou o arquivo local se o blob ainda não
+    existir). Retorna None sem quebrar se o DPF não estiver disponível."""
+    dpf = download_json("data/fiscal-dpf-rmd.json")
+    if not dpf:
+        local = out_dir / "fiscal-dpf-rmd.json"
+        if local.exists():
+            dpf = json.loads(local.read_text(encoding="utf-8"))
+    if not dpf:
+        print("[WARN] fiscal-dpf-rmd indisponível (blob e local) — servico_total ficará null", file=sys.stderr)
+        return None
+
+    vinc = {r["data"]: r["valor"] for r in dpf.get("vincendo_12m_pct") or []}
+    estoque = {r["data"]: r["valor"] for r in dpf.get("estoque_dpf_brl_bi") or []}
+    rg = cl.get("receita_e_gastos") or {}
+    juros = {r["data"]: r.get("valor_12m") for r in rg.get("juros_central_12m_brl_mm") or []}
+    receita = {r["data"]: r.get("valor_12m") for r in rg.get("receita_liquida_12m_brl_mm") or []}
+
+    serie = []
+    for mes in sorted(set(vinc) & set(estoque) & set(juros) & set(receita)):
+        j, rec = juros[mes], receita[mes]
+        if j is None or not rec:
+            continue
+        # principal vincendo em 12m, em R$ mi: % vincendo × estoque DPF (R$ bi → R$ mi)
+        principal_mi = vinc[mes] / 100.0 * estoque[mes] * 1000.0
+        serie.append({"data": mes, "valor_pct_receita": round((j + principal_mi) / rec * 100, 2)})
+    if not serie:
+        print("[WARN] nenhum mês comum DPF×clássicos — servico_total ficará null", file=sys.stderr)
+        return None
+
+    return {
+        "_nota": (
+            "Serviço TOTAL da dívida em % da receita líquida 12m do governo central: juros nominais 12m "
+            "(RTN) + principal da DPF vincendo em 12 meses (% vincendo × estoque DPF, RMD/Tesouro). "
+            "O principal é ROLÁVEL — a série mede a necessidade bruta de refinanciamento, não despesa; "
+            "por isso complementa (e não substitui) o juros/receita do semáforo."
+        ),
+        "serie": serie,
+    }
+
+
+# ============================================================================
 # Séries históricas dos indicadores — a "camada tempo" da aba de risco.
 # Tudo derivado do fiscal-classicos (nenhuma coleta nova aqui).
 # ============================================================================
@@ -645,7 +779,8 @@ def main():
             "faixas": _faixas("juros_pct_receita"),
             "_nota": (
                 "Serviço = juros nominais 12m do governo central (RTN). A rolagem de principal "
-                "(% da DPF vincendo em 12m, RMD/Tesouro) entra numa fase 2 — o RMD não está no CKAN do Tesouro Transparente."
+                "(% da DPF vincendo em 12m × estoque, RMD/Tesouro) existe como série adicional em "
+                "servico_total (juros + principal vincendo 12m, % da receita líquida 12m)."
             ),
         },
         "juros_inflacao_crescimento": {
@@ -698,6 +833,10 @@ def main():
         }
     else:
         print("[WARN] EMBI indisponível (blob antecedentes) — card ficará oculto", file=sys.stderr)
+
+    # === Onda 3: spread soberano vivo (pré 5a − Treasury 5a) e serviço total ===
+    spread_soberano = montar_spread_soberano()
+    servico_total = montar_servico_total(cl, out_dir)
 
     # === Projeção DBGG com Focus (ilustrativa, sem efeito câmbio) ===
     projecao_dbgg = None
@@ -858,6 +997,8 @@ def main():
         "levers": levers,
         "dalio4": dalio4,
         "embi": embi_block,
+        "spread_soberano": spread_soberano,
+        "servico_total": servico_total,
         "projecao_dbgg": projecao_dbgg,
         "premissas": {
             "i_nominal_aa": round(i_nominal * 100, 2),
@@ -890,6 +1031,14 @@ def main():
     print(f"  -> {out_file} ({size / 1024:.1f} KB)")
     print(f"  Score: {score}")
     print(f"  Indicadores com nivel break: {[k for k, v in indicadores.items() if v['nivel'] == 'break']}")
+    if spread_soberano:
+        print(f"  Spread soberano: ultimo {spread_soberano['ultimo']} | percentis 10a {spread_soberano['percentis_10a']}")
+    else:
+        print("  Spread soberano: AUSENTE")
+    if servico_total:
+        print(f"  Servico total: ultimo {servico_total['serie'][-1]}")
+    else:
+        print("  Servico total: null")
 
     if args.upload:
         maybe_upload_json(out_file, BLOB_PATH)

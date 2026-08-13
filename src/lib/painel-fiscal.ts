@@ -283,6 +283,28 @@ export type Dalio4 = {
   };
 };
 
+/**
+ * Onda 3: spread soberano VIVO (proxy declarada no _nota do bloco) — o
+ * sucessor do EMBI+ descontinuado. Unidade: p.p.
+ */
+export type SpreadSoberano = {
+  _fonte: string;
+  _nota: string;
+  unidade: string;
+  serie: PontoMensal[];
+  ultimo: { data: string; valor: number };
+  percentis_10a: { p25: number; p50: number; p75: number };
+};
+
+/**
+ * Onda 3: serviço TOTAL da dívida — (juros 12m + principal vincendo 12m) ÷
+ * receita 12m. Ausente/null enquanto o blob DPF (RMD) não existir.
+ */
+export type ServicoTotal = {
+  _nota: string;
+  serie: { data: string; valor_pct_receita: number | null }[];
+};
+
 /** v3: EMBI+ histÃ³rico (fonte pÃºblica descontinuada em jul/2024 â€” flag no bloco). */
 export type EmbiBlock = {
   _fonte: string;
@@ -347,6 +369,9 @@ export type FiscalTermometroData = {
   dalio4?: Dalio4;
   embi?: EmbiBlock | null;
   projecao_dbgg?: ProjecaoDbgg | null;
+  /** Onda 3 â€” presentes sÃ³ depois que o pipeline novo publica. */
+  spread_soberano?: SpreadSoberano | null;
+  servico_total?: ServicoTotal | null;
   premissas: {
     i_nominal_aa: number;
     g_nominal_aa: number;
@@ -357,6 +382,70 @@ export type FiscalTermometroData = {
   /** Onda 0: nota de calibração das faixas (renderizada na ficha técnica). */
   calibracao_nota?: string;
   metodologia: string;
+};
+
+// === fiscal-dbgg-fatores.json (Onda 3 — build_fiscal_dbgg_fatores.py) ===
+
+/**
+ * Decomposição OFICIAL da variação da DBGG (Nota de Imprensa/BCB), anual em
+ * p.p. do PIB. juros + emissões + câmbio + outros + efeito PIB ≈ Δ total.
+ */
+export type DbggFatoresAno = {
+  ano: number;
+  variacao_dbgg_pp_pib: number;
+  juros_nominais_pp: number;
+  emissoes_liquidas_pp: number;
+  ajuste_cambial_pp: number;
+  outros_pp: number;
+  efeito_pib_pp: number;
+};
+
+/** Mesma decomposição em fluxo mensal, R$ milhões (sem efeito PIB — só fatores). */
+export type DbggFatoresMes = {
+  data: string;
+  variacao_dbgg_brl_mm: number;
+  juros_nominais_brl_mm: number;
+  emissoes_liquidas_brl_mm: number;
+  ajuste_cambial_brl_mm: number;
+  outros_brl_mm: number;
+};
+
+export type FiscalDbggFatoresData = {
+  schema_version: number;
+  gerado_em: string;
+  _fonte: string;
+  /** "outros" = dívida externa-outros ajustes + reconhecimento de dívidas + privatizações. */
+  _nota: string;
+  anual: DbggFatoresAno[];
+  mensal: DbggFatoresMes[];
+};
+
+// === fiscal-dpf-rmd.json (Onda 3 — build_dpf_rmd.py) ===
+
+/** Detentores da DPMFi em mercado, estoque em R$ bilhões por categoria. */
+export type DetentoresDpmfiPonto = {
+  data: string;
+  instituicoes_financeiras: number;
+  fundos: number;
+  previdencia: number;
+  nao_residentes: number;
+  governo: number;
+  seguradoras: number;
+  outros: number;
+};
+
+/** Relatório Mensal da Dívida (RMD/Tesouro): prazo, rolagem, custo e detentores. */
+export type FiscalDpfRmdData = {
+  schema_version: number;
+  gerado_em: string;
+  _fonte: string;
+  _nota: string;
+  prazo_medio_dpf_anos: PontoMensal[];
+  vincendo_12m_pct: PontoMensal[];
+  custo_medio_12m_aa_pct: PontoMensal[];
+  pct_nao_residentes: PontoMensal[];
+  detentores_brl_bi: DetentoresDpmfiPonto[];
+  estoque_dpf_brl_bi: PontoMensal[];
 };
 
 async function fetchBlobJson<T>(path: string): Promise<T | null> {
@@ -375,4 +464,10 @@ export async function loadFiscalClassicos(): Promise<FiscalClassicosData | null>
 }
 export async function loadFiscalTermometro(): Promise<FiscalTermometroData | null> {
   return fetchBlobJson<FiscalTermometroData>("data/fiscal-termometro.json");
+}
+export async function loadFiscalDbggFatores(): Promise<FiscalDbggFatoresData | null> {
+  return fetchBlobJson<FiscalDbggFatoresData>("data/fiscal-dbgg-fatores.json");
+}
+export async function loadFiscalDpfRmd(): Promise<FiscalDpfRmdData | null> {
+  return fetchBlobJson<FiscalDpfRmdData>("data/fiscal-dpf-rmd.json");
 }

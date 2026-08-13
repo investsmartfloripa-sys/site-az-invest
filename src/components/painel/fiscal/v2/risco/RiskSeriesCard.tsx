@@ -87,14 +87,16 @@ export function RiskSeriesCard({
     return { minIso: min, maxIso: max };
   }, [series, benchmarks]);
 
-  // Bandas clipadas à janela visível (mesma folga de 8% do chart).
+  // Bandas clipadas à janela visível (mesma folga de 8% do chart). Benchmarks
+  // entram no clip: o domain do chart os inclui, e banda que parasse no topo da
+  // série principal deixaria a linha tracejada "flutuando" fora das zonas.
   const refAreas = useMemo(() => {
     if (!faixas || !minIso) return [];
     const { from, to } = resolvePeriodRange(period, minIso, maxIso);
     const valores: number[] = [];
-    for (const s of series) valores.push(...valoresNaJanela(s.data, from, to));
+    for (const s of [...series, ...(benchmarks ?? [])]) valores.push(...valoresNaJanela(s.data, from, to));
     return faixasParaBandas(faixas, valores, unidadeFaixas ?? "%");
-  }, [faixas, series, period, minIso, maxIso, unidadeFaixas]);
+  }, [faixas, series, benchmarks, period, minIso, maxIso, unidadeFaixas]);
 
   const chip =
     nivel && nivel !== "sem_dado" ? (

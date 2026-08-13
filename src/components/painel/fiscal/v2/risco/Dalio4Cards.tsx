@@ -19,7 +19,8 @@ import { NIVEL_RISCO, toPoints } from "./shared";
  * históricas com bandas de risco — o topo da aba Indicadores de Risco Fiscal.
  *
  * 1. Dívida / Renda (toggle % Receita ↔ % PIB, referências da literatura)
- * 2. Serviço da dívida / Renda (juros nominais 12m — principal na fase 2)
+ * 2. Serviço da dívida / Renda (juros nominais 12m + benchmark do serviço
+ *    total incl. rolagem de principal, quando o blob DPF existe)
  * 3. Juro nominal vs inflação e vs crescimento nominal (r × g × IPCA + gap r−g)
  * 4. Dívida e serviço da dívida vs poupança nacional (IBGE CNT)
  */
