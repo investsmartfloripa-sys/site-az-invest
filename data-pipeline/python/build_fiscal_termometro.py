@@ -342,6 +342,56 @@ def coletar_classicos(out_dir):
 
 
 # ============================================================================
+# Séries históricas dos indicadores — a "camada tempo" da aba de risco.
+# Tudo derivado do fiscal-classicos (nenhuma coleta nova aqui).
+# ============================================================================
+def _norm(serie, key="valor"):
+    """[{data, <key>}] -> [{data, valor}] sem nulos, ordenado por data."""
+    out = []
+    for r in serie or []:
+        v = r.get(key, r.get("valor", r.get("valor_pct")))
+        if v is None:
+            continue
+        out.append({"data": r["data"], "valor": v})
+    out.sort(key=lambda x: x["data"])
+    return out
+
+
+def _join_ratio(num, den, escala=100.0, casas=2):
+    """Razão num/den mês a mês (ambos [{data, valor}])."""
+    dmap = {r["data"]: r["valor"] for r in den}
+    out = []
+    for r in num:
+        d = dmap.get(r["data"])
+        if d in (None, 0):
+            continue
+        out.append({"data": r["data"], "valor": round(r["valor"] / d * escala, casas)})
+    return out
+
+
+def _join_sum(a, b, casas=2):
+    bmap = {r["data"]: r["valor"] for r in b}
+    out = []
+    for r in a:
+        v = bmap.get(r["data"])
+        if v is None:
+            continue
+        out.append({"data": r["data"], "valor": round(r["valor"] + v, casas)})
+    return out
+
+
+def _var_12m(serie, casas=2):
+    smap = {r["data"]: r["valor"] for r in serie}
+    out = []
+    for data in sorted(smap.keys()):
+        y, m = data.split("-")
+        ant = f"{int(y) - 1}-{m}"
+        if smap.get(ant):
+            out.append({"data": data, "valor": round((smap[data] / smap[ant] - 1) * 100, casas)})
+    return out
+
+
+# ============================================================================
 # Main
 # ============================================================================
 def main():
@@ -469,13 +519,218 @@ def main():
         "lever_aumento_receita_pct": levers["lever_aumento_receita"]["aumento_pct_da_receita"] if levers and "lever_aumento_receita" in levers else None,
     }
 
+    # === Camada tempo: série histórica mensal de cada indicador (derivada do classicos) ===
+    dbgg_serie = _norm(cl["divida"]["dbgg_pct_pib"])
+    receita_pct_serie = _norm(cl["receita_e_gastos"]["receita_liquida_pct_pib"], "valor_pct")
+    juros_pct_pib_serie = _norm(cl["receita_e_gastos"]["juros_central_pct_pib"], "valor_pct")
+    credito_serie = _norm(cl.get("credito_economia", {}).get("credito_total_pct_pib"))
+    sust_norm = sorted((r for r in sust if r.get("r_aa_pct") is not None), key=lambda x: x["data"])
+
+    series_hist = {
+        "dbgg_pct_pib": dbgg_serie,
+        "dbgg_pct_receita": _join_ratio(dbgg_serie, receita_pct_serie),
+        "credito_total_pct_pib": credito_serie,
+        "divida_total_economia_pct_pib": _join_sum(dbgg_serie, credito_serie),
+        "juros_pct_pib": juros_pct_pib_serie,
+        "juros_pct_receita": _norm(cl["receita_e_gastos"]["juros_pct_receita"], "valor_pct"),
+        "custo_medio_aa_pct": [{"data": r["data"], "valor": r["r_aa_pct"]} for r in sust_norm],
+        "primario_estabilizador_pct_pib": [
+            {"data": r["data"], "valor": r["primario_estabilizador_pct_pib"]}
+            for r in sust_norm if r.get("primario_estabilizador_pct_pib") is not None
+        ],
+        "pct_indexado_selic": _norm(comp.get("selic_pct")),
+        "pct_prefixado": _norm(comp.get("prefixado_pct")),
+        "pct_cambio": _norm(comp.get("cambio_pct")),
+        "reer_var_12m_pct": _var_12m(_norm(reer_serie)),
+        "selic_real_ex_post_pct": _norm(cl["monetaria"].get("selic_real_ex_post_pct"), "selic_real_pct"),
+        "r_menos_g_pp": [{"data": r["data"], "valor": r["r_menos_g_pp"]} for r in sust_norm],
+        "primario_realizado_pct_pib": _norm(cl["receita_e_gastos"]["primario_central_pct_pib"], "valor_pct"),
+        "nfsp_pct_pib": _norm(cl["receita_e_gastos"]["nfsp_sp_12m_pct_pib"]),
+        # Levers são prescritivos (quanto falta), não estado de risco — ficam sem série.
+    }
+
     indicadores = {}
     for chave, t in THRESHOLDS.items():
         v = valores.get(chave)
         avali = avaliar(v, t)
         indicadores[chave] = {**t, "valor": v, **avali}
+        hist = series_hist.get(chave)
+        if hist:
+            indicadores[chave]["serie"] = hist
 
     score = calcular_score(indicadores)
+
+    # === Dalio 4 — os indicadores prioritários do livro ===
+    poup_serie = (cl.get("poupanca") or {}).get("serie") or []
+    dbgg_map = {r["data"]: r["valor"] for r in dbgg_serie}
+    juros_pib_map = {r["data"]: r["valor"] for r in juros_pct_pib_serie}
+    divida_servico_poupanca = []
+    for r in poup_serie:
+        taxa = r.get("taxa_poupanca_pct_pib")
+        if not taxa:
+            continue
+        db = dbgg_map.get(r["data"])
+        jp = juros_pib_map.get(r["data"])
+        divida_servico_poupanca.append({
+            "data": r["data"],
+            "taxa_poupanca_pct_pib": taxa,
+            "divida_anos_poupanca": round(db / taxa, 2) if db is not None else None,
+            "juros_pct_poupanca": round(jp / taxa * 100, 1) if jp is not None else None,
+        })
+
+    ipca_map = {r["data"]: r["valor"] for r in _norm(cl["monetaria"].get("ipca_12m_pct"))}
+    juros_infl_cresc = [
+        {
+            "data": r["data"],
+            "r_aa_pct": r["r_aa_pct"],
+            "g_aa_pct": r["g_aa_pct"],
+            "ipca_12m_pct": ipca_map.get(r["data"]),
+            "r_menos_g_pp": r["r_menos_g_pp"],
+        }
+        for r in sust_norm
+    ]
+
+    def _faixas(chave):
+        t = THRESHOLDS[chave]
+        return {
+            "direcao": t["direcao"], "verde": t["verde"], "amarelo": t["amarelo"],
+            "vermelho": t["vermelho"], "break": t["break"],
+            "fonte": "Faixas AZ calibradas a partir dos casos históricos do livro — não são números do livro.",
+        }
+
+    pico_dbgg = max(dbgg_serie, key=lambda r: r["valor"]) if dbgg_serie else None
+
+    dalio4 = {
+        "_nota": (
+            "Os 4 indicadores que Dalio destaca como prioritários em 'How Countries Go Broke': "
+            "(1) dívida vs renda; (2) serviço da dívida vs renda; (3) juro nominal vs inflação e vs "
+            "crescimento nominal da renda; (4) dívida e serviço da dívida vs poupança."
+        ),
+        "divida_renda": {
+            "serie_pct_receita": series_hist["dbgg_pct_receita"],
+            "serie_pct_pib": dbgg_serie,
+            "faixas_pct_receita": _faixas("dbgg_pct_receita"),
+            "faixas_pct_pib": _faixas("dbgg_pct_pib"),
+            "referencias_pct_pib": (
+                [
+                    {"valor": 70, "label": "FMI ~70% (referência p/ emergentes)"},
+                    {"valor": 90, "label": "Reinhart-Rogoff 90% (limiar contestado)"},
+                ]
+                + ([{"valor": round(pico_dbgg["valor"], 1), "label": f"pico histórico ({pico_dbgg['data']})"}] if pico_dbgg else [])
+            ),
+            "_nota": "DBGG (governo geral) ÷ receita líquida 12m do governo central — proxy conservadora do Debt/Income do livro (perímetros distintos, declarado).",
+        },
+        "servico_renda": {
+            "serie_pct_receita": series_hist["juros_pct_receita"],
+            "faixas": _faixas("juros_pct_receita"),
+            "_nota": (
+                "Serviço = juros nominais 12m do governo central (RTN). A rolagem de principal "
+                "(% da DPF vincendo em 12m, RMD/Tesouro) entra numa fase 2 — o RMD não está no CKAN do Tesouro Transparente."
+            ),
+        },
+        "juros_inflacao_crescimento": {
+            "serie": juros_infl_cresc,
+            "faixas_gap": _faixas("r_menos_g_pp"),
+            "_nota": (cl.get("sustentabilidade") or {}).get("_perimetro"),
+        },
+        "divida_servico_poupanca": {
+            "serie": divida_servico_poupanca,
+            "_nota": (
+                "Poupança bruta acumulada 4 trimestres (IBGE CNT, SIDRA t/2072). 'Anos de poupança' = DBGG %PIB ÷ "
+                "taxa de poupança %PIB; 'juros % poupança' = juros nominais 12m %PIB ÷ poupança %PIB — fração da "
+                "poupança nacional que o serviço de juros do governo central absorve."
+            ),
+        },
+    }
+
+    # === EMBI+ (o preço que o mercado cobra do risco fiscal) — reuso do blob dos antecedentes ===
+    embi_block = None
+    antec = download_json("data/visao_geral_antecedentes_fin.json")
+    embi_serie = [
+        {"data": r["mes"], "valor": r["embi_bps"]}
+        for r in ((antec or {}).get("embi") or [])
+        if r.get("embi_bps") is not None
+    ]
+    if embi_serie:
+        ult_embi = embi_serie[-1]
+        corte = f"{int(ult_embi['data'][:4]) - 10}-01"
+        vals_10a = sorted(r["valor"] for r in embi_serie if r["data"] >= corte)
+
+        def _pct(p):
+            if not vals_10a:
+                return None
+            k = max(0, min(len(vals_10a) - 1, int(round(p / 100 * (len(vals_10a) - 1)))))
+            return round(vals_10a[k], 1)
+
+        # A série pública do EMBI+ foi descontinuada (Ipeadata/JPM parou em ~jul/2024).
+        # Defasagem calculada do dado, nunca assumida: >4 meses sem observação = descontinuada.
+        hoje = datetime.now(timezone.utc)
+        anos_meses = (hoje.year - int(ult_embi["data"][:4])) * 12 + (hoje.month - int(ult_embi["data"][5:7]))
+        embi_block = {
+            "_fonte": (
+                "IPEADATA JPM366_EMBI366 (média mensal, pontos-base) — reaproveitado do pipeline de antecedentes "
+                "financeiros. O CDS 5y (referência atual de research) não tem fonte pública gratuita."
+            ),
+            "serie": embi_serie,
+            "ultimo": ult_embi,
+            "percentis_10a": {"p25": _pct(25), "p50": _pct(50), "p75": _pct(75)},
+            "descontinuada": anos_meses > 4,
+        }
+    else:
+        print("[WARN] EMBI indisponível (blob antecedentes) — card ficará oculto", file=sys.stderr)
+
+    # === Projeção DBGG com Focus (ilustrativa, sem efeito câmbio) ===
+    projecao_dbgg = None
+    focus = cl.get("expectativas_focus") or {}
+
+    def _focus_mediana(bloco, ano):
+        pts = (focus.get(bloco) or {}).get(str(ano)) or []
+        for p in reversed(pts):
+            if p.get("mediana") is not None:
+                return p["mediana"]
+        return None
+
+    metas_anos = ((cl.get("metas_ldo") or {}).get("anos")) or {}
+    if dbgg_pct_pib is not None and sust_ult:
+        ano_base = int((cl.get("mes_recente") or "2026-01")[:4])
+        b_meta = b_atual = dbgg_pct_pib
+        prim_atual = primario_central_pct_pib or 0.0  # % PIB 12m, positivo = superávit
+        ult_meta = None
+        anos_proj = []
+        for ano in range(ano_base + 1, ano_base + 4):
+            pib_focus = _focus_mediana("pib_anuais", ano)
+            ipca_focus = _focus_mediana("ipca_anuais", ano)
+            if pib_focus is None or ipca_focus is None:
+                break  # sem Focus para o ano → não inventa premissa
+            g_ano = (1 + pib_focus / 100) * (1 + ipca_focus / 100) - 1
+            meta = (metas_anos.get(str(ano)) or {}).get("centro")
+            if meta is not None:
+                ult_meta = meta
+            p_meta = ult_meta if ult_meta is not None else prim_atual
+            b_meta = b_meta * (1 + i_nominal) / (1 + g_ano) - p_meta
+            b_atual = b_atual * (1 + i_nominal) / (1 + g_ano) - prim_atual
+            anos_proj.append({
+                "ano": ano,
+                "g_nominal_focus_aa_pct": round(g_ano * 100, 2),
+                "primario_cenario_meta_pct_pib": p_meta,
+                "dbgg_cenario_meta_pct_pib": round(b_meta, 1),
+                "dbgg_cenario_primario_atual_pct_pib": round(b_atual, 1),
+            })
+        hist_anual = [r for r in dbgg_serie if r["data"].endswith("-12")]
+        if dbgg_serie and (not hist_anual or hist_anual[-1]["data"] != dbgg_serie[-1]["data"]):
+            hist_anual = hist_anual + [dbgg_serie[-1]]
+        if anos_proj:
+            projecao_dbgg = {
+                "_nota": (
+                    "Projeção ILUSTRATIVA: b(t+1) = b(t)·(1+i)/(1+g) − primário. i = taxa implícita da DLSP "
+                    "(proxy declarada — os juros que acruam sobre a DBGG não são coletados); g composto "
+                    "multiplicativamente do Focus (PIB real × IPCA, medianas mais recentes); SEM efeito câmbio/"
+                    "ajustes patrimoniais. Cenário A: metas LDO cumpridas (centro, % PIB); cenário B: primário 12m atual constante."
+                ),
+                "historico_anual": hist_anual,
+                "premissas": {"i_aa_pct": round(i_nominal * 100, 2), "primario_atual_pct_pib": prim_atual},
+                "anos": anos_proj,
+            }
 
     # Matrizes (mantidas)
     starting = [0, 100, 200, 300, 400, 500, 600, 700]
@@ -560,6 +815,9 @@ def main():
             },
         },
         "levers": levers,
+        "dalio4": dalio4,
+        "embi": embi_block,
+        "projecao_dbgg": projecao_dbgg,
         "premissas": {
             "i_nominal_aa": round(i_nominal * 100, 2),
             "g_nominal_aa": round(g_nominal * 100, 2),
@@ -568,14 +826,17 @@ def main():
             "anos_projecao": 10,
         },
         "metodologia": (
-            "Termometro Fiscal baseado em 'How Countries Go Broke' (Ray Dalio, 2025). "
-            "20 indicadores semaforizados em 5 categorias (Carga, Capacidade, Estrutura, Stress, Levers) — "
-            "FAIXAS CALIBRADAS PELA AZ a partir dos casos historicos do livro, nao numeros do livro. "
+            "Indicadores de Risco Fiscal baseados em 'How Countries Go Broke' (Ray Dalio, 2025). "
+            "Os 4 indicadores prioritarios do livro (divida/renda, servico/renda, juro vs inflacao e crescimento, "
+            "divida e servico vs poupanca) abrem a pagina como series historicas com faixas de risco; "
+            "20 indicadores semaforizados em 5 categorias (Carga, Capacidade, Estrutura, Stress, Levers), cada um "
+            "com serie mensal historica — FAIXAS CALIBRADAS PELA AZ a partir dos casos historicos do livro, nao numeros do livro. "
             "r, g, r-g e primario estabilizador vem do bloco 'sustentabilidade' do fiscal-classicos v2 "
             "(taxa implicita da DLSP x PIB nominal 12m YoY, perimetro unico do setor publico consolidado) — "
             "calculados UMA vez no pipeline; nenhum componente do front recalcula. "
             "Equacao iterativa Debt(t+1)/Income(t+1) = [Debt(t)*(1+i) + Primary_Deficit(t)] / [Income(t)*(1+g)], "
             "matrizes Debt-to-Income apos 10 anos variando deficit e gap (i-g), e os 4 Levers calculados isoladamente. "
+            "EMBI+ como validador de mercado (IPEADATA); projecao ilustrativa da DBGG com Focus. "
             "Variaveis em tempo real: BCB SGS, Tesouro RTN, IBGE."
         ),
     }

@@ -400,6 +400,58 @@ def serie_mensal_e_ytd(serie_mensal):
     return ytd
 
 
+SIDRA_2072_URL = "https://apisidra.ibge.gov.br/values/t/2072/n1/all/v/all/p/all?formato=json"
+
+
+def _tri_seguinte(per):
+    ano, q = int(per[:4]), int(per[4:6])
+    return f"{ano + 1}01" if q == 4 else f"{ano}{q + 1:02d}"
+
+
+def sidra_poupanca():
+    """Taxa de poupança bruta (% PIB) — IBGE SIDRA t/2072 (Contas Nacionais Trimestrais).
+
+    Soma 4 trimestres CONSECUTIVOS de Poupança bruta ÷ soma 4T do PIB — a janela
+    anualizada elimina a sazonalidade da conta de renda. Valores correntes, R$ mi.
+    Insumo do indicador nº 4 de Dalio (dívida e serviço da dívida vs poupança).
+    """
+    print("  [SIDRA 2072] poupanca bruta / PIB (trimestral)")
+    try:
+        data = _get(SIDRA_2072_URL, timeout=90).json()
+    except Exception as e:
+        print(f"  [SIDRA 2072] FALHA: {e}", file=sys.stderr)
+        return []
+    pib, poup = {}, {}
+    for r in data[1:]:
+        nome = r.get("D2N") or ""
+        per = r.get("D3C") or ""  # ex.: '202601' = 1º trimestre de 2026
+        v = _to_float(r.get("V"))
+        if len(per) != 6 or v is None:
+            continue
+        if nome == "Produto Interno Bruto":
+            pib[per] = v
+        elif "Poupança bruta" in nome or "Poupanca bruta" in nome:
+            poup[per] = v
+    serie = []
+    pers = sorted(set(pib) & set(poup))
+    for i in range(3, len(pers)):
+        janela = pers[i - 3 : i + 1]
+        if any(_tri_seguinte(janela[k]) != janela[k + 1] for k in range(3)):
+            continue
+        p4 = sum(poup[q] for q in janela)
+        g4 = sum(pib[q] for q in janela)
+        if not g4:
+            continue
+        ano, q = int(pers[i][:4]), int(pers[i][4:6])
+        serie.append({
+            "data": f"{ano}-{q * 3:02d}",
+            "poupanca_4t_brl_mm": round(p4, 1),
+            "pib_4t_brl_mm": round(g4, 1),
+            "taxa_poupanca_pct_pib": round(p4 / g4 * 100, 2),
+        })
+    return serie
+
+
 def calcula_sustentabilidade(juros_sp_pct, dlsp_pct, primario_sp_pct, pib_map):
     """r − g e primário estabilizador com PERÍMETRO ÚNICO (setor público consolidado):
     r = taxa implícita da DLSP = juros nominais 12m (R$) ÷ DLSP média dos 12m (R$);
@@ -679,6 +731,11 @@ def main():
     # ── v2: acompanhamento da meta pelo ACUMULADO NO ANO (como o RTN publica) ──
     primario_ytd = serie_mensal_e_ytd(rtn_data["primario_acima"])
 
+    poupanca_serie = sidra_poupanca()
+    if poupanca_serie:
+        u = poupanca_serie[-1]
+        print(f"  [SIDRA] poupanca 4T {u['data']}: {u['taxa_poupanca_pct_pib']}% PIB ({len(poupanca_serie)} trimestres)")
+
     ano_atual = datetime.now(timezone.utc).year
     focus_selic = focus_anuais("Selic", ano_atual)
     focus_ipca = focus_anuais("IPCA", ano_atual)
@@ -838,6 +895,10 @@ def main():
         "acompanhamento_meta": {
             "_nota": "Primário do governo central acumulado jan→mês (acima da linha), como o RTN publica — a meta LDO é aferida no ano-calendário, não em 12m móvel.",
             "primario_central_ytd_brl_mm": primario_ytd,
+        },
+        "poupanca": {
+            "_fonte": "IBGE SIDRA t/2072 (Contas Nacionais Trimestrais): Poupança bruta e PIB a preços correntes; taxa = soma 4 trimestres consecutivos ÷ soma 4T do PIB (janela anual elimina sazonalidade). Insumo do indicador nº 4 de Dalio (dívida e serviço vs poupança).",
+            "serie": poupanca_serie,
         },
         "destaques": {
             "dpmfi_selic_pct_recente": last_val(sgs["dpmfi_pct_selic"]),

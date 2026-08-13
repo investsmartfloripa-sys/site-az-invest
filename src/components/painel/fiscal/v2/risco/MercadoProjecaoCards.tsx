@@ -1,0 +1,152 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
+import { AzTimeSeriesChart, type AzRefLine, type AzTimeSeries, type AzXRefArea } from "@/components/painel/charts/AzTimeSeriesChart";
+import { ChartCard } from "@/components/painel/core";
+import type { EmbiBlock, ProjecaoDbgg } from "@/lib/painel-fiscal";
+import { toPoints } from "./shared";
+
+/**
+ * Os dois cards de contexto da aba de risco:
+ * - EMBI+ — o preço que o mercado COBRAVA do risco Brasil (fonte pública
+ *   descontinuada em 2024; o card diz isso com todas as letras).
+ * - Projeção da DBGG com Focus — conecta o framework do livro à expectativa
+ *   concreta do mercado brasileiro (ilustrativa, sem efeito câmbio).
+ */
+
+const NAVY = "#132960";
+const AZURE = "#027DFC";
+const RUST = "#BE3B33";
+
+// Marcos institucionais datados (rótulo com ano — fatos históricos, não dado vivo).
+const MARCOS_EMBI: AzXRefArea[] = [
+  { x1: "2015-09-01", x2: "2015-11-01", label: "perda do grau de investimento", color: "#BE3B33", opacity: 0.1 },
+  { x1: "2016-12-01", x2: "2017-02-01", label: "teto de gastos", color: "#132960", opacity: 0.1 },
+  { x1: "2023-08-01", x2: "2023-10-01", label: "arcabouço fiscal", color: "#1E8A5C", opacity: 0.12 },
+];
+
+export function EmbiCard({ embi, stampGiro }: { embi: EmbiBlock; stampGiro?: string | null }) {
+  const [period, setPeriod] = useState<AzPeriodValue>({ id: "max" });
+
+  const { serie, minIso, maxIso } = useMemo(() => {
+    const pts = toPoints(embi.serie);
+    return {
+      serie: [{ id: "embi", label: "EMBI+ Brasil (pontos-base)", color: NAVY, data: pts }] as AzTimeSeries[],
+      minIso: pts[0]?.[0] ?? "",
+      maxIso: pts[pts.length - 1]?.[0] ?? "",
+    };
+  }, [embi.serie]);
+
+  const p = embi.percentis_10a;
+  const refAreas =
+    p.p25 != null && p.p75 != null
+      ? [{ y1: p.p25, y2: p.p75, color: AZURE, opacity: 0.07, label: "p25–p75 (últimos 10 anos da série)" }]
+      : [];
+  const refLines: AzRefLine[] =
+    p.p50 != null ? [{ y: p.p50, label: `mediana 10a: ${p.p50.toFixed(0)} bps`, color: AZURE }] : [];
+
+  const fimSerie = embi.ultimo?.data ?? "—";
+
+  return (
+    <ChartCard
+      title="O preço do risco no mercado — EMBI+"
+      subtitle="O spread soberano é o validador externo do semáforo: quando o mercado discorda do diagnóstico, o preço mostra."
+      footer={<span>{embi._fonte}</span>}
+      stampGiro={stampGiro}
+      stampDado={fimSerie}
+      toolbar={
+        <AzPeriodSelector
+          value={period}
+          onChange={setPeriod}
+          min={minIso || undefined}
+          max={maxIso || undefined}
+          periods={["5y", "max"]}
+        />
+      }
+    >
+      {embi.descontinuada ? (
+        <div className="mb-3 rounded-lg border-l-4 border-amber-400 bg-amber-50 p-3 text-xs text-amber-900">
+          <strong>Série encerrada na fonte pública em {fimSerie}.</strong> O J.P. Morgan deixou de divulgar o EMBI+
+          abertamente e o CDS de 5 anos (a referência atual de research) não tem fonte gratuita. O histórico continua
+          valioso: mostra como o mercado precificou 2002, 2008 e 2015–16.
+        </div>
+      ) : null}
+      <AzTimeSeriesChart
+        series={serie}
+        unit="pts"
+        period={period}
+        height={280}
+        refAreas={refAreas}
+        refLines={refLines}
+        xRefAreas={MARCOS_EMBI}
+        showLegend={false}
+        yAxisLabel="pontos-base"
+      />
+    </ChartCard>
+  );
+}
+
+export function ProjecaoDbggCard({ projecao, stampGiro }: { projecao: ProjecaoDbgg; stampGiro?: string | null }) {
+  const { hist, cenMeta, cenAtual, minIso, maxIso } = useMemo(() => {
+    const h = toPoints(projecao.historico_anual);
+    const ultimo = h[h.length - 1];
+    // Cenários ancorados no último ponto observado para as linhas conectarem.
+    const meta: (readonly [string, number])[] = ultimo ? [ultimo] : [];
+    const atual: (readonly [string, number])[] = ultimo ? [ultimo] : [];
+    for (const a of projecao.anos) {
+      meta.push([`${a.ano}-12-01`, a.dbgg_cenario_meta_pct_pib]);
+      atual.push([`${a.ano}-12-01`, a.dbgg_cenario_primario_atual_pct_pib]);
+    }
+    return {
+      hist: [{ id: "dbgg_hist", label: "DBGG observada (dez. de cada ano)", color: NAVY, data: h }] as AzTimeSeries[],
+      cenMeta: { id: "cen_meta", label: "cenário: metas LDO cumpridas", color: AZURE, data: meta } as AzTimeSeries,
+      cenAtual: { id: "cen_atual", label: "cenário: primário atual constante", color: RUST, data: atual } as AzTimeSeries,
+      minIso: h[0]?.[0] ?? "",
+      maxIso: atual[atual.length - 1]?.[0] ?? "",
+    };
+  }, [projecao]);
+
+  const [period, setPeriod] = useState<AzPeriodValue>({ id: "max" });
+  const ultimoAno = projecao.anos[projecao.anos.length - 1];
+
+  return (
+    <ChartCard
+      title="Para onde a dívida vai, se o Focus acertar"
+      subtitle={`DBGG projetada com a dinâmica do livro e as expectativas do mercado (Focus) — até ${ultimoAno?.ano ?? "—"}.`}
+      footer={
+        <span>
+          {projecao._nota} Premissas atuais: i = {projecao.premissas.i_aa_pct.toLocaleString("pt-BR")}% a.a.; primário
+          12m = {projecao.premissas.primario_atual_pct_pib.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% do
+          PIB.
+        </span>
+      }
+      stampGiro={stampGiro}
+      toolbar={
+        <AzPeriodSelector
+          value={period}
+          onChange={setPeriod}
+          min={minIso || undefined}
+          max={maxIso || undefined}
+          periods={["5y", "max"]}
+        />
+      }
+    >
+      <AzTimeSeriesChart
+        series={hist}
+        benchmarks={[cenMeta, cenAtual]}
+        unit="%"
+        period={period}
+        height={300}
+        dots={2.5}
+        yAxisLabel="% do PIB"
+        refLines={[{ y: 70, label: "FMI ~70% (emergentes)", color: NAVY }]}
+      />
+      <p className="mt-2 text-[11px] text-zinc-500">
+        Projeção ilustrativa — sem efeito câmbio nem ajustes patrimoniais; o g vem do Focus composto
+        multiplicativamente (PIB real × IPCA). A distância entre os dois cenários é o preço de não cumprir a meta.
+      </p>
+    </ChartCard>
+  );
+}

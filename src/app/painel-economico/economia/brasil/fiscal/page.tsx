@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Fiscal",
   description:
-    "Painéis fiscais brasileiros: divida publica (DBGG, DLSP), receita e gastos do governo central, e Termometro Fiscal aplicando as formulas de Ray Dalio (How Countries Go Broke) ao Brasil.",
+    "Painéis fiscais brasileiros: divida publica (DBGG, DLSP), receita e gastos do governo central, e Indicadores de Risco Fiscal aplicando as formulas de Ray Dalio (How Countries Go Broke) ao Brasil.",
 };
 
 const PAINEIS = [
@@ -23,11 +23,11 @@ const PAINEIS = [
       "Receita líquida do Tesouro, despesa primária, juros nominais e resultado primário. Decomposição por previdência, pessoal e discricionárias. Fonte: STN/RTN + BCB.",
   },
   {
-    slug: "termometro-fiscal",
-    titulo: "Termômetro Fiscal",
+    slug: "indicadores-de-risco-fiscal",
+    titulo: "Indicadores de Risco Fiscal",
     subtitulo: "Framework Ray Dalio",
     descricao:
-      "Aplicação das fórmulas de How Countries Go Broke ao Brasil: projeção de Debt/Income em 10 anos, matrizes de sensibilidade e os 4 levers para estabilizar a dívida.",
+      "Os 4 indicadores prioritários de How Countries Go Broke no tempo, com zonas de risco: dívida vs renda, serviço da dívida, juro vs inflação e crescimento, e dívida vs poupança — mais 20 indicadores semaforizados, matrizes e simulador.",
   },
 ];
 

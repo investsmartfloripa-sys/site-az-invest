@@ -71,6 +71,7 @@ export const PAINEIS: PainelDef[] = [
   { key: "fiscal", label: "Economia · Fiscal", pagePath: "/painel-economico/economia/brasil/fiscal" },
   { key: "contas-externas", label: "Economia · Contas externas", pagePath: "/painel-economico/economia/brasil/contas-externas" },
   { key: "familias", label: "Economia · Famílias", pagePath: "/painel-economico/economia/brasil/familias" },
+  { key: "previsoes-macro", label: "Economia · Previsões macro por casa", pagePath: "/painel-economico/economia/brasil/previsoes-macro" },
 ];
 
 export const DATA_SOURCES: DataSourceDef[] = [
@@ -176,7 +177,7 @@ export const DATA_SOURCES: DataSourceDef[] = [
 
   // ── Fiscal (fiscal-pipeline.yml, diário 12:00 UTC) ─────────────────────────
   { key: "fiscal_classicos", label: "Fiscal clássicos (dívida, primário, Focus)", blobPath: "data/fiscal-classicos.json", workflowName: "fiscal-pipeline.yml", cadence: "diario", painel: "fiscal", pagePath: "/painel-economico/economia/brasil/fiscal/divida" },
-  { key: "fiscal_termometro", label: "Termômetro fiscal", blobPath: "data/fiscal-termometro.json", workflowName: "fiscal-pipeline.yml", cadence: "diario", painel: "fiscal", pagePath: "/painel-economico/economia/brasil/fiscal/termometro-fiscal" },
+  { key: "fiscal_termometro", label: "Indicadores de risco fiscal", blobPath: "data/fiscal-termometro.json", workflowName: "fiscal-pipeline.yml", cadence: "diario", painel: "fiscal", pagePath: "/painel-economico/economia/brasil/fiscal/indicadores-de-risco-fiscal" },
 
   // ── Contas externas (contas-externas-pipeline.yml, diário 23:30 UTC) ───────
   { key: "contas_externas", label: "Balanço de pagamentos (BPM6)", blobPath: "data/contas_externas.json", workflowName: "contas-externas-pipeline.yml", cadence: "diario", painel: "contas-externas" },
@@ -188,6 +189,11 @@ export const DATA_SOURCES: DataSourceDef[] = [
   { key: "familias_endividamento", label: "Endividamento", blobPath: "data/familias_endividamento.json", workflowName: "familias-pipeline.yml", cadence: "diario", painel: "familias" },
   { key: "familias_poder_compra", label: "Poder de compra", blobPath: "data/familias_poder_compra.json", workflowName: "familias-pipeline.yml", cadence: "diario", painel: "familias" },
   { key: "familias_estrutura_social", label: "Estrutura social", blobPath: "data/familias_estrutura_social.json", workflowName: "familias-pipeline.yml", cadence: "diario", painel: "familias" },
+
+  // ── Previsões macro por casa (pista 3 — Robô de Dados Não-API) ─────────────
+  // Gerado pela skill Cowork `dossie-macro-mensal` (1ª segunda do mês, Passo 6-E do SKILL.md).
+  // NÃO é workflow do GitHub Actions — health-check precisa aceitar "workflowName" fora do padrão .yml.
+  { key: "previsoes_macro", label: "Previsões macro por casa (Selic/IPCA/PIB/USD-BRL)", blobPath: "data/nao-api/previsoes-macro.json", workflowName: "dossie-macro-mensal (Cowork)", cadence: "mensal", painel: "previsoes-macro", dataDateField: "last_data_date" },
 ];
 
 /** SLA em minutos "efetivos" por cadência (fins de semana descontados quando business=true). */

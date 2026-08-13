@@ -174,7 +174,20 @@ export type FiscalClassicosData = {
     _nota: string;
     primario_central_ytd_brl_mm: Record<string, { mes: number; acum_brl_mm: number }[]>;
   };
+  /** v3: poupança bruta trimestral (IBGE CNT, SIDRA t/2072) — insumo do Dalio nº 4. */
+  poupanca?: {
+    _fonte: string;
+    serie: PoupancaPonto[];
+  };
   destaques: Record<string, DestaqueRecente>;
+};
+
+/** Poupança bruta acumulada 4 trimestres — data = mês de fim do trimestre. */
+export type PoupancaPonto = {
+  data: string;
+  poupanca_4t_brl_mm: number;
+  pib_4t_brl_mm: number;
+  taxa_poupanca_pct_pib: number;
 };
 
 // === fiscal-termometro.json (Dalio) ===
@@ -215,6 +228,82 @@ export type IndicadorSemaforo = {
   valor: number | null;
   nivel: Nivel;
   distancia_break: number | null;
+  /** v3: série mensal histórica do indicador (camada tempo) — ausente nos levers. */
+  serie?: PontoMensal[];
+};
+
+/** Faixas de risco de um indicador (calibradas pela AZ a partir do livro). */
+export type FaixasRisco = {
+  direcao: "maior_pior" | "maior_melhor";
+  verde: number;
+  amarelo: number;
+  vermelho: number;
+  break: number;
+  fonte: string;
+};
+
+/** Referência da literatura sobreposta a um gráfico (FMI, Reinhart-Rogoff...). */
+export type RefLiteratura = { valor: number; label: string };
+
+/** v3: os 4 indicadores prioritários de How Countries Go Broke, como séries. */
+export type Dalio4 = {
+  _nota: string;
+  divida_renda: {
+    serie_pct_receita: PontoMensal[];
+    serie_pct_pib: PontoMensal[];
+    faixas_pct_receita: FaixasRisco;
+    faixas_pct_pib: FaixasRisco;
+    referencias_pct_pib: RefLiteratura[];
+    _nota: string;
+  };
+  servico_renda: {
+    serie_pct_receita: PontoMensal[];
+    faixas: FaixasRisco;
+    _nota: string;
+  };
+  juros_inflacao_crescimento: {
+    serie: {
+      data: string;
+      r_aa_pct: number;
+      g_aa_pct: number;
+      ipca_12m_pct: number | null;
+      r_menos_g_pp: number;
+    }[];
+    faixas_gap: FaixasRisco;
+    _nota: string | null;
+  };
+  divida_servico_poupanca: {
+    serie: {
+      data: string;
+      taxa_poupanca_pct_pib: number;
+      divida_anos_poupanca: number | null;
+      juros_pct_poupanca: number | null;
+    }[];
+    _nota: string;
+  };
+};
+
+/** v3: EMBI+ histórico (fonte pública descontinuada em jul/2024 — flag no bloco). */
+export type EmbiBlock = {
+  _fonte: string;
+  serie: PontoMensal[];
+  ultimo: { data: string; valor: number };
+  percentis_10a: { p25: number | null; p50: number | null; p75: number | null };
+  descontinuada: boolean;
+};
+
+/** v3: projeção ilustrativa da DBGG com insumos do Focus (sem efeito câmbio). */
+export type ProjecaoDbgg = {
+  _nota: string;
+  historico_anual: PontoMensal[];
+  premissas: { i_aa_pct: number; primario_atual_pct_pib: number };
+  anos: {
+    ano: number;
+    g_nominal_focus_aa_pct: number;
+    primario_cenario_meta_pct_pib: number;
+    dbgg_cenario_meta_pct_pib: number;
+    dbgg_cenario_primario_atual_pct_pib: number;
+  }[];
 };
 
 export type ScoreSemaforo = {
@@ -260,6 +349,10 @@ export type FiscalTermometroData = {
     lever_corte_despesa?: Lever;
     lever_aumento_receita?: Lever;
   } | null;
+  /** v3 — presentes só depois que o pipeline novo publica. */
+  dalio4?: Dalio4;
+  embi?: EmbiBlock | null;
+  projecao_dbgg?: ProjecaoDbgg | null;
   premissas: {
     i_nominal_aa: number;
     g_nominal_aa: number;

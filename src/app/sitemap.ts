@@ -41,7 +41,7 @@ const PAINEL_PATHS: string[] = [
   "/painel-economico/economia/brasil/fiscal",
   "/painel-economico/economia/brasil/fiscal/divida",
   "/painel-economico/economia/brasil/fiscal/receita-e-gastos",
-  "/painel-economico/economia/brasil/fiscal/termometro-fiscal",
+  "/painel-economico/economia/brasil/fiscal/indicadores-de-risco-fiscal",
   "/painel-economico/economia/brasil/contas-externas",
   "/painel-economico/economia/brasil/contas-externas/cambio",
   "/painel-economico/economia/brasil/familias",

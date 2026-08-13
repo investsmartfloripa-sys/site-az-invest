@@ -808,7 +808,7 @@ export function ReceitaGastosDashboard({ data }: { data: FiscalClassicosData }) 
         </div>
 
         <div className="rounded-lg bg-zinc-50 p-3 text-[11px] text-zinc-700">
-          <strong className="text-[#132960]">Leitura Dalio combinada:</strong> com 3 das 4 Levers severamente restritas, o ajuste fiscal brasileiro requer reforma estrutural (PEC) e não política orçamentária ordinária. A literatura histórica do livro mostra que países com esse perfil tendem a recorrer ao Lever 3 (inflação/monetização) quando o estresse fiscal supera o limite político — ver Termômetro Fiscal e simulador de trajetória para cenários.
+          <strong className="text-[#132960]">Leitura Dalio combinada:</strong> com 3 das 4 Levers severamente restritas, o ajuste fiscal brasileiro requer reforma estrutural (PEC) e não política orçamentária ordinária. A literatura histórica do livro mostra que países com esse perfil tendem a recorrer ao Lever 3 (inflação/monetização) quando o estresse fiscal supera o limite político — ver Indicadores de Risco Fiscal e simulador de trajetória para cenários.
         </div>
       </section>
 
