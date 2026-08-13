@@ -46,8 +46,15 @@ def last_value(serie, key=None):
 
 # ============================================================================
 # THRESHOLDS DALIO POR INDICADOR
-# Cada entry: {direcao, verde, amarelo, vermelho, break, titulo, categoria,
-#              unidade, narrativa_curta}
+# Cada entry: {direcao, verde, amarelo, break, titulo, categoria, unidade,
+#              narrativa}
+#
+# ONDA 0 (13/08/2026): 3 fronteiras REAIS (verde/amarelo/break) — o antigo
+# campo "vermelho" nunca decidia classificação (letra morta) e foi removido.
+# Zonas: seguro < verde ≤ atenção < amarelo ≤ crítico < break ≤ ruptura
+# (invertido p/ maior_melhor). Âncoras externas citadas na narrativa quando
+# existem; o resto é calibração AZ dos casos históricos do livro (ver
+# calibracao_nota no payload).
 # ============================================================================
 THRESHOLDS = {
     # === A. CARGA DA DIVIDA ===
@@ -56,23 +63,23 @@ THRESHOLDS = {
         "categoria": "Carga",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 60, "amarelo": 80, "vermelho": 100, "break": 130,
-        "narrativa": "Dívida bruta do governo geral / PIB. Métrica padrão FMI/Maastricht.",
+        "verde": 60, "amarelo": 70, "break": 130,
+        "narrativa": "Dívida bruta do governo geral / PIB. Âncoras: 60% = referência de Maastricht; 70% = referência do FMI p/ emergentes (Fiscal Monitor/DSA); 130% = faixa AZ de ruptura p/ EM sem moeda de reserva (casos do livro).",
     },
     "dbgg_pct_receita": {
         "titulo": "DBGG / Receita",
         "categoria": "Carga",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 200, "amarelo": 350, "vermelho": 500, "break": 700,
-        "narrativa": "Métrica Dalio (Debt/Income). NOTA DE PERÍMETRO: DBGG é do governo GERAL e a receita é do governo CENTRAL — proxy conservadora (infla a razão vs o Debt/Revenue do livro, que usa dívida e receita do mesmo ente).",
+        "verde": 400, "amarelo": 700, "break": 1400,
+        "narrativa": "Métrica Dalio (Debt/Income). PROXY DECLARADA: DBGG (governo geral) ÷ receita líquida do governo CENTRAL — a receita do governo geral (~2× a central, FMI WEO) não é coletada em frequência mensal. Faixas RECALIBRADAS para a proxy: as faixas do conceito do livro (mesmo ente: 200/350/700) × fator 2,0.",
     },
     "credito_total_pct_pib": {
         "titulo": "Crédito total / PIB",
         "categoria": "Carga",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 40, "amarelo": 65, "vermelho": 90, "break": 120,
+        "verde": 40, "amarelo": 65, "break": 120,
         "narrativa": "Crédito ao setor privado (famílias + empresas) sobre PIB. Saturação alta sinaliza estágio tardio do Big Debt Cycle.",
     },
     "divida_total_economia_pct_pib": {
@@ -80,7 +87,7 @@ THRESHOLDS = {
         "categoria": "Carga",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 100, "amarelo": 150, "vermelho": 200, "break": 280,
+        "verde": 100, "amarelo": 150, "break": 280,
         "narrativa": "Dívida total = DBGG + crédito total (SGS 20622), que inclui operações com o setor público (dupla contagem parcial com a DBGG) e exclui mercado de capitais e dívida externa corporativa (subestima a dívida privada). Comparação internacional exigiria a metodologia BIS, não disponível aqui.",
     },
     # === B. CAPACIDADE DE PAGAMENTO ===
@@ -89,7 +96,7 @@ THRESHOLDS = {
         "categoria": "Capacidade",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 3, "amarelo": 5, "vermelho": 7, "break": 10,
+        "verde": 3, "amarelo": 5, "break": 10,
         "narrativa": "Despesa anual com juros nominais do gov central / PIB.",
     },
     "juros_pct_receita": {
@@ -97,15 +104,15 @@ THRESHOLDS = {
         "categoria": "Capacidade",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 10, "amarelo": 20, "vermelho": 30, "break": 40,
-        "narrativa": "Métrica Dalio. Quanto da receita anual é consumida só pra pagar juros. Acima de 30% = zona de alerta.",
+        "verde": 10, "amarelo": 20, "break": 40,
+        "narrativa": "Métrica Dalio: quanto da receita anual é consumida só pelos juros. Âncora externa: nas escalas de debt affordability das agências (Moody's/S&P), juros acima de ~20% da receita = perfil muito fraco; 40% = faixa AZ de ruptura (casos do livro).",
     },
     "custo_medio_aa_pct": {
         "titulo": "Taxa implícita da DLSP (a.a.)",
         "categoria": "Capacidade",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 5, "amarelo": 8, "vermelho": 11, "break": 14,
+        "verde": 5, "amarelo": 8, "break": 14,
         "narrativa": "Juros nominais 12m ÷ DLSP média 12m — convenção BCB, perímetro ÚNICO (setor público consolidado). Custo efetivo do estoque, distinto da Selic over.",
     },
     "primario_estabilizador_pct_pib": {
@@ -113,8 +120,8 @@ THRESHOLDS = {
         "categoria": "Capacidade",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 0.5, "amarelo": 2, "vermelho": 4, "break": 6,
-        "narrativa": "Superávit primário necessário pra Dívida/PIB parar de crescer (Blanchard). Brasil hoje precisa de superávit > 2.5% PIB; realizado é déficit.",
+        "verde": 0.5, "amarelo": 2, "break": 6,
+        "narrativa": "Superávit primário que congela a Dívida/PIB (Blanchard). Quanto maior, mais distante do politicamente factível é o ajuste.",
     },
     # === C. ESTRUTURA DA DIVIDA ===
     "pct_indexado_selic": {
@@ -122,15 +129,15 @@ THRESHOLDS = {
         "categoria": "Estrutura",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 20, "amarelo": 40, "vermelho": 55, "break": 70,
-        "narrativa": "Dívida indexada à Selic transmite alta de juros direto pro estoque. Brasil 2002 era 70%, hoje ~46%.",
+        "verde": 20, "amarelo": 40, "break": 70,
+        "narrativa": "Dívida indexada à Selic transmite alta de juros direto pro estoque. Âncora histórica: Brasil 2002 chegou a ~70%.",
     },
     "pct_prefixado": {
         "titulo": "% DPMFi prefixado",
         "categoria": "Estrutura",
         "unidade": "%",
         "direcao": "maior_melhor",
-        "verde": 30, "amarelo": 25, "vermelho": 15, "break": 10,
+        "verde": 30, "amarelo": 25, "break": 10,
         "narrativa": "Prefixado fixa o custo — protege contra aperto monetário. Acima de 30% é saudável.",
     },
     "pct_cambio": {
@@ -138,8 +145,8 @@ THRESHOLDS = {
         "categoria": "Estrutura",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 3, "amarelo": 8, "vermelho": 15, "break": 25,
-        "narrativa": "Dívida em câmbio explode em desvalorizações. Brasil tem virtude estrutural (~1-3%); Argentina 2001 tinha >60%.",
+        "verde": 3, "amarelo": 8, "break": 25,
+        "narrativa": "Dívida em câmbio explode em desvalorizações (original sin). Brasil tem virtude estrutural (~1-3%); Argentina 2001 tinha >60%.",
     },
     # === D. STRESS EXTERNO & MONETARIO ===
     "reer_var_12m_pct": {
@@ -147,7 +154,7 @@ THRESHOLDS = {
         "categoria": "Stress",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 5, "amarelo": 10, "vermelho": 20, "break": 30,
+        "verde": 5, "amarelo": 10, "break": 30,
         "narrativa": "Variação 12m do câmbio real efetivo (na série do BCB, ALTA = DEPRECIAÇÃO real do BRL). O sinal Dalio é a depreciação real PERSISTENTE — fuga da moeda; o nível do índice tem base arbitrária e não semaforiza.",
     },
     "selic_real_ex_post_pct": {
@@ -155,32 +162,32 @@ THRESHOLDS = {
         "categoria": "Stress",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 3, "amarelo": 6, "vermelho": 9, "break": 12,
-        "narrativa": "Selic - IPCA 12m. Brasil exige real alto pra compensar histórico inflacionário. Acima de 10% sufoca crescimento.",
+        "verde": 3, "amarelo": 6, "break": 12,
+        "narrativa": "Selic − IPCA 12m. Juro real persistentemente alto encarece a rolagem e sufoca o crescimento nominal que dilui a dívida.",
     },
     "r_menos_g_pp": {
         "titulo": "r − g (pp)",
         "categoria": "Stress",
         "unidade": " pp",
         "direcao": "maior_pior",
-        "verde": 0, "amarelo": 2, "vermelho": 4, "break": 6,
-        "narrativa": "Taxa de juros nominal menos crescimento nominal. Quando r > g, dívida cresce mesmo com primário neutro (Domar).",
+        "verde": 0, "amarelo": 2, "break": 6,
+        "narrativa": "Taxa de juros nominal menos crescimento nominal. Quando r > g, dívida cresce mesmo com primário neutro (Domar). Zero é a âncora natural.",
     },
     "primario_realizado_pct_pib": {
         "titulo": "Primário 12m / PIB",
         "categoria": "Stress",
         "unidade": "%",
         "direcao": "maior_melhor",
-        "verde": 2, "amarelo": 0, "vermelho": -2, "break": -4,
-        "narrativa": "Resultado primário gov central 12m % PIB. Convenção Brasil: positivo = superávit. Brasil 2003-08: +3.5%. 2024: -1%.",
+        "verde": 2, "amarelo": 0, "break": -4,
+        "narrativa": "Resultado primário gov central 12m % PIB. Convenção Brasil: positivo = superávit. Âncora histórica: Brasil 2003-08 sustentou ~+3,5%.",
     },
     "nfsp_pct_pib": {
         "titulo": "NFSP 12m / PIB",
         "categoria": "Stress",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 2, "amarelo": 5, "vermelho": 8, "break": 12,
-        "narrativa": "Necessidade de financiamento setor público (déficit nominal). Brasil hoje em zona vermelha por causa dos juros.",
+        "verde": 2, "amarelo": 5, "break": 12,
+        "narrativa": "Necessidade de financiamento do setor público (déficit nominal, consolidado). O peso dos juros domina a leitura brasileira.",
     },
     # === E. LEVERS NECESSARIOS ===
     "lever_juros_delta_pp": {
@@ -188,7 +195,7 @@ THRESHOLDS = {
         "categoria": "Levers",
         "unidade": " pp",
         "direcao": "maior_pior",
-        "verde": 2, "amarelo": 3, "vermelho": 4, "break": 6,
+        "verde": 2, "amarelo": 3, "break": 6,
         "narrativa": "Quanto a taxa de juros teria que cair (em magnitude) pra estabilizar Dívida/Receita.",
     },
     "lever_inflacao_delta_pp": {
@@ -196,7 +203,7 @@ THRESHOLDS = {
         "categoria": "Levers",
         "unidade": " pp",
         "direcao": "maior_pior",
-        "verde": 2, "amarelo": 3, "vermelho": 4, "break": 6,
+        "verde": 2, "amarelo": 3, "break": 6,
         "narrativa": "Inflação adicional necessária pra erodir dívida via crescimento nominal.",
     },
     "lever_corte_despesa_pct": {
@@ -204,7 +211,7 @@ THRESHOLDS = {
         "categoria": "Levers",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 3, "amarelo": 7, "vermelho": 12, "break": 18,
+        "verde": 3, "amarelo": 7, "break": 18,
         "narrativa": "% da despesa primária total que precisaria ser cortado isoladamente.",
     },
     "lever_aumento_receita_pct": {
@@ -212,35 +219,51 @@ THRESHOLDS = {
         "categoria": "Levers",
         "unidade": "%",
         "direcao": "maior_pior",
-        "verde": 3, "amarelo": 7, "vermelho": 12, "break": 18,
+        "verde": 3, "amarelo": 7, "break": 18,
         "narrativa": "% de aumento na receita líquida (mantendo despesa) pra estabilizar.",
     },
 }
 
+# Nota de calibração publicada no payload (renderizada na ficha técnica da aba).
+CALIBRACAO_NOTA = (
+    "Como as faixas foram calibradas (Onda 0, ago/2026): cada indicador tem 3 fronteiras reais "
+    "(seguro < atenção < crítico < ruptura). Âncoras EXTERNAS quando existem: DBGG/PIB 60% (Maastricht) e "
+    "70% (FMI, referência p/ emergentes); Juros/Receita ~20% (limiar de debt affordability muito fraca nas "
+    "escalas de Moody's/S&P); r−g com âncora natural em zero; % DPMFi em Selic com âncora histórica no Brasil "
+    "2002 (~70%); % câmbio com o caso Argentina 2001. Dívida/Receita usa PROXY declarada (DBGG do governo geral ÷ "
+    "receita do governo central) e as faixas do conceito do livro (200/350/700, mesmo ente) foram multiplicadas "
+    "pelo fator ~2,0 da razão entre receita do governo geral e central (FMI WEO) → 400/700/1400. As demais faixas "
+    "são calibração editorial AZ a partir dos casos históricos de 'How Countries Go Broke' (Reino Unido 1976, "
+    "Japão pós-1990, Argentina 2001, EUA pós-2008) — não são números do livro. O limiar de 90% de Reinhart-Rogoff "
+    "não é usado em nenhuma aba (contestado em Herndon, Ash & Pollin, 2013)."
+)
+
 
 def avaliar(valor, t):
+    """3 fronteiras reais (verde/amarelo/break) → 4 zonas. O nível 'vermelho'
+    (crítico) é a zona entre amarelo e break; o antigo campo homônimo era letra
+    morta e foi removido na Onda 0."""
     if valor is None:
         return {"nivel": "sem_dado", "distancia_break": None}
-    direcao = t["direcao"]
-    if direcao == "maior_pior":
+    if t["direcao"] == "maior_pior":
         if valor < t["verde"]:
             nivel = "verde"
         elif valor < t["amarelo"]:
             nivel = "amarelo"
-        elif valor < t["vermelho"]:
+        elif valor < t["break"]:
             nivel = "vermelho"
         else:
-            nivel = "break" if valor >= t["break"] else "vermelho"
+            nivel = "break"
         dist = t["break"] - valor
     else:
         if valor > t["verde"]:
             nivel = "verde"
         elif valor > t["amarelo"]:
             nivel = "amarelo"
-        elif valor > t["vermelho"]:
+        elif valor > t["break"]:
             nivel = "vermelho"
         else:
-            nivel = "break" if valor <= t["break"] else "vermelho"
+            nivel = "break"
         dist = valor - t["break"]
     return {"nivel": nivel, "distancia_break": round(dist, 4)}
 
@@ -594,8 +617,8 @@ def main():
         t = THRESHOLDS[chave]
         return {
             "direcao": t["direcao"], "verde": t["verde"], "amarelo": t["amarelo"],
-            "vermelho": t["vermelho"], "break": t["break"],
-            "fonte": "Faixas AZ calibradas a partir dos casos históricos do livro — não são números do livro.",
+            "break": t["break"],
+            "fonte": "Faixas AZ: âncoras externas quando existem (FMI, Maastricht, agências) + casos históricos do livro — ver nota de calibração na ficha técnica.",
         }
 
     pico_dbgg = max(dbgg_serie, key=lambda r: r["valor"]) if dbgg_serie else None
@@ -610,12 +633,10 @@ def main():
             # séries em indicadores_semaforo.dbgg_pct_receita.serie e .dbgg_pct_pib.serie (front lê de lá)
             "faixas_pct_receita": _faixas("dbgg_pct_receita"),
             "faixas_pct_pib": _faixas("dbgg_pct_pib"),
+            # Onda 0: Reinhart-Rogoff 90% REMOVIDO (posição da casa: contestado, não usamos);
+            # FMI 70% virou a própria fronteira amarela da banda — só o pico fica como linha.
             "referencias_pct_pib": (
-                [
-                    {"valor": 70, "label": "FMI ~70% (referência p/ emergentes)"},
-                    {"valor": 90, "label": "Reinhart-Rogoff 90% (limiar contestado)"},
-                ]
-                + ([{"valor": round(pico_dbgg["valor"], 1), "label": f"pico histórico ({pico_dbgg['data']})"}] if pico_dbgg else [])
+                [{"valor": round(pico_dbgg["valor"], 1), "label": f"pico histórico ({pico_dbgg['data']})"}] if pico_dbgg else []
             ),
             "_nota": "DBGG (governo geral) ÷ receita líquida 12m do governo central — proxy conservadora do Debt/Income do livro (perímetros distintos, declarado).",
         },
@@ -845,12 +866,14 @@ def main():
             "debt_pct_receita": round(debt_pct_receita, 2) if debt_pct_receita else None,
             "anos_projecao": 10,
         },
+        "calibracao_nota": CALIBRACAO_NOTA,
         "metodologia": (
             "Indicadores de Risco Fiscal baseados em 'How Countries Go Broke' (Ray Dalio, 2025). "
             "Os 4 indicadores prioritarios do livro (divida/renda, servico/renda, juro vs inflacao e crescimento, "
             "divida e servico vs poupanca) abrem a pagina como series historicas com faixas de risco; "
             "20 indicadores semaforizados em 5 categorias (Carga, Capacidade, Estrutura, Stress, Levers), cada um "
-            "com serie mensal historica — FAIXAS CALIBRADAS PELA AZ a partir dos casos historicos do livro, nao numeros do livro. "
+            "com serie mensal historica — 3 fronteiras por indicador (seguro/atencao/critico/ruptura), com ancoras "
+            "externas quando existem (Maastricht, FMI, agencias) e calibracao AZ dos casos do livro no restante (ver calibracao_nota). "
             "r, g, r-g e primario estabilizador vem do bloco 'sustentabilidade' do fiscal-classicos v2 "
             "(taxa implicita da DLSP x PIB nominal 12m YoY, perimetro unico do setor publico consolidado) — "
             "calculados UMA vez no pipeline; nenhum componente do front recalcula. "

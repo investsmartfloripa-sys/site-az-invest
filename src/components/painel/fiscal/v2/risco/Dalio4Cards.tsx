@@ -53,16 +53,13 @@ export function DividaRendaCard({
   );
 
   // Rótulos curtos — a margem direita do chart tem ~60px (a fonte completa
-  // fica na nota metodológica do card, ícone ?).
+  // fica na nota metodológica do card, ícone ?). Onda 0: só o pico histórico
+  // vem como linha (FMI 70% é a própria fronteira amarela; R-R não usamos).
   const refLinesPib = useMemo<AzRefLine[]>(
     () =>
       dr.referencias_pct_pib.map((r) => ({
         y: r.valor,
-        label: r.label.startsWith("FMI")
-          ? "FMI 70%"
-          : r.label.startsWith("Reinhart")
-            ? "R-R 90%"
-            : `pico ${r.valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`,
+        label: `pico ${r.valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`,
         color: AZ_BRAND.navy,
       })),
     [dr.referencias_pct_pib],
@@ -84,7 +81,7 @@ export function DividaRendaCard({
       subtitle={
         ehReceita
           ? "DBGG ÷ receita líquida 12m (gov. central) — o denominador do livro"
-          : "DBGG em % do PIB — referências FMI e Reinhart-Rogoff"
+          : "DBGG em % do PIB — fronteiras Maastricht 60% e FMI 70% (emergentes)"
       }
       series={ehReceita ? serieReceita : seriePib}
       faixas={ehReceita ? dr.faixas_pct_receita : dr.faixas_pct_pib}
@@ -95,9 +92,11 @@ export function DividaRendaCard({
       height={280}
       footer={
         <span>
-          {dr._nota} Faixas: {dr.faixas_pct_receita.fonte} Referências no modo %PIB: FMI (Fiscal Monitor, ~70% p/
-          emergentes) e Reinhart-Rogoff 90% (contestado em Herndon et al., 2013); pico histórico calculado da própria
-          série.
+          {ehReceita ? dr.faixas_pct_receita.fonte : dr.faixas_pct_pib.fonte} {dr._nota} No modo %Receita, as faixas
+          são recalibradas para a proxy (conceito do livro × fator ~2,0 da razão receita geral/central — ver nota de
+          calibração na ficha técnica). No modo %PIB: 60% = Maastricht, 70% = FMI p/ emergentes (fronteiras das
+          bandas); pico histórico calculado da própria série. O limiar de 90% de Reinhart-Rogoff não é usado
+          (contestado em Herndon et al., 2013).
         </span>
       }
       stampGiro={stampGiro}

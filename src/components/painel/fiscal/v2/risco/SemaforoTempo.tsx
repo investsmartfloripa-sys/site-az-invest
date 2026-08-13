@@ -177,8 +177,8 @@ export function SemaforoTempoGrid({
                   stampDado={stampDado}
                   footer={
                     <span>
-                      Faixas AZ calibradas a partir dos casos históricos do livro (Reino Unido 1976, Japão pós-1990,
-                      Argentina 2001, EUA pós-2008) — não são números do livro.
+                      Faixas AZ: âncoras externas quando existem (FMI, Maastricht, agências) + casos históricos do
+                      livro — a nota de calibração completa está na ficha técnica, no fim da página.
                     </span>
                   }
                 />
@@ -188,7 +188,8 @@ export function SemaforoTempoGrid({
         );
       })}
       <p className="text-[10px] text-zinc-500">
-        Faixas calibradas pela AZ a partir dos casos históricos do livro — não são números do livro.
+        Faixas com âncoras externas quando existem (FMI, Maastricht, agências) e calibração AZ no restante — nota
+        completa na ficha técnica.
         <MethodInfo className="ml-1 align-middle">
           Cada indicador é avaliado nas 4 zonas (seguro / atenção / crítico / ruptura). O fundo dos gráficos pinta as
           mesmas zonas, então a pergunta &quot;desde quando estamos aqui?&quot; tem resposta visual. Indicadores da

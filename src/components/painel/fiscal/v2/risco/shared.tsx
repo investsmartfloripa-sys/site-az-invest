@@ -49,7 +49,7 @@ function fmtLimiar(v: number, unidade: string): string {
  * limiar; a zona segura é rotulada "seguro".
  */
 /** Subconjunto estrutural das faixas — IndicadorSemaforo também satisfaz. */
-export type FaixasBase = Pick<FaixasRisco, "direcao" | "verde" | "amarelo" | "vermelho" | "break">;
+export type FaixasBase = Pick<FaixasRisco, "direcao" | "verde" | "amarelo" | "break">;
 
 export function faixasParaBandas(
   faixas: FaixasBase,

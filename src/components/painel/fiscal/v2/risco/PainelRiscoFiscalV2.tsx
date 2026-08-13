@@ -213,7 +213,7 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
       {/* ── Ferramentas do livro ── */}
       <Divisor
         label="Ferramentas do livro"
-        info='Matrizes de sensibilidade e os 4 levers de "How Countries Go Broke". Leitura AZ: nenhum lever sozinho resolve o caso brasileiro em magnitude politicamente plausível — o livro prevê combinação de dois ou mais (caso análogo: Reino Unido 1976). Os levers usam o perímetro do livro (DBGG ÷ receita do governo central, estabilizando Dívida/Receita) e por isso pedem ajustes maiores que o primário estabilizador p* dos KPIs, calculado no perímetro consolidado sobre Dívida/PIB. Os dois números são consistentes entre si — medem alvos diferentes.'
+        info='Matrizes de sensibilidade e os 4 levers de "How Countries Go Broke". Leitura AZ: nenhum lever sozinho resolve o caso brasileiro em magnitude politicamente plausível — o livro prevê combinação de dois ou mais (caso análogo: Reino Unido 1976). Os levers usam o perímetro do livro (DBGG ÷ receita do governo central, estabilizando Dívida/Receita) e por isso pedem ajustes maiores que o primário estabilizador p* dos KPIs, calculado no perímetro consolidado sobre Dívida/PIB. Os dois números são consistentes entre si — medem alvos diferentes. CONVENÇÃO DE SINAL: dentro destas ferramentas vale a convenção do livro (déficit primário positivo); no restante da seção fiscal, positivo = superávit (STN).'
       />
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
         <div className="rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">
@@ -333,10 +333,18 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
         </summary>
         <div className="mt-3 space-y-2 text-xs leading-relaxed text-zinc-600">
           <p>
-            <strong>Framework.</strong> {dalio4._nota} As faixas de risco (seguro / atenção / crítico / ruptura) são
-            calibradas pela AZ a partir dos casos históricos do livro (Reino Unido 1976, Japão pós-1990, Argentina
-            2001, EUA pós-2008) — não são números do livro.
+            <strong>Framework.</strong> {dalio4._nota}
           </p>
+          {data.calibracao_nota ? (
+            <p>
+              <strong>Calibração das faixas.</strong> {data.calibracao_nota}
+            </p>
+          ) : (
+            <p>
+              <strong>Calibração das faixas.</strong> Faixas de risco (seguro / atenção / crítico / ruptura) calibradas
+              pela AZ a partir dos casos históricos do livro — não são números do livro.
+            </p>
+          )}
           <p>
             <strong>Perímetros — honestidade de cálculo.</strong> Dívida/Receita usa DBGG (governo geral) sobre a
             receita líquida do governo central — proxy conservadora, declarada. r, g, r − g e o primário estabilizador

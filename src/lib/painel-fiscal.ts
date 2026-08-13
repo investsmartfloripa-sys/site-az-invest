@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Loaders dos JSONs do Painel Fiscal.
  *
  * - fiscal-classicos.json: dados crus (BCB SGS + Tesouro RTN + Focus)
@@ -38,7 +38,7 @@ export type DestaqueRecente =
 
 // === fiscal-classicos.json ===
 
-/** v2: r implícita da DLSP × g nominal — perímetro único (consolidado), calculado SÓ no pipeline. */
+/** v2: r implÃ­cita da DLSP Ã— g nominal â€” perÃ­metro Ãºnico (consolidado), calculado SÃ“ no pipeline. */
 export type SustentabilidadePonto = {
   data: string;
   r_aa_pct: number;
@@ -49,7 +49,7 @@ export type SustentabilidadePonto = {
   dlsp_pct_pib: number | null;
 };
 
-/** v2: por que a dívida (DLSP) subiu — decomposição anual com sinal p/ empilhar. */
+/** v2: por que a dÃ­vida (DLSP) subiu â€” decomposiÃ§Ã£o anual com sinal p/ empilhar. */
 export type DecomposicaoDlspAno = {
   ano: string;
   delta_pp: number;
@@ -129,7 +129,7 @@ export type FiscalClassicosData = {
     cambio_pct: PontoMensal[];
     tr_pct?: PontoMensal[];
     outros_pct?: PontoMensal[];
-    /** v2 (SGS 12001): a fatia de índices de preços que faltava — o stack fecha em ~100%. */
+    /** v2 (SGS 12001): a fatia de Ã­ndices de preÃ§os que faltava â€” o stack fecha em ~100%. */
     indices_precos_pct?: PontoMensal[];
   };
   credito_economia?: {
@@ -174,7 +174,7 @@ export type FiscalClassicosData = {
     _nota: string;
     primario_central_ytd_brl_mm: Record<string, { mes: number; acum_brl_mm: number }[]>;
   };
-  /** v3: poupança bruta trimestral (IBGE CNT, SIDRA t/2072) — insumo do Dalio nº 4. */
+  /** v3: poupanÃ§a bruta trimestral (IBGE CNT, SIDRA t/2072) â€” insumo do Dalio nÂº 4. */
   poupanca?: {
     _fonte: string;
     serie: PoupancaPonto[];
@@ -182,7 +182,7 @@ export type FiscalClassicosData = {
   destaques: Record<string, DestaqueRecente>;
 };
 
-/** Poupança bruta acumulada 4 trimestres — data = mês de fim do trimestre. */
+/** PoupanÃ§a bruta acumulada 4 trimestres â€” data = mÃªs de fim do trimestre. */
 export type PoupancaPonto = {
   data: string;
   poupanca_4t_brl_mm: number;
@@ -222,13 +222,12 @@ export type IndicadorSemaforo = {
   direcao: "maior_pior" | "maior_melhor";
   verde: number;
   amarelo: number;
-  vermelho: number;
   break: number;
   narrativa: string;
   valor: number | null;
   nivel: Nivel;
   distancia_break: number | null;
-  /** v3: série mensal histórica do indicador (camada tempo) — ausente nos levers. */
+  /** v3: sÃ©rie mensal histÃ³rica do indicador (camada tempo) â€” ausente nos levers. */
   serie?: PontoMensal[];
 };
 
@@ -237,19 +236,18 @@ export type FaixasRisco = {
   direcao: "maior_pior" | "maior_melhor";
   verde: number;
   amarelo: number;
-  vermelho: number;
   break: number;
   fonte: string;
 };
 
-/** Referência da literatura sobreposta a um gráfico (FMI, Reinhart-Rogoff...). */
+/** ReferÃªncia da literatura sobreposta a um grÃ¡fico (FMI, Reinhart-Rogoff...). */
 export type RefLiteratura = { valor: number; label: string };
 
 /**
- * v3: os 4 indicadores prioritários de How Countries Go Broke.
- * As séries de dívida/renda e serviço/renda NÃO vivem aqui: o front lê
+ * v3: os 4 indicadores prioritÃ¡rios de How Countries Go Broke.
+ * As sÃ©ries de dÃ­vida/renda e serviÃ§o/renda NÃƒO vivem aqui: o front lÃª
  * indicadores_semaforo.{dbgg_pct_receita, dbgg_pct_pib, juros_pct_receita}.serie
- * (o pipeline parou de duplicá-las byte a byte no dalio4).
+ * (o pipeline parou de duplicÃ¡-las byte a byte no dalio4).
  */
 export type Dalio4 = {
   _nota: string;
@@ -285,7 +283,7 @@ export type Dalio4 = {
   };
 };
 
-/** v3: EMBI+ histórico (fonte pública descontinuada em jul/2024 — flag no bloco). */
+/** v3: EMBI+ histÃ³rico (fonte pÃºblica descontinuada em jul/2024 â€” flag no bloco). */
 export type EmbiBlock = {
   _fonte: string;
   serie: PontoMensal[];
@@ -294,7 +292,7 @@ export type EmbiBlock = {
   descontinuada: boolean;
 };
 
-/** v3: projeção ilustrativa da DBGG com insumos do Focus (sem efeito câmbio). */
+/** v3: projeÃ§Ã£o ilustrativa da DBGG com insumos do Focus (sem efeito cÃ¢mbio). */
 export type ProjecaoDbgg = {
   _nota: string;
   historico_anual: PontoMensal[];
@@ -305,9 +303,9 @@ export type ProjecaoDbgg = {
     primario_cenario_meta_pct_pib: number;
     dbgg_cenario_meta_pct_pib: number;
     dbgg_cenario_primario_atual_pct_pib: number;
-    /** Ano além do horizonte legal da LDO (pós-2027) — meta extrapolada (hipótese AZ). */
+    /** Ano alÃ©m do horizonte legal da LDO (pÃ³s-2027) â€” meta extrapolada (hipÃ³tese AZ). */
     meta_extrapolada?: boolean;
-    /** Ano parcial do próprio ano-base: fração decorrida (0–1). */
+    /** Ano parcial do prÃ³prio ano-base: fraÃ§Ã£o decorrida (0â€“1). */
     fracao_ano?: number;
   }[];
 };
@@ -345,7 +343,7 @@ export type FiscalTermometroData = {
     lever_corte_despesa?: Lever;
     lever_aumento_receita?: Lever;
   } | null;
-  /** v3 — presentes só depois que o pipeline novo publica. */
+  /** v3 â€” presentes sÃ³ depois que o pipeline novo publica. */
   dalio4?: Dalio4;
   embi?: EmbiBlock | null;
   projecao_dbgg?: ProjecaoDbgg | null;
@@ -356,12 +354,14 @@ export type FiscalTermometroData = {
     debt_pct_receita: number | null;
     anos_projecao: number;
   };
+  /** Onda 0: nota de calibração das faixas (renderizada na ficha técnica). */
+  calibracao_nota?: string;
   metodologia: string;
 };
 
 async function fetchBlobJson<T>(path: string): Promise<T | null> {
   try {
-    // TTL curto + cache tag `blob:<path>`, purgável pelo POST /api/revalidate
+    // TTL curto + cache tag `blob:<path>`, purgÃ¡vel pelo POST /api/revalidate
     const res = await fetchPainelBlob(path, FISCAL_REVALIDATE_SECONDS);
     if (!res?.ok) return null;
     return (await res.json()) as T;
