@@ -2,6 +2,8 @@
 
 import { useMemo, type ReactNode } from "react";
 
+import Link from "next/link";
+
 import { KpiCard } from "@/components/painel/core";
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { FiscalTabs } from "@/components/painel/fiscal/v2/FiscalTabs";
@@ -19,9 +21,9 @@ import { dataIso, deltaDozeMeses, toPoints } from "./shared";
  * Indicadores de Risco Fiscal — COCKPIT de monitoramento (não narrativa).
  *
  * Estrutura: status geral (distribuição + 4 KPIs) → os 4 indicadores
- * prioritários de Dalio em grade → os 20 indicadores no tempo → mercado e
- * cenários → ferramentas do livro. Rótulos técnicos; contexto editorial fica
- * atrás dos ícones (?) e da ficha técnica.
+ * prioritários de Dalio em grade → os indicadores de estado no tempo →
+ * mercado e cenários → ferramentas do livro. Rótulos técnicos; contexto
+ * editorial fica atrás dos ícones (?) e da ficha técnica.
  */
 
 function Divisor({ label, info }: { label: string; info?: ReactNode }) {
@@ -86,9 +88,9 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
               Indicadores de Risco Fiscal
               <MethodInfo className="ml-2 align-middle">
                 Framework de &quot;How Countries Go Broke&quot; (Ray Dalio, 2025) aplicado ao Brasil. Os 4 indicadores
-                prioritários do livro abrem o painel; os 20 semaforizados vêm abaixo, todos como séries históricas com
-                as zonas de risco ao fundo. Faixas calibradas pela AZ a partir dos casos históricos do livro — não são
-                números do livro.
+                prioritários do livro abrem o painel; os demais indicadores de estado semaforizados vêm abaixo, todos
+                como séries históricas com as zonas de risco ao fundo (a barra de distribuição conta todos os do
+                payload). Faixas calibradas pela AZ a partir dos casos históricos do livro — não são números do livro.
               </MethodInfo>
             </h1>
             <p className="mt-1 text-xs text-zinc-500">
@@ -213,9 +215,25 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
       {Object.keys(indicadores).length > 0 && categorias.length > 0 ? (
         <>
           <Divisor
-            label="Os 20 indicadores no tempo"
-            info="Grade de monitoramento por categoria. Clique num card para abrir a série completa com seletor de período. Alavancas (categoria E) são prescritivas — medem o tamanho do ajuste, não têm série."
+            label="Indicadores de estado no tempo"
+            info="Grade curada de monitoramento por categoria — clique num card para abrir a série completa com seletor de período. Os indicadores redundantes com os hero cards e KPIs do topo ficam ocultos aqui (mas contam na barra de distribuição). A estrutura da dívida vive na aba Dívida; primário realizado e NFSP, na aba Receita e gastos. As alavancas do livro são prescritivas (medem o tamanho do ajuste, não o estado) e moram na seção Ferramentas do livro."
           />
+          <p className="text-[11px] text-zinc-500">
+            Casas canônicas: estrutura da dívida →{" "}
+            <Link
+              href="/painel-economico/economia/brasil/fiscal/divida"
+              className="font-semibold text-[#027DFC] hover:underline"
+            >
+              aba Dívida
+            </Link>{" "}
+            · fluxo primário e NFSP →{" "}
+            <Link
+              href="/painel-economico/economia/brasil/fiscal/receita-e-gastos"
+              className="font-semibold text-[#027DFC] hover:underline"
+            >
+              aba Receita e gastos
+            </Link>
+          </p>
           <SemaforoTempoGrid indicadores={indicadores} categorias={categorias} stampGiro={giro} stampDado={dado} />
         </>
       ) : null}

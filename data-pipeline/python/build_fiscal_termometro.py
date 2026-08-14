@@ -3,10 +3,11 @@ semaforizados de "How Countries Go Broke" (Ray Dalio, 2025).
 
 Output:
 - foto_brasil (KPIs basicos)
-- INDICADORES SEMAFORIZADOS por categoria (carga, capacidade, estrutura, detentores, stress, levers)
+- 14 INDICADORES SEMAFORIZADOS de ESTADO em 4 categorias (Carga, Capacidade,
+  Stress, Monetizacao), todos com serie mensal
 - trajetoria 10y
 - 2 matrizes (deficit, gap)
-- 4 levers explicitos
+- 4 levers explicitos (data.levers — prescritivos, FORA do semaforo)
 
 Convencao:
 - primary_deficit positivo = governo gasta mais que arrecada (Dalio)
@@ -17,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -93,14 +95,6 @@ THRESHOLDS = {
         "narrativa": "Dívida total = DBGG + crédito total (SGS 20622), que inclui operações com o setor público (dupla contagem parcial com a DBGG) e exclui mercado de capitais e dívida externa corporativa (subestima a dívida privada). Comparação internacional exigiria a metodologia BIS, não disponível aqui.",
     },
     # === B. CAPACIDADE DE PAGAMENTO ===
-    "juros_pct_pib": {
-        "titulo": "Juros / PIB",
-        "categoria": "Capacidade",
-        "unidade": "%",
-        "direcao": "maior_pior",
-        "verde": 3, "amarelo": 5, "break": 10,
-        "narrativa": "Despesa anual com juros nominais do gov central / PIB.",
-    },
     "juros_pct_receita": {
         "titulo": "Juros / Receita",
         "categoria": "Capacidade",
@@ -125,32 +119,8 @@ THRESHOLDS = {
         "verde": 0.5, "amarelo": 2, "break": 6,
         "narrativa": "Superávit primário que congela a Dívida/PIB (Blanchard). Quanto maior, mais distante do politicamente factível é o ajuste.",
     },
-    # === C. ESTRUTURA DA DIVIDA ===
-    "pct_indexado_selic": {
-        "titulo": "% DPMFi em Selic/LFT",
-        "categoria": "Estrutura",
-        "unidade": "%",
-        "direcao": "maior_pior",
-        "verde": 20, "amarelo": 40, "break": 70,
-        "narrativa": "Dívida indexada à Selic transmite alta de juros direto pro estoque. Âncora histórica: Brasil 2002 chegou a ~70%.",
-    },
-    "pct_prefixado": {
-        "titulo": "% DPMFi prefixado",
-        "categoria": "Estrutura",
-        "unidade": "%",
-        "direcao": "maior_melhor",
-        "verde": 30, "amarelo": 25, "break": 10,
-        "narrativa": "Prefixado fixa o custo — protege contra aperto monetário. Acima de 30% é saudável.",
-    },
-    "pct_cambio": {
-        "titulo": "% DPMFi em câmbio",
-        "categoria": "Estrutura",
-        "unidade": "%",
-        "direcao": "maior_pior",
-        "verde": 3, "amarelo": 8, "break": 25,
-        "narrativa": "Dívida em câmbio explode em desvalorizações (original sin). Brasil tem virtude estrutural (~1-3%); Argentina 2001 tinha >60%.",
-    },
-    # === D. STRESS EXTERNO & MONETARIO ===
+    # === C. STRESS EXTERNO & MONETARIO ===
+    # (Estrutura da dívida saiu do payload — casa canônica na aba Dívida: DPMFi/DPF)
     "reer_var_12m_pct": {
         "titulo": "REER — variação 12m",
         "categoria": "Stress",
@@ -175,69 +145,88 @@ THRESHOLDS = {
         "verde": 0, "amarelo": 2, "break": 6,
         "narrativa": "Taxa de juros nominal menos crescimento nominal. Quando r > g, dívida cresce mesmo com primário neutro (Domar). Zero é a âncora natural.",
     },
-    "primario_realizado_pct_pib": {
-        "titulo": "Primário 12m / PIB",
-        "categoria": "Stress",
+    # === D. MONETIZACAO (estágio final do livro, adaptado ao Brasil) ===
+    # Levers saíram do semáforo (prescritivos, não indicadores) — seguem como
+    # LeverCards na seção Ferramentas, lendo data.levers (intacto).
+    "base_monetaria_var_12m_pct": {
+        "titulo": "Base monetária — var. 12m",
+        "categoria": "Monetizacao",
+        "unidade": "%",
+        "direcao": "maior_pior",
+        "verde": 10, "amarelo": 20, "break": 40,
+        "narrativa": (
+            "Crescimento nominal 12m do M0 (base monetária restrita, saldo fim de período — SGS 1788). "
+            "É a variável de estágio final do livro: expansão monetária acelerada financia o governo quando "
+            "o mercado não absorve mais dívida. Faixas ancoradas no episódio 2020 (auxílio emergencial + QE "
+            "global): M0 chegou a crescer ~+40% em 12m — essa é a âncora de ruptura; 10% ≈ crescimento "
+            "nominal do PIB (neutro), 20% = o dobro."
+        ),
+    },
+    "carteira_bcb_pct_pib": {
+        "titulo": "Carteira do BCB / PIB",
+        "categoria": "Monetizacao",
+        "unidade": "%",
+        "direcao": "maior_pior",
+        # faixas = percentis HISTÓRICOS da própria série, calculados no builder:
+        # verde = p50, amarelo = p75, break = máximo histórico arredondado p/ cima
+        "verde": None, "amarelo": None, "break": None,
+        "narrativa": (
+            "Títulos públicos na carteira do Banco Central (SGS 4152) ÷ PIB nominal 12m (SGS 4382). "
+            "Faixas = percentis históricos da própria série (sem âncora externa): verde = mediana, "
+            "amarelo = p75, ruptura = máximo histórico arredondado para cima. Nuance BR: a carteira "
+            "lastreia as operações compromissadas (gestão de liquidez) — NÃO é QE à americana; o sinal "
+            "Dalio é a EXPANSÃO da carteira para absorver dívida que o mercado não quer."
+        ),
+    },
+    "compras_bcb_12m_pp_pib": {
+        "titulo": "Δ carteira do BCB 12m (pp PIB)",
+        "categoria": "Monetizacao",
+        "unidade": " pp",
+        "direcao": "maior_pior",
+        # verde = 0 (âncora natural: BC não expandindo); amarelo/break = percentis
+        # históricos (p75 e máximo), calculados no builder
+        "verde": 0, "amarelo": None, "break": None,
+        "narrativa": (
+            "Variação em 12 meses da carteira do BCB em pontos do PIB — o FLUXO (~'bond purchases' do "
+            "livro). Zero é a âncora natural (BC não expandindo a carteira); amarelo e ruptura = percentis "
+            "históricos da própria série (p75 e máximo — sem âncora externa). Expansão rápida da carteira "
+            "com dívida crescendo = o BC virando comprador residual."
+        ),
+    },
+    "titulos_mercado_var_12m_pct": {
+        "titulo": "Títulos em mercado — var. 12m",
+        "categoria": "Monetizacao",
         "unidade": "%",
         "direcao": "maior_melhor",
-        "verde": 2, "amarelo": 0, "break": -4,
-        "narrativa": "Resultado primário gov central 12m % PIB. Convenção Brasil: positivo = superávit. Âncora histórica: Brasil 2003-08 sustentou ~+3,5%.",
-    },
-    "nfsp_pct_pib": {
-        "titulo": "NFSP 12m / PIB",
-        "categoria": "Stress",
-        "unidade": "%",
-        "direcao": "maior_pior",
-        "verde": 2, "amarelo": 5, "break": 12,
-        "narrativa": "Necessidade de financiamento do setor público (déficit nominal, consolidado). O peso dos juros domina a leitura brasileira.",
-    },
-    # === E. LEVERS NECESSARIOS ===
-    "lever_juros_delta_pp": {
-        "titulo": "Δ juros pra estabilizar",
-        "categoria": "Levers",
-        "unidade": " pp",
-        "direcao": "maior_pior",
-        "verde": 2, "amarelo": 3, "break": 6,
-        "narrativa": "Quanto a taxa de juros teria que cair (em magnitude) pra estabilizar Dívida/Receita.",
-    },
-    "lever_inflacao_delta_pp": {
-        "titulo": "Δ inflação pra estabilizar",
-        "categoria": "Levers",
-        "unidade": " pp",
-        "direcao": "maior_pior",
-        "verde": 2, "amarelo": 3, "break": 6,
-        "narrativa": "Inflação adicional necessária pra erodir dívida via crescimento nominal.",
-    },
-    "lever_corte_despesa_pct": {
-        "titulo": "Corte de despesa necessário",
-        "categoria": "Levers",
-        "unidade": "%",
-        "direcao": "maior_pior",
-        "verde": 3, "amarelo": 7, "break": 18,
-        "narrativa": "% da despesa primária total que precisaria ser cortado isoladamente.",
-    },
-    "lever_aumento_receita_pct": {
-        "titulo": "Aumento de receita necessário",
-        "categoria": "Levers",
-        "unidade": "%",
-        "direcao": "maior_pior",
-        "verde": 3, "amarelo": 7, "break": 18,
-        "narrativa": "% de aumento na receita líquida (mantendo despesa) pra estabilizar.",
+        "verde": 5, "amarelo": 0, "break": -5,
+        "narrativa": (
+            "Crescimento nominal 12m da DPMFi em poder do MERCADO (soma das 7 categorias de detentores, "
+            "RMD/Tesouro). Mercado absorvendo dívida nova = funding saudável (verde acima de +5% a.a., "
+            "calibração AZ); estoque em mercado ENCOLHENDO enquanto a dívida cresce (abaixo de −5%) = "
+            "ruptura — o setor privado se recusando a carregar o papel, com o BC/governo absorvendo."
+        ),
     },
 }
 
 # Nota de calibração publicada no payload (renderizada na ficha técnica da aba).
 CALIBRACAO_NOTA = (
-    "Como as faixas foram calibradas (Onda 0, ago/2026): cada indicador tem 3 fronteiras reais "
-    "(seguro < atenção < crítico < ruptura). Âncoras EXTERNAS quando existem: DBGG/PIB 60% (Maastricht) e "
-    "70% (FMI, referência p/ emergentes); Juros/Receita ~20% (limiar de debt affordability muito fraca nas "
-    "escalas de Moody's/S&P); r−g com âncora natural em zero; % DPMFi em Selic com âncora histórica no Brasil "
-    "2002 (~70%); % câmbio com o caso Argentina 2001. Dívida/Receita usa PROXY declarada (DBGG do governo geral ÷ "
-    "receita do governo central) e as faixas do conceito do livro (200/350/700, mesmo ente) foram multiplicadas "
-    "pelo fator ~2,0 da razão entre receita do governo geral e central (FMI WEO) → 400/700/1400. As demais faixas "
-    "são calibração editorial AZ a partir dos casos históricos de 'How Countries Go Broke' (Reino Unido 1976, "
-    "Japão pós-1990, Argentina 2001, EUA pós-2008) — não são números do livro. O limiar de 90% de Reinhart-Rogoff "
-    "não é usado em nenhuma aba (contestado em Herndon, Ash & Pollin, 2013)."
+    "Como as faixas foram calibradas (Onda 0, ago/2026; poda + Monetização, ago/2026): cada indicador tem "
+    "3 fronteiras reais (seguro < atenção < crítico < ruptura). Âncoras EXTERNAS quando existem: DBGG/PIB 60% "
+    "(Maastricht) e 70% (FMI, referência p/ emergentes); Juros/Receita ~20% (limiar de debt affordability muito "
+    "fraca nas escalas de Moody's/S&P); r−g com âncora natural em zero. Dívida/Receita usa PROXY declarada (DBGG "
+    "do governo geral ÷ receita do governo central) e as faixas do conceito do livro (200/350/700, mesmo ente) "
+    "foram multiplicadas pelo fator ~2,0 da razão entre receita do governo geral e central (FMI WEO) → 400/700/1400. "
+    "MONETIZAÇÃO (variáveis de estágio final do livro, adaptadas ao Brasil): base monetária var. 12m ancorada no "
+    "episódio 2020 (M0 ~+40% em 12m = ruptura; 10/20 abaixo); carteira do BCB/PIB e Δ carteira 12m usam faixas = "
+    "percentis históricos da PRÓPRIA série calculados no builder (mediana/p75/máximo — sem âncora externa), com a "
+    "nuance BR de que a carteira lastreia compromissadas (não é QE à americana) — o sinal Dalio é a expansão para "
+    "absorver dívida que o mercado não quer; títulos em mercado var. 12m (+5/0/−5) é calibração AZ: mercado "
+    "encolhendo enquanto a dívida cresce = ruptura. As demais faixas são calibração editorial AZ a partir dos casos "
+    "históricos de 'How Countries Go Broke' (Reino Unido 1976, Japão pós-1990, Argentina 2001, EUA pós-2008) — não "
+    "são números do livro. O limiar de 90% de Reinhart-Rogoff não é usado em nenhuma aba (contestado em Herndon, "
+    "Ash & Pollin, 2013). Indicadores com casa canônica em outra aba (estrutura da DPMFi → aba Dívida; primário e "
+    "NFSP → aba Receita e gastos; juros/PIB → idem) saíram deste payload; os levers são prescritivos e vivem só na "
+    "seção Ferramentas."
 )
 
 
@@ -245,7 +234,8 @@ def avaliar(valor, t):
     """3 fronteiras reais (verde/amarelo/break) → 4 zonas. O nível 'vermelho'
     (crítico) é a zona entre amarelo e break; o antigo campo homônimo era letra
     morta e foi removido na Onda 0."""
-    if valor is None:
+    if valor is None or t["verde"] is None or t["amarelo"] is None or t["break"] is None:
+        # faixas percentílicas não calculadas (série ausente) contam como sem_dado
         return {"nivel": "sem_dado", "distancia_break": None}
     if t["direcao"] == "maior_pior":
         if valor < t["verde"]:
@@ -453,15 +443,21 @@ def montar_spread_soberano():
 # ============================================================================
 # Onda 3 (b): serviço total da dívida — juros 12m + principal vincendo 12m
 # ============================================================================
-def montar_servico_total(cl, out_dir):
-    """(juros_central_12m + % vincendo 12m × estoque DPF) ÷ receita líquida 12m.
-    Lê o blob data/fiscal-dpf-rmd.json (ou o arquivo local se o blob ainda não
-    existir). Retorna None sem quebrar se o DPF não estiver disponível."""
+def carrega_dpf(out_dir):
+    """Blob data/fiscal-dpf-rmd.json com fallback ao arquivo local out/.
+    Insumo do servico_total e do indicador titulos_mercado_var_12m_pct."""
     dpf = download_json("data/fiscal-dpf-rmd.json")
     if not dpf:
         local = out_dir / "fiscal-dpf-rmd.json"
         if local.exists():
             dpf = json.loads(local.read_text(encoding="utf-8"))
+    return dpf
+
+
+def montar_servico_total(cl, dpf):
+    """(juros_central_12m + % vincendo 12m × estoque DPF) ÷ receita líquida 12m.
+    Recebe o fiscal-dpf-rmd já carregado (carrega_dpf). Retorna None sem quebrar
+    se o DPF não estiver disponível."""
     if not dpf:
         print("[WARN] fiscal-dpf-rmd indisponível (blob e local) — servico_total ficará null", file=sys.stderr)
         return None
@@ -545,6 +541,28 @@ def _var_12m(serie, casas=2):
     return out
 
 
+def _diff_12m(serie, casas=2):
+    """Diferença em NÍVEL vs 12 meses atrás (pp), não razão."""
+    smap = {r["data"]: r["valor"] for r in serie}
+    out = []
+    for data in sorted(smap.keys()):
+        y, m = data.split("-")
+        ant = f"{int(y) - 1}-{m}"
+        if smap.get(ant) is not None:
+            out.append({"data": data, "valor": round(smap[data] - smap[ant], casas)})
+    return out
+
+
+def _percentil(serie, p, casas=2):
+    """Percentil p (0-100) dos valores de [{data, valor}] — mesmo método por
+    posto arredondado usado nos percentis 10a do spread/EMBI."""
+    vals = sorted(r["valor"] for r in serie)
+    if not vals:
+        return None
+    k = max(0, min(len(vals) - 1, int(round(p / 100 * (len(vals) - 1)))))
+    return round(vals[k], casas)
+
+
 # ============================================================================
 # Main
 # ============================================================================
@@ -572,7 +590,6 @@ def main():
     juros_pct_receita = last_value(cl["receita_e_gastos"]["juros_pct_receita"], "valor_pct")
     primario_pct_receita = last_value(cl["receita_e_gastos"]["primario_pct_receita"], "valor_pct")
     despesa_pct_receita = last_value(cl["receita_e_gastos"]["despesa_pct_receita"], "valor_pct")
-    nfsp_sp_pct = last_value(cl["receita_e_gastos"]["nfsp_sp_12m_pct_pib"])
 
     sr = cl.get("destaques", {}).get("selic_real_recente")
     selic_real = sr.get("selic_real_pct") if isinstance(sr, dict) else sr
@@ -581,11 +598,7 @@ def main():
     ipca_obj = cl.get("destaques", {}).get("ipca_12m_recente")
     ipca_12m_pct = ipca_obj.get("valor") if isinstance(ipca_obj, dict) else ipca_obj
 
-    # Composicao DPMFi
-    comp = cl.get("composicao_dpmfi", {})
-    pct_selic = last_value(comp.get("selic_pct"))
-    pct_prefix = last_value(comp.get("prefixado_pct"))
-    pct_cambio = last_value(comp.get("cambio_pct"))
+    # Composicao DPMFi: PODADA do semáforo (casa canônica na aba Dívida)
 
     # Credito economia
     credito_total_pct_pib = last_value(cl.get("credito_economia", {}).get("credito_total_pct_pib"))
@@ -633,31 +646,75 @@ def main():
     # série joinada (numerador e denominador do MESMO mês).
     dbgg_serie = _norm(cl["divida"]["dbgg_pct_pib"])
     receita_pct_serie = _norm(cl["receita_e_gastos"]["receita_liquida_pct_pib"], "valor_pct")
-    juros_pct_pib_serie = _norm(cl["receita_e_gastos"]["juros_central_pct_pib"], "valor_pct")
+    juros_pct_pib_serie = _norm(cl["receita_e_gastos"]["juros_central_pct_pib"], "valor_pct")  # insumo do dalio4 (juros % poupança)
     credito_serie = _norm(cl.get("credito_economia", {}).get("credito_total_pct_pib"))
     sust_norm = sorted((r for r in sust if r.get("r_aa_pct") is not None), key=lambda x: x["data"])
+
+    # === Monetização (estágio final): séries derivadas + faixas percentílicas ===
+    mon = cl.get("monetizacao") or {}
+    base_mon_var12 = _var_12m(_norm(mon.get("base_monetaria_brl_mm")))
+    pib_map_mensal = {
+        r["data"]: r["valor"]
+        for r in (cl.get("pib") or {}).get("acumulado_12m_brl_milhoes_mensal") or []
+        if r.get("valor") is not None
+    }
+    carteira_pct_pib_serie = []
+    for r in _norm(mon.get("carteira_bcb_brl_mm")):
+        pib = pib_map_mensal.get(r["data"])
+        if pib:  # ambos em R$ milhões
+            carteira_pct_pib_serie.append({"data": r["data"], "valor": round(r["valor"] / pib * 100, 2)})
+    compras_12m_serie = _diff_12m(carteira_pct_pib_serie)
+
+    dpf = carrega_dpf(out_dir)
+    detentores_keys = (
+        "instituicoes_financeiras", "fundos", "previdencia", "nao_residentes",
+        "governo", "seguradoras", "outros",
+    )
+    titulos_mercado_brl_bi = []
+    for row in (dpf or {}).get("detentores_brl_bi") or []:
+        vals = [row.get(k) for k in detentores_keys]
+        if any(v is None for v in vals):
+            continue
+        titulos_mercado_brl_bi.append({"data": row["data"], "valor": sum(vals)})
+    titulos_mercado_var12 = _var_12m(titulos_mercado_brl_bi)
+    if not titulos_mercado_var12:
+        print("[WARN] fiscal-dpf-rmd sem detentores — titulos_mercado_var_12m_pct ficará sem_dado", file=sys.stderr)
+
+    # Faixas percentílicas calculadas NO BUILDER (contrato: percentis da própria série)
+    if carteira_pct_pib_serie:
+        THRESHOLDS["carteira_bcb_pct_pib"]["verde"] = _percentil(carteira_pct_pib_serie, 50)
+        THRESHOLDS["carteira_bcb_pct_pib"]["amarelo"] = _percentil(carteira_pct_pib_serie, 75)
+        THRESHOLDS["carteira_bcb_pct_pib"]["break"] = float(math.ceil(max(r["valor"] for r in carteira_pct_pib_serie)))
+        t = THRESHOLDS["carteira_bcb_pct_pib"]
+        print(f"  Faixas percentilicas carteira_bcb_pct_pib: verde(p50)={t['verde']} amarelo(p75)={t['amarelo']} break(max arred. p/ cima)={t['break']}")
+    if compras_12m_serie:
+        THRESHOLDS["compras_bcb_12m_pp_pib"]["amarelo"] = _percentil(compras_12m_serie, 75)
+        # máximo arredondado p/ cima em 1 decimal: o mês recorde fica como crítico, não ruptura
+        THRESHOLDS["compras_bcb_12m_pp_pib"]["break"] = math.ceil(max(r["valor"] for r in compras_12m_serie) * 10) / 10
+        t = THRESHOLDS["compras_bcb_12m_pp_pib"]
+        print(f"  Faixas percentilicas compras_bcb_12m_pp_pib: verde(ancora)=0 amarelo(p75)={t['amarelo']} break(max arred. p/ cima)={t['break']}")
 
     series_hist = {
         "dbgg_pct_pib": dbgg_serie,
         "dbgg_pct_receita": _join_ratio(dbgg_serie, receita_pct_serie),
         "credito_total_pct_pib": credito_serie,
         "divida_total_economia_pct_pib": _join_sum(dbgg_serie, credito_serie),
-        "juros_pct_pib": juros_pct_pib_serie,
         "juros_pct_receita": _norm(cl["receita_e_gastos"]["juros_pct_receita"], "valor_pct"),
         "custo_medio_aa_pct": [{"data": r["data"], "valor": r["r_aa_pct"]} for r in sust_norm],
         "primario_estabilizador_pct_pib": [
             {"data": r["data"], "valor": r["primario_estabilizador_pct_pib"]}
             for r in sust_norm if r.get("primario_estabilizador_pct_pib") is not None
         ],
-        "pct_indexado_selic": _norm(comp.get("selic_pct")),
-        "pct_prefixado": _norm(comp.get("prefixado_pct")),
-        "pct_cambio": _norm(comp.get("cambio_pct")),
         "reer_var_12m_pct": _var_12m(_norm(reer_serie)),
         "selic_real_ex_post_pct": _norm(cl["monetaria"].get("selic_real_ex_post_pct"), "selic_real_pct"),
         "r_menos_g_pp": [{"data": r["data"], "valor": r["r_menos_g_pp"]} for r in sust_norm],
-        "primario_realizado_pct_pib": _norm(cl["receita_e_gastos"]["primario_central_pct_pib"], "valor_pct"),
-        "nfsp_pct_pib": _norm(cl["receita_e_gastos"]["nfsp_sp_12m_pct_pib"]),
-        # Levers são prescritivos (quanto falta), não estado de risco — ficam sem série.
+        # Monetização (estágio final do livro)
+        "base_monetaria_var_12m_pct": base_mon_var12,
+        "carteira_bcb_pct_pib": carteira_pct_pib_serie,
+        "compras_bcb_12m_pp_pib": compras_12m_serie,
+        "titulos_mercado_var_12m_pct": titulos_mercado_var12,
+        # Podados do semáforo: estrutura DPMFi (aba Dívida), primário/NFSP/juros%PIB
+        # (aba Receita e gastos). Levers são prescritivos — seguem só em data.levers.
     }
 
     # Escalar consistente com a série (último ponto da razão joinada)
@@ -675,7 +732,7 @@ def main():
             despesa_pct_rec=despesa_pct_receita or 100.0, inflacao=ipca_12m_pct / 100,
         )
 
-    # === Avaliar 20 indicadores semaforizados ===
+    # === Avaliar 14 indicadores semaforizados (todos de ESTADO, com série mensal) ===
     valores = {
         # Carga
         "dbgg_pct_pib": dbgg_pct_pib,
@@ -683,25 +740,18 @@ def main():
         "credito_total_pct_pib": credito_total_pct_pib,
         "divida_total_economia_pct_pib": divida_total_pct_pib,
         # Capacidade
-        "juros_pct_pib": juros_central_pct_pib,
         "juros_pct_receita": juros_pct_receita,
         "custo_medio_aa_pct": i_nominal * 100,
         "primario_estabilizador_pct_pib": primario_estab_pct_pib,
-        # Estrutura
-        "pct_indexado_selic": pct_selic,
-        "pct_prefixado": pct_prefix,
-        "pct_cambio": pct_cambio,
         # Stress
         "reer_var_12m_pct": reer_var_12m,
         "selic_real_ex_post_pct": selic_real,
         "r_menos_g_pp": gap_pp,
-        "primario_realizado_pct_pib": primario_central_pct_pib,
-        "nfsp_pct_pib": nfsp_sp_pct,
-        # Levers
-        "lever_juros_delta_pp": abs(levers["lever_juros"]["delta_pp"]) if levers and "lever_juros" in levers else None,
-        "lever_inflacao_delta_pp": abs(levers["lever_inflacao"]["delta_pp"]) if levers and "lever_inflacao" in levers else None,
-        "lever_corte_despesa_pct": levers["lever_corte_despesa"]["corte_pct_da_despesa"] if levers and "lever_corte_despesa" in levers else None,
-        "lever_aumento_receita_pct": levers["lever_aumento_receita"]["aumento_pct_da_receita"] if levers and "lever_aumento_receita" in levers else None,
+        # Monetizacao (estágio final)
+        "base_monetaria_var_12m_pct": last_value(base_mon_var12),
+        "carteira_bcb_pct_pib": last_value(carteira_pct_pib_serie),
+        "compras_bcb_12m_pp_pib": compras_12m_serie[-1]["valor"] if compras_12m_serie else None,
+        "titulos_mercado_var_12m_pct": titulos_mercado_var12[-1]["valor"] if titulos_mercado_var12 else None,
     }
 
     indicadores = {}
@@ -836,7 +886,7 @@ def main():
 
     # === Onda 3: spread soberano vivo (pré 5a − Treasury 5a) e serviço total ===
     spread_soberano = montar_spread_soberano()
-    servico_total = montar_servico_total(cl, out_dir)
+    servico_total = montar_servico_total(cl, dpf)
 
     # === Projeção DBGG com Focus (ilustrativa, sem efeito câmbio) ===
     projecao_dbgg = None
@@ -992,7 +1042,7 @@ def main():
         "fonte_base": cl.get("mes_recente"),
         "foto_brasil": foto,
         "indicadores_semaforo": indicadores,
-        "categorias_ordem": ["Carga", "Capacidade", "Estrutura", "Stress", "Levers"],
+        "categorias_ordem": ["Carga", "Capacidade", "Stress", "Monetizacao"],
         "matrizes": matrizes_block,
         "levers": levers,
         "dalio4": dalio4,
@@ -1012,9 +1062,15 @@ def main():
             "Indicadores de Risco Fiscal baseados em 'How Countries Go Broke' (Ray Dalio, 2025). "
             "Os 4 indicadores prioritarios do livro (divida/renda, servico/renda, juro vs inflacao e crescimento, "
             "divida e servico vs poupanca) abrem a pagina como series historicas com faixas de risco; "
-            "20 indicadores semaforizados em 5 categorias (Carga, Capacidade, Estrutura, Stress, Levers), cada um "
+            "14 indicadores semaforizados de ESTADO em 4 categorias (Carga, Capacidade, Stress, Monetizacao), cada um "
             "com serie mensal historica — 3 fronteiras por indicador (seguro/atencao/critico/ruptura), com ancoras "
-            "externas quando existem (Maastricht, FMI, agencias) e calibracao AZ dos casos do livro no restante (ver calibracao_nota). "
+            "externas quando existem (Maastricht, FMI, agencias, episodio 2020 do M0), percentis historicos da propria "
+            "serie na carteira do BCB e calibracao AZ dos casos do livro no restante (ver calibracao_nota). "
+            "A categoria Monetizacao adapta ao Brasil as variaveis de estagio final do livro: crescimento 12m do M0, "
+            "carteira de titulos do BCB em % do PIB (nivel e fluxo 12m) e crescimento 12m da DPMFi em poder do mercado "
+            "(soma dos detentores, RMD/Tesouro); compromissadas publicadas como serie de contexto no fiscal-classicos. "
+            "Indicadores com casa canonica em outra aba (estrutura DPMFi, primario, NFSP, juros/PIB) sairam do payload; "
+            "os 4 levers seguem como ferramenta prescritiva em data.levers (secao Ferramentas), fora do semaforo. "
             "r, g, r-g e primario estabilizador vem do bloco 'sustentabilidade' do fiscal-classicos v2 "
             "(taxa implicita da DLSP x PIB nominal 12m YoY, perimetro unico do setor publico consolidado) — "
             "calculados UMA vez no pipeline; nenhum componente do front recalcula. "
@@ -1030,7 +1086,13 @@ def main():
     size = out_file.stat().st_size
     print(f"  -> {out_file} ({size / 1024:.1f} KB)")
     print(f"  Score: {score}")
+    print(f"  Indicadores no payload: {len(indicadores)} | categorias: {sorted({v['categoria'] for v in indicadores.values()})}")
     print(f"  Indicadores com nivel break: {[k for k, v in indicadores.items() if v['nivel'] == 'break']}")
+    for k in ("base_monetaria_var_12m_pct", "carteira_bcb_pct_pib", "compras_bcb_12m_pp_pib", "titulos_mercado_var_12m_pct"):
+        v = indicadores.get(k) or {}
+        serie = v.get("serie") or []
+        ult = serie[-1]["data"] if serie else "-"
+        print(f"  Monetizacao {k}: valor={v.get('valor')} nivel={v.get('nivel')} (serie ate {ult}, n={len(serie)})")
     if spread_soberano:
         print(f"  Spread soberano: ultimo {spread_soberano['ultimo']} | percentis 10a {spread_soberano['percentis_10a']}")
     else:

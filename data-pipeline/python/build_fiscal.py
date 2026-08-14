@@ -629,6 +629,11 @@ def main():
         # Credito total economia (saldo % PIB)
         "credito_total_pct_pib": 20622, # Saldo total de credito / PIB
         # Selic over diaria? Ja temos 1178
+        # ── Monetizacao (estagio final do livro, sonda SGS 14/08/2026) ──
+        "base_monetaria_brl_mil": 1788,    # M0 — base monetaria restrita, saldo FIM de periodo, R$ mil
+        "carteira_bcb_brl_mi": 4152,       # titulos do TN na carteira do Banco Central, R$ mi
+        "custodia_fora_bcb_brl_mi": 4153,  # divida mobiliaria — posicao de custodia FORA do BC, R$ mi
+        "mercado_aberto_pct": 10632,       # % da custodia em operacoes de mercado aberto (compromissadas)
     }
     sgs = {}
     for nome, cod in series_mensal.items():
@@ -716,6 +721,29 @@ def main():
 
     selic_real = selic_real_ex_post(selic_diaria, sgs["ipca_12m"])
     pib_real_yoy_serie = pib_real_yoy(sgs["pib_real_idx"])
+
+    # ── Monetizacao: series em R$ mi (base monetaria vem em R$ MIL do 1788;
+    # compromissadas nao existem em R$ no SGS → derivada 4153 × 10632/100) ──
+    base_monetaria_mm = [
+        {"data": r["data"], "valor": round(r["valor"] / 1000.0, 2)}
+        for r in sgs["base_monetaria_brl_mil"] if r["valor"] is not None
+    ]
+    carteira_bcb_mm = [
+        {"data": r["data"], "valor": round(r["valor"], 2)}
+        for r in sgs["carteira_bcb_brl_mi"] if r["valor"] is not None
+    ]
+    ma_pct_map = {r["data"]: r["valor"] for r in sgs["mercado_aberto_pct"] if r["valor"] is not None}
+    compromissadas_mm = []
+    for r in sgs["custodia_fora_bcb_brl_mi"]:
+        pct = ma_pct_map.get(r["data"])
+        if r["valor"] is None or pct is None:
+            continue
+        compromissadas_mm.append({"data": r["data"], "valor": round(r["valor"] * pct / 100.0, 2)})
+    if compromissadas_mm:
+        u = compromissadas_mm[-1]
+        print(f"  [monetizacao] compromissadas {u['data']}: R$ {u['valor'] / 1000:.0f} bi | "
+              f"carteira BCB: R$ {carteira_bcb_mm[-1]['valor'] / 1000:.0f} bi | "
+              f"M0: R$ {base_monetaria_mm[-1]['valor'] / 1000:.0f} bi")
 
     # ── v2: famílias de receita (stack que FECHA com a receita total) ──
     admin_12m = soma_12m(rtn_data["receita_administrada_rfb"])
@@ -889,6 +917,20 @@ def main():
         "credito_economia": {
             "credito_total_pct_pib": sgs["credito_total_pct_pib"],
         },
+        "monetizacao": {
+            "_fonte": (
+                "BCB SGS — base monetária restrita M0, saldo em final de período (1788, publicada em R$ MIL, "
+                "convertida aqui para R$ milhões); títulos do Tesouro na carteira do Banco Central (4152, R$ milhões); "
+                "operações compromissadas do BCB derivadas — não há série direta do estoque em R$ no SGS — como "
+                "custódia fora do BC (4153, R$ milhões) × participação das operações de mercado aberto na custódia "
+                "(10632, %). Compromissadas são série de CONTEXTO (não semaforizada): desde 2021 o BC também "
+                "esteriliza via depósitos voluntários remunerados (SGS 28964), então só a compromissada subestima "
+                "a absorção total. Todas mensais, saldo do fim do mês de referência."
+            ),
+            "base_monetaria_brl_mm": base_monetaria_mm,
+            "carteira_bcb_brl_mm": carteira_bcb_mm,
+            "compromissadas_brl_mm": compromissadas_mm,
+        },
         "stress": {
             "reer_index": sgs["reer"],
             "reservas_usd_mm_mensal": reservas_mensal,
@@ -981,6 +1023,15 @@ def main():
     vazias = [nome for nome, serie in sgs.items() if not serie]
     if not selic_diaria:
         vazias.append("selic_diaria")
+    # monetizacao: as derivadas tambem precisam ter conteudo (o join 4153×10632
+    # pode esvaziar mesmo com as fontes ok)
+    for nome, serie in (
+        ("monetizacao.base_monetaria_brl_mm", base_monetaria_mm),
+        ("monetizacao.carteira_bcb_brl_mm", carteira_bcb_mm),
+        ("monetizacao.compromissadas_brl_mm", compromissadas_mm),
+    ):
+        if not serie:
+            vazias.append(nome)
     if vazias:
         print(
             f"[ERROR] series vazias ({', '.join(vazias)}) — upload abortado "

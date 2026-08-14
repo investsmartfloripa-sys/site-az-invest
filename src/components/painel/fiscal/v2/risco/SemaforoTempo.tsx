@@ -2,8 +2,6 @@
 
 import { useMemo, useState } from "react";
 
-import Link from "next/link";
-
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import type { IndicadorSemaforo, Nivel } from "@/lib/painel-fiscal";
 import type { AzTimeSeries } from "@/components/painel/charts/AzTimeSeriesChart";
@@ -11,23 +9,39 @@ import { MiniRiskSpark, NIVEL_RISCO, toPoints } from "./shared";
 import { RiskSeriesCard } from "./RiskSeriesCard";
 
 /**
- * Camada de esmiuçamento: os 20 indicadores Dalio NO TEMPO, como small
- * multiples por categoria — sparkline com bandas de risco ao fundo, valor
- * atual e chip de nível. Clicar num card abre a série completa (com
- * AzPeriodSelector) logo abaixo da grade da categoria.
+ * Camada de esmiuçamento: os indicadores de ESTADO do framework Dalio NO
+ * TEMPO, como small multiples por categoria — sparkline com bandas de risco
+ * ao fundo, valor atual e chip de nível. Clicar num card abre a série
+ * completa (com AzPeriodSelector) logo abaixo da grade da categoria.
  *
  * Substitui os cards antigos com régua vertical: a régua virou o FUNDO do
  * gráfico, e a pergunta "desde quando estamos nessa zona?" passou a ter
  * resposta visual.
+ *
+ * Curadoria (decisão 14/08/2026): alavancas (prescritivas) moram só em
+ * Ferramentas do livro; estrutura da dívida, primário e NFSP moram nas suas
+ * abas canônicas; os hero-fed continuam no payload mas o grid os oculta
+ * (ver GRID_OCULTOS).
  */
 
 const CATEGORIA_LABEL: Record<string, string> = {
   Carga: "A · Carga da dívida",
   Capacidade: "B · Capacidade de pagamento",
-  Estrutura: "C · Estrutura da dívida",
-  Stress: "D · Sinais de stress",
-  Levers: "E · Alavancas — o tamanho do ajuste que falta",
+  Stress: "C · Sinais de stress",
+  Monetizacao: "D · Monetização",
 };
+
+/**
+ * Indicadores que FICAM no payload (alimentam os hero cards, KPIs e chips do
+ * topo da página) mas que o grid NÃO renderiza — seriam redundantes na
+ * própria página. A DistribuicaoBar continua contando TODOS os do payload.
+ */
+const GRID_OCULTOS = new Set<string>([
+  "dbgg_pct_pib", // hero: Dívida/Renda + KPI Dívida/Receita
+  "dbgg_pct_receita", // hero: Dívida/Renda + KPI Dívida/Receita
+  "juros_pct_receita", // hero: Serviço da dívida/Receita + KPI Juros/Receita
+  "r_menos_g_pp", // hero: juro × inflação × crescimento + KPI r − g
+]);
 
 function fmtValor(ind: IndicadorSemaforo): string {
   if (ind.valor == null) return "—";
@@ -96,6 +110,7 @@ export function SemaforoTempoGrid({
   const porCategoria = useMemo(() => {
     const grupos: Record<string, Array<[string, IndicadorSemaforo]>> = {};
     for (const [id, ind] of Object.entries(indicadores)) {
+      if (GRID_OCULTOS.has(id)) continue; // redundantes na própria página (heroes/KPIs)
       (grupos[ind.categoria] ??= []).push([id, ind]);
     }
     return grupos;
@@ -184,26 +199,20 @@ export function SemaforoTempoGrid({
                     </span>
                   }
                 />
-                {cat === "Estrutura" ? (
-                  <Link
-                    href="/painel-economico/economia/brasil/fiscal/divida"
-                    className="mt-2 inline-block text-[11px] font-semibold text-[#027DFC] hover:underline"
-                  >
-                    composição completa na aba Dívida →
-                  </Link>
-                ) : null}
               </div>
             ) : null}
           </div>
         );
       })}
       <p className="text-[10px] text-zinc-500">
-        Faixas com âncoras externas quando existem (FMI, Maastricht, agências) e calibração AZ no restante — nota
-        completa na ficha técnica.
+        Faixas com âncoras externas quando existem (FMI, Maastricht, agências, episódio 2020 na Monetização) e
+        calibração AZ no restante — nota completa na ficha técnica.
         <MethodInfo className="ml-1 align-middle">
           Cada indicador é avaliado nas 4 zonas (seguro / atenção / crítico / ruptura). O fundo dos gráficos pinta as
-          mesmas zonas, então a pergunta &quot;desde quando estamos aqui?&quot; tem resposta visual. Indicadores da
-          categoria E (alavancas) são prescritivos — medem o tamanho do ajuste, não têm série histórica.
+          mesmas zonas, então a pergunta &quot;desde quando estamos aqui?&quot; tem resposta visual. Grade curada: os
+          indicadores que já viram hero cards e KPIs no topo desta página seguem no boletim de contagem, mas não
+          repetem card aqui; estrutura da dívida vive na aba Dívida; primário e NFSP, na aba Receita e gastos; as
+          alavancas do livro são prescritivas e moram em Ferramentas do livro, no fim da página.
         </MethodInfo>
       </p>
     </div>
