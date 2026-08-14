@@ -10,13 +10,24 @@ import { baixarCsv } from "../v2/shared";
 
 /**
  * Tabela-síntese estilo Carta de Conjuntura (IPEA), espelho do card do IPCA:
- * família IGP (IGP-M, IGP-10, IGP-DI), componentes com peso EFETIVO encadeado
- * + resíduo estrutural e origem do IPA (se a identificação foi validada) ×
- * [m-2, m-1, mês, acum. ano, 12m, peso]. TODO valor vem pré-computado do
- * builder (tabela_sintese) — zero conta aqui. Linhas de janela própria
- * (IGP-10/IGP-DI/origem) carregam o próprio mês entre parênteses.
+ * família IGP (IGP-M, IGP-10, IGP-DI) e componentes com peso EFETIVO encadeado
+ * + resíduo estrutural × [m-2, m-1, mês, acum. ano, 12m, peso]. TODO valor vem
+ * pré-computado do builder (tabela_sintese) — zero conta aqui. Linhas de
+ * janela própria (IGP-10/IGP-DI) carregam o próprio mês entre parênteses.
  * Semântica de inflação: alta em vermelho (pressão), queda em azul.
+ *
+ * A seção "origem do IPA" (família IPA-DI) NÃO entra aqui por decisão
+ * editorial (relatório ago/2026): é assunto do atacado e vive no card
+ * próprio da tab IPA-M (OrigemIpaCard) — misturar família IPA-DI na síntese
+ * do IGP-M deslocava a leitura.
  */
+
+/** Janela de coleta de cada índice da família IGP — o que os diferencia. */
+const JANELA_COLETA: Record<string, string> = {
+  igpm: "IGP-M: preços coletados do dia 21 do mês anterior ao dia 20 do mês de referência",
+  igp10: "IGP-10: prévia — coleta do dia 11 do mês anterior ao dia 10 do mês de referência",
+  igpdi: "IGP-DI: mês civil fechado — coleta do dia 1º ao último dia do mês",
+};
 
 function celula(v: number | null, opts?: { destaque?: boolean }): ReactNode {
   if (v == null) return <span className="text-zinc-300">—</span>;
@@ -30,10 +41,11 @@ function celula(v: number | null, opts?: { destaque?: boolean }): ReactNode {
 
 export function TabelaSinteseIgpmCard({ sintese, geradoEm }: { sintese: TabelaSinteseIgpmBlock; geradoEm: string }) {
   const [m2, m1, m0] = sintese.meses;
+  const secoes = sintese.secoes.filter((sec) => sec.id !== "origem");
 
   const exportarCsv = () => {
     const header = ["Seção", "Linha", fmtMesCurto(m2), fmtMesCurto(m1), fmtMesCurto(m0), "No ano", "12 meses", "Peso (%)"];
-    const rows = sintese.secoes.flatMap((sec) =>
+    const rows = secoes.flatMap((sec) =>
       sec.linhas.map((linha) => [
         sec.titulo,
         linha.nome,
@@ -60,7 +72,7 @@ export function TabelaSinteseIgpmCard({ sintese, geradoEm }: { sintese: TabelaSi
           Baixar CSV
         </button>
       }
-      footer="Fontes: FGV via BCB/SGS — 189 (IGP-M), 7447 (IGP-10), 190 (IGP-DI), 7450 (IPA-M), 7453 (IPC-M), 7456 (INCC-M). Peso (%) e contribuição dos componentes usam pesos EFETIVOS encadeados no pipeline (não os 60/30/10 de origem); o resíduo estrutural da aproximação é linha própria. Origem do IPA: família IPA-DI (SGS 7459/7460), identificação revalidada a cada build contra o IPA-DI cheio (SGS 225) — a seção só aparece quando a validação passa. Meses entre parênteses = série com janela de coleta própria."
+      footer="Fontes: FGV via BCB/SGS — 189 (IGP-M), 7447 (IGP-10), 190 (IGP-DI), 7450 (IPA-M), 7453 (IPC-M), 7456 (INCC-M). Peso (%) e contribuição dos componentes usam pesos EFETIVOS encadeados no pipeline (não os 60/30/10 de origem); o resíduo estrutural da aproximação é linha própria. A abertura do IPA por origem (agrícola × industrial, família IPA-DI) vive na tab IPA-M. Meses entre parênteses = série com janela de coleta própria."
       stampGiro={geradoEm}
       stampDado={m0}
     >
@@ -83,12 +95,21 @@ export function TabelaSinteseIgpmCard({ sintese, geradoEm }: { sintese: TabelaSi
             </tr>
           </thead>
           <tbody className="bg-white">
-            {sintese.secoes.map((sec) => (
+            {secoes.map((sec) => (
               <FragmentoSecao key={sec.id} titulo={sec.titulo} linhas={sec.linhas} />
             ))}
           </tbody>
         </table>
       </div>
+      <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
+        <strong className="font-semibold text-zinc-600">Mesma cesta, três janelas de coleta:</strong> o{" "}
+        <strong className="font-semibold text-zinc-600">IGP-10</strong> é a prévia (coleta do dia 11 do mês
+        anterior ao dia 10), o <strong className="font-semibold text-zinc-600">IGP-M</strong> fecha a coleta no
+        dia 20 (do dia 21 do mês anterior ao dia 20) e o{" "}
+        <strong className="font-semibold text-zinc-600">IGP-DI</strong> cobre o mês civil inteiro (1º ao último
+        dia). Por isso os três divergem no mesmo mês — quanto maior a diferença IGP-10 → IGP-DI, mais os preços
+        mudaram dentro do mês.
+      </p>
     </ChartCard>
   );
 }
@@ -109,7 +130,10 @@ function FragmentoSecao({
       </tr>
       {linhas.map((linha) => (
         <tr key={linha.id} className="border-t border-zinc-50 hover:bg-zinc-50/60">
-          <td className="whitespace-nowrap px-3 py-1.5 font-medium text-zinc-800">
+          <td
+            className="whitespace-nowrap px-3 py-1.5 font-medium text-zinc-800"
+            title={JANELA_COLETA[linha.id]}
+          >
             {linha.nome}
             {linha.mes_proprio ? (
               <span className="ml-1 text-[10px] font-normal text-zinc-400">({fmtMesCurto(linha.mes_proprio)})</span>

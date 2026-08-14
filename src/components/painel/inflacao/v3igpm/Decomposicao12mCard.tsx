@@ -28,6 +28,9 @@ import { CORES_COMPONENTE, COR_RESIDUO } from "../v2igpm/shared";
  * do IGP-M 12m oficial. As contribuições vêm do builder por ENCADEAMENTO das
  * contribs mensais (pesos efetivos); o resíduo é fatia PRÓPRIA da pilha e a
  * soma fecha com o oficial por construção — nunca realocado.
+ *
+ * Vive na tab "Leitura do mês", em evidência (relatório ago/2026), com o mês
+ * de referência marcado em rust — a tab é focada no mês.
  */
 
 const NOMES_LEGENDA: Record<string, string> = {
@@ -76,6 +79,21 @@ export function Decomposicao12mCard({ decomp, geradoEm }: { decomp: Decomposicao
               <XAxis {...azXAxisProps()} dataKey="mes" tickFormatter={fmtMesCurto} minTickGap={28} />
               <YAxis {...azYAxisProps()} width={44} tickFormatter={(v: number) => fmtNum(v, 1)} />
               <ReferenceLine y={0} stroke={AZ_CHART.zero} strokeOpacity={AZ_CHART.zeroOpacity} strokeWidth={1.5} />
+              {/* Mês de referência em evidência — a tab é focada no mês */}
+              {rows.length > 0 ? (
+                <ReferenceLine
+                  x={rows[rows.length - 1].mes}
+                  stroke={AZ_BRAND.rust}
+                  strokeDasharray="4 3"
+                  strokeWidth={1.5}
+                  label={{
+                    value: `mês atual · ${fmtMesCurto(rows[rows.length - 1].mes)}`,
+                    position: "insideTopRight",
+                    fontSize: 10,
+                    fill: AZ_BRAND.rust,
+                  }}
+                />
+              ) : null}
 
               <Tooltip
                 content={

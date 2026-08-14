@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 import type { AluguelBlock } from "@/lib/painel-igpm";
 import { ChartCard } from "@/components/painel/core";
-import { AZ_CHART, variationText } from "@/lib/az-chart-theme";
+import { AZ_CHART } from "@/lib/az-chart-theme";
 import { fmtBRL, fmtMesCurto, fmtPct, fmtSignedPct } from "@/lib/format-br";
 import { ALUGUEL_ILUSTRATIVO } from "./shared";
 
@@ -16,6 +16,11 @@ import { ALUGUEL_ILUSTRATIVO } from "./shared";
  * Regra contratual de mercado embutida (crítica do revisor): cláusula de
  * não-redução — IGP-M 12m negativo congela o aluguel ("fica estável"),
  * não reduz. Os anos de 2023-24 mostram exatamente isso.
+ *
+ * Semântica de cores (relatório ago/2026: "cores e valores contraintuitivos"):
+ * UMA perspectiva só, a do inquilino, e a diferença vira frase sem sinal —
+ * verde = com IGP-M o inquilino paga MENOS do que pagaria pelo IPCA;
+ * vermelho = paga MAIS. Colunas de índice ficam neutras (sem cor).
  */
 export function AluguelCard({ aluguel, geradoEm }: { aluguel: AluguelBlock; geradoEm: string }) {
   const rows = useMemo(
@@ -59,7 +64,7 @@ export function AluguelCard({ aluguel, geradoEm }: { aluguel: AluguelBlock; gera
               <th className="px-3 py-2 text-right font-semibold">IPCA 12m</th>
               <th className="px-3 py-2 text-right font-semibold">Aluguel c/ IGP-M</th>
               <th className="px-3 py-2 text-right font-semibold">Seria c/ IPCA</th>
-              <th className="px-3 py-2 text-right font-semibold">Diferença/mês</th>
+              <th className="px-3 py-2 text-right font-semibold">P/ o inquilino, o IGP-M…</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
@@ -70,10 +75,7 @@ export function AluguelCard({ aluguel, geradoEm }: { aluguel: AluguelBlock; gera
                   <td className="whitespace-nowrap px-3 py-2 font-semibold text-[#132960]">
                     {fmtMesCurto(r.mes)}
                   </td>
-                  <td
-                    className="whitespace-nowrap px-3 py-2 text-right tabular-nums"
-                    style={{ color: variationText(r.igpm_12m) }}
-                  >
+                  <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-zinc-700">
                     {fmtSignedPct(r.igpm_12m, 2)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-zinc-700">
@@ -96,10 +98,16 @@ export function AluguelCard({ aluguel, geradoEm }: { aluguel: AluguelBlock; gera
                   </td>
                   <td
                     className="whitespace-nowrap px-3 py-2 text-right font-semibold tabular-nums"
-                    style={{ color: dif > 0 ? AZ_CHART.negText : dif < 0 ? AZ_CHART.posText : undefined }}
+                    style={{
+                      color:
+                        Math.abs(dif) < 0.005 ? "#71717a" : dif > 0 ? AZ_CHART.negText : AZ_CHART.posText,
+                    }}
                   >
-                    {dif > 0 ? "+" : ""}
-                    {fmtBRL(dif)}
+                    {Math.abs(dif) < 0.005
+                      ? "empata com o IPCA"
+                      : dif > 0
+                        ? `cobra ${fmtBRL(Math.abs(dif))} a mais/mês`
+                        : `cobra ${fmtBRL(Math.abs(dif))} a menos/mês`}
                   </td>
                 </tr>
               );
@@ -109,7 +117,15 @@ export function AluguelCard({ aluguel, geradoEm }: { aluguel: AluguelBlock; gera
       </div>
       <p className="mt-2 text-[11px] text-zinc-500">
         Cada linha é um contrato hipotético independente reajustado naquele aniversário (não é a trajetória
-        de um mesmo contrato). Diferença em vermelho = IGP-M cobrou mais que o IPCA; verde = cobrou menos.
+        de um mesmo contrato). A última coluna lê da perspectiva do inquilino:{" "}
+        <span className="font-semibold" style={{ color: AZ_CHART.posText }}>
+          verde
+        </span>{" "}
+        = com IGP-M o aluguel sai mais barato do que sairia pelo IPCA;{" "}
+        <span className="font-semibold" style={{ color: AZ_CHART.negText }}>
+          vermelho
+        </span>{" "}
+        = sai mais caro.
       </p>
     </ChartCard>
   );

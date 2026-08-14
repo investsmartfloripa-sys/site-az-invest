@@ -7,9 +7,8 @@ import { KpiCard } from "@/components/painel/core";
 import { fmtMesLongo, fmtNum, fmtPct, fmtSignedPct } from "@/lib/format-br";
 import { AluguelCard } from "./v2igpm/AluguelCard";
 import { AntecipaIpcaCard } from "./v2igpm/AntecipaIpcaCard";
-import { FocusMensalCard } from "./v3/FocusMensalCard";
-import { SurpresasCard } from "./v3/SurpresasCard";
 import { ComponentePane } from "./v3igpm/ComponentePane";
+import { FocusCurtoPrazoCard } from "./v3igpm/FocusCurtoPrazoCard";
 import { Decomposicao12mCard } from "./v3igpm/Decomposicao12mCard";
 import { DecomposicaoMesCard } from "./v3igpm/DecomposicaoMesCard";
 import { DriversIpaCards } from "./v3igpm/DriversIpaCards";
@@ -161,6 +160,11 @@ export function IgpmDashboardV3({ data }: { data: IgpmData }) {
             {data.tabela_sintese ? (
               <TabelaSinteseIgpmCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
             ) : null}
+            {/* Em evidência na 1ª tab (relatório ago/2026): o retrato que explica
+                o 12m atual, com o mês de referência destacado. */}
+            {data.decomposicao_12m && data.decomposicao_12m.serie.length > 0 ? (
+              <Decomposicao12mCard decomp={data.decomposicao_12m} geradoEm={data.gerado_em} />
+            ) : null}
             <div className="grid gap-6 xl:grid-cols-2">
               {data.tabela_sintese ? (
                 <DecomposicaoMesCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
@@ -212,9 +216,6 @@ export function IgpmDashboardV3({ data }: { data: IgpmData }) {
           <div className="space-y-6">
             <SubSecao rotulo="Tendência" />
             {data.serie_longa ? <SerieLongaIgpmCard longa={data.serie_longa} geradoEm={data.gerado_em} /> : null}
-            {data.decomposicao_12m && data.decomposicao_12m.serie.length > 0 ? (
-              <Decomposicao12mCard decomp={data.decomposicao_12m} geradoEm={data.gerado_em} />
-            ) : null}
             {data.aluguel && data.aluguel.reajustes.length > 0 ? (
               <AluguelCard aluguel={data.aluguel} geradoEm={data.gerado_em} />
             ) : null}
@@ -223,15 +224,12 @@ export function IgpmDashboardV3({ data }: { data: IgpmData }) {
               <FocusAnosIgpmCard focus={data.focus_anuais} geradoEm={data.gerado_em} />
             ) : null}
             {data.focus_mensal ? (
-              <FocusMensalCard
+              <FocusCurtoPrazoCard
                 focusMensal={data.focus_mensal}
                 realizadoMes={igpmMes}
                 geradoEm={data.gerado_em}
                 indicador="IGP-M"
               />
-            ) : null}
-            {data.focus_mensal && data.focus_mensal.surpresas.length > 0 ? (
-              <SurpresasCard focusMensal={data.focus_mensal} geradoEm={data.gerado_em} indicador="IGP-M" />
             ) : null}
           </div>
         ) : null}

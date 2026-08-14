@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactElement } from "react";
 import {
   Bar,
   BarChart,
@@ -89,6 +90,39 @@ export function DivergingReturnBars({
   const data = rows.map((r) => ({ name: truncate(r.label), value: r.value }));
   const height = 28 * data.length + 56;
 
+  // Rótulo de valor SEMPRE à direita da extremidade direita do retângulo da
+  // barra (= linha do zero, em barra negativa). O position="right" nativo
+  // colide com o rótulo de categoria quando a barra é negativa (o Recharts
+  // pode entregar width negativo), então o posicionamento é manual.
+  const renderLabel = (props: unknown): ReactElement => {
+    const { x, y, width, height: h, value } = props as {
+      x?: number | string;
+      y?: number | string;
+      width?: number | string;
+      height?: number | string;
+      value?: number | string;
+    };
+    const xx = Number(x);
+    const yy = Number(y);
+    const w = Number(width);
+    const hh = Number(h);
+    const n = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(xx) || !Number.isFinite(yy) || !Number.isFinite(n)) return <g />;
+    const labelX = Math.max(xx, xx + (Number.isFinite(w) ? w : 0)) + 6;
+    const labelY = yy + (Number.isFinite(hh) ? hh : 0) / 2;
+    return (
+      <text
+        x={labelX}
+        y={labelY}
+        textAnchor="start"
+        dominantBaseline="central"
+        style={{ fontSize: 10.5, fill: "#475569", fontVariantNumeric: "tabular-nums" }}
+      >
+        {fmtLabel(n)}
+      </text>
+    );
+  };
+
   return (
     <div className={`w-full ${className}`} style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -124,15 +158,7 @@ export function DivergingReturnBars({
             {data.map((e, i) => (
               <Cell key={`${e.name}-${i}`} fill={fill(e.value)} />
             ))}
-            <LabelList
-              dataKey="value"
-              position="right"
-              formatter={(v) => {
-                const n = typeof v === "number" ? v : Number(v);
-                return Number.isFinite(n) ? fmtLabel(n) : "";
-              }}
-              style={{ fontSize: 10.5, fill: "#475569", fontVariantNumeric: "tabular-nums" }}
-            />
+            <LabelList dataKey="value" content={renderLabel} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>

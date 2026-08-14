@@ -27,6 +27,19 @@ export function DecomposicaoMesCard({ sintese, geradoEm }: { sintese: TabelaSint
       .map((l) => ({ label: l.nome, value: l.contrib_pp as number }));
   }, [sintese]);
 
+  // Domínio explícito com folga à direita: os rótulos de valor ficam sempre à
+  // direita da linha do zero (ou da ponta da barra positiva) e precisam de
+  // espaço no domínio para não serem cortados.
+  const xDomain = useMemo<[number, number] | undefined>(() => {
+    if (rows.length === 0) return undefined;
+    const vals = rows.map((r) => r.value);
+    const minV = Math.min(0, ...vals);
+    const maxV = Math.max(0, ...vals);
+    const hi = Math.max(maxV * 1.3, Math.abs(minV) * 0.35, 0.05);
+    const lo = minV < 0 ? minV * 1.08 : 0;
+    return [lo, hi];
+  }, [rows]);
+
   if (rows.length === 0) return null;
 
   return (
@@ -38,6 +51,7 @@ export function DecomposicaoMesCard({ sintese, geradoEm }: { sintese: TabelaSint
     >
       <DivergingReturnBars
         rows={rows}
+        xDomain={xDomain}
         valueFmt={fmtPp}
         axisFmt={(v) => fmtSignedNum(v, 2)}
         fillFor={fillInflacao}

@@ -62,9 +62,9 @@ export function SurpresasCard({
       <div className="h-[260px] w-full">
         <ResponsiveContainer>
           <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-            <CartesianGrid {...azGridProps} />
-            <XAxis {...azXAxisProps} dataKey="mes" interval={2} />
-            <YAxis {...azYAxisProps} tickFormatter={(v: number) => fmtSignedNum(v, 1)} width={44} />
+            <CartesianGrid {...azGridProps()} />
+            <XAxis {...azXAxisProps()} dataKey="mes" interval={2} />
+            <YAxis {...azYAxisProps()} tickFormatter={(v: number) => fmtSignedNum(v, 1)} width={44} />
             <Tooltip
               content={
                 <AzTooltip
