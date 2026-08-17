@@ -89,6 +89,11 @@ SERIE_LONGA_DESDE = "1999-01"
 #: 2002-03 tem choque cambial que distorce o padrão sazonal estimado) e
 #: publicar desde 2012 (janela conjuntural longa o suficiente p/ tendência).
 MOMENTUM_AJUSTE_DESDE = "2004-01"
+
+#: Meses de coluna na tabela-síntese (observado e dessazonalizado). 13 fecha um
+#: ciclo sazonal completo + o mês corrente, então cada mês aparece ao lado do
+#: seu par do ano anterior.
+SINTESE_MESES = 13
 MOMENTUM_PUBLICA_DESDE = "2012-01"
 
 #: Metas de inflação do CMN (centro e tolerância, % a.a.). Tabela NORMATIVA —
@@ -361,13 +366,17 @@ def sazonalidade_mensal(serie: dict[str, float | None], ano_ini: int, ano_fim: i
     out: dict[str, dict] = {}
     for mm, vals in por_mes.items():
         if not vals:
-            out[mm] = {"mediana": None, "media": None, "min": None, "max": None, "n": 0}
+            out[mm] = {"mediana": None, "media": None, "min": None, "max": None, "dp": None, "n": 0}
         else:
             out[mm] = {
                 "mediana": round(statistics.median(vals), 3),
                 "media": round(statistics.mean(vals), 3),
                 "min": round(min(vals), 3),
                 "max": round(max(vals), 3),
+                # Desvio-padrão AMOSTRAL da distribuição do mês civil: alimenta as
+                # faixas de ±1 e ±2 dp do card de sazonalidade, que substituíram o
+                # mín–máx (o extremo era um ponto só, sem noção de dispersão).
+                "dp": round(statistics.stdev(vals), 3) if len(vals) >= 2 else None,
                 "n": len(vals),
             }
     return out
@@ -773,10 +782,35 @@ def tabela_sintese_build(
     dif: dict[str, float | None],
 ) -> dict:
     """Linhas (cheio, IPCA-15, grupos, núcleos, categorias, difusão) ×
-    colunas [m-2, m-1, mês, acum. ano, acum. 12m, peso] — TUDO pré-computado."""
-    m0, m1, m2 = mes_ref, _mes_mais(mes_ref, -1), _mes_mais(mes_ref, -2)
+    colunas [m-2, m-1, mês, acum. ano, acum. 12m, peso] — TUDO pré-computado.
 
-    def _linha(sid: str, nome: str, valores: dict[str, float | None], *, acum12=None, peso=None, acum_ano=None) -> dict:
+    Desde ago/2026 cada linha traz também `serie` (últimos SINTESE_MESES meses
+    observados) e `serie_sa` (os mesmos meses DESSAZONALIZADOS por STL), para a
+    tabela abrir uma janela longa e alternar observado × dessazonalizado. m2/m1/m0
+    seguem preenchidos: o publisher e o release do robô dependem deles."""
+    m0, m1, m2 = mes_ref, _mes_mais(mes_ref, -1), _mes_mais(mes_ref, -2)
+    meses_serie = [_mes_mais(m0, -i) for i in range(SINTESE_MESES - 1, -1, -1)]
+
+    def _serie(valores: dict[str, float | None]) -> dict[str, float | None]:
+        return {m: valores.get(m) for m in meses_serie}
+
+    def _serie_sa(valores: dict[str, float | None]) -> dict[str, float | None] | None:
+        """Dessazonalizada da MESMA série; None quando o STL não roda (série curta)."""
+        sa = dessazonaliza_stl(valores)
+        if not sa:
+            return None
+        return {m: (round(sa[m], 3) if m in sa else None) for m in meses_serie}
+
+    def _linha(
+        sid: str,
+        nome: str,
+        valores: dict[str, float | None],
+        *,
+        acum12=None,
+        peso=None,
+        acum_ano=None,
+        sa: bool = True,
+    ) -> dict:
         return {
             "id": sid,
             "nome": nome,
@@ -786,6 +820,8 @@ def tabela_sintese_build(
             "acum_ano": acum_ano if acum_ano is not None else acum_ano_composto(valores, m0),
             "acum_12m": acum12,
             "peso": peso,
+            "serie": _serie(valores),
+            "serie_sa": _serie_sa(valores) if sa else None,
         }
 
     cheio_m = {r["mes"]: r.get("IPCA cheio") for r in ipca_cheio["serie"]}
@@ -807,6 +843,8 @@ def tabela_sintese_build(
         "acum_12m": q15_12.get(m0_15),
         "peso": None,
         "mes_proprio": m0_15,
+        "serie": _serie(q15_m),
+        "serie_sa": _serie_sa(q15_m),
     })
 
     ab_grupos = {x["codigo"]: x for x in abertura if x["nivel"] == "grupo"}
@@ -826,6 +864,8 @@ def tabela_sintese_build(
             "acum_12m": ab.get("acum_12m"),
             "peso": ab.get("peso"),
             "contrib_pp": ab.get("contrib_pp"),
+            "serie": _serie(gm),
+            "serie_sa": _serie_sa(gm),
         })
     linhas_grupos.sort(key=lambda x: (x["contrib_pp"] is None, -(x["contrib_pp"] or 0.0)))
 
@@ -837,9 +877,10 @@ def tabela_sintese_build(
             )
     medias = {
         m: (round(sum(vs) / len(vs), 4) if all(v is not None for v in vs) else None)
-        for m in (m2, m1, m0)
+        for m in sorted({m2, m1, m0, *meses_serie})
         for vs in [[nuc_data.get(k, {}).get(m) for k in NUCLEOS_MEDIA]]
     }
+    medias_serie = medias
     med12 = [nuc_12m.get(k, {}).get(m0) for k in NUCLEOS_MEDIA]
     linhas_nucleos.append({
         "id": "nucleos_media",
@@ -850,6 +891,10 @@ def tabela_sintese_build(
         "acum_ano": None,
         "acum_12m": round(sum(med12) / len(med12), 4) if all(v is not None for v in med12) else None,
         "peso": None,
+        # A média dos 5 é agregada mês a mês; dessazonalizar a MÉDIA não é o mesmo
+        # que a média das dessazonalizadas — fica sem SA, cada núcleo tem a sua.
+        "serie": {m: medias_serie.get(m) for m in meses_serie},
+        "serie_sa": None,
     })
 
     nome_cat = {
@@ -874,11 +919,16 @@ def tabela_sintese_build(
         "acum_12m": None,
         "peso": None,
         "unidade": "%",
+        # Difusão é contagem (% de subitens em alta), não variação de preço:
+        # dessazonalizar por STL log-multiplicativo não faz sentido aqui.
+        "serie": {m: dif.get(m) for m in meses_serie},
+        "serie_sa": None,
     }]
 
     return {
         "mes_recente": m0,
         "meses": [m2, m1, m0],
+        "meses_serie": meses_serie,
         "secoes": [
             {"id": "indice", "titulo": "Índice cheio", "linhas": linhas_indice},
             {"id": "grupos", "titulo": "Grupos", "linhas": linhas_grupos},
