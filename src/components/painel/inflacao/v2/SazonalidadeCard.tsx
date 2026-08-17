@@ -178,7 +178,10 @@ export function SazonalidadeCard({ data }: { data: IpcaData }) {
         </p>
       ) : null}
 
-      <div className="h-full min-h-[300px] w-full">
+      {/* Altura DEFINIDA, não `h-full min-h-[…]`: o ResponsiveContainer calcula
+          height:100% contra o pai, e um pai que tira a altura de min-height tem
+          height:auto — a conta dá zero e o gráfico some. */}
+      <div className="h-[340px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={rows} margin={{ top: 20, right: 16, bottom: 4, left: 0 }}>
             <CartesianGrid {...azGridProps()} />
