@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import type { IgpmData } from "@/lib/painel-igpm";
 import { KpiCard } from "@/components/painel/core";
 import { fmtMesLongo, fmtNum, fmtPct, fmtSignedPct } from "@/lib/format-br";
-import { AluguelCard } from "./v2igpm/AluguelCard";
 import { AntecipaIpcaCard } from "./v2igpm/AntecipaIpcaCard";
 import { ComponentePane } from "./v3igpm/ComponentePane";
 import { FocusCurtoPrazoCard } from "./v3igpm/FocusCurtoPrazoCard";
@@ -216,9 +215,6 @@ export function IgpmDashboardV3({ data }: { data: IgpmData }) {
           <div className="space-y-6">
             <SubSecao rotulo="Tendência" />
             {data.serie_longa ? <SerieLongaIgpmCard longa={data.serie_longa} geradoEm={data.gerado_em} /> : null}
-            {data.aluguel && data.aluguel.reajustes.length > 0 ? (
-              <AluguelCard aluguel={data.aluguel} geradoEm={data.gerado_em} />
-            ) : null}
             <SubSecao rotulo="Expectativas" />
             {data.focus_anuais && Object.keys(data.focus_anuais).length > 0 ? (
               <FocusAnosIgpmCard focus={data.focus_anuais} geradoEm={data.gerado_em} />

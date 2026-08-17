@@ -1,49 +1,27 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import {
-  Bar,
-  CartesianGrid,
-  Cell,
-  ComposedChart,
-  Legend,
-  Line,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 
 import type {
   DecomposicaoBlock,
   IgpmData,
-  IgpmMomentumBlock,
+  SinteseIgpmLinha,
   SubPainelComponente,
   TransformacaoIgpm,
 } from "@/lib/painel-igpm";
-import {
-  AzSegmented,
-  AzTooltip,
-  ChartCard,
-  Heatmap,
-  azGridProps,
-  azXAxisProps,
-  azYAxisProps,
-  steppedDivergingScale,
-} from "@/components/painel/core";
+import { AzSegmented, ChartCard, Heatmap, steppedDivergingScale } from "@/components/painel/core";
 import { AzTimeSeriesChart, type AzSeriesPoint } from "@/components/painel/charts/AzTimeSeriesChart";
-import { AzPeriodSelector, resolvePeriodRange, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
-import { AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
+import { AZ_CHART } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum, fmtSignedNum, fmtSignedPct } from "@/lib/format-br";
 import { mesIso, num } from "../v2/shared";
 import { CORES_COMPONENTE } from "../v2igpm/shared";
 
 /**
  * O TEMPLATE de escrutínio por componente do IGP-M (tabs 2/3/4): tabela de
- * transformações (com o IGP-M como régua cinza), série âncora + momentum lado
- * a lado, heatmap de sazonalidade anos × meses, distribuição pós-Real +
- * rankings e a contribuição do componente ao IGP-M cheio.
+ * transformações (com o IGP-M como régua cinza e leitura que diz o quanto o
+ * componente pesou no IGP-M), série âncora, heatmap de sazonalidade anos ×
+ * meses, régua histórica didática (zonas) e a contribuição do componente ao
+ * IGP-M cheio. Os gráficos de Momentum foram RETIRADOS (relatório 14/08/2026).
  *
  * Regras herdadas (inegociáveis): todo acumulado/dessaz/SAAR nasce no builder;
  * semântica de inflação (alta = vermelho, queda = azul); títulos neutros.
@@ -79,11 +57,17 @@ function TabelaTransformacoes({
   comp,
   mesRef,
   geradoEm,
+  linhaSintese,
+  igpmMes,
 }: {
   transformacoes: TransformacaoIgpm[];
   comp: ComponenteIgpm;
   mesRef: string;
   geradoEm: string;
+  /** Linha do componente na tabela_sintese — peso efetivo + contribuição do mês. */
+  linhaSintese?: SinteseIgpmLinha;
+  /** IGP-M cheio do mês (contexto da contribuição). */
+  igpmMes?: number | null;
 }) {
   const linhaComp = transformacoes.find((t) => t.id === comp);
   const linhaIgpm = transformacoes.find((t) => t.id === "IGP-M");
@@ -99,7 +83,8 @@ function TabelaTransformacoes({
   ];
 
   // Leitura pronta, gerada por regra (nunca ad-hoc): compara o ritmo recente
-  // (6m anualizado) com o acumulado 12m para dizer se acelera ou desacelera.
+  // (6m anualizado) com o acumulado 12m e diz O QUANTO o componente pesou no
+  // IGP-M do mês (peso efetivo + contribuição — pedido do relatório 14/08).
   const leitura = useMemo(() => {
     const { nome, mes, saar_6m, acum_12m } = linhaComp;
     if (mes == null || saar_6m == null || acum_12m == null) return null;
@@ -110,8 +95,12 @@ function TabelaTransformacoes({
         : diff < -0.3
           ? "abaixo do acumulado de 12 meses — pressão em desaceleração"
           : "em linha com o acumulado de 12 meses — ritmo estável";
-    return `O ${nome} variou ${fmtSignedPct(mes, 2)} no mês. Nos últimos 6 meses, roda a ${fmtSignedPct(saar_6m, 2)} em ritmo anual${dessaz ? " (já descontada a sazonalidade)" : ""}, ${tendencia} (${fmtSignedPct(acum_12m, 2)}).`;
-  }, [linhaComp, dessaz]);
+    let frase = `O ${nome} variou ${fmtSignedPct(mes, 2)} no mês. Nos últimos 6 meses, roda a ${fmtSignedPct(saar_6m, 2)} em ritmo anual${dessaz ? " (já descontada a sazonalidade)" : ""}, ${tendencia} (${fmtSignedPct(acum_12m, 2)}).`;
+    if (linhaSintese?.peso != null && linhaSintese.contrib_pp != null) {
+      frase += ` No IGP-M, o ${nome} pesa ${fmtNum(linhaSintese.peso, 0)}% e respondeu por ${fmtSignedNum(linhaSintese.contrib_pp, 2)} p.p.${igpmMes != null ? ` dos ${fmtSignedPct(igpmMes, 2)} do índice cheio` : ""} neste mês.`;
+    }
+    return frase;
+  }, [linhaComp, dessaz, linhaSintese, igpmMes]);
 
   return (
     <ChartCard
@@ -231,108 +220,6 @@ function SerieComponenteCard({
 }
 
 // ---------------------------------------------------------------------------
-// 2b. Momentum do componente (SAAR 3m × 6m)
-// ---------------------------------------------------------------------------
-function MomentumComponenteCard({
-  momentum,
-  comp,
-  geradoEm,
-}: {
-  momentum: IgpmMomentumBlock;
-  comp: ComponenteIgpm;
-  geradoEm: string;
-}) {
-  const serie = momentum.series[comp] ?? [];
-  const [janela, setJanela] = useState<AzPeriodValue>({ id: "5y" });
-  const [ritmo, setRitmo] = useState<"6m" | "3m">("6m");
-
-  const minIso = serie.length > 0 ? mesIso(serie[0].mes) : "";
-  const maxIso = serie.length > 0 ? mesIso(serie[serie.length - 1].mes) : "";
-
-  const { rows, dessaz } = useMemo(() => {
-    const { from, to } = resolvePeriodRange(janela, minIso, maxIso);
-    const out = serie
-      .filter((p) => {
-        const iso = mesIso(p.mes);
-        return iso >= from && iso <= to;
-      })
-      .map((p) => ({
-        mes: p.mes,
-        mensal: p.var_base,
-        ritmo: ritmo === "6m" ? p.saar_6m : p.saar_3m,
-      }));
-    return { rows: out, dessaz: serie.at(-1)?.dessaz ?? false };
-  }, [serie, janela, ritmo, minIso, maxIso]);
-
-  if (serie.length === 0) return null;
-
-  const rotuloMensal = dessaz ? "Mensal (dessaz)" : "Mensal";
-  const rotuloRitmo = `Ritmo ${ritmo} (anualizado)`;
-
-  return (
-    <ChartCard
-      title={`Momentum do ${comp}`}
-      toolbar={
-        <div className="flex flex-wrap items-center gap-2">
-          <AzSegmented
-            ariaLabel="Janela do ritmo anualizado"
-            options={[
-              { id: "6m", label: "Ritmo 6m" },
-              { id: "3m", label: "Ritmo 3m" },
-            ]}
-            value={ritmo}
-            onChange={(id) => setRitmo(id as "6m" | "3m")}
-          />
-          <AzPeriodSelector value={janela} onChange={setJanela} min={minIso} max={maxIso} periods={["5y", "max"]} />
-        </div>
-      }
-      footer={`Para onde o índice está indo AGORA, sem o retrovisor dos 12 meses: barras = variação mensal${dessaz ? " dessazonalizada (STL própria — não o X-13)" : " SEM dessazonalização — o IPA não tem padrão sazonal estável"} (alta = vermelho, queda = azul); linha = ritmo dos últimos ${ritmo === "6m" ? "6" : "3"} meses anualizado geometricamente no pipeline ("se esse ritmo durasse um ano"). Janela padrão de 5 anos — o histórico completo está no botão Máx. Ajuste desde ${momentum.ajuste_desde}; publicação desde ${momentum.publica_desde}.`}
-      stampGiro={geradoEm}
-      stampDado={serie.at(-1)?.mes ?? null}
-    >
-      <div className="h-[300px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={rows} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
-            <CartesianGrid {...azGridProps()} />
-            <XAxis {...azXAxisProps()} dataKey="mes" tickFormatter={fmtMesCurto} minTickGap={28} />
-            <YAxis {...azYAxisProps()} width={48} tickFormatter={(v: number) => `${fmtNum(v, 0)}%`} />
-            <ReferenceLine y={0} stroke={AZ_CHART.zero} strokeOpacity={AZ_CHART.zeroOpacity} strokeWidth={1.5} />
-            <Tooltip
-              content={
-                <AzTooltip
-                  labelFmt={(l) => fmtMesCurto(String(l))}
-                  valueFmt={(v) => fmtSignedPct(v, 2)}
-                />
-              }
-              cursor={AZ_TOOLTIP_PROPS.cursor}
-            />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
-            <Bar dataKey="mensal" name={rotuloMensal} maxBarSize={10} isAnimationActive={false}>
-              {rows.map((r) => (
-                <Cell
-                  key={r.mes}
-                  fill={r.mensal > 0 ? AZ_CHART.neg : r.mensal < 0 ? AZ_CHART.neutral : AZ_CHART.ticks}
-                  fillOpacity={0.55}
-                />
-              ))}
-            </Bar>
-            <Line
-              type="monotone"
-              dataKey="ritmo"
-              name={rotuloRitmo}
-              stroke={CORES_COMPONENTE[comp] ?? AZ_CHART.ticks}
-              strokeWidth={2}
-              dot={false}
-              isAnimationActive={false}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
-    </ChartCard>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // 3. Heatmap de sazonalidade (anos × meses civis, mediana como 1ª linha)
 // ---------------------------------------------------------------------------
 function HeatmapSazonalidadeCard({
@@ -389,97 +276,78 @@ function HeatmapSazonalidadeCard({
 }
 
 // ---------------------------------------------------------------------------
-// 4a. Distribuição pós-Real — faixa visual: "o valor de hoje é normal ou
-// extremo?" respondido em um olhar, no lugar da antiga tabela de estatísticas
-// (relatório ago/2026: "essa tabela está ruim").
+// 4a. Régua histórica — versão DIDÁTICA (relatório 14/08/2026: as faixas
+// anteriores não comunicavam). Cinco zonas rotuladas + frase-veredito gerada
+// por regra: o mensal é classificado por z-score (média/DP pós-96) e o 12m
+// pelo percentil histórico do builder.
 // ---------------------------------------------------------------------------
 
-function pctPos(v: number, min: number, max: number): number {
-  if (max <= min) return 50;
-  return Math.min(100, Math.max(0, ((v - min) / (max - min)) * 100));
+const ZONAS_ROTULO = ["muito abaixo", "abaixo", "normal", "acima", "muito acima"] as const;
+const ZONAS_FRASE = [
+  "muito abaixo do padrão histórico",
+  "abaixo do padrão histórico",
+  "dentro do padrão histórico",
+  "acima do padrão histórico",
+  "muito acima do padrão histórico",
+] as const;
+/** Cores das zonas na semântica de inflação: abaixo = azul, acima = vermelho. */
+const ZONAS_COR = [AZ_CHART.neutral, AZ_CHART.neutral, "#64748B", AZ_CHART.neg, AZ_CHART.neg];
+
+/** Zona por z-score: ±1 DP = normal; ±2 DP = muito acima/abaixo. */
+function zonaPorZ(z: number): number {
+  if (z <= -2) return 0;
+  if (z <= -1) return 1;
+  if (z < 1) return 2;
+  if (z < 2) return 3;
+  return 4;
 }
 
-/** Faixa horizontal com banda, tique da mediana e ponto do valor atual. */
-function FaixaDistribuicao({
-  min,
-  max,
-  bandLo,
-  bandHi,
-  mediana,
-  atual,
-  atualLabel,
-  minLabel,
-  maxLabel,
-  corAtual: corAtualProp,
-}: {
-  min: number;
-  max: number;
-  bandLo: number | null;
-  bandHi: number | null;
-  mediana: number | null;
-  atual: number | null;
-  atualLabel: string | null;
-  minLabel: string;
-  maxLabel: string;
-  /** Cor do ponto atual — default: semântica de inflação pelo sinal de `atual`. */
-  corAtual?: string;
-}) {
-  const corAtual =
-    corAtualProp ??
-    (atual == null ? AZ_CHART.ticks : atual > 0 ? AZ_CHART.neg : atual < 0 ? AZ_CHART.neutral : AZ_CHART.ticks);
-  const pAtual = atual != null ? pctPos(atual, min, max) : null;
-  const pBandLo = bandLo != null ? pctPos(bandLo, min, max) : null;
-  const pBandHi = bandHi != null ? pctPos(bandHi, min, max) : null;
-  const pMediana = mediana != null ? pctPos(mediana, min, max) : null;
+/** Zona por percentil: 10/30/70/90 como cortes. */
+function zonaPorPercentil(p: number): number {
+  if (p < 10) return 0;
+  if (p < 30) return 1;
+  if (p <= 70) return 2;
+  if (p <= 90) return 3;
+  return 4;
+}
 
+/** Régua de 5 zonas com a zona ativa acesa e o valor embaixo dela. */
+function ReguaZonas({ ativa, valorLabel }: { ativa: number; valorLabel: string }) {
   return (
-    <div className="relative h-16">
-      {/* rótulo do valor atual, ancorado no ponto (clamp p/ não cortar) */}
-      {pAtual != null && atualLabel ? (
-        <span
-          className="absolute top-0 -translate-x-1/2 whitespace-nowrap text-[11px] font-semibold tabular-nums"
-          style={{ left: `${Math.min(90, Math.max(10, pAtual))}%`, color: corAtual }}
-        >
-          {atualLabel}
-        </span>
-      ) : null}
-
-      {/* trilho */}
-      <div className="absolute left-0 right-0 top-[34px] h-[3px] rounded-full bg-zinc-200" />
-      {/* banda média ± 2 DP */}
-      {pBandLo != null && pBandHi != null ? (
-        <div
-          className="absolute top-[29px] h-[13px] rounded-full bg-slate-400/25"
-          style={{ left: `${pBandLo}%`, width: `${Math.max(pBandHi - pBandLo, 0)}%` }}
-        />
-      ) : null}
-      {/* tique da mediana */}
-      {pMediana != null ? (
-        <div
-          className="absolute top-[25px] h-[21px] w-[2px] -translate-x-1/2 rounded bg-zinc-500"
-          style={{ left: `${pMediana}%` }}
-        />
-      ) : null}
-      {/* ponto do valor atual */}
-      {pAtual != null ? (
-        <div
-          className="absolute top-[35.5px] h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow"
-          style={{ left: `${pAtual}%`, background: corAtual }}
-        />
-      ) : null}
-
-      {/* extremos */}
-      <span className="absolute bottom-0 left-0 text-[10px] tabular-nums text-zinc-400">{minLabel}</span>
-      <span className="absolute bottom-0 right-0 text-[10px] tabular-nums text-zinc-400">{maxLabel}</span>
+    <div className="flex gap-1.5">
+      {ZONAS_ROTULO.map((z, i) => {
+        const acesa = i === ativa;
+        return (
+          <div key={z} className="min-w-0 flex-1 text-center">
+            <div
+              className="h-2.5 rounded-full"
+              style={{ background: ZONAS_COR[i], opacity: acesa ? 1 : 0.16 }}
+            />
+            <p
+              className="mt-1 truncate text-[10px] uppercase tracking-wide"
+              style={acesa ? { color: ZONAS_COR[i], fontWeight: 700 } : { color: "#a1a1aa" }}
+            >
+              {z}
+            </p>
+            {acesa ? (
+              <p className="whitespace-nowrap text-[11px] font-bold tabular-nums" style={{ color: ZONAS_COR[i] }}>
+                {valorLabel}
+              </p>
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 function DistribuicaoCard({
   sub,
+  comp,
   geradoEm,
 }: {
   sub: SubPainelComponente;
+  comp: ComponenteIgpm;
   geradoEm: string;
 }) {
   const est = sub.estatisticas;
@@ -488,76 +356,52 @@ function DistribuicaoCard({
   const atual12m = sub.ultimo_12m;
   const percentil = e12?.percentil_atual ?? null;
 
-  if (est.min == null || est.max == null) return null;
+  const zonaMensal =
+    atualMensal != null && est.media != null && est.std != null && est.std > 0
+      ? zonaPorZ((atualMensal - est.media) / est.std)
+      : null;
+  const zona12m = percentil != null ? zonaPorPercentil(percentil) : null;
 
-  const bandLo = est.media != null && est.std != null ? est.media - 2 * est.std : null;
-  const bandHi = est.media != null && est.std != null ? est.media + 2 * est.std : null;
+  if (zonaMensal == null && zona12m == null) return null;
 
   return (
     <ChartCard
-      title="Distribuição pós-Real"
-      footer={`Onde o valor de hoje cai na história desde ${e12?.desde ?? "jan/1996"} (pós-Real estabilizado; estatísticas do pipeline). Faixa de cima: variação mensal entre o mínimo e o máximo históricos — banda cinza = média ± 2 desvios-padrão, tique = mediana, ponto = mês atual (alta = vermelho, queda = azul). Faixa de baixo: percentil do acumulado 12m na distribuição histórica (0 = mínimo, 100 = máximo; tique = mediana no percentil 50).`}
+      title="Régua histórica"
+      footer={`O valor de hoje comparado com TODA a história desde ${e12?.desde ?? "jan/1996"} (pós-Real estabilizado; estatísticas do pipeline). Zonas do mês: "normal" = até 1 desvio-padrão da média histórica; "muito acima/abaixo" = além de 2 desvios. Zonas do 12m: percentil histórico (abaixo de 10 e acima de 90 = extremos). Semântica de inflação: acima = vermelho (pressão), abaixo = azul.`}
       stampGiro={geradoEm}
       stampDado={sub.ultimo_mes}
     >
-      <div className="space-y-4">
-        <div>
-          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-            Variação mensal — mês atual na história
-          </p>
-          <FaixaDistribuicao
-            min={est.min}
-            max={est.max}
-            bandLo={bandLo}
-            bandHi={bandHi}
-            mediana={est.mediana ?? null}
-            atual={atualMensal}
-            atualLabel={atualMensal != null ? `mês atual ${fmtSignedPct(atualMensal, 2)}` : null}
-            minLabel={`mín ${fmtSignedNum(est.min, 2)}`}
-            maxLabel={`máx ${fmtSignedNum(est.max, 2)}`}
-          />
-          <p className="text-[11px] text-zinc-500">
-            média {est.media != null ? fmtSignedNum(est.media, 2) : "—"} · mediana{" "}
-            {est.mediana != null ? fmtSignedNum(est.mediana, 2) : "—"} · desvio-padrão{" "}
-            {est.std != null ? fmtNum(est.std, 2) : "—"}
-            {est.negativos_pct != null ? ` · ${fmtNum(est.negativos_pct, 1)}% dos meses negativos` : ""}
-          </p>
-        </div>
-
-        {percentil != null ? (
+      <div className="space-y-5">
+        {zonaMensal != null && atualMensal != null ? (
           <div>
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-              Acumulado 12m — percentil na história
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+              Variação do mês
             </p>
-            <FaixaDistribuicao
-              min={0}
-              max={100}
-              bandLo={null}
-              bandHi={null}
-              mediana={50}
-              atual={percentil}
-              corAtual={
-                atual12m == null
-                  ? AZ_CHART.ticks
-                  : atual12m > 0
-                    ? AZ_CHART.neg
-                    : atual12m < 0
-                      ? AZ_CHART.neutral
-                      : AZ_CHART.ticks
-              }
-              atualLabel={
-                atual12m != null
-                  ? `percentil ${fmtNum(percentil, 0)} (12m: ${fmtSignedPct(atual12m, 2)})`
-                  : `percentil ${fmtNum(percentil, 0)}`
-              }
-              minLabel="0 = mínimo pós-96"
-              maxLabel="100 = máximo"
-            />
-            <p className="text-[11px] text-zinc-500">
-              12m histórico: média {e12?.media != null ? fmtSignedNum(e12.media, 2) : "—"} · mediana{" "}
-              {e12?.mediana != null ? fmtSignedNum(e12.mediana, 2) : "—"}
-              {e12?.negativos_pct != null ? ` · ${fmtNum(e12.negativos_pct, 1)}% dos períodos negativos` : ""}
+            <p className="mb-2 text-xs leading-relaxed text-zinc-600">
+              O {comp} de {fmtMesCurto(sub.ultimo_mes)} (
+              <strong className="tabular-nums">{fmtSignedPct(atualMensal, 2)}</strong>) ficou{" "}
+              <strong>{ZONAS_FRASE[zonaMensal]}</strong> — o mês típico deste índice é{" "}
+              {est.mediana != null ? fmtSignedPct(est.mediana, 2) : "—"}.
             </p>
+            <ReguaZonas ativa={zonaMensal} valorLabel={fmtSignedPct(atualMensal, 2)} />
+          </div>
+        ) : null}
+
+        {zona12m != null && percentil != null ? (
+          <div>
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+              Acumulado 12 meses
+            </p>
+            <p className="mb-2 text-xs leading-relaxed text-zinc-600">
+              Nos 12 meses (
+              <strong className="tabular-nums">{atual12m != null ? fmtSignedPct(atual12m, 2) : "—"}</strong>), o{" "}
+              {comp} está {ZONAS_FRASE[zona12m]}:{" "}
+              {percentil < 50
+                ? `mais baixo que ${fmtNum(100 - percentil, 0)}% de toda a história`
+                : `mais alto que ${fmtNum(percentil, 0)}% de toda a história`}{" "}
+              — o usual é {e12?.mediana != null ? fmtSignedPct(e12.mediana, 2) : "—"}.
+            </p>
+            <ReguaZonas ativa={zona12m} valorLabel={atual12m != null ? fmtSignedPct(atual12m, 2) : ""} />
           </div>
         ) : null}
       </div>
@@ -658,6 +502,11 @@ function ContribuicaoCard({
       stampGiro={geradoEm}
       stampDado={decomposicao.serie.at(-1)?.mes ?? null}
     >
+      <p className="mb-2 text-xs leading-relaxed text-zinc-600">
+        <strong className="font-semibold text-[#132960]">Leitura:</strong> o quanto o {comp} pesou no IGP-M,
+        mês a mês — cada ponto é a fatia (em pontos percentuais) da variação do IGP-M daquele mês que veio
+        deste componente.
+      </p>
       <AzTimeSeriesChart
         series={[
           {
@@ -690,20 +539,32 @@ export function ComponentePane({
   const sub = data.componentes[comp];
   if (!sub && !data.transformacoes) return null;
 
+  // Linha do componente na tabela_sintese (peso efetivo + contribuição do
+  // mês) e o IGP-M cheio — alimentam a Leitura da tabela de transformações.
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "");
+  const linhaSintese = data.tabela_sintese?.secoes
+    .find((s) => s.id === "componentes")
+    ?.linhas.find((l) => l.nome === comp || norm(l.id) === norm(comp));
+  const igpmMes = data.overview.ultimo_mensal;
+
   return (
     <div className="space-y-6">
       {data.transformacoes ? (
-        <TabelaTransformacoes transformacoes={data.transformacoes} comp={comp} mesRef={data.mes_recente} geradoEm={geradoEm} />
+        <TabelaTransformacoes
+          transformacoes={data.transformacoes}
+          comp={comp}
+          mesRef={data.mes_recente}
+          geradoEm={geradoEm}
+          linhaSintese={linhaSintese}
+          igpmMes={igpmMes}
+        />
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        {sub ? <SerieComponenteCard sub={sub} comp={comp} geradoEm={geradoEm} /> : null}
-        {data.momentum ? <MomentumComponenteCard momentum={data.momentum} comp={comp} geradoEm={geradoEm} /> : null}
-      </div>
+      {sub ? <SerieComponenteCard sub={sub} comp={comp} geradoEm={geradoEm} /> : null}
 
       {sub ? <HeatmapSazonalidadeCard sub={sub} comp={comp} geradoEm={geradoEm} /> : null}
 
-      {sub ? <DistribuicaoCard sub={sub} geradoEm={geradoEm} /> : null}
+      {sub ? <DistribuicaoCard sub={sub} comp={comp} geradoEm={geradoEm} /> : null}
 
       {data.decomposicao ? <ContribuicaoCard decomposicao={data.decomposicao} comp={comp} geradoEm={geradoEm} /> : null}
 

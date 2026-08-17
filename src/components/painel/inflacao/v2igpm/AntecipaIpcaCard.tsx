@@ -87,6 +87,15 @@ export function AntecipaIpcaCard({
         unit="%"
         height={300}
       />
+      {deslocado ? (
+        <p className="mt-1 text-xs leading-relaxed text-zinc-600">
+          <strong className="font-semibold text-[#132960]">Por que a linha laranja termina antes?</strong>{" "}
+          Neste modo, a linha azul (IPA) foi empurrada {lagOtimo} meses à frente no tempo — o trecho dela que
+          avança além do último IPCA divulgado é o &quot;aviso prévio&quot; do atacado para os próximos{" "}
+          {lagOtimo} meses. A laranja (IPCA) só existe até o último dado real; se o atacado de fato antecipar o
+          varejo, ela tende a seguir o caminho que a azul já desenhou.
+        </p>
+      ) : null}
       <p className="mt-1 text-[11px] text-zinc-500">
         Escala única de propósito: a amplitude muito maior do IPA{" "}
         <em>é</em> a mensagem (atacado vive de câmbio e commodities;{" "}

@@ -61,7 +61,7 @@ export function Decomposicao12mCard({ decomp, geradoEm }: { decomp: Decomposicao
     <ChartCard
       title="Composição do acumulado 12 meses"
       toolbar={
-        <AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["1y", "5y", "max"]} />
+        <AzPeriodSelector value={period} onChange={setPeriod} min={minIso} max={maxIso} periods={["3m", "1y", "5y", "max"]} />
       }
       footer="Contribuição de cada componente ao IGP-M 12m por ENCADEAMENTO das contribuições mensais (pesos efetivos), calculada no pipeline. A fatia de resíduo fecha a pilha exatamente com o IGP-M 12m oficial por construção e NUNCA é realocada entre componentes — resíduo estrutural é informação."
       stampGiro={geradoEm}

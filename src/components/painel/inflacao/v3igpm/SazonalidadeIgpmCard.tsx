@@ -121,6 +121,13 @@ export function SazonalidadeIgpmCard({ data }: { data: IgpmData }) {
       stampGiro={data.gerado_em}
       stampDado={mesRef}
     >
+      <p className="mb-2 text-xs leading-relaxed text-zinc-600">
+        <strong className="font-semibold text-[#132960]">Como ler:</strong> a barra é o comportamento típico de
+        cada mês do calendário desde 1996 (vermelha = mês que costuma ter alta; azul = que costuma ter queda). A
+        haste é a faixa usual do mês (média ± 2 desvios: ~95% das observações caem aí) e o losango cinza é a
+        média. Os pontos são os últimos 12 meses de fato — ponto abaixo da barra = aquele mês veio mais fraco
+        que o padrão; o contorno laranja marca o mês de referência.
+      </p>
       <div className="h-[280px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={rows} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>

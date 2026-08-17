@@ -44,7 +44,7 @@ export function DecomposicaoMesCard({ sintese, geradoEm }: { sintese: TabelaSint
 
   return (
     <ChartCard
-      title="Decomposição do mês"
+      title="IGP-M do mês decomposto"
       footer="Contribuições em p.p. com pesos EFETIVOS encadeados (w = peso de origem 60/30/10 × número-índice encadeado do componente, renormalizado mês a mês, no pipeline). O resíduo estrutural da aproximação é barra própria — nunca realocado entre componentes. Alta = vermelho, queda = azul (semântica de inflação)."
       stampGiro={geradoEm}
       stampDado={sintese.mes_recente}
