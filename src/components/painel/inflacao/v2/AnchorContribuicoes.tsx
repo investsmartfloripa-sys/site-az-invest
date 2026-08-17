@@ -71,17 +71,6 @@ export function AnchorContribuicoes({ indice, geradoEm }: { indice: IpcaIndice; 
   const linhaKey = visao === "12m" ? "IPCA 12m" : "IPCA cheio";
   const linhaNome = visao === "12m" ? "IPCA 12m (oficial)" : "IPCA do mês";
 
-  // Tabela de contribuição por grupo ao IPCA de 12 meses (último ponto).
-  const ultimo = contrib12[contrib12.length - 1];
-  const ipca12 = ultimo ? num(ultimo, "IPCA 12m") : null;
-  const tabelaGrupos = useMemo(() => {
-    if (!ultimo) return [] as Array<{ grupo: string; contrib: number }>;
-    return grupos
-      .map((g) => ({ grupo: nomeGrupo(g), contrib: num(ultimo, g) }))
-      .filter((r): r is { grupo: string; contrib: number } => r.contrib != null)
-      .sort((a, b) => b.contrib - a.contrib);
-  }, [ultimo, grupos]);
-
   return (
     <ChartCard
       title="Contribuição por grupo ao IPCA"
@@ -131,12 +120,30 @@ export function AnchorContribuicoes({ indice, geradoEm }: { indice: IpcaIndice; 
                     stroke="none"
                     label={{ value: "banda da meta", position: "insideTopRight", fontSize: 9, fill: AZ_CHART.ticks }}
                   />
+                  {/* Meta em BRANCO: a linha cruza a pilha de barras coloridas —
+                      em navy ela sumia dentro das faixas escuras (relatório do
+                      editor, ago/2026). Halo escuro por baixo garante contraste
+                      também onde a pilha é clara ou o fundo é o do card. */}
                   <ReferenceLine
                     y={META}
-                    stroke={AZ_BRAND.navy}
+                    stroke="rgba(19,41,96,0.55)"
+                    strokeWidth={3.2}
+                    ifOverflow="extendDomain"
+                  />
+                  <ReferenceLine
+                    y={META}
+                    stroke="#ffffff"
                     strokeDasharray="4 4"
-                    strokeWidth={1.2}
-                    label={{ value: "meta contínua 3,0%", position: "insideBottomRight", fontSize: 9, fill: AZ_BRAND.navy }}
+                    strokeWidth={1.6}
+                    label={{
+                      value: "meta contínua 3,0%",
+                      position: "insideBottomRight",
+                      fontSize: 9,
+                      fill: "#ffffff",
+                      stroke: "rgba(19,41,96,0.65)",
+                      strokeWidth: 2.4,
+                      paintOrder: "stroke",
+                    }}
                   />
                 </>
               ) : null}
@@ -153,7 +160,14 @@ export function AnchorContribuicoes({ indice, geradoEm }: { indice: IpcaIndice; 
                 }
                 cursor={AZ_TOOLTIP_PROPS.cursor}
               />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              {/* Legenda na lateral DIREITA, em coluna: são 10 séries e na
+                  horizontal elas ocupavam duas linhas embaixo do gráfico. */}
+              <Legend
+                layout="vertical"
+                align="right"
+                verticalAlign="middle"
+                wrapperStyle={{ fontSize: 11, lineHeight: "18px", paddingLeft: 12 }}
+              />
 
               {grupos.map((g, i) => (
                 <Bar
@@ -179,37 +193,9 @@ export function AnchorContribuicoes({ indice, geradoEm }: { indice: IpcaIndice; 
           </ResponsiveContainer>
         </div>
       )}
-      {tabelaGrupos.length > 0 ? (
-        <div className="mt-4 overflow-x-auto rounded-lg border border-zinc-100">
-          <table className="min-w-full text-xs">
-            <thead className="bg-zinc-50">
-              <tr>
-                <th className="px-3 py-2 text-left font-semibold text-zinc-700">Grupo</th>
-                <th className="whitespace-nowrap px-3 py-2 text-right font-semibold text-zinc-700">Contrib. 12m (p.p.)</th>
-                <th className="whitespace-nowrap px-3 py-2 text-right font-semibold text-zinc-700">
-                  Composição do IPCA (%)
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white">
-              {tabelaGrupos.map((r) => (
-                <tr key={r.grupo} className="border-t border-zinc-50 hover:bg-zinc-50/60">
-                  <td className="whitespace-nowrap px-3 py-1.5 text-zinc-800">{r.grupo}</td>
-                  <td
-                    className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums"
-                    style={{ color: r.contrib > 0 ? AZ_CHART.negText : r.contrib < 0 ? AZ_CHART.neutral : undefined }}
-                  >
-                    {fmtSignedNum(r.contrib, 3)}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums text-zinc-600">
-                    {ipca12 != null && ipca12 !== 0 ? fmtNum((r.contrib / ipca12) * 100, 1) : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
+      {/* A tabela de contribuição 12m que vivia acoplada ao gráfico saiu na
+          revisão ago/2026 do editor: "deixe apenas o gráfico". Os mesmos
+          números estão na tabela-síntese e no tooltip de cada barra. */}
     </ChartCard>
   );
 }

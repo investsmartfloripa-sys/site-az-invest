@@ -64,6 +64,19 @@ export function EsperadoRealizadoCard({
     [focusMensal.surpresas],
   );
 
+  /**
+   * Domínio APERTADO no maior desvio observado (+10% de folga), simétrico em
+   * torno do zero. O "auto" do Recharts arredondava a escala para ±1,4 p.p.
+   * enquanto a maior surpresa da série é ~0,3 — as barras viravam traços
+   * (relatório do editor, ago/2026). Piso de ±0,15 p.p. p/ uma série morna não
+   * virar ruído ampliado.
+   */
+  const dominio = useMemo<[number, number]>(() => {
+    const pico = rows.reduce((mx, r) => Math.max(mx, Math.abs(r.surpresa ?? 0)), 0);
+    const lim = Math.max(0.15, Math.ceil(pico * 1.1 * 100) / 100);
+    return [-lim, lim];
+  }, [rows]);
+
   const veredito =
     surpresa == null
       ? null
@@ -134,7 +147,12 @@ export function EsperadoRealizadoCard({
               <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
                 <CartesianGrid {...azGridProps()} />
                 <XAxis {...azXAxisProps()} dataKey="mes" interval={2} />
-                <YAxis {...azYAxisProps()} tickFormatter={(v: number) => fmtSignedNum(v, 1)} width={44} />
+                <YAxis
+                  {...azYAxisProps()}
+                  domain={dominio}
+                  tickFormatter={(v: number) => fmtSignedNum(v, 2)}
+                  width={50}
+                />
                 <Tooltip
                   content={
                     <AzTooltip

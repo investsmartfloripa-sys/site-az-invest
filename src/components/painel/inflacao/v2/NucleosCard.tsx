@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import {
-  Area,
   CartesianGrid,
   ComposedChart,
   Legend,
@@ -24,36 +23,77 @@ import { META, META_PISO, META_TETO, NUCLEO_INFO, NUCLEOS_5, num } from "./share
 /**
  * Bloco 01 — "a inflação subjacente converge para a meta?".
  *
- * Sem spaghetti de 7 linhas: média dos 5 núcleos acompanhados pelo BC
- * (EX0·EX3·MS·DP·P — MA fica fora por ser a versão não suavizada da MS) +
- * banda mín–máx da amplitude entre eles + IPCA cheio como referência em
- * cinza tracejado. EX3 destacável via chip (rótulo neutro — o Copom comunica
- * pela média dos núcleos, não por uma medida "preferida").
+ * Revisão ago/2026 (relatório do editor): este card ABSORVEU o "Os cinco
+ * núcleos, um a um" (barras), que deixou de existir. Antes o gráfico mostrava
+ * só a média dos 5 com uma banda de amplitude; agora traz OS CINCO núcleos,
+ * cada um com sua linha, mais a média em destaque e o IPCA cheio como régua.
+ * O glossário que vivia no card de barras veio junto, visível abaixo do
+ * gráfico — é o que faz a sigla virar informação.
  *
- * Tudo em acumulado 12m COMPOSTO calculado no builder; o momentum 3m
- * dessazonalizado anualizado (padrão RI) entra na fatia 2 (exige X-13).
+ * Chips ligam/desligam cada núcleo: cinco linhas simultâneas viram spaghetti,
+ * então elas nascem esmaecidas atrás da média e o leitor destaca a que quiser.
+ *
+ * Tudo em acumulado 12m COMPOSTO calculado no builder.
  */
+
+/** Cor de cada núcleo — paleta categórica, estável entre sessões. */
+const COR_NUCLEO: Record<string, string> = {
+  EX0: "#FF5713",
+  EX3: "#7C3AED",
+  MS: "#1E8A5C",
+  DP: "#A16207",
+  P: "#0891B2",
+};
+
 export function NucleosCard({ nucleos, geradoEm }: { nucleos: NucleosBlock; geradoEm: string }) {
-  const [mostraEx3, setMostraEx3] = useState(false);
+  const [destacados, setDestacados] = useState<string[]>([]);
 
   const rows = useMemo(
     () =>
-      (nucleos.serie_12m ?? []).map((r) => ({
-        mes: r.mes,
-        media_nucleos: num(r, "media_nucleos"),
-        banda: [num(r, "nucleos_min"), num(r, "nucleos_max")] as [number | null, number | null],
-        EX3: num(r, "EX3"),
-        ipca: num(r, "IPCA cheio"),
-      })),
+      (nucleos.serie_12m ?? []).map((r) => {
+        const linha: Record<string, number | string | null> = {
+          mes: r.mes,
+          media_nucleos: num(r, "media_nucleos"),
+          ipca: num(r, "IPCA cheio"),
+        };
+        for (const k of NUCLEOS_5) linha[k] = num(r, k);
+        return linha;
+      }),
     [nucleos.serie_12m],
   );
 
   const ultimo = rows[rows.length - 1];
+  const alternar = (k: string) =>
+    setDestacados((v) => (v.includes(k) ? v.filter((x) => x !== k) : [...v, k]));
 
   return (
     <ChartCard
       title="Núcleos de inflação (12 meses)"
       subtitle="Núcleo é o IPCA sem os preços que sobem e descem por motivo passageiro — a inflação que tende a ficar. O Banco Central acompanha cinco: EX0, EX3, MS, DP e P55."
+      toolbar={
+        <div className="flex flex-wrap items-center gap-1.5">
+          {NUCLEOS_5.map((k) => {
+            const on = destacados.includes(k);
+            return (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={on}
+                onClick={() => alternar(k)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                  on ? "border-[#132960] bg-white text-[#132960]" : "border-zinc-200 bg-zinc-50 text-zinc-400"
+                }`}
+              >
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ background: on ? COR_NUCLEO[k] : "#d1d5db" }}
+                />
+                {NUCLEO_INFO[k].sigla}
+              </button>
+            );
+          })}
+        </div>
+      }
       footer={
         <>
           <p className="mb-1.5">
@@ -68,37 +108,22 @@ export function NucleosCard({ nucleos, geradoEm }: { nucleos: NucleosBlock; gera
             ))}
           </ul>
           <p>
-            A linha azul é a média simples dos cinco; a área clara mostra a distância entre o núcleo que marca mais e o
-            que marca menos no mesmo mês — quanto mais estreita, mais as cinco medidas concordam. Tudo em acumulado de
-            12 meses composto.
+            A linha azul grossa é a média simples dos cinco — é por ela que o Copom comunica, não por uma medida
+            “preferida”. Quando as cinco correm juntas, o sinal é confiável; quando abrem o leque, as medidas discordam
+            e vale olhar cada uma. Tudo em acumulado de 12 meses composto. A meta contínua é de {fmtPct(META, 1)}, com
+            banda de {fmtPct(META_PISO, 1)} a {fmtPct(META_TETO, 1)}.
           </p>
         </>
       }
-      toolbar={
-        <button
-          type="button"
-          aria-pressed={mostraEx3}
-          onClick={() => setMostraEx3((v) => !v)}
-          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition ${
-            mostraEx3 ? "border-[#132960] bg-white text-[#132960]" : "border-zinc-200 bg-zinc-50 text-zinc-400"
-          }`}
-        >
-          <span
-            className="h-2.5 w-2.5 rounded-full"
-            style={{ background: mostraEx3 ? AZ_BRAND.rust : "#d1d5db" }}
-          />
-          EX3 (exclusão)
-        </button>
-      }
       stampGiro={geradoEm}
-      stampDado={ultimo?.mes ?? null}
+      stampDado={typeof ultimo?.mes === "string" ? ultimo.mes : null}
     >
       {rows.length === 0 ? (
         <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
           Série de núcleos em 12m ainda não disponível neste JSON.
         </p>
       ) : (
-        <div className="h-[300px] w-full">
+        <div className="h-[340px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={rows} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
               <CartesianGrid {...azGridProps()} />
@@ -127,16 +152,6 @@ export function NucleosCard({ nucleos, geradoEm }: { nucleos: NucleosBlock; gera
               />
               <Legend wrapperStyle={{ fontSize: 11 }} />
 
-              <Area
-                dataKey="banda"
-                name="Amplitude dos 5 núcleos"
-                stroke="none"
-                fill={AZ_BRAND.azure}
-                fillOpacity={0.12}
-                isAnimationActive={false}
-                tooltipType="none"
-                connectNulls
-              />
               <Line
                 type="monotone"
                 dataKey="ipca"
@@ -147,23 +162,30 @@ export function NucleosCard({ nucleos, geradoEm }: { nucleos: NucleosBlock; gera
                 dot={false}
                 isAnimationActive={false}
               />
-              {mostraEx3 ? (
-                <Line
-                  type="monotone"
-                  dataKey="EX3"
-                  name="EX3 (exclusão)"
-                  stroke={AZ_BRAND.rust}
-                  strokeWidth={1.8}
-                  dot={false}
-                  isAnimationActive={false}
-                />
-              ) : null}
+              {/* Os CINCO núcleos: esmaecidos por padrão (o conjunto conta a
+                  história), realçados um a um pelos chips do topo. */}
+              {NUCLEOS_5.map((k) => {
+                const on = destacados.includes(k);
+                return (
+                  <Line
+                    key={k}
+                    type="monotone"
+                    dataKey={k}
+                    name={`Núcleo ${NUCLEO_INFO[k].sigla}`}
+                    stroke={COR_NUCLEO[k]}
+                    strokeWidth={on ? 2 : 1}
+                    strokeOpacity={on ? 1 : 0.32}
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                );
+              })}
               <Line
                 type="monotone"
                 dataKey="media_nucleos"
                 name="Média dos 5 núcleos"
                 stroke={AZ_BRAND.azure}
-                strokeWidth={2.2}
+                strokeWidth={2.6}
                 dot={false}
                 isAnimationActive={false}
               />
@@ -171,6 +193,26 @@ export function NucleosCard({ nucleos, geradoEm }: { nucleos: NucleosBlock; gera
           </ResponsiveContainer>
         </div>
       )}
+
+      {/* Glossário VISÍVEL — herdado do card de barras que este absorveu. */}
+      <dl className="mt-4 space-y-2 rounded-lg border border-zinc-100 bg-[#f8fafc] p-3 text-[11px] leading-relaxed">
+        <p className="font-semibold text-[#132960]">O que cada núcleo tira da conta</p>
+        {NUCLEOS_5.map((k) => (
+          <div key={k} className="flex gap-2">
+            <dt className="flex w-16 shrink-0 items-center gap-1.5 font-semibold text-zinc-700">
+              <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: COR_NUCLEO[k] }} />
+              {NUCLEO_INFO[k].sigla}
+            </dt>
+            <dd className="text-zinc-600">
+              <span className="text-zinc-400">{NUCLEO_INFO[k].familia}</span> · {NUCLEO_INFO[k].curta}.
+            </dd>
+          </div>
+        ))}
+        <p className="pt-1 text-zinc-500">
+          A linha cinza tracejada (IPCA cheio) é a régua: quando os núcleos rodam abaixo dela, a alta do índice está
+          vindo de itens voláteis; quando rodam acima, a pressão é de fundo.
+        </p>
+      </dl>
     </ChartCard>
   );
 }

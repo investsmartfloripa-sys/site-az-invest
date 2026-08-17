@@ -73,6 +73,8 @@ export type SazonalidadeStats = {
   media: number | null;
   min: number | null;
   max: number | null;
+  /** Desvio-padrão amostral do mês civil (faixas de ±1 e ±2 dp). Ausente em JSON anterior a ago/2026. */
+  dp?: number | null;
   n: number;
 };
 
@@ -114,10 +116,19 @@ export type SinteseLinha = {
   unidade?: string;
   /** IPCA-15: mês de referência próprio (pode divergir do cheio). */
   mes_proprio?: string;
+  /** Janela longa observada, mês → variação. Ausente em JSON anterior a ago/2026. */
+  serie?: Record<string, number | null> | null;
+  /**
+   * A MESMA janela dessazonalizada (STL, no builder). `null` quando não se
+   * aplica: média dos 5 núcleos (agregada) e difusão (contagem, não preço).
+   */
+  serie_sa?: Record<string, number | null> | null;
 };
 export type TabelaSinteseBlock = {
   mes_recente: string;
   meses: string[];
+  /** Meses das colunas de `serie`/`serie_sa`. Ausente em JSON anterior a ago/2026. */
+  meses_serie?: string[];
   secoes: Array<{ id: string; titulo: string; linhas: SinteseLinha[] }>;
 };
 

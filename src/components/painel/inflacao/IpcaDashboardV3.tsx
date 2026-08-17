@@ -18,16 +18,10 @@ import { BuscadorSubitensCard } from "./v3/BuscadorSubitensCard";
 import { GruposMesCard } from "./v3/GruposMesCard";
 import { HeatmapGruposCard } from "./v3/HeatmapGruposCard";
 import { TabelaHierarquicaCard } from "./v3/TabelaHierarquicaCard";
-import { NucleosBarrasCard } from "./v3/NucleosBarrasCard";
 import { SerieLongaCard } from "./v3/SerieLongaCard";
 import { AncoragemCard } from "./v3/AncoragemCard";
 import { EsperadoRealizadoCard } from "./v3/EsperadoRealizadoCard";
-import {
-  SinteseCategoriasCard,
-  SinteseDifusaoCard,
-  SinteseGruposCard,
-  SinteseIndiceCard,
-} from "./v3/SinteseBlocos";
+import { SinteseCategoriasCard } from "./v3/SinteseBlocos";
 
 /**
  * Painel IPCA v3 — tabs de ESCRUTÍNIO (padrão Termômetro de Ciclo/CAGED):
@@ -93,8 +87,12 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
         </p>
       </header>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* Flex com cards do tamanho do CONTEÚDO, não grid de 4 colunas iguais:
+          esticados até 1/4 da largura, cada quadrado ficava com metade vazia à
+          direita (relatório do editor, ago/2026). */}
+      <div className="flex flex-wrap gap-2">
         <KpiCard
+          size="sm"
           label="IPCA do mês"
           value={fmtSignedPct(ipcaM, 2)}
           delta={surpresa ?? (ipcaM != null && medianaSaz != null ? ipcaM - medianaSaz : null)}
@@ -113,6 +111,7 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
           }
         />
         <KpiCard
+          size="sm"
           label="IPCA 12 meses"
           value={fmtPct(ipca12m, 2)}
           delta={ipca12m != null ? ipca12m - 3.0 : null}
@@ -122,6 +121,7 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
           hint="banda: 1,5% a 4,5%"
         />
         <KpiCard
+          size="sm"
           label="Núcleos 12m (média)"
           value={fmtPct(mediaNucleos, 2)}
           delta={mediaNucleos != null ? mediaNucleos - 3.0 : null}
@@ -131,6 +131,7 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
           hint="EX0 · EX3 · MS · DP · P"
         />
         <KpiCard
+          size="sm"
           label="Difusão do mês"
           value={fmtPct(difusaoM, 1)}
           delta={difusaoM != null && difMedia != null ? difusaoM - difMedia : null}
@@ -176,49 +177,33 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
               />
             ) : null}
 
-            {/* O número do mês: o índice em si e se ele é alto p/ este mês do ano.
-                `items-start` em TODA linha: sem ele o grid estica o card mais
-                baixo até a altura do vizinho e sobra o vazio que o editor
-                apontou (relatório ago/2026). */}
+            {/* A tabela-síntese voltou a ficar ABERTA na aba (saiu do recolhido)
+                e agora abre 13 meses, com alternador observado × dessazonalizado. */}
+            {data.tabela_sintese ? (
+              <TabelaSinteseCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
+            ) : null}
+
+            {/* `items-start` em TODA linha: sem ele o grid estica o card mais
+                baixo até a altura do vizinho e sobra vazio. */}
             <div className="grid items-start gap-6 xl:grid-cols-2">
-              {data.tabela_sintese ? (
-                <SinteseIndiceCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
-              ) : null}
               <SazonalidadeCard data={data} />
-            </div>
-
-            {/* Grupos: "quanto subiu" (variação) ao lado de "quanto pesou" (contribuição) */}
-            <div className="grid items-start gap-6 xl:grid-cols-2">
-              {data.tabela_sintese ? (
-                <SinteseGruposCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
-              ) : null}
-              {data.abertura_hierarquica ? (
-                <GruposMesCard hierarquia={data.abertura_hierarquica} mesRef={mesRef} geradoEm={data.gerado_em} />
-              ) : null}
-            </div>
-
-            {/* Natureza do preço + alcance da alta */}
-            <div className="grid items-start gap-6 xl:grid-cols-2">
               {data.tabela_sintese ? (
                 <SinteseCategoriasCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
               ) : null}
-              <SinteseDifusaoCard difusao={data.difusao} geradoEm={data.gerado_em} />
             </div>
+
+            {/* Os 9 grupos num card só: variação e contribuição em colunas pareadas */}
+            {data.abertura_hierarquica ? (
+              <GruposMesCard
+                hierarquia={data.abertura_hierarquica}
+                sintese={data.tabela_sintese}
+                mesRef={mesRef}
+                geradoEm={data.gerado_em}
+              />
+            ) : null}
 
             {/* Micro: 17 barras pedem a largura toda */}
             <InfluenciasCard data={data} />
-
-            {/* A tabela-síntese continua inteira, recolhida — nada de dado se perdeu */}
-            {data.tabela_sintese ? (
-              <details className="group rounded-2xl border border-[#132960]/10 bg-white shadow-sm">
-                <summary className="cursor-pointer select-none p-4 text-sm font-semibold text-[#132960] marker:text-[#027DFC]">
-                  Ver a tabela-síntese completa — todos os recortes lado a lado, com download em CSV
-                </summary>
-                <div className="border-t border-zinc-100 p-4 pt-3">
-                  <TabelaSinteseCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
-                </div>
-              </details>
-            ) : null}
           </div>
         ) : null}
 
@@ -235,13 +220,10 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
 
         {vista === "nucleos" ? (
           <div className="space-y-6">
+            {/* Card único dos núcleos: absorveu o gráfico de barras "um a um",
+                que deixou de existir. O momentum (SAAR 3m/6m) segue fora do
+                painel, disponível só ao publisher. */}
             <NucleosCard nucleos={data.nucleos} geradoEm={data.gerado_em} />
-            {/* O momentum dessazonalizado (SAAR 3m/6m) saiu do painel na revisão
-                ago/2026 — gráfico e tabela. O componente segue disponível ao
-                publisher p/ embutir em post, mas não pesa mais na navegação. */}
-            {data.tabela_sintese ? (
-              <NucleosBarrasCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
-            ) : null}
             <AberturaCards categorias={data.categorias} nucleos={data.nucleos} geradoEm={data.gerado_em} />
             <DifusaoCard difusao={data.difusao} geradoEm={data.gerado_em} />
           </div>

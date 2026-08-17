@@ -73,29 +73,58 @@ export function SazonalidadeCard({ data }: { data: IpcaData }) {
     return out;
   }, [data.ipca_cheio.serie]);
 
+  /**
+   * Desvio-padrão por mês civil. Nasce no builder (`sazonalidade.por_mes[mm].dp`)
+   * — este cálculo é só a PONTE para o JSON anterior a ago/2026, que não tem o
+   * campo: sem ele o card ficaria sem nenhuma faixa de dispersão. Usa a série
+   * longa (IPCA desde 1999) restrita à MESMA janela do bloco, então dá o mesmo
+   * número do builder. Cai fora sozinho assim que o pipeline republicar.
+   */
+  const dpFallback = useMemo(() => {
+    if (!saz) return new Map<string, number>();
+    const temDpNoJson = Object.values(saz.por_mes).some((s) => s?.dp != null);
+    const longa = data.serie_longa?.serie;
+    if (temDpNoJson || !longa) return new Map<string, number>();
+    const [aIni, aFim] = saz.janela.split("-").map((x) => Number(x.trim()));
+    if (!Number.isFinite(aIni) || !Number.isFinite(aFim)) return new Map<string, number>();
+    const porMes = new Map<string, number[]>();
+    for (const p of longa) {
+      const ano = Number(p.mes.slice(0, 4));
+      if (p.var == null || ano < aIni || ano > aFim) continue;
+      const mm = p.mes.slice(5, 7);
+      porMes.set(mm, [...(porMes.get(mm) ?? []), p.var]);
+    }
+    const out = new Map<string, number>();
+    for (const [mm, vals] of porMes) {
+      if (vals.length < 2) continue;
+      const media = vals.reduce((s, v) => s + v, 0) / vals.length;
+      const variancia = vals.reduce((s, v) => s + (v - media) ** 2, 0) / (vals.length - 1);
+      out.set(mm, Math.sqrt(variancia));
+    }
+    return out;
+  }, [saz, data.serie_longa]);
+
   const rows = useMemo(() => {
     if (!saz) return [];
     return MESES_LABEL.map((label, i) => {
       const mm = String(i + 1).padStart(2, "0");
       const s = saz.por_mes[mm];
       const mediana = s?.mediana ?? null;
-      const minV = s?.min ?? null;
-      const maxV = s?.max ?? null;
+      const dp = s?.dp ?? dpFallback.get(mm) ?? null;
       const real = realizados.get(mm);
       return {
         label,
         mediana,
-        // ErrorBar do Recharts: offsets [abaixo, acima] relativos à barra.
-        amplitude:
-          mediana != null && minV != null && maxV != null
-            ? ([mediana - minV, maxV - mediana] as [number, number])
-            : undefined,
+        // ErrorBar do Recharts: offsets [abaixo, acima] relativos à barra. Duas
+        // hastes concêntricas: ±1 dp (o intervalo comum) e ±2 dp (o excepcional).
+        dp1: mediana != null && dp != null ? ([dp, dp] as [number, number]) : undefined,
+        dp2: mediana != null && dp != null ? ([2 * dp, 2 * dp] as [number, number]) : undefined,
         realizado: real?.valor ?? null,
         mesRealizado: real?.mes ?? null,
         atual: mm === mmRef,
       };
     });
-  }, [saz, realizados, mmRef]);
+  }, [saz, realizados, mmRef, dpFallback]);
 
   // Leitura em prosa: o número do mês contra o padrão daquele mês civil.
   const leitura = useMemo(() => {
@@ -141,9 +170,11 @@ export function SazonalidadeCard({ data }: { data: IpcaData }) {
           <p className="mb-1.5">
             <strong>Como ler.</strong> A barra cinza é a <em>mediana</em> daquele mês civil na janela {saz.janela} — o
             valor típico, escolhido no lugar da média porque não se deixa distorcer pelos meses excepcionais de
-            2020-2022. A haste vertical vai do menor ao maior IPCA já registrado naquele mês no período. Os pontos são
-            os 12 meses mais recentes, cada um no seu mês civil; o ponto laranja e a linha tracejada marcam o mês de
-            referência.
+            2020-2022. As duas hastes verticais são faixas de dispersão: a mais grossa e curta marca{" "}
+            <strong>±1 desvio-padrão</strong> — onde cai a variação corriqueira daquele mês, cerca de dois terços dos
+            anos — e a mais fina e longa, <strong>±2 desvios-padrão</strong>, fora da qual o mês é atípico de verdade.
+            Os pontos são os 12 meses mais recentes, cada um no seu mês civil; o ponto laranja e a linha tracejada
+            marcam o mês de referência.
           </p>
           <p>
             <strong>Por que importa.</strong> Comparar o IPCA de um mês com o do mês anterior engana: janeiro e
@@ -223,7 +254,10 @@ export function SazonalidadeCard({ data }: { data: IpcaData }) {
               maxBarSize={22}
               isAnimationActive={false}
             >
-              <ErrorBar dataKey="amplitude" width={5} strokeWidth={1} stroke={AZ_CHART.labels} direction="y" />
+              {/* ±2 dp primeiro (haste longa e clara), ±1 dp por cima (curta e
+                  escura): as duas concêntricas leem como faixa comum × extremo. */}
+              <ErrorBar dataKey="dp2" width={3} strokeWidth={1} stroke={AZ_CHART.ticks} strokeOpacity={0.55} direction="y" />
+              <ErrorBar dataKey="dp1" width={7} strokeWidth={1.6} stroke={AZ_CHART.labels} direction="y" />
             </Bar>
             <Scatter dataKey="realizado" name="Quanto variou de fato (últimos 12 meses)" isAnimationActive={false}>
               {rows.map((r) => (
@@ -240,8 +274,9 @@ export function SazonalidadeCard({ data }: { data: IpcaData }) {
         </ResponsiveContainer>
       </div>
       <p className="mt-2 text-[10.5px] leading-relaxed text-zinc-400">
-        A haste de cada barra vai do menor ao maior IPCA registrado naquele mês entre {saz.janela.replace("-", " e ")}.
-        Diferença de até {fmtSignedNum(0.05, 2)} p.p. em relação à mediana conta como “em linha com o padrão”.
+        Hastes: a grossa é ±1 desvio-padrão e a fina, ±2, calculados sobre os {saz.janela.replace("-", " a ")} de cada
+        mês civil. Diferença de até {fmtSignedNum(0.05, 2)} p.p. em relação à mediana conta como “em linha com o
+        padrão”.
       </p>
     </ChartCard>
   );

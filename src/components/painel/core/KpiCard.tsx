@@ -33,8 +33,8 @@ export type KpiCardProps = {
   invertColor?: boolean;
   /** Nota auxiliar pequena abaixo do valor. */
   hint?: string;
-  /** md (default) ou lg (KPI de destaque). */
-  size?: "md" | "lg";
+  /** md (default), lg (KPI de destaque) ou sm (compacto, p/ fila de 4+). */
+  size?: "md" | "lg" | "sm";
 };
 
 const POS_BG = "rgba(30,138,92,0.10)";
@@ -73,29 +73,47 @@ export function KpiCard({
       : { color: AZ_CHART.negText, background: NEG_BG };
   })();
 
+  // `sm`: rótulo e valor na MESMA linha, padding menor e sem quebra — a fila de
+  // 4 KPIs deixava metade do card vazia à direita (relatório do editor, ago/2026).
+  const sm = size === "sm";
   return (
-    <div className="flex flex-col rounded-xl border border-[#132960]/10 bg-white p-3 shadow-sm">
-      <div className="text-[11px] uppercase tracking-wide text-zinc-500">{label}</div>
-      <div className="mt-1 flex items-baseline gap-1">
+    <div
+      className={`flex flex-col rounded-xl border border-[#132960]/10 bg-white shadow-sm ${sm ? "px-3 py-2" : "p-3"}`}
+    >
+      <div className={`${sm ? "text-[10px]" : "text-[11px]"} uppercase tracking-wide text-zinc-500`}>{label}</div>
+      <div className={`flex flex-wrap items-baseline gap-x-2 gap-y-0.5 ${sm ? "" : "mt-1"}`}>
         <span
-          className={`${size === "lg" ? "text-2xl" : "text-xl"} font-bold tabular-nums text-[#132960]`}
+          className={`${size === "lg" ? "text-2xl" : sm ? "text-lg" : "text-xl"} font-bold tabular-nums text-[#132960]`}
         >
           {value}
         </span>
         {unit ? <span className="text-xs text-zinc-500">{unit}</span> : null}
-      </div>
-      <div className="mt-1 flex flex-wrap items-center gap-2">
-        {deltaText ? (
-          <span
-            className="rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums"
-            style={badgeStyle}
-          >
+        {sm && deltaText ? (
+          <span className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums" style={badgeStyle}>
             {deltaText}
-            {deltaHint ? <span className="ml-1 font-normal opacity-80">{deltaHint}</span> : null}
           </span>
         ) : null}
-        {hint ? <span className="text-[10px] text-zinc-500">{hint}</span> : null}
       </div>
+      {sm ? (
+        deltaHint || hint ? (
+          <div className="text-[10px] leading-tight text-zinc-500">
+            {[deltaHint, hint].filter(Boolean).join(" · ")}
+          </div>
+        ) : null
+      ) : (
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          {deltaText ? (
+            <span
+              className="rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums"
+              style={badgeStyle}
+            >
+              {deltaText}
+              {deltaHint ? <span className="ml-1 font-normal opacity-80">{deltaHint}</span> : null}
+            </span>
+          ) : null}
+          {hint ? <span className="text-[10px] text-zinc-500">{hint}</span> : null}
+        </div>
+      )}
     </div>
   );
 }
