@@ -18,12 +18,16 @@ import { BuscadorSubitensCard } from "./v3/BuscadorSubitensCard";
 import { GruposMesCard } from "./v3/GruposMesCard";
 import { HeatmapGruposCard } from "./v3/HeatmapGruposCard";
 import { TabelaHierarquicaCard } from "./v3/TabelaHierarquicaCard";
-import { MomentumCard } from "./v3/MomentumCard";
-import { TabelaNucleosCard } from "./v3/TabelaNucleosCard";
+import { NucleosBarrasCard } from "./v3/NucleosBarrasCard";
 import { SerieLongaCard } from "./v3/SerieLongaCard";
 import { AncoragemCard } from "./v3/AncoragemCard";
-import { FocusMensalCard } from "./v3/FocusMensalCard";
-import { SurpresasCard } from "./v3/SurpresasCard";
+import { EsperadoRealizadoCard } from "./v3/EsperadoRealizadoCard";
+import {
+  SinteseCategoriasCard,
+  SinteseDifusaoCard,
+  SinteseGruposCard,
+  SinteseIndiceCard,
+} from "./v3/SinteseBlocos";
 
 /**
  * Painel IPCA v3 — tabs de ESCRUTÍNIO (padrão Termômetro de Ciclo/CAGED):
@@ -160,20 +164,58 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
       <div>
         {vista === "leitura" ? (
           <div className="space-y-6">
-            {/* Síntese compacta (sem núcleos) divide a linha com a sazonalidade */}
-            <div className="grid gap-6 xl:grid-cols-2">
+            {/* Abre pela pergunta do dia da divulgação: esperavam quanto, deu quanto */}
+            {data.focus_mensal ? (
+              <EsperadoRealizadoCard
+                focusMensal={data.focus_mensal}
+                realizadoMes={ipcaM}
+                geradoEm={data.gerado_em}
+              />
+            ) : null}
+
+            {/* O número do mês: o índice em si e se ele é alto p/ este mês do ano.
+                `items-start` em TODA linha: sem ele o grid estica o card mais
+                baixo até a altura do vizinho e sobra o vazio que o editor
+                apontou (relatório ago/2026). */}
+            <div className="grid items-start gap-6 xl:grid-cols-2">
               {data.tabela_sintese ? (
-                <TabelaSinteseCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
+                <SinteseIndiceCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
               ) : null}
               <SazonalidadeCard data={data} />
             </div>
-            {/* Macro (grupos) ao lado do micro (subitens) */}
-            <div className="grid gap-6 xl:grid-cols-2">
+
+            {/* Grupos: "quanto subiu" (variação) ao lado de "quanto pesou" (contribuição) */}
+            <div className="grid items-start gap-6 xl:grid-cols-2">
+              {data.tabela_sintese ? (
+                <SinteseGruposCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
+              ) : null}
               {data.abertura_hierarquica ? (
                 <GruposMesCard hierarquia={data.abertura_hierarquica} mesRef={mesRef} geradoEm={data.gerado_em} />
               ) : null}
-              <InfluenciasCard data={data} />
             </div>
+
+            {/* Natureza do preço + alcance da alta */}
+            <div className="grid items-start gap-6 xl:grid-cols-2">
+              {data.tabela_sintese ? (
+                <SinteseCategoriasCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
+              ) : null}
+              <SinteseDifusaoCard difusao={data.difusao} geradoEm={data.gerado_em} />
+            </div>
+
+            {/* Micro: 17 barras pedem a largura toda */}
+            <InfluenciasCard data={data} />
+
+            {/* A tabela-síntese continua inteira, recolhida — nada de dado se perdeu */}
+            {data.tabela_sintese ? (
+              <details className="group rounded-2xl border border-[#132960]/10 bg-white shadow-sm">
+                <summary className="cursor-pointer select-none p-4 text-sm font-semibold text-[#132960] marker:text-[#027DFC]">
+                  Ver a tabela-síntese completa — todos os recortes lado a lado, com download em CSV
+                </summary>
+                <div className="border-t border-zinc-100 p-4 pt-3">
+                  <TabelaSinteseCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
+                </div>
+              </details>
+            ) : null}
           </div>
         ) : null}
 
@@ -191,9 +233,11 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
         {vista === "nucleos" ? (
           <div className="space-y-6">
             <NucleosCard nucleos={data.nucleos} geradoEm={data.gerado_em} />
-            {data.momentum ? <MomentumCard momentum={data.momentum} geradoEm={data.gerado_em} /> : null}
+            {/* O momentum dessazonalizado (SAAR 3m/6m) saiu do painel na revisão
+                ago/2026 — gráfico e tabela. O componente segue disponível ao
+                publisher p/ embutir em post, mas não pesa mais na navegação. */}
             {data.tabela_sintese ? (
-              <TabelaNucleosCard sintese={data.tabela_sintese} momentum={data.momentum} geradoEm={data.gerado_em} />
+              <NucleosBarrasCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
             ) : null}
             <AberturaCards categorias={data.categorias} nucleos={data.nucleos} geradoEm={data.gerado_em} />
             <DifusaoCard difusao={data.difusao} geradoEm={data.gerado_em} />
@@ -211,12 +255,9 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
             {data.focus_12m && data.focus_12m.length > 0 ? (
               <AncoragemCard focus12m={data.focus_12m} geradoEm={data.gerado_em} />
             ) : null}
-            {data.focus_mensal ? (
-              <FocusMensalCard focusMensal={data.focus_mensal} realizadoMes={ipcaM} geradoEm={data.gerado_em} />
-            ) : null}
-            {data.focus_mensal && data.focus_mensal.surpresas.length > 0 ? (
-              <SurpresasCard focusMensal={data.focus_mensal} geradoEm={data.gerado_em} />
-            ) : null}
+            {/* Focus mensal + surpresa migraram fundidos p/ a tab "Leitura do mês"
+                (EsperadoRealizadoCard): é lá que a pergunta "esperavam quanto,
+                deu quanto" é feita. */}
           </div>
         ) : null}
       </div>
@@ -238,9 +279,10 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
           <p>
             <strong>Metodologia — honestidade de cálculo.</strong> Todo acumulado de 12 meses é COMPOSTO (Π(1+v/100)−1),
             nunca soma aritmética; contribuições 12m encadeadas com resíduo realocado pró-rata p/ fechar com o oficial.
-            Momentum: dessazonalização STL sobre o log do índice encadeado (período 12, robusta) — método próprio, NÃO o
-            X-13 do BCB — e SAAR = janela de 3/6 meses dessaz anualizada geometricamente; ajuste desde 2004, publicação
-            desde 2012. Surpresa inflacionária = realizado − mediana da última pesquisa Focus antes da divulgação (o BC
+            Núcleos: conjunto de cinco (EX0, EX3, MS, DP e P55) definido pelo Estudo Especial 102/2020 do BCB — o MA
+            fica fora da média por ser redundante com o MS. As séries de momentum dessazonalizado (SAAR 3m/6m, STL sobre
+            o log do índice encadeado) seguem no pipeline e disponíveis ao publisher, mas saíram do painel na revisão de
+            ago/2026. Surpresa inflacionária = realizado − mediana da última pesquisa Focus antes da divulgação (o BC
             encerra a coleta do mês no release do IBGE). Metas do CMN por resolução (2003-04 nas versões ajustadas);
             regime de meta CONTÍNUA de 3,0% ± 1,5 p.p. desde 2025.
           </p>

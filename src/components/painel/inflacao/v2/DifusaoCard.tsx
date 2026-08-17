@@ -44,7 +44,28 @@ export function DifusaoCard({ difusao, geradoEm }: { difusao: DifusaoBlock; gera
 
   return (
     <ChartCard
-      title="Índice de difusão"
+      title="Índice de difusão — a alta está espalhada ou concentrada?"
+      subtitle="De cada 100 preços que o IBGE coleta, quantos ficaram mais caros no mês. Não mede o tamanho da alta, e sim em quantos itens ela aparece."
+      footer={
+        <>
+          <p className="mb-1.5">
+            <strong>O que é.</strong> A difusão é o percentual dos subitens do IPCA (são cerca de 380) que subiram de
+            preço no mês. Serve para separar duas situações que dão o mesmo IPCA no fim: uma alta forte em poucos itens
+            (um choque de energia ou de safra, que passa) e uma alta pequena espalhada por quase toda a cesta (pressão
+            generalizada, que costuma persistir e é a que preocupa o Banco Central).
+          </p>
+          <p className="mb-1.5">
+            <strong>Como ler.</strong> A régua NÃO é 50%: a difusão do IPCA quase nunca cai abaixo disso, porque quase
+            sempre há mais itens subindo do que caindo. A referência certa é a média histórica desde{" "}
+            {mh?.desde?.slice(0, 4) ?? "2012"} (linha tracejada) com a faixa de ±1 desvio-padrão. Dentro da faixa, a
+            difusão está normal; acima dela, a alta está mais espalhada que o usual; abaixo, mais concentrada.
+          </p>
+          <p>
+            A linha cheia é a média móvel de 3 meses — a leitura mensal (pontilhada, ao fundo) é ruidosa e sazonal
+            demais para se tirar conclusão de um mês só.
+          </p>
+        </>
+      }
       stampGiro={geradoEm}
       stampDado={ultimoMes}
     >

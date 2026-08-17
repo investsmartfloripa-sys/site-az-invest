@@ -6,7 +6,7 @@ import type { IpcaData } from "@/lib/painel-ipca";
 import { ChartCard } from "@/components/painel/core";
 import { DivergingReturnBars } from "@/components/painel/charts/DivergingReturnBars";
 import { AZ_CHART } from "@/lib/az-chart-theme";
-import { fmtSignedNum } from "@/lib/format-br";
+import { fmtMesCurto, fmtSignedNum } from "@/lib/format-br";
 import { num } from "./shared";
 
 /**
@@ -36,10 +36,16 @@ export function InfluenciasCard({ data }: { data: IpcaData }) {
   }, [top_altas, top_quedas, ipcaMes]);
 
   return (
-    <ChartCard title="Maiores influências do mês" stampGiro={data.gerado_em} stampDado={mes}>
+    <ChartCard
+      title={`Maiores influências do mês (${fmtMesCurto(mes)})`}
+      subtitle="Os 8 subitens que mais empurraram o IPCA para cima e os 8 que mais puxaram para baixo, em pontos percentuais. “Demais itens” fecha a conta com o índice cheio."
+      stampGiro={data.gerado_em}
+      stampDado={mes}
+    >
       <DivergingReturnBars
         rows={rows}
-        yAxisWidth={150}
+        yAxisWidth={186}
+        labelMax={28}
         valueFmt={(v) => `${fmtSignedNum(v, 2)} p.p.`}
         axisFmt={(v) => fmtSignedNum(v, Math.abs(v) < 1 ? 2 : 1)}
         fillFor={(v) => (v > 0 ? AZ_CHART.neg : AZ_CHART.neutral)}

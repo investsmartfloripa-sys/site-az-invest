@@ -19,7 +19,7 @@ import type { NucleosBlock } from "@/lib/painel-ipca";
 import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum, fmtPct } from "@/lib/format-br";
-import { META, META_PISO, META_TETO, num } from "./shared";
+import { META, META_PISO, META_TETO, NUCLEO_INFO, NUCLEOS_5, num } from "./shared";
 
 /**
  * Bloco 01 — "a inflação subjacente converge para a meta?".
@@ -53,6 +53,27 @@ export function NucleosCard({ nucleos, geradoEm }: { nucleos: NucleosBlock; gera
   return (
     <ChartCard
       title="Núcleos de inflação (12 meses)"
+      subtitle="Núcleo é o IPCA sem os preços que sobem e descem por motivo passageiro — a inflação que tende a ficar. O Banco Central acompanha cinco: EX0, EX3, MS, DP e P55."
+      footer={
+        <>
+          <p className="mb-1.5">
+            <strong>Os cinco núcleos acompanhados pelo BC</strong> (conjunto vigente desde o Estudo Especial 102/2020;
+            o antigo MA saiu por ser redundante com o MS):
+          </p>
+          <ul className="mb-1.5 space-y-1">
+            {NUCLEOS_5.map((k) => (
+              <li key={k}>
+                <strong>{NUCLEO_INFO[k].sigla}</strong> ({NUCLEO_INFO[k].familia.toLowerCase()}) — {NUCLEO_INFO[k].curta}.
+              </li>
+            ))}
+          </ul>
+          <p>
+            A linha azul é a média simples dos cinco; a área clara mostra a distância entre o núcleo que marca mais e o
+            que marca menos no mesmo mês — quanto mais estreita, mais as cinco medidas concordam. Tudo em acumulado de
+            12 meses composto.
+          </p>
+        </>
+      }
       toolbar={
         <button
           type="button"

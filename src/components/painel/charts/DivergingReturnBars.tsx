@@ -60,6 +60,16 @@ export type DivergingReturnBarsProps = {
    * queda = azul) — exceção documentada no PADRAO-VISUAL-GRAFICOS.md.
    */
   fillFor?: (v: number) => string;
+  /**
+   * Máximo de caracteres do rótulo de categoria antes de truncar. Suba junto
+   * com `yAxisWidth` quando os nomes forem longos (grupos do IPCA). Default 18.
+   */
+  labelMax?: number;
+  /**
+   * Régua vertical opcional (meta, média histórica...). Em barras horizontais
+   * o valor mora no eixo X — daí `refX`, não `refY`.
+   */
+  refX?: { value: number; label: string; color?: string };
   className?: string;
 };
 
@@ -75,6 +85,8 @@ export function DivergingReturnBars({
   valueFmt,
   axisFmt,
   fillFor,
+  labelMax = 18,
+  refX,
   className = "",
 }: DivergingReturnBarsProps) {
   if (rows.length === 0) {
@@ -87,7 +99,7 @@ export function DivergingReturnBars({
     axisFmt ?? ((v: number) => fmtSignedPct(v, Math.abs(v) < 1 ? 1 : 0));
   const fill = fillFor ?? variationFill;
 
-  const data = rows.map((r) => ({ name: truncate(r.label), value: r.value }));
+  const data = rows.map((r) => ({ name: truncate(r.label, labelMax), value: r.value }));
   const height = 28 * data.length + 56;
 
   // Rótulo de valor SEMPRE à direita da extremidade direita do retângulo da
@@ -150,6 +162,15 @@ export function DivergingReturnBars({
             tick={{ fontSize: 11, fill: AZ_CHART.labels }}
           />
           <ReferenceLine {...azZeroLineProps("x")} />
+          {refX ? (
+            <ReferenceLine
+              x={refX.value}
+              stroke={refX.color ?? AZ_CHART.zero}
+              strokeDasharray="4 4"
+              strokeWidth={1.2}
+              label={{ value: refX.label, position: "top", fontSize: 9, fill: refX.color ?? AZ_CHART.zero }}
+            />
+          ) : null}
           <Tooltip
             content={<AzTooltip hideDot valueFmt={(v) => fmtTooltip(v)} />}
             cursor={AZ_TOOLTIP_PROPS.cursor}

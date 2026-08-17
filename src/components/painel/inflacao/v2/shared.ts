@@ -73,6 +73,67 @@ export function nomeGrupo(g: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Núcleos de inflação — os CINCO acompanhados pelo BCB
+// ---------------------------------------------------------------------------
+/**
+ * Conjunto vigente desde o Estudo Especial 102/2020 do BCB ("Atualização do
+ * conjunto de núcleos de inflação comumente considerados pelo BCB"): EX0, EX3,
+ * MS, DP e P55 — o MA saiu do conjunto (redundante com o MS) e por isso fica
+ * fora da média. As descrições abaixo são as do próprio estudo, encurtadas:
+ * são texto de PUBLICAÇÃO, não paráfrase livre.
+ */
+export const NUCLEOS_5 = ["EX0", "EX3", "MS", "DP", "P"] as const;
+
+export type NucleoInfo = {
+  /** Sigla como o BCB comunica ("P" no JSON = P55 do estudo). */
+  sigla: string;
+  /** Família do método — o que agrupa medidas parecidas. */
+  familia: "Exclusão" | "Estatístico";
+  /** Uma linha, em português direto: o que a medida faz. */
+  curta: string;
+};
+
+export const NUCLEO_INFO: Record<string, NucleoInfo> = {
+  EX0: {
+    sigla: "EX0",
+    familia: "Exclusão",
+    curta: "tira da conta alimentação no domicílio e preços monitorados (energia, combustível, plano de saúde…)",
+  },
+  EX3: {
+    sigla: "EX3",
+    familia: "Exclusão",
+    curta: "tira todos os alimentos, os monitorados e outros itens voláteis — sobra o miolo de serviços e industriais",
+  },
+  MS: {
+    sigla: "MS",
+    familia: "Estatístico",
+    curta: "médias aparadas com suavização: descarta o que subiu mais (acima do percentil 80) e o que subiu menos (abaixo do percentil 20) no mês",
+  },
+  DP: {
+    sigla: "DP",
+    familia: "Estatístico",
+    curta: "dupla ponderação: não exclui nada, mas reduz o peso dos itens historicamente mais voláteis",
+  },
+  P: {
+    sigla: "P55",
+    familia: "Estatístico",
+    curta: "percentil 55: a variação do subitem que fica no meio da fila quando se ordena tudo do que menos subiu ao que mais subiu",
+  },
+  MA: {
+    sigla: "MA",
+    familia: "Estatístico",
+    curta: "médias aparadas sem suavização — fora do conjunto dos cinco desde 2020, por ser redundante com o MS",
+  },
+};
+
+/** "Núcleo EX0" / "nucleo_ex0" / "EX0" → chave do NUCLEO_INFO. Null se não for núcleo. */
+export function chaveNucleo(idOuNome: string): string | null {
+  const m = idOuNome.toUpperCase().match(/(?:^|[_\s])(EX0|EX3|MS|DP|MA|P55|P)$/);
+  if (!m) return null;
+  return m[1] === "P55" ? "P" : m[1];
+}
+
+// ---------------------------------------------------------------------------
 // CSV client-side (gerado dos dados já carregados — sem round-trip)
 // ---------------------------------------------------------------------------
 type CsvCell = string | number | null | undefined;

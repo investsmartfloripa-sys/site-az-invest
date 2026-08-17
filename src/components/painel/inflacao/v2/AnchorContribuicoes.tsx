@@ -186,7 +186,9 @@ export function AnchorContribuicoes({ indice, geradoEm }: { indice: IpcaIndice; 
               <tr>
                 <th className="px-3 py-2 text-left font-semibold text-zinc-700">Grupo</th>
                 <th className="whitespace-nowrap px-3 py-2 text-right font-semibold text-zinc-700">Contrib. 12m (p.p.)</th>
-                <th className="whitespace-nowrap px-3 py-2 text-right font-semibold text-zinc-700">Share do IPCA (%)</th>
+                <th className="whitespace-nowrap px-3 py-2 text-right font-semibold text-zinc-700">
+                  Composição do IPCA (%)
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white">

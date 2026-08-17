@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import type { IpcaData } from "@/lib/painel-ipca";
 import { ChartCard } from "@/components/painel/core";
 import { AZ_CHART } from "@/lib/az-chart-theme";
-import { fmtMesCurto, fmtNum, fmtSignedNum, fmtSignedPct } from "@/lib/format-br";
+import { fmtMesCurto, fmtMesLongo, fmtNum, fmtSignedNum, fmtSignedPct } from "@/lib/format-br";
 
 /**
  * Explorador dos ~380 subitens do IPCA do mês: busca (por subitem, grupo,
@@ -62,7 +62,12 @@ export function BuscadorSubitensCard({ data }: { data: IpcaData }) {
   ];
 
   return (
-    <ChartCard title="Busca por subitem" stampGiro={data.gerado_em} stampDado={mes}>
+    <ChartCard
+      title={`Busca por subitem (${fmtMesCurto(mes)})`}
+      subtitle={`Variação de cada um dos ${subitens.length} subitens que compõem o IPCA de ${fmtMesLongo(mes)}.`}
+      stampGiro={data.gerado_em}
+      stampDado={mes}
+    >
       <input
         type="text"
         value={filtro}

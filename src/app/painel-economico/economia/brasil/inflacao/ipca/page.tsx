@@ -6,7 +6,7 @@ import { loadIpcaData } from "@/lib/painel-ipca";
 export const metadata: Metadata = {
   title: "Inflação — IPCA",
   description:
-    "IPCA em seis vistas de escrutínio: leitura da divulgação (realizado × Focus), tabela-síntese, composição hierárquica, núcleos e momentum dessazonalizado, tendência desde 1999 contra a meta e expectativas completas. IBGE/SIDRA e BCB.",
+    "IPCA destrinchado: o que o mercado esperava e o que deu, índice cheio e prévia, grupos, categorias econômicas, difusão, os cinco núcleos do Banco Central, tendência desde 1999 contra a meta e expectativas do Focus. IBGE/SIDRA e BCB.",
 };
 
 // ISR puro: o dado é mensal; force-dynamic anularia o revalidate (plano de economia, P2).
