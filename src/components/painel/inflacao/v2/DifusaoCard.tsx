@@ -44,7 +44,7 @@ export function DifusaoCard({ difusao, geradoEm }: { difusao: DifusaoBlock; gera
 
   return (
     <ChartCard
-      title="Índice de difusão — a alta está espalhada ou concentrada?"
+      title="Índice de difusão — alta espalhada ou concentrada"
       subtitle="De cada 100 preços que o IBGE coleta, quantos ficaram mais caros no mês. Não mede o tamanho da alta, e sim em quantos itens ela aparece."
       footer={
         <>

@@ -21,6 +21,12 @@ export type KpiCardProps = {
   delta?: number | null;
   /** Unidade do delta: "%" (default), "p.p." ou "abs". */
   deltaUnit?: "%" | "p.p." | "abs";
+  /**
+   * Casas decimais do delta. Default 1 — suba quando a grandeza for pequena a
+   * ponto de 1 casa virar "+0,0" e contradizer outro card da mesma tela (ex.:
+   * surpresa inflacionária, na casa dos centésimos de p.p.).
+   */
+  deltaDec?: number;
   /** Sufixo de contexto do delta dentro do badge (ex.: "vs mês ant."). */
   deltaHint?: string;
   /** true quando QUEDA é boa (desocupação, inflação): inverte verde/vermelho. */
@@ -43,15 +49,16 @@ export function KpiCard({
   delta,
   deltaUnit = "%",
   deltaHint,
+  deltaDec = 1,
   invertColor = false,
   hint,
   size = "md",
 }: KpiCardProps) {
   const deltaText = (() => {
     if (delta == null || !Number.isFinite(delta)) return null;
-    if (deltaUnit === "p.p.") return `${fmtSignedNum(delta, 1)} p.p.`;
+    if (deltaUnit === "p.p.") return `${fmtSignedNum(delta, deltaDec)} p.p.`;
     if (deltaUnit === "abs") return fmtSignedNum(delta, 0);
-    return fmtSignedPct(delta, 1);
+    return fmtSignedPct(delta, deltaDec);
   })();
 
   // Direção literal do número; banda ±0,03 = "no zero" (azul AZ).

@@ -134,8 +134,8 @@ export function SazonalidadeCard({ data }: { data: IpcaData }) {
 
   return (
     <ChartCard
-      title={`O IPCA de ${fmtMesCurto(mesRef)} foi alto para um mês de ${nomeMesRef}?`}
-      subtitle={`Todo mês do ano tem um comportamento típico — ${nomeMesRef} tem o seu. A barra cinza mostra quanto o IPCA costuma variar em cada mês; o ponto, quanto variou de verdade.`}
+      title={`IPCA de ${fmtMesCurto(mesRef)} contra o padrão de ${nomeMesRef}`}
+      subtitle={`Um número do mês só é alto ou baixo em relação ao próprio mês: ${nomeMesRef} tem o comportamento típico dele. A barra cinza mostra quanto o IPCA costuma variar em cada mês; o ponto, quanto variou de verdade.`}
       footer={
         <>
           <p className="mb-1.5">

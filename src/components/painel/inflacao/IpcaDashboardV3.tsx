@@ -99,6 +99,9 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
           value={fmtSignedPct(ipcaM, 2)}
           delta={surpresa ?? (ipcaM != null && medianaSaz != null ? ipcaM - medianaSaz : null)}
           deltaUnit="p.p."
+          // 2 casas: a surpresa mora nos centésimos e com 1 casa virava "+0,0",
+          // contradizendo o card "Esperado × realizado" logo abaixo.
+          deltaDec={2}
           deltaHint={surpresa != null ? "vs Focus véspera" : "vs padrão do mês"}
           invertColor
           hint={
