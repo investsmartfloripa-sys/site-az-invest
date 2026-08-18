@@ -8,6 +8,58 @@ Aprofundamento em `docs/DADOS-E-SERIES.md` — códigos de série, contrato de b
 
 ---
 
+## 0. Como trabalhar aqui
+
+### Descubra onde você está antes de tudo
+
+```bash
+echo "${CLAUDE_CODE_REMOTE:-local}"
+```
+
+**Nuvem (`true`)** — sandbox Linux efêmero, clone limpo, proxy de egresso com política. Não existe OneDrive nem PowerShell aqui.
+**Local (vazio)** — Windows, PowerShell, repo dentro do OneDrive, possivelmente com o Cursor aberto no mesmo repo.
+
+Boa parte das regras antigas deste projeto foi escrita para resolver problemas do ambiente local. Elas estão marcadas como tal — não as aplique na nuvem.
+
+### Relação com o dono (vale nos dois ambientes)
+
+1. **Plano antes de tarefa grande.** Qualquer mudança que afete mais de três ou quatro arquivos, ou que crie infraestrutura nova (pipeline, rota, workflow), vai primeiro como proposta em texto: objetivo em uma frase, fontes e por que essas, estrutura do output, sequência de etapas, riscos conhecidos. Espere o "pode seguir". Depois **execute o plano inteiro** sem pedir aprovação a cada passo — reporte só nos marcos.
+2. **Não peça ao dono para rodar comando que você mesmo pode rodar.** Você tem shell.
+3. **Não diga "deve funcionar".** Teste.
+4. **Não trate exit code 0 como prova de sucesso.** Inspecione o output ou o estado.
+5. **Não entregue assumindo que ele valida cada passo.** Ele não vai. Valide você.
+6. **Antes de pedir credencial, secret ou config**, rode `gh secret list --repo investsmartfloripa-sys/site-az-invest`, `vercel env ls` e `gh auth status`. Em 9 de 10 casos já está configurado por trabalho anterior — mostre o comando e o output.
+
+### Você não está sozinho neste repositório
+
+O agente do Café com Mercado empurra commits na `main` **várias vezes por dia** — edição, capa e snapshot. Sempre `git fetch` e `git rebase origin/main` antes de empurrar; push sem rebase é rejeitado. Use `git add <caminhos>` explícito, **nunca `git add .`**: pode haver trabalho não-commitado de outra sessão. No ambiente local, o Cursor também pode estar com arquivos abertos.
+
+### Publicar
+
+**Na nuvem:** o proxy só permite push na branch da sessão. O fluxo é push na branch, depois PR com `base=main`, depois merge squash. **O deploy sai do merge, não do push.** A Contents API (PUT) e o `workflow_dispatch` retornam 403 — não insista. Se o `git push` der 403, rode `/web-setup` uma vez no terminal do PC, logado no `gh`.
+
+**No local:** `git push origin main` direto, que dispara o auto-deploy.
+
+### Verificar
+
+A validação por Chrome MCP descrita nos documentos antigos era do Cowork. Aqui:
+
+- Página no ar: `curl -sI https://investimentosdeaz.com.br/<rota> | head -1` deve dar 200.
+- Dado no Blob: `curl -s <blob>/data/<arquivo>.json` e confira `last_data_date`, número de observações e o primeiro registro.
+- **Na nuvem a Actions API é bloqueada até para leitura** — não tente checar runs por lá, verifique pelo site público.
+- Mudança só em `.md` **não dispara deploy** (`paths-ignore`). Não fique esperando build que não vem.
+- ISR tem TTL de 1 hora: dado novo no Blob demora até 60 min para aparecer. Não é falha.
+
+### Armadilhas do ambiente local (ignore na nuvem)
+
+- Mensagem de commit **sem vírgulas e sem aspas duplas internas** — o PowerShell quebra o argument splitting.
+- `&` com caminho que contém espaço falha dentro de pipeline. Use `Start-Process` com `-RedirectStandardOutput`.
+- Valores em `.env` vêm com aspas; faça o strip antes de usar ou o auth volta 403.
+- `.git/index.lock` pode estar preso pelo Cursor — espere 5 a 10 segundos.
+- **Latência do OneDrive:** arquivo lido pelo mount pode vir truncado enquanto no Windows está completo. Nunca faça append baseado só no que o mount mostrou; releia antes.
+
+---
+
 ## 1. Regra de ouro: execute, verifique, ajuste
 
 Não encerre a tarefa porque o build passou ou o código foi escrito. **Valide o resultado no site.**
@@ -27,7 +79,7 @@ Não encerre a tarefa porque o build passou ou o código foi escrito. **Valide o
 
 ## 2. Deploy e publicação
 
-**Publique só por `git push origin main`.** O projeto está conectado ao GitHub (branch de produção `main`) e faz auto-deploy a cada push.
+**Publicar é sempre por git.** O projeto está conectado ao GitHub (branch de produção `main`) e faz auto-deploy quando a `main` recebe commit. O caminho até a `main` depende do ambiente — veja §0 "Publicar": direto no local, via branch e PR na nuvem.
 
 **Nunca use `vercel --prod` / folder-deploy.** O repo vive dentro do OneDrive; o folder-deploy sobe o estado da *pasta*, com modificações não-commitadas e, por latência do OneDrive, às vezes versões antigas dos arquivos. Com Cursor e Claude atuando em paralelo, um deploy reverte em produção o trabalho não-commitado do outro.
 
