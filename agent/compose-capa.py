@@ -1,190 +1,184 @@
 #!/usr/bin/env python3
-"""compose-capa.py — crava a manchete padrão do "Café com Mercado" sobre a base.
+"""compose-capa.py — crava a manchete padrao do "Cafe com Mercado" sobre a base.
 
-POR QUE ESTE ARQUIVO EXISTE (incidente 2026-07-10):
-O visual padronizado das capas depende da fonte **DejaVu Sans Condensed Bold**
-(pacote `fonts-dejavu-extra`) + do layout kicker-branco-com-barra-azul. No PC do
-autor essa fonte existe; no sandbox de NUVEM só vem o `fonts-dejavu-core`
-(DejaVuSans-Bold, LARGA). Quando a rotina caía no fallback para a fonte larga,
-a capa "perdia o padrão" (letras largas, sem cara de thumbnail de notícia).
+Layout: kicker branco espacado, barra azul AZ, manchete condensada em caixa alta,
+subtitulo de uma linha e assinatura do site no rodape, sobre gradientes escuros
+no topo e na base. Saida 1600x840.
 
-FIX: garantir a fonte condensada antes de compor. Rode uma vez por sessão:
-    apt-get install -y --no-install-recommends fonts-dejavu-extra
-Desde o incidente 2026-07-15 (capa publicada no fallback largo mesmo com o hook
-de SessionStart na main), este script é FAIL-HARD: se a condensada faltar, ele
-tenta instalá-la sozinho (apt-get update + install) e, se ainda faltar, SAI COM
-ERRO em vez de compor fora do padrão. O fallback largo só sai com a flag
-explícita --allow-fallback (decisão do autor, nunca da rotina).
+DEPENDE da fonte DejaVu Sans Condensed Bold (pacote fonts-dejavu-extra). Sem ela
+a manchete sai numa fonte larga e a capa perde o padrao visual, por isso o script
+tenta instalar a fonte e, se ainda faltar, aborta em vez de compor fora do padrao.
+O fallback largo so sai com --allow-fallback, que e decisao do autor e nunca da
+rotina automatica.
 
-USO:
-    python3 agent/compose-capa.py \
-        --base /tmp/base.png --out /tmp/capa.jpg \
-        --dia "SEXTA" --data "10/07" \
-        --head "INFLAÇÃO CEDE, JURO RECUA" \
-        --sub  "IPCA a 0,16% reacende a aposta de corte da Selic; dólar cai a R$5,12"
+USO (interface atual):
+    python3 compose-capa.py --image base.png --out capa.jpg \
+        --kicker "CAFE COM MERCADO   .   QUARTA, 19/08" \
+        --manchete "A MAIOR FUGA DESDE 2008" \
+        --sub "11a queda do Ibovespa e ata do Fed as 15h"
+
+USO (interface antiga, ainda aceita):
+    python3 compose-capa.py --base base.png --out capa.jpg \
+        --dia SEXTA --data 10/07 --head "MANCHETE" --sub "subtitulo"
+
+LIMITES MEDIDOS: manchete ate ~32 caracteres (acima quebra em 3 linhas e cobre
+arte demais); subtitulo ate ~48 caracteres (acima e cortado na margem direita).
+O script avisa quando o subtitulo estoura.
 """
+
 import argparse
 import os
-import shutil
 import subprocess
 import sys
+
 from PIL import Image, ImageDraw, ImageFont
 
+FONT_CONDENSED = "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf"
+FONT_STANDARD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+AZ_BLUE = (2, 125, 252)
 W, H = 1600, 840
-BLUE = (46, 123, 240)
-MARGIN = 92
-BRAND = "investimentosdeaz.com.br"
-
-# Caminhos da condensada: nuvem (Linux) primeiro; Windows para testes no PC.
-FCOND_CANDIDATES = [
-    "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf",
-    r"C:\Windows\Fonts\DejaVuSansCondensed-Bold.ttf",
-    os.path.expanduser(r"~\AppData\Local\Microsoft\Windows\Fonts\DejaVuSansCondensed-Bold.ttf"),
-]
-FALLBACK = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
 
-def find_condensed():
-    for p in FCOND_CANDIDATES:
-        if os.path.exists(p):
-            return p
-    return None
-
-
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--base", required=True)
-    ap.add_argument("--out", required=True)
-    ap.add_argument("--dia", required=True, help="dia da semana em CAIXA ALTA, ex.: SEXTA")
-    ap.add_argument("--data", required=True, help="DD/MM, ex.: 10/07")
-    ap.add_argument("--head", required=True, help="manchete curta em CAIXA ALTA")
-    ap.add_argument("--sub", required=True, help="subtítulo de 1 linha")
-    ap.add_argument("--allow-fallback", action="store_true",
-                    help="permite compor com a DejaVuSans-Bold LARGA (fora do padrão); "
-                         "só com aprovação explícita do autor")
-    a = ap.parse_args()
-
-    font_path = find_condensed()
-    if font_path is None and shutil.which("apt-get"):
-        # Sandbox de nuvem novo pode vir sem a fonte E sem listas do apt —
-        # o update antes do install é o que faz a instalação funcionar.
-        print("fonte condensada ausente — tentando instalar fonts-dejavu-extra...",
+def ensure_condensed(allow_fallback=False):
+    """Devolve a fonte da manchete. Instala a condensada se faltar; aborta se nao vier."""
+    if os.path.exists(FONT_CONDENSED):
+        return FONT_CONDENSED
+    print("AVISO: fonte condensada ausente — tentando instalar fonts-dejavu-extra...",
+          file=sys.stderr)
+    for cmd in (["apt-get", "update", "-qq"],
+                ["apt-get", "install", "-y", "--no-install-recommends", "-qq",
+                 "fonts-dejavu-extra"]):
+        try:
+            subprocess.run(cmd, check=False, capture_output=True, timeout=180)
+        except Exception:
+            break
+    if os.path.exists(FONT_CONDENSED):
+        print("OK: fonte condensada instalada.", file=sys.stderr)
+        return FONT_CONDENSED
+    if allow_fallback:
+        print("AVISO: compondo no fallback LARGO (--allow-fallback) — capa FORA do padrao.",
               file=sys.stderr)
-        for cmd in (["apt-get", "update", "-qq"],
-                    ["apt-get", "install", "-y", "--no-install-recommends",
-                     "fonts-dejavu-extra"]):
-            try:
-                subprocess.run(cmd, capture_output=True, timeout=300)
-            except Exception:
-                break
-        font_path = find_condensed()
+        return FONT_STANDARD
+    sys.exit("ERRO: DejaVuSansCondensed-Bold.ttf ausente e nao instalavel. A capa sairia "
+             "fora do padrao visual. Instale fonts-dejavu-extra e recomponha, ou passe "
+             "--allow-fallback para aceitar a fonte larga conscientemente.")
 
-    if font_path is None:
-        if not a.allow_fallback:
-            sys.exit(
-                "ERRO: DejaVu Sans Condensed Bold ausente e a instalação de "
-                "fonts-dejavu-extra falhou. A capa NÃO sai no fallback largo "
-                "(padrão visual). Instale a fonte e recomponha; --allow-fallback "
-                "existe só para uso manual com aprovação do autor."
-            )
-        font_path = FALLBACK
-        print("AVISO: compondo no fallback LARGO (--allow-fallback) — capa FORA do padrão.",
-              file=sys.stderr)
 
-    kicker = f"CAFÉ COM MERCADO      ·      {a.dia}, {a.data}"
+def build(image, out, kicker, manchete, sub, brand="investimentosdeaz.com.br",
+          allow_fallback=False):
+    font_head = ensure_condensed(allow_fallback)
 
-    im = Image.open(a.base).convert("RGB")
-    sw, sh = im.size
-    scale = max(W / sw, H / sh)
-    im = im.resize((int(sw * scale), int(sh * scale)), Image.LANCZOS)
-    nw, nh = im.size
-    left, top = (nw - W) // 2, (nh - H) // 2
-    im = im.crop((left, top, left + W, top + H))
-    draw = ImageDraw.Draw(im, "RGBA")
+    base = Image.open(image).convert("RGB")
+    w0, h0 = base.size
+    nw, nh = W, int(h0 * W / w0)
+    img = base.resize((nw, nh), Image.LANCZOS)
+    if nh >= H:
+        top = int((nh - H) * 0.42)
+        img = img.crop((0, top, W, top + H))
+    else:
+        nh2, nw2 = H, int(w0 * H / h0)
+        tmp = base.resize((nw2, nh2), Image.LANCZOS)
+        left = (nw2 - W) // 2
+        img = tmp.crop((left, 0, left + W, H))
 
-    def grad(h, top_edge, base_rgb, amax, power):
-        g = Image.new("RGBA", (W, h), (0, 0, 0, 0))
-        gd = ImageDraw.Draw(g)
-        for y in range(h):
-            t = (1 - y / h) if top_edge else (y / h)
-            gd.line([(0, y), (W, y)], fill=base_rgb + (int(amax * t ** power),))
-        im.paste(g, (0, 0 if top_edge else H - h), g)
+    # gradiente escuro no topo, para a manchete respirar
+    g = Image.new("L", (1, H), 0)
+    for y in range(H):
+        f = max(0.0, 1 - (y / (H * 0.60)))
+        g.putpixel((0, y), int(210 * f))
+    img = Image.composite(Image.new("RGB", (W, H), (0, 0, 0)), img, g.resize((W, H)))
 
-    grad(150, False, (6, 10, 18), 150, 1.4)  # rodapé (marca)
+    # gradiente escuro na base, para a assinatura
+    gb = Image.new("L", (1, H), 0)
+    for y in range(H):
+        f = max(0.0, (y - (H * 0.84)) / (H * 0.16))
+        gb.putpixel((0, y), int(140 * f))
+    img = Image.composite(Image.new("RGB", (W, H), (0, 0, 0)), img, gb.resize((W, H)))
 
-    # faixa superior DEFINIDA (largura total, borda inferior suave) — o kicker é
-    # centralizado verticalmente nela, como nas capas padrão.
-    BAND_H, FADE = 140, 44
-    top = Image.new("RGBA", (W, BAND_H), (0, 0, 0, 0))
-    td = ImageDraw.Draw(top)
-    for y in range(BAND_H):
-        av = 216 if y < BAND_H - FADE else int(216 * (1 - (y - (BAND_H - FADE)) / FADE))
-        td.line([(0, y), (W, y)], fill=(8, 12, 20, av))
-    im.paste(top, (0, 0), top)
+    d = ImageDraw.Draw(img)
+    s = W / 1200.0
+    kf = ImageFont.truetype(FONT_STANDARD, int(26 * s))
+    mf = ImageFont.truetype(font_head, int(76 * s))
+    sf = ImageFont.truetype(FONT_STANDARD, int(30 * s))
+    bf = ImageFont.truetype(FONT_STANDARD, int(20 * s))
+    MX = int(66 * s)
+    y = int(48 * s)
 
-    def font(sz):
-        return ImageFont.truetype(font_path, sz)
+    def ls_text(xy, t, f, fill, ls=0, sh=None):
+        """Texto com letter-spacing manual e sombra opcional."""
+        x, yy = xy
+        for ch in t:
+            if sh:
+                d.text((x + sh[0], yy + sh[1]), ch, font=f, fill=sh[2])
+            d.text((x, yy), ch, font=f, fill=fill)
+            x += d.textlength(ch, font=f) + ls
+        return x
 
-    def tw(s, f):
-        return draw.textbbox((0, 0), s, font=f)[2]
+    ls_text((MX, y), kicker, kf, (255, 255, 255), ls=int(2 * s),
+            sh=(int(2 * s), int(2 * s), (0, 0, 0)))
+    y += int(40 * s)
+    d.rectangle([MX, y, MX + int(74 * s), y + int(6 * s)], fill=AZ_BLUE)
+    y += int(24 * s)
 
-    def tracked(x, y, s, f, fill, track):
-        cx = x
-        for ch in s:
-            draw.text((cx, y), ch, font=f, fill=fill)
-            cx += tw(ch, f) + track
-
-    def wrap_balanced(s, f, max_w):
-        words = s.split()
-        if tw(s, f) <= max_w:
-            return [s]
-        best = None
-        for i in range(1, len(words)):
-            l1, l2 = " ".join(words[:i]), " ".join(words[i:])
-            if tw(l1, f) <= max_w and tw(l2, f) <= max_w:
-                d = abs(tw(l1, f) - tw(l2, f))
-                if best is None or d < best[0]:
-                    best = (d, [l1, l2])
-        return best[1] if best else [s]
-
-    maxw = W - 2 * MARGIN
-
-    # kicker + barra azul, centralizados verticalmente na faixa
-    fk = font(33)
-    kb = draw.textbbox((0, 0), kicker, font=fk)
-    kh, gap, bar_h = kb[3] - kb[1], 15, 7
-    group_top = (BAND_H - (kh + gap + bar_h)) // 2
-    tracked(MARGIN, group_top - kb[1], kicker, fk, (255, 255, 255, 255), 4)
-    by = group_top + kh + gap
-    draw.rounded_rectangle([MARGIN, by, MARGIN + 96, by + bar_h], radius=3, fill=BLUE)
-
-    hy = BAND_H + 28
-    hsz, fh = 118, font(118)
-    lines = wrap_balanced(a.head, fh, maxw)
-    while (len(lines) > 2 or any(tw(l, fh) > maxw for l in lines)) and hsz > 72:
-        hsz -= 3
-        fh = font(hsz)
-        lines = wrap_balanced(a.head, fh, maxw)
-    y = hy
+    maxw = W - MX - int(70 * s)
+    lines, cur = [], ""
+    for wd in manchete.split():
+        t = (cur + " " + wd).strip()
+        if d.textlength(t, font=mf) <= maxw:
+            cur = t
+        else:
+            lines.append(cur)
+            cur = wd
+    if cur:
+        lines.append(cur)
+    if len(lines) > 2:
+        print("AVISO: manchete quebrou em %d linhas — encurte para ~32 caracteres"
+              % len(lines))
     for ln in lines:
-        draw.text((MARGIN + 3, y + 3), ln, font=fh, fill=(0, 0, 0, 150))
-        draw.text((MARGIN, y), ln, font=fh, fill=(255, 255, 255, 255))
-        y += fh.size + int(fh.size * 0.02)
+        d.text((MX + int(3 * s), y + int(3 * s)), ln, font=mf, fill=(0, 0, 0))
+        d.text((MX, y), ln, font=mf, fill=(255, 255, 255))
+        y += int(80 * s)
+    y += int(8 * s)
 
-    ssz, fs = 44, font(44)
-    while tw(a.sub, fs) > maxw and ssz > 26:
-        ssz -= 2
-        fs = font(ssz)
-    sy = y + 10
-    draw.text((MARGIN + 2, sy + 2), a.sub, font=fs, fill=(0, 0, 0, 130))
-    draw.text((MARGIN, sy), a.sub, font=fs, fill=(238, 242, 250, 255))
+    if sub:
+        if d.textlength(sub, font=sf) > maxw:
+            print("AVISO: subtitulo estoura a margem — encurte para ~48 caracteres")
+        d.text((MX + int(2 * s), y + int(2 * s)), sub, font=sf, fill=(0, 0, 0))
+        d.text((MX, y), sub, font=sf, fill=(236, 236, 236))
 
-    fbr = font(33)
-    draw.text((W - MARGIN - tw(BRAND, fbr), H - 58), BRAND, font=fbr, fill=(240, 244, 250, 240))
+    if brand:
+        bw = d.textlength(brand, font=bf)
+        d.text((W - MX - bw, H - int(48 * s)), brand, font=bf, fill=(255, 255, 255))
 
-    im.save(a.out, "JPEG", quality=90)
-    print(f"OK {a.out} | fonte: {os.path.basename(font_path)} | manchete: {len(lines)} linha(s) @ {hsz}px | sub {ssz}px")
+    if out.lower().endswith((".jpg", ".jpeg")):
+        img.save(out, quality=88, optimize=True)
+    else:
+        img.save(out)
+    print("OK", out, img.size, "linhas manchete:", lines)
 
 
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--image", "--base", dest="image", required=True,
+                    help="imagem base gerada (PNG)")
+    ap.add_argument("--out", required=True, help="arquivo de saida (.jpg)")
+    ap.add_argument("--kicker", help='linha superior pronta, ex.: "CAFE COM MERCADO . QUARTA, 19/08"')
+    ap.add_argument("--dia", help="interface antiga: dia da semana em caixa alta")
+    ap.add_argument("--data", help="interface antiga: DD/MM")
+    ap.add_argument("--manchete", "--head", dest="manchete",
+                    help="manchete curta em caixa alta")
+    ap.add_argument("--sub", default="", help="subtitulo de 1 linha")
+    ap.add_argument("--brand", default="investimentosdeaz.com.br")
+    ap.add_argument("--allow-fallback", action="store_true",
+                    help="aceita a fonte larga se a condensada faltar (decisao manual)")
+    a = ap.parse_args()
+
+    kicker = a.kicker
+    if not kicker:
+        if not (a.dia and a.data):
+            ap.error("informe --kicker, ou --dia e --data")
+        kicker = "CAFE COM MERCADO   .   %s, %s" % (a.dia, a.data)
+    if not a.manchete:
+        ap.error("informe --manchete (ou --head)")
+
+    build(a.image, a.out, kicker, a.manchete, a.sub, a.brand, a.allow_fallback)
