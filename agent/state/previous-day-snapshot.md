@@ -1,10 +1,33 @@
 # Snapshot do dia anterior — Café com Mercado
 
-**Rodada:** 2026-08-21 (sexta-feira), 10:32 BRT. Publicação em `content/cafe-com-mercado/2026-08-21.md` + capa `/capas/cafe-com-mercado/2026-08-21.jpg`. **Deploy confirmado pela run de PUSH `32486868444` (head `962bd71`), `conclusion=success`**; a run de dispatch `32486879627` ainda estava `in_progress` quando a URL já respondia 200 com o `<title>`, o og:image e os 283.368 bytes exatos da capa. **WhatsApp = POSTADO às 10:31, `EXITCODE=0`, confirmado no histórico ao vivo em 5 s, agora COM `linkPreview` (a correção de ontem passou no primeiro uso em produção).** Rodada limpa, com uma única falha: **a Genial não teve legenda a tempo**.
+**Rodada:** 2026-08-21 (sexta-feira), 10:32 BRT. Publicação em `content/cafe-com-mercado/2026-08-21.md` + capa `/capas/cafe-com-mercado/2026-08-21.jpg`. **Deploy confirmado pela run de PUSH `32486868444` (head `962bd71`), `conclusion=success`**; a run de dispatch `32486879627` ainda estava `in_progress` quando a URL já respondia 200 com o `<title>`, o og:image e os 283.368 bytes exatos da capa. **WhatsApp = postado às 10:31, mas COM O CARD PEQUENO de novo; corrigido às 11h com a capa ANEXADA e a mensagem de texto revogada.** Rodada com duas falhas: **a Genial não teve legenda a tempo** e **o diagnóstico do card feito ontem estava errado** — ver a seção do WhatsApp.
 
-## 🟢 O que a correção de ontem provou hoje
-- **`linkPreview = $true` funcionou em produção.** Sessão `ready` no primeiro poll (mesmo id `b6230560-...` de ontem, não foi recriada), envio aceito em 12 s, confirmado em 5 s. Nenhuma intervenção. **Não voltar a mexer nesse ponto.**
+## 🔴 O CARD DO WHATSAPP — o diagnóstico de ontem estava errado, e a causa real é OUTRA
+**A entrada de ontem no CHANGELOG e a regra do SKILL sobre `linkPreview` estavam erradas. Já reescritas.** O post das 10:31 saiu de novo com o card pequeno.
+
+**Por que o erro passou por validado ontem, e este é o aprendizado que importa:**
+1. **Diagnóstico contra a documentação do engine errado.** O Swagger do OpenWA diz: *"On whatsapp-web.js WhatsApp Web builds one BY DEFAULT and `false` suppresses it. On Baileys previews are OPT-IN."* Este container roda **`ENGINE_TYPE=whatsapp-web.js`**, então `linkPreview: true` é **inerte** — o preview já era o padrão. A correção de ontem nunca fez efeito nenhum.
+2. 🔴 **Os testes de ontem foram para `554896994295`, que é O PRÓPRIO NÚMERO DA SESSÃO.** Caíram no chat "mensagens para mim". A API devolve `messageId` terminado em **`_out`** e o log diz sucesso, mas ninguém vê nada. **Um teste de renderização nesse número não prova coisa alguma.** O número de uso do Borbarox é **5548999386708** (a API resolve o nono dígito sozinha, `whatsappId = 142477017252008@lid`).
+3. **As duas amostras de ontem diferiam na flag E no peso da capa**, e o resultado foi creditado à flag.
+
+**CAUSA REAL, medida hoje lado a lado:** o grupo Avisos é *announce* e vive dentro de uma Comunidade, e nesse contexto o WhatsApp renderiza o card do link **pequeno**. O mesmo envio dá card grande num chat individual.
+
+| destino | `send-text` + link | `send-image` + legenda |
+|---|---|---|
+| chat individual | card **grande** | capa **grande** |
+| grupo Avisos (announce) | card **pequeno** | capa **grande** |
+
+**Hipóteses DESCARTADAS por medição — não voltar a elas:** conectividade e latência (de dentro do container a página responde em **175-593 ms** e a capa em **57-825 ms**); cold fetch do Vercel (a capa foi de `MISS` a `HIT` em menos de 1 s); tags og (todas corretas, `og:image:width=1600`, `summary_large_image`); e **`customLinkPreview`, que responde `501` neste engine**.
+
+**CORREÇÃO APLICADA: a capa agora vai ANEXADA (`send-image`), com a isca inteira na legenda.** O script deriva a capa da URL da edição, faz `HEAD` para conferir que responde 200 e **cai para `send-text` se ela faltar** — `send-image` com URL 404 falharia o envio inteiro e deixaria o grupo sem nada. Duas falhas seguidas com imagem também derrubam a terceira tentativa para texto. Testado ponta a ponta.
+
+🟢 **O post de hoje foi refeito:** capa anexada enviada ao grupo e a mensagem de texto original **revogada com `forEveryone` (`success: true`)**. O grupo ficou com uma única mensagem.
+
+🔴 **Armadilha de PowerShell nova, que custou uma tentativa:** **nomes de variável são case-insensitive — `$H` e `$h` são a MESMA variável.** Um `$h = Invoke-RestMethod ...` destruiu o `$H` dos headers em silêncio, e a revogação falhou com "HTTP 0" em vez de um status de verdade. Em script de sessão única, usar nomes descritivos (`$hdr`, `$hist`).
+
+## 🟢 O que se confirmou hoje
 - **A receita de cortar o letterbox antes do `compose-capa.py` (escrita ontem) é a melhor da série e se repetiu hoje.** Ver seção da capa.
+- Sessão `ready` no primeiro poll, mesmo id `b6230560-...` de ontem (não foi recriada), sem `EXITCODE=5`.
 
 ## 🔴 A ÚNICA FALHA: Genial sem legenda (1ª vez em 4 dias)
 - **`8gxL_n_dmII`, "🔴 21/08 Tesouro traz alívio aos yields e petróleo salta 6%", 55 min (3300 s), `was_live=True`, publicado 09:47 BRT.** Três tentativas (10:15, 10:19, 10:23) devolveram `There are no subtitles for the requested languages`. **Não foi bot check nem bloqueio — foi tempo de processamento.**
@@ -100,7 +123,7 @@ O alívio do Tesouro americano morreu em menos de um pregão: **30a voltou a 5,2
 ## Deploy e WhatsApp
 - **Deploy:** commits às 13:26 UTC. **HEAD `962bd71` = commit da capa.** Duas runs no mesmo head: **push `32486868444` → `success`** e dispatch `32486879627` (ainda `in_progress` quando encerrei). 🟢 **Confirma o aprendizado de ontem: a run de PUSH resolve o deploy sozinha e chega antes; o dispatch é redundante.** Verificado por par: URL 200 + `<title>` correto + og:image apontando para a capa + **283.368 bytes servidos, idênticos ao arquivo local**.
 - **WhatsApp: POSTADO às 10:31, `EXITCODE=0`.** Sessão `ready` no primeiro poll, **mesmo id `b6230560-7f4b-4fc8-9ab3-52aa6fc15412` de ontem** (não foi recriada, então a chave seguiu válida — sem `EXITCODE=5`). Aceito em 12 s, **confirmado no histórico ao vivo 5 s depois**. `messageId` no grupo `120363426397949841@g.us`.
-- 🟢 **`linkPreview = $true` estreou em produção e funcionou.** Nada a ajustar.
+- 🔴 **`linkPreview` não fez efeito nenhum: o engine é whatsapp-web.js e a flag é inerte nele.** Ver a seção do card no topo. O envio agora é `send-image` com a capa anexada.
 - **Placar publicado com 5 linhas de 23 caracteres** (nome `ljust(8)` + valor `rjust(8)` + variação `rjust(7)`): **Ibov, Dólar, S&P 500, UST 30a e Bitcoin** — troquei o Brent pelo Bitcoin porque o BTC era a narrativa do dia e o Brent estava de lado. **A fórmula segue alinhando certo.**
 
 ## Próxima rodada (segunda 24/8)
@@ -108,4 +131,6 @@ O alívio do Tesouro americano morreu em menos de um pregão: **30a voltou a 5,2
 - 🔴 **Eventos de segunda 24/08, dia cheio:** **coletiva de Bessent sobre o pacote contra o Irã**; **vencimento da cautelar da Braskem** (protocola a RJ ou não?); e **vencimento da suspensão tarifária do Canadá no sábado 22/08** — chega na segunda como fato consumado.
 - **Agenda:** **26/08** núcleo do PCE, IPCA-15 e resultado da **Nvidia**; **27-29/08 Jackson Hole, com Warsh na manhã de 28/08**; **28/08** início da propaganda eleitoral; **31/08** PLOA 2027 e volta do Congresso; **10/09** BCE (mercado precifica 70% de alta); **15-16/09** Copom e FOMC.
 - **Divergências a cobrar:** se a **XP** mantém Selic em 14% contra o **BTG**, que já fala em corte em setembro; se o **BTG (comprar com seleção)**, a **XP (esperar os 165 mil segurarem)** ou a **AW Capital (montar já)** acerta na bolsa; se o **band-aid da XP** ou o **sossego da AW Capital** descreve melhor a recompra do Tesouro; se **Jackson Hole é gatilho (BTG)** ou não **(Genial)**; e se o **desmonte do carrego em ienes** vira canal real de saída da B3.
+- 🔴 **Conferir na segunda que a capa saiu ANEXADA e grande no grupo** — é o primeiro uso do `send-image` numa rodada normal, de ponta a ponta pelo script.
 - 🟢 **Genial:** a legenda de `8gxL_n_dmII` provavelmente ficou pronta por volta de 10:10-10:15 de hoje. **Se der para pescar a tese do Motta no retorno dele, vale como contexto na segunda** — mas não gastar mais de 1 minuto com isso.
+
