@@ -21,6 +21,11 @@ USO (interface antiga, ainda aceita):
     python3 compose-capa.py --base base.png --out capa.jpg \
         --dia SEXTA --data 10/07 --head "MANCHETE" --sub "subtitulo"
 
+SEM BASE (--fallback-bg): compoe sobre um fundo de marca gerado aqui mesmo
+(gradiente escuro + brilho azul AZ + motivo abstrato de mercado). Serve para o
+dia em que o gerador de imagem estiver fora do ar: a edicao SEMPRE sai com capa
+e o post do WhatsApp SEMPRE vai com foto. Nao e foto do dia e nao finge ser.
+
 LIMITES MEDIDOS: manchete ate ~32 caracteres (acima quebra em 3 linhas e cobre
 arte demais); subtitulo ate ~48 caracteres (acima e cortado na margem direita).
 O script avisa quando o subtitulo estoura.
@@ -64,14 +69,81 @@ def ensure_condensed(allow_fallback=False):
              "--allow-fallback para aceitar a fonte larga conscientemente.")
 
 
+def fundo_marca():
+    """Fundo de marca 1600x840, gerado sem depender de nenhum servico externo.
+
+    Existe por causa do incidente de 02/09/2026: o conector de imagem caiu com
+    401, a edicao saiu sem `image` e o post do WhatsApp foi text-only. Com este
+    fundo a capa nunca falta — perde-se a arte do dia, nao a capa.
+    """
+    img = Image.new("RGB", (W, H))
+    px = img.load()
+    topo, base_ = (7, 11, 18), (14, 23, 38)
+    for y in range(H):
+        f = y / (H - 1)
+        linha = tuple(int(topo[i] + (base_[i] - topo[i]) * f) for i in range(3))
+        for x in range(W):
+            px[x, y] = linha
+
+    # brilho azul difuso no canto inferior direito
+    glow = Image.new("L", (W, H), 0)
+    gd = ImageDraw.Draw(glow)
+    cx, cy = int(W * 0.78), int(H * 0.72)
+    for r in range(int(W * 0.55), 0, -8):
+        i = int(120 * (1 - r / (W * 0.55)) ** 2)
+        gd.ellipse([cx - r, cy - int(r * 0.72), cx + r, cy + int(r * 0.72)], fill=i)
+    img = Image.composite(Image.new("RGB", (W, H), AZ_BLUE), img, glow)
+
+    d = ImageDraw.Draw(img, "RGBA")
+
+    # grade discreta
+    for x in range(0, W, 80):
+        d.line([(x, 0), (x, H)], fill=(255, 255, 255, 8), width=1)
+    for y in range(0, H, 80):
+        d.line([(0, y), (W, y)], fill=(255, 255, 255, 8), width=1)
+
+    # motivo de mercado: barras + linha ascendente na faixa inferior
+    alturas = [0.20, 0.34, 0.28, 0.46, 0.40, 0.58, 0.52, 0.70, 0.62, 0.80,
+               0.74, 0.90, 0.84, 0.96, 0.88, 1.00]
+    larg = int(W / (len(alturas) * 1.9))
+    x0 = int(W * 0.06)
+    piso = int(H * 0.88)
+    teto = int(H * 0.44)
+    pts = []
+    for i, a in enumerate(alturas):
+        x = x0 + int(i * larg * 1.9)
+        y = piso - int((piso - teto) * a)
+        d.rectangle([x, y, x + larg, piso], fill=(41, 130, 220, 34))
+        pts.append((x + larg // 2, y))
+    for i in range(len(pts) - 1):
+        d.line([pts[i], pts[i + 1]], fill=(90, 170, 250, 90), width=3)
+    for p in pts:
+        d.ellipse([p[0] - 4, p[1] - 4, p[0] + 4, p[1] + 4], fill=(120, 190, 255, 120))
+
+    # vinheta
+    vin = Image.new("L", (W, H), 0)
+    vd = ImageDraw.Draw(vin)
+    for i in range(60):
+        vd.rectangle([i * 3, i * 2, W - i * 3, H - i * 2], outline=3)
+    img = Image.composite(Image.new("RGB", (W, H), (0, 0, 0)), img, vin)
+    return img
+
+
 def build(image, out, kicker, manchete, sub, brand="investimentosdeaz.com.br",
           allow_fallback=False):
     font_head = ensure_condensed(allow_fallback)
 
-    base = Image.open(image).convert("RGB")
+    if image is None:
+        print("AVISO: sem base gerada — compondo sobre o FUNDO DE MARCA (--fallback-bg).",
+              file=sys.stderr)
+        base = fundo_marca()
+    else:
+        base = Image.open(image).convert("RGB")
     w0, h0 = base.size
     nw, nh = W, int(h0 * W / w0)
-    img = base.resize((nw, nh), Image.LANCZOS)
+    img = base if image is None else base.resize((nw, nh), Image.LANCZOS)
+    if image is None:
+        nh = H
     if nh >= H:
         top = int((nh - H) * 0.42)
         img = img.crop((0, top, W, top + H))
@@ -159,8 +231,11 @@ def build(image, out, kicker, manchete, sub, brand="investimentosdeaz.com.br",
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--image", "--base", dest="image", required=True,
-                    help="imagem base gerada (PNG)")
+    ap.add_argument("--image", "--base", dest="image",
+                    help="imagem base gerada (PNG). Sem ela, use --fallback-bg")
+    ap.add_argument("--fallback-bg", action="store_true",
+                    help="compoe sobre o fundo de marca, sem base externa (use "
+                         "quando o gerador de imagem estiver fora do ar)")
     ap.add_argument("--out", required=True, help="arquivo de saida (.jpg)")
     ap.add_argument("--kicker", help='linha superior pronta, ex.: "CAFE COM MERCADO . QUARTA, 19/08"')
     ap.add_argument("--dia", help="interface antiga: dia da semana em caixa alta")
@@ -180,5 +255,8 @@ if __name__ == "__main__":
         kicker = "CAFE COM MERCADO   .   %s, %s" % (a.dia, a.data)
     if not a.manchete:
         ap.error("informe --manchete (ou --head)")
+    if not a.image and not a.fallback_bg:
+        ap.error("informe --image, ou --fallback-bg para compor sobre o fundo de marca")
 
-    build(a.image, a.out, kicker, a.manchete, a.sub, a.brand, a.allow_fallback)
+    build(a.image if a.image else None, a.out, kicker, a.manchete, a.sub, a.brand,
+          a.allow_fallback)
