@@ -16,6 +16,8 @@ import {
 import { PhotoField } from "@/components/workspace/PhotoField";
 import { SubmitButton } from "@/components/workspace/SubmitButton";
 
+const urlHint = "Link completo, começando com https://";
+
 export default async function PerfilPage() {
   const session = await requireSession();
   if (session.role !== "AUTHOR") redirect("/area-restrita/dashboard");
@@ -95,6 +97,8 @@ export default async function PerfilPage() {
               <span className="text-[#132960]/65">WhatsApp</span>
               <input
                 name="whatsapp"
+                inputMode="tel"
+                placeholder="+55 48 99999-9999"
                 defaultValue={author.whatsapp ?? ""}
                 className="mt-1 w-full rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-[#132960] outline-none focus:border-[#027DFC]"
               />
@@ -103,17 +107,23 @@ export default async function PerfilPage() {
               <span className="text-[#132960]/65">LinkedIn</span>
               <input
                 name="linkedin"
+                type="url"
+                placeholder="https://www.linkedin.com/in/seu-perfil"
                 defaultValue={author.linkedin ?? ""}
                 className="mt-1 w-full rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-[#132960] outline-none focus:border-[#027DFC]"
               />
+              <span className="mt-1 block text-xs text-[#132960]/50">{urlHint}</span>
             </label>
             <label className="block text-sm">
               <span className="text-[#132960]/65">Instagram</span>
               <input
                 name="instagram"
+                type="url"
+                placeholder="https://www.instagram.com/seu.perfil"
                 defaultValue={author.instagram ?? ""}
                 className="mt-1 w-full rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-[#132960] outline-none focus:border-[#027DFC]"
               />
+              <span className="mt-1 block text-xs text-[#132960]/50">{urlHint}</span>
             </label>
             <label className="block text-sm md:col-span-2">
               <span className="text-[#132960]/65">Bio</span>

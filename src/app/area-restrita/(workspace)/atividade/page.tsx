@@ -151,7 +151,7 @@ export default async function AtividadePage({
           <select
             name="acao"
             defaultValue={acao ?? ""}
-            className="mt-1 block max-w-56 rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm font-normal text-[#132960] outline-none focus:border-[#027DFC]"
+            className="mt-1 block max-w-56 rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm font-medium text-[#132960] outline-none focus:border-[#027DFC]"
           >
             <option value="">Todas</option>
             {distinctActions.map((a) => (
@@ -166,7 +166,7 @@ export default async function AtividadePage({
           <select
             name="usuario"
             defaultValue={usuarioId ? String(usuarioId) : ""}
-            className="mt-1 block max-w-56 rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm font-normal text-[#132960] outline-none focus:border-[#027DFC]"
+            className="mt-1 block max-w-56 rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm font-medium text-[#132960] outline-none focus:border-[#027DFC]"
           >
             <option value="">Todos</option>
             {users.map((u) => (
@@ -181,7 +181,7 @@ export default async function AtividadePage({
           <select
             name="janela"
             defaultValue={janela}
-            className="mt-1 block rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm font-normal text-[#132960] outline-none focus:border-[#027DFC]"
+            className="mt-1 block rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm font-medium text-[#132960] outline-none focus:border-[#027DFC]"
           >
             <option value="7">7 dias</option>
             <option value="30">30 dias</option>

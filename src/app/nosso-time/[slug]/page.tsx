@@ -9,6 +9,7 @@ import { parseSpecialties } from "@/lib/authors";
 import { prisma } from "@/lib/prisma";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 import { getSiteUrl } from "@/lib/site-url";
+import { normalizeProfileUrl, whatsappDigits } from "@/lib/social-links";
 
 // ISR: edição de perfil chama revalidatePath("/nosso-time/[slug]") (workspace);
 // o fallback de 1h cobre o resto. Sem force-dynamic.
@@ -29,13 +30,6 @@ const getAuthor = cache(async (slug: string) =>
 
 const FALLBACK_IMAGE = "/capa-padrao.svg";
 
-function normalizeWhatsapp(value: string | null | undefined) {
-  if (!value) return null;
-  const digits = value.replace(/\D/g, "");
-  if (digits.length < 10) return null;
-  return digits;
-}
-
 async function registerWhatsappClickAction(
   authorId: number,
   name: string,
@@ -47,8 +41,7 @@ async function registerWhatsappClickAction(
   const trimmed = name.trim();
   if (!trimmed) return "";
 
-  const normalizedVisitorPhone =
-    normalizeWhatsapp(visitorPhone?.trim() || null) ?? null;
+  const normalizedVisitorPhone = whatsappDigits(visitorPhone);
 
   const author = await prisma.author.findUnique({
     where: { id: authorId },
@@ -56,7 +49,7 @@ async function registerWhatsappClickAction(
   });
   if (!author) return "";
 
-  const digits = normalizeWhatsapp(author.whatsapp);
+  const digits = whatsappDigits(author.whatsapp);
 
   await prisma.authorWhatsappClick.create({
     data: {
@@ -104,10 +97,15 @@ export default async function AuthorPage({
   if (!author) notFound();
 
   const specialties = parseSpecialties(author.specialtiesJson);
-  const whatsappDigits = normalizeWhatsapp(author.whatsapp);
-  const fallbackWhatsappUrl = whatsappDigits
-    ? `https://wa.me/${whatsappDigits}`
+  // Defesa em profundidade: corrige o que já está no banco (sem https://,
+  // "/feed/", utm_*, celular sem DDI ou sem o nono dígito).
+  const authorWhatsappDigits = whatsappDigits(author.whatsapp);
+  const fallbackWhatsappUrl = authorWhatsappDigits
+    ? `https://wa.me/${authorWhatsappDigits}`
     : "";
+  const linkedin = normalizeProfileUrl(author.linkedin, "linkedin");
+  const instagram = normalizeProfileUrl(author.instagram, "instagram");
+  const sameAs = [linkedin, instagram].filter((url): url is string => url !== null);
 
   const mappedPosts = author.posts.map((post) => ({
     id: post.id,
@@ -138,7 +136,7 @@ export default async function AuthorPage({
             ...(author.role ? { jobTitle: author.role } : {}),
             ...(author.bio ? { description: author.bio } : {}),
             worksFor: { "@type": "Organization", name: "AZ Invest", url: siteUrl },
-            sameAs: [author.linkedin, author.instagram].filter(Boolean),
+            ...(sameAs.length ? { sameAs } : {}),
           },
           {
             "@context": "https://schema.org",
@@ -160,11 +158,11 @@ export default async function AuthorPage({
           role: author.role,
           headline: author.headline,
           photo: author.photo,
-          linkedin: author.linkedin,
-          instagram: author.instagram,
+          linkedin,
+          instagram,
         }}
         specialties={specialties}
-        whatsappDigits={whatsappDigits}
+        whatsappDigits={authorWhatsappDigits}
         fallbackWhatsappUrl={fallbackWhatsappUrl}
         registerClickAction={registerWhatsappClickAction}
       />

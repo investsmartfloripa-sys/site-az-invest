@@ -286,7 +286,7 @@ export default async function LeadsPage({
           <select
             name="origem"
             defaultValue={origem ?? ""}
-            className="mt-1 block rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm font-normal text-[#132960] outline-none focus:border-[#027DFC]"
+            className="mt-1 block rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm font-medium text-[#132960] outline-none focus:border-[#027DFC]"
           >
             <option value="">Todas</option>
             {allowedTipos.map((tipo) => (
@@ -303,7 +303,7 @@ export default async function LeadsPage({
             defaultValue={statusFiltro ?? ""}
             disabled={migrationPending}
             title={migrationPending ? "aguardando migration" : undefined}
-            className="mt-1 block rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm font-normal text-[#132960] outline-none focus:border-[#027DFC] disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-1 block rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm font-medium text-[#132960] outline-none focus:border-[#027DFC] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <option value="">Todos</option>
             <option value="novo">Novo</option>
@@ -317,7 +317,7 @@ export default async function LeadsPage({
           <select
             name="janela"
             defaultValue={janela}
-            className="mt-1 block rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm font-normal text-[#132960] outline-none focus:border-[#027DFC]"
+            className="mt-1 block rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm font-medium text-[#132960] outline-none focus:border-[#027DFC]"
           >
             <option value="7">7 dias</option>
             <option value="30">30 dias</option>
@@ -332,7 +332,7 @@ export default async function LeadsPage({
             name="q"
             defaultValue={q}
             placeholder="Buscar por nome…"
-            className="mt-1 block w-52 rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm font-normal text-[#132960] outline-none focus:border-[#027DFC]"
+            className="mt-1 block w-52 rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm font-medium text-[#132960] outline-none focus:border-[#027DFC]"
           />
         </label>
         <button

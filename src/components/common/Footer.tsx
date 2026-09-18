@@ -18,7 +18,8 @@ type SocialEntry = {
 const socials: SocialEntry[] = [
   {
     label: "Instagram",
-    href: "https://www.instagram.com/azinvestoficial",
+    // @azinvestoficial não existe no Instagram (verificado em 18/09/2026); repor quando o dono confirmar o handle oficial
+    href: null,
     Icon: InstagramIcon,
   },
   {
@@ -51,7 +52,6 @@ const activeSocials = socials.filter(
 export function Footer() {
   return (
     <footer className="bg-[#132960] text-[#E8E7E5]">
-      <div className="h-1 bg-[#027DFC]" />
       <div className="mx-auto grid w-full max-w-[90rem] grid-cols-1 gap-8 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-3 lg:gap-10 lg:px-8 lg:py-14">
         <div className="text-center sm:col-span-2 sm:text-left lg:col-span-1">
           <div className="mx-auto w-full max-w-[16rem] sm:mx-0">
@@ -98,7 +98,10 @@ export function Footer() {
         <div className="border-t border-white/10 pt-5 sm:border-0 sm:pt-0">
           <h2 className="text-xl text-white">Entre em contato</h2>
           <p className="mt-4 text-sm text-[#E8E7E5]/70">
-            <strong className="font-semibold text-white">Email:</strong> azinvest.equipe@gmail.com
+            <strong className="font-semibold text-white">Email:</strong>{" "}
+            <a href="mailto:azinvest.equipe@gmail.com" className="hover:underline">
+              azinvest.equipe@gmail.com
+            </a>
           </p>
           <p className="break-words text-sm text-[#E8E7E5]/70">
             <strong className="font-semibold text-white">Telefone:</strong>{" "}
@@ -123,7 +126,8 @@ export function Footer() {
           </p>
         </div>
       </div>
-      <div className="bg-[#027DFC] px-3 py-2 text-center text-[11px] leading-relaxed text-white sm:text-xs">
+      {/* Copyright sobre o navy do próprio rodapé: #E8E7E5/70 dá ~7:1, o azure com branco reprovava no AA */}
+      <div className="border-t border-white/10 px-3 py-2 text-center text-xs leading-relaxed text-[#E8E7E5]/70">
         {new Date().getFullYear()} Todos os direitos reservados para INVESTIMENTOS DE A A Z
       </div>
     </footer>

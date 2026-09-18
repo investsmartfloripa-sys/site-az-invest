@@ -151,7 +151,7 @@ export function AcoesScreener({
           <select
             value={sectorFilter}
             onChange={(e) => setSectorFilter(e.target.value)}
-            className="rounded-md border border-[#132960]/15 bg-white px-2 py-1 text-[11px] font-normal text-[#132960] focus:outline-none"
+            className="rounded-md border border-[#132960]/15 bg-white px-2 py-1 text-[11px] font-medium text-[#132960] focus:outline-none"
           >
             <option value="Todos">Todos</option>
             {data.sectors.map((s) => (

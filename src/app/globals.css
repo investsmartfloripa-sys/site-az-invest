@@ -17,12 +17,21 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-body);
   --font-heading: var(--font-heading);
+  /* A Raleway usa algarismos old-style por padrão (3/4/7/9 descem da linha de
+     base, 6/8 sobem) — em tabela de cotação parece número desalinhado. "lnum"
+     força os algarismos alinhados. O preflight do Tailwind v4 lê esta variável
+     e aplica font-feature-settings no <html>, então vale para o site inteiro.
+     Obs.: a Raleway NÃO tem figuras tabulares — tabular-nums é inócuo nela. */
+  --default-font-feature-settings: "lnum" 1;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), Arial, Helvetica, sans-serif;
+  /* Peso 400 da Raleway tem haste ~23% mais fina que a da Arial — abaixo de 1px
+     em 14px, o texto corrido "some" em tela. 500 é o regular efetivo do site. */
+  font-weight: 500;
 }
 
 @layer base {
@@ -37,6 +46,9 @@ body {
     font-family: var(--font-heading), Arial, Helvetica, sans-serif;
     font-weight: 400;
     letter-spacing: -0.02em;
+    /* A Michroma só existe em 400: sem isto o navegador fabrica um negrito
+       borrado quando alguém aplica font-bold/font-semibold no título. */
+    font-synthesis-weight: none;
   }
 
   /* h3/h4 e títulos de card em Raleway semibold para hierarquia mais legível. */

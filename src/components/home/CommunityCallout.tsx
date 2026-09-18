@@ -79,7 +79,7 @@ export function CommunityCallout() {
             <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/80">
               Comunidade AZ Invest
             </p>
-            <h2 className="text-xl font-bold uppercase leading-tight">
+            <h2 className="text-xl uppercase leading-tight">
               Fique por dentro de todas as novidades
             </h2>
             <p className="text-sm leading-relaxed text-white/90">
@@ -96,7 +96,7 @@ export function CommunityCallout() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={COMMUNITY_LABEL}
-                  className="inline-flex w-full items-center justify-center rounded-md bg-[#F26B2C] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#dd5c1f] active:bg-[#cf5318]"
+                  className="inline-flex w-full items-center justify-center rounded-md bg-[#FF5713] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#d94a10] active:bg-[#b03a0a]"
                 >
                   Inscreva-se
                 </a>

@@ -66,7 +66,7 @@ export function MethodInfo({
       {open ? (
         <span
           role="tooltip"
-          className={`absolute top-[24px] z-50 block w-[290px] max-w-[80vw] rounded-xl border border-[#132960]/15 bg-white p-3 text-left text-[11.5px] font-normal leading-relaxed text-zinc-600 shadow-lg md:w-[340px] ${
+          className={`absolute top-[24px] z-50 block w-[290px] max-w-[80vw] rounded-xl border border-[#132960]/15 bg-white p-3 text-left text-[11.5px] font-medium leading-relaxed text-zinc-600 shadow-lg md:w-[340px] ${
             align === "right" ? "right-0" : "left-0"
           }`}
         >

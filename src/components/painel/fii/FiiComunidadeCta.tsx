@@ -56,7 +56,7 @@ export function FiiComunidadeCta() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={COMMUNITY_LABEL}
-              className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-[#F26B2C] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#dd5c1f] active:bg-[#cf5318] md:w-auto"
+              className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-[#FF5713] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#d94a10] active:bg-[#b03a0a] md:w-auto"
             >
               Entrar na comunidade →
             </a>
@@ -117,7 +117,7 @@ export function FiiComunidadeCta() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="mt-1 inline-flex items-center justify-center rounded-md bg-[#F26B2C] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#dd5c1f] disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-1 inline-flex items-center justify-center rounded-md bg-[#FF5713] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#d94a10] active:bg-[#b03a0a] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting ? "Enviando…" : "Quero receber"}
               </button>

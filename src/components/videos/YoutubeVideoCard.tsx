@@ -75,22 +75,21 @@ export function YoutubeVideoCard({
                 className="object-cover transition group-hover:scale-105"
               />
             ) : null}
-            <span className="absolute inset-0 flex items-center justify-center">
-              <span
-                className={
-                  "flex items-center justify-center rounded-full bg-[#FF0000] text-white shadow-lg transition group-hover:scale-110 " +
-                  (variant === "home" ? "h-12 w-12" : "h-14 w-14")
-                }
+            {/* Play navy no canto inferior esquerdo; a duração segue no canto direito. */}
+            <span
+              className={
+                "absolute bottom-2 left-2 flex items-center justify-center rounded-full bg-[#132960]/85 text-white shadow ring-1 ring-white/60 transition group-hover:bg-[#027DFC] " +
+                (variant === "home" ? "h-8 w-8" : "h-9 w-9")
+              }
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className={(variant === "home" ? "h-4 w-4 " : "h-4.5 w-4.5 ") + "translate-x-px"}
+                aria-hidden
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className={(variant === "home" ? "h-5 w-5 " : "h-6 w-6 ") + "translate-x-0.5"}
-                  aria-hidden
-                >
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </span>
+                <path d="M8 5v14l11-7z" />
+              </svg>
             </span>
             {video.duration ? (
               <span className="absolute bottom-2 right-2 rounded bg-black/80 px-2 py-0.5 text-[11px] font-semibold text-white">
@@ -98,7 +97,7 @@ export function YoutubeVideoCard({
               </span>
             ) : null}
             {vertical ? (
-              <span className="absolute left-2 top-2 rounded bg-[#FF0000]/95 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+              <span className="absolute left-2 top-2 rounded bg-[#027DFC] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
                 Shorts
               </span>
             ) : null}

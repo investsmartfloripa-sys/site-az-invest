@@ -24,7 +24,7 @@ export default function DataStamp({
   return (
     <span
       suppressHydrationWarning
-      className={`inline-flex items-center gap-1 whitespace-nowrap text-[10px] font-normal leading-none text-zinc-400 ${className}`}
+      className={`inline-flex items-center gap-1 whitespace-nowrap text-[10px] font-medium leading-none text-zinc-400 ${className}`}
     >
       {giroFmt ? <span suppressHydrationWarning>Giro {giroFmt}</span> : null}
       {giroFmt && dadoFmt ? <span aria-hidden>·</span> : null}

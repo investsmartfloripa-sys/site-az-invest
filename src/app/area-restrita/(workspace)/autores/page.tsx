@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
+import { normalizeProfileUrl, whatsappE164 } from "@/lib/social-links";
 import { canManageAllAuthors } from "@/lib/workspace/permissions";
 import { PhotoField } from "@/components/workspace/PhotoField";
 import { SubmitButton } from "@/components/workspace/SubmitButton";
@@ -20,9 +21,10 @@ async function createAuthorAction(formData: FormData) {
   const bio = String(formData.get("bio") || "").trim();
   const photo = String(formData.get("photo") || "").trim();
   const email = String(formData.get("email") || "").trim();
-  const linkedin = String(formData.get("linkedin") || "").trim();
-  const instagram = String(formData.get("instagram") || "").trim();
-  const whatsapp = String(formData.get("whatsapp") || "").trim();
+  // Links canônicos (ou null se não for perfil da rede) e WhatsApp em E.164 (+55…).
+  const linkedin = normalizeProfileUrl(String(formData.get("linkedin") || ""), "linkedin");
+  const instagram = normalizeProfileUrl(String(formData.get("instagram") || ""), "instagram");
+  const whatsapp = whatsappE164(String(formData.get("whatsapp") || ""));
 
   if (!name || !role) return;
 
@@ -42,9 +44,9 @@ async function createAuthorAction(formData: FormData) {
       bio: bio || null,
       photo: photo || null,
       email: email || null,
-      linkedin: linkedin || null,
-      instagram: instagram || null,
-      whatsapp: whatsapp || null,
+      linkedin,
+      instagram,
+      whatsapp,
     },
   });
 
@@ -68,6 +70,8 @@ async function deleteAuthorAction(formData: FormData) {
 
 const inputClass =
   "mt-1 w-full rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-sm text-[#132960] outline-none focus:border-[#027DFC]";
+const hintClass = "mt-1 block text-xs text-[#132960]/50";
+const urlHint = "Link completo, começando com https://";
 
 export default async function AutoresPage() {
   const session = await requireSession();
@@ -104,7 +108,17 @@ export default async function AutoresPage() {
           </label>
           <label className="text-sm text-[#132960]/65">
             WhatsApp
-            <input name="whatsapp" className={inputClass} />
+            <input name="whatsapp" inputMode="tel" placeholder="+55 48 99999-9999" className={inputClass} />
+          </label>
+          <label className="text-sm text-[#132960]/65">
+            LinkedIn
+            <input name="linkedin" type="url" placeholder="https://www.linkedin.com/in/seu-perfil" className={inputClass} />
+            <span className={hintClass}>{urlHint}</span>
+          </label>
+          <label className="text-sm text-[#132960]/65">
+            Instagram
+            <input name="instagram" type="url" placeholder="https://www.instagram.com/seu.perfil" className={inputClass} />
+            <span className={hintClass}>{urlHint}</span>
           </label>
           <label className="text-sm text-[#132960]/65 md:col-span-2">
             Bio

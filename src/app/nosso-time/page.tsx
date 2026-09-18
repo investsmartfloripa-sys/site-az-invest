@@ -7,10 +7,10 @@ import {
   InstagramIcon,
   LinkedinIcon,
   WhatsappIcon,
-  whatsappLink,
 } from "@/components/common/SocialIcons";
 import { prisma } from "@/lib/prisma";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
+import { normalizeProfileUrl, whatsappLink } from "@/lib/social-links";
 
 // DINÂMICA (não ISR): a lista de autores vem do banco e o render tem um
 // estado degradado ("Nenhum autor cadastrado") quando a query falha/volta
@@ -85,7 +85,11 @@ export default async function NossoTimePage() {
           ) : (
             <ul className="grid gap-4 sm:grid-cols-2">
               {authors.map((author) => {
+                // Normalizados no render: o banco ainda pode ter link sem https://,
+                // "/feed/", utm_* ou celular sem DDI. Ícone só com link válido.
                 const whatsappHref = whatsappLink(author.whatsapp);
+                const linkedinHref = normalizeProfileUrl(author.linkedin, "linkedin");
+                const instagramHref = normalizeProfileUrl(author.instagram, "instagram");
                 return (
                 <li
                   key={author.id}
@@ -150,9 +154,9 @@ export default async function NossoTimePage() {
                             <WhatsappIcon className="h-3.5 w-3.5" />
                           </a>
                         ) : null}
-                        {author.linkedin ? (
+                        {linkedinHref ? (
                           <a
-                            href={author.linkedin}
+                            href={linkedinHref}
                             target="_blank"
                             rel="noreferrer"
                             aria-label={`LinkedIn de ${author.name}`}
@@ -161,9 +165,9 @@ export default async function NossoTimePage() {
                             <LinkedinIcon className="h-3.5 w-3.5" />
                           </a>
                         ) : null}
-                        {author.instagram ? (
+                        {instagramHref ? (
                           <a
-                            href={author.instagram}
+                            href={instagramHref}
                             target="_blank"
                             rel="noreferrer"
                             aria-label={`Instagram de ${author.name}`}

@@ -204,7 +204,7 @@ export default async function BlogPostPage({
           >
             {formatPostCategoryLabel(post.category)}
           </span>
-          <h1 className="text-4xl font-semibold text-[#132960] md:text-5xl">{post.title}</h1>
+          <h1 className="text-4xl text-[#132960] md:text-5xl">{post.title}</h1>
 
           <div className="flex items-center gap-3 border-y border-[#132960]/10 py-3">
             {post.author ? (

@@ -5,9 +5,6 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
-  parseEducation,
-  parseExperiences,
-  parseSpecialties,
   serializeEducation,
   serializeExperiences,
   serializeSpecialties,
@@ -15,6 +12,7 @@ import {
   type AuthorExperience,
   type AuthorSpecialty,
 } from "@/lib/authors";
+import { normalizeProfileUrl, whatsappE164 } from "@/lib/social-links";
 import { writeAuditLog } from "@/lib/workspace/audit";
 
 export async function updateOwnProfileAction(formData: FormData) {
@@ -29,9 +27,10 @@ export async function updateOwnProfileAction(formData: FormData) {
   const bio = String(formData.get("bio") || "").trim();
   const photo = String(formData.get("photo") || "").trim();
   const email = String(formData.get("email") || "").trim();
-  const linkedin = String(formData.get("linkedin") || "").trim();
-  const instagram = String(formData.get("instagram") || "").trim();
-  const whatsapp = String(formData.get("whatsapp") || "").trim();
+  // Links canônicos (ou null se não for perfil da rede) e WhatsApp em E.164 (+55…).
+  const linkedin = normalizeProfileUrl(String(formData.get("linkedin") || ""), "linkedin");
+  const instagram = normalizeProfileUrl(String(formData.get("instagram") || ""), "instagram");
+  const whatsapp = whatsappE164(String(formData.get("whatsapp") || ""));
   const experiencesRaw = String(formData.get("experiencesJson") || "[]");
   const educationRaw = String(formData.get("educationJson") || "[]");
   const specialtiesRaw = String(formData.get("specialtiesJson") || "[]");
@@ -81,9 +80,9 @@ export async function updateOwnProfileAction(formData: FormData) {
       bio: bio || null,
       photo: photo || null,
       email: email || null,
-      linkedin: linkedin || null,
-      instagram: instagram || null,
-      whatsapp: whatsapp || null,
+      linkedin,
+      instagram,
+      whatsapp,
       experiencesJson: serializeExperiences(experiences),
       educationJson: serializeEducation(education),
       specialtiesJson: serializeSpecialties(specialties),

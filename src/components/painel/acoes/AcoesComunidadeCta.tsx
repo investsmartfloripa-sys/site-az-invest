@@ -36,7 +36,7 @@ export function AcoesComunidadeCta() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label={COMMUNITY_LABEL}
-          className="inline-flex w-full shrink-0 items-center justify-center rounded-md bg-[#F26B2C] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#dd5c1f] active:bg-[#cf5318] md:w-auto"
+          className="inline-flex w-full shrink-0 items-center justify-center rounded-md bg-[#FF5713] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#d94a10] active:bg-[#b03a0a] md:w-auto"
         >
           Entrar na comunidade →
         </a>

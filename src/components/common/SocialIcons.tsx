@@ -65,9 +65,6 @@ export function TiktokIcon({ className }: IconProps) {
   );
 }
 
-export function whatsappLink(value: string | null | undefined): string | null {
-  if (!value) return null;
-  const digits = value.replace(/\D/g, "");
-  if (digits.length < 10) return null;
-  return `https://wa.me/${digits}`;
-}
+// A regra do número (DDI 55, nono dígito, URL wa.me) vive em @/lib/social-links;
+// fica reexportada aqui para quem importa junto com os ícones.
+export { whatsappLink } from "@/lib/social-links";
