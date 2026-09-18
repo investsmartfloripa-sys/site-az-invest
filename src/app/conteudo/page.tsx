@@ -5,7 +5,7 @@ import { Header } from "@/components/common/Header";
 import { PostCard } from "@/components/common/PostCard";
 import { YoutubeVideoCard } from "@/components/videos/YoutubeVideoCard";
 import { formatDateBR, listBriefings } from "@/lib/cafe-com-mercado";
-import { listPautas } from "@/lib/pauta-da-semana";
+import { listDossies } from "@/lib/dossies";
 import { findPosts, mapPost } from "@/lib/posts";
 import { publishedPostWhere } from "@/lib/workspace/posts";
 import {
@@ -25,12 +25,12 @@ const CHANNEL_URL = "https://www.youtube.com/@azinvestoficial";
 export const metadata: Metadata = {
   title: "Conteúdo",
   description:
-    "Todo o conteúdo do AZ Invest em um só lugar: artigos, vídeos e os periódicos (Café com Mercado diário e Pauta da Semana).",
+    "Todo o conteúdo do AZ Invest em um só lugar: artigos, vídeos e os periódicos (Café com Mercado diário e os dossiês macro semanal e mensal).",
   alternates: { canonical: "/conteudo" },
   openGraph: { images: ["/opengraph-image.png"],
     title: "Conteúdo | AZ Invest",
     description:
-      "Artigos, vídeos e periódicos (Café com Mercado e Pauta da Semana) sobre economia, mercado e educação financeira.",
+      "Artigos, vídeos e periódicos (Café com Mercado e os dossiês macro) sobre economia, mercado e educação financeira.",
     type: "website",
   },
 };
@@ -40,7 +40,7 @@ type ConteudoProps = {
 };
 
 type Periodico = {
-  kind: "Café" | "Pauta";
+  kind: "Café" | "Mensal" | "Semanal";
   href: string;
   date: string;
   label: string;
@@ -52,7 +52,7 @@ export default async function ConteudoHub({ searchParams }: ConteudoProps) {
   const activePlaylist = findPlaylistBySlug(vp);
   const activeType = vt === "shorts" || vt === "long" ? vt : undefined;
 
-  const [posts, videoResult, cafes, pautas] = await Promise.all([
+  const [posts, videoResult, cafes, [mensais, semanais]] = await Promise.all([
     findPosts({
       where: publishedPostWhere,
       orderBy: { createdAt: "desc" },
@@ -62,7 +62,7 @@ export default async function ConteudoHub({ searchParams }: ConteudoProps) {
       ? fetchPlaylistVideos(activePlaylist.playlistId, 50)
       : fetchChannelVideos(30),
     listBriefings(3),
-    listPautas(3),
+    Promise.all([listDossies("mensal", 2), listDossies("semanal", 2)]),
   ]);
   const mappedPosts = posts.map(mapPost);
 
@@ -81,12 +81,19 @@ export default async function ConteudoHub({ searchParams }: ConteudoProps) {
       label: `${b.weekday ? `${b.weekday}, ` : ""}${formatDateBR(b.date)}`,
       title: b.title,
     })),
-    ...pautas.map((p) => ({
-      kind: "Pauta" as const,
-      href: `/pauta-da-semana/${p.slug}`,
-      date: p.date,
-      label: `Semana de ${formatDateBR(p.date)}`,
-      title: p.title,
+    ...mensais.map((d) => ({
+      kind: "Mensal" as const,
+      href: d.href,
+      date: d.date,
+      label: d.periodo,
+      title: d.title,
+    })),
+    ...semanais.map((d) => ({
+      kind: "Semanal" as const,
+      href: d.href,
+      date: d.date,
+      label: d.periodo,
+      title: d.title,
     })),
   ]
     .sort((a, b) => (a.date < b.date ? 1 : -1))
@@ -167,7 +174,7 @@ export default async function ConteudoHub({ searchParams }: ConteudoProps) {
           )}
         </section>
 
-        {/* Periódicos — lista única compacta (Café + Pauta) */}
+        {/* Periódicos — lista única compacta (Café + dossiês) */}
         <section className="space-y-4">
           <div className="flex items-baseline justify-between">
             <h2 className="text-2xl font-semibold text-[#132960] md:text-3xl">
@@ -183,7 +190,7 @@ export default async function ConteudoHub({ searchParams }: ConteudoProps) {
 
           {periodicos.length === 0 ? (
             <p className="text-zinc-700">
-              Café com Mercado (diário) e Pauta da Semana em breve.
+              Café com Mercado (diário) e os dossiês macro em breve.
             </p>
           ) : (
             <ul className="space-y-2">

@@ -4,7 +4,7 @@ import { getSiteUrl } from "@/lib/site-url";
 import { prisma } from "@/lib/prisma";
 import { simuladores } from "@/data/simuladores";
 import { listBriefings } from "@/lib/cafe-com-mercado";
-import { listPautas } from "@/lib/pauta-da-semana";
+import { listDossies } from "@/lib/dossies";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,6 @@ const STATIC_PATHS: { path: string; changeFrequency: MetadataRoute.Sitemap[numbe
   { path: "/blog", changeFrequency: "daily", priority: 0.9 },
   { path: "/conteudo", changeFrequency: "daily", priority: 0.8 },
   { path: "/cafe-com-mercado", changeFrequency: "daily", priority: 0.7 },
-  { path: "/pauta-da-semana", changeFrequency: "weekly", priority: 0.7 },
   { path: "/painel-economico", changeFrequency: "daily", priority: 0.8 },
   { path: "/painel-economico/panorama", changeFrequency: "daily", priority: 0.7 },
   { path: "/painel-economico/economia", changeFrequency: "daily", priority: 0.7 },
@@ -105,17 +104,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   try {
-    const pautas = await listPautas();
-    for (const p of pautas) {
+    const dossies = [
+      ...(await listDossies("mensal")),
+      ...(await listDossies("semanal")),
+    ];
+    for (const d of dossies) {
       entries.push({
-        url: `${siteUrl}/pauta-da-semana/${p.slug}`,
-        lastModified: safeDate(p.publishedAt),
+        url: `${siteUrl}${d.href}`,
+        lastModified: safeDate(d.publishedAt),
         changeFrequency: "monthly",
         priority: 0.5,
       });
     }
   } catch {
-    // conteudo local indisponivel: segue sem as pautas
+    // conteudo local indisponivel: segue sem os dossies
   }
 
   try {
