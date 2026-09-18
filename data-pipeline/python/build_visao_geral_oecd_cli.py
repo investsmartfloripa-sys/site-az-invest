@@ -1,7 +1,15 @@
 """Build do Painel Visao Geral - bloco OECD CLI Brasil via DBnomics.
 
-DBnomics e espelho confiavel do OECD MEI_CLI (Composite Leading Indicators).
-Endpoint REST publico, sem auth, JSON estruturado.
+DBnomics e espelho do OECD. Endpoint REST publico, sem auth, JSON estruturado.
+
+TROCA DE DATASET EM 2026-09-18. O script lia `OECD/MEI_CLI/LOLITOAA.BRA.M`, da
+base MEI, que a OCDE aposentou: o DBnomics segue servindo o historico congelado
+em 2023-12 com HTTP 200, entao a serie ficou 2 anos e 9 meses parada marcada
+como "fresh" — mesmo defeito da EPE, achado no mesmo dia.
+
+Substituto: `OECD/DSD_STES@DF_CLI/BRA.M.LI.IX._Z.AA.IX._Z.H` (Composite leading
+indicator, amplitude-adjusted). Continuidade conferida na sobreposicao: 420
+meses em comum, diferenca media 0,13 e +0,02 no ponto de emenda (2023-12).
 """
 from __future__ import annotations
 import argparse, json, sys, time
@@ -13,7 +21,7 @@ HERE = Path(__file__).resolve().parent
 DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
 BLOB_PATH = "data/visao_geral_oecd_cli.json"
 UA = {"User-Agent": "Mozilla/5.0 (compatible; az-invest/0.3)"}
-DBNOMICS = "https://api.db.nomics.world/v22/series/OECD/MEI_CLI/LOLITOAA.BRA.M?observations=1"
+DBNOMICS = "https://api.db.nomics.world/v22/series/OECD/DSD_STES@DF_CLI/BRA.M.LI.IX._Z.AA.IX._Z.H?observations=1"
 INPUTS = {"oecd_cli_bra": "1989-01"}
 
 def _get(url, *, timeout=60, retries=3, sleep=4.0):
@@ -28,6 +36,20 @@ def _get(url, *, timeout=60, retries=3, sleep=4.0):
             print(f"  retry {i+1}/{retries}: {e}", file=sys.stderr)
             time.sleep(sleep)
     raise RuntimeError(f"falha apos {retries}: {last}")
+
+def freshness(mes_recente):
+    """Compara a data do DADO com hoje — nao basta a API ter respondido 200.
+
+    A CLI tem defasagem tipica de ~2 meses. Acima de 5 meses de atraso o dataset
+    foi descontinuado ou mudou de lugar, e isso precisa aparecer no painel de
+    saude em vez de passar por "fresh" (foi o que escondeu a quebra do MEI_CLI).
+    """
+    if not mes_recente:
+        return "missing"
+    hoje = datetime.now(timezone.utc)
+    a, m = (int(x) for x in mes_recente.split("-"))
+    atraso = (hoje.year - a) * 12 + (hoje.month - m)
+    return "fresh" if atraso <= 5 else "stale"
 
 def quadrante(nivel, mom6):
     if nivel is None or mom6 is None: return None
@@ -62,15 +84,18 @@ def build_payload(serie_dict):
         yoy = round((nivel/prev12 - 1)*100, 2) if (prev12 and prev12 > 0) else None
         serie.append({"mes": m, "nivel": round(nivel, 3), "var_6m_anualizada": mom6, "var_yoy": yoy, "quadrante": quadrante(nivel, mom6)})
     ult = serie[-1] if serie else {}
+    status = freshness(ult.get("mes"))
+    if status == "stale":
+        print(f"  AVISO: dado mais recente e {ult.get('mes')} — dataset atrasado", file=sys.stderr)
     return {
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "freshness_status": "fresh",
+        "freshness_status": status,
         "mes_recente": ult.get("mes"),
         "serie": serie,
         "inputs": INPUTS,
         "min_start_date": min(INPUTS.values()),
         "destaques": {"nivel_recente": ult.get("nivel"), "var_6m_anualizada_recente": ult.get("var_6m_anualizada"), "quadrante_recente": ult.get("quadrante")},
-        "metadata": {"fonte": "DBnomics espelho OECD MEI_CLI LOLITOAA Brazil (amplitude-adjusted, monthly)", "nota": "Linha 100 = tendencia. Defasagem tipica ~2 meses."},
+        "metadata": {"fonte": "DBnomics espelho OECD DSD_STES@DF_CLI, serie BRA.M.LI.IX._Z.AA.IX._Z.H (CLI amplitude-adjusted, mensal)", "nota": "Linha 100 = tendencia. Defasagem tipica ~2 meses."},
     }
 
 def main():
