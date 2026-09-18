@@ -161,10 +161,20 @@ async function renderIndicador(browser, catalogo, indicador) {
   };
   const manifestPath = `releases/${indicador}/${mes}/manifest.json`;
   await uploadBlob(manifestPath, JSON.stringify(manifest, null, 2), "application/json");
+  // `manifest_url` (absoluta) ALÉM de `manifest_path` (relativo): consumidores que só
+  // podem buscar URLs já vistas numa resposta anterior — o agente Publisher é um deles —
+  // não conseguem montar a URL sozinhos e ficam sem o manifest. Com a URL literal aqui,
+  // ler o latest.json já autoriza ler o manifest. `manifest_path` fica por compatibilidade.
+  const manifestUrl = `${BLOB_BASE}/${manifestPath}`;
   await uploadBlob(
     `releases/${indicador}/latest.json`,
     JSON.stringify(
-      { mes_referencia: mes, manifest_path: manifestPath, gerado_em: manifest.gerado_em },
+      {
+        mes_referencia: mes,
+        manifest_path: manifestPath,
+        manifest_url: manifestUrl,
+        gerado_em: manifest.gerado_em,
+      },
       null,
       2,
     ),
