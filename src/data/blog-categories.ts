@@ -1,5 +1,35 @@
 import { articleCategories } from "@/data/home";
 
+/**
+ * Boletins — as divulgações de indicadores (IPCA, IGP-M…) que o robô Publisher
+ * grava a cada release. Têm categoria própria para NUNCA se misturarem aos
+ * artigos: `artigosWhere` (lib/workspace/posts) exclui esta categoria e as
+ * listagens de boletins usam `boletinsWhere`.
+ *
+ * O NOME é provisório: trocar `BOLETIM_SECTION_LABEL`/`BOLETIM_KICKER` muda o
+ * rótulo em todo o site; o valor gravado no banco e a URL ficam estáveis.
+ */
+export const BOLETIM_CATEGORY = "Boletim";
+/** Nome da seção/arquivo. Ex.: "Boletins". */
+export const BOLETIM_SECTION_LABEL = "Boletins";
+/** Prefixo do kicker de cada boletim. Ex.: "Boletim IPCA". */
+export const BOLETIM_KICKER = "Boletim";
+/** Base da URL das páginas de boletim (lista e post). */
+export const BOLETIM_BASE_PATH = "/boletins";
+
+export function isBoletimCategory(category: string | null | undefined): boolean {
+  return (category ?? "").trim() === BOLETIM_CATEGORY;
+}
+
+/**
+ * Slug que o Publisher grava a cada release: `<indicador>-AAAA-MM` (ipca-2026-07).
+ * Usado pelo proxy para responder 308 em `/blog/<slug>` sem consultar o banco —
+ * a página faz o mesmo redirect pela categoria, mas como `blog/loading.tsx` faz
+ * a rota fazer streaming, lá ele vira meta-refresh (200) em vez de 308.
+ * Manter em sincronia com `ChartIndicador` em lib/publisher/chart-catalog.
+ */
+export const BOLETIM_SLUG_PATTERN = /^(ipca|igpm)-\d{4}-\d{2}$/;
+
 /** Opções do select no painel: rótulo com acentuação, valor igual ao banco. */
 export const blogPostCategoryOptions: { label: string; value: string }[] = [
   { label: "Geral", value: "Geral" },
@@ -15,6 +45,7 @@ export const blogPostCategoryLabels: string[] = blogPostCategoryOptions.map((o) 
 const postCategoryDisplayLabel: Record<string, string> = {
   "Educacao Financeira": "Educação Financeira",
   Politica: "Política",
+  [BOLETIM_CATEGORY]: BOLETIM_KICKER,
 };
 
 export function formatPostCategoryLabel(stored: string): string {
@@ -56,6 +87,12 @@ const postCategoryVisual: Record<string, CategoryVisual> = {
     solid: "bg-[#333333] text-white",
     soft: "bg-[#333333]/10 text-[#333333]",
     chipInactive: "border-[#333333]/30 text-[#333333] hover:bg-[#333333]/5",
+  },
+  /* Boletim: pill branca vazada em navy — distinta das categorias editoriais. */
+  [BOLETIM_CATEGORY]: {
+    solid: "bg-white text-[#132960] ring-1 ring-[#132960]/30",
+    soft: "border border-[#132960]/25 bg-white text-[#132960]",
+    chipInactive: "border-[#132960]/35 text-[#132960] hover:bg-[#132960]/5",
   },
 };
 

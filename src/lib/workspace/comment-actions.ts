@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { isStaffOrAdmin, requireSession, type SessionUser } from "@/lib/auth";
+import { postPath } from "@/lib/post-path";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/workspace/audit";
 
@@ -25,13 +26,15 @@ async function loadComment(commentId: number) {
       id: true,
       postId: true,
       parentId: true,
-      post: { select: { slug: true, authorId: true } },
+      post: { select: { slug: true, category: true, authorId: true } },
     },
   });
 }
 
-function revalidateComment(slug: string) {
-  revalidatePath(`/blog/${slug}`);
+// O post está à mão (vem junto do comentário), então a categoria decide a
+// rota pública a revalidar: artigo em /blog/<slug>, boletim em /boletins/<slug>.
+function revalidateComment(post: { slug: string; category: string }) {
+  revalidatePath(postPath(post));
   revalidatePath("/area-restrita/comentarios");
   revalidatePath("/area-restrita/dashboard");
 }
@@ -82,7 +85,7 @@ export async function replyToCommentAction(formData: FormData) {
     entityId: comment.id,
   });
 
-  revalidateComment(comment.post.slug);
+  revalidateComment(comment.post);
 }
 
 /**
@@ -106,5 +109,5 @@ export async function deleteCommentAction(formData: FormData) {
     entityId: comment.id,
   });
 
-  revalidateComment(comment.post.slug);
+  revalidateComment(comment.post);
 }

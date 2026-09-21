@@ -3,10 +3,10 @@ import { Header } from "@/components/common/Header";
 import { HeroRecentes } from "@/components/home/HeroRecentes";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { VideosSection } from "@/components/home/VideosSection";
-import { DestaquesDaSemana } from "@/components/conteudo/DestaquesDaSemana";
+import { PeriodicosBlock } from "@/components/conteudo/PeriodicosBlock";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { findPosts, mapPost } from "@/lib/posts";
-import { publishedPostWhere } from "@/lib/workspace/posts";
+import { artigosWhere } from "@/lib/workspace/posts";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -43,7 +43,8 @@ export default async function Home() {
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
     try {
       const posts = await findPosts({
-        where: publishedPostWhere,
+        // Só artigos editoriais: os boletins do Publisher têm seção própria (Periódicos).
+        where: artigosWhere,
         // Ordena pela data de PUBLICAÇÃO (posts antigos sem publishedAt caem para o fim
         // do critério e o desempate é a criação) — publicar um rascunho antigo o traz ao topo.
         orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
@@ -93,9 +94,9 @@ export default async function Home() {
         className={`az-shell az-hero-bg mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} flex-col gap-12 px-4 py-6 md:px-8 md:py-8`}
       >
         <HeroRecentes posts={hero} />
-        {/* DestaquesDaSemana é compartilhado com /conteudo; o reveal fica no wrapper. */}
+        {/* PeriodicosBlock é compartilhado com /conteudo; o reveal fica no wrapper. */}
         <div className="az-reveal">
-          <DestaquesDaSemana />
+          <PeriodicosBlock variant="home" />
         </div>
         <VideosSection />
         <CommunityCallout />

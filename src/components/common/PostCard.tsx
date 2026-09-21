@@ -14,6 +14,8 @@ export type PostCardData = {
   date: string;
   image: string;
   excerpt?: string | null;
+  /** URL pública (`/blog/…` ou `/boletins/…`) — vem de `postPath`. */
+  href: string;
 };
 
 function initials(name: string) {
@@ -28,7 +30,7 @@ function initials(name: string) {
 export function PostCard({ post }: { post: PostCardData }) {
   return (
     <article className="az-hover-lift flex flex-col self-start overflow-hidden rounded-2xl border border-[#132960]/15 bg-white shadow-sm hover:shadow-md">
-      <Link href={`/blog/${post.slug}`} className="block">
+      <Link href={post.href} className="block">
         <div className="relative aspect-[16/9] w-full overflow-hidden">
           <Image
             src={post.image}
@@ -48,7 +50,7 @@ export function PostCard({ post }: { post: PostCardData }) {
         {/* min-h reserva sempre 2 linhas (text-lg ≈ 1.75rem/linha) → parte branca
             do card com altura padronizada, independente do tamanho do título. */}
         <h3 className="line-clamp-2 min-h-[3.5rem] text-lg font-semibold text-[#132960]">
-          <Link href={`/blog/${post.slug}`} className="hover:underline">
+          <Link href={post.href} className="hover:underline">
             {post.title}
           </Link>
         </h3>

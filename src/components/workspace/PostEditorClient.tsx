@@ -8,6 +8,7 @@ import { PhotoField } from "@/components/workspace/PhotoField";
 import { SubmitButton } from "@/components/workspace/SubmitButton";
 import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
 import { PostPreviewPanel } from "@/components/workspace/PostPreviewPanel";
+import { postPath } from "@/lib/post-path";
 import {
   autosavePostDraftAction,
   deletePostAction,
@@ -36,6 +37,8 @@ type PostData = {
 type Props = {
   post: PostData | null;
   categoryOptions: CategoryOption[];
+  /** Categoria travada (boletim do robô): substitui o select por campo somente leitura. */
+  lockedCategory: CategoryOption | null;
   authorOptions: AuthorOption[];
   defaultAuthorId: number | null;
   authorNameById: Record<number, string>;
@@ -61,6 +64,7 @@ function statusTime(date: Date) {
 export function PostEditorClient({
   post,
   categoryOptions,
+  lockedCategory,
   authorOptions,
   defaultAuthorId,
   authorNameById,
@@ -196,22 +200,36 @@ export function PostEditorClient({
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="block text-sm">
-          <span className="text-[#132960]/65">Categoria</span>
-          <select
-            name="category"
-            required
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="mt-1 w-full rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-[#132960] outline-none focus:border-[#027DFC]"
-          >
-            {categoryOptions.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        {lockedCategory ? (
+          <div className="block text-sm">
+            <span className="text-[#132960]/65">Categoria</span>
+            {/* Categoria fixa, fora do select — o hidden é o que vai no form. */}
+            <input type="hidden" name="category" value={lockedCategory.value} />
+            <p className="mt-1 w-full rounded-md border border-[#132960]/20 bg-[#132960]/5 px-3 py-2 text-[#132960]/80">
+              {lockedCategory.label}
+            </p>
+            <span className="mt-1 block text-xs text-[#132960]/50">
+              Classificação própria das divulgações de indicador — não vira artigo.
+            </span>
+          </div>
+        ) : (
+          <label className="block text-sm">
+            <span className="text-[#132960]/65">Categoria</span>
+            <select
+              name="category"
+              required
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="mt-1 w-full rounded-md border border-[#132960]/20 bg-white px-3 py-2 text-[#132960] outline-none focus:border-[#027DFC]"
+            >
+              {categoryOptions.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="block text-sm">
           <span className="text-[#132960]/65">Autor</span>
           <select
@@ -330,7 +348,7 @@ export function PostEditorClient({
             />
             {post.status === "APPROVED" ? (
               <Link
-                href={`/blog/${post.slug}`}
+                href={postPath(post)}
                 target="_blank"
                 className="rounded-md border border-[#132960]/25 px-4 py-2 text-sm text-[#132960]/70 hover:bg-[#132960]/5"
               >

@@ -13,6 +13,7 @@ import { KpiStrip, type KpiCard } from "@/components/painel/panorama/KpiStrip";
 import { MarketTape, type TapeItem } from "@/components/painel/panorama/MarketTape";
 import { PeriodicosChips } from "@/components/painel/panorama/PeriodicosChips";
 import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection";
+import { BOLETIM_CATEGORY } from "@/data/blog-categories";
 import { fetchB3ReferenceCurve, refDateLabel } from "@/lib/b3-reference-rates";
 import { getPanoramaData, painelBlobConfigured, type PanoramaData } from "@/lib/painel-data";
 import { getRatesVolMult, type RatesVol } from "@/lib/painel-market-data";
@@ -274,7 +275,8 @@ export async function PainelPanoramaPage() {
   let mapped: ReturnType<typeof mapPost>[] = [];
   try {
     const posts = await findPosts({
-      where: { status: "APPROVED", published: true, category: "Economia" },
+      // Economia + boletins: no Panorama a divulgação do IPCA é relevante.
+      where: { status: "APPROVED", published: true, category: { in: ["Economia", BOLETIM_CATEGORY] } },
       orderBy: { createdAt: "desc" },
     });
     mapped = posts.map(mapPost);

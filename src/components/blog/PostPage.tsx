@@ -1,0 +1,374 @@
+import { cache, type ReactNode } from "react";
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Footer } from "@/components/common/Footer";
+import { Header } from "@/components/common/Header";
+import { CommunityCallout } from "@/components/home/CommunityCallout";
+import { PostMarkdownBody } from "@/components/blog/PostMarkdownBody";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  BOLETIM_BASE_PATH,
+  BOLETIM_SECTION_LABEL,
+  formatPostCategoryLabel,
+  getPostCategorySoftPillClasses,
+} from "@/data/blog-categories";
+import { addCommentAction } from "@/lib/comment-actions";
+import {
+  ChartById,
+  type IgpmRelease,
+  type IpcaRelease,
+} from "@/components/painel/publisher/ChartById";
+import { loadIgpmData } from "@/lib/painel-igpm";
+import { loadIpcaData } from "@/lib/painel-ipca";
+import { fetchPainelBlob } from "@/lib/painel-blob";
+import { postPath } from "@/lib/post-path";
+import { RELEASE_BLOB_PATH, getChartDef } from "@/lib/publisher/chart-catalog";
+import { prisma } from "@/lib/prisma";
+import { getSiteUrl } from "@/lib/site-url";
+
+/**
+ * Página de post compartilhada por /blog/[slug] (artigo) e /boletins/[slug]
+ * (boletim do Publisher). O mesmo registro renderiza nos dois lugares; a rota
+ * fina decide, pela categoria, se mostra ou redireciona para a casa certa.
+ * Tudo que muda entre os dois tipos sai do mapa `POST_KIND` abaixo — o nome
+ * "Boletins" é provisório, por isso vem das constantes e nunca de literal.
+ */
+export type PostKind = "artigo" | "boletim";
+
+const POST_KIND: Record<PostKind, { label: string; listPath: string }> = {
+  artigo: { label: "Artigos", listPath: "/blog" },
+  boletim: { label: BOLETIM_SECTION_LABEL, listPath: BOLETIM_BASE_PATH },
+};
+
+// React.cache: generateMetadata, a rota fina e a página compartilham a MESMA
+// consulta dentro de um request (antes eram duas idas ao banco por acesso).
+export const getPost = cache(async (slug: string) =>
+  prisma.post.findUnique({
+    where: { slug },
+    include: {
+      author: true,
+      comments: {
+        where: { parentId: null, isStaffReply: false },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+        include: {
+          replies: {
+            orderBy: { createdAt: "asc" },
+            include: { repliedBy: { select: { authorId: true } } },
+          },
+        },
+      },
+    },
+  }),
+);
+
+/** Metadata do post — canonical/og:url seguem `postPath` (categoria decide a rota). */
+export async function buildPostMetadata(slug: string): Promise<Metadata> {
+  const post = await getPost(slug);
+  if (!post) return { title: "Página não encontrada" };
+  const path = postPath(post);
+  return {
+    title: post.title,
+    description: post.excerpt ?? undefined,
+    alternates: { canonical: path },
+    openGraph: {
+      type: "article",
+      url: path,
+      title: post.title,
+      description: post.excerpt ?? undefined,
+      ...(post.coverImage ? { images: [{ url: post.coverImage, alt: post.title }] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.excerpt ?? undefined,
+      ...(post.coverImage ? { images: [post.coverImage] } : {}),
+    },
+  };
+}
+
+/**
+ * Gráficos VIVOS nos posts do Publisher: o corpo markdown carrega marcadores
+ * `[az-chart:IPCA-08]` (um por parágrafo). Aqui a página detecta os ids,
+ * carrega os dados dos indicadores envolvidos (mesmos loaders do painel) e
+ * entrega ao PostMarkdownBody o card interativo real de cada marcador.
+ */
+async function fetchReleaseJson<T>(path: string): Promise<T | null> {
+  try {
+    // TTL curto + cache tag `blob:<path>` p/ o pipeline purgar ao gravar o arquivo.
+    const res = await fetchPainelBlob(path, 300);
+    if (!res?.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+async function buildChartSlots(
+  content: string,
+): Promise<Record<string, ReactNode> | undefined> {
+  const ids = [
+    ...new Set(
+      [...content.matchAll(/\\?\[az-chart:([A-Za-z0-9-]+)\\?\]/g)].map((m) =>
+        m[1].toUpperCase(),
+      ),
+    ),
+  ].filter((id) => getChartDef(id) !== null);
+  if (ids.length === 0) return undefined;
+
+  const precisaIpca = ids.some((id) => getChartDef(id)?.indicador === "ipca");
+  const precisaIgpm = ids.some((id) => getChartDef(id)?.indicador === "igpm");
+  const [ipca, ipcaRelease, igpm, igpmRelease] = await Promise.all([
+    precisaIpca ? loadIpcaData() : Promise.resolve(null),
+    precisaIpca ? fetchReleaseJson<IpcaRelease>(RELEASE_BLOB_PATH.ipca) : Promise.resolve(null),
+    precisaIgpm ? loadIgpmData() : Promise.resolve(null),
+    precisaIgpm ? fetchReleaseJson<IgpmRelease>(RELEASE_BLOB_PATH.igpm) : Promise.resolve(null),
+  ]);
+  const bundle = { ipca, ipcaRelease, igpm, igpmRelease };
+  return Object.fromEntries(ids.map((id) => [id, ChartById({ id, data: bundle })]));
+}
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+export async function PostPage({ slug, kind }: { slug: string; kind: PostKind }) {
+  const post = await getPost(slug);
+
+  if (!post || post.status !== "APPROVED") {
+    notFound();
+  }
+
+  const siteUrl = getSiteUrl();
+  const section = POST_KIND[kind];
+  // URL pública do post (/blog/… ou /boletins/…): vale p/ JSON-LD e p/ o form.
+  const path = postPath(post);
+  const chartSlots = await buildChartSlots(post.content);
+
+  return (
+    <div className="min-h-screen text-[#132960]">
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: post.title,
+            description: post.excerpt ?? undefined,
+            datePublished: (post.publishedAt ?? post.createdAt).toISOString(),
+            dateModified: post.updatedAt.toISOString(),
+            mainEntityOfPage: `${siteUrl}${path}`,
+            inLanguage: "pt-BR",
+            ...(post.coverImage ? { image: post.coverImage } : {}),
+            author: post.author
+              ? {
+                  "@type": "Person",
+                  name: post.author.name,
+                  url: `${siteUrl}/nosso-time/${post.author.slug}`,
+                }
+              : { "@type": "Person", name: post.authorName },
+            publisher: {
+              "@type": "Organization",
+              name: "AZ Invest",
+              url: siteUrl,
+              logo: { "@type": "ImageObject", url: `${siteUrl}/logo-az.png` },
+            },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Início", item: siteUrl },
+              { "@type": "ListItem", position: 2, name: section.label, item: `${siteUrl}${section.listPath}` },
+              { "@type": "ListItem", position: 3, name: post.title, item: `${siteUrl}${path}` },
+            ],
+          },
+        ]}
+      />
+      <Header />
+      <main className="mx-auto w-full max-w-[60rem] px-4 py-8 md:px-8">
+        <Link href={section.listPath} className="text-sm text-[#027DFC] hover:underline">
+          {"<-"} Voltar para {section.label}
+        </Link>
+
+        {post.coverImage ? (
+          <div className="relative mt-4 aspect-[21/8] w-full overflow-hidden rounded-2xl">
+            <Image
+              src={post.coverImage}
+              alt={post.title}
+              fill
+              sizes="(min-width: 768px) 960px, 100vw"
+              className="object-cover"
+              priority
+            />
+          </div>
+        ) : null}
+
+        <article className="az-card mt-6 space-y-4 p-6 md:p-10">
+          <span
+            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${getPostCategorySoftPillClasses(post.category)}`}
+          >
+            {formatPostCategoryLabel(post.category)}
+          </span>
+          <h1 className="text-4xl text-[#132960] md:text-5xl">{post.title}</h1>
+
+          <div className="flex items-center gap-3 border-y border-[#132960]/10 py-3">
+            {post.author ? (
+              <Link
+                href={`/nosso-time/${post.author.slug}`}
+                className="flex items-center gap-3 hover:underline"
+              >
+                <div className="relative h-12 w-12 flex-none overflow-hidden rounded-full bg-[#132960]">
+                  {post.author.photo ? (
+                    <Image
+                      src={post.author.photo}
+                      alt={post.author.name}
+                      fill
+                      sizes="48px"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-white">
+                      {initials(post.author.name)}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[#132960]">{post.author.name}</p>
+                  <p className="text-xs text-zinc-500">
+                    {post.author.role} | {new Date(post.createdAt).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+              </Link>
+            ) : (
+              <p className="text-sm text-zinc-500">
+                {post.authorName} | {new Date(post.createdAt).toLocaleDateString("pt-BR")}
+              </p>
+            )}
+          </div>
+
+          <PostMarkdownBody markdown={post.content} chartSlots={chartSlots} />
+        </article>
+
+        <section id="comentarios" className="az-card mt-8 space-y-6 p-6 md:p-10">
+          <h2 className="text-2xl text-[#132960]">
+            Comentários{post.comments.length > 0 ? ` (${post.comments.length})` : ""}
+          </h2>
+
+          <form action={addCommentAction} className="space-y-3">
+            <input type="hidden" name="postId" value={post.id} />
+            <input type="hidden" name="slug" value={post.slug} />
+            {/* Para onde voltar depois de comentar — a action valida (só caminho relativo). */}
+            <input type="hidden" name="returnTo" value={path} />
+            <input
+              type="text"
+              name="site"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              className="hidden"
+            />
+            <div>
+              <label
+                htmlFor="comment-name"
+                className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+              >
+                Nome
+              </label>
+              <input
+                id="comment-name"
+                name="name"
+                required
+                maxLength={80}
+                placeholder="Seu nome"
+                className="mt-1 w-full rounded-lg border border-[#132960]/20 bg-white px-3 py-2 text-sm outline-none transition focus:border-[#027DFC]"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="comment-content"
+                className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+              >
+                Comentário
+              </label>
+              <textarea
+                id="comment-content"
+                name="content"
+                required
+                maxLength={2000}
+                rows={4}
+                placeholder="Escreva seu comentário..."
+                className="mt-1 w-full rounded-lg border border-[#132960]/20 bg-white px-3 py-2 text-sm outline-none transition focus:border-[#027DFC]"
+              />
+            </div>
+            <button
+              type="submit"
+              className="rounded-lg bg-[#027DFC] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#0265c9] active:bg-[#0253a4]"
+            >
+              Publicar comentário
+            </button>
+          </form>
+
+          {post.comments.length === 0 ? (
+            <p className="text-sm text-zinc-500">Seja o primeiro a comentar.</p>
+          ) : (
+            <ul className="space-y-4">
+              {post.comments.map((comment) => (
+                <li key={comment.id} className="rounded-xl border border-[#132960]/10 bg-[#F7F9FC] p-4">
+                  <p className="text-sm font-semibold text-[#132960]">
+                    {comment.name}{" "}
+                    <span className="text-xs font-normal text-zinc-500">
+                      | {new Date(comment.createdAt).toLocaleDateString("pt-BR")}
+                    </span>
+                  </p>
+                  <p className="mt-1 whitespace-pre-line text-sm text-zinc-700">{comment.content}</p>
+
+                  {comment.replies.length > 0 ? (
+                    <ul className="mt-3 space-y-3 border-l-2 border-[#027DFC]/30 pl-4">
+                      {comment.replies.map((reply) => {
+                        const isAuthorReply =
+                          reply.repliedBy?.authorId != null &&
+                          reply.repliedBy.authorId === post.authorId;
+                        return (
+                          <li key={reply.id}>
+                            <p className="text-sm font-semibold text-[#027DFC]">
+                              {reply.name}{" "}
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                                  isAuthorReply
+                                    ? "bg-[#166B47]/10 text-[#166B47]"
+                                    : "bg-[#027DFC]/10 text-[#027DFC]"
+                                }`}
+                              >
+                                {isAuthorReply ? "Autor" : "AZ Invest"}
+                              </span>{" "}
+                              <span className="text-xs font-normal text-zinc-500">
+                                | {new Date(reply.createdAt).toLocaleDateString("pt-BR")}
+                              </span>
+                            </p>
+                            <p className="mt-1 whitespace-pre-line text-sm text-zinc-700">{reply.content}</p>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <div className="mt-10">
+          <CommunityCallout />
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}

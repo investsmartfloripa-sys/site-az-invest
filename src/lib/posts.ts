@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { PostCardData } from "@/components/common/PostCard";
+import { postPath } from "@/lib/post-path";
 
 const FALLBACK_IMAGE =
   "/capa-padrao.png";
@@ -26,5 +27,6 @@ export function mapPost(post: PostWithAuthor): PostCardData {
     // Data exibida no card = publicação (criação só p/ posts legados sem publishedAt).
     date: new Date(post.publishedAt ?? post.createdAt).toLocaleDateString("pt-BR"),
     image: post.coverImage || FALLBACK_IMAGE,
+    href: postPath(post),
   };
 }

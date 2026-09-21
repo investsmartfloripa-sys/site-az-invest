@@ -6,6 +6,7 @@ import Link from "next/link";
 import { CornerDownRight, ExternalLink, MessageSquarePlus } from "lucide-react";
 import { SubmitButton } from "@/components/workspace/SubmitButton";
 import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
+import { postPath } from "@/lib/post-path";
 import {
   deleteCommentAction,
   replyToCommentAction,
@@ -24,7 +25,12 @@ export type CommentDTO = {
   name: string;
   content: string;
   createdAt: string;
-  post: { id: number; title: string; slug: string };
+  /**
+   * `category` decide a URL pública (boletim vs artigo). Opcional porque a
+   * origem (lib/workspace/comments → listWorkspaceComments) ainda não a
+   * seleciona; sem ela o link cai em /blog/<slug>, que redireciona boletim.
+   */
+  post: { id: number; title: string; slug: string; category?: string };
   replies: CommentReplyDTO[];
 };
 
@@ -68,7 +74,7 @@ function CommentCard({ comment }: { comment: CommentDTO }) {
           <p className="mt-0.5 text-xs text-[#132960]/50">
             {fmtDate(comment.createdAt)} ·{" "}
             <Link
-              href={`/blog/${comment.post.slug}#comentarios`}
+              href={`${postPath({ slug: comment.post.slug, category: comment.post.category ?? "" })}#comentarios`}
               target="_blank"
               className="inline-flex items-center gap-1 text-[#027DFC] hover:underline"
             >

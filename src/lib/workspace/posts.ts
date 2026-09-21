@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import type { PostStatus } from "@prisma/client";
+import { BOLETIM_CATEGORY } from "@/data/blog-categories";
 
 export const POST_STATUS_LABELS: Record<PostStatus, string> = {
   DRAFT: "Rascunho",
@@ -11,6 +12,18 @@ export const POST_STATUS_LABELS: Record<PostStatus, string> = {
 export const publishedPostWhere: Prisma.PostWhereInput = {
   status: "APPROVED",
   published: true,
+};
+
+/** Artigos editoriais publicados — exclui os boletins do Publisher. */
+export const artigosWhere: Prisma.PostWhereInput = {
+  ...publishedPostWhere,
+  category: { not: BOLETIM_CATEGORY },
+};
+
+/** Boletins (divulgações de indicadores) publicados. */
+export const boletinsWhere: Prisma.PostWhereInput = {
+  ...publishedPostWhere,
+  category: BOLETIM_CATEGORY,
 };
 
 export function syncPublishedFields(status: PostStatus) {

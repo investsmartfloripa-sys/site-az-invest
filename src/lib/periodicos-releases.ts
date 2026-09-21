@@ -35,7 +35,8 @@ const MESES = [
   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
 ];
 
-function periodoLegivel(mesRef: string): string {
+/** "2026-07" → "julho de 2026". Usado também no kicker dos boletins (PeriodicosBlock). */
+export function periodoLegivel(mesRef: string): string {
   const [ano, mes] = mesRef.split("-");
   const i = Number(mes) - 1;
   return MESES[i] ? `${MESES[i]} de ${ano}` : mesRef;

@@ -1,4 +1,9 @@
-import { blogPostCategoryOptions } from "@/data/blog-categories";
+import {
+  BOLETIM_CATEGORY,
+  blogPostCategoryOptions,
+  formatPostCategoryLabel,
+  isBoletimCategory,
+} from "@/data/blog-categories";
 import { PostEditorClient } from "@/components/workspace/PostEditorClient";
 import type { Post, Author } from "@prisma/client";
 import type { SessionUser } from "@/lib/auth";
@@ -29,6 +34,13 @@ export function PostEditorForm({
   const isLegacyPost = Boolean(post && !post.contentHtml && post.content);
   // AUTHOR não edita post publicado — a equipe editorial precisa abrir revisão.
   const isLockedForAuthor = Boolean(isAuthor && post?.status === "APPROVED");
+  // Boletim (post do robô Publisher): a categoria é própria e NÃO está no select
+  // (blogPostCategoryOptions). Vai travada para o cliente — campo somente leitura
+  // + hidden — senão salvar trocaria a categoria e o boletim viraria artigo.
+  const lockedCategory =
+    post && isBoletimCategory(post.category)
+      ? { label: formatPostCategoryLabel(post.category), value: BOLETIM_CATEGORY }
+      : null;
 
   return (
     <PostEditorClient
@@ -49,6 +61,7 @@ export function PostEditorForm({
           : null
       }
       categoryOptions={blogPostCategoryOptions}
+      lockedCategory={lockedCategory}
       authorOptions={authorOptions}
       defaultAuthorId={post?.authorId ?? session.authorId ?? null}
       authorNameById={authorNameById}

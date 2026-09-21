@@ -16,7 +16,7 @@ export type WorkspaceComment = {
   name: string;
   content: string;
   createdAt: Date;
-  post: { id: number; title: string; slug: string };
+  post: { id: number; title: string; slug: string; category: string };
   replies: WorkspaceCommentReply[];
 };
 
@@ -46,7 +46,7 @@ export async function listWorkspaceComments(
       name: true,
       content: true,
       createdAt: true,
-      post: { select: { id: true, title: true, slug: true, authorId: true } },
+      post: { select: { id: true, title: true, slug: true, category: true, authorId: true } },
       replies: {
         orderBy: { createdAt: "asc" },
         select: {
@@ -65,7 +65,7 @@ export async function listWorkspaceComments(
     name: c.name,
     content: c.content,
     createdAt: c.createdAt,
-    post: { id: c.post.id, title: c.post.title, slug: c.post.slug },
+    post: { id: c.post.id, title: c.post.title, slug: c.post.slug, category: c.post.category },
     replies: c.replies.map((r) => ({
       id: r.id,
       name: r.name,

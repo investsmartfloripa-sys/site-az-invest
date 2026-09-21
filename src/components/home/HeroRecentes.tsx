@@ -54,7 +54,7 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
         */}
         <article className="relative flex flex-col overflow-hidden rounded-2xl border border-[#132960]/10 bg-white shadow-sm md:col-span-2 md:block md:border-0 md:bg-transparent md:shadow-none">
           <Link
-            href={`/blog/${main.slug}`}
+            href={main.href}
             aria-label={main.title}
             className="relative block aspect-[16/10] w-full overflow-hidden md:aspect-auto md:h-full"
           >
@@ -77,7 +77,7 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
                   {formatPostCategoryLabel(main.category)}
                 </span>
                 <h2 className="mt-2 text-xl leading-snug text-[#132960] md:text-3xl md:text-white">
-                  <Link href={`/blog/${main.slug}`} className="pointer-events-auto">{main.title}</Link>
+                  <Link href={main.href} className="pointer-events-auto">{main.title}</Link>
                 </h2>
                 <p className="mt-1 text-xs text-zinc-600 md:text-white">
                   {main.authorSlug ? (
@@ -99,7 +99,7 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
             const release = isReleaseCover(post);
             return (
               <article key={post.id} className="relative min-h-36 flex-1 overflow-hidden rounded-2xl">
-                <Link href={`/blog/${post.slug}`} aria-label={post.title} className="absolute inset-0 block">
+                <Link href={post.href} aria-label={post.title} className="absolute inset-0 block">
                   <Image
                     src={post.image}
                     alt={post.title}
@@ -117,7 +117,7 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
                         {formatPostCategoryLabel(post.category)}
                       </span>
                       <h3 className="mt-1 text-lg leading-tight md:text-xl">
-                        <Link href={`/blog/${post.slug}`} className="pointer-events-auto">{post.title}</Link>
+                        <Link href={post.href} className="pointer-events-auto">{post.title}</Link>
                       </h3>
                       <p className="mt-1 text-[10px]">
                         {post.authorSlug ? (

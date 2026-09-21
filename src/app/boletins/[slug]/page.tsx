@@ -17,11 +17,11 @@ export async function generateMetadata({
 }
 
 /**
- * Rota fina do ARTIGO. Se o slug for de um boletim (categoria própria do
- * Publisher), manda em definitivo para /boletins/<slug> — boletim nunca
- * aparece na casa dos artigos. O render em si fica em PostPage.
+ * Rota fina do BOLETIM — espelho de /blog/[slug]. Se o slug for de um artigo
+ * (qualquer categoria que não a do Publisher), manda em definitivo para
+ * /blog/<slug>; `postPath` resolve o destino pela categoria.
  */
-export default async function BlogPostPage({
+export default async function BoletimPostPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -32,9 +32,9 @@ export default async function BlogPostPage({
   if (!post || post.status !== "APPROVED") {
     notFound();
   }
-  if (isBoletimCategory(post.category)) {
+  if (!isBoletimCategory(post.category)) {
     permanentRedirect(postPath(post));
   }
 
-  return <PostPage slug={slug} kind="artigo" />;
+  return <PostPage slug={slug} kind="boletim" />;
 }

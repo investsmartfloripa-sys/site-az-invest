@@ -4,6 +4,7 @@ import { ExternalLink, Eye, Pencil, Search } from "lucide-react";
 import { ConfirmDialog } from "@/components/workspace/ConfirmDialog";
 import { daysAgo } from "@/lib/analytics";
 import { requireSession } from "@/lib/auth";
+import { postPath } from "@/lib/post-path";
 import { prisma } from "@/lib/prisma";
 import { deletePostAction } from "@/lib/workspace/post-actions";
 import { authorScopeWhere, canManageAllAuthors } from "@/lib/workspace/permissions";
@@ -286,7 +287,7 @@ export default async function ConteudoPage({
                       </Link>
                       {isPublished ? (
                         <a
-                          href={`/blog/${post.slug}`}
+                          href={postPath(post)}
                           target="_blank"
                           rel="noopener noreferrer"
                           title="Ver no site (nova aba)"

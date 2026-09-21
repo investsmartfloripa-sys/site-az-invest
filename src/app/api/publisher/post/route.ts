@@ -3,7 +3,8 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
-import { blogPostCategoryLabels } from "@/data/blog-categories";
+import { BOLETIM_BASE_PATH, BOLETIM_CATEGORY } from "@/data/blog-categories";
+import { postPath } from "@/lib/post-path";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
 import { writeAuditLog } from "@/lib/workspace/audit";
@@ -11,13 +12,17 @@ import { preparePostContent } from "@/lib/workspace/html-content";
 import { getSiteUrl } from "@/lib/site-url";
 
 /**
- * Porta de escrita do Publisher (robô de releases macro) no blog.
+ * Porta de escrita do Publisher (robô de releases macro) nos boletins.
  *
  * POST autenticado por `Authorization: Bearer ${AGENT_API_TOKEN}` — mesmo
  * padrão decidido no BRIEFING-INTEGRACAO-AGENTE-NOTICIAS (uma credencial para
  * as pistas de agente). O post nasce PUBLICADO (APPROVED + published), com
- * autor resolvido por slug — decisão do produto: blog automático, WhatsApp
+ * autor resolvido por slug — decisão do produto: boletim automático, WhatsApp
  * com aprovação humana (o envio é outro passo, fora desta rota).
+ *
+ * Tudo que entra por aqui é BOLETIM (`BOLETIM_CATEGORY`): classificação própria
+ * das divulgações de indicador, que nunca se mistura aos artigos do blog. A URL
+ * pública sai de `postPath` (base `BOLETIM_BASE_PATH`).
  *
  * Idempotente por slug: repetir a chamada com o mesmo slug NÃO duplica —
  * retorna o post existente com `already: true` (o robô pode re-rodar sem medo).
@@ -32,7 +37,10 @@ type PublisherPostBody = {
   excerpt?: string;
   /** HTML do corpo (será sanitizado; markdown derivado p/ o campo content). */
   contentHtml: string;
-  /** Categoria do blog — precisa existir em blogPostCategoryLabels. */
+  /**
+   * @deprecated Ignorado: todo post desta porta é gravado como `BOLETIM_CATEGORY`.
+   * Fica no tipo só para o robô antigo (que ainda manda "Economia") não quebrar.
+   */
   category?: string;
   /** Slug do autor assinante (ex.: "arthur-borba"). */
   authorSlug: string;
@@ -81,13 +89,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const category = body.category?.trim() || "Economia";
-  if (!blogPostCategoryLabels.includes(category)) {
-    return NextResponse.json(
-      { ok: false, error: "invalid-category", allowed: blogPostCategoryLabels },
-      { status: 422 },
-    );
-  }
+  // Categoria fixa: o robô não escolhe (body.category é ignorado).
+  const category = BOLETIM_CATEGORY;
 
   const author = await prisma.author.findUnique({ where: { slug: authorSlug } });
   if (!author) {
@@ -104,7 +107,7 @@ export async function POST(req: Request) {
       already: true,
       id: existing.id,
       slug: existing.slug,
-      url: `${siteUrl}/blog/${existing.slug}`,
+      url: `${siteUrl}${postPath(existing)}`,
     });
   }
 
@@ -132,15 +135,16 @@ export async function POST(req: Request) {
       meta: { source: "publisher", authorSlug, category, ...(body.meta ?? {}) },
     });
     revalidatePath("/");
-    revalidatePath("/blog");
-    revalidatePath(`/blog/${updated.slug}`);
+    revalidatePath(BOLETIM_BASE_PATH);
+    revalidatePath(postPath(updated));
+    revalidatePath("/conteudo");
     return NextResponse.json({
       ok: true,
       already: false,
       updated: true,
       id: updated.id,
       slug: updated.slug,
-      url: `${siteUrl}/blog/${updated.slug}`,
+      url: `${siteUrl}${postPath(updated)}`,
     });
   }
 
@@ -172,8 +176,8 @@ export async function POST(req: Request) {
   });
 
   revalidatePath("/");
-  revalidatePath("/blog");
-  revalidatePath(`/blog/${created.slug}`);
+  revalidatePath(BOLETIM_BASE_PATH);
+  revalidatePath(postPath(created));
   revalidatePath("/conteudo");
 
   return NextResponse.json({
@@ -181,6 +185,6 @@ export async function POST(req: Request) {
     already: false,
     id: created.id,
     slug: created.slug,
-    url: `${siteUrl}/blog/${created.slug}`,
+    url: `${siteUrl}${postPath(created)}`,
   });
 }

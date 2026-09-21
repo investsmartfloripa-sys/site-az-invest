@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 
+import { BOLETIM_BASE_PATH } from "@/data/blog-categories";
 import { getSiteUrl } from "@/lib/site-url";
+import { postPath } from "@/lib/post-path";
 import { prisma } from "@/lib/prisma";
 import { simuladores } from "@/data/simuladores";
 import { listBriefings } from "@/lib/cafe-com-mercado";
@@ -13,6 +15,7 @@ const STATIC_PATHS: { path: string; changeFrequency: MetadataRoute.Sitemap[numbe
   { path: "/blog", changeFrequency: "daily", priority: 0.9 },
   { path: "/conteudo", changeFrequency: "daily", priority: 0.8 },
   { path: "/cafe-com-mercado", changeFrequency: "daily", priority: 0.7 },
+  { path: BOLETIM_BASE_PATH, changeFrequency: "daily", priority: 0.7 },
   { path: "/painel-economico", changeFrequency: "daily", priority: 0.8 },
   { path: "/painel-economico/panorama", changeFrequency: "daily", priority: 0.7 },
   { path: "/painel-economico/economia", changeFrequency: "daily", priority: 0.7 },
@@ -123,12 +126,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const posts = await prisma.post.findMany({
       where: { status: "APPROVED", published: true },
-      select: { slug: true, updatedAt: true },
+      select: { slug: true, category: true, updatedAt: true },
       orderBy: { updatedAt: "desc" },
     });
     for (const p of posts) {
       entries.push({
-        url: `${siteUrl}/blog/${p.slug}`,
+        url: `${siteUrl}${postPath(p)}`,
         lastModified: p.updatedAt,
         changeFrequency: "weekly",
         priority: 0.7,

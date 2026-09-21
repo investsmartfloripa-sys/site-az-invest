@@ -5,10 +5,12 @@ import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { PostCard } from "@/components/common/PostCard";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { BOLETIM_CATEGORY } from "@/data/blog-categories";
 import { parseSpecialties } from "@/lib/authors";
 import { prisma } from "@/lib/prisma";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 import { getSiteUrl } from "@/lib/site-url";
+import { postPath } from "@/lib/post-path";
 import { normalizeProfileUrl, whatsappDigits } from "@/lib/social-links";
 
 // ISR: edição de perfil chama revalidatePath("/nosso-time/[slug]") (workspace);
@@ -21,7 +23,9 @@ const getAuthor = cache(async (slug: string) =>
     where: { slug },
     include: {
       posts: {
-        where: { published: true },
+        // "Artigos desta pessoa": o autor assina os boletins do robô, mas eles
+        // não são artigos dele — ficam fora.
+        where: { published: true, category: { not: BOLETIM_CATEGORY } },
         orderBy: { createdAt: "desc" },
       },
     },
@@ -111,6 +115,7 @@ export default async function AuthorPage({
     id: post.id,
     title: post.title,
     slug: post.slug,
+    href: postPath(post),
     category: post.category,
     authorName: author.name,
     authorSlug: author.slug,

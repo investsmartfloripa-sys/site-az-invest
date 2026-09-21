@@ -6,7 +6,7 @@ import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { formatPostCategoryLabel, getPostCategoryFilterChipClasses } from "@/data/blog-categories";
 import { prisma } from "@/lib/prisma";
 import { findPosts, mapPost } from "@/lib/posts";
-import { publishedPostWhere } from "@/lib/workspace/posts";
+import { artigosWhere } from "@/lib/workspace/posts";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export const dynamic = "force-dynamic";
@@ -35,16 +35,17 @@ export default async function BlogIndexPage({
   const { categoria } = await searchParams;
   const filter = categoria?.trim();
 
+  // Só artigos: `artigosWhere` exclui os boletins do Publisher. O filtro entra
+  // por AND para que ?categoria= nunca reabra a porta para a categoria deles.
   const [posts, categoriesRaw] = await Promise.all([
     findPosts({
       where: {
-        ...publishedPostWhere,
-        ...(filter ? { category: { equals: filter } } : {}),
+        AND: [artigosWhere, ...(filter ? [{ category: { equals: filter } }] : [])],
       },
       orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
     }),
     prisma.post.findMany({
-      where: { status: "APPROVED", published: true },
+      where: artigosWhere,
       select: { category: true },
       distinct: ["category"],
       orderBy: { category: "asc" },

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
-import { blogPostCategoryLabels } from "@/data/blog-categories";
+import { BOLETIM_BASE_PATH, blogPostCategoryLabels, isBoletimCategory } from "@/data/blog-categories";
 import { writeAuditLog } from "@/lib/workspace/audit";
 import {
   notifyAdminPendingReview,
@@ -68,8 +68,15 @@ export async function savePostDraftAction(formData: FormData) {
   const session = await requireSession();
   const input = parsePostForm(formData);
   const id = Number(formData.get("id")) || null;
+  const existing = id ? await prisma.post.findUnique({ where: { id } }) : null;
 
-  if (!input.title || !blogPostCategoryLabels.includes(input.category)) {
+  // Categoria válida = opção do select. A categoria de boletim (robô Publisher)
+  // não está no select e só é aceita ao ATUALIZAR um post que já é boletim —
+  // nunca na criação manual, nem para reclassificar artigo como boletim.
+  const categoryOk =
+    blogPostCategoryLabels.includes(input.category) ||
+    (isBoletimCategory(input.category) && existing != null && isBoletimCategory(existing.category));
+  if (!input.title || !categoryOk) {
     redirect("/area-restrita/conteudo?error=invalid");
   }
 
@@ -82,7 +89,7 @@ export async function savePostDraftAction(formData: FormData) {
   const { content, contentHtml } = await prepareContent(input.contentHtml || "<p></p>");
 
   if (id) {
-    const post = await prisma.post.findUnique({ where: { id } });
+    const post = existing;
     if (!post || !canEditPost(session, post)) redirect("/area-restrita/conteudo");
 
     // AUTHOR não edita post publicado (APPROVED): a equipe editorial precisa
@@ -153,6 +160,7 @@ export async function savePostDraftAction(formData: FormData) {
 
   revalidatePath("/area-restrita/conteudo");
   revalidatePath("/blog");
+  revalidatePath(BOLETIM_BASE_PATH);
   redirect(`/area-restrita/conteudo/${id}`);
 }
 
@@ -280,6 +288,7 @@ export async function publishPostDirectAction(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath("/blog");
+  revalidatePath(BOLETIM_BASE_PATH);
   revalidatePath("/area-restrita/conteudo");
 }
 
@@ -302,6 +311,7 @@ export async function deletePostAction(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath("/blog");
+  revalidatePath(BOLETIM_BASE_PATH);
   revalidatePath("/area-restrita/conteudo");
   redirect("/area-restrita/conteudo");
 }
