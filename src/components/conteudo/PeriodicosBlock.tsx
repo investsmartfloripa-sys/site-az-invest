@@ -11,20 +11,22 @@ import { INDICADOR_LABEL, PAINEL_PATH, type ChartIndicador } from "@/lib/publish
 import { boletinsWhere } from "@/lib/workspace/posts";
 
 /**
- * Bloco "Periódicos" — os formatos recorrentes da casa numa anatomia só de card:
- * capa sangrada no topo → kicker → descrição → link.
+ * Bloco "Periódicos" — os formatos recorrentes da casa, um grupo por formato,
+ * cada grupo com título próprio e link para o arquivo:
  *
  * - Café com Mercado (diário, Markdown em `content/cafe-com-mercado`);
  * - Dossiês macro mensal e semanal (Markdown em `content/dossie-*`);
  * - Boletins — os posts que o Publisher grava a cada divulgação de indicador
  *   (categoria própria no banco; nunca se misturam aos artigos).
  *
- * Capa de Café e de boletim já traz a manchete gravada na arte, então o card
- * não repete o título. Formato sem arte (dossiê) ganha uma capa tipográfica na
- * mesma proporção — é isso que mantém todos os cards da linha com a mesma altura.
+ * Como o título do grupo já diz o formato, o kicker do card carrega só o que
+ * varia dentro dele (data, cadência e período, indicador e mês).
  *
- * `variant="home"` monta uma linha só, um card por formato (até 4 colunas);
- * `variant="hub"` (página /conteudo) abre três grupos com subtítulo e arquivo.
+ * `variant="home"`: três colunas na mesma linha — o Café é o card cheio com a
+ * capa em cima; Dossiês e Boletins são cards só de texto, empilhados, que
+ * juntos preenchem a altura do Café (destaque + lista, como página de notícia).
+ * `variant="hub"` (página /conteudo): os mesmos grupos, com cards cheios e
+ * mais itens por formato.
  *
  * Formato sem conteúdo simplesmente não aparece — nada de "ainda não publicado"
  * em página pública. Cada fonte falha em silêncio (→ []) porque a home não pode
@@ -36,31 +38,30 @@ import { boletinsWhere } from "@/lib/workspace/posts";
 const SECTION_TITLE_CLASSES =
   "text-3xl text-[#132960] after:mt-2 after:block after:h-1 after:w-12 after:rounded-full after:bg-[#027DFC] md:text-4xl";
 
-/** `flex-col` no card + `mt-auto` no link: rodapés alinhados entre cards da mesma linha. */
-const CARD_CLASSES = "az-card group flex flex-col overflow-hidden transition hover:border-[#027DFC]/40";
+/** Card cheio: capa sangrada no topo, corpo embaixo; `flex-1` preenche a coluna na home. */
+const CARD_CLASSES =
+  "az-card group flex flex-1 flex-col overflow-hidden transition hover:border-[#027DFC]/40";
 const CARD_BODY_CLASSES = "flex flex-1 flex-col gap-2 p-4 md:p-5";
+/** Card só de texto. `relative` ancora o link esticado do título. */
+const TEXT_CARD_CLASSES =
+  "az-card group relative flex flex-col gap-1.5 p-4 transition hover:border-[#027DFC]/40 md:p-5";
 /** Proporção das artes de release (1600×840) e da capa do Café (1200×630). */
 const COVER_CLASSES = "relative aspect-[40/21] w-full overflow-hidden bg-[#132960]";
-const COVER_SIZES = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw";
+const COVER_SIZES = "(min-width: 768px) 33vw, 100vw";
 const KICKER_CLASSES = "text-xs font-semibold uppercase tracking-wider text-[#027DFC]";
 const TITLE_CLASSES =
   "text-lg font-semibold leading-snug text-[#132960] line-clamp-2 group-hover:text-[#027DFC]";
-const DESCRIPTION_CLASSES = "line-clamp-3 text-base leading-relaxed text-zinc-700";
+/** 4 linhas: na home o Café estica até a coluna dos boletins, e texto preenche melhor que vazio. */
+const DESCRIPTION_CLASSES = "line-clamp-4 text-base leading-relaxed text-zinc-700";
+const TEXT_CARD_DESCRIPTION_CLASSES = "line-clamp-2 text-[15px] leading-relaxed text-zinc-700";
 const CARD_LINK_CLASSES = "text-base font-semibold text-[#027DFC]";
+const SECONDARY_LINK_CLASSES = "text-sm font-semibold text-[#132960]/60 hover:text-[#027DFC]";
 const SECTION_LINK_CLASSES = "whitespace-nowrap text-sm font-semibold text-[#027DFC] hover:underline";
 /** "Ler boletim →" — deriva de BOLETIM_KICKER porque o nome do formato é provisório. */
 const LER_BOLETIM = `Ler ${BOLETIM_KICKER.toLowerCase()} →`;
 
-/** Home: colunas conforme quantos cards há, para a linha fechar sem órfão. */
-const HOME_GRID_COLS: Record<number, string> = {
-  1: "sm:grid-cols-2",
-  2: "sm:grid-cols-2",
-  3: "sm:grid-cols-2 lg:grid-cols-3",
-  4: "sm:grid-cols-2 lg:grid-cols-4",
-};
-
-/** Hub: colunas conforme quantos grupos (formatos) têm conteúdo. */
-const HUB_GRID_COLS: Record<number, string> = {
+/** Colunas da grade (md+) conforme quantos formatos têm conteúdo. */
+const GRID_COLS: Record<number, string> = {
   1: "md:grid-cols-2",
   2: "md:grid-cols-2",
   3: "md:grid-cols-3",
@@ -76,13 +77,16 @@ async function seguro<T>(rotulo: string, carregar: () => Promise<T[]>): Promise<
   }
 }
 
-/**
- * "2026-09-18" → "Café com Mercado · 18/09/2026". Sem o dia da semana: a arte da
- * capa já o traz, e com ele o kicker vira duas linhas na coluna de 4 — desalinha
- * a descrição com a dos cards vizinhos.
- */
+/** "sexta-feira" + "2026-09-18" → "Sexta, 18/09/2026". */
 function kickerCafe(b: Briefing): string {
-  return `Café com Mercado · ${b.date.split("-").reverse().join("/")}`;
+  const dia = b.weekday.replace(/-feira$/, "");
+  const data = b.date.split("-").reverse().join("/");
+  return dia ? `${dia[0].toUpperCase()}${dia.slice(1)}, ${data}` : data;
+}
+
+/** "Mensal · Agosto de 2026". */
+function kickerDossie(d: Dossie): string {
+  return `${d.tipo === "mensal" ? "Mensal" : "Semanal"} · ${d.periodo}`;
 }
 
 /** Indicador da divulgação, pelo prefixo do slug que o Publisher grava. */
@@ -93,11 +97,11 @@ function indicadorDoSlug(slug: string): ChartIndicador | null {
 }
 
 /**
- * "Boletim IPCA · julho de 2026". O mês de referência vem do slug
- * (`ipca-2026-07`); sem esse padrão, cai na data de publicação do post.
+ * "IPCA · julho de 2026". O mês de referência vem do slug (`ipca-2026-07`);
+ * sem esse padrão, cai na data de publicação do post.
  */
 function kickerBoletim(post: PostCardData, ind: ChartIndicador | null): string {
-  const rotulo = ind ? `${BOLETIM_KICKER} ${INDICADOR_LABEL[ind]}` : BOLETIM_KICKER;
+  const rotulo = ind ? INDICADOR_LABEL[ind] : BOLETIM_KICKER;
   const mesRef = /-(\d{4}-\d{2})(?:-|$)/.exec(post.slug)?.[1];
   return `${rotulo} · ${mesRef ? periodoLegivel(mesRef) : post.date}`;
 }
@@ -111,8 +115,8 @@ function CapaImagem({ src, alt }: { src: string; alt: string }) {
 }
 
 /**
- * Capa para formato sem arte: painel navy com o título em branco, na mesma
- * proporção das capas de imagem. Barra azure no topo ecoa o cabeçalho das artes.
+ * Capa para formato sem arte (hub): painel navy com o título em branco, na
+ * mesma proporção das capas de imagem. Barra azure no topo ecoa as artes.
  */
 function CapaTipografica({ titulo }: { titulo: string }) {
   return (
@@ -136,7 +140,7 @@ type PeriodicoCardProps = {
   cover?: { src: string; alt: string };
 };
 
-/** A anatomia única: capa → kicker → descrição → link, tudo dentro de um <Link>. */
+/** Card cheio: capa → kicker → descrição → link, tudo dentro de um <Link>. */
 function PeriodicoCard({ href, kicker, title, description, linkLabel, cover }: PeriodicoCardProps) {
   return (
     <Link href={href} className={CARD_CLASSES}>
@@ -147,6 +151,41 @@ function PeriodicoCard({ href, kicker, title, description, linkLabel, cover }: P
         <p className={`mt-auto pt-1 ${CARD_LINK_CLASSES}`}>{linkLabel}</p>
       </div>
     </Link>
+  );
+}
+
+type TextoCardProps = {
+  href: string;
+  kicker: string;
+  title: string;
+  description?: string;
+  linkLabel: string;
+  /** Link secundário (ex.: painel do indicador), fora do link esticado. */
+  extra?: ReactNode;
+  /** Num grupo de dois, cada card cresce para os dois somarem a altura do Café. */
+  preencher: boolean;
+};
+
+/**
+ * Card só de texto (home): kicker → título → descrição → link. O link do
+ * título é "esticado" e cobre o card inteiro; o secundário sobe em z-10 para
+ * continuar clicável — sem <a> dentro de <a>.
+ */
+function TextoCard({ href, kicker, title, description, linkLabel, extra, preencher }: TextoCardProps) {
+  return (
+    <article className={`${TEXT_CARD_CLASSES} ${preencher ? "flex-1" : ""}`}>
+      <p className={KICKER_CLASSES}>{kicker}</p>
+      <h3 className={TITLE_CLASSES}>
+        <Link href={href} className="after:absolute after:inset-0 after:content-['']">
+          {title}
+        </Link>
+      </h3>
+      {description ? <p className={TEXT_CARD_DESCRIPTION_CLASSES}>{description}</p> : null}
+      <div className="mt-auto flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 pt-1">
+        <span className={CARD_LINK_CLASSES}>{linkLabel}</span>
+        {extra ? <span className="relative z-10">{extra}</span> : null}
+      </div>
+    </article>
   );
 }
 
@@ -163,24 +202,43 @@ function CafeCard({ briefing }: { briefing: Briefing }) {
   );
 }
 
-function DossieCard({ dossie }: { dossie: Dossie }) {
-  return (
-    <PeriodicoCard
-      href={dossie.href}
-      kicker={`Dossiê ${dossie.tipo === "mensal" ? "Mensal" : "Semanal"} · ${dossie.periodo}`}
-      title={dossie.title}
-      description={dossie.description || undefined}
-      linkLabel="Ler dossiê →"
-    />
-  );
+function DossieCard({ dossie, compacto }: { dossie: Dossie; compacto?: { preencher: boolean } }) {
+  const comum = {
+    href: dossie.href,
+    kicker: kickerDossie(dossie),
+    title: dossie.title,
+    description: dossie.description || undefined,
+    linkLabel: "Ler dossiê →",
+  };
+  return compacto ? <TextoCard {...comum} preencher={compacto.preencher} /> : <PeriodicoCard {...comum} />;
 }
 
 /**
  * Boletim tem DOIS destinos (o post e o painel ao vivo do indicador), então o
  * card é um <article> com mais de um <Link> — nunca <a> dentro de <a>.
  */
-function BoletimCard({ post }: { post: PostCardData }) {
+function BoletimCard({ post, compacto }: { post: PostCardData; compacto?: { preencher: boolean } }) {
   const ind = indicadorDoSlug(post.slug);
+  const painel = ind ? (
+    <Link href={PAINEL_PATH[ind]} className={SECONDARY_LINK_CLASSES}>
+      Painel do {INDICADOR_LABEL[ind]} ↗
+    </Link>
+  ) : null;
+
+  if (compacto) {
+    return (
+      <TextoCard
+        href={post.href}
+        kicker={kickerBoletim(post, ind)}
+        title={post.title}
+        description={post.excerpt || undefined}
+        linkLabel={LER_BOLETIM}
+        extra={painel}
+        preencher={compacto.preencher}
+      />
+    );
+  }
+
   const release = isReleaseCover(post);
   return (
     <article className={CARD_CLASSES}>
@@ -199,21 +257,18 @@ function BoletimCard({ post }: { post: PostCardData }) {
           <Link href={post.href} className={`${CARD_LINK_CLASSES} hover:underline`}>
             {LER_BOLETIM}
           </Link>
-          {ind ? (
-            <Link
-              href={PAINEL_PATH[ind]}
-              className="text-sm font-semibold text-[#132960]/60 hover:text-[#027DFC]"
-            >
-              Painel do {INDICADOR_LABEL[ind]} ↗
-            </Link>
-          ) : null}
+          {painel}
         </div>
       </div>
     </article>
   );
 }
 
-/** Grupo do hub: subtítulo + link para o arquivo (quando existe) + cards empilhados. */
+/**
+ * Grupo de formato: título + link para o arquivo (quando existe) + cards
+ * empilhados. É `flex-col` para que, na home, os cards com `flex-1` preencham a
+ * altura da linha.
+ */
 function Grupo({
   titulo,
   arquivoHref,
@@ -253,61 +308,43 @@ export async function PeriodicosBlock({ variant }: { variant: "home" | "hub" }) 
     ),
   ]);
 
-  if (cafes.length === 0 && mensais.length === 0 && semanais.length === 0 && boletins.length === 0) {
+  // Dossiês juntos num grupo só: mensal em cima, semanal embaixo.
+  const dossies: Dossie[] = [...mensais, ...semanais];
+
+  if (cafes.length === 0 && dossies.length === 0 && boletins.length === 0) {
     return null;
   }
 
-  let grade: ReactNode;
-  if (home) {
-    // Uma linha só, um card por formato: Café + o dossiê mais recente (mensal ou
-    // semanal) + os dois últimos boletins. Cap de 4 para a linha nunca quebrar.
-    const dossie = [...mensais, ...semanais].sort((a, b) =>
-      b.publishedAt.localeCompare(a.publishedAt),
-    )[0];
-    const cards: ReactNode[] = [];
-    if (cafes.length > 0) cards.push(<CafeCard key="cafe" briefing={cafes[0]} />);
-    if (dossie) cards.push(<DossieCard key={`${dossie.tipo}-${dossie.slug}`} dossie={dossie} />);
-    for (const p of boletins) cards.push(<BoletimCard key={p.id} post={p} />);
-    grade = (
-      <div className={`grid grid-cols-1 gap-4 ${HOME_GRID_COLS[Math.min(cards.length, 4)]}`}>
-        {cards}
-      </div>
+  // Na home, card de texto só cresce quando há dois: sozinho, cresceria em
+  // branco até a altura do Café.
+  const compacto = (n: number) => (home ? { preencher: n > 1 } : undefined);
+
+  const grupos: ReactNode[] = [];
+  if (cafes.length > 0) {
+    grupos.push(
+      <Grupo key="cafe" titulo="Café com Mercado" arquivoHref="/cafe-com-mercado">
+        {cafes.map((b) => (
+          <CafeCard key={b.date} briefing={b} />
+        ))}
+      </Grupo>,
     );
-  } else {
-    // Dossiês juntos num grupo só: mensal em cima, semanal embaixo.
-    const dossies: Dossie[] = [...mensais, ...semanais];
-    const grupos: ReactNode[] = [];
-    if (cafes.length > 0) {
-      grupos.push(
-        <Grupo key="cafe" titulo="Café com Mercado" arquivoHref="/cafe-com-mercado">
-          {cafes.map((b) => (
-            <CafeCard key={b.date} briefing={b} />
-          ))}
-        </Grupo>,
-      );
-    }
-    if (dossies.length > 0) {
-      grupos.push(
-        <Grupo key="dossies" titulo="Dossiês">
-          {dossies.map((d) => (
-            <DossieCard key={`${d.tipo}-${d.slug}`} dossie={d} />
-          ))}
-        </Grupo>,
-      );
-    }
-    if (boletins.length > 0) {
-      grupos.push(
-        <Grupo key="boletins" titulo={BOLETIM_SECTION_LABEL} arquivoHref={BOLETIM_BASE_PATH}>
-          {boletins.map((p) => (
-            <BoletimCard key={p.id} post={p} />
-          ))}
-        </Grupo>,
-      );
-    }
-    grade = (
-      <div className={`grid grid-cols-1 items-start gap-4 ${HUB_GRID_COLS[grupos.length]}`}>
-        {grupos}
-      </div>
+  }
+  if (dossies.length > 0) {
+    grupos.push(
+      <Grupo key="dossies" titulo="Dossiês">
+        {dossies.map((d) => (
+          <DossieCard key={`${d.tipo}-${d.slug}`} dossie={d} compacto={compacto(dossies.length)} />
+        ))}
+      </Grupo>,
+    );
+  }
+  if (boletins.length > 0) {
+    grupos.push(
+      <Grupo key="boletins" titulo={BOLETIM_SECTION_LABEL} arquivoHref={BOLETIM_BASE_PATH}>
+        {boletins.map((p) => (
+          <BoletimCard key={p.id} post={p} compacto={compacto(boletins.length)} />
+        ))}
+      </Grupo>,
     );
   }
 
@@ -322,7 +359,12 @@ export async function PeriodicosBlock({ variant }: { variant: "home" | "hub" }) 
           </Link>
         ) : null}
       </div>
-      {grade}
+      {/* Home: colunas esticam (os cards de texto preenchem a altura do Café). Hub: cada grupo na sua altura. */}
+      <div
+        className={`grid grid-cols-1 ${home ? "gap-6 md:gap-5" : "items-start gap-4"} ${GRID_COLS[grupos.length]}`}
+      >
+        {grupos}
+      </div>
     </section>
   );
 }
