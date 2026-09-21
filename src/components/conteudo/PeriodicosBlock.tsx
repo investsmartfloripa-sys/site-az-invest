@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { isReleaseCover, type PostCardData } from "@/components/common/PostCard";
 import { BOLETIM_BASE_PATH, BOLETIM_KICKER, BOLETIM_SECTION_LABEL } from "@/data/blog-categories";
 import { listBriefings, type Briefing } from "@/lib/cafe-com-mercado";
@@ -22,11 +22,12 @@ import { boletinsWhere } from "@/lib/workspace/posts";
  * Como o título do grupo já diz o formato, o kicker do card carrega só o que
  * varia dentro dele (data, cadência e período, indicador e mês).
  *
- * `variant="home"`: três colunas na mesma linha — o Café é o card cheio com a
- * capa em cima; Dossiês e Boletins são cards só de texto, empilhados, que
- * juntos preenchem a altura do Café (destaque + lista, como página de notícia).
- * `variant="hub"` (página /conteudo): os mesmos grupos, com cards cheios e
- * mais itens por formato.
+ * `variant="home"`: duas colunas — o Café é o card cheio com a capa em cima;
+ * ao lado, um grupo só chamado "Boletins" reúne dossiês e boletins (decisão do
+ * dono: para o leitor é tudo boletim) em cards só de texto, do mais recente
+ * para o mais antigo, que juntos preenchem a altura do Café.
+ * `variant="hub"` (página /conteudo): três grupos (Café, Dossiês, Boletins),
+ * com cards cheios e mais itens por formato.
  *
  * Formato sem conteúdo simplesmente não aparece — nada de "ainda não publicado"
  * em página pública. Cada fonte falha em silêncio (→ []) porque a home não pode
@@ -51,9 +52,11 @@ const COVER_SIZES = "(min-width: 768px) 33vw, 100vw";
 const KICKER_CLASSES = "text-xs font-semibold uppercase tracking-wider text-[#027DFC]";
 const TITLE_CLASSES =
   "text-lg font-semibold leading-snug text-[#132960] line-clamp-2 group-hover:text-[#027DFC]";
+/** Card de texto vive só do título: um degrau acima. */
+const TEXT_CARD_TITLE_CLASSES =
+  "text-xl font-semibold leading-snug text-[#132960] line-clamp-2 group-hover:text-[#027DFC]";
 /** 4 linhas: na home o Café estica até a coluna dos boletins, e texto preenche melhor que vazio. */
 const DESCRIPTION_CLASSES = "line-clamp-4 text-base leading-relaxed text-zinc-700";
-const TEXT_CARD_DESCRIPTION_CLASSES = "line-clamp-2 text-[15px] leading-relaxed text-zinc-700";
 const CARD_LINK_CLASSES = "text-base font-semibold text-[#027DFC]";
 const SECONDARY_LINK_CLASSES = "text-sm font-semibold text-[#132960]/60 hover:text-[#027DFC]";
 const SECTION_LINK_CLASSES = "whitespace-nowrap text-sm font-semibold text-[#027DFC] hover:underline";
@@ -84,9 +87,9 @@ function kickerCafe(b: Briefing): string {
   return dia ? `${dia[0].toUpperCase()}${dia.slice(1)}, ${data}` : data;
 }
 
-/** "Mensal · Agosto de 2026". */
+/** "Dossiê Mensal · Agosto de 2026" — na home divide o grupo com os boletins, então leva o nome. */
 function kickerDossie(d: Dossie): string {
-  return `${d.tipo === "mensal" ? "Mensal" : "Semanal"} · ${d.periodo}`;
+  return `Dossiê ${d.tipo === "mensal" ? "Mensal" : "Semanal"} · ${d.periodo}`;
 }
 
 /** Indicador da divulgação, pelo prefixo do slug que o Publisher grava. */
@@ -158,29 +161,27 @@ type TextoCardProps = {
   href: string;
   kicker: string;
   title: string;
-  description?: string;
   linkLabel: string;
   /** Link secundário (ex.: painel do indicador), fora do link esticado. */
   extra?: ReactNode;
-  /** Num grupo de dois, cada card cresce para os dois somarem a altura do Café. */
+  /** Num grupo com mais de um, cada card cresce para a pilha somar a altura do Café. */
   preencher: boolean;
 };
 
 /**
- * Card só de texto (home): kicker → título → descrição → link. O link do
+ * Card só de texto (home): kicker → título → link, sem resumo. O link do
  * título é "esticado" e cobre o card inteiro; o secundário sobe em z-10 para
  * continuar clicável — sem <a> dentro de <a>.
  */
-function TextoCard({ href, kicker, title, description, linkLabel, extra, preencher }: TextoCardProps) {
+function TextoCard({ href, kicker, title, linkLabel, extra, preencher }: TextoCardProps) {
   return (
     <article className={`${TEXT_CARD_CLASSES} ${preencher ? "flex-1" : ""}`}>
       <p className={KICKER_CLASSES}>{kicker}</p>
-      <h3 className={TITLE_CLASSES}>
+      <h3 className={TEXT_CARD_TITLE_CLASSES}>
         <Link href={href} className="after:absolute after:inset-0 after:content-['']">
           {title}
         </Link>
       </h3>
-      {description ? <p className={TEXT_CARD_DESCRIPTION_CLASSES}>{description}</p> : null}
       <div className="mt-auto flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 pt-1">
         <span className={CARD_LINK_CLASSES}>{linkLabel}</span>
         {extra ? <span className="relative z-10">{extra}</span> : null}
@@ -207,10 +208,13 @@ function DossieCard({ dossie, compacto }: { dossie: Dossie; compacto?: { preench
     href: dossie.href,
     kicker: kickerDossie(dossie),
     title: dossie.title,
-    description: dossie.description || undefined,
     linkLabel: "Ler dossiê →",
   };
-  return compacto ? <TextoCard {...comum} preencher={compacto.preencher} /> : <PeriodicoCard {...comum} />;
+  return compacto ? (
+    <TextoCard {...comum} preencher={compacto.preencher} />
+  ) : (
+    <PeriodicoCard {...comum} description={dossie.description || undefined} />
+  );
 }
 
 /**
@@ -231,7 +235,6 @@ function BoletimCard({ post, compacto }: { post: PostCardData; compacto?: { pree
         href={post.href}
         kicker={kickerBoletim(post, ind)}
         title={post.title}
-        description={post.excerpt || undefined}
         linkLabel={LER_BOLETIM}
         extra={painel}
         preencher={compacto.preencher}
@@ -295,7 +298,7 @@ function Grupo({
 
 export async function PeriodicosBlock({ variant }: { variant: "home" | "hub" }) {
   const home = variant === "home";
-  const [cafes, mensais, semanais, boletins] = await Promise.all([
+  const [cafes, mensais, semanais, posts] = await Promise.all([
     seguro("listBriefings", () => listBriefings(home ? 1 : 3)),
     seguro("listDossies(mensal)", () => listDossies("mensal", home ? 1 : 2)),
     seguro("listDossies(semanal)", () => listDossies("semanal", home ? 1 : 2)),
@@ -304,20 +307,21 @@ export async function PeriodicosBlock({ variant }: { variant: "home" | "hub" }) 
         where: boletinsWhere,
         orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
         take: home ? 2 : 4,
-      }).then((posts) => posts.map(mapPost)),
+      }),
     ),
   ]);
 
-  // Dossiês juntos num grupo só: mensal em cima, semanal embaixo.
+  // Dossiês juntos: mensal em cima, semanal embaixo.
   const dossies: Dossie[] = [...mensais, ...semanais];
+  // O card usa a data formatada; a ISO fica só para ordenar na home.
+  const boletins = posts.map((p) => ({
+    card: mapPost(p),
+    publishedAt: (p.publishedAt ?? p.createdAt).toISOString(),
+  }));
 
   if (cafes.length === 0 && dossies.length === 0 && boletins.length === 0) {
     return null;
   }
-
-  // Na home, card de texto só cresce quando há dois: sozinho, cresceria em
-  // branco até a altura do Café.
-  const compacto = (n: number) => (home ? { preencher: n > 1 } : undefined);
 
   const grupos: ReactNode[] = [];
   if (cafes.length > 0) {
@@ -329,23 +333,51 @@ export async function PeriodicosBlock({ variant }: { variant: "home" | "hub" }) 
       </Grupo>,
     );
   }
-  if (dossies.length > 0) {
-    grupos.push(
-      <Grupo key="dossies" titulo="Dossiês">
-        {dossies.map((d) => (
-          <DossieCard key={`${d.tipo}-${d.slug}`} dossie={d} compacto={compacto(dossies.length)} />
-        ))}
-      </Grupo>,
-    );
-  }
-  if (boletins.length > 0) {
-    grupos.push(
-      <Grupo key="boletins" titulo={BOLETIM_SECTION_LABEL} arquivoHref={BOLETIM_BASE_PATH}>
-        {boletins.map((p) => (
-          <BoletimCard key={p.id} post={p} compacto={compacto(boletins.length)} />
-        ))}
-      </Grupo>,
-    );
+
+  if (home) {
+    // Um grupo só, do mais recente para o mais antigo. Card de texto só cresce
+    // quando há mais de um: sozinho, cresceria em branco até a altura do Café.
+    const itens = [
+      ...dossies.map((d) => ({
+        key: `${d.tipo}-${d.slug}`,
+        publishedAt: d.publishedAt,
+        render: (preencher: boolean) => <DossieCard dossie={d} compacto={{ preencher }} />,
+      })),
+      ...boletins.map((b) => ({
+        key: `post-${b.card.id}`,
+        publishedAt: b.publishedAt,
+        render: (preencher: boolean) => <BoletimCard post={b.card} compacto={{ preencher }} />,
+      })),
+    ].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+    if (itens.length > 0) {
+      const preencher = itens.length > 1;
+      grupos.push(
+        <Grupo key="boletins" titulo={BOLETIM_SECTION_LABEL} arquivoHref={BOLETIM_BASE_PATH}>
+          {itens.map((i) => (
+            <Fragment key={i.key}>{i.render(preencher)}</Fragment>
+          ))}
+        </Grupo>,
+      );
+    }
+  } else {
+    if (dossies.length > 0) {
+      grupos.push(
+        <Grupo key="dossies" titulo="Dossiês">
+          {dossies.map((d) => (
+            <DossieCard key={`${d.tipo}-${d.slug}`} dossie={d} />
+          ))}
+        </Grupo>,
+      );
+    }
+    if (boletins.length > 0) {
+      grupos.push(
+        <Grupo key="boletins" titulo={BOLETIM_SECTION_LABEL} arquivoHref={BOLETIM_BASE_PATH}>
+          {boletins.map((b) => (
+            <BoletimCard key={b.card.id} post={b.card} />
+          ))}
+        </Grupo>,
+      );
+    }
   }
 
   return (
