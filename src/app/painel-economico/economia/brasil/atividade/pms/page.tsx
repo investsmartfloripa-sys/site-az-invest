@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { AtividadeTabs } from "@/components/painel/atividade/v2/AtividadeTabs";
+
 import { PmsDashboard } from "@/components/painel/atividade/PmsDashboard";
 import { PmsDashboardV2 } from "@/components/painel/atividade/v2/pms/PmsDashboardV2";
 import { loadAtividadeCodace, loadAtividadePms } from "@/lib/painel-atividade";
@@ -28,5 +30,10 @@ export default async function PainelAtividadePmsPage() {
     return <PmsDashboard data={data} />;
   }
 
-  return <PmsDashboardV2 pms={data} codace={codace} />;
+  return (
+    <div className="flex flex-col gap-4">
+      <AtividadeTabs />
+      <PmsDashboardV2 pms={data} codace={codace} />
+    </div>
+  );
 }

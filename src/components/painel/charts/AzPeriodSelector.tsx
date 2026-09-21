@@ -21,7 +21,7 @@ import { addMonthsUTC, parseIsoUTC } from "@/lib/format-br";
  * Cortes de data sempre em UTC — ver `resolvePeriodRange`.
  */
 
-export type AzPeriodId = "1m" | "3m" | "6m" | "ytd" | "1y" | "5y" | "max" | "custom";
+export type AzPeriodId = "1m" | "3m" | "6m" | "ytd" | "1y" | "5y" | "10y" | "max" | "custom";
 
 /** Valor do seletor: id do período + range explícito quando "custom". */
 export type AzPeriodValue = {
@@ -39,10 +39,13 @@ export const AZ_PERIOD_LABELS: Record<Exclude<AzPeriodId, "custom">, string> = {
   ytd: "YTD",
   "1y": "1A",
   "5y": "5A",
+  "10y": "10A",
   max: "Máx",
 };
 
 const DEFAULT_PERIODS: Exclude<AzPeriodId, "custom">[] = ["1m", "3m", "6m", "ytd", "1y", "5y", "max"];
+/** Ids aceitos na querystring (inclui presets fora do default, como "10y" das séries trimestrais). */
+const ALL_PERIOD_IDS: Exclude<AzPeriodId, "custom">[] = ["1m", "3m", "6m", "ytd", "1y", "5y", "10y", "max"];
 
 function clampIso(iso: string, min: string, max: string): string {
   if (iso < min) return min;
@@ -72,6 +75,8 @@ export function resolvePeriodRange(
       return { from: clampIso(addMonthsUTC(to, -12), seriesMin, to), to };
     case "5y":
       return { from: clampIso(addMonthsUTC(to, -60), seriesMin, to), to };
+    case "10y":
+      return { from: clampIso(addMonthsUTC(to, -120), seriesMin, to), to };
     case "ytd": {
       const year = to.slice(0, 4);
       return { from: clampIso(`${year}-01-01`, seriesMin, to), to };
@@ -89,7 +94,7 @@ export function resolvePeriodRange(
   }
 }
 
-const VALID_IDS = new Set<string>([...DEFAULT_PERIODS, "custom"]);
+const VALID_IDS = new Set<string>([...ALL_PERIOD_IDS, "custom"]);
 
 function isIsoDate(s: string | null | undefined): s is string {
   return !!s && /^\d{4}-\d{2}-\d{2}$/.test(s) && Number.isFinite(parseIsoUTC(s));

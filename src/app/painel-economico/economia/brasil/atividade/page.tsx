@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AtividadeTabs } from "@/components/painel/atividade/v2/AtividadeTabs";
+
 import { SinteseSetorialCard } from "@/components/painel/atividade/v2/SinteseSetorialCard";
 import {
   loadAtividadeCodace,
@@ -60,6 +62,7 @@ export default async function PainelAtividadeHub() {
 
   return (
     <div className="space-y-6">
+      <AtividadeTabs />
       <header>
         <h1 className="text-2xl font-bold text-[#132960]">Atividade Econômica</h1>
         <p className="mt-1 text-sm text-zinc-600">

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { AtividadeTabs } from "@/components/painel/atividade/v2/AtividadeTabs";
+
 import { PmcDashboard } from "@/components/painel/atividade/PmcDashboard";
 import { PmcDashboardV2 } from "@/components/painel/atividade/v2/pmc/PmcDashboardV2";
 import { loadAtividadeCodace, loadAtividadePmc } from "@/lib/painel-atividade";
@@ -28,5 +30,10 @@ export default async function PainelAtividadePmcPage() {
     return <PmcDashboard data={data} />;
   }
 
-  return <PmcDashboardV2 pmc={data} codace={codace} />;
+  return (
+    <div className="flex flex-col gap-4">
+      <AtividadeTabs />
+      <PmcDashboardV2 pmc={data} codace={codace} />
+    </div>
+  );
 }

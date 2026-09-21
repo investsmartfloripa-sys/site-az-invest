@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 
-import { PibDashboard } from "@/components/painel/atividade/PibDashboard";
-import { PibDashboardV2 } from "@/components/painel/atividade/v2/pib/PibDashboardV2";
+import { AtividadeTabs } from "@/components/painel/atividade/v2/AtividadeTabs";
+import { PibCockpit } from "@/components/painel/atividade/v2/pib/cockpit/PibCockpit";
+import { PipelinePendingCard } from "@/components/painel/PipelinePendingCard";
 import { loadAtividadeCodace, loadAtividadeIbcBr, loadAtividadePib } from "@/lib/painel-atividade";
 
 export const metadata: Metadata = {
   title: "PIB — Atividade",
   description:
-    "Produto Interno Bruto trimestral (IBGE Contas Nacionais): contribuições ao crescimento por ótica da oferta e da demanda, carrego estatístico, IBC-Br como prévia mensal, expectativas Focus e PIB per capita.",
+    "Cockpit das Contas Nacionais Trimestrais do IBGE: ritmo (QoQ SA, YoY, acumulados, carrego vs Focus), prévia mensal pelo IBC-Br, contribuições por ótica, os 17 recortes da oferta e 6 da demanda em 9 lentes, tabelas mestras, poupança × investimento, conta financeira (B.9, IDP, instrumentos) e PIB per capita.",
 };
 
 export const revalidate = 86400;
@@ -15,18 +16,16 @@ export const revalidate = 86400;
 export default async function PainelAtividadePibPage() {
   const [pib, ibcbr, codace] = await Promise.all([loadAtividadePib(), loadAtividadeIbcBr(), loadAtividadeCodace()]);
 
-  if (!pib) {
+  // Gate honesto (padrão do cockpit fiscal): sem payload ou sem o schema v2
+  // (contribuições), aviso âmbar — nunca página quebrada nem dashboard antigo.
+  if (!pib || !pib.schema_version || pib.schema_version < 2 || !pib.contribuicoes?.serie?.length) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-800">
-        Não foi possível carregar os dados do PIB agora. Tente recarregar em alguns minutos.
+      <div className="flex flex-col gap-4">
+        <AtividadeTabs />
+        <PipelinePendingCard blobPaths={["data/atividade_pib.json"]} workflow="atividade-pipeline.yml" />
       </div>
     );
   }
 
-  // Fallback: enquanto o Blob não tiver o schema v2 (contribuições), serve o dashboard antigo.
-  if (!pib.schema_version || pib.schema_version < 2 || !pib.contribuicoes?.serie?.length) {
-    return <PibDashboard pib={pib} ibcbr={ibcbr} />;
-  }
-
-  return <PibDashboardV2 pib={pib} ibcbr={ibcbr} codace={codace} />;
+  return <PibCockpit pib={pib} ibcbr={ibcbr} codace={codace} />;
 }

@@ -66,7 +66,7 @@ export function formatGiroMinuto(value: string | Date | null | undefined): strin
  *  - ISO com hora ("2026-06-04T14:32:00Z") → "04/06 14:32"
  *  - data ("2026-06-04")                   → "04/06/26"
  *  - mês ("2026-05")                       → "mai/26"
- *  - trimestre ("2026-T1" | "2026Q1")      → "T1/26"
+ *  - trimestre ("2026-T1" | "2026Q1")      → "1T26" (mesma grafia de fmtTrimCurto)
  *  - outro                                 → valor cru
  */
 export function formatDadoLabel(raw: string | Date | null | undefined): string | null {
@@ -76,7 +76,7 @@ export function formatDadoLabel(raw: string | Date | null | undefined): string |
   if (!value) return null;
 
   const tri = value.match(/^(\d{4})[-\s]?[TQ](\d{1,2})$/i);
-  if (tri) return `T${Number(tri[2])}/${tri[1].slice(2)}`;
+  if (tri) return `${Number(tri[2])}T${tri[1].slice(2)}`;
 
   const mes = value.match(/^(\d{4})-(\d{2})$/);
   if (mes) {

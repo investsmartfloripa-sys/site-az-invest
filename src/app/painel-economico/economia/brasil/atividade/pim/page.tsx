@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { AtividadeTabs } from "@/components/painel/atividade/v2/AtividadeTabs";
+
 import { PimDashboard } from "@/components/painel/atividade/PimDashboard";
 import { PimDashboardV2 } from "@/components/painel/atividade/v2/pim/PimDashboardV2";
 import { loadAtividadeCodace, loadAtividadePib, loadAtividadePim } from "@/lib/painel-atividade";
@@ -28,5 +30,10 @@ export default async function PainelAtividadePimPage() {
     return <PimDashboard data={data} />;
   }
 
-  return <PimDashboardV2 pim={data} pib={pib} codace={codace} />;
+  return (
+    <div className="flex flex-col gap-4">
+      <AtividadeTabs />
+      <PimDashboardV2 pim={data} pib={pib} codace={codace} />
+    </div>
+  );
 }

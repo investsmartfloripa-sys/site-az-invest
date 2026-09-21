@@ -22,3 +22,8 @@ export {
 } from "./Heatmap";
 export { IndicadorBox, type IndicadorBoxProps } from "./IndicadorBox";
 export { DashboardScaffold, type DashboardScaffoldProps, type DashboardBloco } from "./DashboardScaffold";
+export { Divisor } from "./Divisor";
+export { CockpitChip, tomPorSinal, type CockpitChipTom } from "./CockpitChip";
+export { SectionTabs, type SectionTab } from "./SectionTabs";
+export { DifusaoBar, type DifusaoSegmento } from "./DifusaoBar";
+export { MiniSpark } from "./MiniSpark";
