@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { PostCardData } from "@/components/common/PostCard";
+import { isReleaseCover, type PostCardData } from "@/components/common/PostCard";
 import { formatPostCategoryLabel, getPostCategorySolidPillClasses } from "@/data/blog-categories";
 
 /** Título de seção da home: navy com sublinhado curto azure. */
@@ -13,14 +13,6 @@ const COVER_OVERLAY_CLASSES =
 
 /** Pill de categoria sobre o overlay: anel branco para não sumir no navy. */
 const PILL_CLASSES = "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ring-1 ring-white/50";
-
-/**
- * Capas de release (IPCA, IGP-M…) já trazem a manchete gravada na arte, no cabeçalho
- * da imagem: o card mostra só a capa, sem sobrepor outro título.
- */
-function isReleaseCover(post: PostCardData): boolean {
-  return post.image.includes("/releases/");
-}
 
 export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
   if (posts.length === 0) {

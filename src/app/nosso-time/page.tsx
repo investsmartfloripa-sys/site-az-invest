@@ -44,11 +44,15 @@ function findAuthors() {
   });
 }
 
+// Ordem alfabética resolvida aqui, não no banco: a collation do Postgres pode
+// jogar acento e caixa para fora da ordem que um leitor em pt-BR espera.
+const porNome = new Intl.Collator("pt-BR", { sensitivity: "base" });
+
 export default async function NossoTimePage() {
   // Guard para o prerender de build: banco indisponível degrada para lista vazia.
   let authors: AuthorWithCount[] = [];
   try {
-    authors = await findAuthors();
+    authors = (await findAuthors()).sort((a, b) => porNome.compare(a.name, b.name));
   } catch (err) {
     console.error("[NossoTime] findMany falhou; seguindo sem autores", err);
   }

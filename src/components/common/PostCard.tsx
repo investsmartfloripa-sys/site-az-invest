@@ -18,6 +18,14 @@ export type PostCardData = {
   href: string;
 };
 
+/**
+ * Capas de release (IPCA, IGP-M…) já trazem a manchete gravada na arte: quem
+ * mostra a capa não sobrepõe nem repete o título.
+ */
+export function isReleaseCover(post: Pick<PostCardData, "image">): boolean {
+  return post.image.includes("/releases/");
+}
+
 function initials(name: string) {
   return name
     .split(" ")
