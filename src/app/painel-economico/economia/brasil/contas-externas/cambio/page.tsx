@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { ContasExternasTabs } from "@/components/painel/contas-externas/ContasExternasTabs";
 import { CambioMacroDashboard } from "@/components/painel/contas-externas/cambio/CambioMacroDashboard";
 import { loadCambioMacro } from "@/lib/painel-contas-externas";
 
@@ -22,5 +23,10 @@ export default async function PainelCambioEconomicoPage() {
     );
   }
 
-  return <CambioMacroDashboard data={data} />;
+  return (
+    <div className="flex flex-col gap-4">
+      <ContasExternasTabs />
+      <CambioMacroDashboard data={data} />
+    </div>
+  );
 }

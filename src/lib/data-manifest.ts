@@ -182,8 +182,12 @@ export const DATA_SOURCES: DataSourceDef[] = [
   { key: "fiscal_dpf_rmd", label: "DPF — prazo, rolagem e detentores (RMD)", blobPath: "data/fiscal-dpf-rmd.json", workflowName: "fiscal-pipeline.yml", cadence: "diario", painel: "fiscal", pagePath: "/painel-economico/economia/brasil/fiscal/divida" },
 
   // ── Contas externas (contas-externas-pipeline.yml, diário 23:30 UTC) ───────
-  { key: "contas_externas", label: "Balanço de pagamentos (BPM6)", blobPath: "data/contas_externas.json", workflowName: "contas-externas-pipeline.yml", cadence: "diario", painel: "contas-externas" },
-  { key: "contas_externas_comex", label: "Comex Stat (SECEX)", blobPath: "data/contas_externas_comex.json", workflowName: "contas-externas-pipeline.yml", cadence: "diario", painel: "contas-externas", dataDateField: "periodo_3m.to" },
+  { key: "contas_externas", label: "Balanço de pagamentos (BPM6)", blobPath: "data/contas_externas.json", workflowName: "contas-externas-pipeline.yml", cadence: "diario", painel: "contas-externas", dataDateField: "ultima_referencia_mensal" },
+  // Blocos v3 do MESMO JSON com calendário próprio (data do último dado por bloco).
+  { key: "contas_externas_fluxo_cambial", label: "Fluxo cambial contratado (SGS 13961/13967/13970)", blobPath: "data/contas_externas.json", workflowName: "contas-externas-pipeline.yml", cadence: "diario", painel: "contas-externas", dataDateField: "fluxo_cambial.ultimo_dia" },
+  { key: "contas_externas_pii", label: "Posição de investimento internacional (SGS 24010+)", blobPath: "data/contas_externas.json", workflowName: "contas-externas-pipeline.yml", cadence: "diario", painel: "contas-externas", dataDateField: "pii.ultimo_trim" },
+  { key: "contas_externas_focus", label: "Focus — setor externo (CC, balança, IDP, câmbio)", blobPath: "data/contas_externas.json", workflowName: "contas-externas-pipeline.yml", cadence: "diario", painel: "contas-externas", dataDateField: "focus.ultima_coleta" },
+  { key: "contas_externas_comex", label: "Comex Stat (SECEX)", blobPath: "data/contas_externas_comex.json", workflowName: "contas-externas-pipeline.yml", cadence: "diario", painel: "contas-externas", dataDateField: "periodo_12m.to" },
   { key: "cambio_macro", label: "Câmbio econômico (REER, paridade de juros)", blobPath: "data/cambio_macro.json", workflowName: "contas-externas-pipeline.yml", cadence: "diario", painel: "contas-externas", pagePath: "/painel-economico/economia/brasil/contas-externas/cambio", dataDateField: "ultima_referencia_mensal" },
 
   // ── Famílias (familias-pipeline.yml, diário 23:30 UTC) ─────────────────────

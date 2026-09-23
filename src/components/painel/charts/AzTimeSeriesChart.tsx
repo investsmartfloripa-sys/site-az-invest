@@ -179,8 +179,33 @@ export type AzTimeSeriesChartProps = {
    * sua pill; aqui as demais (índice ≥ 1) ganham a delas.
    */
   seriesEndLabels?: boolean;
+  /**
+   * ADITIVO (default false). Marcas do eixo Y em múltiplos "redondos" (1·2·2,5·5
+   * × 10^k) dentro do domínio, com casas decimais pelo passo — evita rótulos
+   * tipo "25,04 · 45,04" quando o domínio com folga não é redondo.
+   */
+  niceYTicks?: boolean;
   className?: string;
 };
+
+function buildNiceY(yDomain: [number, number], unit: AzUnit, mode: AzSeriesMode) {
+  const [lo, hi] = yDomain;
+  const step = niceStep(hi - lo);
+  const ticks: number[] = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) ticks.push(+v.toFixed(6));
+  const dec = step >= 1 ? 0 : step >= 0.1 ? 1 : 2;
+  const fmt = (v: number) => (unit === "%" && mode === "raw" ? `${fmtNum(v, dec)}%` : fmtNum(v, dec));
+  return { ticks, fmt };
+}
+
+/** Passo "redondo" (1, 2, 2,5, 5 × 10^k) para ~4 intervalos no span dado. */
+function niceStep(span: number): number {
+  const raw = span / 4;
+  if (!(raw > 0)) return 1;
+  const p = 10 ** Math.floor(Math.log10(raw));
+  const m = raw / p;
+  return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p;
+}
 
 type ChartRow = { t: number } & Record<string, number>;
 
@@ -449,6 +474,7 @@ export function AzTimeSeriesChart({
   variant = "default",
   showLegend,
   seriesEndLabels = false,
+  niceYTicks = false,
   className = "",
 }: AzTimeSeriesChartProps) {
   const all = useMemo(
@@ -520,6 +546,8 @@ export function AzTimeSeriesChart({
   }
 
   const { rows, yDomain, spanDays, hasNegative, main } = built;
+  // (cálculo simples, sem hook: fica depois do retorno antecipado acima)
+  const yNice = niceYTicks ? buildNiceY(yDomain, unit, mode) : null;
 
   // Faixas verticais clipadas à janela plotada (faixa fora da janela é omitida).
   const firstT = rows[0].t;
@@ -578,7 +606,8 @@ export function AzTimeSeriesChart({
             {...azYAxisProps()}
             width={56}
             domain={yDomain}
-            tickFormatter={(v) => axisFmt(Number(v))}
+            ticks={yNice?.ticks}
+            tickFormatter={(v) => (yNice ? yNice.fmt(Number(v)) : axisFmt(Number(v)))}
             label={
               yAxisLabel
                 ? { value: yAxisLabel, angle: -90, position: "insideLeft", fontSize: 10, fill: AZ_CHART.ticks }

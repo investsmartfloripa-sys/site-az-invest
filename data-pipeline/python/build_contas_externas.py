@@ -10,6 +10,8 @@ Baixa séries do BCB SGS:
 - Reservas internacionais (3546 mensal, 13982 liquidez diária).
 - PIB acumulado 12m em US$ milhões (4192) para denominador de % PIB.
 
+Schema v3 (ADITIVO): bp_mestre, pii, fluxo_cambial, focus e revisoes — ver contas_externas_v3.py.
+
 Schema v2 (ADITIVO — campos v1 intactos):
 - bloco_a.decomposicao_12m / balanca_12m: acumulados 12m (US$ bi) sobre a série
   completa, janela de saída desde 2005.
@@ -38,6 +40,13 @@ from pathlib import Path
 from typing import Any
 
 import requests
+
+# Console Windows local é cp1252 — força UTF-8 nos prints (no CI já é UTF-8).
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:  # noqa: BLE001
+        pass
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUT_DIR = (HERE.parent / "out").resolve()
@@ -742,9 +751,16 @@ def main() -> None:
             "meses_bens_servicos": _round(meses_bens_serv, 2),
         })
 
+    # ========================================================================
+    # Schema v3 — cockpit do BP (tabela mestra, PII, fluxo cambial, Focus)
+    # ========================================================================
+    sys.path.insert(0, str(HERE))
+    from contas_externas_v3 import build_v3
+    v3 = build_v3(sgs_serie, pib_12m, mensais["reservas_mensal"], prev)
+
     # ---- Output ----
     payload = {
-        "schema_version": 2,
+        "schema_version": 3,
         "gerado_em": datetime.now(timezone.utc).isoformat(),
         "fonte_principal": "Banco Central do Brasil — Estatísticas do Setor Externo (BPM6)",
         "ultima_referencia_mensal": k_tc,
@@ -793,6 +809,8 @@ def main() -> None:
                 "Total = renda primária (22800)."
             ),
         },
+        # v3
+        **v3,
         "metadata": {
             "fonte": "BCB SGS / BPM6",
             "nota": "Saldo de transações correntes e componentes em US$. Decomposição soma identidade do BPM6: bens + serviços + renda primária + renda secundária ≈ saldo TC.",

@@ -1,24 +1,25 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { ContasExternasDashboard } from "@/components/painel/contas-externas/ContasExternasDashboard";
 import { ContasExternasDashboardV2 } from "@/components/painel/contas-externas/v2/ContasExternasDashboardV2";
-import { loadContasExternas, loadContasExternasComex } from "@/lib/painel-contas-externas";
+import { ContasExternasCockpit } from "@/components/painel/contas-externas/cockpit/ContasExternasCockpit";
+import { loadCambioMacro, loadContasExternas, loadContasExternasComex } from "@/lib/painel-contas-externas";
 import { loadAtividadeCodace } from "@/lib/painel-atividade";
 
 export const metadata: Metadata = {
   title: "Contas Externas",
   description:
-    "Balanço de pagamentos do Brasil em acumulado de 12 meses: conta corrente em % do PIB, decomposição em bens, serviços e rendas, cobertura do déficit pelo IDP, reservas em meses de importação e a pauta de comércio por produto e destino. Dados BCB (BPM6) e SECEX/MDIC (Comex Stat), atualização automática diária.",
+    "Cockpit do balanço de pagamentos do Brasil (BPM6): transações correntes em 12 meses e % do PIB, tabela mestra linha a linha, conta financeira e ingressos de não residentes, reservas e posição de investimento internacional, fluxo cambial diário, Focus, câmbio real, paridade do poder de compra e pauta de comércio. Dados BCB, SECEX, FUNCEX e Banco Mundial, atualização automática diária.",
 };
 
 export const revalidate = 3600;
 
 export default async function PainelContasExternasPage() {
-  const [data, comex, codace] = await Promise.all([
+  const [data, comex, codace, cambio] = await Promise.all([
     loadContasExternas(),
     loadContasExternasComex(),
     loadAtividadeCodace(),
+    loadCambioMacro(),
   ]);
 
   if (!data) {
@@ -29,43 +30,19 @@ export default async function PainelContasExternasPage() {
     );
   }
 
-  // Gate v2: o dashboard narrativo exige o JSON do builder v2 (acumulados 12m).
-  // Sem schema_version >= 2 (ou sem o bloco-chave), serve o dashboard antigo.
+  // Gate v3: o cockpit exige a tabela mestra do builder v3. Sem ela (Blob antigo),
+  // cai no dashboard v2 e, sem o v2, no v1 — nunca derruba a página.
+  const v3Pronto = !!data.schema_version && data.schema_version >= 3 && !!data.bp_mestre?.acum_12m?.length;
+  if (v3Pronto) {
+    return <ContasExternasCockpit data={data} comex={comex} cambio={cambio} codace={codace} />;
+  }
+
   const v2Pronto =
     !!data.schema_version && data.schema_version >= 2 && !!data.bloco_a.decomposicao_12m?.length;
 
-  return (
-    <div className="space-y-6">
-      {/* Sub-páginas de Contas Externas (mesmo padrão de cards de Atividade). */}
-      <Link
-        href="/painel-economico/economia/brasil/contas-externas/cambio"
-        className="group block rounded-2xl border border-[#132960]/15 bg-white p-5 shadow-sm transition hover:border-[#027DFC] hover:shadow-md"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold text-[#132960] group-hover:text-[#027DFC]">Câmbio econômico</h2>
-            <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-zinc-500">
-              BCB/SGS + FRED — sub-área de Contas Externas
-            </p>
-            <p className="mt-2 text-sm text-zinc-600">
-              O real está caro ou barato em termos reais? Câmbio real (REER e bilateral deflacionado), paridade de
-              juros Selic−Fed e o teste da UIP na prática.
-            </p>
-          </div>
-          <span
-            className="text-xl text-zinc-300 transition group-hover:translate-x-1 group-hover:text-[#027DFC]"
-            aria-hidden="true"
-          >
-            →
-          </span>
-        </div>
-      </Link>
-
-      {v2Pronto ? (
-        <ContasExternasDashboardV2 data={data} comex={comex} codace={codace} />
-      ) : (
-        <ContasExternasDashboard data={data} comex={comex} />
-      )}
-    </div>
+  return v2Pronto ? (
+    <ContasExternasDashboardV2 data={data} comex={comex} codace={codace} />
+  ) : (
+    <ContasExternasDashboard data={data} comex={comex} />
   );
 }

@@ -125,6 +125,83 @@ export type Renda12mPonto = {
 
 export type MesesImportacaoPonto = { mes: string; meses_bens: NumOrNull; meses_bens_servicos: NumOrNull };
 
+// ── v3 (cockpit do BP: tabela mestra, PII, fluxo cambial, Focus, revisões) ──
+
+/** Linha da tabela mestra do BPM6 (ordem = apresentação do BCB). */
+export type BpLinha = { key: string; label: string; nivel: number; sgs: number | null };
+
+/** Registro mensal/12m: `mes` + uma coluna por `BpLinha.key` (mensal em US$ mi; 12m em US$ bi). */
+export type BpRegistro = { mes: string; pib?: NumOrNull } & Record<string, NumOrNull | string | undefined>;
+
+export type BpMestre = {
+  linhas: BpLinha[];
+  mensal: BpRegistro[];
+  acum_12m: BpRegistro[];
+  identidade: { formula: string; tolerancia_usd_mi: number; meses_ok: number; violacoes: number };
+  _nota?: string;
+};
+
+export type PiiPonto = {
+  trim: string;
+  mes_fim: string;
+  liquida: NumOrNull;
+  ativos: NumOrNull;
+  ide: NumOrNull;
+  carteira_ativos: NumOrNull;
+  reservas: NumOrNull;
+  passivos: NumOrNull;
+  idp: NumOrNull;
+  idp_intercompanhia: NumOrNull;
+  carteira_passivos: NumOrNull;
+  acoes_passivos: NumOrNull;
+  titulos_passivos: NumOrNull;
+  titulos_domesticos: NumOrNull;
+  titulos_externos: NumOrNull;
+  oi_passivos: NumOrNull;
+  divida_cp: NumOrNull;
+  guidotti: NumOrNull;
+  pib_12m: NumOrNull;
+};
+
+export type FluxoCambialMensal = {
+  mes: string;
+  total: NumOrNull;
+  comercial: NumOrNull;
+  financeiro: NumOrNull;
+  dias_uteis: number;
+  total_12m: NumOrNull;
+  comercial_12m: NumOrNull;
+  financeiro_12m: NumOrNull;
+};
+
+export type FluxoCambial = {
+  mensal: FluxoCambialMensal[];
+  diario_90d: { data: string; total: NumOrNull; comercial: NumOrNull; financeiro: NumOrNull }[];
+  ultimo_dia: string;
+  mes_corrente_parcial: boolean;
+  ano_corrente: { ano: string; total: NumOrNull; comercial: NumOrNull; financeiro: NumOrNull };
+  _nota?: string;
+};
+
+export type FocusColeta = { data: string; mediana: NumOrNull; dp: NumOrNull; n: number | null };
+/** indicador → ano de referência → coletas semanais. */
+export type FocusExterno = {
+  conta_corrente?: Record<string, FocusColeta[]>;
+  balanca?: Record<string, FocusColeta[]>;
+  idp?: Record<string, FocusColeta[]>;
+  cambio?: Record<string, FocusColeta[]>;
+  ultima_coleta?: string | null;
+  _nota?: string;
+};
+
+export type RevisoesBp = {
+  revised_at: string | null;
+  n_meses: number;
+  max_abs_diff_usd_bi?: number;
+  amostra?: { mes: string; antes: number; depois: number; diff: number }[];
+  _nota?: string;
+};
+
 export type ContasExternasData = {
   schema_version?: number;
   gerado_em: string;
@@ -157,6 +234,12 @@ export type ContasExternasData = {
   /** v2 */
   bloco_servicos?: { serie_12m: Servicos12mPonto[]; _nota?: string };
   bloco_renda?: { serie_12m: Renda12mPonto[]; _nota?: string };
+  /** v3 */
+  bp_mestre?: BpMestre;
+  pii?: { serie: PiiPonto[]; ultimo_trim?: string | null; _nota?: string };
+  fluxo_cambial?: FluxoCambial;
+  focus?: FocusExterno;
+  revisoes?: RevisoesBp;
   metadata: {
     fonte: string;
     nota: string;
@@ -230,6 +313,39 @@ export type UipPonto = {
   var_cambial_12m_pct: number;
 };
 
+export type IndiceMensalBloco = {
+  sgs?: number;
+  fonte?: string;
+  base?: string;
+  serie: CambioRealPonto[];
+  ultimo: { mes: string; indice: number };
+  var_12m_pct: NumOrNull;
+};
+
+export type PpcPonto = {
+  ano: string;
+  ppc: number;
+  ptax_media: NumOrNull;
+  nivel_precos_relativo: NumOrNull;
+  desvio_ptax_vs_ppc_pct: NumOrNull;
+  parcial: boolean;
+};
+
+/** v2 do cambio_macro — cada bloco pode vir null (fonte opcional). */
+export type CambioExtras = {
+  reer_ipa?: IndiceMensalBloco | null;
+  efetivo_nominal?: IndiceMensalBloco | null;
+  real_usd_oficial?: IndiceMensalBloco | null;
+  icbr_reais?: IndiceMensalBloco | null;
+  icbr_usd?: IndiceMensalBloco | null;
+  termos_troca?: IndiceMensalBloco | null;
+  ppc?: { fonte: string; serie: PpcPonto[]; _nota?: string } | null;
+  juro_real?: {
+    metodologia: string;
+    serie: { mes: string; real_br: number; real_eua: number; diferencial_real_pp: number }[];
+  } | null;
+};
+
 export type CambioMacroData = {
   schema_version: number;
   generated_at: string;
@@ -272,6 +388,8 @@ export type CambioMacroData = {
     reer_var_12m_pct: NumOrNull;
     diferencial_pp: NumOrNull;
   };
+  /** v2 */
+  extras?: CambioExtras;
   /** Estrutura reservada p/ os modelos de previsão do dono (vazia por ora). */
   previsao: { modelos: unknown[]; nota: string };
   metadata: {

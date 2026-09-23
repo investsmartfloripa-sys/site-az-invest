@@ -60,7 +60,7 @@ BLOB_PATH = "data/cambio_macro.json"
 UA = {"User-Agent": "az-invest-cambio-macro-builder/0.1"}
 SGS_BASE = "https://api.bcb.gov.br/dados/serie/bcdata.sgs"
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2  # v2 (aditivo): bloco `extras` — REER IPA, efetivo nominal, IC-Br, termos de troca, PPC, juro real
 
 # ---------------------------------------------------------------------------
 # Parâmetros metodológicos (documentados — mudou, versione o schema)
@@ -82,6 +82,16 @@ SGS_PTAX_VENDA_MEDIA_MENSAL = 3698  # cross-check da agregação mensal
 SGS_REER_IPCA = 11752
 SGS_IPCA_VAR_MENSAL = 433
 SGS_SELIC_META = 432
+
+# v2 — variáveis cambiais do cockpit de Contas Externas (bloco `extras`)
+SGS_REER_IPA = 11757           # câmbio efetivo real deflacionado pelo IPA-DI, jun/1994 = 100
+SGS_REER_NOMINAL = 20360       # câmbio efetivo NOMINAL, jun/1994 = 100
+SGS_REAL_USD_IPCA = 11753      # câmbio real bilateral oficial BCB (IPCA) vs US$, jun/1994 = 100
+SGS_ICBR_REAIS = 27574         # Índice de Commodities - Brasil (R$), dez/2005 = 100
+SGS_ICBR_USD = 29042           # IC-Br em US$
+IPEA_TERMOS_TROCA = "FUNCEX12_TTR12"  # termos de troca FUNCEX, média 2018 = 100
+WB_PPP_URL = "https://api.worldbank.org/v2/country/BRA/indicator/PA.NUS.PPP?format=json&per_page=100"  # ICP: R$ por US$ internacional
+IMF_PPP_URL = "https://www.imf.org/external/datamapper/api/v1/PPPEX/BRA"  # WEO (fallback; 403 fora de navegador)
 
 FRED_CPI_EUA = "CPIAUCSL"
 FRED_FED_FUNDS_DIARIA = "DFF"       # via API (exige FRED_API_KEY; fredgraph dá 504)
@@ -379,6 +389,132 @@ def valida(out: dict, ptax_media_calc: dict[str, float], sgs_3698: dict[str, flo
 
 
 # ---------------------------------------------------------------------------
+# v2 — extras (cada fonte é opcional: falhou, o campo vai null e o resto segue)
+# ---------------------------------------------------------------------------
+def ipea_mensal(cod: str) -> dict[str, float]:
+    url = f"http://www.ipeadata.gov.br/api/odata4/ValoresSerie(SERCODIGO='{cod}')"
+    print(f"  [IPEA {cod}] {url}")
+    out: dict[str, float] = {}
+    for r in _get(url).json().get("value", []):
+        v = _to_float(r.get("VALVALOR"))
+        if v is not None:
+            out[str(r["VALDATA"])[:7]] = v
+    return out
+
+
+def ppp_anual() -> tuple[dict[str, float], str]:
+    """Fator de conversão PPC (R$ por US$ internacional). Banco Mundial/ICP primeiro; FMI/WEO de fallback."""
+    try:
+        print(f"  [WB PA.NUS.PPP] {WB_PPP_URL}")
+        rows = _get(WB_PPP_URL).json()[1] or []
+        out = {str(r["date"]): float(r["value"]) for r in rows if r.get("value") is not None}
+        if out:
+            return out, "Banco Mundial — International Comparison Program (PA.NUS.PPP, R$ por dólar internacional)"
+    except Exception as e:  # noqa: BLE001
+        print(f"  [WARN] PPC Banco Mundial: {e}", file=sys.stderr)
+    print(f"  [IMF PPPEX] {IMF_PPP_URL}")
+    vals = (_get(IMF_PPP_URL).json().get("values", {}).get("PPPEX", {}).get("BRA") or {})
+    return ({str(a): float(v) for a, v in vals.items() if v is not None},
+            "FMI — World Economic Outlook (PPPEX, R$ por dólar internacional)")
+
+
+def _serie_mensal(d: dict[str, float], desde: str = "1999-01", nd: int = 2) -> list[dict[str, Any]]:
+    return [{"mes": m, "indice": round(d[m], nd)} for m in sorted(d) if m >= desde]
+
+
+def _var12(d: dict[str, float]) -> float | None:
+    if not d:
+        return None
+    m = max(d)
+    m12 = mes_anterior(m, 12)
+    return round((d[m] / d[m12] - 1.0) * 100.0, 1) if m12 in d and d[m12] else None
+
+
+def _yoy_indice(idx: dict[str, float]) -> dict[str, float]:
+    out: dict[str, float] = {}
+    for m, v in idx.items():
+        m12 = mes_anterior(m, 12)
+        if m12 in idx and idx[m12]:
+            out[m] = (v / idx[m12] - 1.0) * 100.0
+    return out
+
+
+def build_extras(ptax_media: dict[str, float], ipca_idx: dict[str, float], cpi: dict[str, float],
+                 selic_mensal: dict[str, float], dff_mensal: dict[str, float]) -> dict[str, Any]:
+    ex: dict[str, Any] = {}
+
+    def tenta(nome: str, fn):  # noqa: ANN001
+        try:
+            ex[nome] = fn()
+        except Exception as e:  # noqa: BLE001
+            print(f"  [WARN] extras.{nome}: {e}", file=sys.stderr)
+            ex[nome] = None
+
+    def _indice(cod: int, desde: str = "1999-01") -> dict[str, Any]:
+        d = sgs_fetch_mensal(cod)
+        return {"sgs": cod, "serie": _serie_mensal(d, desde), "ultimo": {"mes": max(d), "indice": round(d[max(d)], 2)},
+                "var_12m_pct": _var12(d)}
+
+    tenta("reer_ipa", lambda: _indice(SGS_REER_IPA))
+    tenta("efetivo_nominal", lambda: _indice(SGS_REER_NOMINAL))
+    tenta("real_usd_oficial", lambda: _indice(SGS_REAL_USD_IPCA))
+    tenta("icbr_reais", lambda: _indice(SGS_ICBR_REAIS, "2005-12"))
+    tenta("icbr_usd", lambda: _indice(SGS_ICBR_USD, "2005-12"))
+
+    def _tt() -> dict[str, Any]:
+        d = ipea_mensal(IPEA_TERMOS_TROCA)
+        return {"fonte": f"FUNCEX via Ipeadata ({IPEA_TERMOS_TROCA})", "base": "média 2018 = 100",
+                "serie": _serie_mensal(d, "1999-01"), "ultimo": {"mes": max(d), "indice": round(d[max(d)], 2)},
+                "var_12m_pct": _var12(d)}
+    tenta("termos_troca", _tt)
+
+    def _ppp() -> dict[str, Any]:
+        ppp, fonte_ppp = ppp_anual()
+        ano_corrente = datetime.now(timezone.utc).year
+        rows = []
+        for ano in sorted(ppp):
+            if int(ano) < 1999 or int(ano) > ano_corrente:
+                continue
+            meses = [ptax_media[m] for m in ptax_media if m.startswith(ano)]
+            ptax_ano = statistics.mean(meses) if meses else None
+            rows.append({
+                "ano": ano,
+                "ppc": round(ppp[ano], 3),
+                "ptax_media": round(ptax_ano, 4) if ptax_ano else None,
+                # nível de preços relativo (Brasil ÷ EUA, em US$): PPC ÷ câmbio de mercado
+                "nivel_precos_relativo": round(ppp[ano] / ptax_ano, 3) if ptax_ano else None,
+                "desvio_ptax_vs_ppc_pct": round((ptax_ano / ppp[ano] - 1.0) * 100.0, 1) if ptax_ano else None,
+                "parcial": int(ano) == ano_corrente,
+            })
+        return {
+            "fonte": fonte_ppp,
+            "serie": rows,
+            "_nota": ("PPC é a taxa que igualaria o poder de compra de uma cesta ampla nos dois países. Emergentes "
+                      "operam estruturalmente ACIMA dela (efeito Balassa-Samuelson): o desvio não é desalinhamento, "
+                      "a leitura é a TENDÊNCIA do nível de preços relativo."),
+        }
+    tenta("ppc", _ppp)
+
+    def _juro_real() -> dict[str, Any]:
+        ipca_yoy = _yoy_indice(ipca_idx)
+        cpi_yoy = _yoy_indice(cpi)
+        rows = []
+        for m in sorted(selic_mensal):
+            if m < INICIO_JUROS or m not in dff_mensal or m not in ipca_yoy or m not in cpi_yoy:
+                continue
+            br = ((1 + selic_mensal[m] / 100) / (1 + ipca_yoy[m] / 100) - 1) * 100
+            us = ((1 + dff_mensal[m] / 100) / (1 + cpi_yoy[m] / 100) - 1) * 100
+            rows.append({"mes": m, "real_br": round(br, 2), "real_eua": round(us, 2), "diferencial_real_pp": round(br - us, 2)})
+        return {
+            "metodologia": ("Juro real EX POST por Fisher: (1 + Selic meta média do mês) ÷ (1 + IPCA 12m) − 1, menos o "
+                            "mesmo para Fed Funds efetivo ÷ CPI 12m. Ex post (inflação passada), não ex ante."),
+            "serie": rows,
+        }
+    tenta("juro_real", _juro_real)
+    return ex
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
@@ -510,6 +646,10 @@ def main() -> None:
         ),
     }
 
+    # ── 5. Extras v2 (cockpit de Contas Externas) ─────────────────────────────
+    print("== Extras v2 (REER IPA, efetivo nominal, IC-Br, termos de troca, PPC, juro real) ==")
+    extras = build_extras(ptax_media, ipca_idx, cpi, selic_mensal, dff_mensal)
+
     # ── Payload ──────────────────────────────────────────────────────────────
     ult_mes_nominal = max(ptax_media)
     out: dict[str, Any] = {
@@ -582,6 +722,7 @@ def main() -> None:
             "reer_var_12m_pct": round(reer_var_12m, 1) if reer_var_12m is not None else None,
             "diferencial_pp": diferencial_serie[-1]["diferencial_pp"] if diferencial_serie else None,
         },
+        "extras": extras,
         "previsao": {
             # Estrutura reservada p/ os modelos do dono (combinação de paridades
             # + fundamentos). O front mostra placeholder honesto enquanto vazio.
