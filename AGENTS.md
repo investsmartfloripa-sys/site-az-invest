@@ -1,8 +1,15 @@
 # Guia para agentes — site-az-invest
 
-Leia **antes** de implementar qualquer mudança. Este arquivo é autossuficiente: não aponta para documentos fora do repositório.
+Leia **antes** de implementar qualquer mudança. A doutrina técnica é autossuficiente: tudo o que você precisa para mexer no código está neste repositório.
 
-Aprofundamento em `docs/DADOS-E-SERIES.md` — códigos de série, contrato de builder e metodologia por painel. O padrão visual dos gráficos está em `docs/PADRAO-VISUAL-GRAFICOS.md`.
+Aprofundamento em `docs/`:
+
+- `docs/ARMADILHAS.md` — o que já quebrou o site sem dar erro: banco local = produção, deploy duplo, cache/purga, hidratação, Recharts sem altura. **Leia antes da primeira mudança.**
+- `docs/PRINCIPIOS-DE-PRODUTO.md` — como o dono avalia o trabalho (pergunta econômica, duas camadas, checklist de revisão).
+- `docs/DADOS-E-SERIES.md` — códigos de série, contrato de builder e metodologia por painel.
+- `docs/PADRAO-VISUAL-GRAFICOS.md` — padrão visual dos gráficos.
+
+Material **não técnico** (os agentes, a base de dados do Blob para uso fora do site, identidade visual para dossiês, estratégia) fica no repo **privado** `investsmartfloripa-sys/agentes-az`. Nunca copie esse conteúdo para cá: este repo é público.
 
 > Consolidado em 18/08/2026 a partir de 21 documentos que viviam fora do repositório, na pasta do projeto Cowork, e que nenhum agente do repositório conseguia ler. Itens marcados **[verificar]** foram extraídos de material de mai–jul/2026 e podem já ter sido resolvidos.
 
@@ -34,11 +41,26 @@ Boa parte das regras antigas deste projeto foi escrita para resolver problemas d
 
 O agente do Café com Mercado empurra commits na `main` **várias vezes por dia** — edição, capa e snapshot. Sempre `git fetch` e `git rebase origin/main` antes de empurrar; push sem rebase é rejeitado. Use `git add <caminhos>` explícito, **nunca `git add .`**: pode haver trabalho não-commitado de outra sessão. No ambiente local, o Cursor também pode estar com arquivos abertos.
 
+### Trabalho em equipe
+
+Várias pessoas do escritório trabalham neste repo, cada uma pelo seu Claude, **todas com o mesmo login do GitHub**. O GitHub não distingue quem é quem, então quem distingue é a configuração local de cada clone:
+
+- `git config az.papel` — `dono` ou `colaborador`. **Sem configuração vale `colaborador`.** O hook de início de sessão diz qual é o papel desta máquina.
+- `git config user.name "<Nome da pessoa>"` — é o que identifica o autor no histórico.
+
+Regras:
+
+1. **Comece atualizado.** Se o hook disser que a branch está atrás da `origin/main`, `git pull --rebase` antes de editar.
+2. **Termine publicado.** Trabalho que ficou só no seu PC não existe para os outros. O hook de fim de resposta avisa quando há commit sem push.
+3. **Conhecimento vai para o repo, não para a memória do Claude.** A memória automática do Claude fica presa no PC de quem estava trabalhando. Descobriu uma armadilha, uma regra de dado ou uma preferência do dono que vale para a próxima sessão? Escreva em `docs/` (armadilha técnica em `ARMADILHAS.md`, série em `DADOS-E-SERIES.md`, critério do dono em `PRINCIPIOS-DE-PRODUTO.md`) e commite junto com o código.
+
 ### Publicar
 
 **Na nuvem:** o proxy só permite push na branch da sessão. O fluxo é push na branch, depois PR com `base=main`, depois merge squash. **O deploy sai do merge, não do push.** A Contents API (PUT) e o `workflow_dispatch` retornam 403 — não insista. Se o `git push` der 403, rode `/web-setup` uma vez no terminal do PC, logado no `gh`.
 
-**No local:** `git push origin main` direto, que dispara o auto-deploy.
+**No local, papel `dono`:** `git push origin main` direto, que dispara o auto-deploy.
+
+**No local, papel `colaborador`:** nunca empurre para a `main` — cada push nela vai direto para produção. Crie uma branch `<seu-nome>/<assunto>`, valide localmente (não há preview por branch; ver `docs/ARMADILHAS.md` §6), faça push dela e abra o PR com `gh pr create --base main`, descrevendo o que mudou e como você verificou. O dono revisa e faz o merge squash; o deploy sai do merge. PR com migration de banco: **não aplique a migration** (o banco local é o de produção) — deixe o SQL no PR e avise; o dono aplica antes do merge.
 
 ### Verificar
 

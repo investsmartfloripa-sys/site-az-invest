@@ -11,23 +11,62 @@ Site institucional + blog dinamico, construido em Next.js 16 (App Router), Prism
 - **Auth**: cookies HMAC + bcrypt, RBAC com 3 papeis (`ADMIN`, `STAFF`, `AUTHOR`)
 - **Workspace**: `/area-restrita/*` — editor TipTap, fila de revisao, metricas, leads, saude dos dados
 
+## Comecando a trabalhar no projeto (equipe do escritorio)
+
+Todo mundo usa o mesmo login do GitHub e trabalha pelo Claude Code. As regras completas estao no
+[`AGENTS.md`](AGENTS.md), que o Claude le sozinho ao abrir o repo (via `CLAUDE.md`).
+
+1. Clone o site e, ao lado dele, o repo privado de apoio:
+
+   ```bash
+   git clone https://github.com/investsmartfloripa-sys/site-az-invest.git
+   git clone https://github.com/investsmartfloripa-sys/agentes-az.git
+   ```
+
+2. Dentro de `site-az-invest`, identifique-se e declare o seu papel:
+
+   ```bash
+   git config user.name "Seu Nome"
+   git config az.papel colaborador
+   ```
+
+   Colaborador trabalha em branch e abre PR; quem publica na `main` e o dono. Sem `az.papel`
+   configurado, o Claude trata a maquina como colaborador.
+
+3. Peca o `.env` ao dono. Ele nunca vai para o git.
+4. Leia [`docs/ARMADILHAS.md`](docs/ARMADILHAS.md) antes da primeira mudanca.
+
 ## Rodando local
 
-1. Copie `.env.example` para `.env` e preencha as variaveis.
-2. Instale dependencias e rode as migrations:
+> **O `.env` do projeto aponta para o banco de PRODUCAO.** Nao existe banco de desenvolvimento.
+> Nunca rode `npx prisma migrate dev`, `prisma migrate reset` nem os seeds (`npm run db:seed-*`)
+> com ele: gravam ou apagam dados do site real. Testar criacao de post, comentario ou lead
+> localmente tambem grava no site real — apague depois.
 
 ```bash
 npm install
-npx prisma migrate dev
-npm run db:seed-master
-npm run db:seed-authors
-npm run db:seed-posts
-npm run dev
+npm run dev          # http://localhost:3000
 ```
 
-3. Abra `http://localhost:3000`. O login admin e criado pelo seed `db:seed-master`, que exige
-   `MASTER_LOGIN` e `MASTER_PASSWORD` definidos no ambiente (nunca commitar credenciais).
-   A tela de login fica em `/area-restrita/login` (titulo **AZ Workspace**).
+O `/painel-economico/*` responde 404 no `npm run dev` (quirk do Turbopack). Para ver o painel:
+
+```bash
+npm run build && npm run start -- -p 3001
+```
+
+A tela de login fica em `/area-restrita/login` (titulo **AZ Workspace**).
+
+### Banco novo do zero (so para um ambiente separado)
+
+Os comandos abaixo sao para montar um banco **novo e vazio** (outra conta Neon, por exemplo),
+nunca com o `.env` do projeto:
+
+```bash
+npx prisma migrate deploy
+npm run db:seed-master   # exige MASTER_LOGIN e MASTER_PASSWORD no ambiente
+npm run db:seed-authors
+npm run db:seed-posts
+```
 
 ## Deploy na Vercel
 
@@ -39,7 +78,8 @@ npm run dev
    - `YOUTUBE_API_KEY` e `YOUTUBE_CHANNEL_ID` (opcionais, para a aba `/videos`)
    - `RESEND_API_KEY` e `EMAIL_FROM` (usado no formulario de contato dos assessores)
 3. A Vercel roda automaticamente `prisma generate && next build` (script `vercel-build`).
-4. Apos o primeiro deploy, rode os seeds **uma vez** apontando o `.env` local para o banco de producao:
+4. Apos o primeiro deploy de um banco **novo**, rode os seeds **uma vez** (ja feito na producao
+   atual; so repita ao montar tudo do zero):
 
 ```bash
 npm run db:seed-master
@@ -65,15 +105,11 @@ Diagnostico e **validacao pos-deploy** (obrigatorio para agentes — ver tambem 
 npm run site:check-access
 ```
 
-O script confirma HTTP 200 **e** se `/area-restrita/login` exibe **AZ Workspace** (nao o login legado nem a pagina de erro global). Se falhar, publique com `vercel --prod --yes` e repita.
+O script confirma HTTP 200 **e** se `/area-restrita/login` exibe **AZ Workspace** (nao o login legado nem a pagina de erro global).
 
-Deploy manual (producao pode estar a frente do `main` no GitHub):
-
-```bash
-vercel --prod --yes
-```
-
-Aguarde **Aliased** no log antes de rodar `site:check-access` de novo.
+**Publicar e sempre por git** (push na `main` dispara o deploy). Nunca use `vercel --prod`: o repo
+vive no OneDrive e o deploy da pasta sobe arquivos desatualizados ou nao commitados, revertendo
+em producao o trabalho de outras pessoas. Detalhes em `AGENTS.md` §2 e `docs/ARMADILHAS.md` §2.
 
 **Corrigir DNS** (Registro.br ou provedor onde o dominio esta):
 
@@ -99,15 +135,12 @@ Migrations **NAO** rodam no build do Vercel (o pooler do Neon nao suporta o
 advisory lock que o `prisma migrate deploy` usa, e o auto-suspend do Neon
 free tier deixa o lock instavel). Quando criar novas migrations:
 
-```bash
-# 1. Cria a migration localmente, apontando .env para o Neon
-npx prisma migrate dev --name minha_migration
+1. Escreva o SQL a mao em `prisma/migrations/<timestamp>_<nome>/migration.sql`
+   (`migrate dev` quebra com a shadow DB do Neon e pode propor reset do banco de producao).
+2. Aplique com `npx prisma migrate deploy` **antes** de publicar o codigo que depende dela.
+3. Commit da migration junto com o codigo.
 
-# 2. Commit e push (a migration vai junto pro git)
-git add prisma/migrations && git commit -m "Adicionar migration X" && git push
-```
-
-Como `migrate dev` ja aplica direto no banco, nao precisa rodar `migrate deploy` em lugar nenhum.
+Colaborador nao aplica migration: deixa o SQL no PR e o dono aplica antes do merge.
 
 ## E-mail dos assessores (Resend)
 
@@ -122,7 +155,7 @@ Configurar uma vez:
 3. Gerar API key e setar `RESEND_API_KEY` e `EMAIL_FROM` no `.env`.
 4. No painel restrito (`/area-restrita/autores`), preencher para cada assessor:
    - **E-mail profissional** (destinatario dos leads).
-   - **WhatsApp** no formato internacional (ex: `+5548999386708`).
+   - **WhatsApp** no formato internacional (ex: `+5548999990000`).
 
 Sem `RESEND_API_KEY`/`EMAIL_FROM`, os leads continuam sendo salvos no banco e
 listados no painel com status `SKIPPED`.
