@@ -56,6 +56,15 @@ if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
       echo "- A tarefa AZ Sync Apoio não roda há mais de 3 horas (status.json antigo): os repos de apoio podem estar desatualizados no GitHub."
     fi
   fi
+
+  # Backup local diário (tarefa "AZ Backup Local", só no PC do escritório).
+  backup="$HOME/.az-sync/backup-status.json"
+  if [ -f "$backup" ]; then
+    grep -q '"result": *"falhou"' "$backup" 2>/dev/null && echo "- O último backup local teve falha. Detalhes em ~/.az-sync/backup.log."
+    if [ -n "$(find "$backup" -mmin +2880 2>/dev/null)" ]; then
+      echo "- O backup local (D:\\AZ-Backup) não roda há mais de 2 dias. Rode: Start-ScheduledTask 'AZ Backup Local'."
+    fi
+  fi
 fi
 
 echo "(Regras de trabalho em equipe: AGENTS.md §0. Armadilhas técnicas: docs/ARMADILHAS.md.)"

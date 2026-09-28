@@ -16,7 +16,11 @@ Site institucional + blog dinamico, construido em Next.js 16 (App Router), Prism
 Todo mundo usa o mesmo login do GitHub e trabalha pelo Claude Code. As regras completas estao no
 [`AGENTS.md`](AGENTS.md), que o Claude le sozinho ao abrir o repo (via `CLAUDE.md`).
 
-1. Clone o site e, ao lado dele, o repo privado de apoio:
+**Passo a passo completo, do zero, em outro computador:
+[`docs/COMECAR-EM-OUTRO-PC.md`](docs/COMECAR-EM-OUTRO-PC.md).** Resumo:
+
+1. Clone numa pasta curta e **fora do OneDrive** (ex.: `C:\dev`) o site e, ao lado dele, o repo
+   privado de apoio:
 
    ```bash
    git clone https://github.com/investsmartfloripa-sys/site-az-invest.git
