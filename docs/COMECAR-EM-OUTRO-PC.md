@@ -73,7 +73,7 @@ NEXT_PUBLIC_BLOB_BASE_URL=https://8ytqvgmik75vk1it.public.blob.vercel-storage.co
 AUTH_SECRET=troque-por-qualquer-texto-longo-e-aleatorio
 ```
 
-Funciona: painel econômico, gráficos, simuladores, layout das páginas. Não funciona: artigos, time e vídeos aparecem vazios, `/boletins` dá erro e não dá para entrar na área logada. É o esperado.
+Funciona: painel econômico, gráficos, simuladores, vídeos, Café com Mercado, layout das páginas. Não funciona: as listas de artigos, boletins e time aparecem vazias, a página de um artigo, boletim ou autor dá erro e não dá para entrar na área logada. É o esperado.
 
 ### Opção B — completa (para mexer em blog, conteúdo ou área logada)
 

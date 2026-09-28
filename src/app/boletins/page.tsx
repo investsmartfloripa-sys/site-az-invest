@@ -9,7 +9,9 @@ import { INDICADOR_LABEL, type ChartIndicador } from "@/lib/publisher/chart-cata
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 import { boletinsWhere } from "@/lib/workspace/posts";
 
-// Lista de boletins: lê o banco a cada request (como /blog), sem ISR.
+// Lista de boletins: lê o banco a cada request (como /blog), sem ISR. Por ser
+// dinâmica, degradar para lista vazia quando o banco falha afeta só aquele
+// acesso — nada é assado no cache (ver /nosso-time).
 export const dynamic = "force-dynamic";
 
 const DESCRIPTION =
@@ -48,14 +50,20 @@ export default async function BoletinsIndexPage({
   const { ind } = await searchParams;
   const filtro = parseIndicador(ind?.trim());
 
-  const posts = await findPosts({
-    where: {
-      ...boletinsWhere,
-      ...(filtro ? { slug: { startsWith: `${filtro}-` } } : {}),
-    },
-    orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
-  });
-  const mapped = posts.map(mapPost);
+  // Banco indisponível (ou .env sem DATABASE_URL) degrada para lista vazia.
+  let mapped: ReturnType<typeof mapPost>[] = [];
+  try {
+    const posts = await findPosts({
+      where: {
+        ...boletinsWhere,
+        ...(filtro ? { slug: { startsWith: `${filtro}-` } } : {}),
+      },
+      orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+    });
+    mapped = posts.map(mapPost);
+  } catch (err) {
+    console.error("[Boletins] findPosts falhou; seguindo sem boletins", err);
+  }
 
   return (
     <div className="min-h-screen text-[#132960]">

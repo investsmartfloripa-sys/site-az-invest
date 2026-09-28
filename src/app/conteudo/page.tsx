@@ -53,6 +53,11 @@ export default async function ConteudoHub({ searchParams }: ConteudoProps) {
       where: artigosWhere,
       orderBy: { createdAt: "desc" },
       take: 3,
+    }).catch((err) => {
+      // Banco indisponível degrada só a seção de artigos; vídeos e periódicos
+      // seguem. Seguro porque a rota é dinâmica (nada é assado no cache).
+      console.error("[Conteudo] findPosts falhou; seguindo sem artigos", err);
+      return [];
     }),
     activePlaylist
       ? fetchPlaylistVideos(activePlaylist.playlistId, 50)

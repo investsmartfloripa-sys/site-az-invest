@@ -35,25 +35,34 @@ export default async function BlogIndexPage({
   const { categoria } = await searchParams;
   const filter = categoria?.trim();
 
-  // Só artigos: `artigosWhere` exclui os boletins do Publisher. O filtro entra
-  // por AND para que ?categoria= nunca reabra a porta para a categoria deles.
-  const [posts, categoriesRaw] = await Promise.all([
-    findPosts({
-      where: {
-        AND: [artigosWhere, ...(filter ? [{ category: { equals: filter } }] : [])],
-      },
-      orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
-    }),
-    prisma.post.findMany({
-      where: artigosWhere,
-      select: { category: true },
-      distinct: ["category"],
-      orderBy: { category: "asc" },
-    }),
-  ]);
-
-  const mapped = posts.map(mapPost);
-  const categories = categoriesRaw.map((c) => c.category);
+  // Banco indisponível (ou .env sem DATABASE_URL) degrada para lista vazia.
+  // Seguro porque a rota é dinâmica: nada é assado no cache (ver /nosso-time).
+  // Sem o catch, o loading.tsx já teria mandado HTTP 200 e o visitante veria
+  // a tela de erro no lugar da lista.
+  let mapped: ReturnType<typeof mapPost>[] = [];
+  let categories: string[] = [];
+  try {
+    // Só artigos: `artigosWhere` exclui os boletins do Publisher. O filtro entra
+    // por AND para que ?categoria= nunca reabra a porta para a categoria deles.
+    const [posts, categoriesRaw] = await Promise.all([
+      findPosts({
+        where: {
+          AND: [artigosWhere, ...(filter ? [{ category: { equals: filter } }] : [])],
+        },
+        orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+      }),
+      prisma.post.findMany({
+        where: artigosWhere,
+        select: { category: true },
+        distinct: ["category"],
+        orderBy: { category: "asc" },
+      }),
+    ]);
+    mapped = posts.map(mapPost);
+    categories = categoriesRaw.map((c) => c.category);
+  } catch (err) {
+    console.error("[Blog] consulta de artigos falhou; seguindo sem artigos", err);
+  }
 
   return (
     <div className="min-h-screen text-[#132960]">
