@@ -1,41 +1,40 @@
 # Snapshot do dia anterior — Café com Mercado
 
-**Rodada:** 2026-09-30 (quarta), disparada 10:19 BRT (agendada 10:02). Publicada ~10:30 BRT. ✅ Deploy `success` na run do push `36721920763` (commit 3036505). ✅ WhatsApp `EXITCODE=0`, capa anexada, confirmado no histórico (messageId `..._3EB0C14473E8DBD2A1F801_...`). 4 transcrições úteis de 5 (Money Times era giro intradiário de 29/09).
+**Rodada:** 2026-10-01 (quinta), disparada 10:19 BRT (agendada 10:02). Publicada ~10:32 BRT. ✅ Deploy `success` na run do push `36869099094` (commit 3ab33d4). ✅ WhatsApp `EXITCODE=0`, capa anexada, confirmado no histórico (messageId `..._3EB005E179E0211351D592_...`). 4 calls de hoje transcritos (BTG, Genial, XP, Spyer); Money Times era giro de fechamento de setembro.
 
 ## 🔧 INFRAESTRUTURA
-- GitHub API segue bloqueada no sandbox da nuvem (403 "GitHub access to this repository is not enabled for this session") → todo tráfego GitHub via `device_bash` com PAT do `.env.vercel.local`. Funcionou.
-- yt-dlp reinstalado via `pip --user` no device_bash; 429 em 2 vídeos na 1ª tentativa, ok na 2ª (20 s depois).
-- Blob: prefixo `data/`. `BZ=F` segue quebrado/rolando (97,68, −4,8%) — NÃO usar. Brent Nov vence hoje; fontes divergem 97 × 103 (contrato curto ~103). `BRL=X` hoje 5,1676, bateu com a Genial (5,17).
-- Capa: Higgsfield `cinematic_studio_2_5`, jobs `9814bce5` (escolhida; letterbox preto no topo → recortei 190 px e centralizei 16:9, 2392×1346) e `4cf169b0` (moldura no topo, descartada). Manchete "PCE ALIVIA E DÓLAR CAI A R$ 5,17" (2 linhas), sub "Pesquisas empatadas a quatro dias do 1º turno". Acentos OK. Elementos: tela com linha vermelha caindo, dólares ao vento, petroleiro, bandeira BR, multidão de costas.
+- GitHub API segue bloqueada no sandbox da nuvem (403) → tráfego GitHub via `device_bash` com PAT. Arquivos levados ao PC por `device_commit_files` em `Enviador de Noticias\_edicao_hoje.md` / `_capa_hoje.jpg`.
+- yt-dlp na nuvem: bot check (cookies) em 3 de 5. No device_bash: 429 em Spyer e Money Times (2 tentativas); resolvido com `youtube-transcript-api` no device.
+- `compose-capa.py` local difere do main só por CRLF.
+- Blob: Nikkei 68.957 (+3,30%), Kospi +1,95%, EWZ 30/09 +2,14%.
+- Capa: Higgsfield `cinematic_studio_2_5`, jobs `02abeb71` (escolhida) e `04dadacf` (descartada). As duas vieram com moldura no topo → recortei 200 px e centralizei 16:9 (2375×1336); texto "GOVERNMENT BOND" no prop apagado com inpaint (OpenCV). Manchete "TREASURY NA MÁXIMA DESDE 2002", sub "Brent volta a US$ 100 e DXY bate 102". Elementos: telas com curva vermelha subindo, operador de costas, títulos em chamas, refinaria, porto com guindastes.
 
-## 📌 NARRATIVA (30/9) — PCE ABAIXO DO ESPERADO + ELEIÇÃO EMPATADA
-- Ter 29/09 EUA: S&P 7.670,84 (−0,17%), Dow 51.349,92 (−0,26%), Nasdaq 26.797,54 (−0,09%). UST 2a 4,89, 10a 5,25-5,26 (máx. 2007), 30a 5,58 (máx. 2002). Conference Board 81,9 (esp. 89,1; mín. ~12 anos). JOLTS 7,08 mi (esp. 7,2). Williams: "sem urgência" → prob. alta 28/10 de ~70% para ~45-50%.
-- Qua 30/09: PCE ago 0,3% m/m, 3,4% a/a (esp. 3,7); núcleo 0,2%, 3,0% (esp. 0,3/3,3). Renda +0,2, gastos +0,9. PIB 2T 3ª est. 2,2% (de 1,5); consumo 3,8. ADP set +90 mil (esp. ~68-75 mil; ago rev. 36 mil). DXY para ~100,7 pós-PCE. FedWatch pós-PCE: n/d.
-- Europa: França HICP 3,4% (esp. 3,2), Alemanha 3,3% (esp. 3,1), Itália 4,1% (esp. 3,7, Genial). China PMI oficial 50,1; RatingDog 52,1; estímulo de crédito 4,85 tri CNY (BTG); feriado de uma semana. Nikkei +1,94% (66.754).
-- Irã: Catar sem avanço; Trump nega alívio de sanções; fluxo Golfo perto do pré-guerra (JPMorgan 98%; FT 13 mi b/d em Ormuz vs 19 antes); SPR até 40 mi barris. Ouro 4.242 (+1,5%), cobre +1,5%.
-- Brasil: primário consolidado ago −10,0 bi (esp. −15,7); gov. central −14,7; dívida bruta 82,9% (de 82,6), líquida 69,3. Caged ago +165,8 mil (jul 55,9); acumulado 1,134 mi, pior desde 2020. PNAD 5,3%, renda real 3,7%. Selic 13,75%. Desenrola ampliado (MEI, rural, tributário). IPP ago: números conflitantes (InfoMoney +0,36) — NÃO publicado.
-- Pesquisas: Meio/Ideia (30/09) 1º Lula 39,4 × Flávio 38,4; 2º 48,5 × 48,0. AtlasIntel 45,3 × 42,2; 2º 47,6 × 47,7 Flávio. Quaest 39×34, 2º 42×42. Genial exibiu ao vivo pesquisa com 2º 43×42, 1º 39×34, desaprovação 51% (instituto não identificado — NÃO publicado). Spyer citou "JERP" Flávio 50 × Lula 43 (não verificado, NÃO publicado).
+## 📌 NARRATIVA (1/10) — JUROS LONGOS GLOBAIS + PETRÓLEO + ELEIÇÃO
+- Qua 30/09 EUA: S&P 7.651,54 (−0,25%), Dow 50.906,05 (−0,9%), Nasdaq 26.861,06 (+0,2%). Setembro: S&P −0,4%, Nasdaq +1,9%, Dow −4,3%; 3T S&P +2,0%. UST 10a fech. 5,29% (máx. desde 2002, NÃO 2007), hoje tocou 5,33-5,36; 30a 5,64-5,67; gilt 30a 6% (máx. 1998). FedWatch alta 28/10: ~35-37% (de ~70% na semana passada). Goldman empurrou alta para dezembro. Fed funds 3,75-4,00% (alta em setembro). Presidente do Fed: Kevin Warsh.
+- Qui 1/10: jobless claims 197 mil (esp. 201). PMI ind. zona do euro 52,9 (máx. 52 meses), Alemanha 53,9, França 50,6. Tankan grandes ind. +24. DXY 102 (máx. 17 meses); USD/JPY 158-159. PetroChina cancelou embarques de gasolina/QAV de outubro → Brent dez ~US$ 100,5 (+2,5%); Brent nov venceu 30/09 a 103,53, dez fechou 98,03. Ouro ~4.210 (setembro −6,2%). Micron forte (receita 1T guia 61,5 bi). Trump: "certo nível de inflação ajuda a pagar a dívida". Kashkari hawkish. China fechada (feriado). Payroll amanhã: consenso +90 mil, 4,1%.
+- Irã: Rubio expulsou delegação iraniana na ONU; Trump admite intensificar ataques pós-midterms; 3 petroleiros atingidos em Ormuz 30/09; EUA avaliam proibir exportação de diesel por 90 dias.
+- Brasil: PMI ind. S&P set 44,8 (de 46,3). IPP ago +0,36% (12m 2,53%) — publicado hoje. Confiança empresarial FGV 89,3 (−1,2). China tarifa adicional 55% carne bovina BR a partir de 1/10. Fux admitiu Flamengo na ação contra MP das bets. Avalanche (PRTB) desistiu.
+- Pesquisas: Quaest 39×34, 2º 42×42; AtlasIntel 45,3×42,2, 2º Flávio 47,7×47,6; Datafolha 24/09 40×36, 2º 47×45 — NOVO Datafolha hoje 19h. Debate Globo 21h30: Flávio confirmado (Spyer/Genial), Lula vai a podcast (Flow). Polymarket 62×37 pró-Flávio (Genial, NÃO publicado).
 
 ## Níveis
 | Ativo | Nível |
 |---|---|
-| Ibovespa | Fech. 29/09: 183.828 (+0,46%; interrompeu 4 quedas). Mês ~+4% (Spyer). **COBRAR fech. 30/09 e setembro.** |
-| Dólar | Fech. 29/09: R$ 5,21-5,217 (−0,16%). 30/09 manhã: tocou 5,249 no futuro na abertura (Meio/Ideia), depois R$ 5,17 (−1%) pós-PCE. |
-| DI 29/09 | F27 13,55 · F29 13,76 (−14) · F31 13,94 (−11) · F33 13,985. NTN-B 2029 7,47 · 2035 7,58 · 2050 7,22 (XP). |
+| Ibovespa | Fech. 30/09: 186.340 (+1,37%). Setembro +5,0-5,3% (fontes divergem); 3T +8,3%; ano ~+15%. Abertura 1/10 ~186.871. **COBRAR fech. 1/10.** |
+| Dólar | Fech. 30/09: R$ 5,172-5,174 (−0,81%). ~R$ 5,18-5,19 na manhã de 1/10. |
+| DI 30/09 | F27 13,555 · F29 13,79 · F31 13,96. Set: F29 −40 pb, F31 −50 pb. |
 
 ## 🎯 Teses das casas
-- **Selic:** BTG/Empiricus (Laís Costa) — mais um corte de 25 em DEZEMBRO (curva precifica novembro); curva embute alta líquida ~50 pb em 2027, BTG vê cortes menores e contínuos × Genial (Motta) — sem alternância, piso 13,25-13,50; com alternância, abaixo de dois dígitos. PUBLICADO.
-- XP: NTN-B 2035 "queridinha"; energia: Axia, Auren (TIR 12→16%), Eneva, Copel, Engie. Fed: Williams sinalizou só +1 alta de 25 em 2026 (BTG).
-- Genial: surpreso com real a 5,19 com DXY >101; estrangeiro comprou call spread Brasil (110 mil contratos) na terça — aposta em alternância. Motta: Lula até 3 pts à frente no 1º turno "mercado ainda gosta" (opinião eleitoral, NÃO publicada). Motta tem 20-25% em dólar como proteção.
-- UBS elevou minério LP de 85 para 93 US$/t (Genial). Ativa: baixa prob. de Vale cortar guidance.
+- **Genial (Motta):** sem trade eleitoral, real estaria acima de 5,30; fim do regime de dólar fraco deixa Brasil vulnerável (déficit nominal ~9% PIB, despesa +6% real). Juro longo para quem aposta em alternância. Villegas: lista de 18 não financeiras sensíveis à queda da Selic; carteiras de outubro favorecem receita dolarizada, saíram do ouro, reintroduziram cripto. PUBLICADO.
+- **BTG (Luiz Molo, intl):** PCE → Fed em outubro fora; vê alta só em dezembro; fechamento da curva americana com fim do conflito; S&P a 19x lucro; assimetria positiva em Treasuries/TIPS. Neoenergia incorporou 7 ativos de transmissão (R$ 2,4 bi, com GIC). PUBLICADO.
+- **XP (Raquel Sá):** tema do dia FIIs ("preço de ficar de fora"); micro × macro; suporte técnico 180.800, resistência 189.500 (InfoMoney, matéria anterior).
 
 ## Empresas (publicadas)
-CSN Mineração corte de guidance (39-41 Mt; C1 US$ 25-26/t); Azzas +10,5% (Farm Rio); Raízen redução de capital até R$ 35 bi, AGEs 30/10; Braskem OPA 16/10; Copasa nova diretoria/conselho; Azul BNDES R$ 2,66 bi; Oncoclínicas AGE pedida pelo UBS/EXA; ISA JCP R$ 398,7 mi; Brava PPT-52. Não publicadas: CSU JCP 171,1 mi; Light JCP; Vale debêntures participativas R$ 512,2 mi; Tenda recompra 5 mi; Brasil Agro venda 1.752 ha; Nexpe pede encerramento da RJ; GPA corretora Susep; Ultrapar neutro (Ativa).
+Bradesco JCP R$ 3,8 bi; Vale panda bonds 3,5 bi yuans (não aprovado); Petrobras subvenção R$ 1,03 bi; Iguatemi venda de 5 shoppings ao TRXF11; Neoenergia transmissão R$ 2,4 bi; Sigma Lithium interdição ANM; Tecnisa grupamento 10:1; CPFL alvos BBA 52,50 / BBI 53; Embraer AGE 30/10 (GPX). Não publicadas (incertas): "Açaí" Cade 12% ON; "Evin" rating S&P AA+→AA; Simpar/JSL troca de CFO/DRI; PSEC11×RBRX11; Sabesp debêntures R$ 400 mi.
 
 ## Transcrições
-✅ BTG `nf_xBWCvSHs` (31,7 KB) · ✅ XP `V7-Si3ubJ4s` (26 KB) · ✅ Genial `DmkFyYe_x2Q` (47,7 KB; fechou ~09:42, legenda pronta às 10:25) · ✅ Spyer `zsb9lPXmH6U` (2,5 KB; 429 na 1ª, ok na 2ª) · ⚠️ Money Times `0hTPeDLmCvo` baixado (32,8 KB), mas é o giro intradiário de 29/09 — não usado; `enaR717fdGE` é notícia de pesquisa, não call.
+✅ BTG `wAw4oCP1A3s` (27 KB) · ✅ Genial `xfnvQbbk2Ns` (45,8 KB; legenda pronta às 10:25) · ✅ XP `e5hhIMQTDes` (31 KB) · ✅ Spyer `cHiXTIYZwK8` (2 KB; 429 no yt-dlp, ok via youtube-transcript-api) · ⚠️ Money Times `kCBOMX0Xqgk` (33,5 KB; via transcript-api) é giro de fechamento de setembro, não call de hoje — só contexto.
 
-## Próxima rodada (quinta 1/10)
-- COBRAR: fech. 30/09 (Ibov, dólar, DI, UST pós-PCE, Brent) e desempenho de setembro; Micron (após fechamento 30/09); falas Barkin, Cook, Goolsbee, Kashkari; FedWatch pós-PCE; ISM industrial; Datafolha; debate Globo (Lula vai?); Fux/bets (prazo AGU ~01/10); IPP ago (confirmar no IBGE).
-- AGENDA: 01/10 ISM, debate, Datafolha · 02/10 payroll · 04/10 1º turno · 16/10 OPA Braskem · 27-28/10 FOMC · 03-04/11 Copom.
-- Capa: NÃO repetir bandeira BR + multidão de costas + dólares ao vento amanhã.
+## Próxima rodada (sexta 2/10)
+- COBRAR: fech. 1/10 (Ibov, dólar, DI, UST, Brent); ISM industrial; falas Fed (Waller, Williams/Cook, Logan); Datafolha e demais pesquisas da noite; repercussão do debate; Nike; payroll 9h30 BRT (consenso +90 mil, 4,1%, salário 3,1% a/a); produção industrial BR (ago).
+- AGENDA: 02/10 payroll, produção industrial · 04/10 1º turno e Opep+ · 16/10 OPA Braskem · 27-28/10 FOMC · 03-04/11 Copom.
+- Capa: NÃO repetir telas com curva vermelha + títulos em chamas + operador de costas.
