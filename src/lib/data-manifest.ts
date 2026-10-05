@@ -53,7 +53,10 @@ export type DataSourceDef = {
    * juros globais em vez de sondar o Blob. `maxAgeDays` = tolerância p/ a data
    * do último fechamento (feriados/lag de carga da fonte contam).
    */
-  probe?: { kind: "global-rates"; country: string; expectPolicy?: boolean; maxAgeDays: number };
+  probe?:
+    | { kind: "global-rates"; country: string; expectPolicy?: boolean; maxAgeDays: number }
+    /** Taxas básicas (BIS/BCE): `maxAgeDays` vale p/ o país MAIS defasado entre os do gráfico padrão. */
+    | { kind: "policy-rates"; maxAgeDays: number };
 };
 
 export const PAINEIS: PainelDef[] = [
@@ -118,6 +121,8 @@ export const DATA_SOURCES: DataSourceDef[] = [
   { key: "live_rates_gb", label: "Reino Unido ao vivo (BoE)", blobPath: "live:global-rates/gb", workflowName: "(ao vivo)", cadence: "diario-util", painel: "juros-globais", probe: { kind: "global-rates", country: "gb", maxAgeDays: 6 } },
   { key: "live_rates_co", label: "Colômbia ao vivo (BanRep + implícita IBR)", blobPath: "live:global-rates/co", workflowName: "(ao vivo)", cadence: "diario-util", painel: "juros-globais", probe: { kind: "global-rates", country: "co", expectPolicy: true, maxAgeDays: 12 } },
   { key: "live_rates_cl", label: "Chile ao vivo (BCCh, credencial BCCH_*)", blobPath: "live:global-rates/cl", workflowName: "(ao vivo)", cadence: "diario-util", painel: "juros-globais", probe: { kind: "global-rates", country: "cl", maxAgeDays: 7 } },
+  // BIS publica ~1x/semana com ~1 semana de atraso (Colômbia chega a 12 dias).
+  { key: "live_policy_rates", label: "Taxas básicas pelo mundo (BIS + BCE depósito)", blobPath: "live:global-rates/policy-rates", workflowName: "(ao vivo)", cadence: "semanal", painel: "juros-globais", probe: { kind: "policy-rates", maxAgeDays: 21 } },
 
   // ── Fundos de Investimento (fundos-pipeline.yml, semanal — Mais Retorno) ───
   { key: "fundos_ranking", label: "Ranking de fundos (Mais Retorno)", blobPath: "data/fundos_ranking.json", workflowName: "fundos-pipeline.yml", cadence: "semanal", painel: "fundos-investimento", pagePath: "/painel-economico/mercado/brasil/fundos-investimento", dataDateField: "data_date" },

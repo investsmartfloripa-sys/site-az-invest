@@ -8,6 +8,8 @@ import {
 } from "@/lib/data-manifest";
 import { getCountryCurve, getFuturesPolicy } from "@/lib/global-rates-server";
 import type { GlobalCountryId } from "@/lib/global-rates";
+import { POLICY_RATE_COUNTRIES, policyCountry, type PolicyRateCountryId } from "@/lib/policy-rates";
+import { getPolicyRates } from "@/lib/policy-rates-server";
 
 export { DATA_SOURCES };
 export type { DataSourceDef };
@@ -141,7 +143,8 @@ type ProbeResult = {
  * badge aqui — antes o país sumia do site em silêncio.
  */
 async function probeLiveRates(source: DataSourceDef): Promise<ProbeResult> {
-  const probe = source.probe!;
+  const probe = source.probe;
+  if (probe?.kind !== "global-rates") throw new Error("probe inválida p/ juros globais");
   const country = probe.country as GlobalCountryId;
   try {
     const [curve, policy] = await Promise.all([
@@ -186,13 +189,60 @@ async function probeLiveRates(source: DataSourceDef): Promise<ProbeResult> {
 }
 
 /**
+ * Sonda as TAXAS BÁSICAS (BIS + BCE): chama o mesmo fetcher da rota. Erro se
+ * algum país do gráfico PADRÃO sumiu ou se o mais defasado deles passou da
+ * tolerância; aviso se só um país extra (fora do padrão) falhou. A data exibida
+ * é a do país padrão mais defasado — é ela que limita a leitura do gráfico.
+ */
+async function probePolicyRates(source: DataSourceDef): Promise<ProbeResult> {
+  const probe = source.probe;
+  if (probe?.kind !== "policy-rates") throw new Error("probe inválida p/ taxas básicas");
+  try {
+    const payload = await getPolicyRates();
+    const defaults = POLICY_RATE_COUNTRIES.filter((c) => c.defaultOn).map((c) => c.id);
+    const byId = new Map(payload.series.map((s) => [s.id, s]));
+    const missingDefault = defaults.filter((id) => !byId.has(id));
+    const missingExtra = payload.missing.filter((id) => !defaults.includes(id));
+    const defaultAsOf = defaults.map((id) => byId.get(id)?.asOf).filter((d): d is string => !!d).sort();
+    const oldest = defaultAsOf[0] ?? null;
+    if (payload.series.length === 0 || !oldest) {
+      return { generatedAt: null, lastDataLabel: null, level: "error", freshness: "missing", error: "BIS/BCE não responderam (nenhum país)" };
+    }
+    const generatedAt = new Date();
+    const names = (ids: PolicyRateCountryId[]) => ids.map((id) => policyCountry(id).name).join(", ");
+    if (missingDefault.length > 0) {
+      return { generatedAt, lastDataLabel: oldest, level: "error", freshness: "missing", error: `Sem dados: ${names(missingDefault)}` };
+    }
+    const ageDays = (Date.now() - Date.parse(`${oldest}T00:00:00Z`)) / 86_400_000;
+    if (ageDays > probe.maxAgeDays) {
+      const late = defaults.filter((id) => byId.get(id)!.asOf === oldest);
+      return {
+        generatedAt,
+        lastDataLabel: oldest,
+        level: "error",
+        freshness: "atrasado",
+        error: `${names(late)}: último dado há ${Math.round(ageDays)} dias (tolerância ${probe.maxAgeDays})`,
+      };
+    }
+    if (missingExtra.length > 0) {
+      return { generatedAt, lastDataLabel: oldest, level: "warn", freshness: "stale", error: `Extras sem dados: ${names(missingExtra)}` };
+    }
+    return { generatedAt, lastDataLabel: oldest, level: "ok", freshness: "fresh", error: null };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "probe failed";
+    return { generatedAt: null, lastDataLabel: null, level: "error", freshness: "missing", error: msg };
+  }
+}
+
+/**
  * Checa uma fonte:
- *  - probe (ao vivo) → chama o fetcher dos juros globais
+ *  - probe (ao vivo) → chama o fetcher dos juros globais / das taxas básicas
  *  - kind=svg ou heavy=true → HEAD (last-modified como giro, sem meta interna)
  *  - JSON normal → GET + leitura de gerado_em/generated_at, freshness e data do dado
  */
 async function probeSource(source: DataSourceDef): Promise<ProbeResult> {
   if (source.probe?.kind === "global-rates") return probeLiveRates(source);
+  if (source.probe?.kind === "policy-rates") return probePolicyRates(source);
 
   const url = painelBlobUrl(source.blobPath);
   const headOnly = source.kind === "svg" || source.heavy === true;

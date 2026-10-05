@@ -151,3 +151,17 @@ Conta corrente usa referências assimétricas — déficit acima de 4 a 5% é zo
 B3, DI1 e DAP: `cotacao.b3.com.br/mds/api/v1/DerivativeQuotation/{DI1,DAP}` tem atraso de cerca de 15 minutos e CORS aberto. Faça o fetch **sempre client-side** — o datacenter recebe cache velho de meses.
 
 Focus: `https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais`, endpoint público e sem token.
+
+### Taxas básicas pelo mundo (Juros Globais)
+Gráfico "Taxas básicas de juros pelo mundo" no topo de `/painel-economico/mercado/global/juros-globais`. Catálogo e cálculos em `src/lib/policy-rates.ts`, fetch em `src/lib/policy-rates-server.ts`, rota `/api/global-rates/policy-rates`, sonda `live_policy_rates` no data-manifest.
+
+Fonte única: **BIS WS_CBPOL** — `https://stats.bis.org/api/v1/data/WS_CBPOL/D.{CC}/all?format=csv&detail=dataonly&startPeriod=2000-01-01`, grátis, sem chave, ~200 KB por país. Use **sempre `detail=dataonly`**: o CSV completo tem campos entre aspas com vírgula dentro (notas de compilação) e quebra o split ingênuo. A série é diária **corrida**: fim de semana e feriado vêm como `"NaN"` — sem descartar, cada fim de semana vira duas "mudanças" de taxa falsas (Chile deu 662 mudanças desde 2021). Compare valores numericamente arredondados (3 casas). Defasagem de cerca de 1 semana; a Colômbia chega a 12 dias e a Coreia do Sul a 5 semanas (por isso a coluna "Dados até" por país).
+
+Quebras de definição dentro da própria série do BIS (as notas vêm na coluna `COMPILATION`/`SUPP_INFO_BREAKS` do CSV completo) — tratadas com corte `since` no catálogo:
+- **México** até 20/01/2008 é a *bank funding rate* (taxa de mercado, oscila todo dia — 1.458 "mudanças"); só a partir de 21/01/2008 é a meta do Banxico.
+- **Indonésia** troca a BI rate pela 7-day reverse repo em 19/08/2016: o salto de 6,50 para 5,25 **não foi corte** (nota do próprio BIS).
+- **Chile** antes de 09/08/2001 a taxa era real (indexada à inflação defasada).
+- **Zona do Euro**: o BIS publica a MRO até 17/09/2024 e a taxa de depósito depois — a emenda cria um corte falso de 0,75 p.p. e um "pico do ciclo" de 4,50 que nunca existiu na taxa que guia o mercado. Por isso o euro vem do **BCE** (`data-api.ecb.europa.eu/service/data/FM/D.U2.EUR.4F.KR.DFR.LEV`, taxa de depósito, histórico inteiro, atualizada no dia); se o BCE falhar, cai para o BIS só a partir de 18/09/2024.
+- **EUA** = ponto médio da banda do Fed (3,875 = banda 3,75–4,00; a tabela mostra a banda). **China** = LPR 1 ano desde 20/08/2019 (antes, taxa oficial de empréstimo de 1 ano — degrau pequeno, mantido).
+
+Fora do gráfico de propósito: Turquia (acima de 35% achata a escala) e Índia (série do BIS parada há meses). "Situação" = direção da última decisão se ela ocorreu nos últimos 100 dias, senão "Pausa"; "vs. pico" = taxa atual menos a máxima desde jan/2021.
