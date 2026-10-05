@@ -43,6 +43,7 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
   const indicadores = data.indicadores_semaforo ?? {};
   const categorias = data.categorias_ordem ?? [];
   const lev = data.levers;
+  const mat = data.matrizes;
   const foto = data.foto_brasil;
   const giro = data.gerado_em;
   const dado = data.fonte_base;
@@ -262,12 +263,13 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
         label="Ferramentas do livro"
         info='Matrizes de sensibilidade e os 4 levers de "How Countries Go Broke". Leitura AZ: nenhum lever sozinho resolve o caso brasileiro em magnitude politicamente plausível — o livro prevê combinação de dois ou mais (caso análogo: Reino Unido 1976). Os levers usam o perímetro do livro (DBGG ÷ receita do governo central, estabilizando Dívida/Receita) e por isso pedem ajustes maiores que o primário estabilizador p* dos KPIs, calculado no perímetro consolidado sobre Dívida/PIB. Os dois números são consistentes entre si — medem alvos diferentes. CONVENÇÃO DE SINAL: dentro destas ferramentas vale a convenção do livro (déficit primário positivo); no restante da seção fiscal, positivo = superávit (STN).'
       />
+      {mat ? (
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
         <div className="rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">
           <h2 className="mb-2 text-base font-bold text-[#132960]">Dívida/Receita em 10 anos — por déficit</h2>
           <MatrizDalio
-            matriz={data.matrizes.endlevel_por_deficit}
-            eixoX={data.matrizes.endlevel_por_deficit.eixo_x_deficit ?? []}
+            matriz={mat.endlevel_por_deficit}
+            eixoX={mat.endlevel_por_deficit.eixo_x_deficit ?? []}
             labelY="Dívida/Receita HOJE"
             labelX="Déficit primário anual (% Receita)"
             premissaTexto="Assume i = g (cenário simplificado do livro): isola o efeito do déficit primário acumulado."
@@ -276,8 +278,8 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
         <div className="rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">
           <h2 className="mb-2 text-base font-bold text-[#132960]">Dívida/Receita em 10 anos — por gap r − g</h2>
           <MatrizDalio
-            matriz={data.matrizes.endlevel_por_gap}
-            eixoX={data.matrizes.endlevel_por_gap.eixo_x_gap_pp ?? []}
+            matriz={mat.endlevel_por_gap}
+            eixoX={mat.endlevel_por_gap.eixo_x_gap_pp ?? []}
             labelY="Dívida/Receita HOJE"
             labelX="Gap r − g (pontos percentuais)"
             sufX="pp"
@@ -285,6 +287,11 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
           />
         </div>
       </div>
+      ) : (
+        <p className="text-sm text-zinc-500">
+          Matrizes de sensibilidade indisponíveis nesta atualização (faltou insumo no pipeline) — voltam na próxima rodada.
+        </p>
+      )}
 
       {lev ? (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">

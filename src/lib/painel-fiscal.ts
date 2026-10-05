@@ -354,10 +354,11 @@ export type FiscalTermometroData = {
       gap_i_menos_g_pp: number;
     };
   };
+  /** null quando o pipeline não teve insumo (ex.: SGS falhou) — já aconteceu em 05/10/2026 e quebrou o build. */
   matrizes: {
     endlevel_por_deficit: Matriz;
     endlevel_por_gap: Matriz;
-  };
+  } | null;
   levers: {
     gap_atual_pp: number;
     lever_juros?: Lever;
