@@ -114,6 +114,20 @@ def _get(url: str, *, timeout: int = 90, retries: int = 4, sleep: float = 4.0) -
     raise RuntimeError(f"falha após {retries} tentativas: {last}")
 
 
+def _get_json(url: str, *, timeout: int = 90, retries: int = 4, sleep: float = 4.0):
+    """GET + JSON com retry também quando a fonte responde 200 com corpo vazio ou HTML
+    (falha intermitente do SGS/Olinda que o raise_for_status não pega)."""
+    last: Optional[Exception] = None
+    for i in range(retries):
+        try:
+            return _get(url, timeout=timeout, retries=1).json()
+        except Exception as e:  # noqa: BLE001
+            last = e
+            print(f"  json retry {i + 1}/{retries}: {repr(e)[:100]}", file=sys.stderr)
+            time.sleep(sleep)
+    raise RuntimeError(f"JSON inválido após {retries} tentativas ({url[:80]}...): {last}")
+
+
 def sgs_diaria(cod: int, ini_ano: int = 2008) -> pd.Series:
     """Série diária do SGS em janelas de 5 anos (limite da API)."""
     out: Dict[pd.Timestamp, float] = {}
@@ -122,7 +136,7 @@ def sgs_diaria(cod: int, ini_ano: int = 2008) -> pd.Series:
         b = min(a + 5, fim_ano)
         url = (f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.{cod}/dados?formato=json"
                f"&dataInicial=01/01/{a}&dataFinal=31/12/{b - 1}")
-        j = _get(url, timeout=60).json()
+        j = _get_json(url, timeout=60)
         if not isinstance(j, list):
             raise RuntimeError(f"SGS {cod} {a}-{b - 1}: resposta inesperada")
         for x in j:
@@ -138,7 +152,7 @@ def focus_ipca_12m() -> pd.Series:
     url = (f"{OLINDA}/ExpectativasMercadoInflacao12Meses"
            "?$filter=Indicador%20eq%20%27IPCA%27%20and%20Suavizada%20eq%20%27S%27%20and%20baseCalculo%20eq%200"
            "&$select=Data,Mediana&$format=json&$top=30000")
-    v = _get(url, timeout=120).json().get("value", [])
+    v = _get_json(url, timeout=120).get("value", [])
     s = pd.Series({pd.Timestamp(x["Data"]): float(x["Mediana"]) for x in v if x.get("Mediana") is not None})
     s = s[~s.index.duplicated(keep="last")].sort_index()
     print(f"  Focus IPCA 12m: {len(s)} dias até {s.index.max().date()}")
@@ -153,7 +167,7 @@ def focus_anuais(indicador_url: str) -> Dict[pd.Timestamp, Dict[int, float]]:
         url = (f"{OLINDA}/ExpectativasMercadoAnuais?$format=json&$select=Data,DataReferencia,Mediana"
                f"&$filter=Indicador%20eq%20'{indicador_url}'%20and%20baseCalculo%20eq%200"
                f"%20and%20Data%20ge%20'{INICIO_DADOS}'&$orderby=Data&$top=10000&$skip={skip}")
-        v = _get(url, timeout=180).json().get("value", [])
+        v = _get_json(url, timeout=180).get("value", [])
         if not v:
             break
         rows += v
@@ -198,7 +212,7 @@ def fred(series_id: str, start: str = INICIO_DADOS) -> pd.Series:
     if key:
         url = ("https://api.stlouisfed.org/fred/series/observations"
                f"?series_id={series_id}&api_key={key}&file_type=json&observation_start={start}")
-        for o in _get(url).json().get("observations", []):
+        for o in _get_json(url).get("observations", []):
             try:
                 out[pd.Timestamp(o["date"])] = float(o["value"])
             except (TypeError, ValueError):
@@ -498,12 +512,16 @@ def build(out_dir: Path) -> Dict:
             "coef_so_juros": _r(rj.params[c], 4) if c in JUROS else None,
         })
 
+    # Dispersões P/L × cada variável (regressão simples, só para leitura): as 3 taxas
+    # de juros num conjunto e as demais variáveis do completo noutro (grupo).
     dispersao = []
-    for c in JUROS:
+    for c in COMPLETO:
         rb = ols_hac(amostra["pl"], amostra[[c]])
         x0, x1 = float(amostra[c].min()), float(amostra[c].max())
         a, b = float(rb.params["const"]), float(rb.params[c])
-        dispersao.append({"key": c, "nome": VARS[c]["nome"], "a": _r(a, 4), "b": _r(b, 4), "t": _r(rb.tvalues[c], 2),
+        dispersao.append({"key": c, "nome": VARS[c]["nome"], "unidade": VARS[c]["unidade"],
+                          "grupo": "juros" if c in JUROS else "outras",
+                          "a": _r(a, 4), "b": _r(b, 4), "t": _r(rb.tvalues[c], 2),
                           "r2": _r(rb.rsquared, 3), "x0": _r(x0, 3), "y0": _r(a + b * x0, 3), "x1": _r(x1, 3),
                           "y1": _r(a + b * x1, 3)})
 

@@ -94,12 +94,14 @@ function DispTooltip({
 
 function MiniDispersao({
   d,
+  unidade,
   pts,
   hoje,
   ylo,
   yhi,
 }: {
   d: IbovPlModeloData["dispersao"][number];
+  unidade: string;
   pts: Ponto[];
   hoje: Ponto | null;
   ylo: number;
@@ -109,8 +111,11 @@ function MiniDispersao({
   const xlo = Math.floor(Math.min(...xs) - 0.5);
   const xhi = Math.ceil(Math.max(...xs) + 0.5);
   return (
-    <div>
-      <p className="text-[12px] font-semibold text-[#132960]">{d.nome}</p>
+    <div className="min-w-0">
+      <p className="text-[12px] font-semibold text-[#132960]">
+        {d.nome}
+        {unidade === "p.p." ? <span className="font-normal text-zinc-500"> (p.p.)</span> : null}
+      </p>
       <p className="text-[10px] text-zinc-500">
         inclinação {fmtSignedNum(d.b, 2)} · R² {fmtNum(d.r2, 2)}
       </p>
@@ -123,7 +128,7 @@ function MiniDispersao({
               type="number"
               dataKey="x"
               domain={[xlo, xhi]}
-              tickFormatter={(v) => `${fmtNum(Number(v), 0)}%`}
+              tickFormatter={(v) => (unidade === "%" ? `${fmtNum(Number(v), 0)}%` : fmtNum(Number(v), 0))}
               tickCount={5}
             />
             <YAxis
@@ -135,7 +140,7 @@ function MiniDispersao({
               tickFormatter={(v) => fmtNum(Number(v), 0)}
             />
             <Tooltip
-              content={<DispTooltip nome={d.nome} unidade="%" />}
+              content={<DispTooltip nome={d.nome} unidade={unidade} />}
               cursor={{ strokeDasharray: "3 3", stroke: AZ_CHART.ticks }}
             />
             <Scatter data={pts} fill={PL_CORES.obs} fillOpacity={0.32} isAnimationActive={false} />
@@ -166,7 +171,19 @@ function MiniDispersao({
   );
 }
 
-export function PlDispersaoCard({ m }: { m: IbovPlModeloData }) {
+/** Grupo da dispersão: blobs antigos não trazem `grupo` — deduz pelas variáveis do "só juros". */
+export function grupoDispersao(m: IbovPlModeloData, key: IbovPlModeloVarKey): "juros" | "outras" {
+  const d = m.dispersao.find((x) => x.key === key);
+  if (d?.grupo) return d.grupo;
+  return m.modelos.juros.vars.includes(key) ? "juros" : "outras";
+}
+
+const GRUPOS = {
+  juros: { titulo: "P/L × juro real", grade: "grid-cols-1 sm:grid-cols-3" },
+  outras: { titulo: "P/L × demais variáveis do modelo", grade: "grid-cols-2 sm:grid-cols-4" },
+} as const;
+
+export function PlDispersaoCard({ m, grupo }: { m: IbovPlModeloData; grupo: "juros" | "outras" }) {
   const { porVar, hojePorVar, ylo, yhi } = useMemo(() => {
     const amostra = m.serie.filter((r) => r.na_amostra && r.pl != null);
     const hojeRow = m.serie.find((r) => r.mes === m.hoje.mes) ?? null;
@@ -182,34 +199,42 @@ export function PlDispersaoCard({ m }: { m: IbovPlModeloData }) {
           ? { x: xv, y: hojeRow.pl, mes: hojeRow.mes, date: hojeRow.date, parcial: hojeRow.parcial }
           : null;
     }
+    // Mesma régua de P/L em todos os painéis (os dois cards ficam lado a lado).
     const ys = amostra.map((r) => r.pl as number).concat(hojeRow?.pl != null ? [hojeRow.pl] : []);
     return { porVar, hojePorVar, ylo: Math.floor(Math.min(...ys) - 0.5), yhi: Math.ceil(Math.max(...ys) + 0.5) };
   }, [m]);
+  const itens = m.dispersao.filter((d) => grupoDispersao(m, d.key) === grupo);
+  if (!itens.length) return null;
+  const unidadeDe = (key: IbovPlModeloVarKey) =>
+    m.dispersao.find((d) => d.key === key)?.unidade ?? m.variaveis.find((v) => v.key === key)?.unidade ?? "%";
+  const g = GRUPOS[grupo];
 
   return (
-    <article className={CARD}>
+    <article className={`${CARD} h-full`}>
       <header className="pb-2">
         <h3 className={TITULO}>
-          P/L × juro real ({fmtMesCurto(m.amostra.inicio)}–{fmtMesCurto(m.amostra.fim)})
+          {g.titulo} ({fmtMesCurto(m.amostra.inicio)}–{fmtMesCurto(m.amostra.fim)})
           <MethodInfo className="ml-1.5 align-middle">
-            Cada ponto é um mês da amostra do modelo: P/L do Ibovespa (eixo vertical) contra a taxa de juro
-            real do mês (média mensal). A reta é a regressão simples com aquela taxa sozinha — serve para ver a
-            relação; o P/L justificado do modelo usa as taxas juntas, com outros coeficientes. Ponto laranja =
-            hoje.
+            Cada ponto é um mês da amostra do modelo: P/L do Ibovespa (eixo vertical) contra a variável do mês
+            (média mensal). A reta é a regressão simples com aquela variável sozinha — serve para ver a relação;
+            o P/L justificado do modelo usa as variáveis juntas, com outros coeficientes. Ponto laranja = hoje.
           </MethodInfo>
         </h3>
-        <p className="mt-0.5 text-[11px] text-zinc-500">
-          Quanto maior o juro real, menor o P/L que o mercado paga · ponto laranja = hoje
-        </p>
+        <p className="mt-0.5 text-[11px] text-zinc-500">Cada ponto é um mês · ponto laranja = hoje</p>
       </header>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {m.dispersao.map((d) => (
-          <MiniDispersao key={d.key} d={d} pts={porVar[d.key] ?? []} hoje={hojePorVar[d.key] ?? null} ylo={ylo} yhi={yhi} />
+      <div className={`grid ${g.grade} gap-3`}>
+        {itens.map((d) => (
+          <MiniDispersao
+            key={d.key}
+            d={d}
+            unidade={unidadeDe(d.key)}
+            pts={porVar[d.key] ?? []}
+            hoje={hojePorVar[d.key] ?? null}
+            ylo={ylo}
+            yhi={yhi}
+          />
         ))}
       </div>
-      <p className="mt-2 text-right">
-        <DataStamp giro={m.generated_at} dado={m.last_data_date} />
-      </p>
     </article>
   );
 }

@@ -18,6 +18,7 @@ import {
   PlDecomposicaoCard,
   PlDispersaoCard,
   PlVariaveisCard,
+  grupoDispersao,
 } from "@/components/painel/acoes/AcoesPlModeloDetalhe";
 import { AcoesPremioNtnb } from "@/components/painel/acoes/AcoesPremioNtnb";
 import { PL_CORES, rotuloMes } from "@/components/painel/acoes/plModeloShared";
@@ -26,13 +27,12 @@ import {
   resolvePeriodRange,
   type AzPeriodValue,
 } from "@/components/painel/charts";
-import { Divisor, KpiCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
+import { Divisor, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { AZ_BRAND } from "@/lib/az-chart-theme";
 import {
   buildTimeTicks,
   diffDaysUTC,
-  fmtDataBR,
   fmtMesCurto,
   fmtNum,
   fmtSignedNum,
@@ -314,74 +314,6 @@ function PlJustificadoCard({ m }: { m: IbovPlModeloData }) {
   );
 }
 
-const GLOSSARIO: Array<[string, string]> = [
-  ["P/L", "Preço sobre lucro: quantos anos de lucro dos últimos 12 meses o mercado paga pelas empresas do índice."],
-  ["P/L justificado", "O P/L que a relação histórica com os juros prevê para as condições de hoje. Acima dele, a bolsa está mais cara do que os juros explicam."],
-  ["Só juros × completo", "“Só juros” usa três taxas reais (Selic, 5 e 30 anos). O completo soma expectativas e exterior: mudança esperada da Selic, juro real dos EUA, cupom cambial real e tendência do juro americano."],
-  ["σ (desvio-padrão)", "Quanto o P/L costuma se afastar da média. As faixas sombreadas marcam ±1σ e ±2σ; o z diz quantos σ o P/L está da média."],
-  ["Juro real", "Juro descontada a inflação. Selic real: Selic meta ÷ IPCA esperado em 12 meses (Focus). Juro real de 5 e 30 anos: taxa das NTN-B nesses prazos."],
-  ["Cupom cambial real", "Juro em dólar implícito na Selic e no câmbio esperados pelo Focus, descontada a inflação esperada nos EUA."],
-  ["Peso fora do cálculo", "Parte do índice que fica de fora num mês: empresas com prejuízo, sem dado de lucro ou com P/L fora de 2–100x."],
-];
-
-function GlossarioFicha({ m, valuation }: { m: IbovPlModeloData; valuation: AcoesValuationData | null }) {
-  const c = m.modelos.completo;
-  const ajustes = valuation?.lpa_ajustes ? Object.entries(valuation.lpa_ajustes) : [];
-  return (
-    <section className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Glossário</h3>
-      <dl className="mt-2 grid gap-x-6 gap-y-2 text-[12px] leading-snug md:grid-cols-2">
-        {GLOSSARIO.map(([t, d]) => (
-          <div key={t}>
-            <dt className="font-semibold text-[#132960]">{t}</dt>
-            <dd className="text-zinc-600">{d}</dd>
-          </div>
-        ))}
-      </dl>
-      <details className="mt-4 border-t border-[#132960]/10 pt-3 text-[12px] text-zinc-600">
-        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          Ficha técnica do modelo
-        </summary>
-        <ul className="mt-2 list-disc space-y-1 pl-5">
-          <li>
-            Y = P/L do Ibovespa no último dia útil do mês. X = média mensal de cada variável (o tratamento é
-            só nas explicativas; suavizar o P/L inflaria o ajuste).
-          </li>
-          <li>
-            Regressão por mínimos quadrados com erro-padrão robusto (Newey-West, 6 defasagens). As três
-            taxas de juros andam juntas, então valem em bloco (teste F), não uma a uma.
-          </li>
-          <li>
-            Amostra: {fmtMesCurto(m.amostra.inicio)} a {fmtMesCurto(m.amostra.fim)}, {m.amostra.n} meses
-            {m.amostra.buracos.length
-              ? ` — sem P/L em ${m.amostra.buracos.map(([a, b]) => (a === b ? fmtMesCurto(a) : `${fmtMesCurto(a)}–${fmtMesCurto(b)}`)).join(", ")} (menos de 60% do índice com lucro positivo)`
-              : ""}
-            .
-          </li>
-          <li>
-            Ajuste: R² {fmtNum(m.modelos.juros.r2, 2)} só com juros e {fmtNum(c.r2, 2)} no completo. Resíduo do
-            completo estacionário (relação de longo prazo); desvios se corrigem com meia-vida de{" "}
-            {c.meia_vida_meses != null ? `${fmtNum(c.meia_vida_meses, 1)} meses` : "—"}.
-          </li>
-          <li>
-            Reestimado a cada fechamento de mês: a linha histórica do justificado muda um pouco a cada
-            reestimação. O mês em curso entra só como ponto de hoje.
-          </li>
-          <li>
-            Lucro: LPA reportado (calendário de resultados do Yahoo) somado em 12 meses pela data de anúncio;
-            pesos da carteira atual do Ibovespa aplicados a todo o histórico.
-            {ajustes.length ? ` Correções de moeda/unidade: ${ajustes.map(([t, mot]) => `${t} (${mot})`).join("; ")}.` : ""}
-          </li>
-          <li>
-            Fontes: B3 (carteira), Yahoo (preço e lucro), ANBIMA/Tesouro (NTN-B), BCB (Selic, câmbio, Focus),
-            US Treasury (juro real e inflação implícita dos EUA).
-          </li>
-        </ul>
-      </details>
-    </section>
-  );
-}
-
 /**
  * Seção Valuation da aba Analítico (Bolsa): P/L do Ibovespa contra o P/L que os juros
  * reais justificam (modelo de build_ibov_pl_modelo.py), dispersões, prêmio vs NTN-B e,
@@ -389,52 +321,28 @@ function GlossarioFicha({ m, valuation }: { m: IbovPlModeloData; valuation: Acoe
  */
 export function AcoesPlModelo({ modelo, valuation }: { modelo: IbovPlModeloData; valuation: AcoesValuationData | null }) {
   const [verModelo, setVerModelo] = useState(false);
-  const h = modelo.hoje;
-  const s = modelo.pl_stats;
-  const naConta = h.excl.total != null ? 100 - h.excl.total : null;
+  const temOutras = modelo.dispersao.some((d) => grupoDispersao(modelo, d.key) === "outras");
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiCard
-          label="P/L do Ibovespa hoje"
-          value={fmtNum(h.pl, 1)}
-          unit="x"
-          hint={`${fmtDataBR(h.data)}${naConta != null ? ` · ${fmtNum(naConta, 0)}% do índice no cálculo` : ""}`}
-          size="lg"
-        />
-        <KpiCard
-          label="Vs. média histórica"
-          value={h.z != null ? `${fmtSignedNum(h.z, 2)}σ` : "—"}
-          hint={`média ${fmtNum(s.mean, 1)}x desde ${fmtMesCurto(s.inicio)} · σ ${fmtNum(s.sd, 1)}x`}
-        />
-        <KpiCard
-          label="Justificado só pelos juros"
-          value={fmtNum(h.justificado_juros, 1)}
-          unit="x"
-          delta={h.desvio_juros_pct}
-          deltaHint="P/L vs justificado"
-          hint={`IC 95% ${fmtNum(h.ic_juros[0], 1)}–${fmtNum(h.ic_juros[1], 1)}x`}
-        />
-        <KpiCard
-          label="Justificado pelo modelo completo"
-          value={fmtNum(h.justificado_completo, 1)}
-          unit="x"
-          delta={h.desvio_completo_pct}
-          deltaHint="P/L vs justificado"
-          hint={`IC 95% ${fmtNum(h.ic_completo[0], 1)}–${fmtNum(h.ic_completo[1], 1)}x`}
-        />
-      </div>
-
       <Divisor
         label="Valuation — P/L × juros reais"
         info="O P/L do Ibovespa comparado com a própria história (média e desvios) e com o P/L que os juros reais justificam. Acima do justificado, a bolsa está mais cara do que os juros explicam; abaixo, mais barata."
       />
       <PlJustificadoCard m={modelo} />
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
-        <PlDispersaoCard m={modelo} />
-        {valuation && valuation.status === "ok" ? <AcoesPremioNtnb data={valuation} /> : null}
+      {/* As duas dispersões dividem a linha na proporção dos painéis (3 + 4): todo
+          painel sai com a mesma largura. */}
+      <div className={`grid grid-cols-1 items-stretch gap-4 ${temOutras ? "xl:grid-cols-7" : ""}`}>
+        <div className={temOutras ? "xl:col-span-3" : ""}>
+          <PlDispersaoCard m={modelo} grupo="juros" />
+        </div>
+        {temOutras ? (
+          <div className="xl:col-span-4">
+            <PlDispersaoCard m={modelo} grupo="outras" />
+          </div>
+        ) : null}
       </div>
+      {valuation && valuation.status === "ok" ? <AcoesPremioNtnb data={valuation} /> : null}
 
       <Divisor
         label="Modelo — variáveis e coeficientes"
@@ -456,8 +364,6 @@ export function AcoesPlModelo({ modelo, valuation }: { modelo: IbovPlModeloData;
           <PlDecomposicaoCard m={modelo} />
         </div>
       ) : null}
-
-      <GlossarioFicha m={modelo} valuation={valuation} />
     </div>
   );
 }

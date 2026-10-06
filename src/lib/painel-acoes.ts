@@ -222,6 +222,10 @@ export type IbovPlModeloData = {
   dispersao: Array<{
     key: IbovPlModeloVarKey;
     nome: string;
+    /** "%" ou "p.p." (blobs antigos não trazem). */
+    unidade?: string;
+    /** "juros" (as 3 taxas) ou "outras" (demais variáveis do completo). */
+    grupo?: "juros" | "outras";
     a: number | null;
     b: number | null;
     t: number | null;
