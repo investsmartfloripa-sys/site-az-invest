@@ -3,17 +3,20 @@
 import { useCallback, useState } from "react";
 
 import { AcoesScreener } from "@/components/painel/acoes/AcoesScreener";
+import { AcoesPlModelo } from "@/components/painel/acoes/AcoesPlModelo";
 import { AcoesValuation } from "@/components/painel/acoes/AcoesValuation";
 import { ComparadorTabela, type ComparadorAtivoRow } from "@/components/painel/acoes/ComparadorTabela";
 import { FluxoInvestidores } from "@/components/painel/acoes/FluxoInvestidores";
 import { IbovHero, type IbovOverlaySeries } from "@/components/painel/acoes/IbovHero";
 import { SimuladorCarteira, type SimAssetInput } from "@/components/painel/acoes/SimuladorCarteira";
 import type { AzPeriodValue, AzSeriesPoint } from "@/components/painel/charts";
+import { Divisor } from "@/components/painel/core";
 import type {
   AcoesIbovData,
   AcoesScreenerData,
   AcoesValuationData,
   FluxoInvestidoresData,
+  IbovPlModeloData,
 } from "@/lib/painel-acoes";
 
 /** Paleta das ações sobrepostas — evita o azul AZ (reservado ao Ibovespa). */
@@ -25,12 +28,14 @@ type TabId = "visao" | "analitico";
 type Props = {
   ibov: AcoesIbovData | null;
   valuation: AcoesValuationData | null;
+  /** Modelo P/L × juros reais; null → card legado de P/L com bandas. */
+  modelo: IbovPlModeloData | null;
   fluxo: FluxoInvestidoresData | null;
   screener: AcoesScreenerData | null;
   logos: Record<string, string>;
 };
 
-export function RendaVariavelClient({ ibov, valuation, fluxo, screener, logos }: Props) {
+export function RendaVariavelClient({ ibov, valuation, modelo, fluxo, screener, logos }: Props) {
   const [tab, setTab] = useState<TabId>("visao");
 
   // Janela do comparador — vive AQUI (não no hero) porque gráfico e tabela
@@ -207,7 +212,9 @@ export function RendaVariavelClient({ ibov, valuation, fluxo, screener, logos }:
         </div>
       ) : (
         <div className="space-y-6">
-          {valuation && valuation.status === "ok" ? (
+          {modelo ? (
+            <AcoesPlModelo modelo={modelo} valuation={valuation && valuation.status === "ok" ? valuation : null} />
+          ) : valuation && valuation.status === "ok" ? (
             <AcoesValuation data={valuation} />
           ) : (
             <section className="rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm">
@@ -215,7 +222,12 @@ export function RendaVariavelClient({ ibov, valuation, fluxo, screener, logos }:
               <p className="mt-2 text-sm text-zinc-500">Em construção.</p>
             </section>
           )}
-          {fluxo && fluxo.status === "ok" ? <FluxoInvestidores data={fluxo} /> : null}
+          {fluxo && fluxo.status === "ok" ? (
+            <div className="space-y-4">
+              {modelo ? <Divisor label="Fluxo de investidores" /> : null}
+              <FluxoInvestidores data={fluxo} />
+            </div>
+          ) : null}
         </div>
       )}
     </div>

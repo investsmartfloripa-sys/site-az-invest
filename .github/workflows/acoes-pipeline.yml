@@ -64,7 +64,8 @@ jobs:
         run: python data-pipeline/python/build_acoes_total_return.py --upload
         continue-on-error: true
 
-      # Valuation (P/L bottom-up + prêmio EY/DY vs NTN-B) — pesado, ~5 min, append-only
+      # Valuation (P/L bottom-up + prêmio EY/DY vs NTN-B) — pesado, ~5 min, append-only.
+      # Grava também data/acoes_lpa_reportado.json (base incremental do LPA por data de anúncio).
       # ATENÇÃO: em runs de `schedule` o github.event.inputs não existe e o if
       # antigo (inputs.run_valuation != '0') avaliava FALSE — o step era PULADO
       # silenciosamente em todo cron (valuation ficou parado 01-04/06/26).
@@ -72,6 +73,15 @@ jobs:
         if: ${{ github.event_name == 'schedule' || github.event.inputs.run_valuation != '0' }}
         run: python data-pipeline/python/build_acoes_valuation.py --upload --sleep 0.2
         continue-on-error: true
+
+      # Modelo P/L × juros reais (Bolsa → Analítico) — leve, ~1 min. Lê o pl_mensal
+      # recém-gerado no passo anterior (out/) ou, se ele foi pulado/falhou, o do Blob.
+      # Trava interna: estimação ruim aborta o upload e o site segue com o último bom.
+      - name: build_ibov_pl_modelo (P/L justificado pelos juros)
+        run: python data-pipeline/python/build_ibov_pl_modelo.py --upload
+        continue-on-error: true
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
 
       - name: Upload artefatos (debug)
         if: always()
@@ -84,6 +94,8 @@ jobs:
             data-pipeline/out/acoes_logos.json
             data-pipeline/out/acoes_total_return.json
             data-pipeline/out/acoes_valuation.json
+            data-pipeline/out/acoes_lpa_reportado.json
+            data-pipeline/out/ibov_pl_modelo.json
           if-no-files-found: warn
           retention-days: 7
 

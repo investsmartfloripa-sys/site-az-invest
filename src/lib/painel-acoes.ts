@@ -91,6 +91,157 @@ export type AcoesValuationData = {
   ntnb_full?: Array<[string, number]>;
   sources?: Record<string, string>;
   method?: string;
+  // ---- schema_version 2 (out/2026): LPA reportado por data de anúncio ----
+  schema_version?: number;
+  last_data_date?: string | null;
+  /** P/L do último dia útil de cada mês desde 2011 (Y do modelo P/L × juros). */
+  pl_mensal?: Array<{
+    date: string;
+    pl: number;
+    excl: number;
+    excl_teto: number;
+    excl_prejuizo: number;
+    excl_sem_dado: number;
+  }>;
+  excl_hoje?: { sem_dado: number | null; prejuizo: number | null; teto: number | null } | null;
+  /** Correções mecânicas do LPA (moeda/unidade), papel → motivo. */
+  lpa_ajustes?: Record<string, string>;
+  lpa_irma?: Record<string, string>;
+  cortes_descontinuidade?: Record<string, string>;
+};
+
+// ---------------------------------------------------------------------------
+// Modelo P/L × juros reais (build_ibov_pl_modelo.py → data/ibov_pl_modelo.json)
+// ---------------------------------------------------------------------------
+
+export type IbovPlModeloVarKey =
+  | "real_selic"
+  | "real_5a"
+  | "real_30a"
+  | "dselic_e"
+  | "us10_real"
+  | "cupom_real_e"
+  | "t_us10";
+
+/** Uma linha por mês: P/L observado, linhas justificadas e as explicativas (média mensal). */
+export type IbovPlModeloRow = {
+  date: string; // último dia útil com dado no mês (no mês corrente: a data mais recente)
+  mes: string; // YYYY-MM
+  parcial: boolean;
+  na_amostra: boolean;
+  pl: number | null;
+  fit_juros: number | null;
+  fit_completo: number | null;
+  excl: number | null;
+  excl_teto: number | null;
+  excl_prejuizo: number | null;
+  excl_sem_dado: number | null;
+} & Record<IbovPlModeloVarKey, number | null>;
+
+export type IbovPlModeloVariavel = {
+  key: IbovPlModeloVarKey;
+  nome: string;
+  unidade: string; // "%" | "p.p."
+  tipo: "nível" | "direção";
+  formula: string;
+  coef: number | null;
+  ep: number | null;
+  t: number | null;
+  p: number | null;
+  vif: number | null;
+  hoje: number | null;
+  media: number | null;
+  min: number | null;
+  max: number | null;
+  coef_so_juros: number | null;
+};
+
+export type IbovPlModeloResumo = {
+  r2: number | null;
+  r2_aj: number | null;
+  aic: number | null;
+  sigma: number | null;
+  n: number;
+  const: number | null;
+  adf_residuo_p: number | null;
+  vars: IbovPlModeloVarKey[];
+  ecm_gamma?: number | null;
+  ecm_gamma_p?: number | null;
+  meia_vida_meses?: number | null;
+};
+
+export type IbovPlModeloDecomp = {
+  media_pl: number | null;
+  justificado: number | null;
+  blocos: Array<{
+    bloco: string;
+    nome: string;
+    efeito: number | null;
+    itens: Array<{ key: IbovPlModeloVarKey; nome: string; efeito: number | null }>;
+  }>;
+};
+
+export type IbovPlModeloData = {
+  schema_version: number;
+  status: "ok" | "error";
+  generated_at: string;
+  last_data_date: string;
+  /** Último mês completo da amostra de estimação (YYYY-MM). */
+  estimado_ate: string;
+  min_start_date: string;
+  amostra: { inicio: string; fim: string; n: number; buracos: Array<[string, string]> };
+  hoje: {
+    data: string;
+    mes: string;
+    parcial: boolean;
+    pl: number;
+    z: number | null;
+    justificado_juros: number;
+    ic_juros: [number | null, number | null];
+    justificado_completo: number;
+    ic_completo: [number | null, number | null];
+    desvio_juros_pct: number | null;
+    desvio_completo_pct: number | null;
+    excl: { total: number | null; teto: number | null; prejuizo: number | null; sem_dado: number | null };
+  };
+  pl_stats: {
+    mean: number;
+    sd: number;
+    minus2: number;
+    minus1: number;
+    plus1: number;
+    plus2: number;
+    n: number;
+    inicio: string;
+    z_hoje: number | null;
+  };
+  serie: IbovPlModeloRow[];
+  variaveis: IbovPlModeloVariavel[];
+  modelos: { juros: IbovPlModeloResumo; completo: IbovPlModeloResumo };
+  testes_f: Array<{ bloco: string; nome: string; F: number | null; p: number }>;
+  dispersao: Array<{
+    key: IbovPlModeloVarKey;
+    nome: string;
+    a: number | null;
+    b: number | null;
+    t: number | null;
+    r2: number | null;
+    x0: number | null;
+    y0: number | null;
+    x1: number | null;
+    y1: number | null;
+  }>;
+  decomposicao: { completo: IbovPlModeloDecomp; juros: IbovPlModeloDecomp };
+  coef_history?: Array<{
+    mes: string;
+    n: number;
+    r2: number | null;
+    r2_juros: number | null;
+    coefs: Record<string, number | null>;
+  }>;
+  avisos: string[];
+  fontes_ultima_data?: Record<string, string | null>;
+  fontes?: Record<string, string>;
 };
 
 // ---------------------------------------------------------------------------
@@ -167,6 +318,12 @@ export async function getAcoesIbov(): Promise<AcoesIbovData | null> {
 
 export async function getAcoesValuation(): Promise<AcoesValuationData | null> {
   return fetchBlobJson<AcoesValuationData>("data/acoes_valuation.json");
+}
+
+/** Modelo P/L × juros reais. Null (→ card legado) se o blob faltar ou vier sem série. */
+export async function getIbovPlModelo(): Promise<IbovPlModeloData | null> {
+  const d = await fetchBlobJson<IbovPlModeloData>("data/ibov_pl_modelo.json");
+  return d && d.status === "ok" && Array.isArray(d.serie) && d.serie.length > 1 ? d : null;
 }
 
 export async function getAcoesScreener(): Promise<AcoesScreenerData | null> {

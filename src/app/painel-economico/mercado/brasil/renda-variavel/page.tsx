@@ -8,23 +8,28 @@ import {
   getAcoesUltimasNoticias,
   getAcoesValuation,
   getFluxoInvestidores,
+  getIbovPlModelo,
 } from "@/lib/painel-acoes";
 
 export const metadata = {
   title: "Ações Brasil (Ibovespa) — Ativos de mercado",
   description:
-    "Panorama do Ibovespa: índice vs CDI/S&P 500/dólar, P/L histórico com bandas de desvio, prêmio de risco vs NTN-B e screener das ações do índice.",
+    "Panorama do Ibovespa: índice vs CDI/S&P 500/dólar, P/L do Ibovespa contra o P/L justificado pelos juros reais, prêmio de risco vs NTN-B e screener das ações do índice.",
 };
 
 export default async function RendaVariavelPage() {
-  const [ibov, valuation, screener, noticias, fluxo, logos] = await Promise.all([
+  const [ibov, valuationFull, modelo, screener, noticias, fluxo, logos] = await Promise.all([
     getAcoesIbov(),
     getAcoesValuation(),
+    getIbovPlModelo(),
     getAcoesScreener(),
     getAcoesUltimasNoticias(),
     getFluxoInvestidores(),
     getAcoesLogos(),
   ]);
+  // O cliente não usa a NTN-B diária completa nem o P/L mensal (esse vai pelo modelo):
+  // tira ~120 KB do payload da página.
+  const valuation = valuationFull ? { ...valuationFull, ntnb_full: undefined, pl_mensal: undefined } : null;
 
   return (
     <div className="space-y-6">
@@ -37,8 +42,8 @@ export default async function RendaVariavelPage() {
           Acompanhamento do Ibovespa e do valuation da bolsa brasileira. Na{" "}
           <strong>Visão geral</strong>, o índice comparado a CDI, S&amp;P 500 e dólar, e um screener
           com as ações do índice — clique para jogar qualquer papel no gráfico (retorno total, com
-          dividendos). Na aba <strong>Analítico</strong>, o P/L histórico com bandas de desvio, o
-          prêmio de risco contra a NTN-B e o fluxo de investidores.
+          dividendos). Na aba <strong>Analítico</strong>, o P/L do Ibovespa contra o P/L que os juros
+          reais justificam, o prêmio de risco contra a NTN-B e o fluxo de investidores.
         </p>
       </header>
 
@@ -46,6 +51,7 @@ export default async function RendaVariavelPage() {
       <RendaVariavelClient
         ibov={ibov}
         valuation={valuation}
+        modelo={modelo}
         fluxo={fluxo}
         screener={screener}
         logos={logos}

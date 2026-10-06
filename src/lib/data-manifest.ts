@@ -93,7 +93,9 @@ export const DATA_SOURCES: DataSourceDef[] = [
 
   // ── Renda variável (acoes-pipeline.yml, dias úteis 22:45/00:45 UTC) ────────
   { key: "acoes_ibov", label: "Ibovespa (hero)", blobPath: "data/acoes_ibov.json", workflowName: "acoes-pipeline.yml", cadence: "diario-util", painel: "renda-variavel" },
-  { key: "acoes_valuation", label: "Valuation (P/L + prêmio)", blobPath: "data/acoes_valuation.json", workflowName: "acoes-pipeline.yml", cadence: "diario-util", painel: "renda-variavel" },
+  { key: "acoes_valuation", label: "Valuation (P/L + prêmio)", blobPath: "data/acoes_valuation.json", workflowName: "acoes-pipeline.yml", cadence: "diario-util", painel: "renda-variavel", dataDateField: "last_data_date" },
+  { key: "ibov_pl_modelo", label: "Modelo P/L × juros reais (P/L justificado)", blobPath: "data/ibov_pl_modelo.json", workflowName: "acoes-pipeline.yml", cadence: "diario-util", painel: "renda-variavel", dataDateField: "last_data_date" },
+  { key: "acoes_lpa_reportado", label: "LPA reportado por papel (base interna do P/L)", blobPath: "data/acoes_lpa_reportado.json", workflowName: "acoes-pipeline.yml", cadence: "diario-util", painel: "renda-variavel" },
   { key: "acoes_screener", label: "Screener IBOV", blobPath: "data/acoes_screener.json", workflowName: "acoes-pipeline.yml", cadence: "diario-util", painel: "renda-variavel" },
   { key: "acoes_total_return", label: "Retorno total por papel (comparador/simulador)", blobPath: "data/acoes_total_return.json", workflowName: "acoes-pipeline.yml", cadence: "diario-util", painel: "renda-variavel", heavy: true },
   { key: "acoes_logos", label: "Logos das empresas (TradingView)", blobPath: "data/acoes_logos.json", workflowName: "acoes-pipeline.yml", cadence: "diario-util", painel: "renda-variavel" },
