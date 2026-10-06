@@ -9,6 +9,12 @@ Colunas:
   Interv. Ind. Inf. (D0) @ Interv. Ind. Sup. (D0) @
   Interv. Ind. Inf. (D+1) @ Interv. Ind. Sup. (D+1) @ Criterio
 
+Janela da fonte: ate 21/09/2026 a ANBIMA servia 130+ dias uteis de arquivos; desde
+22/09/2026 serve so a partir de 11/09/2026 (17 dias uteis em 06/10) e dia mais
+antigo da 404. O historico (backfill Tesouro Transparente desde 2004 + ANBIMA
+acumulada) so existe no Blob: o merge incremental e obrigatorio e a trava de
+defasagem (main) reprova o run quando a curva para de andar.
+
 Saidas:
   - data/treasury_history.json  : series temporais por (tipo, vencimento)
 
@@ -17,10 +23,12 @@ Estrutura JSON:
   "status": "ok",
   "generated_at": "...",
   "lookback_business_days": 130,
-  "last_data_date": "YYYY-MM-DD",
+  "last_data_date": "YYYY-MM-DD",   # ultima data PRESENTE nas series (a menor entre PRE e IPCA)
+  "freshness_status": "fresh",      # "stale" se PRE ou IPCA esta mais de 2 dias uteis atras de D-1
   "categories": {
     "PRE": {
       "label": "Prefixado",
+      "last_data_date": "YYYY-MM-DD",   # ultima data presente nas series da categoria
       "vencimentos": ["2026-07-01", "2027-01-01", ...],
       "series": {
         "2026-07-01": [["2025-12-02", 11.20], ["2025-12-03", 11.18], ...],
@@ -46,6 +54,7 @@ import json
 import sys
 import time
 from datetime import date, datetime, timedelta, timezone
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -63,24 +72,43 @@ HEADERS = {
     "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
 }
 
-# Feriados nacionais conhecidos (apenas pra pular tentativas de download)
-# Lista basica - faltando data sera pulada se 404
-KNOWN_HOLIDAYS_RECENT = {
-    "2025-01-01", "2025-03-03", "2025-03-04", "2025-04-18", "2025-04-21",
-    "2025-05-01", "2025-06-19", "2025-09-07", "2025-10-12", "2025-11-02",
-    "2025-11-15", "2025-11-20", "2025-12-25",
-    "2026-01-01", "2026-02-16", "2026-02-17", "2026-04-03", "2026-04-21",
-    "2026-05-01", "2026-06-04", "2026-09-07", "2026-10-12", "2026-11-02",
-    "2026-11-15", "2026-11-20", "2026-12-25",
-}
+# Trava de defasagem (main): com a ANBIMA guardando so as ultimas semanas, dia que
+# nao entra no Blob a tempo se perde. Se PRE ou IPCA ficar mais de N dias uteis
+# atras de D-1, o builder sai com erro (depois do upload) e o workflow reprova a run.
+MAX_DIAS_UTEIS_SEM_DADO = 2
+BRT = timezone(timedelta(hours=-3), "BRT")  # sem horario de verao desde 2019
+
+
+def _pascoa(ano: int) -> date:
+    """Domingo de Pascoa no calendario gregoriano (algoritmo de Meeus/Jones/Butcher)."""
+    a = ano % 19
+    b, c = divmod(ano, 100)
+    d, e = divmod(b, 4)
+    f = (b + 8) // 25
+    g = (b - f + 1) // 3
+    h = (19 * a + b - d - g + 15) % 30
+    i, k = divmod(c, 4)
+    ell = (32 + 2 * e + 2 * i - h - k) % 7
+    m = (a + 11 * h + 22 * ell) // 451
+    mes, dia = divmod(h + ell - 7 * m + 114, 31)
+    return date(ano, mes, dia + 1)
+
+
+@lru_cache(maxsize=None)
+def feriados_nacionais(ano: int) -> frozenset:
+    """Dias sem arquivo da ANBIMA: feriados nacionais fixos + Carnaval (seg e ter),
+    Sexta-feira Santa e Corpus Christi. Calculado, para nao vencer na virada do ano
+    como a lista fixa que existia aqui (ia so ate 2026)."""
+    fixos = [(1, 1), (4, 21), (5, 1), (9, 7), (10, 12), (11, 2), (11, 15), (12, 25)]
+    if ano >= 2024:
+        fixos.append((11, 20))  # Consciencia Negra, nacional desde a Lei 14.759/2023
+    pascoa = _pascoa(ano)
+    moveis = [pascoa + timedelta(days=n) for n in (-48, -47, -2, 60)]
+    return frozenset([date(ano, m, d) for m, d in fixos] + moveis)
 
 
 def is_business_day(d: date) -> bool:
-    if d.weekday() >= 5:
-        return False
-    if d.isoformat() in KNOWN_HOLIDAYS_RECENT:
-        return False
-    return True
+    return d.weekday() < 5 and d not in feriados_nacionais(d.year)
 
 
 def previous_business_days(n: int, start: Optional[date] = None) -> List[date]:
@@ -210,10 +238,38 @@ def aggregate_by_category_and_vencimento(rows: List[Dict]) -> Dict[str, Dict[str
     return final
 
 
-def filter_relevant_vencimentos(series_by_venc: Dict[str, List[Tuple[str, float]]],
-                                 min_observations: int = 30) -> Dict[str, List[Tuple[str, float]]]:
-    """Remove vencimentos com poucas observacoes (papeis curtos que ja venceram)."""
-    return {v: s for v, s in series_by_venc.items() if len(s) >= min_observations}
+def stamp_last_dates(payload: Dict) -> Dict[str, str]:
+    """Carimba em cada categoria a maior data PRESENTE nas suas series e, no topo, a
+    menor delas (data ate a qual PRE e IPCA estao completos). Devolve {categoria: data}.
+
+    Ate 06/10/2026 o carimbo do topo vinha das linhas baixadas, antes do filtro de
+    vencimentos e do merge: o JSON dizia 05/10 com as series paradas em 21/09.
+    """
+    lasts: Dict[str, str] = {}
+    for cat, c in (payload.get("categories") or {}).items():
+        last = max((p[0] for s in (c.get("series") or {}).values() for p in s), default="")
+        c["last_data_date"] = last
+        lasts[cat] = last
+    present = [d for d in lasts.values() if d]
+    payload["last_data_date"] = min(present) if present else ""
+    return lasts
+
+
+def count_obs(payload: Dict) -> int:
+    return sum(len(s) for c in (payload.get("categories") or {}).values()
+               for s in (c.get("series") or {}).values())
+
+
+def combine_sources(new_source: str, old_source: str) -> str:
+    """Fonte do JSON mesclado: a deste run + as de backfill do JSON antigo, sem repetir.
+    A regra antiga prefixava a fonte nova a cada run e a string chegou a 200+ copias
+    de 'ANBIMA — Mercado Secundario TPF'."""
+    parts = [new_source] if new_source else []
+    for p in old_source.split(" + "):
+        p = p.strip()
+        if p and not p.startswith("ANBIMA") and p not in parts:
+            parts.append(p)
+    return " + ".join(parts)
 
 
 def merge_with_existing(new_payload: Dict, existing: Optional[Dict]) -> Dict:
@@ -264,17 +320,9 @@ def merge_with_existing(new_payload: Dict, existing: Optional[Dict]) -> Dict:
     # Preserva metadados uteis do payload novo, indica que houve merge
     out = dict(new_payload)
     out["categories"] = merged_cats
-    # Data mais recente entre new e old
-    new_last = new_payload.get("last_data_date") or ""
-    old_last = existing.get("last_data_date") or ""
-    out["last_data_date"] = max(new_last, old_last)
-    # Indica origem combinada se o existing tinha source backfill
-    old_source = existing.get("source") or ""
-    new_source = new_payload.get("source") or ""
-    if "Tesouro" in old_source and "Tesouro" not in new_source:
-        out["source"] = f"{new_source} + {old_source}"
-    elif old_source and old_source != new_source and "+" in old_source:
-        out["source"] = old_source  # ja era combinada, preserva
+    out["source"] = combine_sources(new_payload.get("source") or "", existing.get("source") or "")
+    # Carimbo sai das series mescladas, nunca do max entre os carimbos de entrada
+    stamp_last_dates(out)
     return out
 
 
@@ -283,30 +331,32 @@ def build_tpf_history(business_days: int = 130, sleep_s: float = 0.1) -> Dict:
     print(f"[tpf] baixando {len(days)} dias uteis de {days[0]} a {days[-1]}")
     session = requests.Session()
     all_rows: List[Dict] = []
-    ok_count = 0
+    loaded: List[date] = []
     fail_count = 0
 
     for i, d in enumerate(days):
         content = fetch_tpf_day(d, session)
-        if content:
-            rows = parse_tpf_content(content)
+        rows = parse_tpf_content(content) if content else []
+        if rows:
             all_rows.extend(rows)
-            ok_count += 1
+            loaded.append(d)
             if i % 20 == 0:
                 print(f"  [tpf] {i+1}/{len(days)} ({d}): {len(rows)} linhas")
         else:
             fail_count += 1
         time.sleep(sleep_s)
 
+    ok_count = len(loaded)
     print(f"[tpf] OK {ok_count} dias, FAIL {fail_count} dias, {len(all_rows)} linhas totais")
+    if loaded:
+        print(f"[tpf] janela servida pela ANBIMA: {loaded[0]} a {loaded[-1]}")
     grouped = aggregate_by_category_and_vencimento(all_rows)
 
-    # Filtra vencimentos com poucos pontos
-    for cat in grouped:
-        grouped[cat] = filter_relevant_vencimentos(grouped[cat], min_observations=int(business_days * 0.3))
-
-    last_data_date = max((r["data_ref"] for r in all_rows), default="")
-
+    # Sem filtro de minimo de observacoes por vencimento. O filtro antigo (30% de
+    # --business-days = 39 pontos NA JANELA BAIXADA) tirava papel curto ja vencido,
+    # mas quando a ANBIMA passou a servir so ~17 dias (22/09/2026) descartou TODOS os
+    # vencimentos: o merge recebia payload vazio e a curva congelou em 21/09. Com o
+    # merge incremental todo dia novo conta, inclusive de papel recem-emitido.
     categories_out = {}
     for cat, venc_map in grouped.items():
         vencimentos_sorted = sorted(venc_map.keys())
@@ -318,16 +368,64 @@ def build_tpf_history(business_days: int = 130, sleep_s: float = 0.1) -> Dict:
             "series": series,
         }
 
-    return {
+    payload = {
         "status": "ok" if ok_count > 0 else "error",
         "generated_at": datetime.now(tz=timezone.utc).isoformat(),
         "source": "ANBIMA — Mercado Secundario TPF",
         "lookback_business_days": business_days,
         "days_loaded": ok_count,
         "days_failed": fail_count,
-        "last_data_date": last_data_date,
+        "last_data_date": "",
         "categories": categories_out,
     }
+    stamp_last_dates(payload)
+    return payload
+
+
+def read_existing(tries: int = 3) -> Optional[Dict]:
+    """JSON atual do Blob, com retentativa. None = nao deu para ler."""
+    for attempt in range(1, tries + 1):
+        data = blob_download_json("data/treasury_history.json")
+        if isinstance(data, dict) and data.get("categories"):
+            return data
+        if attempt < tries:
+            time.sleep(5 * attempt)
+    return None
+
+
+def business_days_after(start_iso: str, end: date) -> int:
+    """Quantidade de dias uteis em (start, end]."""
+    d = date.fromisoformat(start_iso)
+    n = 0
+    while d < end:
+        d += timedelta(days=1)
+        if is_business_day(d):
+            n += 1
+    return n
+
+
+def check_staleness(lasts: Dict[str, str], today: date) -> List[str]:
+    """Compara a ultima data de PRE e IPCA com D-1 (dia util anterior a hoje).
+    Devolve os problemas encontrados (lista vazia = ok).
+
+    A referencia e D-1, nao hoje: a ANBIMA publica o arquivo do dia a noite
+    (~19-21h BRT) e o run das 19h30 pode chegar antes dele.
+    """
+    ref = previous_business_days(1, start=today)[0]
+    problems: List[str] = []
+    for cat in ("PRE", "IPCA"):
+        last = lasts.get(cat) or ""
+        if not last:
+            problems.append(f"{cat} sem nenhuma observacao")
+            continue
+        lag = business_days_after(last, ref)
+        print(f"[tpf]   trava {cat}: ultima data {last}, referencia D-1 {ref}, "
+              f"{lag} dia(s) util(eis) sem dado")
+        if lag > MAX_DIAS_UTEIS_SEM_DADO:
+            problems.append(f"{cat} parada em {last} ({lag} dias uteis sem dado ate {ref})")
+        elif lag > 0:
+            print(f"::warning::curva TPF {cat} com {lag} dia(s) util(eis) de atraso (ultima {last})")
+    return problems
 
 
 def main() -> int:
@@ -337,7 +435,8 @@ def main() -> int:
     ap.add_argument("--out-dir", default="data-pipeline/out")
     ap.add_argument("--upload", action="store_true")
     ap.add_argument("--no-merge", action="store_true",
-                    help="Desliga merge incremental com Blob (rebuild from scratch — usar com cuidado)")
+                    help="Desliga merge incremental com Blob (rebuild from scratch). APAGA o historico "
+                         "do Blob: a ANBIMA so serve as ultimas semanas")
     args = ap.parse_args()
 
     out_dir = Path(args.out_dir)
@@ -345,23 +444,41 @@ def main() -> int:
     out_path = out_dir / "treasury_history.json"
 
     payload = build_tpf_history(business_days=args.business_days, sleep_s=args.sleep)
+    days_loaded = payload["days_loaded"]
 
     # Merge incremental: carrega o JSON ja existente no Blob e mescla as series.
     # Sem isso, o cron diario sobrescreveria o backfill historico (Tesouro Transparente)
     # e perderia dias antigos da ANBIMA que ja foram acumulados.
-    if not args.no_merge:
+    if args.no_merge:
+        if days_loaded == 0:
+            print("::error::treasury_history: nenhum arquivo da ANBIMA baixado (--no-merge)")
+            return 2
+    else:
         print("[tpf] merge incremental: lendo data/treasury_history.json existente do Blob...")
-        existing = blob_download_json("data/treasury_history.json")
-        if existing:
-            old_obs = sum(len(s) for c in (existing.get("categories") or {}).values()
-                          for s in (c.get("series") or {}).values())
-            print(f"[tpf]   existing: {old_obs} observacoes, last_data={existing.get('last_data_date')}")
-            payload = merge_with_existing(payload, existing)
-            new_obs = sum(len(s) for c in payload["categories"].values()
-                          for s in c["series"].values())
-            print(f"[tpf]   apos merge: {new_obs} observacoes (delta {new_obs - old_obs})")
-        else:
-            print("[tpf]   nenhum JSON existente no Blob — primeira execucao")
+        existing = read_existing()
+        if existing is None:
+            # Seguir sem o existente trocaria o historico inteiro pelas poucas semanas
+            # que a ANBIMA ainda serve — perda silenciosa e irreversivel.
+            print("::error::treasury_history: nao deu para ler o JSON atual do Blob. Abortado sem "
+                  "upload para nao trocar o historico (Tesouro desde 2004 + ANBIMA acumulada) pelas "
+                  "poucas semanas que a ANBIMA ainda serve. Rebuild proposital: --no-merge.")
+            return 3
+        old_obs = count_obs(existing)
+        print(f"[tpf]   existing: {old_obs} observacoes, last_data={existing.get('last_data_date')}")
+        payload = merge_with_existing(payload, existing)
+        new_obs = count_obs(payload)
+        print(f"[tpf]   apos merge: {new_obs} observacoes (delta {new_obs - old_obs})")
+        if new_obs < old_obs:
+            print(f"::error::treasury_history: o merge perdeu {old_obs - new_obs} observacoes. "
+                  "Abortado sem upload.")
+            return 4
+
+    # Trava de defasagem: falhar e melhor que servir curva congelada com carimbo fresco.
+    # freshness_status vai no JSON porque a Saude dos Dados, sem ele, so olha generated_at.
+    lasts = {cat: c.get("last_data_date", "") for cat, c in payload["categories"].items()}
+    today = datetime.now(BRT).date()
+    problems = check_staleness(lasts, today)
+    payload["freshness_status"] = "stale" if problems else "fresh"
 
     out_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     size_kb = out_path.stat().st_size / 1024
@@ -369,12 +486,26 @@ def main() -> int:
     n_ipca = len(payload["categories"].get("IPCA", {}).get("vencimentos", []))
     print(f"[tpf] Gerado {out_path} ({size_kb:.1f} KB)")
     print(f"[tpf] PRE: {n_pre} vencimentos | IPCA: {n_ipca} vencimentos")
-    print(f"[tpf] Ultima data: {payload['last_data_date']}")
+    print(f"[tpf] Ultima data nas series: PRE {lasts.get('PRE') or '-'} | IPCA {lasts.get('IPCA') or '-'}"
+          f" -> last_data_date {payload['last_data_date']} ({payload['freshness_status']})")
 
+    # Upload antes de reprovar: nao segura os dias que ainda entraram.
     if args.upload:
-        maybe_upload_json(out_path, "data/treasury_history.json")
+        if days_loaded > 0:
+            maybe_upload_json(out_path, "data/treasury_history.json")
+        else:
+            print("::warning::treasury_history: nenhum arquivo da ANBIMA baixado neste run, "
+                  "nada novo para publicar (upload pulado)")
 
-    return 0 if payload["status"] == "ok" else 2
+    if not problems:
+        return 0
+    if not is_business_day(today):
+        print(f"[tpf] curva atrasada, mas {today} nao e dia util: run nao reprovado")
+        return 0
+    for p in problems:
+        print(f"::error::curva TPF congelada: {p}. A ANBIMA so guarda as ultimas semanas e dia "
+              "nao recuperado a tempo se perde (docs/DADOS-E-SERIES.md §2).")
+    return 1
 
 
 if __name__ == "__main__":

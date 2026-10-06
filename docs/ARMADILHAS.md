@@ -86,6 +86,7 @@ Aprendizados de operação:
 - A coluna "Workflow" do `/dados` tem atraso de um refresh (cache de 300 s da API do GitHub). Badge de falha com execução recente: atualize de novo antes de concluir.
 - `dispatch-pipelines` responde 500 quando o GitHub recusa o disparo — PAT expirado aparece no painel de crons da Vercel.
 - Pipeline com merge *append-only* congela "bonito" quando a fonte morre: é o caso que o monitor existe para pegar.
+- O monitor só pega se o carimbo (`last_data_date`) sair das séries gravadas, não das linhas baixadas: a curva TPF ficou duas semanas parada com carimbo do dia e run verde (`docs/DADOS-E-SERIES.md` §2).
 
 ## 9. Juros: feed intraday da B3
 

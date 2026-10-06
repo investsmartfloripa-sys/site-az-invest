@@ -174,7 +174,6 @@ Limpe arquivos temporários (`.cm`, `.gh-out`, `.tsc-out.txt`, `.run-*.cmd`) ant
 
 ## 8. Bugs abertos herdados **[verificar]**
 
-- `build_anbima_tpf.py` concatena `data.source` a cada dia carregado, e o rodapé "Fonte:" repete a mesma string cerca de 40 vezes. É bug do builder, não do componente.
 - Se ainda houver `.jsx` em `src/app/simuladores/`, esses arquivos estão fora do `tsc` (o `tsconfig` não inclui jsx) — ponto cego de tipos exatamente na área que calcula dinheiro do usuário.
 - Probit financeiro devolve null em 100% dos pontos: é univariado em ICF e o Newton-Raphson diverge sem regularização (`build_visao_geral_recessao.py`, por volta das linhas 242-294). Contorno proposto: ridge L2, carry-forward e slope DI como segunda feature.
 - ANFAVEA: o scraper precisa baixar `siteautoveiculos{ANO}.xlsx` em loop de 2019 até o ano corrente. **Manutenção anual obrigatória.** A cascata de falha está em `docs/DADOS-E-SERIES.md`.

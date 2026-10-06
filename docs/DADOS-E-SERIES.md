@@ -12,7 +12,7 @@ O código mostra **o que** foi feito. Este documento guarda **por quê** — e p
 
 **Nunca sobrescreva dado bom com vazio.** Builder que falha aborta o upload ou faz merge incremental. Padrões de referência no próprio repo: `visao-geral-pipeline.yml` (soft-fail com preservação do último dado bom) e `build_anbima_tpf.py` (merge incremental).
 
-**Merge incremental é obrigatório em fonte com janela de retenção curta.** A ANBIMA retém 3 meses. Regenerar do zero apaga o histórico no Blob de forma silenciosa e irreversível — é a falha de maior consequência e menor detectabilidade de todo o pipeline.
+**Merge incremental é obrigatório em fonte com janela de retenção curta.** A ANBIMA servia 130+ dias úteis do `ms{AAMMDD}.txt` até 21/09/2026; desde 22/09 serve só os arquivos a partir de 11/09/2026 (17 dias úteis em 06/10) — trate como poucas semanas. Regenerar do zero apaga o histórico no Blob de forma silenciosa e irreversível — é a falha de maior consequência e menor detectabilidade de todo o pipeline.
 
 **Preserve o histórico completo no builder, mesmo quando o gráfico mostra recorte.** Médias históricas e percentis se calculam no Python. Truncar no fetch foi o que quebrou IPCA (24m), PNAD (24 trimestres), PIM/PMC/PMS (60/24m) e o deflator de todo o painel Emprego.
 
@@ -40,7 +40,9 @@ O código mostra **o que** foi feito. Este documento guarda **por quê** — e p
 
 ## 2. Falhas silenciosas conhecidas
 
-**A tela "Saúde dos Dados" só olha `generated_at`.** Um JSON vazio com timestamp fresco aparece como OK. Não a use como prova de que o dado está certo.
+**A tela "Saúde dos Dados" só olha `generated_at`.** Um JSON vazio com timestamp fresco aparece como OK. Não a use como prova de que o dado está certo. A exceção é o builder que grava `freshness_status` no payload (`stale` vira aviso, `missing` vira erro) — o `build_anbima_tpf.py` grava.
+
+**Curva TPF congelada com carimbo fresco (22/09 a 06/10/2026).** Em 22/09 a ANBIMA encolheu o arquivo público `ms{AAMMDD}.txt` de 130+ dias úteis para só os dias a partir de 11/09 (8 no run de 23/09, 17 em 06/10; antes disso dá 404). O `build_anbima_tpf.py` descartava vencimento com menos de 30% de `--business-days` (39) pontos **na janela baixada** — com 8 a 17 dias descartou todos, e o merge recebeu payload vazio (delta 0). Só que o `last_data_date` saía das linhas baixadas, antes do filtro: o JSON dizia 05/10 com as 60 séries paradas em 21/09, e o step (`continue-on-error`) e a "Saúde dos Dados" ficaram verdes. Consumidores com forward-fill (NTN-B ~10a do prêmio de risco em Bolsa > Analítico, spread IPCA+ das debêntures) serviram a NTN-B de 21/09 como se fosse do dia: em 05/10, depois do rali pós-1º turno, a NTN-B ~10a do card estava em 7,58% contra 7,01% real, e o prêmio EY vs NTN-B saía 0,95 p.p. em vez de 1,52. Correção em 06/10: sem filtro de observações; `last_data_date` calculado das séries (a menor data entre PRE e IPCA, e a de cada categoria dentro dela); `freshness_status`; trava que reprova a run quando PRE ou IPCA fica mais de 2 dias úteis atrás de D-1; abortar sem upload quando o JSON atual do Blob não puder ser lido. Regras que valem para qualquer builder: **carimbo de data se calcula do que foi gravado, nunca do que foi pedido ou baixado**; filtro de mínimo de observações antes de merge incremental tem que ser relativo ao que a fonte entregou. Com a janela da ANBIMA em poucas semanas, trava disparada se conserta no mesmo dia: dia que sai da janela não volta.
 
 **Cascata ANFAVEA.** O scraper baixava só o XLSX do ano corrente, então `by_mes` ficava com 4 pontos, o YoY virava null por falta de base do ano anterior, a difusão perdia inputs (exige pelo menos 2 vivos), `sensiveis_presentes` ia a zero e o KPI de recessão do hero congelava. **Nada disso levanta exceção.** Correção: loop de 2019 até o ano corrente (`siteautoveiculos{ANO}.xlsx`, layout WIDE com header Jan-Dez e linha "Total" abaixo). Manutenção anual obrigatória.
 

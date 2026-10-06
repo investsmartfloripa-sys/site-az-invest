@@ -78,7 +78,12 @@ jobs:
           python data-pipeline/python/build_global_valuation.py --upload
         continue-on-error: true
 
+      # Sai com erro quando PRE ou IPCA fica mais de 2 dias uteis atras de D-1 (a ANBIMA
+      # so guarda as ultimas semanas) ou quando nao consegue ler o historico do Blob.
+      # continue-on-error para nao bloquear debentures e purga; quem reprova a run e o
+      # ultimo step ("Falhar se a curva TPF ficou parada").
       - name: ANBIMA TPF - historico curva juros (Pre + IPCA+)
+        id: tpf
         run: |
           python data-pipeline/python/build_anbima_tpf.py \
             --business-days 130 \
@@ -127,3 +132,12 @@ jobs:
             echo "::error::purga de cache falhou (HTTP ${code:-sem-resposta}) - o painel pode servir dado velho ate o TTL vencer"
             exit 1
           fi
+
+      # De 22/09 a 06/10/2026 a curva TPF ficou parada com a run verde: o step tem
+      # continue-on-error e o carimbo andava sozinho. Falhar e melhor que servir dado
+      # congelado com carimbo fresco.
+      - name: Falhar se a curva TPF ficou parada
+        if: ${{ always() && steps.tpf.outcome == 'failure' }}
+        run: |
+          echo "::error::build_anbima_tpf.py falhou: treasury_history.json parado ou merge abortado - ver o log do step ANBIMA TPF"
+          exit 1
