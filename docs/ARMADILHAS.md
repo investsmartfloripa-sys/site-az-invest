@@ -42,6 +42,7 @@ Arquitetura: todo loader lê o Blob por `fetchPainelBlob(path, ttl)` (`src/lib/p
 - **O `revalidate` efetivo de uma rota é o MENOR entre o da página e o de qualquer `fetch` dentro dela.** Encurtar o TTL de um fetch rebaixou as 28 rotas do painel para ISR de 1 minuto de uma vez. Quem garante frescor é a purga por tag, não o TTL.
 - O cron do GitHub atrasa **74–111 min** em média. O gatilho de verdade é o Vercel Cron `/api/cron/dispatch-pipelines` (a cada 15 min), que dispara os workflows por `workflow_dispatch`; o cron do `.yml` é rede de segurança.
 - Shell do Actions é `bash -e`: `a && b` que resulte falso **aborta o step**. Use `if`.
+- **Push que muda a página E o dado: dispare o pipeline (ou a purga) só DEPOIS do deploy ficar Ready.** O build do deploy novo pré-renderiza a página com o JSON que estava no Blob naquela hora; a purga que roda antes de o deploy subir alcança o deploy antigo, e o novo entra no ar com o dado velho até o TTL (06/10/2026: dispersões novas do modelo P/L só apareceram depois de uma segunda purga).
 
 ## 5. Hidratação: nada de `loading.tsx` nem `<Suspense>` em rota estática interativa
 
@@ -109,6 +110,7 @@ Desde 21/09/2026 as divulgações de IPCA/IGP-M não são artigos: categoria `Bo
 
 - `quarterly_income_stmt` fica **defasado em até um trimestre** depois da divulgação. Use `tk.get_earnings_dates(limit=N)`, coluna `Reported EPS` — datada pelo anúncio, ~12 anos de histórico.
 - Sempre cruze o TTM calculado com `tk.info['trailingPE']`/`['trailingEps']`. Divergência grande denuncia ADR em moeda local (TSM em TWD, ASML em EUR), DRE defasada ou lucro perto de zero (P/L sem sentido: marque n.a.).
+- Ações da B3 no `Reported EPS`: VALE3 e EMBJ3 vêm em **US$** (preço em R$) e a unit KLBN11 vem **por ação**; e o `trailingEps`/`trailingPE` do `.info` erra units como BPAC11. Correções e conferência em `build_acoes_valuation.py` (`LPA_AJUSTES`, `LPA_CONFERIDOS`) — detalhe em `DADOS-E-SERIES.md` §4 "Bolsa".
 - Console do Windows quebra em acento: `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`.
 
 ## 12. HTTP 200 não prova que a página renderizou; `revalidate` em `[slug]` não é ISR
