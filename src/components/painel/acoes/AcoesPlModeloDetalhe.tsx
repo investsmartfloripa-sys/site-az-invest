@@ -351,7 +351,10 @@ export function PlVariaveisCard({ m }: { m: IbovPlModeloData }) {
     ["Máximo", fmtVar(v.max, v.unidade)],
     [
       "+1 no P/L hoje",
-      v.efeito_1pp != null ? `${fmtSignedNum(v.efeito_1pp, 2)}x (t ${fmtNum(v.t, 1)})` : `t ${fmtNum(v.t, 1)}`,
+      // No modelo em lucro sobre preço o t vem com o sinal do EY (inverso do P/L): mostra no sinal do P/L.
+      v.efeito_1pp != null
+        ? `${fmtSignedNum(v.efeito_1pp, 2)}x (t ${fmtNum(m.modelos.forma === "ey" && v.t != null ? -v.t : v.t, 1)})`
+        : `t ${fmtNum(v.t, 1)}`,
     ],
     ["VIF", fmtNum(v.vif, 1)],
   ];
