@@ -17,9 +17,15 @@ Pergunta: que P/L o nível dos juros reais (e as expectativas) justifica para a 
                   pela inflação implícita de 10 anos dos EUA (nominal − real; = FRED T10YIE)
     t_us10        us10_real − us10_real 12 meses antes (calendário mensal completo)
 
+Forma (revisão de 07/10/2026): o Y estimado é o LUCRO SOBRE PREÇO (EY = 100 / P/L, em %).
+Pelo modelo de Gordon, P/L = 1/(k − g) com k = juro real + prêmio: o P/L é convexo nos juros
+e o EY é linear. Com o P/L direto o teste RESET reprovava a forma funcional (p = 0,014); com
+o EY passa (p = 0,07) e o erro fora da amostra (janela crescente, últimos 72 meses) caiu de
+1,53x para 1,29x de P/L. O justificado volta para P/L como 100 / EY ajustado.
+
 Modelos (MQO, erro-padrão HAC Newey-West com 6 defasagens):
-  só juros : P/L ~ real_selic + real_5a + real_30a
-  completo : P/L ~ as 7 variáveis
+  só juros : EY ~ real_selic + real_5a + real_30a
+  completo : EY ~ as 7 variáveis
 Relação de longo prazo à Engle-Granger (resíduo estacionário) + ECM p/ a meia-vida.
 Amostra = meses COMPLETOS desde o primeiro mês com todas as séries (buracos de cobertura
 do P/L preservados). O mês corrente entra só como ponto "hoje" (média do mês até a data).
@@ -53,6 +59,7 @@ import requests
 import statsmodels.api as sm
 from scipy.interpolate import PchipInterpolator
 from statsmodels.stats.outliers_influence import variance_inflation_factor
+from statsmodels.stats.diagnostic import linear_reset
 from statsmodels.tsa.stattools import adfuller
 
 sys.path.append(str(Path(__file__).parent))
@@ -61,7 +68,7 @@ from shared.blob_download import download_json  # noqa: E402
 
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0.0.0", "Accept": "*/*"}
 BLOB_OUT = "data/ibov_pl_modelo.json"
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2  # 2 = modelo no lucro sobre preço; dispersões com pontos/curva
 INICIO_DADOS = "2008-01-01"     # explicativas baixadas desde aqui (t_us10 precisa de 12m antes)
 PISO_AMOSTRA = "2010-01"        # amostra começa no 1º mês com tudo, nunca antes disto
 HAC_LAGS = 6
@@ -423,14 +430,21 @@ def build(out_dir: Path) -> Dict:
     amostra = base[base.index >= inicio]
     print(f"[pl_modelo] amostra: {len(amostra)} meses {amostra.index.min()} -> {amostra.index.max()}")
 
-    rj = ols_hac(amostra["pl"], amostra[JUROS])
-    rc = ols_hac(amostra["pl"], amostra[COMPLETO])
+    ey = 100.0 / amostra["pl"]  # lucro sobre preço (%) — o Y estimado
+    rj = ols_hac(ey, amostra[JUROS])
+    rc = ols_hac(ey, amostra[COMPLETO])
 
-    # ECM em calendário completo (o resíduo defasado não pula buracos)
+    def para_pl(v):
+        """EY ajustado (%) -> P/L. EY <= 1% (P/L > 100) não tem leitura: vira NaN."""
+        v = np.asarray(v, dtype="float64")
+        with np.errstate(divide="ignore", invalid="ignore"):
+            return np.where(v > 1.0, 100.0 / v, np.nan)
+
+    # ECM em calendário completo (o resíduo defasado não pula buracos), no EY
     cal_a = pd.period_range(amostra.index.min(), amostra.index.max(), freq="M")
     resid = rc.resid.reindex(cal_a)
     dX = amostra[COMPLETO].reindex(cal_a).diff()
-    dy = amostra["pl"].reindex(cal_a).diff()
+    dy = ey.reindex(cal_a).diff()
     W = pd.concat([resid.shift(1).rename("ect"), dX], axis=1)
     ok = W.notna().all(axis=1) & dy.notna()
     ecm = sm.OLS(dy[ok], sm.add_constant(W[ok])).fit(cov_type="HAC", cov_kwds={"maxlags": HAC_LAGS})
@@ -438,6 +452,7 @@ def build(out_dir: Path) -> Dict:
     meia_vida = float(np.log(0.5) / np.log(1 + gamma)) if -1 < gamma < 0 else None
     adf_c = float(adfuller(rc.resid, autolag="AIC")[1])
     adf_j = float(adfuller(rj.resid, autolag="AIC")[1])
+    reset_c = float(linear_reset(sm.OLS(ey, sm.add_constant(amostra[COMPLETO])).fit(), power=3, use_f=True).pvalue)
 
     Zc = sm.add_constant(amostra[COMPLETO])
     vifs = {c: float(variance_inflation_factor(Zc.values, i)) for i, c in enumerate(Zc.columns) if c != "const"}
@@ -455,16 +470,18 @@ def build(out_dir: Path) -> Dict:
     tem_xc = m_out[COMPLETO].notna().all(axis=1)
     fit_j = pd.Series(np.nan, index=m_out.index)
     fit_c = pd.Series(np.nan, index=m_out.index)
-    fit_j[tem_xj] = sm.add_constant(m_out.loc[tem_xj, JUROS], has_constant="add") @ rj.params.values
-    fit_c[tem_xc] = sm.add_constant(m_out.loc[tem_xc, COMPLETO], has_constant="add") @ rc.params.values
+    fit_j[tem_xj] = para_pl(sm.add_constant(m_out.loc[tem_xj, JUROS], has_constant="add") @ rj.params.values)
+    fit_c[tem_xc] = para_pl(sm.add_constant(m_out.loc[tem_xc, COMPLETO], has_constant="add") @ rc.params.values)
 
     # "hoje": último mês com P/L e todas as explicativas (normalmente o mês corrente, parcial)
     ult = m_out[m_out["pl"].notna() & tem_xc].index.max()
     xh = m_out.loc[ult]
-    eq_j, lo_j, hi_j = ajuste_com_ic(rj, xh[JUROS])
-    eq_c, lo_c, hi_c = ajuste_com_ic(rc, xh[COMPLETO])
-    pl_hoje = float(xh["pl"])
     xh_num = xh[COMPLETO].astype(float)
+    ey_j, ey_lo_j, ey_hi_j = ajuste_com_ic(rj, xh[JUROS])
+    ey_c, ey_lo_c, ey_hi_c = ajuste_com_ic(rc, xh[COMPLETO])
+    eq_j, lo_j, hi_j = 100 / ey_j, 100 / ey_hi_j, 100 / ey_lo_j  # EY maior = P/L menor
+    eq_c, lo_c, hi_c = 100 / ey_c, 100 / ey_hi_c, 100 / ey_lo_c
+    pl_hoje = float(xh["pl"])
 
     pls = m_out.loc[m_out.index <= ult, "pl"].dropna()
     mean, sd = float(pls.mean()), float(pls.std(ddof=0))
@@ -480,50 +497,89 @@ def build(out_dir: Path) -> Dict:
         falhas.append(f"resíduo do completo não estacionário (ADF p={adf_c:.3f})")
     if not (3 <= eq_c <= 30 and 3 <= eq_j <= 30):
         falhas.append(f"justificado fora de [3; 30]: completo {eq_c:.2f}, só juros {eq_j:.2f}")
+    if float(rc.fittedvalues.min()) <= 2.0:
+        falhas.append(f"EY ajustado chega a {rc.fittedvalues.min():.2f}% (P/L > 50) dentro da amostra")
     if testes[1]["p"] >= 0.05:
         falhas.append(f"bloco de juros não significativo (p={testes[1]['p']:.3f})")
     if falhas:
         raise RuntimeError("trava do modelo: " + "; ".join(falhas))
 
-    # ---- decomposição: justificado = média do P/L na amostra + Σ coef·(X hoje − média de X) ----
-    # Em bloco colinear (VIF alto) o efeito de cada taxa sozinha não se interpreta — só o
-    # do bloco; por isso a decomposição sai somada pelos mesmos blocos do teste F.
+    # ---- decomposição, em P/L ----
+    # O modelo soma efeitos no EY; o P/L é 1/EY, então os efeitos em P/L se encadeiam: parte do
+    # EY médio da amostra e soma os blocos na ordem do teste F (juros → exterior → direção). Cada
+    # bloco leva o P/L do passo anterior ao seguinte, e a soma fecha exatamente no justificado.
+    # Dentro do bloco, cada variável recebe a parte proporcional pela mesma inclinação do bloco.
+    # Em bloco colinear (VIF alto) o efeito de cada taxa sozinha não se interpreta — só o do bloco.
     blocos_vars = {"curva": JUROS, "externo": ["us10_real", "cupom_real_e"], "direcao": ["dselic_e", "t_us10"]}
 
     def decompor(res, cols):
-        efeito = {c: float(res.params[c] * (float(xh[c]) - amostra[c].mean())) for c in cols}
+        ef_ey = {c: float(res.params[c] * (float(xh[c]) - amostra[c].mean())) for c in cols}
+        ey0 = float(res.fittedvalues.mean())
+        ey_acc = ey0
         blocos = []
         for k, nome, _ in BLOCOS_F:
             vs = [c for c in blocos_vars[k] if c in cols]
-            if vs:
-                blocos.append({"bloco": k, "nome": nome, "efeito": _r(sum(efeito[c] for c in vs), 3),
-                               "itens": [{"key": c, "nome": VARS[c]["nome"], "efeito": _r(efeito[c], 3)} for c in vs]})
-        return {"media_pl": _r(amostra["pl"].mean(), 3), "blocos": blocos,
-                "justificado": _r(float(res.params["const"] + sum(res.params[c] * float(xh[c]) for c in cols)), 3)}
+            if not vs:
+                continue
+            d_ey = sum(ef_ey[c] for c in vs)
+            inclin = -100.0 / (ey_acc * (ey_acc + d_ey))  # ΔP/L por p.p. de EY neste trecho
+            blocos.append({"bloco": k, "nome": nome, "efeito": _r(inclin * d_ey, 3), "efeito_ey": _r(d_ey, 3),
+                           "itens": [{"key": c, "nome": VARS[c]["nome"], "efeito": _r(inclin * ef_ey[c], 3),
+                                      "efeito_ey": _r(ef_ey[c], 3)} for c in vs]})
+            ey_acc += d_ey
+        return {"media_pl": _r(100 / ey0, 3), "media_ey": _r(ey0, 3), "blocos": blocos,
+                "justificado": _r(100 / ey_acc, 3)}
 
     variaveis = []
     for c in COMPLETO:
         s = m_out[c].dropna()
+        b = float(rc.params[c])
         variaveis.append({
             "key": c, **VARS[c],
-            "coef": _r(rc.params[c], 4), "ep": _r(rc.bse[c], 4), "t": _r(rc.tvalues[c], 2), "p": _r(rc.pvalues[c], 4),
+            "coef": _r(b, 4), "ep": _r(rc.bse[c], 4), "t": _r(rc.tvalues[c], 2), "p": _r(rc.pvalues[c], 4),
             "vif": _r(vifs.get(c), 1), "hoje": _r(xh[c], 3), "media": _r(amostra[c].mean(), 3),
             "min": _r(s.min(), 3), "max": _r(s.max(), 3),
+            # efeito de +1 (p.p.) na variável sobre o P/L justificado de hoje, com as outras paradas
+            "efeito_1pp": _r(100 / (ey_c + b) - 100 / ey_c, 3) if ey_c + b > 1 else None,
             "coef_so_juros": _r(rj.params[c], 4) if c in JUROS else None,
         })
 
-    # Dispersões P/L × cada variável (regressão simples, só para leitura): as 3 taxas
-    # de juros num conjunto e as demais variáveis do completo noutro (grupo).
+    # ---- dispersões ----
+    # Juros: P/L observado × a taxa (bruto), curva = regressão simples do EY na taxa, em P/L.
+    # Demais variáveis: EFEITO PARCIAL — P/L que o mês teria com as OUTRAS seis variáveis na média
+    # da amostra (resíduo parcial). No bruto essas quatro se misturam com o ciclo dos juros (ex.:
+    # Selic esperada subindo acontece quando a Selic está baixa) e a relação some do gráfico.
+    medias = amostra[COMPLETO].mean()
+    ey_med = float(rc.fittedvalues.mean())
     dispersao = []
     for c in COMPLETO:
-        rb = ols_hac(amostra["pl"], amostra[[c]])
-        x0, x1 = float(amostra[c].min()), float(amostra[c].max())
-        a, b = float(rb.params["const"]), float(rb.params[c])
-        dispersao.append({"key": c, "nome": VARS[c]["nome"], "unidade": VARS[c]["unidade"],
-                          "grupo": "juros" if c in JUROS else "outras",
-                          "a": _r(a, 4), "b": _r(b, 4), "t": _r(rb.tvalues[c], 2),
-                          "r2": _r(rb.rsquared, 3), "x0": _r(x0, 3), "y0": _r(a + b * x0, 3), "x1": _r(x1, 3),
-                          "y1": _r(a + b * x1, 3)})
+        x = amostra[c].astype(float)
+        x0, x1 = float(x.min()), float(x.max())
+        xs = np.linspace(x0, x1, 25)
+        if c in JUROS:
+            rb = ols_hac(ey, amostra[[c]])
+            a, b = float(rb.params["const"]), float(rb.params[c])
+            ys = amostra["pl"].astype(float).values
+            curva = para_pl(a + b * xs)
+            y_hoje = pl_hoje
+            extra = {"tipo": "bruto", "a": _r(a, 4), "b": _r(b, 4), "t": _r(rb.tvalues[c], 2), "r2": _r(rb.rsquared, 3)}
+        else:
+            outras = [j for j in COMPLETO if j != c]
+            desloc = (amostra[outras] - medias[outras]) @ rc.params[outras]
+            ys = para_pl(ey - desloc)
+            curva = para_pl(ey_med + rc.params[c] * (xs - medias[c]))
+            y_hoje = float(para_pl(100 / pl_hoje - float((xh_num[outras] - medias[outras]) @ rc.params[outras])))
+            extra = {"tipo": "parcial", "a": None, "b": _r(rc.params[c], 4), "t": _r(rc.tvalues[c], 2), "r2": None}
+        pontos = [[_r(xv, 3), _r(yv, 3), str(per)] for per, xv, yv in zip(amostra.index, x.values, ys)
+                  if np.isfinite(yv)]
+        dispersao.append({
+            "key": c, "nome": VARS[c]["nome"], "unidade": VARS[c]["unidade"],
+            "grupo": "juros" if c in JUROS else "outras", **extra,
+            "pontos": pontos,
+            "curva": [[_r(xv, 3), _r(yv, 3)] for xv, yv in zip(xs, curva) if np.isfinite(yv)],
+            "hoje": [_r(xh_num[c], 3), _r(y_hoje, 3)] if np.isfinite(y_hoje) else None,
+            "x0": _r(x0, 3), "x1": _r(x1, 3),
+        })
 
     serie = []
     for p, row in m_out.iterrows():
@@ -552,13 +608,15 @@ def build(out_dir: Path) -> Dict:
         "pl": _r(pl_hoje, 3), "z": pl_stats["z_hoje"],
         "justificado_juros": _r(eq_j, 3), "ic_juros": [_r(lo_j, 2), _r(hi_j, 2)],
         "justificado_completo": _r(eq_c, 3), "ic_completo": [_r(lo_c, 2), _r(hi_c, 2)],
+        "ey": _r(100 / pl_hoje, 3), "ey_justificado_juros": _r(ey_j, 3), "ey_justificado_completo": _r(ey_c, 3),
         "desvio_juros_pct": _r((pl_hoje / eq_j - 1) * 100, 1),
         "desvio_completo_pct": _r((pl_hoje / eq_c - 1) * 100, 1),
         "excl": {"total": _r(xh["excl"], 1), "teto": _r(xh["excl_teto"], 1),
                  "prejuizo": _r(xh["excl_prejuizo"], 1), "sem_dado": _r(xh["excl_sem_dado"], 1)},
     }
     estimado_ate = str(amostra.index.max())
-    hist_item = {"mes": estimado_ate, "n": int(len(amostra)), "r2": _r(rc.rsquared, 3), "r2_juros": _r(rj.rsquared, 3),
+    hist_item = {"mes": estimado_ate, "forma": "ey", "n": int(len(amostra)), "r2": _r(rc.rsquared, 3),
+                 "r2_juros": _r(rj.rsquared, 3),
                  "coefs": {c: _r(rc.params[c], 4) for c in ["const"] + COMPLETO}}
 
     def resumo(res, adf_p):
@@ -581,7 +639,9 @@ def build(out_dir: Path) -> Dict:
         "variaveis": variaveis,
         "modelos": {
             "juros": {**resumo(rj, adf_j), "vars": JUROS},
-            "completo": {**resumo(rc, adf_c), "vars": COMPLETO, "ecm_gamma": _r(gamma, 3),
+            "forma": "ey",
+            "forma_descricao": "Estimado no lucro sobre preço (EY = 1/P-L); justificado = 1/EY ajustado",
+            "completo": {**resumo(rc, adf_c), "vars": COMPLETO, "reset_p": _r(reset_c, 4), "ecm_gamma": _r(gamma, 3),
                          "ecm_gamma_p": _r(ecm.pvalues["ect"], 4), "meia_vida_meses": _r(meia_vida, 1)},
         },
         "testes_f": testes,

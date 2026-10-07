@@ -164,7 +164,9 @@ function PlJustificadoCard({ m }: { m: IbovPlModeloData }) {
               P/L observado: lucro por ação reportado nos últimos 12 meses (calendário de resultados,
               pela data de anúncio) contra o preço, agregado pela média harmônica com os pesos atuais
               do Ibovespa; último dia útil de cada mês. P/L justificado: o que a relação histórica
-              entre P/L e juros reais prevê para as condições do mês. &quot;Só juros&quot; usa Selic real,
+              entre lucro sobre preço (o inverso do P/L) e juros reais prevê para as condições do mês — o modelo
+              é estimado no lucro sobre preço porque, pela fórmula de Gordon, é ele que anda em linha reta com os
+              juros; o P/L faz curva. &quot;Só juros&quot; usa Selic real,
               juro real de 5 e de 30 anos; o &quot;modelo completo&quot; acrescenta a mudança esperada da Selic,
               o juro real americano, o cupom cambial real e a tendência do juro americano. Reestimado a cada
               fechamento de mês (amostra {fmtMesCurto(m.amostra.inicio)}–{fmtMesCurto(m.amostra.fim)},{" "}
@@ -330,23 +332,10 @@ export function AcoesPlModelo({ modelo, valuation }: { modelo: IbovPlModeloData;
         info="O P/L do Ibovespa comparado com a própria história (média e desvios) e com o P/L que os juros reais justificam. Acima do justificado, a bolsa está mais cara do que os juros explicam; abaixo, mais barata."
       />
       <PlJustificadoCard m={modelo} />
-      {/* As duas dispersões dividem a linha na proporção dos painéis (3 + 4): todo
-          painel sai com a mesma largura. */}
-      <div className={`grid grid-cols-1 items-stretch gap-4 ${temOutras ? "xl:grid-cols-7" : ""}`}>
-        <div className={temOutras ? "xl:col-span-3" : ""}>
-          <PlDispersaoCard m={modelo} grupo="juros" />
-        </div>
-        {temOutras ? (
-          <div className="xl:col-span-4">
-            <PlDispersaoCard m={modelo} grupo="outras" />
-          </div>
-        ) : null}
-      </div>
-      {valuation && valuation.status === "ok" ? <AcoesPremioNtnb data={valuation} /> : null}
 
       <Divisor
         label="Modelo — variáveis e coeficientes"
-        info="As sete variáveis do modelo completo, como entram na regressão (média mensal), e a conta que leva da média histórica do P/L ao P/L justificado de hoje."
+        info="As sete variáveis do modelo completo, como entram na regressão (média mensal), e a conta que leva do lucro sobre preço médio da amostra ao P/L justificado de hoje."
         right={
           <button
             type="button"
@@ -364,6 +353,20 @@ export function AcoesPlModelo({ modelo, valuation }: { modelo: IbovPlModeloData;
           <PlDecomposicaoCard m={modelo} />
         </div>
       ) : null}
+
+      {/* As duas dispersões dividem a linha na proporção dos painéis (3 + 4): todo
+          painel sai com a mesma largura. */}
+      <div className={`grid grid-cols-1 items-stretch gap-4 ${temOutras ? "xl:grid-cols-7" : ""}`}>
+        <div className={temOutras ? "xl:col-span-3" : ""}>
+          <PlDispersaoCard m={modelo} grupo="juros" />
+        </div>
+        {temOutras ? (
+          <div className="xl:col-span-4">
+            <PlDispersaoCard m={modelo} grupo="outras" />
+          </div>
+        ) : null}
+      </div>
+      {valuation && valuation.status === "ok" ? <AcoesPremioNtnb data={valuation} /> : null}
     </div>
   );
 }

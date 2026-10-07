@@ -154,6 +154,8 @@ export type IbovPlModeloVariavel = {
   min: number | null;
   max: number | null;
   coef_so_juros: number | null;
+  /** Efeito de +1 (p.p.) na variável sobre o P/L justificado de hoje, com as outras paradas. */
+  efeito_1pp?: number | null;
 };
 
 export type IbovPlModeloResumo = {
@@ -173,11 +175,14 @@ export type IbovPlModeloResumo = {
 export type IbovPlModeloDecomp = {
   media_pl: number | null;
   justificado: number | null;
+  /** Lucro sobre preço médio da amostra (%), ponto de partida (schema 2). */
+  media_ey?: number | null;
   blocos: Array<{
     bloco: string;
     nome: string;
     efeito: number | null;
-    itens: Array<{ key: IbovPlModeloVarKey; nome: string; efeito: number | null }>;
+    efeito_ey?: number | null;
+    itens: Array<{ key: IbovPlModeloVarKey; nome: string; efeito: number | null; efeito_ey?: number | null }>;
   }>;
 };
 
@@ -217,7 +222,12 @@ export type IbovPlModeloData = {
   };
   serie: IbovPlModeloRow[];
   variaveis: IbovPlModeloVariavel[];
-  modelos: { juros: IbovPlModeloResumo; completo: IbovPlModeloResumo };
+  modelos: {
+    juros: IbovPlModeloResumo;
+    completo: IbovPlModeloResumo & { reset_p?: number | null };
+    /** "ey" (schema 2): estimado no lucro sobre preço, justificado = 1/EY. */
+    forma?: string;
+  };
   testes_f: Array<{ bloco: string; nome: string; F: number | null; p: number }>;
   dispersao: Array<{
     key: IbovPlModeloVarKey;
@@ -226,14 +236,21 @@ export type IbovPlModeloData = {
     unidade?: string;
     /** "juros" (as 3 taxas) ou "outras" (demais variáveis do completo). */
     grupo?: "juros" | "outras";
+    /** "bruto" = P/L observado; "parcial" = P/L com as outras variáveis na média (schema 2). */
+    tipo?: "bruto" | "parcial";
+    /** [x, P/L, "YYYY-MM"] de cada mês da amostra (schema 2). */
+    pontos?: Array<[number, number, string]>;
+    /** Curva da relação, já em P/L (schema 2). */
+    curva?: Array<[number, number]>;
+    hoje?: [number, number] | null;
     a: number | null;
     b: number | null;
     t: number | null;
     r2: number | null;
     x0: number | null;
-    y0: number | null;
+    y0?: number | null;
     x1: number | null;
-    y1: number | null;
+    y1?: number | null;
   }>;
   decomposicao: { completo: IbovPlModeloDecomp; juros: IbovPlModeloDecomp };
   coef_history?: Array<{

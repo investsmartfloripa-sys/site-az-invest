@@ -61,64 +61,92 @@ function fmtVar(v: number | null | undefined, unidade: string, dec = 2): string 
 }
 
 // ---------------------------------------------------------------------------
-// Dispersões: P/L × cada taxa de juros real, com a reta de regressão simples
+// Dispersões: P/L × juros (bruto) e efeito parcial das demais variáveis
 // ---------------------------------------------------------------------------
 
-type Ponto = { x: number; y: number; mes: string; date: string; parcial: boolean };
+type Ponto = { x: number; y: number; date: string; parcial: boolean };
+type Dispersao = IbovPlModeloData["dispersao"][number];
 
 function DispTooltip({
   active,
   payload,
   nome,
   unidade,
+  parcialTipo,
 }: {
   active?: boolean;
   payload?: ReadonlyArray<{ payload?: unknown }>;
   nome: string;
   unidade: string;
+  parcialTipo: boolean;
 }) {
   if (!active || !payload || payload.length === 0) return null;
   const p = payload[0]?.payload as Ponto | undefined;
-  if (!p) return null;
+  if (!p || p.date == null) return null;
   return (
     <div style={navyBox}>
       <p style={{ color: "#94A3B8", fontWeight: 600, margin: 0, marginBottom: 2 }}>
         {rotuloMes({ date: p.date, parcial: p.parcial })}
       </p>
       <p style={{ margin: 0 }}>
-        P/L <strong>{fmtNum(p.y, 1)}x</strong> · {nome} <strong>{fmtVar(p.x, unidade)}</strong>
+        {parcialTipo ? "P/L ajustado" : "P/L"} <strong>{fmtNum(p.y, 1)}x</strong> · {nome}{" "}
+        <strong>{fmtVar(p.x, unidade)}</strong>
       </p>
     </div>
   );
 }
 
+/** Pontos, curva e "hoje" do painel. Blob antigo (schema 1): pontos da série e reta x0→x1. */
+function dadosPainel(m: IbovPlModeloData, d: Dispersao) {
+  const pts: Ponto[] = d.pontos
+    ? d.pontos.map(([x, y, mes]) => ({ x, y, date: mes, parcial: false }))
+    : m.serie
+        .filter((r) => r.na_amostra && r.pl != null && r[d.key] != null)
+        .map((r) => ({ x: r[d.key] as number, y: r.pl as number, date: r.date, parcial: r.parcial }));
+  const curva = d.curva
+    ? d.curva.map(([x, y]) => ({ x, y }))
+    : d.x0 != null && d.y0 != null && d.x1 != null && d.y1 != null
+      ? [
+          { x: d.x0, y: d.y0 },
+          { x: d.x1, y: d.y1 },
+        ]
+      : [];
+  const hojeRow = m.serie.find((r) => r.mes === m.hoje.mes);
+  const hoje: Ponto | null = d.hoje
+    ? { x: d.hoje[0], y: d.hoje[1], date: m.hoje.data, parcial: m.hoje.parcial }
+    : hojeRow && hojeRow.pl != null && hojeRow[d.key] != null
+      ? { x: hojeRow[d.key] as number, y: hojeRow.pl, date: hojeRow.date, parcial: hojeRow.parcial }
+      : null;
+  return { pts, curva, hoje };
+}
+
 function MiniDispersao({
   d,
   unidade,
-  pts,
-  hoje,
+  rotulo,
+  dados,
   ylo,
   yhi,
 }: {
-  d: IbovPlModeloData["dispersao"][number];
+  d: Dispersao;
   unidade: string;
-  pts: Ponto[];
-  hoje: Ponto | null;
+  rotulo: string;
+  dados: ReturnType<typeof dadosPainel>;
   ylo: number;
   yhi: number;
 }) {
+  const { pts, curva, hoje } = dados;
   const xs = pts.map((p) => p.x).concat(hoje ? [hoje.x] : []);
   const xlo = Math.floor(Math.min(...xs) - 0.5);
   const xhi = Math.ceil(Math.max(...xs) + 0.5);
+  const parcialTipo = d.tipo === "parcial";
   return (
     <div className="min-w-0">
       <p className="text-[12px] font-semibold text-[#132960]">
         {d.nome}
         {unidade === "p.p." ? <span className="font-normal text-zinc-500"> (p.p.)</span> : null}
       </p>
-      <p className="text-[10px] text-zinc-500">
-        inclinação {fmtSignedNum(d.b, 2)} · R² {fmtNum(d.r2, 2)}
-      </p>
+      <p className="text-[10px] text-zinc-500">{rotulo}</p>
       <div style={{ height: 230 }} className="w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
@@ -136,23 +164,22 @@ function MiniDispersao({
               type="number"
               dataKey="y"
               domain={[ylo, yhi]}
+              allowDataOverflow
               width={30}
               tickFormatter={(v) => fmtNum(Number(v), 0)}
             />
             <Tooltip
-              content={<DispTooltip nome={d.nome} unidade={unidade} />}
+              content={<DispTooltip nome={d.nome} unidade={unidade} parcialTipo={parcialTipo} />}
               cursor={{ strokeDasharray: "3 3", stroke: AZ_CHART.ticks }}
             />
             <Scatter data={pts} fill={PL_CORES.obs} fillOpacity={0.32} isAnimationActive={false} />
-            {d.x0 != null && d.y0 != null && d.x1 != null && d.y1 != null ? (
-              <ReferenceLine
-                segment={[
-                  { x: d.x0, y: d.y0 },
-                  { x: d.x1, y: d.y1 },
-                ]}
-                stroke={PL_CORES.completo}
-                strokeWidth={2}
-                ifOverflow="hidden"
+            {curva.length > 1 ? (
+              <Scatter
+                data={curva}
+                line={{ stroke: PL_CORES.completo, strokeWidth: 2 }}
+                shape={() => <g />}
+                legendType="none"
+                isAnimationActive={false}
               />
             ) : null}
             {hoje ? (
@@ -179,61 +206,74 @@ export function grupoDispersao(m: IbovPlModeloData, key: IbovPlModeloVarKey): "j
 }
 
 const GRUPOS = {
-  juros: { titulo: "P/L × juro real", grade: "grid-cols-1 sm:grid-cols-3" },
-  outras: { titulo: "P/L × demais variáveis do modelo", grade: "grid-cols-2 sm:grid-cols-4" },
+  juros: {
+    titulo: "P/L × juro real",
+    sub: "Cada ponto é um mês · curva = relação do lucro sobre preço com a taxa · ponto laranja = hoje",
+    info:
+      "Cada ponto é um mês da amostra: P/L do Ibovespa contra a taxa de juro real do mês (média mensal). A curva é a regressão simples do lucro sobre preço (o inverso do P/L) na taxa, convertida de volta em P/L — por isso é curva: o P/L reage mais aos juros quando eles estão baixos. O modelo usa as taxas juntas, com outros coeficientes.",
+    grade: "grid-cols-1 sm:grid-cols-3",
+  },
+  outras: {
+    titulo: "Efeito das demais variáveis no modelo",
+    sub: "P/L do mês com as outras seis variáveis na média · ponto laranja = hoje",
+    info:
+      "Gráfico de efeito parcial: cada ponto é o P/L que o mês teria se as outras seis variáveis do modelo estivessem na média da amostra; a curva é o efeito que o modelo atribui à variável. Sem esse ajuste, estas quatro variáveis se misturam com o ciclo dos juros (ex.: a Selic esperada sobe quando a Selic está baixa e o P/L alto) e a relação some do gráfico.",
+    grade: "grid-cols-2 sm:grid-cols-4",
+  },
 } as const;
 
 export function PlDispersaoCard({ m, grupo }: { m: IbovPlModeloData; grupo: "juros" | "outras" }) {
-  const { porVar, hojePorVar, ylo, yhi } = useMemo(() => {
-    const amostra = m.serie.filter((r) => r.na_amostra && r.pl != null);
-    const hojeRow = m.serie.find((r) => r.mes === m.hoje.mes) ?? null;
-    const porVar: Record<string, Ponto[]> = {};
-    const hojePorVar: Record<string, Ponto | null> = {};
-    for (const d of m.dispersao) {
-      porVar[d.key] = amostra
-        .filter((r) => r[d.key] != null)
-        .map((r) => ({ x: r[d.key] as number, y: r.pl as number, mes: r.mes, date: r.date, parcial: r.parcial }));
-      const xv = hojeRow?.[d.key];
-      hojePorVar[d.key] =
-        hojeRow && xv != null && hojeRow.pl != null
-          ? { x: xv, y: hojeRow.pl, mes: hojeRow.mes, date: hojeRow.date, parcial: hojeRow.parcial }
-          : null;
+  const itens = useMemo(() => m.dispersao.filter((d) => grupoDispersao(m, d.key) === grupo), [m, grupo]);
+  const { porVar, ylo, yhi } = useMemo(() => {
+    const porVar: Record<string, ReturnType<typeof dadosPainel>> = {};
+    const ys: number[] = [];
+    for (const d of itens) {
+      const dd = dadosPainel(m, d);
+      porVar[d.key] = dd;
+      ys.push(...dd.pts.map((p) => p.y), ...dd.curva.map((p) => p.y), ...(dd.hoje ? [dd.hoje.y] : []));
     }
-    // Mesma régua de P/L em todos os painéis (os dois cards ficam lado a lado).
-    const ys = amostra.map((r) => r.pl as number).concat(hojeRow?.pl != null ? [hojeRow.pl] : []);
-    return { porVar, hojePorVar, ylo: Math.floor(Math.min(...ys) - 0.5), yhi: Math.ceil(Math.max(...ys) + 0.5) };
-  }, [m]);
-  const itens = m.dispersao.filter((d) => grupoDispersao(m, d.key) === grupo);
+    // Uma régua de P/L por card (os painéis do mesmo card comparam entre si).
+    return { porVar, ylo: Math.floor(Math.min(...ys) - 0.5), yhi: Math.ceil(Math.max(...ys) + 0.5) };
+  }, [m, itens]);
   if (!itens.length) return null;
   const unidadeDe = (key: IbovPlModeloVarKey) =>
     m.dispersao.find((d) => d.key === key)?.unidade ?? m.variaveis.find((v) => v.key === key)?.unidade ?? "%";
-  const g = GRUPOS[grupo];
+  const efeitoDe = (key: IbovPlModeloVarKey) => m.variaveis.find((v) => v.key === key)?.efeito_1pp ?? null;
+  // Blob antigo (schema 1) não traz o efeito parcial: mantém o título/explicação do gráfico bruto.
+  const g =
+    grupo === "outras" && !itens.every((d) => d.tipo === "parcial")
+      ? { ...GRUPOS.juros, titulo: "P/L × demais variáveis do modelo", grade: GRUPOS.outras.grade }
+      : GRUPOS[grupo];
 
   return (
     <article className={`${CARD} h-full`}>
       <header className="pb-2">
         <h3 className={TITULO}>
           {g.titulo} ({fmtMesCurto(m.amostra.inicio)}–{fmtMesCurto(m.amostra.fim)})
-          <MethodInfo className="ml-1.5 align-middle">
-            Cada ponto é um mês da amostra do modelo: P/L do Ibovespa (eixo vertical) contra a variável do mês
-            (média mensal). A reta é a regressão simples com aquela variável sozinha — serve para ver a relação;
-            o P/L justificado do modelo usa as variáveis juntas, com outros coeficientes. Ponto laranja = hoje.
-          </MethodInfo>
+          <MethodInfo className="ml-1.5 align-middle">{g.info}</MethodInfo>
         </h3>
-        <p className="mt-0.5 text-[11px] text-zinc-500">Cada ponto é um mês · ponto laranja = hoje</p>
+        <p className="mt-0.5 text-[11px] text-zinc-500">{g.sub}</p>
       </header>
       <div className={`grid ${g.grade} gap-3`}>
-        {itens.map((d) => (
-          <MiniDispersao
-            key={d.key}
-            d={d}
-            unidade={unidadeDe(d.key)}
-            pts={porVar[d.key] ?? []}
-            hoje={hojePorVar[d.key] ?? null}
-            ylo={ylo}
-            yhi={yhi}
-          />
-        ))}
+        {itens.map((d) => {
+          const un = unidadeDe(d.key);
+          const ef = efeitoDe(d.key);
+          const rotulo =
+            d.tipo === "parcial"
+              ? `+1 p.p. → ${ef != null ? `${fmtSignedNum(ef, 2)}x` : "—"} no P/L`
+              : `R² ${fmtNum(d.r2, 2)} sozinha`;
+          return (
+            <MiniDispersao
+              key={d.key}
+              d={d}
+              unidade={un}
+              rotulo={rotulo}
+              dados={porVar[d.key]}
+              ylo={ylo}
+              yhi={yhi}
+            />
+          );
+        })}
       </div>
     </article>
   );
@@ -301,7 +341,10 @@ export function PlVariaveisCard({ m }: { m: IbovPlModeloData }) {
     ["Média da amostra", fmtVar(v.media, v.unidade)],
     ["Mínimo", fmtVar(v.min, v.unidade)],
     ["Máximo", fmtVar(v.max, v.unidade)],
-    ["Coeficiente", `${fmtSignedNum(v.coef, 3)} (t ${fmtNum(v.t, 1)})`],
+    [
+      "+1 no P/L hoje",
+      v.efeito_1pp != null ? `${fmtSignedNum(v.efeito_1pp, 2)}x (t ${fmtNum(v.t, 1)})` : `t ${fmtNum(v.t, 1)}`,
+    ],
     ["VIF", fmtNum(v.vif, 1)],
   ];
 
@@ -314,9 +357,10 @@ export function PlVariaveisCard({ m }: { m: IbovPlModeloData }) {
             <MethodInfo className="ml-1.5 align-middle">
               Cada variável como entra na regressão: média mensal dos dados diários. &quot;Nível&quot; = a taxa em
               si; &quot;direção&quot; = para onde ela está indo (mudança esperada ou tendência de 12 meses).
-              Coeficiente = quanto o P/L justificado muda para cada 1 ponto na variável, mantidas as outras;
-              VIF alto (acima de 10) indica variável que anda junto com outras — por isso os juros valem em
-              bloco, não um a um.
+              &quot;+1 no P/L hoje&quot; = quanto o P/L justificado de hoje muda se a variável subir 1 ponto,
+              mantidas as outras (o modelo é estimado no lucro sobre preço, então o efeito em P/L depende do
+              nível de hoje). VIF alto (acima de 10) indica variável que anda junto com outras — por isso os
+              juros valem em bloco, não um a um.
             </MethodInfo>
           </h3>
           <p className="mt-0.5 text-[11px] text-zinc-500">
@@ -432,9 +476,10 @@ export function PlDecomposicaoCard({ m }: { m: IbovPlModeloData }) {
         <h3 className={TITULO}>
           De onde vem o P/L justificado ({fmtMesCurto(m.hoje.data)})
           <MethodInfo className="ml-1.5 align-middle">
-            O P/L justificado parte da média histórica do P/L e soma o efeito de cada variável: coeficiente ×
-            (valor de hoje − média da amostra). Os efeitos são somados por bloco — os mesmos do teste F — porque
-            variáveis que andam juntas (as três taxas de juros) só têm leitura em conjunto.
+            O modelo é estimado no lucro sobre preço (o inverso do P/L). A conta parte do P/L equivalente ao
+            lucro sobre preço médio da amostra e soma, bloco a bloco (os mesmos do teste F, na ordem juros →
+            exterior → direção), quanto cada bloco desloca o P/L com os valores de hoje contra a média. A soma
+            fecha no P/L justificado. Variáveis que andam juntas (as três taxas de juros) só têm leitura em bloco.
           </MethodInfo>
         </h3>
         <p className="mt-0.5 text-[11px] text-zinc-500">Modelo completo, em pontos de P/L (x)</p>
@@ -444,7 +489,8 @@ export function PlDecomposicaoCard({ m }: { m: IbovPlModeloData }) {
         <tbody>
           <tr className="border-b border-[#132960]/10">
             <td className="py-1.5 text-zinc-600">
-              Média histórica do P/L ({fmtMesCurto(m.amostra.inicio)}–{fmtMesCurto(m.amostra.fim)})
+              {dc.media_ey != null ? "P/L com o lucro sobre preço médio" : "Média histórica do P/L"} (
+              {fmtMesCurto(m.amostra.inicio)}–{fmtMesCurto(m.amostra.fim)})
             </td>
             <td className="py-1.5 text-right font-semibold tabular-nums text-[#132960]">{fmtNum(dc.media_pl, 1)}x</td>
           </tr>
