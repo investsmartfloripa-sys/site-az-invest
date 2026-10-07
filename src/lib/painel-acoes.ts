@@ -120,6 +120,7 @@ export type IbovPlModeloVarKey =
   | "real_30a"
   | "dselic_e"
   | "us10_real"
+  | "fed_real"
   | "cupom_real_e"
   | "t_us10";
 
@@ -186,6 +187,24 @@ export type IbovPlModeloDecomp = {
     efeito_ey?: number | null;
     itens: Array<{ key: IbovPlModeloVarKey; nome: string; efeito: number | null; efeito_ey?: number | null }>;
   }>;
+};
+
+/** Projeção pelas implícitas do dia (schema 4): Selic e Fed Funds seguem as trajetórias do Panorama,
+ *  as demais variáveis ficam paradas; o 1º ponto é o justificado de hoje. */
+export type IbovPlModeloProjecao = {
+  inicio: string;
+  fim: string;
+  pontos: Array<{
+    mes: string;
+    date: string;
+    selic: number | null;
+    fed: number | null;
+    juros: number | null;
+    completo: number | null;
+  }>;
+  selic: { origem: string; ref: string; gerado_em?: string | null; vol_mult?: number | null };
+  fed: { origem: string; ref: string } | null;
+  premissas: string;
 };
 
 export type IbovPlModeloData = {
@@ -276,6 +295,7 @@ export type IbovPlModeloData = {
     coefs: Record<string, number | null>;
   }>;
   avisos: string[];
+  projecao?: IbovPlModeloProjecao | null;
   fontes_ultima_data?: Record<string, string | null>;
   fontes?: Record<string, string>;
 };

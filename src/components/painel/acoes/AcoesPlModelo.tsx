@@ -42,7 +42,17 @@ import {
 } from "@/lib/format-br";
 import type { AcoesValuationData, IbovPlModeloData, IbovPlModeloRow } from "@/lib/painel-acoes";
 
-type Linha = IbovPlModeloRow & { t: number };
+/** Linha do gráfico: mês do histórico ou mês projetado (proj_*: pelas implícitas do dia). */
+type Linha = IbovPlModeloRow & {
+  t: number;
+  projetado?: boolean;
+  proj_juros?: number | null;
+  proj_completo?: number | null;
+  proj_selic?: number | null;
+  proj_fed?: number | null;
+};
+
+const fmtTaxa = (v: number | null | undefined) => (v != null ? `${fmtNum(v, 2)}%` : "—");
 
 function PlTooltip({
   active,
@@ -58,6 +68,43 @@ function PlTooltip({
   if (!active || !payload || payload.length === 0) return null;
   const r = payload[0]?.payload as Linha | undefined;
   if (!r) return null;
+  if (r.projetado) {
+    return (
+      <div
+        style={{
+          background: AZ_BRAND.navy,
+          borderRadius: 8,
+          color: "#fff",
+          fontSize: 12,
+          boxShadow: "0 4px 12px rgba(19,41,96,.25)",
+          padding: "8px 12px",
+          maxWidth: 300,
+        }}
+      >
+        <p style={{ color: "#94A3B8", fontWeight: 600, margin: 0, marginBottom: 4 }}>
+          {fmtMesCurto(r.date)} · projeção
+        </p>
+        {(
+          [
+            ["Justificado — completo", r.proj_completo, PL_CORES.completo],
+            ["Justificado — só juros", r.proj_juros, PL_CORES.juros],
+          ] as Array<[string, number | null | undefined, string]>
+        ).map(([nome, v, cor]) => (
+          <p key={nome} style={{ display: "flex", alignItems: "center", gap: 6, margin: 0, whiteSpace: "nowrap" }}>
+            <span aria-hidden style={{ width: 8, height: 8, borderRadius: "50%", background: cor, flexShrink: 0 }} />
+            <span style={{ color: "#C7D2E8" }}>{nome}</span>
+            <span style={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", marginLeft: "auto" }}>
+              {v != null ? `${fmtNum(v, 1)}x` : "—"}
+            </span>
+          </p>
+        ))}
+        <p style={{ margin: "4px 0 0", color: "#C7D2E8" }}>
+          Selic implícita <strong style={{ color: "#fff" }}>{fmtTaxa(r.proj_selic)}</strong> · Fed implícita{" "}
+          <strong style={{ color: "#fff" }}>{fmtTaxa(r.proj_fed)}</strong>
+        </p>
+      </div>
+    );
+  }
   const z = r.pl != null && sd > 0 ? (r.pl - mean) / sd : null;
   const itens: Array<[string, number | null, string]> = [
     ["P/L observado", r.pl, PL_CORES.obs],
@@ -112,30 +159,73 @@ function PlTooltip({
   );
 }
 
-function Amostra({ cor, tracejado }: { cor: string; tracejado?: boolean }) {
+function Amostra({ cor, tracejado, pontilhado }: { cor: string; tracejado?: boolean; pontilhado?: boolean }) {
   return (
     <span
       aria-hidden
       className="inline-block h-0.5 w-4 align-middle"
       style={
-        tracejado
-          ? { backgroundImage: `repeating-linear-gradient(90deg, ${cor} 0 5px, transparent 5px 8px)` }
-          : { backgroundColor: cor }
+        pontilhado
+          ? { backgroundImage: `repeating-linear-gradient(90deg, ${cor} 0 2px, transparent 2px 5px)` }
+          : tracejado
+            ? { backgroundImage: `repeating-linear-gradient(90deg, ${cor} 0 5px, transparent 5px 8px)` }
+            : { backgroundColor: cor }
       }
     />
   );
 }
 
+/** Histórico + meses projetados. O 1º ponto da projeção é hoje: entra na linha do mês corrente,
+ *  para as linhas pontilhadas saírem do justificado de hoje. */
+function montarLinhas(m: IbovPlModeloData): { hist: Linha[]; proj: Linha[] } {
+  const hist: Linha[] = m.serie.map((r) => ({ ...r, t: parseIsoUTC(r.date) }));
+  const pts = m.projecao?.pontos ?? [];
+  if (pts.length < 2 || !hist.length) return { hist, proj: [] };
+  const vazio = Object.fromEntries(m.variaveis.map((v) => [v.key, null]));
+  const proj: Linha[] = [];
+  pts.forEach((p, i) => {
+    const extra = { proj_juros: p.juros, proj_completo: p.completo, proj_selic: p.selic, proj_fed: p.fed };
+    const ult = hist[hist.length - 1];
+    if (i === 0 && ult.mes === p.mes) {
+      Object.assign(ult, extra);
+      return;
+    }
+    proj.push({
+      ...(vazio as Record<string, null>),
+      date: p.date,
+      mes: p.mes,
+      parcial: false,
+      na_amostra: false,
+      pl: null,
+      fit_juros: null,
+      fit_completo: null,
+      excl: null,
+      excl_teto: null,
+      excl_prejuizo: null,
+      excl_sem_dado: null,
+      ...extra,
+      projetado: true,
+      t: parseIsoUTC(p.date),
+    } as Linha);
+  });
+  return { hist, proj };
+}
+
 function PlJustificadoCard({ m }: { m: IbovPlModeloData }) {
-  const rows: Linha[] = useMemo(() => m.serie.map((r) => ({ ...r, t: parseIsoUTC(r.date) })), [m]);
+  const { hist: rows, proj } = useMemo(() => montarLinhas(m), [m]);
   const [win, setWin] = useState<AzPeriodValue>({ id: "max" }); // abre sempre no histórico inteiro
   const dMin = rows[0]?.date;
   const dMax = rows[rows.length - 1]?.date;
   const vis = useMemo(() => {
     if (!rows.length) return [];
     const { from, to } = resolvePeriodRange(win, rows[0].date, rows[rows.length - 1].date);
-    return rows.filter((r) => r.date >= from && r.date <= to);
-  }, [rows, win]);
+    const h = rows.filter((r) => r.date >= from && r.date <= to);
+    // A projeção acompanha qualquer janela que chegue até hoje.
+    return h.length && h[h.length - 1].date === rows[rows.length - 1].date ? [...h, ...proj] : h;
+  }, [rows, proj, win]);
+  const temProj = vis.some((r) => r.projetado);
+  const pj = m.projecao;
+  const pFim = pj?.pontos[pj.pontos.length - 1];
   const span = vis.length > 1 ? Math.max(1, diffDaysUTC(vis[0].date, vis[vis.length - 1].date)) : 1;
   const xTicks = useMemo(
     () => buildTimeTicks(vis.map((r) => r.date), span).map((iso) => parseIsoUTC(iso)).filter((t) => Number.isFinite(t)),
@@ -145,7 +235,7 @@ function PlJustificadoCard({ m }: { m: IbovPlModeloData }) {
   const h = m.hoje;
   const [lo, hi] = useMemo(() => {
     const vals = vis
-      .flatMap((r) => [r.pl, r.fit_juros, r.fit_completo])
+      .flatMap((r) => [r.pl, r.fit_juros, r.fit_completo, r.proj_juros ?? null, r.proj_completo ?? null])
       .filter((v): v is number => v != null && Number.isFinite(v));
     const a = Math.min(...vals, s.minus1);
     const b = Math.max(...vals, s.plus1);
@@ -168,7 +258,10 @@ function PlJustificadoCard({ m }: { m: IbovPlModeloData }) {
               é estimado no lucro sobre preço porque, pela fórmula de Gordon, é ele que anda em linha reta com os
               juros; o P/L faz curva. &quot;Só juros&quot; usa Selic real,
               juro real de 5 e de 30 anos; o &quot;modelo completo&quot; acrescenta a mudança esperada da Selic,
-              o juro real americano, o cupom cambial real e a tendência do juro americano. Reestimado a cada
+              o juro real americano de 10 anos, a Fed Funds real, o cupom cambial real e a tendência do juro
+              americano. Projeção (pontilhado): a Selic implícita e a Fed implícita do dia, as mesmas do
+              Panorama, fazem o papel da Selic e da Fed Funds nos meses seguintes; as demais variáveis ficam
+              no nível de hoje. Reestimado a cada
               fechamento de mês (amostra {fmtMesCurto(m.amostra.inicio)}–{fmtMesCurto(m.amostra.fim)},{" "}
               {m.amostra.n} meses). Meses em que menos de 60% do índice tem lucro positivo ficam sem P/L.
               Não é recomendação.
@@ -201,6 +294,18 @@ function PlJustificadoCard({ m }: { m: IbovPlModeloData }) {
           <Amostra cor={PL_CORES.juros} tracejado />
           Justificado — só juros <strong className="tabular-nums text-[#132960]">{fmtNum(h.justificado_juros, 1)}x</strong>
         </span>
+        {temProj && pFim ? (
+          <span className="inline-flex items-center gap-1.5">
+            <Amostra cor={PL_CORES.completo} pontilhado />
+            Projeção pelas implícitas de hoje · {fmtMesCurto(pFim.date)}:{" "}
+            {pFim.completo != null ? (
+              <>
+                completo <strong className="tabular-nums text-[#132960]">{fmtNum(pFim.completo, 1)}x</strong> ·{" "}
+              </>
+            ) : null}
+            só juros <strong className="tabular-nums text-[#132960]">{fmtNum(pFim.juros, 1)}x</strong>
+          </span>
+        ) : null}
         <span className="inline-flex items-center gap-1.5 text-zinc-500">
           <Amostra cor={PL_CORES.media} tracejado />
           média {fmtNum(s.mean, 1)}x
@@ -272,7 +377,41 @@ function PlJustificadoCard({ m }: { m: IbovPlModeloData }) {
                     label={{ value: rot, position: "right", fontSize: 9, fill: PL_CORES.media }}
                   />
                 ))}
+              {temProj ? (
+                <ReferenceArea
+                  x1={rows[rows.length - 1].t}
+                  x2={vis[vis.length - 1].t}
+                  fill={AZ_BRAND.navy}
+                  fillOpacity={0.05}
+                  ifOverflow="hidden"
+                  label={{ value: "projeção", position: "insideTop", fontSize: 10, fill: PL_CORES.media }}
+                />
+              ) : null}
               <Tooltip content={<PlTooltip mean={s.mean} sd={s.sd} />} cursor={{ stroke: AZ_BRAND.navy, strokeOpacity: 0.25 }} />
+              {temProj ? (
+                <Line
+                  type="linear"
+                  dataKey="proj_juros"
+                  name="Projeção — só juros"
+                  stroke={PL_CORES.juros}
+                  strokeWidth={1.8}
+                  strokeDasharray="2 3"
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              ) : null}
+              {temProj ? (
+                <Line
+                  type="linear"
+                  dataKey="proj_completo"
+                  name="Projeção — completo"
+                  stroke={PL_CORES.completo}
+                  strokeWidth={2}
+                  strokeDasharray="2 3"
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              ) : null}
               <Line
                 type="linear"
                 dataKey="fit_juros"
@@ -308,7 +447,13 @@ function PlJustificadoCard({ m }: { m: IbovPlModeloData }) {
       <p className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-400">
         <span>
           Modelo estimado com dados até {fmtMesCurto(m.estimado_ate)} · linhas interrompidas = meses sem
-          P/L confiável · não é recomendação
+          P/L confiável
+          {temProj && pj
+            ? ` · projeção: Selic implícita de ${fmtTaxa(pj.pontos[0].selic)} a ${fmtTaxa(pFim?.selic)}${
+                pj.fed ? ` e Fed implícita de ${fmtTaxa(pj.pontos[0].fed)} a ${fmtTaxa(pFim?.fed)}` : ""
+              }, demais variáveis paradas`
+            : ""}{" "}
+          · não é recomendação
         </span>
         <DataStamp giro={m.generated_at} dado={m.last_data_date} />
       </p>
@@ -323,7 +468,13 @@ function PlJustificadoCard({ m }: { m: IbovPlModeloData }) {
  */
 export function AcoesPlModelo({ modelo, valuation }: { modelo: IbovPlModeloData; valuation: AcoesValuationData | null }) {
   const [verModelo, setVerModelo] = useState(false);
-  const temOutras = modelo.dispersao.some((d) => grupoDispersao(modelo, d.key) === "outras");
+  const nOutras = modelo.dispersao.filter((d) => grupoDispersao(modelo, d.key) === "outras").length;
+  const temOutras = nOutras > 0;
+  // Juros (3 painéis) + demais (4 ou 5): a linha se divide na proporção, todo painel com a mesma largura.
+  const grade =
+    nOutras >= 5
+      ? { linha: "xl:grid-cols-8", juros: "xl:col-span-3", outras: "xl:col-span-5" }
+      : { linha: "xl:grid-cols-7", juros: "xl:col-span-3", outras: "xl:col-span-4" };
 
   return (
     <div className="space-y-4">
@@ -335,7 +486,7 @@ export function AcoesPlModelo({ modelo, valuation }: { modelo: IbovPlModeloData;
 
       <Divisor
         label="Modelo — variáveis e coeficientes"
-        info="As sete variáveis do modelo completo, como entram na regressão (média mensal), e a conta que leva do lucro sobre preço médio da amostra ao P/L justificado de hoje."
+        info={`As ${modelo.variaveis.length} variáveis do modelo completo, como entram na regressão (média mensal), e a conta que leva do lucro sobre preço médio da amostra ao P/L justificado de hoje.`}
         right={
           <button
             type="button"
@@ -354,14 +505,12 @@ export function AcoesPlModelo({ modelo, valuation }: { modelo: IbovPlModeloData;
         </div>
       ) : null}
 
-      {/* As duas dispersões dividem a linha na proporção dos painéis (3 + 4): todo
-          painel sai com a mesma largura. */}
-      <div className={`grid grid-cols-1 items-stretch gap-4 ${temOutras ? "xl:grid-cols-7" : ""}`}>
-        <div className={temOutras ? "xl:col-span-3" : ""}>
+      <div className={`grid grid-cols-1 items-stretch gap-4 ${temOutras ? grade.linha : ""}`}>
+        <div className={temOutras ? grade.juros : ""}>
           <PlDispersaoCard m={modelo} grupo="juros" />
         </div>
         {temOutras ? (
-          <div className="xl:col-span-4">
+          <div className={grade.outras}>
             <PlDispersaoCard m={modelo} grupo="outras" />
           </div>
         ) : null}

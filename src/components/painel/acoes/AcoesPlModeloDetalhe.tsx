@@ -223,13 +223,20 @@ export function grupoDispersao(m: IbovPlModeloData, key: IbovPlModeloVarKey): "j
   return m.modelos.juros.vars.includes(key) ? "juros" : "outras";
 }
 
-const INFO_PARCIAL =
-  "Os sete gráficos são feitos do mesmo jeito. Cada ponto é um mês da amostra mostrando o P/L que o Ibovespa teria se as outras seis variáveis do modelo estivessem na média; a linha é o efeito que o modelo atribui à variável, com as demais paradas. O eixo vertical é lido em P/L, mas está na escala do lucro sobre preço (o inverso do P/L), em que o modelo é uma reta — por isso os intervalos entre 6x, 8x, 10x e 15x não são iguais. O ponto laranja é hoje.";
+const EXTENSO: Record<number, string> = { 4: "quatro", 5: "cinco", 6: "seis", 7: "sete", 8: "oito", 9: "nove" };
+const porExtenso = (n: number) => EXTENSO[n] ?? String(n);
+
+const infoParcial = (n: number) =>
+  `Os ${porExtenso(n)} gráficos são feitos do mesmo jeito. Cada ponto é um mês da amostra mostrando o P/L que o Ibovespa teria se as outras ${porExtenso(n - 1)} variáveis do modelo estivessem na média; a linha é o efeito que o modelo atribui à variável, com as demais paradas. O eixo vertical é lido em P/L, mas está na escala do lucro sobre preço (o inverso do P/L), em que o modelo é uma reta — por isso os intervalos entre 6x, 8x, 10x e 15x não são iguais. O ponto laranja é hoje.`;
 
 const GRUPOS = {
-  juros: { titulo: "Efeito dos juros reais no P/L", grade: "grid-cols-1 sm:grid-cols-3" },
-  outras: { titulo: "Efeito das demais variáveis no P/L", grade: "grid-cols-2 sm:grid-cols-4" },
+  juros: { titulo: "Efeito dos juros reais no P/L" },
+  outras: { titulo: "Efeito das demais variáveis no P/L" },
 } as const;
+
+/** Grade dos painéis: juros em 3; as demais em 4 (blobs até o schema 3) ou 5 (com a Fed Funds). */
+const gradeDe = (grupo: "juros" | "outras", n: number) =>
+  grupo === "juros" ? "grid-cols-1 sm:grid-cols-3" : n >= 5 ? "grid-cols-2 sm:grid-cols-3 xl:grid-cols-5" : "grid-cols-2 sm:grid-cols-4";
 
 export function PlDispersaoCard({ m, grupo }: { m: IbovPlModeloData; grupo: "juros" | "outras" }) {
   const itens = useMemo(() => m.dispersao.filter((d) => grupoDispersao(m, d.key) === grupo), [m, grupo]);
@@ -269,19 +276,20 @@ export function PlDispersaoCard({ m, grupo }: { m: IbovPlModeloData; grupo: "jur
 
   return (
     <article className={`${CARD} h-full`}>
-      <header className="pb-2">
+      {/* Altura mínima no xl: lado a lado, os painéis dos dois cards começam na mesma linha. */}
+      <header className="pb-2 xl:min-h-[84px]">
         <h3 className={TITULO}>
           {g.titulo} ({fmtMesCurto(m.amostra.inicio)}–{fmtMesCurto(m.amostra.fim)})
-          <MethodInfo className="ml-1.5 align-middle">{INFO_PARCIAL}</MethodInfo>
+          <MethodInfo className="ml-1.5 align-middle">{infoParcial(m.dispersao.length)}</MethodInfo>
         </h3>
         <p className="mt-0.5 text-[11px] text-zinc-500">
           {emEy
-            ? "Cada ponto é um mês com as outras seis variáveis na média · linha = efeito no modelo, demais variáveis paradas · laranja = hoje"
+            ? `Cada ponto é um mês com as outras ${porExtenso(m.dispersao.length - 1)} variáveis na média · linha = efeito no modelo, demais variáveis paradas · laranja = hoje`
             : "Cada ponto é um mês · ponto laranja = hoje"}
         </p>
         {emEy && nota ? <p className="mt-0.5 text-[11px] font-semibold text-[#132960]">{nota}</p> : null}
       </header>
-      <div className={`grid ${g.grade} gap-3`}>
+      <div className={`grid ${gradeDe(grupo, itens.length)} gap-3`}>
         {itens.map((d) => {
           const un = unidadeDe(d.key);
           const ef = efeitoDe(d.key);

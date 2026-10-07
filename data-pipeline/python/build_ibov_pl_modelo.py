@@ -16,6 +16,9 @@ Pergunta: que P/L o nível dos juros reais (e as expectativas) justifica para a 
     cupom_real_e  cupom cambial esperado (paridade coberta com Focus de Selic e câmbio) deflacionado
                   pela inflação implícita de 10 anos dos EUA (nominal − real; = FRED T10YIE)
     t_us10        us10_real − us10_real 12 meses antes (calendário mensal completo)
+    fed_real      (1 + Fed Funds efetiva, NY Fed) / (1 + inflação implícita de 10 anos dos EUA) − 1
+                  (revisão de 07/10/2026: a taxa curta americana entra como a Selic real; erro fora
+                  da amostra 1,29x -> 1,22x)
 
 Forma (revisão de 07/10/2026): o Y estimado é o LUCRO SOBRE PREÇO (EY = 100 / P/L, em %).
 Pelo modelo de Gordon, P/L = 1/(k − g) com k = juro real + prêmio: o P/L é convexo nos juros
@@ -34,6 +37,13 @@ reestimação (in-sample).
 
 Trava: se a estimação nova falhar (amostra curta, R² baixo, resíduo não estacionário,
 justificado fora de [3; 30]), o upload é abortado e o site segue com o último modelo bom.
+
+Projeção (07/10/2026): as implícitas DO DIA do site fazem o papel da Selic e da Fed Funds futuras —
+Selic implícita do Panorama (charts/tables/selic_implicita.json, com os mesmos ajustes da página) e
+Fed implícita dos futuros (/api/global-rates/us; reserva charts/tables/fed_implicita.json). Mês a mês
+até o fim da curva da Selic: Selic real, mudança esperada da Selic e Fed Funds real andam pela
+trajetória, ancorados no valor de hoje; o resto fica parado (no teste no passado, parar os juros longos
+foi o que menos errou). Sem curva da Selic -> sem projeção; a página segue sem ela.
 
 Uso:
     python data-pipeline/python/build_ibov_pl_modelo.py --out-dir data-pipeline/out --upload
@@ -68,20 +78,25 @@ from shared.blob_download import download_json  # noqa: E402
 
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0.0.0", "Accept": "*/*"}
 BLOB_OUT = "data/ibov_pl_modelo.json"
-SCHEMA_VERSION = 3  # 3 = dispersões todas em efeito parcial, em lucro sobre preço (eixo "ey")
+SCHEMA_VERSION = 4  # 4 = Fed Funds real no completo + projeção pelas implícitas do dia
 INICIO_DADOS = "2008-01-01"     # explicativas baixadas desde aqui (t_us10 precisa de 12m antes)
 PISO_AMOSTRA = "2010-01"        # amostra começa no 1º mês com tudo, nunca antes disto
 HAC_LAGS = 6
 FFILL_DIAS_UTEIS = 22           # fonte parada há mais que isso some do mês (vira buraco)
 DEFASAGEM_AVISO = 5             # dias úteis sem dado novo -> aviso na página
 OLINDA = "https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata"
+SITE_URL = os.environ.get("SITE_URL", "https://investimentosdeaz.com.br").rstrip("/")
+IDADE_MAX_IMPLICITA = 5         # dias corridos: implícita mais velha que isso não projeta
+IRFM_TICKER = "IRFM11.SA"       # = RATES_VOL_TICKER (painel-market-data.ts)
+SELIC_PREMIO_BASE = 0.0025      # = SELIC_TERM_PREMIUM.baseBps (selic-forward.ts)
+SELIC_PREMIO_JOELHO = 0.25      # = SELIC_TERM_PREMIUM.kneeFrac (rampa linear, shapeExp 1)
 
 # Estrutura do modelo aprovado no protótipo (ago/2026)
 JUROS = ["real_selic", "real_5a", "real_30a"]
-COMPLETO = JUROS + ["dselic_e", "us10_real", "cupom_real_e", "t_us10"]
+COMPLETO = JUROS + ["dselic_e", "us10_real", "fed_real", "cupom_real_e", "t_us10"]
 BLOCOS_F = [
     ("curva", "Juros reais (Selic, 5 e 30 anos)", "real_selic = real_5a = real_30a = 0"),
-    ("externo", "Exterior (juro real EUA e cupom cambial real)", "us10_real = cupom_real_e = 0"),
+    ("externo", "Exterior (juros reais dos EUA e cupom cambial real)", "us10_real = fed_real = cupom_real_e = 0"),
     ("direcao", "Direção (Selic esperada e tendência EUA)", "dselic_e = t_us10 = 0"),
 ]
 VARS = {
@@ -95,6 +110,8 @@ VARS = {
                  "formula": "Selic esperada daqui a 12 meses (Focus) − Selic meta de hoje"},
     "us10_real": {"nome": "Juro real dos EUA (10 anos)", "unidade": "%", "tipo": "nível",
                   "formula": "Treasury de 10 anos indexada à inflação (TIPS, US Treasury)"},
+    "fed_real": {"nome": "Fed Funds real (curto prazo EUA)", "unidade": "%", "tipo": "nível",
+                 "formula": "(1 + Fed Funds efetiva, NY Fed) ÷ (1 + inflação implícita de 10 anos dos EUA) − 1"},
     "cupom_real_e": {"nome": "Cupom cambial real esperado", "unidade": "%", "tipo": "nível",
                      "formula": "juro em dólar implícito no Focus (Selic e câmbio esperados) descontada "
                                 "a inflação implícita de 10 anos dos EUA (Treasury nominal − TIPS)"},
@@ -266,6 +283,197 @@ def eua_10a() -> Tuple[pd.Series, pd.Series, str]:
     return fred("DFII10"), fred("T10YIE"), "FRED DFII10 / T10YIE"
 
 
+def fed_funds_diaria(ini: str = INICIO_DADOS) -> pd.Series:
+    """Fed Funds efetiva (EFFR) diária do NY Fed (sem chave); FRED DFF de reserva.
+    É a taxa que os futuros de Fed Funds liquidam — a Fed implícita do site é a expectativa dela."""
+    try:
+        out: Dict[pd.Timestamp, float] = {}
+        hoje = pd.Timestamp(datetime.now(timezone.utc).date())
+        a = pd.Timestamp(ini)
+        while a <= hoje:
+            b = min(a + pd.DateOffset(years=8) - pd.Timedelta(days=1), hoje)
+            url = ("https://markets.newyorkfed.org/api/rates/unsecured/effr/search.json"
+                   f"?startDate={a.date()}&endDate={b.date()}")
+            for r in (_get_json(url, timeout=90).get("refRates") or []):
+                if r.get("percentRate") is not None:
+                    out[pd.Timestamp(r["effectiveDate"])] = float(r["percentRate"])
+            a = b + pd.Timedelta(days=1)
+        s = pd.Series(out, dtype="float64").sort_index()
+        if len(s) < 1000:
+            raise RuntimeError(f"EFFR curta ({len(s)} dias)")
+        print(f"  Fed Funds efetiva (NY Fed): {len(s)} dias até {s.index.max().date()}")
+        return s
+    except Exception as e:  # noqa: BLE001
+        print(f"  [WARN] NY Fed falhou, tentando FRED DFF: {repr(e)[:100]}", file=sys.stderr)
+    return fred("DFF")
+
+
+# ---------------------------------------------------------------------------
+# Projeção: as implícitas DO DIA do site como extrapolação da Selic e da Fed Funds
+# ---------------------------------------------------------------------------
+
+def _passo_025(frac: float) -> float:
+    return round(frac / 0.0025) * 0.0025
+
+
+def _vol_mult_irfm() -> float:
+    """Mesmo multiplicador de vol do Panorama (getRatesVolMult, painel-market-data.ts): percentil
+    da vol de 15 pregões do IRFM11 em todo o histórico, 2^((pct − 50)/50), entre 0,5 e 2."""
+    full = download_json("data/market_history_full.json", timeout=120) or {}
+    serie = (((full.get("tickers") or {}).get(IRFM_TICKER) or {}).get("series_daily")) or []
+    closes = [float(p[1]) for p in serie if isinstance(p, (list, tuple)) and len(p) > 1
+              and isinstance(p[1], (int, float)) and p[1] > 0]
+    if len(closes) < 15 + 30:
+        return 1.0
+    rets = np.diff(np.log(closes))
+    roll = [float(np.std(rets[i - 15:i])) for i in range(15, len(rets) + 1)]
+    if len(roll) < 30 or roll[-1] <= 0:
+        return 1.0
+    pct = 100.0 * sum(v <= roll[-1] for v in roll) / len(roll)
+    return float(min(2.0, max(0.5, 2 ** ((pct - 50) / 50))))
+
+
+def _recente(ref: Optional[str]) -> bool:
+    try:
+        return (pd.Timestamp(datetime.now(timezone.utc).date()) - pd.Timestamp(ref)).days <= IDADE_MAX_IMPLICITA
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def implicita_selic(meta_hoje: float) -> Optional[Dict]:
+    """Selic implícita do Panorama (charts/tables/selic_implicita.json, corte "Recente") com os MESMOS
+    ajustes da página (extractSelicMeetings): forward bruto + spread CDI→Selic − prêmio de prazo,
+    arredondado a 0,25; o trecho vigente é a meta de hoje."""
+    t = download_json("charts/tables/selic_implicita.json")
+    if not t or t.get("status") != "ok" or not _recente(t.get("ref_today")):
+        print("  [WARN] Selic implícita ausente ou velha — sem projeção", file=sys.stderr)
+        return None
+    cols = [c.get("key", "") for c in t.get("columns") or []]
+    k = next((c for c in cols if c.startswith("Recente")), None) or next((c for c in cols if c.startswith("Hoje")), None)
+    if not k:
+        return None
+    ref = pd.Timestamp(t["ref_today"])
+    pts = []
+    for r in t.get("rows") or []:
+        try:
+            pts.append((pd.to_datetime(r["grid_date"], dayfirst=True), float(r[f"{k}__raw"])))
+        except (KeyError, TypeError, ValueError):
+            continue
+    pts.sort()
+    if len(pts) < 3:
+        return None
+    # spread CDI→Selic (o forward do DI é nível de CDI): meta − trecho vigente, entre 0 e 0,25 p.p.
+    wedge = min(0.0025, max(0.0, (meta_hoje - pts[0][1]) / 100))
+    mult = _vol_mult_irfm()
+    du1y = int(np.busday_count(ref.date(), (ref + pd.Timedelta(days=365)).date())) or 252
+    degraus = [(pts[0][0], float(meta_hoje))]
+    for d, raw in pts[1:]:
+        du = int(np.busday_count(ref.date(), d.date()))
+        rampa = max(0.0, (du / du1y - SELIC_PREMIO_JOELHO) / (1 - SELIC_PREMIO_JOELHO))
+        frac = raw / 100 + wedge - SELIC_PREMIO_BASE * rampa * mult
+        degraus.append((d, round(_passo_025(frac) * 100, 2)))
+    return {"degraus": degraus, "fim": pd.Timestamp(t.get("chart_end") or pts[-1][0]),
+            "origem": "Selic implícita do Panorama (curva PRE da B3)", "ref": t["ref_today"],
+            "gerado_em": t.get("generated_at"), "vol_mult": round(mult, 3)}
+
+
+def implicita_fed() -> Optional[Dict]:
+    """Fed implícita do Panorama: futuros de Fed Funds (rota /api/global-rates/us, teto da faixa,
+    degraus de 0,25). Reserva: tabela do pipeline R (curva curta do Treasury)."""
+    try:
+        pol = (_get_json(f"{SITE_URL}/api/global-rates/us", timeout=60, retries=2) or {}).get("policy") or {}
+        rows = sorted((pd.Timestamp(r["date"]), float(r["d0"])) for r in pol.get("rows") or [] if r.get("d0") is not None)
+        if len(rows) >= 3 and _recente(pol.get("asOf") or str(rows[0][0].date())):
+            return {"degraus": rows, "origem": "Fed implícita do Panorama (futuros de Fed Funds)",
+                    "ref": pol.get("asOf") or str(rows[0][0].date())}
+    except Exception as e:  # noqa: BLE001
+        print(f"  [WARN] Fed implícita (futuros) indisponível: {repr(e)[:100]}", file=sys.stderr)
+    t = download_json("charts/tables/fed_implicita.json")
+    if not t or t.get("status") != "ok" or not _recente(t.get("ref_today")):
+        return None
+    cols = [c.get("key", "") for c in t.get("columns") or []]
+    k = next((c for p in ("D+0", "D-1", "Recente", "Hoje") for c in cols if c.startswith(p)), None)
+    rows = []
+    for r in t.get("rows") or []:
+        try:
+            rows.append((pd.to_datetime(r["grid_date"], dayfirst=True), float(str(r[k]).rstrip("%"))))
+        except (KeyError, TypeError, ValueError):
+            continue
+    rows.sort()
+    if len(rows) < 3:
+        return None
+    return {"degraus": rows, "origem": "Fed implícita do Panorama (curva curta do Treasury)", "ref": t["ref_today"]}
+
+
+def projetar(rj, rc, xh: pd.Series, mes_hoje: pd.Period, data_hoje: str, focS: Dict[pd.Timestamp, Dict[int, float]],
+             ipca_e: float, be10: float, meta_hoje: float) -> Optional[Dict]:
+    """P/L justificado mês a mês até o fim da Selic implícita. A trajetória do dia faz o papel da Selic
+    e da Fed Funds futuras; cada variável = valor de hoje + variação da trajetória desde o mês corrente
+    (o primeiro ponto coincide com o justificado de hoje). Juros longos, juro americano de 10 anos,
+    cupom cambial e tendência dos EUA ficam parados. Sem Selic -> sem projeção; sem Fed -> só "só juros"."""
+    sel = implicita_selic(meta_hoje)
+    if sel is None:
+        return None
+    fed = implicita_fed()
+    if fed is None:
+        print("  [WARN] Fed implícita indisponível — projeção só do modelo só juros", file=sys.stderr)
+    ini = mes_hoje.to_timestamp(how="start")
+
+    def diaria(degraus, ate):
+        s = pd.Series({d: v for d, v in degraus}).sort_index()
+        s = s[~s.index.duplicated(keep="last")]
+        dias = pd.date_range(ini, ate, freq="D")
+        return s.reindex(s.index.union(dias)).ffill().bfill().reindex(dias)
+
+    fim = sel["fim"]
+    s_d = diaria(sel["degraus"], fim)
+    g = s_d.groupby(s_d.index.to_period("M"))
+    S, cobre = g.mean(), g.size()
+    meses = [p for p in S.index if p == mes_hoje or cobre[p] >= 20]
+    anos = sorted(a for a in (focS[max(focS)] if focS else {}) if pd.Timestamp(year=a, month=12, day=31) > fim)
+
+    def selic_mes(p: pd.Period) -> float:
+        if p in S.index and (p == mes_hoje or cobre[p] >= 20):
+            return float(S[p])
+        # além do fim da curva (só a direção esperada de 12 meses usa): Focus anual, como no histórico
+        xs = [fim.value] + [pd.Timestamp(year=a, month=12, day=31).value for a in anos]
+        ys = [float(s_d.iloc[-1])] + [focS[max(focS)][a] for a in anos]
+        return float(np.interp((p.to_timestamp(how="start") + pd.Timedelta(days=14)).value, xs, ys))
+
+    if fed:
+        f_d = diaria(fed["degraus"], max(fim, max(d for d, _ in fed["degraus"])))
+        F = f_d.groupby(f_d.index.to_period("M")).mean()
+        fed_mes = lambda p: float(F[p]) if p in F.index else float(f_d.iloc[-1])  # noqa: E731
+    real = lambda n, pi: ((1 + n / 100) / (1 + pi / 100) - 1) * 100  # noqa: E731
+    S0, x0 = selic_mes(mes_hoje), xh[COMPLETO].astype(float)
+    pontos = []
+    for p in meses:
+        x = x0.copy()
+        x["real_selic"] += real(selic_mes(p), ipca_e) - real(S0, ipca_e)
+        x["dselic_e"] += (selic_mes(p + 12) - selic_mes(p)) - (selic_mes(mes_hoje + 12) - S0)
+        if fed:
+            x["fed_real"] += real(fed_mes(p), be10) - real(fed_mes(mes_hoje), be10)
+        ey_j = float(rj.params["const"] + (rj.params[JUROS] * x[JUROS]).sum())
+        ey_c = float(rc.params["const"] + (rc.params[COMPLETO] * x[COMPLETO]).sum())
+        pontos.append({
+            "mes": str(p), "date": data_hoje if p == mes_hoje else p.to_timestamp(how="end").strftime("%Y-%m-%d"),
+            "selic": _r(selic_mes(p), 2), "fed": _r(fed_mes(p), 2) if fed else None,
+            "juros": _r(100 / ey_j, 3) if ey_j > 1 else None,
+            "completo": _r(100 / ey_c, 3) if fed and ey_c > 1 else None,
+        })
+    if len(pontos) < 3:
+        return None
+    return {
+        "inicio": pontos[0]["mes"], "fim": pontos[-1]["mes"], "pontos": pontos,
+        "selic": {k: sel[k] for k in ("origem", "ref", "gerado_em", "vol_mult")},
+        "fed": {k: fed[k] for k in ("origem", "ref")} if fed else None,
+        "premissas": "Selic e Fed Funds seguem as implícitas do dia (média de cada mês); Selic real e Fed Funds "
+                     "real descontam a inflação esperada de hoje; a mudança esperada da Selic vem da própria "
+                     "trajetória (Focus depois do fim da curva); juros longos, juro americano de 10 anos e sua "
+                     "tendência e cupom cambial ficam no nível de hoje.",
+    }
+
+
 # ---------------------------------------------------------------------------
 # Curva real em prazo constante (NTN-B) a partir do treasury_history.json do site
 # ---------------------------------------------------------------------------
@@ -382,16 +590,18 @@ def build(out_dir: Path) -> Dict:
     selic = sgs_diaria(432)
     usd = sgs_diaria(1)
     ipca_e = focus_ipca_12m()
-    sel_e12 = esperado_12m(focus_anuais("Selic"), selic)
+    focS = focus_anuais("Selic")
+    sel_e12 = esperado_12m(focS, selic)
     cam_e12 = esperado_12m(focus_anuais("C%C3%A2mbio"), usd)
     us10, be10, rota_eua = eua_10a()
+    effr = fed_funds_diaria()
 
     fontes_ult = {
         "NTN-B (treasury_history)": curva.dropna(how="all").index.max(),
         "Selic meta (SGS 432)": selic.index.max(), "Dólar (SGS 1)": usd.index.max(),
         "Focus IPCA 12m": ipca_e.index.max(), "Focus Selic": sel_e12.index.max(),
         "Focus câmbio": cam_e12.index.max(), "Juro real EUA 10a": us10.index.max(),
-        "Inflação implícita EUA 10a": be10.index.max(),
+        "Inflação implícita EUA 10a": be10.index.max(), "Fed Funds efetiva": effr.index.max(),
     }
 
     fim = pd.Timestamp(last_data)
@@ -410,6 +620,7 @@ def build(out_dir: Path) -> Dict:
     dep = (ce12 / us - 1) * 100
     nom = ((1 + se12 / 100) / (1 + dep / 100) - 1) * 100
     X["cupom_real_e"] = ((1 + nom / 100) / (1 + al(be10) / 100) - 1) * 100
+    X["fed_real"] = ((1 + al(effr) / 100) / (1 + al(be10) / 100) - 1) * 100
     X = X.dropna()
 
     m = X.resample("ME").mean()
@@ -510,7 +721,7 @@ def build(out_dir: Path) -> Dict:
     # bloco leva o P/L do passo anterior ao seguinte, e a soma fecha exatamente no justificado.
     # Dentro do bloco, cada variável recebe a parte proporcional pela mesma inclinação do bloco.
     # Em bloco colinear (VIF alto) o efeito de cada taxa sozinha não se interpreta — só o do bloco.
-    blocos_vars = {"curva": JUROS, "externo": ["us10_real", "cupom_real_e"], "direcao": ["dselic_e", "t_us10"]}
+    blocos_vars = {"curva": JUROS, "externo": ["us10_real", "fed_real", "cupom_real_e"], "direcao": ["dselic_e", "t_us10"]}
 
     def decompor(res, cols):
         ef_ey = {c: float(res.params[c] * (float(xh[c]) - amostra[c].mean())) for c in cols}
@@ -567,8 +778,8 @@ def build(out_dir: Path) -> Dict:
         "repasse": {c: _r(v, 2) for c, v in repasse.items()},
     }
 
-    # ---- dispersões: as 7 no MESMO formato (efeito parcial, revisão de 07/10/2026) ----
-    # Cada ponto = lucro sobre preço (EY) do mês com as OUTRAS seis variáveis na média da amostra;
+    # ---- dispersões: todas no MESMO formato (efeito parcial, revisão de 07/10/2026) ----
+    # Cada ponto = lucro sobre preço (EY) do mês com as OUTRAS variáveis na média da amostra;
     # a linha é o efeito da variável no modelo (reta, porque o modelo é linear no EY). Ficam em EY
     # porque em P/L (1/EY) o ajuste explode quando o EY ajustado chega perto de zero (Selic real
     # negativa em 2020-21 dava P/L de 1.000). A página desenha o eixo em escala de EY rotulado em P/L.
@@ -632,6 +843,15 @@ def build(out_dir: Path) -> Dict:
                  "prejuizo": _r(xh["excl_prejuizo"], 1), "sem_dado": _r(xh["excl_sem_dado"], 1)},
     }
     estimado_ate = str(amostra.index.max())
+
+    # ---- projeção pelas implícitas do dia (falha não derruba o modelo: a página segue sem ela) ----
+    projecao = None
+    try:
+        meta_hoje = float(selic[selic.index <= pd.Timestamp(last_data)].iloc[-1])
+        projecao = projetar(rj, rc, xh, ult, last_data, focS, float(ipca_e.dropna().iloc[-1]),
+                            float(be10.dropna().iloc[-1]), meta_hoje)
+    except Exception as e:  # noqa: BLE001
+        print(f"::warning::projeção do P/L não gerada: {repr(e)[:160]}")
     hist_item = {"mes": estimado_ate, "forma": "ey", "n": int(len(amostra)), "r2": _r(rc.rsquared, 3),
                  "r2_juros": _r(rj.rsquared, 3),
                  "coefs": {c: _r(rc.params[c], 4) for c in ["const"] + COMPLETO}}
@@ -663,6 +883,7 @@ def build(out_dir: Path) -> Dict:
         },
         "testes_f": testes,
         "efeito_eua": efeito_eua,
+        "projecao": projecao,
         "efeito_juros_juntos": efeito_juros_juntos,
         "efeito_juros_juntos_01": efeito_juros_juntos_01,
         "dispersao": dispersao,
@@ -676,6 +897,8 @@ def build(out_dir: Path) -> Dict:
             "selic": "BCB SGS 432 (Selic meta)", "dolar": "BCB SGS 1",
             "focus": "BCB Olinda — ExpectativasMercadoInflacao12Meses (IPCA, suavizada) e ExpectativasMercadoAnuais (Selic, câmbio)",
             "eua": f"{rota_eua} — juro real (TIPS) e inflação implícita de 10 anos",
+            "fed": "NY Fed — Fed Funds efetiva (EFFR); FRED DFF de reserva",
+            "projecao": "Selic implícita (charts/tables/selic_implicita.json) e Fed implícita (/api/global-rates/us) do dia",
         },
         "_meta": {"hac_lags": HAC_LAGS, "piso_amostra": PISO_AMOSTRA, "ffill_dias_uteis": FFILL_DIAS_UTEIS,
                   "juros": JUROS, "completo": COMPLETO},
@@ -707,6 +930,11 @@ def main() -> int:
           f"justificado só juros {h['justificado_juros']} ({h['desvio_juros_pct']:+.1f}%) | "
           f"completo {h['justificado_completo']} ({h['desvio_completo_pct']:+.1f}%) | "
           f"R² {payload['modelos']['juros']['r2']} / {payload['modelos']['completo']['r2']}")
+    pj = payload.get("projecao")
+    if pj:
+        u = pj["pontos"][-1]
+        print(f"[pl_modelo] projeção até {pj['fim']}: só juros {u['juros']} | completo {u['completo']} | "
+              f"Selic {u['selic']} | Fed {u['fed']}")
     for a in payload["avisos"]:
         print(f"::warning::{a}")
     if args.upload:
