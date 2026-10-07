@@ -123,6 +123,7 @@ function dadosPainel(m: IbovPlModeloData, d: Dispersao) {
 function MiniDispersao({
   d,
   unidade,
+  qualificador,
   rotulo,
   dados,
   ylo,
@@ -130,6 +131,7 @@ function MiniDispersao({
 }: {
   d: Dispersao;
   unidade: string;
+  qualificador?: string;
   rotulo: string;
   dados: ReturnType<typeof dadosPainel>;
   ylo: number;
@@ -142,11 +144,14 @@ function MiniDispersao({
   const parcialTipo = d.tipo === "parcial";
   return (
     <div className="min-w-0">
-      <p className="text-[12px] font-semibold text-[#132960]">
-        {d.nome}
-        {unidade === "p.p." ? <span className="font-normal text-zinc-500"> (p.p.)</span> : null}
-      </p>
-      <p className="text-[10px] text-zinc-500">{rotulo}</p>
+      {/* Cabeçalho de altura fixa: todos os gráficos da linha começam na mesma altura. */}
+      <div className="min-h-[60px]">
+        <p className="text-[12px] font-semibold leading-tight text-[#132960]">{d.nome}</p>
+        {qualificador || unidade === "p.p." ? (
+          <p className="text-[10px] text-zinc-500">{[unidade === "p.p." ? "p.p." : null, qualificador].filter(Boolean).join(" · ")}</p>
+        ) : null}
+        <p className="text-[10px] leading-tight text-zinc-500">{rotulo}</p>
+      </div>
       <div style={{ height: 230 }} className="w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
@@ -258,15 +263,18 @@ export function PlDispersaoCard({ m, grupo }: { m: IbovPlModeloData; grupo: "jur
         {itens.map((d) => {
           const un = unidadeDe(d.key);
           const ef = efeitoDe(d.key);
+          const tot = d.key === "us10_real" ? (m.efeito_eua?.total ?? null) : null;
           const rotulo =
             d.tipo === "parcial"
-              ? `+1 p.p. → ${ef != null ? `${fmtSignedNum(ef, 2)}x` : "—"} no P/L`
+              ? `+1 p.p. → ${ef != null ? `${fmtSignedNum(ef, 2)}x` : "—"} no P/L` +
+                (tot != null ? ` · com repasse: ${fmtSignedNum(tot, 2)}x` : "")
               : `R² ${fmtNum(d.r2, 2)} sozinha`;
           return (
             <MiniDispersao
               key={d.key}
               d={d}
               unidade={un}
+              qualificador={d.key === "us10_real" && d.tipo === "parcial" ? "juros BR fixos" : undefined}
               rotulo={rotulo}
               dados={porVar[d.key]}
               ylo={ylo}
@@ -508,6 +516,17 @@ export function PlDecomposicaoCard({ m }: { m: IbovPlModeloData }) {
         <strong className="text-[#132960]">{fmtNum(dj.justificado, 1)}x</strong> (outros coeficientes: sem as
         demais variáveis, as taxas carregam também o efeito delas).
       </p>
+
+      {m.efeito_eua?.total != null ? (
+        <p className="mt-2 text-[11px] text-zinc-600">
+          Juro real dos EUA +1 p.p. em 12 meses, com o repasse típico aos juros brasileiros (Selic real{" "}
+          {fmtSignedNum(m.efeito_eua.repasse.real_selic ?? null, 1)}, 5 anos {fmtSignedNum(m.efeito_eua.repasse.real_5a ?? null, 1)},
+          30 anos {fmtSignedNum(m.efeito_eua.repasse.real_30a ?? null, 1)} p.p.):{" "}
+          <strong className="text-[#132960]">{fmtSignedNum(m.efeito_eua.total, 1)}x</strong> no P/L justificado. Com os
+          juros brasileiros parados o efeito do nível é positivo ({fmtSignedNum(m.efeito_eua.nivel_parado, 1)}x): diferencial
+          menor, menos prêmio Brasil.
+        </p>
+      ) : null}
 
       <h4 className={`${TITULO} mt-4`}>Qualidade do ajuste</h4>
       <dl className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-4">

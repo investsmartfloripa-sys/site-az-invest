@@ -229,6 +229,13 @@ export type IbovPlModeloData = {
     forma?: string;
   };
   testes_f: Array<{ bloco: string; nome: string; F: number | null; p: number }>;
+  /** Juro real dos EUA +1 p.p. em 12 meses, em x de P/L (schema 2). */
+  efeito_eua?: {
+    total: number | null; // nível + tendência + repasse típico aos juros brasileiros
+    so_eua: number | null; // nível + tendência com os juros brasileiros parados
+    nivel_parado: number | null;
+    repasse: Record<string, number | null>;
+  };
   dispersao: Array<{
     key: IbovPlModeloVarKey;
     nome: string;

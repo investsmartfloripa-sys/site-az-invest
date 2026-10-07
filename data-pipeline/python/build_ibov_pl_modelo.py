@@ -544,6 +544,26 @@ def build(out_dir: Path) -> Dict:
             "coef_so_juros": _r(rj.params[c], 4) if c in JUROS else None,
         })
 
+    # ---- juro americano: efeito total ----
+    # O coeficiente do NÍVEL do juro real americano é lido com os juros brasileiros parados: juro
+    # americano maior com juro brasileiro igual = diferencial menor = menos prêmio Brasil -> P/L maior.
+    # Na prática os juros brasileiros sobem junto; o efeito total de +1 p.p. em 12 meses soma o nível,
+    # a tendência e o repasse típico aos juros brasileiros (regressão das variações de 12 meses).
+    repasse = {}
+    for c in JUROS:
+        dd = amostra[c].reindex(cal_a).diff(12)
+        du = amostra["us10_real"].reindex(cal_a).diff(12)
+        okr = dd.notna() & du.notna()
+        repasse[c] = float(sm.OLS(dd[okr], sm.add_constant(du[okr])).fit().params.iloc[1]) if okr.sum() > 24 else 0.0
+    d_ey_eua = float(rc.params["us10_real"] + rc.params["t_us10"])
+    d_ey_total = d_ey_eua + sum(float(rc.params[c]) * repasse[c] for c in JUROS)
+    efeito_eua = {
+        "total": _r(100 / (ey_c + d_ey_total) - 100 / ey_c, 3) if ey_c + d_ey_total > 1 else None,
+        "so_eua": _r(100 / (ey_c + d_ey_eua) - 100 / ey_c, 3) if ey_c + d_ey_eua > 1 else None,
+        "nivel_parado": _r(100 / (ey_c + rc.params["us10_real"]) - 100 / ey_c, 3),
+        "repasse": {c: _r(v, 2) for c, v in repasse.items()},
+    }
+
     # ---- dispersões ----
     # Juros: P/L observado × a taxa (bruto), curva = regressão simples do EY na taxa, em P/L.
     # Demais variáveis: EFEITO PARCIAL — P/L que o mês teria com as OUTRAS seis variáveis na média
@@ -573,7 +593,8 @@ def build(out_dir: Path) -> Dict:
         pontos = [[_r(xv, 3), _r(yv, 3), str(per)] for per, xv, yv in zip(amostra.index, x.values, ys)
                   if np.isfinite(yv)]
         dispersao.append({
-            "key": c, "nome": VARS[c]["nome"], "unidade": VARS[c]["unidade"],
+            "key": c, "nome": VARS[c]["nome"],
+            "unidade": VARS[c]["unidade"],
             "grupo": "juros" if c in JUROS else "outras", **extra,
             "pontos": pontos,
             "curva": [[_r(xv, 3), _r(yv, 3)] for xv, yv in zip(xs, curva) if np.isfinite(yv)],
@@ -645,6 +666,7 @@ def build(out_dir: Path) -> Dict:
                          "ecm_gamma_p": _r(ecm.pvalues["ect"], 4), "meia_vida_meses": _r(meia_vida, 1)},
         },
         "testes_f": testes,
+        "efeito_eua": efeito_eua,
         "dispersao": dispersao,
         "decomposicao": {"completo": decompor(rc, COMPLETO), "juros": decompor(rj, JUROS)},
         "coef_history": [hist_item],
