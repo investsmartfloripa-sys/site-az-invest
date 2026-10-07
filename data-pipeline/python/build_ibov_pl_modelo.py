@@ -68,7 +68,7 @@ from shared.blob_download import download_json  # noqa: E402
 
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0.0.0", "Accept": "*/*"}
 BLOB_OUT = "data/ibov_pl_modelo.json"
-SCHEMA_VERSION = 2  # 2 = modelo no lucro sobre preço; dispersões com pontos/curva
+SCHEMA_VERSION = 3  # 3 = dispersões todas em efeito parcial, em lucro sobre preço (eixo "ey")
 INICIO_DADOS = "2008-01-01"     # explicativas baixadas desde aqui (t_us10 precisa de 12m antes)
 PISO_AMOSTRA = "2010-01"        # amostra começa no 1º mês com tudo, nunca antes disto
 HAC_LAGS = 6
@@ -564,43 +564,35 @@ def build(out_dir: Path) -> Dict:
         "repasse": {c: _r(v, 2) for c, v in repasse.items()},
     }
 
-    # ---- dispersões ----
-    # Juros: P/L observado × a taxa (bruto), curva = regressão simples do EY na taxa, em P/L.
-    # Demais variáveis: EFEITO PARCIAL — P/L que o mês teria com as OUTRAS seis variáveis na média
-    # da amostra (resíduo parcial). No bruto essas quatro se misturam com o ciclo dos juros (ex.:
-    # Selic esperada subindo acontece quando a Selic está baixa) e a relação some do gráfico.
+    # ---- dispersões: as 7 no MESMO formato (efeito parcial, revisão de 07/10/2026) ----
+    # Cada ponto = lucro sobre preço (EY) do mês com as OUTRAS seis variáveis na média da amostra;
+    # a linha é o efeito da variável no modelo (reta, porque o modelo é linear no EY). Ficam em EY
+    # porque em P/L (1/EY) o ajuste explode quando o EY ajustado chega perto de zero (Selic real
+    # negativa em 2020-21 dava P/L de 1.000). A página desenha o eixo em escala de EY rotulado em P/L.
     medias = amostra[COMPLETO].mean()
     ey_med = float(rc.fittedvalues.mean())
+    ey_hoje_obs = 100 / pl_hoje
     dispersao = []
     for c in COMPLETO:
         x = amostra[c].astype(float)
         x0, x1 = float(x.min()), float(x.max())
-        xs = np.linspace(x0, x1, 25)
-        if c in JUROS:
-            rb = ols_hac(ey, amostra[[c]])
-            a, b = float(rb.params["const"]), float(rb.params[c])
-            ys = amostra["pl"].astype(float).values
-            curva = para_pl(a + b * xs)
-            y_hoje = pl_hoje
-            extra = {"tipo": "bruto", "a": _r(a, 4), "b": _r(b, 4), "t": _r(rb.tvalues[c], 2), "r2": _r(rb.rsquared, 3)}
-        else:
-            outras = [j for j in COMPLETO if j != c]
-            desloc = (amostra[outras] - medias[outras]) @ rc.params[outras]
-            ys = para_pl(ey - desloc)
-            curva = para_pl(ey_med + rc.params[c] * (xs - medias[c]))
-            y_hoje = float(para_pl(100 / pl_hoje - float((xh_num[outras] - medias[outras]) @ rc.params[outras])))
-            extra = {"tipo": "parcial", "a": None, "b": _r(rc.params[c], 4), "t": _r(rc.tvalues[c], 2), "r2": None}
-        pontos = [[_r(xv, 3), _r(yv, 3), str(per)] for per, xv, yv in zip(amostra.index, x.values, ys)
-                  if np.isfinite(yv)]
+        outras = [j for j in COMPLETO if j != c]
+        ys = (ey - (amostra[outras] - medias[outras]) @ rc.params[outras]).values
+        b = float(rc.params[c])
+        y_hoje = ey_hoje_obs - float((xh_num[outras] - medias[outras]) @ rc.params[outras])
         dispersao.append({
-            "key": c, "nome": VARS[c]["nome"],
-            "unidade": VARS[c]["unidade"],
-            "grupo": "juros" if c in JUROS else "outras", **extra,
-            "pontos": pontos,
-            "curva": [[_r(xv, 3), _r(yv, 3)] for xv, yv in zip(xs, curva) if np.isfinite(yv)],
-            "hoje": [_r(xh_num[c], 3), _r(y_hoje, 3)] if np.isfinite(y_hoje) else None,
+            "key": c, "nome": VARS[c]["nome"], "unidade": VARS[c]["unidade"],
+            "grupo": "juros" if c in JUROS else "outras", "tipo": "parcial", "eixo": "ey",
+            "a": None, "b": _r(b, 4), "t": _r(rc.tvalues[c], 2), "r2": None,
+            "pontos": [[_r(xv, 3), _r(yv, 3), str(per)] for per, xv, yv in zip(amostra.index, x.values, ys)
+                       if np.isfinite(yv)],
+            "curva": [[_r(x0, 3), _r(ey_med + b * (x0 - medias[c]), 3)], [_r(x1, 3), _r(ey_med + b * (x1 - medias[c]), 3)]],
+            "hoje": [_r(xh_num[c], 3), _r(y_hoje, 3)],
             "x0": _r(x0, 3), "x1": _r(x1, 3),
         })
+    # As três taxas brasileiras andam juntas (VIF 24-56): efeito de +1 p.p. nas três ao mesmo tempo.
+    d_ey_juros = float(sum(rc.params[c] for c in JUROS))
+    efeito_juros_juntos = _r(100 / (ey_c + d_ey_juros) - 100 / ey_c, 3) if ey_c + d_ey_juros > 1 else None
 
     serie = []
     for p, row in m_out.iterrows():
@@ -667,6 +659,7 @@ def build(out_dir: Path) -> Dict:
         },
         "testes_f": testes,
         "efeito_eua": efeito_eua,
+        "efeito_juros_juntos": efeito_juros_juntos,
         "dispersao": dispersao,
         "decomposicao": {"completo": decompor(rc, COMPLETO), "juros": decompor(rj, JUROS)},
         "coef_history": [hist_item],

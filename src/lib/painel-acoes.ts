@@ -229,6 +229,8 @@ export type IbovPlModeloData = {
     forma?: string;
   };
   testes_f: Array<{ bloco: string; nome: string; F: number | null; p: number }>;
+  /** +1 p.p. nas três taxas reais brasileiras ao mesmo tempo, em x de P/L (schema 3). */
+  efeito_juros_juntos?: number | null;
   /** Juro real dos EUA +1 p.p. em 12 meses, em x de P/L (schema 2). */
   efeito_eua?: {
     total: number | null; // nível + tendência + repasse típico aos juros brasileiros
@@ -243,8 +245,10 @@ export type IbovPlModeloData = {
     unidade?: string;
     /** "juros" (as 3 taxas) ou "outras" (demais variáveis do completo). */
     grupo?: "juros" | "outras";
-    /** "bruto" = P/L observado; "parcial" = P/L com as outras variáveis na média (schema 2). */
+    /** "bruto" = P/L observado; "parcial" = com as outras variáveis na média (schema 2+). */
     tipo?: "bruto" | "parcial";
+    /** "ey" (schema 3): pontos/curva/hoje em lucro sobre preço (%); sem o campo, em P/L. */
+    eixo?: "ey" | "pl";
     /** [x, P/L, "YYYY-MM"] de cada mês da amostra (schema 2). */
     pontos?: Array<[number, number, string]>;
     /** Curva da relação, já em P/L (schema 2). */
