@@ -501,6 +501,20 @@ def merge_series(new: Dict, existing: Optional[Dict]) -> Dict:
         by_date[p["date"]] = p
     merged = sorted(by_date.values(), key=lambda p: p["date"])
     new["series"] = merged
+    # Giro com dado ATRASADO da fonte não pode fazer o "hoje" andar para trás (07/10/2026:
+    # o run das 03h25 recebeu do Yahoo preços só até 05/10 e rebaixou current, last_data_date
+    # e o último pl_mensal, que o run da 1h já tinha em 06/10). Mantém o ponto mais recente.
+    if (existing.get("last_data_date") or "") > (new.get("last_data_date") or ""):
+        for k in ("current", "last_data_date", "excl_hoje", "coverage_weight_pct"):
+            if existing.get(k) is not None:
+                new[k] = existing[k]
+    por_mes = {p["date"][:7]: p for p in existing.get("pl_mensal") or []}
+    for p in new.get("pl_mensal") or []:
+        ant = por_mes.get(p["date"][:7])
+        if ant is None or p["date"] >= ant["date"]:
+            por_mes[p["date"][:7]] = p
+    if por_mes:
+        new["pl_mensal"] = [por_mes[k] for k in sorted(por_mes)]
     pls = [p["pl"] for p in merged if p.get("pl") is not None]
     if pls:
         arr = np.array(pls, dtype=float)
