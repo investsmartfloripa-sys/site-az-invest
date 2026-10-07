@@ -1,29 +1,29 @@
 # Snapshot do dia anterior — Café com Mercado
 
-**Rodada:** 2026-10-06 (terça), disparada 10:21 BRT (agendada 10:02). `.md` e capa em main (HEAD b3b1a2d). ✅ Deploy run `37471173429` (push) success; edição e capa 200. ✅ WhatsApp postado (EXITCODE=0, capa anexada, confirmado no histórico).
-- Edição de 05/10 ficou no ar depois do fix `3179923` (fiscal matrizes nulas, run 37327774331 success), mas o post de 05/10 no WhatsApp NUNCA saiu — não foi repostado (decisão do usuário).
+**Rodada:** 2026-10-07 (quarta), disparada 10:21 BRT (agendada 10:02). `.md` e capa em main (HEAD c851ef4). ✅ Deploy run `37628870730` (push) success; edição e capa 200. ✅ WhatsApp postado (EXITCODE=0, capa anexada, confirmado no histórico).
 
 ## 🔧 INFRAESTRUTURA
-- GitHub API bloqueada no sandbox da nuvem (403 "GitHub access to this repository is not enabled for this session") → tráfego via `device_bash` com PAT lido do `.env.vercel.local` (`$HOME/w/env.sh`).
-- Transcrição: XP via yt-dlp na nuvem OK; Spyer e BTG 429, Money Times e Genial bot check na nuvem → todos 4 via `youtube-transcript-api` no device_bash (instalado com pip --user). Todos os 5 transcritos.
-- `device_commit_files` de JPG chega com md5 diferente (reencodado?), conteúdo visual conferido OK.
-- Capa: Higgsfield `cinematic_studio_2_5`, jobs `dc7ab721` (escolhida; faixa escura 112 px no topo recortada → 2531×1424) e `8ed609cb` (descartada: placa preta no topo). Manchete "RALI À PROVA NO SENADO" (1 linha), sub "PEC do 6x1 em pauta e Galípolo fala hoje". Elementos: Congresso Nacional, telas verdes de bolsa, capacete e relógio de ponto, plataforma de petróleo com seta vermelha.
+- GitHub API segue bloqueada no sandbox da nuvem (403 "GitHub access to this repository is not enabled for this session") → todo o tráfego via `device_bash` com PAT do `.env.vercel.local`.
+- Transcrição: 5/5 via `youtube-transcript-api` no device_bash direto (sem tentar a nuvem). OK: Spyer zMGX52u9mek, Money Times A_TW0z6H8aI (Giro gravado na terça ao meio-dia, não é call de hoje), BTG dpVztxrdfBM, XP -4pFUhtr5yc, Genial zB4FcYAQtBI. Atenção: ID começando com "-" exige `--` no argv.
+- Blob do painel: `asset_returns_panorama.json`, `world_indices_returns_panorama.json`, `commodities_returns_panorama.json` → "Blob not found" na raiz; catálogo (`Agentes AZ\_comum`) não está montado em device_bash → caminhos reais n/d. Números vieram da pesquisa.
+- `device_commit_files` de JPG chega com md5 diferente de novo (07ca84… nuvem vs 38c29d… PC); capa no ar 200.
+- Capa: Higgsfield `cinematic_studio_2_5`, jobs `cd8f8be0` (escolhida; letterbox preto de 182 px no topo recortado → 2752×1350) e `7f9c98e8` (descartada: moldura no topo). Manchete "PETRÓLEO E JURO LONGO TESTAM RALI" (2 linhas), sub "Ataques em Ormuz e ata do Fed no radar". Elementos: petroleiro em chamas, destróier, Torre Eiffel com raios, bandeira do Brasil em mastro.
 
-## 📌 NARRATIVA (6/10) — DIA SEGUINTE DO RALI, PEC 6x1 NO SENADO
-- 05/10 fechamento: Ibov 206.911,89 (+7,70%, máx. ~209,6 mil, maior alta desde mar/20, volume B3 R$ 103,3 bi recorde); dólar R$ 5,0018 (−4,12%, maior queda desde jun/18, mín. 4,953); DI F27 13,413 (−10 pb), F29 12,65 (−104), F31 12,70 (−122). Altas: MGLU3 +24,2, CSAN3 +23,8, B3SA3 +22,6, BPAC11 +22,5. Baixas: SUZB3 −5,4, EMBJ3 −3,3. EWZ ~US$ 8 bi negociados. Fluxo estrangeiro 2/10 +R$ 2,28 bi; 5/10 n/d.
-- 06/10 abertura: Ibov +0,44% 207,8 mil (máx 209,5); dólar R$ 4,96 (−0,7%); DI −10 a −15 pb.
-- Política: Zema, Temer apoiam Flávio; Caiado anuncia hoje. PEC 221/2019 (6x1) começa a votar no Senado 14h (Alcolumbre). Galípolo fala após fechamento. Datafolha 08/10, AtlasIntel 09/10. Veritas já soltou primeira pesquisa (números n/d).
-- Focus 05/10: IPCA 26 5,01%; PIB 1,85%; Selic 26 13,50%.
-- Global: S&P 7.775,30 (+0,68%), Nasdaq 27.449 recorde, Dow 51.302; UST10 tocou 5,349% (máx desde 2002), hoje ~5,26-5,31; DXY ~102,2; EUR <1,12 (mín 17 meses); USDJPY ~158; Brent ~97,7 (mín 1 mês), WTI 87,5; ouro 4.197; cobre 6,62; Nikkei 70.684 (+1,05%); Kospi −0,89%; ISM serv. 54,9, preços 74. Fed: 78% manutenção out.
+## 📌 NARRATIVA (7/10) — EXTERIOR PESA: ORMUZ, JURO LONGO, FRANÇA
+- 06/10 fechamento: Ibov 205.835,29 (−0,52%, máx 209.522, vol R$ 58,5 bi); dólar R$ 4,9756 (−0,52%, 1º fech. < R$5 desde maio); DI F27 13,428 (+1,5), F29 12,445 (−20,5), F31 12,560 (−14). Altas BEEF3 +7,4, COGN3 +4,8, VAMO3 +4,5, BBDC4 +4,4; baixas BBAS3 −6,4 (JPM venda), RAIL3 −3,5, PRIO3 −3,3, PETR4 −2,8. Fluxo estrangeiro 05/10 ~R$ 10 bi (recorde; PF contraparte, zerou saldo comprado de ~5 bi).
+- 07/10 abertura: Ibov ~205,8 mil (futuro chegou −0,8%); dólar ~R$ 4,99-5,00; DI longos +5-6 pb.
+- Global: S&P 7.818,93 (+0,58%) recorde, Nasdaq 27.599,79 recorde, Dow 51.521; futuros −0,1 a −0,2; UST2 ~4,81, UST10 5,31-5,35, UST30 5,69-5,72 (máx 24 anos); DXY 102,41; EUR 1,118; JPY 158,3; Brent 101,7, WTI 90,2; ouro 4.088 (−1,8); prata 59,7; BTC ~84 mil; Nikkei −0,9, HSI −0,6, Kospi −2,0, China fechada até 08/10; DAX −1,2, CAC −0,9 (mín desde mar), MIB −2,3. OAT-Bund >130 pb. Fed: 78% manutenção out, 69% alta dez. Leilões 10a hoje e 30a amanhã (US$39 bi cada). RBI subiu juros.
+- BR dados: IGP-DI set +1,50% (12m 3,80%); balança set superávit US$ 7 bi. IPCA set sai 09/10 (Empiricus 0,83%).
+- Política: PP+União anunciaram apoio a Flávio; Republicanos hoje (Spyer). Eurasia 45→70% Flávio. PEC 6x1: só 1ª sessão de discussão em 06/10; 2ª hoje; 1º turno de votação próxima semana (49 votos). Galípolo: depoimento à PF (Master), sem fala pública. Equipe Flávio: Campos Neto, Kayath, Bettamio (especulação); ajuste ~R$ 200 bi.
 
 ## 🎯 Teses das casas
-- **XP (Raquel Sá, Paulo Gama):** aumento tático de risco (pré, bolsa, FIIs/listados); Flávio precisa de 3 dos 8 pts, Lula 5+; Congresso alinhado reduz custo, mas não carrega agenda fiscal; campanha de Flávio quer adiar parte da reforma tributária do consumo; S&P alvo 8.900 fim/27. PUBLICADO.
-- **BTG (Gerson, "Coxinha"):** início de ciclo; bolsa precisa +30-40% p/ voltar à média de múltiplo; após dias >7%, 5-10 pregões costumam ser negativos, depois positivo (comprar correção). PUBLICADO.
-- **Genial (Motta, Villegas):** "cautelosamente otimista"; compra realização; dólar 4,80; cita NTN-B 5,5% (Deutsche); curva embute Selic 12,25% ago/27; tese "pico hawkish do Fed". PUBLICADO.
-- **Spyer / Money Times:** EWZ pré +0,5%; migração de votos de 3ª via ~60/40 p/ Flávio (MT, não publicado).
-- Estrangeiros: MS base 215 mil/otimista 250 mil; JPM overweight; Goldman dólar 4,50-4,80; UBS +30%.
+- **Genial (Motta, Villegas):** NTN-B 2084 ainda o melhor ativo (+34% num dia); small caps 2º; juro real pode ir a 5% com PEC fiscal; fluxo é "início"; hoje exterior manda (dólar > R$5). Villegas: sem pressa. PUBLICADO.
+- **XP (Raquel Sá, Marx Gonçalves):** rebalanceamento tático e gradual: −8,5 pp pós → pré (duration 4 anos), bolsa, FIIs; correção entre turnos é comum; IFIX +2,3% em 06/10. PUBLICADO.
+- **BTG (Mateus Spiess) + Empiricus (Laís Costa):** IPCA+ longos e PACB11; real ainda com espaço; 10% de apreciação = −0,6 pp no IPCA 12m; mercado vê cortes até ago/27; ajuste fiscal desacelera atividade. PUBLICADO.
+- **Spyer:** dólar volta acima de R$5 hoje; Flávio diz que vai usar maioria para mudar Constituição (recado ao STF).
+- **Salomão (Money Times):** rali foi descompressão de prêmio (DI longo a 14%), não adoração; Senado com PL 28 cadeiras.
 
-## Próxima rodada (quarta 7/10)
-- Resultado da votação da PEC 6x1 no Senado; fala de Galípolo; fechamento de 6/10 (Ibov, dólar, DI); fluxo estrangeiro de 5/10 (B3 divulga ~2 dias depois); nomes de equipe econômica.
-- AGENDA: 07/10 ata FOMC 15h BRT · 08/10 Datafolha, China volta, Bowman (conferir data) · 09/10 AtlasIntel · 16/10 OPA Braskem · 25/10 2º turno · 27-28/10 FOMC · 03-04/11 Copom.
-- Capa: NÃO repetir Congresso/telas verdes/relógio de ponto/plataforma; nem touro/multidão/cédulas.
+## Próxima rodada (quinta 8/10)
+- Conteúdo da ata do FOMC; resultado dos leilões de 10a; Datafolha e PoderData 2º turno (08/10); Anfavea set; fluxo estrangeiro 06/10; Republicanos confirmou?; PEC 6x1 2ª sessão.
+- AGENDA: 08/10 Datafolha/PoderData, jobless claims, leilão 30a, Samsung prévia, China volta, TSE Garotinho · 09/10 IPCA set, AtlasIntel, Michigan · 13/10 BTG/Nexus · 16/10 OPA Braskem · 25/10 2º turno · 27-28/10 FOMC · 03-04/11 Copom.
+- Capa: NÃO repetir petroleiro em chamas/navio de guerra/Torre Eiffel/bandeira em mastro; nem Congresso/telas verdes/relógio de ponto/plataforma/touro/multidão/cédulas.
