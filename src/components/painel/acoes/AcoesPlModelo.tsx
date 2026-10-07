@@ -128,7 +128,7 @@ function Amostra({ cor, tracejado }: { cor: string; tracejado?: boolean }) {
 
 function PlJustificadoCard({ m }: { m: IbovPlModeloData }) {
   const rows: Linha[] = useMemo(() => m.serie.map((r) => ({ ...r, t: parseIsoUTC(r.date) })), [m]);
-  const [win, setWin] = useState<AzPeriodValue>({ id: "5y" });
+  const [win, setWin] = useState<AzPeriodValue>({ id: "max" }); // abre sempre no histórico inteiro
   const dMin = rows[0]?.date;
   const dMax = rows[rows.length - 1]?.date;
   const vis = useMemo(() => {

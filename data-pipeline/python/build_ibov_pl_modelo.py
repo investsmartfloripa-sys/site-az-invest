@@ -541,6 +541,8 @@ def build(out_dir: Path) -> Dict:
             "min": _r(s.min(), 3), "max": _r(s.max(), 3),
             # efeito de +1 (p.p.) na variável sobre o P/L justificado de hoje, com as outras paradas
             "efeito_1pp": _r(100 / (ey_c + b) - 100 / ey_c, 3) if ey_c + b > 1 else None,
+            # legenda do dono: "cada +0,1 p.p. na taxa muda o P/L em tanto" (calculado, não 1/10 do de 1 p.p.)
+            "efeito_01pp": _r(100 / (ey_c + 0.1 * b) - 100 / ey_c, 3) if ey_c + 0.1 * b > 1 else None,
             "coef_so_juros": _r(rj.params[c], 4) if c in JUROS else None,
         })
 
@@ -561,6 +563,7 @@ def build(out_dir: Path) -> Dict:
         "total": _r(100 / (ey_c + d_ey_total) - 100 / ey_c, 3) if ey_c + d_ey_total > 1 else None,
         "so_eua": _r(100 / (ey_c + d_ey_eua) - 100 / ey_c, 3) if ey_c + d_ey_eua > 1 else None,
         "nivel_parado": _r(100 / (ey_c + rc.params["us10_real"]) - 100 / ey_c, 3),
+        "total_01": _r(100 / (ey_c + 0.1 * d_ey_total) - 100 / ey_c, 3) if ey_c + 0.1 * d_ey_total > 1 else None,
         "repasse": {c: _r(v, 2) for c, v in repasse.items()},
     }
 
@@ -593,6 +596,7 @@ def build(out_dir: Path) -> Dict:
     # As três taxas brasileiras andam juntas (VIF 24-56): efeito de +1 p.p. nas três ao mesmo tempo.
     d_ey_juros = float(sum(rc.params[c] for c in JUROS))
     efeito_juros_juntos = _r(100 / (ey_c + d_ey_juros) - 100 / ey_c, 3) if ey_c + d_ey_juros > 1 else None
+    efeito_juros_juntos_01 = _r(100 / (ey_c + 0.1 * d_ey_juros) - 100 / ey_c, 3) if ey_c + 0.1 * d_ey_juros > 1 else None
 
     serie = []
     for p, row in m_out.iterrows():
@@ -660,6 +664,7 @@ def build(out_dir: Path) -> Dict:
         "testes_f": testes,
         "efeito_eua": efeito_eua,
         "efeito_juros_juntos": efeito_juros_juntos,
+        "efeito_juros_juntos_01": efeito_juros_juntos_01,
         "dispersao": dispersao,
         "decomposicao": {"completo": decompor(rc, COMPLETO), "juros": decompor(rj, JUROS)},
         "coef_history": [hist_item],

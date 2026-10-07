@@ -253,15 +253,18 @@ export function PlDispersaoCard({ m, grupo }: { m: IbovPlModeloData; grupo: "jur
   if (!itens.length) return null;
   const unidadeDe = (key: IbovPlModeloVarKey) =>
     m.dispersao.find((d) => d.key === key)?.unidade ?? m.variaveis.find((v) => v.key === key)?.unidade ?? "%";
-  const efeitoDe = (key: IbovPlModeloVarKey) => m.variaveis.find((v) => v.key === key)?.efeito_1pp ?? null;
+  const efeitoDe = (key: IbovPlModeloVarKey) => {
+    const v = m.variaveis.find((x) => x.key === key);
+    return v?.efeito_01pp ?? (v?.efeito_1pp != null ? v.efeito_1pp / 10 : null);
+  };
   const g = GRUPOS[grupo];
   const nota =
     grupo === "juros"
-      ? m.efeito_juros_juntos != null
-        ? `As três taxas andam juntas: subindo 1 p.p. as três ao mesmo tempo, o P/L justificado muda ${fmtSignedNum(m.efeito_juros_juntos, 2)}x.`
+      ? (m.efeito_juros_juntos_01 ?? null) != null
+        ? `As três taxas andam juntas: +0,1 p.p. nas três ao mesmo tempo → P/L ${fmtSignedNum(m.efeito_juros_juntos_01 ?? null, 2)}x`
         : null
-      : m.efeito_eua?.total != null
-        ? `Juro real dos EUA +1 p.p. com o repasse típico aos juros brasileiros: ${fmtSignedNum(m.efeito_eua.total, 2)}x no P/L.`
+      : (m.efeito_eua?.total_01 ?? null) != null
+        ? `Juro real dos EUA +0,1 p.p., com o repasse típico aos juros brasileiros → P/L ${fmtSignedNum(m.efeito_eua?.total_01 ?? null, 2)}x`
         : null;
 
   return (
@@ -273,7 +276,7 @@ export function PlDispersaoCard({ m, grupo }: { m: IbovPlModeloData; grupo: "jur
         </h3>
         <p className="mt-0.5 text-[11px] text-zinc-500">
           {emEy
-            ? "Cada ponto é um mês com as outras seis variáveis na média · linha = efeito no modelo · ponto laranja = hoje"
+            ? "Cada ponto é um mês com as outras seis variáveis na média · linha = efeito no modelo, demais variáveis paradas · laranja = hoje"
             : "Cada ponto é um mês · ponto laranja = hoje"}
         </p>
         {emEy && nota ? <p className="mt-0.5 text-[11px] font-semibold text-[#132960]">{nota}</p> : null}
@@ -283,7 +286,7 @@ export function PlDispersaoCard({ m, grupo }: { m: IbovPlModeloData; grupo: "jur
           const un = unidadeDe(d.key);
           const ef = efeitoDe(d.key);
           const rotulo = emEy || d.tipo === "parcial"
-            ? `+1 → ${ef != null ? `${fmtSignedNum(ef, 2)}x` : "—"} no P/L, demais paradas`
+            ? `+0,1 p.p. → P/L ${ef != null ? `${fmtSignedNum(ef, 2)}x` : "—"}`
             : `R² ${fmtNum(d.r2, 2)} sozinha`;
           return (
             <MiniDispersao
@@ -366,10 +369,10 @@ export function PlVariaveisCard({ m }: { m: IbovPlModeloData }) {
     ["Mínimo", fmtVar(v.min, v.unidade)],
     ["Máximo", fmtVar(v.max, v.unidade)],
     [
-      "+1 no P/L hoje",
+      "+0,1 p.p. → P/L",
       // No modelo em lucro sobre preço o t vem com o sinal do EY (inverso do P/L): mostra no sinal do P/L.
-      v.efeito_1pp != null
-        ? `${fmtSignedNum(v.efeito_1pp, 2)}x (t ${fmtNum(m.modelos.forma === "ey" && v.t != null ? -v.t : v.t, 1)})`
+      (v.efeito_01pp ?? (v.efeito_1pp != null ? v.efeito_1pp / 10 : null)) != null
+        ? `${fmtSignedNum(v.efeito_01pp ?? (v.efeito_1pp as number) / 10, 2)}x (t ${fmtNum(m.modelos.forma === "ey" && v.t != null ? -v.t : v.t, 1)})`
         : `t ${fmtNum(v.t, 1)}`,
     ],
     ["VIF", fmtNum(v.vif, 1)],

@@ -156,6 +156,8 @@ export type IbovPlModeloVariavel = {
   coef_so_juros: number | null;
   /** Efeito de +1 (p.p.) na variável sobre o P/L justificado de hoje, com as outras paradas. */
   efeito_1pp?: number | null;
+  /** Idem para +0,1 p.p. (legendas). */
+  efeito_01pp?: number | null;
 };
 
 export type IbovPlModeloResumo = {
@@ -231,11 +233,13 @@ export type IbovPlModeloData = {
   testes_f: Array<{ bloco: string; nome: string; F: number | null; p: number }>;
   /** +1 p.p. nas três taxas reais brasileiras ao mesmo tempo, em x de P/L (schema 3). */
   efeito_juros_juntos?: number | null;
+  efeito_juros_juntos_01?: number | null;
   /** Juro real dos EUA +1 p.p. em 12 meses, em x de P/L (schema 2). */
   efeito_eua?: {
     total: number | null; // nível + tendência + repasse típico aos juros brasileiros
     so_eua: number | null; // nível + tendência com os juros brasileiros parados
     nivel_parado: number | null;
+    total_01?: number | null;
     repasse: Record<string, number | null>;
   };
   dispersao: Array<{
