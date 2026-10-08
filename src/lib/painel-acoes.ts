@@ -137,6 +137,14 @@ export type IbovPlModeloRow = {
   excl_teto: number | null;
   excl_prejuizo: number | null;
   excl_sem_dado: number | null;
+  /** Schema 5: Ibovespa em pontos no dia do P/L, lucro do índice (Ibovespa ÷ P/L, pontos por ano) e os
+   *  justificados em pontos (P/L justificado × lucro); faixa = ±1 desvio do modelo completo. */
+  ibov?: number | null;
+  lucro?: number | null;
+  pts_completo?: number | null;
+  pts_juros?: number | null;
+  pts_lo?: number | null;
+  pts_hi?: number | null;
 } & Record<IbovPlModeloVarKey, number | null>;
 
 export type IbovPlModeloVariavel = {
@@ -201,10 +209,32 @@ export type IbovPlModeloProjecao = {
     fed: number | null;
     juros: number | null;
     completo: number | null;
+    /** Schema 5: lucro do índice projetado e os justificados em pontos. */
+    lucro?: number | null;
+    pts_completo?: number | null;
+    pts_juros?: number | null;
   }>;
   selic: { origem: string; ref: string; gerado_em?: string | null; vol_mult?: number | null };
   fed: { origem: string; ref: string } | null;
   premissas: string;
+  /** Schema 5: o lucro do índice cresce pelo PIB nominal esperado (Focus). erro_12m = erro típico
+   *  (raiz do erro quadrático médio, %) dessa regra no lucro de 12 meses à frente, no histórico. */
+  lucro?: {
+    hoje: number | null;
+    crescimento_12m: number | null;
+    pib_12m: number | null;
+    ipca_12m: number | null;
+    erro_12m: number | null;
+    n_erro?: number;
+    metodo: string;
+  } | null;
+  /** Schema 5: o que o simulador precisa para refazer a projeção (efeitos lineares no lucro sobre preço). */
+  simulador?: {
+    ipca_e: number;
+    be10: number;
+    coef: { real_selic: number; dselic_e: number; fed_real: number };
+    coef_juros: { real_selic: number };
+  } | null;
 };
 
 export type IbovPlModeloData = {
@@ -228,6 +258,13 @@ export type IbovPlModeloData = {
     ic_completo: [number | null, number | null];
     desvio_juros_pct: number | null;
     desvio_completo_pct: number | null;
+    /** Schema 5: em pontos (ver IbovPlModeloRow). */
+    ibov?: number | null;
+    lucro?: number | null;
+    pts_completo?: number | null;
+    pts_juros?: number | null;
+    pts_lo?: number | null;
+    pts_hi?: number | null;
     excl: { total: number | null; teto: number | null; prejuizo: number | null; sem_dado: number | null };
   };
   pl_stats: {
