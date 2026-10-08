@@ -275,7 +275,7 @@ const TOPO = 8;
 const EIXO_X = 30;
 
 /** Variação até o fim da projeção, escrita à direita do gráfico na altura da linha. */
-type Ponta = { chave: string; rotulo: string; valor: string; cor: string; y: number };
+type Ponta = { chave: string; rotulo: string; valor: string; sub?: string; cor: string; y: number };
 
 const PASSOS_PONTOS = [5000, 10000, 20000, 25000, 50000, 100000];
 const PASSOS_PL = [0.5, 1, 2, 2.5, 5];
@@ -407,12 +407,16 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
   const pontas = useMemo((): Ponta[] => {
     if (!esc || !temProj || nivel == null || varFim == null) return [];
     const alturaUtil = ALT - TOPO - EIXO_X;
-    const yDe = (v: number) => Math.min(ALT - EIXO_X - 12, Math.max(14, TOPO + ((esc.hi - v) / (esc.hi - esc.lo)) * alturaUtil));
+    const yDe = (v: number) => Math.min(ALT - EIXO_X - 30, Math.max(32, TOPO + ((esc.hi - v) / (esc.hi - esc.lo)) * alturaUtil));
     if (vista === "pl") {
-      return plFim != null ? [{ chave: "pl", rotulo: "P/L", valor: vezes(plFim), cor: PL_CORES.completo, y: yDe(plFim) }] : [];
+      return plFim != null
+        ? [{ chave: "pl", rotulo: "P/L", valor: vezes(plFim), sub: `hoje ${vezes(h.pl)}`, cor: PL_CORES.completo, y: yDe(plFim) }]
+        : [];
     }
-    return [{ chave: "ibov", rotulo: "Ibovespa", valor: `${fmtSignedNum(varFim, 1)}%`, cor: PL_CORES.completo, y: yDe(nivel) }];
-  }, [esc, temProj, nivel, varFim, plFim, vista]);
+    return [
+      { chave: "ibov", rotulo: "Ibovespa", valor: pts(nivel), sub: `${fmtSignedNum(varFim, 1)}%`, cor: PL_CORES.completo, y: yDe(nivel) },
+    ];
+  }, [esc, temProj, nivel, varFim, plFim, vista, h.pl]);
 
   const vars = new Map(m.variaveis.map((v) => [v.key, v]));
   const coefTxt = (k: "real_selic" | "dselic_e" | "fed_real") => fmtNum(Math.abs(vars.get(k)?.coef ?? 0), 2);
@@ -643,14 +647,24 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
               )}
             </div>
             {pontas.length && pFim ? (
-              <div className="relative hidden w-[5rem] shrink-0 sm:block" style={{ height: ALT }}>
-                <p className="absolute left-2 top-0 text-[10px] leading-tight text-zinc-500">até {fmtMesCurto(pFim.date)}</p>
+              <div className="relative hidden w-[7.5rem] shrink-0 sm:block" style={{ height: ALT }}>
                 {pontas.map((pt) => (
-                  <div key={pt.chave} className="absolute left-2 -translate-y-1/2 leading-tight" style={{ top: pt.y }}>
-                    <p className="text-[10px] text-zinc-500">{pt.rotulo}</p>
-                    <p className="text-sm font-bold tabular-nums" style={{ color: pt.cor }}>
+                  <div
+                    key={pt.chave}
+                    className="absolute left-2 right-0 -translate-y-1/2 rounded-lg border-l-[3px] bg-white/90 py-1 pl-2 leading-tight"
+                    style={{ top: pt.y, borderColor: pt.cor }}
+                  >
+                    <p className="whitespace-nowrap text-[10px] text-zinc-500">
+                      {pt.rotulo} em {fmtMesCurto(pFim.date)}
+                    </p>
+                    <p className="text-lg font-bold tabular-nums" style={{ color: pt.cor }}>
                       {pt.valor}
                     </p>
+                    {pt.sub ? (
+                      <p className="text-xs font-semibold tabular-nums" style={{ color: pt.cor }}>
+                        {pt.sub}
+                      </p>
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -665,6 +679,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
                   <strong className="tabular-nums" style={{ color: pt.cor }}>
                     {pt.valor}
                   </strong>
+                  {pt.sub ? <span className="tabular-nums"> ({pt.sub})</span> : null}
                 </span>
               ))}
             </p>
