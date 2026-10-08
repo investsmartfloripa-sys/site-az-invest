@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 
 import { ComparadorTabela, type ComparadorAtivoRow } from "@/components/painel/acoes/ComparadorTabela";
 import { SimuladorCarteira, type SimAssetInput } from "@/components/painel/acoes/SimuladorCarteira";
@@ -23,9 +23,11 @@ const MAX_SELECTED = 5;
 type Props = {
   ifix: FiiIfixData | null;
   screener: FiiScreenerData | null;
+  /** Card do índice de tijolo × IFIX, logo abaixo do bloco do IFIX. */
+  tijolo?: ReactNode;
 };
 
-export function FundosImobiliariosClient({ ifix, screener }: Props) {
+export function FundosImobiliariosClient({ ifix, screener, tijolo }: Props) {
   // Janela do comparador — compartilhada entre gráfico e tabela.
   const [period, setPeriod] = useState<AzPeriodValue>({ id: "1y" });
 
@@ -151,6 +153,8 @@ export function FundosImobiliariosClient({ ifix, screener }: Props) {
           </p>
         </section>
       )}
+
+      {tijolo}
 
       {notice ? (
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
