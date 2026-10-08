@@ -58,3 +58,6 @@ data-pipeline/out-local/
 # saidas de tsc redirecionadas (debug local)
 .tsc-out.txt
 .tsc-err.txt
+
+# cache de fontes brutas dos builders (COTAHIST da B3, informes da CVM)
+data-pipeline/cache/

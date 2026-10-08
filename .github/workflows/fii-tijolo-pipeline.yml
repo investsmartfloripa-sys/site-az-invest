@@ -1,0 +1,85 @@
+name: FII tijolo (índice + modelo DY × juros)
+
+# Índice de FIIs de tijolo (B3 COTAHIST + informe mensal da CVM) e modelo DY × juros com projeção
+# pela Selic implícita do Panorama → data/fii_tijolo_modelo.json (aba Analítico da página de FIIs).
+# Roda depois do market-data.yml (22:30 UTC), que atualiza as curvas PRE/IPCA usadas no modelo:
+#   23:20 UTC = 20:20 BRT; 01:20 UTC do dia seguinte = retry.
+# Os COTAHIST anuais dos anos fechados (~550 MB) ficam no cache do Actions; o do ano corrente e os
+# informes da CVM dos dois últimos anos são baixados de novo a cada run (o builder força).
+on:
+  schedule:
+    - cron: "20 23 * * 1-5"
+    - cron: "20 1 * * 2-6"
+  workflow_dispatch:
+
+concurrency:
+  group: fii-tijolo
+  cancel-in-progress: true
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      SITE_BASE: https://investimentosdeaz.com.br
+      PYTHONUTF8: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: data-pipeline/python/requirements.txt
+
+      - name: Pip install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r data-pipeline/python/requirements.txt
+
+      - name: Ano corrente (chave do cache das fontes brutas)
+        id: ano
+        run: echo "ano=$(date -u +%Y)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache das fontes brutas (COTAHIST + CVM)
+        uses: actions/cache@v4
+        with:
+          path: data-pipeline/cache
+          key: fii-tijolo-fontes-v1-${{ steps.ano.outputs.ano }}
+          restore-keys: |
+            fii-tijolo-fontes-v1-
+
+      # Falha (trava do modelo, fonte fora) NÃO sobe nada: o site segue com o último dado bom
+      # e a run fica vermelha.
+      - name: build_fii_tijolo_modelo (índice + modelo + projeção)
+        run: python data-pipeline/python/build_fii_tijolo_modelo.py --upload
+
+      - name: Upload artefato (debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fii-tijolo-${{ github.run_id }}
+          path: data-pipeline/out/fii_tijolo_modelo.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      # O Blob já está novo, mas o site serviria o dado velho até o TTL vencer. Purga a tag do
+      # Blob e a rota da página na hora (docs/ARMADILHAS.md §4). Falhar aqui reprova a run.
+      - name: Purgar cache do site (FIIs — aba Analítico)
+        run: |
+          code=$(curl -s -o resposta.json -w '%{http_code}' --max-time 30 \
+            -X POST "$SITE_BASE/api/revalidate" \
+            -H "Authorization: Bearer ${{ secrets.REVALIDATE_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{"workflow":"fii-tijolo-pipeline.yml"}' || true)
+          echo "HTTP ${code:-sem-resposta}"
+          cat resposta.json || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::purga de cache falhou (HTTP ${code:-sem-resposta}) - o painel pode servir dado velho ate o TTL vencer"
+            exit 1
+          fi

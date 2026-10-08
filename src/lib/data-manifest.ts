@@ -111,6 +111,7 @@ export const DATA_SOURCES: DataSourceDef[] = [
   { key: "fii_details", label: "Detalhe por ticker (107 FIIs)", blobPath: "data/fii_details.json", workflowName: "fii-pipeline.yml", cadence: "diario-util", painel: "fii", pagePath: "/painel-economico/mercado/brasil/fundos-imobiliarios", heavy: true },
   { key: "fii_macro_charts", label: "Macro charts (P/VP + prêmio)", blobPath: "data/fii_macro_charts.json", workflowName: "fii-pipeline.yml", cadence: "diario-util", painel: "fii" },
   { key: "fii_total_return", label: "Retorno total por FII (comparador/simulador)", blobPath: "data/fii_total_return.json", workflowName: "fii-pipeline.yml", cadence: "diario-util", painel: "fii", heavy: true },
+  { key: "fii_tijolo_modelo", label: "Índice de tijolo + modelo DY × juros (aba Analítico)", blobPath: "data/fii_tijolo_modelo.json", workflowName: "fii-tijolo-pipeline.yml", cadence: "diario-util", painel: "fii", dataDateField: "last_data_date" },
 
   // ── Juros globais (pipelines→Blob; as demais fontes da página são AO VIVO) ─
   { key: "br_ettj", label: "Curva pré/IPCA Brasil (ANBIMA ETTJ)", blobPath: "data/br_ettj.json", workflowName: "br-ettj-pipeline.yml", cadence: "diario-util", painel: "juros-globais", dataDateField: "last_data_date" },

@@ -194,6 +194,103 @@ export async function getFiiMacroCharts(): Promise<FiiMacroChartsData | null> {
 }
 
 // ---------------------------------------------------------------------------
+// Índice de tijolo + modelo DY × juros (build_fii_tijolo_modelo.py → data/fii_tijolo_modelo.json)
+// ---------------------------------------------------------------------------
+
+/** Mês do índice de tijolo. Índices em base 1.000 (jan/2017); taxas e DY em % a.a. */
+export type FiiTijoloRow = {
+  mes: string; // YYYY-MM
+  date: string; // fim do mês; no mês corrente, o último pregão
+  parcial: boolean;
+  /** Índice de preço (oficial) */
+  preco: number | null;
+  /** Índice ajustado pelo rendimento (rendimentos reinvestidos) — só para comparar com o IFIX */
+  retorno_total: number | null;
+  ifix: number | null;
+  dy: number | null;
+  dy_just: number | null;
+  /** Índice justificado pelos juros (= preço × DY ÷ DY justificado) e faixa de ±1 desvio do modelo */
+  just: number | null;
+  just_lo: number | null;
+  just_hi: number | null;
+  pvp: number | null;
+  n: number;
+  p1: number | null;
+  r30: number | null;
+};
+
+export type FiiTijoloProjecaoPonto = {
+  mes: string;
+  date: string;
+  selic: number | null;
+  p1: number | null;
+  dy_just: number | null;
+  just: number | null;
+};
+
+export type FiiTijoloModeloData = {
+  schema_version: number;
+  status: "ok" | "error";
+  generated_at: string;
+  last_data_date: string;
+  cvm_ate: string;
+  curva_data: string;
+  hoje: {
+    date: string;
+    preco: number;
+    dy: number;
+    dy_just: number;
+    just: number;
+    distancia_pct: number;
+    p1: number;
+    r30: number;
+    pvp: number | null;
+    n: number;
+  };
+  modelo: {
+    formula: string;
+    n: number;
+    inicio: string;
+    fim: string;
+    r2: number;
+    sd: number;
+    coef: { const: number; p1: number; r30: number };
+    t: { const: number; p1: number; r30: number };
+    /** +0,1 p.p. na taxa → variação % do índice justificado */
+    efeito_01: { p1: number; r30: number; juntos: number };
+  };
+  projecao: {
+    inicio: string;
+    fim: string;
+    pontos: FiiTijoloProjecaoPonto[];
+    selic: { origem?: string; ref?: string; gerado_em?: string };
+    premissas: string;
+  } | null;
+  serie: FiiTijoloRow[];
+  composicao: Array<{ ticker: string; peso: number | null; pvp: number | null; dy: number | null }>;
+  indice: {
+    base: string;
+    n_hoje: number;
+    volume_sem_cnpj: number | null;
+    regras: {
+      limiar_tijolo: number;
+      janela_classificacao_meses?: number;
+      presenca: number;
+      corte_negociabilidade: number;
+      teto: number;
+      janela_liquidez_meses: number;
+    };
+  };
+  avisos: string[];
+  fontes: Record<string, string>;
+};
+
+export async function getFiiTijoloModelo(): Promise<FiiTijoloModeloData | null> {
+  const d = await fetchBlobJson<FiiTijoloModeloData>("data/fii_tijolo_modelo.json");
+  return d && d.status === "ok" && Array.isArray(d.serie) && d.serie.length > 12 ? d : null;
+}
+
+// ---------------------------------------------------------------------------
 // Página individual de cada FII (etapa 2)
 // ---------------------------------------------------------------------------
 

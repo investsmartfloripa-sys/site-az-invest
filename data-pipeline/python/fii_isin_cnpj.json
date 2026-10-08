@@ -1,0 +1,335 @@
+{
+ "_doc": "Ligações ISIN (B3) -> CNPJ (CVM) que não saem do ISIN do informe mensal: troca de código na B3 (ISIN novo, CVM mantém o antigo), raiz do ISIN, contagem de cotas B3 = CVM e conferência manual. Gerado pelo protótipo (_prototipos/fii-tijolo-juros/mapear.py) em 08/10/2026; o build acrescenta ligações novas sozinho (continuidade de negociação e contagem de cotas).",
+ "ligacoes": [
+  {
+   "isin": "BRALZMCTF007",
+   "ticker": "ALZM11",
+   "cnpj": "34.847.063/0001-08",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRALZTCTF002",
+   "ticker": "ALZT11",
+   "cnpj": "34.007.109/0001-72",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRARXDCTF008",
+   "ticker": "ARXD11",
+   "cnpj": "44.527.494/0001-32",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRBJRCCTF007",
+   "ticker": "BJRC11",
+   "cnpj": "17.209.378/0001-00",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRBTCICTF005",
+   "ticker": "BTCI11",
+   "cnpj": "09.552.812/0001-14",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRBTHFCTF000",
+   "ticker": "BTHF11",
+   "cnpj": "45.188.176/0001-57",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRCOPPCTF019",
+   "ticker": "COPP11",
+   "cnpj": "48.916.699/0001-60",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRCPSHCTF017",
+   "ticker": "CPSH11",
+   "cnpj": "47.896.665/0001-99",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRCSBCCTF000",
+   "ticker": "CSBC11",
+   "cnpj": "11.160.521/0001-22",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRDAYMCTF007",
+   "ticker": "DAYM11",
+   "cnpj": "38.293.921/0001-62",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRDVLTCTF005",
+   "ticker": "DVLT11",
+   "cnpj": "54.635.301/0001-10",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRFYTOCTF008",
+   "ticker": "FYTO11",
+   "cnpj": "18.085.673/0001-57",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRGCOICTF005",
+   "ticker": "GCOI11",
+   "cnpj": "46.285.299/0001-79",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRGSRFCTF000",
+   "ticker": "GSRF11",
+   "cnpj": "62.951.756/0001-73",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRGURBCTF005",
+   "ticker": "GURB11",
+   "cnpj": "36.501.210/0001-00",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRGVFFCTF009",
+   "ticker": "GVFF11",
+   "cnpj": "16.875.388/0001-04",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRGWIRCTF006",
+   "ticker": "GWIR11",
+   "cnpj": "14.733.211/0001-48",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRGZITCTF005",
+   "ticker": "GZIT11",
+   "cnpj": "15.447.108/0001-02",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRHIRECTF002",
+   "ticker": "HIRE11",
+   "cnpj": "63.806.554/0001-09",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRHSRECTF001",
+   "ticker": "HSRE11",
+   "cnpj": "08.098.114/0001-28",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRINHFCTF008",
+   "ticker": "INHF11",
+   "cnpj": "58.501.860/0001-99",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRJCCJCTF002",
+   "ticker": "JCCJ11",
+   "cnpj": "50.701.686/0001-16",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRJCINCTF001",
+   "ticker": "JCIN11",
+   "cnpj": "50.718.976/0001-72",
+   "via": "manual"
+  },
+  {
+   "isin": "BRKNUQCTF004",
+   "ticker": "KNUQ11",
+   "cnpj": "42.754.362/0001-18",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRLFTTCTF004",
+   "ticker": "LFTT11",
+   "cnpj": "24.796.967/0001-90",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRLMAICTF003",
+   "ticker": "LMAI11",
+   "cnpj": "17.374.696/0001-19",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRMAGMCTF005",
+   "ticker": "MAGM11",
+   "cnpj": "60.355.424/0001-09",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRMCLOCTF007",
+   "ticker": "MCLO11",
+   "cnpj": "57.466.934/0001-30",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRMCRECTF013",
+   "ticker": "MCRE11",
+   "cnpj": "36.655.973/0001-06",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRNAVTCTF015",
+   "ticker": "NAVT11",
+   "cnpj": "35.652.252/0001-80",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRNMKSCTF007",
+   "ticker": "NMKS11",
+   "cnpj": "43.011.068/0001-89",
+   "via": "raiz"
+  },
+  {
+   "isin": "BROBALCTF004",
+   "ticker": "OBAL11",
+   "cnpj": "42.273.290/0001-97",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRONDACTF006",
+   "ticker": "ONDA11",
+   "cnpj": "52.966.340/0001-75",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRPCIPCTF003",
+   "ticker": "PCIP11",
+   "cnpj": "28.729.197/0001-13",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRPLAGCTF000",
+   "ticker": "PLAG11",
+   "cnpj": "32.754.734/0001-52",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRPMLLCTF005",
+   "ticker": "PMLL11",
+   "cnpj": "26.499.833/0001-32",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRPSECCTF006",
+   "ticker": "PSEC11",
+   "cnpj": "35.507.457/0001-71",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRQIFFCTF005",
+   "ticker": "QIFF11",
+   "cnpj": "34.736.432/0001-87",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRQIRICTF004",
+   "ticker": "QIRI11",
+   "cnpj": "34.736.432/0001-87",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRRBLGCTF004",
+   "ticker": "RBLG11",
+   "cnpj": "35.652.227/0001-04",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRRJDACTF007",
+   "ticker": "RJDA11",
+   "cnpj": "36.200.701/0001-11",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRRZDMCTF008",
+   "ticker": "RZDM11",
+   "cnpj": "45.742.247/0001-11",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRRZLCCTF002",
+   "ticker": "RZLC11",
+   "cnpj": "56.212.023/0001-14",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRRZZRCTF000",
+   "ticker": "RZZR11",
+   "cnpj": "35.652.278/0001-28",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRSMRECTF001",
+   "ticker": "SMRE11",
+   "cnpj": "53.730.029/0001-95",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRSNCRCTF003",
+   "ticker": "SNCR11",
+   "cnpj": "32.065.364/0001-46",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRTRPLCTF015",
+   "ticker": "TRPL11",
+   "cnpj": "63.320.393/0001-30",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRTRUECTF002",
+   "ticker": "TRUE11",
+   "cnpj": "13.974.819/0001-00",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRTSFICTF002",
+   "ticker": "TSFI11",
+   "cnpj": "13.584.584/0001-31",
+   "via": "continuidade"
+  },
+  {
+   "isin": "BRTVRICTF001",
+   "ticker": "TVRI11",
+   "cnpj": "14.410.722/0001-29",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRVCTHCTF005",
+   "ticker": "VCTH11",
+   "cnpj": "52.714.934/0001-99",
+   "via": "raiz"
+  },
+  {
+   "isin": "BRVVCOCTF007",
+   "ticker": "VVCO11",
+   "cnpj": "15.006.267/0001-63",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRVVMRCTF009",
+   "ticker": "VVMR11",
+   "cnpj": "30.871.698/0001-81",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRXLPRCTF009",
+   "ticker": "XLPR11",
+   "cnpj": "35.689.733/0001-60",
+   "via": "cotas"
+  },
+  {
+   "isin": "BRXPHTCTF003",
+   "ticker": "XPHT11",
+   "cnpj": "18.308.516/0001-63",
+   "via": "raiz"
+  }
+ ]
+}
