@@ -109,6 +109,7 @@ type Linha = FiiTijoloRow & {
   proj_dy?: number | null;
   proj_selic?: number | null;
   proj_p1?: number | null;
+  proj_r30?: number | null;
 };
 
 function montar(m: FiiTijoloModeloData): { hist: Linha[]; proj: Linha[] } {
@@ -159,19 +160,34 @@ function montar(m: FiiTijoloModeloData): { hist: Linha[]; proj: Linha[] } {
   return { hist, proj };
 }
 
-function TooltipJust({ active, payload }: { active?: boolean; payload?: ReadonlyArray<{ payload?: unknown }> }) {
+function TooltipJust({
+  active,
+  payload,
+  cenario = false,
+}: {
+  active?: boolean;
+  payload?: ReadonlyArray<{ payload?: unknown }>;
+  cenario?: boolean;
+}) {
   if (!active || !payload || payload.length === 0) return null;
   const r = payload[0]?.payload as Linha | undefined;
   if (!r) return null;
   if (r.projetado) {
     return (
       <div style={caixaTooltip}>
-        <p style={{ color: "#94A3B8", fontWeight: 600, margin: "0 0 4px" }}>{fmtMesCurto(r.date)} · projeção</p>
+        <p style={{ color: "#94A3B8", fontWeight: 600, margin: "0 0 4px" }}>
+          {fmtMesCurto(r.date)} · {cenario ? "seu cenário" : "projeção"}
+        </p>
         <Item nome="Onde deveria estar" valor={pts(r.proj_just)} cor={COR.just} />
         <Item nome="DY pelos juros" valor={taxa(r.proj_dy)} cor={COR.dy} />
-        <p style={{ margin: "4px 0 0", color: "#C7D2E8" }}>
-          Selic implícita no mês <strong style={{ color: "#fff" }}>{taxa(r.proj_selic)}</strong> · juro de 1 ano{" "}
-          <strong style={{ color: "#fff" }}>{taxa(r.proj_p1)}</strong>
+        {cenario ? null : (
+          <p style={{ margin: "4px 0 0", color: "#C7D2E8" }}>
+            Selic implícita no mês <strong style={{ color: "#fff" }}>{taxa(r.proj_selic)}</strong>
+          </p>
+        )}
+        <p style={{ margin: "2px 0 0", color: "#C7D2E8" }}>
+          Juro de 1 ano <strong style={{ color: "#fff" }}>{taxa(r.proj_p1)}</strong> · NTN-B 30 anos{" "}
+          <strong style={{ color: "#fff" }}>{taxa(r.proj_r30)}</strong>
         </p>
       </div>
     );
@@ -295,13 +311,40 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
   const h = m.hoje;
   const c = m.modelo.coef;
 
-  // Simulador: mesmos coeficientes do JSON, partindo dos juros de hoje.
-  const [p1, setP1] = useState(h.p1);
+  const pj = m.projecao;
+  const pFim = pj?.pontos[pj.pontos.length - 1];
+  const mesFim = pFim ? fmtMesCurto(pFim.date) : null;
+
+  // Simulador = juros no fim da projeção. Parte do juro de 1 ano que a Selic implícita indica para
+  // lá e da NTN-B de hoje; mexer nele refaz a projeção (linha, barra e números à direita).
+  const p1Base = pFim?.p1 ?? h.p1;
+  const [p1, setP1] = useState(p1Base);
   const [r30, setR30] = useState(h.r30);
   const dyCen = c.const + c.p1 * p1 + c.r30 * r30;
   const nivel = dyCen > 0.5 ? (h.preco * h.dy) / dyCen : null;
   const varHoje = nivel != null ? (nivel / h.preco - 1) * 100 : null;
-  const mexeu = Math.abs(p1 - h.p1) > 0.02 || Math.abs(r30 - h.r30) > 0.02;
+  const mexeu = Math.abs(p1 - p1Base) > 0.02 || Math.abs(r30 - h.r30) > 0.02;
+
+  // Projeção mês a mês com os coeficientes publicados (o cliente não reestima nada): o juro de 1
+  // ano mantém o formato da Selic implícita e é deslocado aos poucos até o valor do simulador; a
+  // NTN-B vai em linha reta da de hoje até a do simulador. Sem mexer, reproduz o JSON.
+  const projDin = useMemo(() => {
+    const k = proj.length;
+    if (!k) return proj;
+    return proj.map((r, i) => {
+      const f = (i + 1) / k;
+      const p1m = (r.proj_p1 ?? p1Base) + (p1 - p1Base) * f;
+      const r30m = h.r30 + (r30 - h.r30) * f;
+      const dym = c.const + c.p1 * p1m + c.r30 * r30m;
+      return {
+        ...r,
+        proj_p1: p1m,
+        proj_r30: r30m,
+        proj_dy: dym,
+        proj_just: dym > 0.5 ? (h.preco * h.dy) / dym : null,
+      };
+    });
+  }, [proj, p1, r30, p1Base, h.r30, h.preco, h.dy, c.const, c.p1, c.r30]);
 
   const dMin = hist[0]?.date;
   const dMax = hist[hist.length - 1]?.date;
@@ -309,8 +352,8 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
     if (!hist.length) return [];
     const { from, to } = resolvePeriodRange(win, hist[0].date, hist[hist.length - 1].date);
     const v = hist.filter((r) => r.date >= from && r.date <= to);
-    return v.length && v[v.length - 1].date === hist[hist.length - 1].date ? [...v, ...proj] : v;
-  }, [hist, proj, win]);
+    return v.length && v[v.length - 1].date === hist[hist.length - 1].date ? [...v, ...projDin] : v;
+  }, [hist, projDin, win]);
   const temProj = vis.some((r) => r.projetado);
   const tHoje = hist.length ? hist[hist.length - 1].t : 0;
   const tFim = vis.length ? vis[vis.length - 1].t : 0;
@@ -332,14 +375,12 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
     if (barra) dy.push(dyCen);
     return escalas(ind, dy);
   }, [vis, barra, nivel, dyCen]);
-  const pj = m.projecao;
-  const pFim = pj?.pontos[pj.pontos.length - 1];
   const rg = m.indice.regras;
 
-  // Quanto o índice e o DY variam de hoje até o fim da projeção pela Selic implícita: escrito à
-  // direita do gráfico, na altura em que cada linha projetada termina.
+  // Quanto o índice varia e onde fica o DY no fim da projeção (a do simulador): escrito à direita
+  // do gráfico, na altura em que cada linha projetada termina.
   const pontas = useMemo((): Ponta[] => {
-    if (!esc || !temProj || !pFim || pFim.just == null) return [];
+    if (!esc || !temProj || nivel == null) return [];
     const alturaUtil = ALT - TOPO - EIXO_X;
     const yDe = (v: number, lo: number, hi: number) =>
       Math.min(ALT - EIXO_X - 12, Math.max(14, TOPO + ((hi - v) / (hi - lo)) * alturaUtil));
@@ -347,19 +388,19 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
       {
         chave: "indice",
         rotulo: "Índice",
-        valor: `${fmtSignedNum((pFim.just / h.preco - 1) * 100, 1)}%`,
+        valor: `${fmtSignedNum((nivel / h.preco - 1) * 100, 1)}%`,
         cor: COR.just,
-        y: yDe(pFim.just, esc.indice.lo, esc.indice.hi),
+        y: yDe(nivel, esc.indice.lo, esc.indice.hi),
       },
     ];
-    if (esc.dy && pFim.dy_just != null) {
+    if (esc.dy) {
       out.push({
         chave: "dy",
         rotulo: "DY ao ano",
-        valor: taxa(pFim.dy_just),
-        sub: `${fmtNum(pFim.dy_just / 12, 2)}% ao mês`,
+        valor: taxa(dyCen),
+        sub: `${fmtNum(dyCen / 12, 2)}% ao mês`,
         cor: COR.dy,
-        y: yDe(pFim.dy_just, esc.dy.lo, esc.dy.hi),
+        y: yDe(dyCen, esc.dy.lo, esc.dy.hi),
       });
     }
     if (out.length === 2 && Math.abs(out[0].y - out[1].y) < 48) {
@@ -369,7 +410,7 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
       out[1].y = meio - sinal * 24;
     }
     return out;
-  }, [esc, temProj, pFim, h.preco]);
+  }, [esc, temProj, nivel, dyCen, h.preco]);
 
   return (
     <article className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
@@ -399,8 +440,9 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
               <br />
               <br />
               <strong>Projeção.</strong> Só a Selic implícita do Panorama se move: o juro de 1 ano de cada mês segue a
-              média da Selic implícita nos 12 meses seguintes; NTN-B e rendimentos ficam no nível de hoje. Fontes: B3
-              (cotações), CVM (informe mensal), curvas do site (juros). Não é recomendação.
+              média da Selic implícita nos 12 meses seguintes; NTN-B e rendimentos ficam no nível de hoje. O simulador
+              ao lado troca os juros do fim da projeção e a linha, a barra e os números à direita acompanham. Fontes:
+              B3 (cotações), CVM (informe mensal), curvas do site (juros). Não é recomendação.
             </MethodInfo>
           </h3>
           <p className="mt-0.5 text-[11px] text-zinc-500">
@@ -428,17 +470,12 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
               Onde deveria estar <strong className="tabular-nums text-[#132960]">{pts(h.just)}</strong>
               <span className="tabular-nums">({fmtSignedNum((h.just / h.preco - 1) * 100, 1)}%)</span>
             </span>
-            {temProj && pFim ? (
+            {barra && mesFim ? (
               <span className="inline-flex items-center gap-1.5">
                 <Amostra cor={COR.just} pontilhado />
-                Pela Selic implícita · {fmtMesCurto(pFim.date)}{" "}
-                <strong className="tabular-nums text-[#132960]">{pts(pFim.just)}</strong>
-              </span>
-            ) : null}
-            {barra ? (
-              <span className="inline-flex items-center gap-1.5">
                 <Amostra cor={COR.just} barra />
-                Cenário do simulador <strong className="tabular-nums text-[#132960]">{pts(nivel)}</strong>
+                {mexeu ? "Seu cenário" : "Pela Selic implícita"} · {mesFim}{" "}
+                <strong className="tabular-nums text-[#132960]">{pts(nivel)}</strong>
               </span>
             ) : null}
             <span className="inline-flex items-center gap-1.5 text-zinc-500">
@@ -457,10 +494,11 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
               <Amostra cor={COR.dy} tracejado opacidade={OPAC_DY_JUST} />
               Pelos juros <strong className="tabular-nums text-[#132960]">{taxa(h.dy_just)}</strong>
             </span>
-            {temProj && pFim ? (
+            {barra ? (
               <span className="inline-flex items-center gap-1.5">
                 <Amostra cor={COR.dy} pontilhado opacidade={OPAC_DY_JUST} />
-                Pela Selic implícita <strong className="tabular-nums text-[#132960]">{taxa(pFim.dy_just)}</strong>
+                {mexeu ? "Seu cenário" : "Pela Selic implícita"}{" "}
+                <strong className="tabular-nums text-[#132960]">{taxa(dyCen)}</strong>
               </span>
             ) : null}
           </div>
@@ -519,7 +557,7 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
                         label={{ value: "projeção", position: "insideTop", fontSize: 10, fill: AZ_CHART.ticks }}
                       />
                     ) : null}
-                    <Tooltip content={<TooltipJust />} cursor={{ stroke: AZ_BRAND.navy, strokeOpacity: 0.25 }} />
+                    <Tooltip content={<TooltipJust cenario={mexeu} />} cursor={{ stroke: AZ_BRAND.navy, strokeOpacity: 0.25 }} />
 
                     {/* Fundo: DY 12 meses, eixo da direita */}
                     {esc.dy ? (
@@ -653,19 +691,24 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
           <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
             Simulador de cenário
             <MethodInfo className="ml-1.5 align-middle">
-              Mesmo modelo do gráfico: DY pelos juros = {fmtNum(c.const, 2)} + {fmtNum(c.p1, 2)} × juro de 1 ano +{" "}
-              {fmtNum(c.r30, 2)} × NTN-B de 30 anos. O índice no cenário é o índice de hoje × DY de hoje ÷ DY pelos
-              juros, com os rendimentos parados; a barra no gráfico marca esse nível na área da projeção. Cada +0,1
+              Os controles são os juros no fim da projeção. Partem do juro de 1 ano que a Selic implícita indica
+              para lá e da NTN-B de hoje. Mês a mês, o juro de 1 ano mantém o formato da Selic implícita e é levado
+              aos poucos ao valor escolhido; a NTN-B vai em linha reta de hoje ao valor escolhido. Mesmo modelo do
+              gráfico: DY pelos juros = {fmtNum(c.const, 2)} + {fmtNum(c.p1, 2)} × juro de 1 ano +{" "}
+              {fmtNum(c.r30, 2)} × NTN-B de 30 anos; índice = índice de hoje × DY de hoje ÷ DY pelos juros, com os
+              rendimentos parados. Cada +0,1
               ponto no juro de 1 ano tira {fmtNum(Math.abs(m.modelo.efeito_01.p1), 2)}% do índice justificado; na NTN-B
               de 30 anos, {fmtNum(Math.abs(m.modelo.efeito_01.r30), 2)}%. Não é recomendação.
             </MethodInfo>
           </p>
-          <p className="mt-0.5 text-[11px] text-zinc-500">Mova os juros e acompanhe a barra no gráfico</p>
+          <p className="mt-0.5 text-[11px] text-zinc-500">
+            {mesFim ? `Juros de ${mesFim}: mova e a projeção acompanha` : "Mova os juros e veja onde o índice ficaria"}
+          </p>
 
           <div className="mt-4 space-y-5">
             <Controle
-              rotulo="Juro de 1 ano"
-              ajuda="CDI dos próximos 12 meses"
+              rotulo={mesFim ? `Juro de 1 ano em ${mesFim}` : "Juro de 1 ano"}
+              ajuda={mesFim ? `pela Selic implícita ${taxa(p1Base)}` : "CDI dos próximos 12 meses"}
               valor={p1}
               hoje={h.p1}
               min={4}
@@ -673,7 +716,7 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
               onChange={setP1}
             />
             <Controle
-              rotulo="NTN-B 30 anos"
+              rotulo={mesFim ? `NTN-B 30 anos em ${mesFim}` : "NTN-B 30 anos"}
               ajuda="juro real do IPCA+ longo"
               valor={r30}
               hoje={h.r30}
@@ -685,14 +728,14 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
 
           <div className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-zinc-50 p-3">
             <div>
-              <p className="text-[11px] text-zinc-500">Índice</p>
+              <p className="text-[11px] text-zinc-500">{mesFim ? `Índice em ${mesFim}` : "Índice"}</p>
               <p className="text-xl font-semibold tabular-nums text-[#132960]">{pts(nivel)}</p>
               <p className="text-[11px] tabular-nums text-zinc-500">
                 {varHoje != null ? `${fmtSignedNum(varHoje, 1)}% sobre hoje` : "—"}
               </p>
             </div>
             <div>
-              <p className="text-[11px] text-zinc-500">DY ao ano pelos juros</p>
+              <p className="text-[11px] text-zinc-500">{mesFim ? `DY ao ano em ${mesFim}` : "DY ao ano pelos juros"}</p>
               <p className="text-xl font-semibold tabular-nums text-[#132960]">{taxa(dyCen)}</p>
               <p className="text-[10px] tabular-nums text-zinc-500">{fmtNum(dyCen / 12, 2)}% ao mês</p>
               <p className="text-[11px] tabular-nums text-zinc-500">hoje {taxa(h.dy)}</p>
@@ -702,12 +745,12 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
             type="button"
             disabled={!mexeu}
             onClick={() => {
-              setP1(h.p1);
+              setP1(p1Base);
               setR30(h.r30);
             }}
             className="mt-3 rounded-full border border-[#132960]/20 bg-white px-3 py-1 text-[11px] font-semibold text-[#132960] transition hover:border-[#132960]/40 hover:bg-zinc-50 disabled:cursor-default disabled:opacity-40"
           >
-            Voltar aos juros de hoje
+            {mesFim ? "Voltar à Selic implícita" : "Voltar aos juros de hoje"}
           </button>
         </aside>
       </div>
@@ -717,7 +760,9 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
           Modelo estimado com dados até {fmtMesCurto(m.modelo.fim)} · VP e rendimentos até{" "}
           {fmtMesCurto(m.cvm_ate)} (informe da CVM)
           {temProj && pj && pFim
-            ? ` · projeção: Selic implícita de ${taxa(pj.pontos[0].selic)} a ${taxa(pFim.selic)}, NTN-B e rendimentos parados`
+            ? mexeu
+              ? ` · projeção: seu cenário (juro de 1 ano ${taxa(p1)} e NTN-B 30 anos ${taxa(r30)} em ${mesFim}), rendimentos parados`
+              : ` · projeção: Selic implícita de ${taxa(pj.pontos[0].selic)} a ${taxa(pFim.selic)}, NTN-B e rendimentos parados`
             : ""}{" "}
           · não é recomendação
         </span>
