@@ -87,7 +87,7 @@ export default async function FundosImobiliariosPage() {
       <FiiComunidadeCta />
 
       {/* Notas metodológicas saíram do rodapé (poluição visual): cada uma vive
-          no ícone (?) do card correspondente — hero (XFIX11/benchmarks),
+          no ícone (?) do card correspondente — hero (IFIX da B3/benchmarks),
           screener (composição IFIX + CVM + DY), simulador (metodologia) e índice de tijolo. */}
     </div>
   );

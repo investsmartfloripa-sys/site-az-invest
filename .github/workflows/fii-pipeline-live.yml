@@ -2,7 +2,9 @@ name: FII pipeline live (IFIX hero + Screener)
 
 # Roda a cada 15 minutos durante o horário de pregão da B3 (10h-19h BRT = 13h-22h UTC)
 # em dias úteis. Estes pipelines são leves:
-#   - build_fii_ifix: ~30s (XFIX11 + CDI + IBOV + IMAB11)
+#   - build_fii_ifix: ~30s (IFIX oficial da B3 + spot do Yahoo + CDI + IBOV + IMA-B/IMA-B5+ da ANBIMA).
+#     O IMA guarda histórico no Blob (data/anbima_ima_historico.json) e só pede os dias que faltam;
+#     sem histórico, a 1ª rodada baixa ~1.270 dias da ANBIMA (~3 min) — por isso o timeout de 12 min.
 #   - build_fii_screener: ~2-3 min (107 tickers × yfinance preço + volume + dividends 12m)
 #
 # Fora do pregão (noites, fins de semana) os preços yfinance não mudam, então não roda.
@@ -22,7 +24,7 @@ concurrency:
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     env:
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
       SITE_BASE: https://investimentosdeaz.com.br

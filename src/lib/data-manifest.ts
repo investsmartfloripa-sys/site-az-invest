@@ -107,6 +107,7 @@ export const DATA_SOURCES: DataSourceDef[] = [
 
   // ── FIIs (fii-pipeline-live.yml */15 em pregão; fii-pipeline.yml pesado) ───
   { key: "fii_ifix", label: "IFIX (hero)", blobPath: "data/fii_ifix.json", workflowName: "fii-pipeline-live.yml", cadence: "intraday-util", painel: "fii" },
+  { key: "anbima_ima", label: "IMA-B e IMA-B5+ da ANBIMA (benchmarks do hero do IFIX)", blobPath: "data/anbima_ima_historico.json", workflowName: "fii-pipeline-live.yml", cadence: "diario-util", painel: "fii", dataDateField: "last_data_date" },
   { key: "fii_screener", label: "Screener FIIs", blobPath: "data/fii_screener.json", workflowName: "fii-pipeline-live.yml", cadence: "intraday-util", painel: "fii" },
   { key: "fii_details", label: "Detalhe por ticker (107 FIIs)", blobPath: "data/fii_details.json", workflowName: "fii-pipeline.yml", cadence: "diario-util", painel: "fii", pagePath: "/painel-economico/mercado/brasil/fundos-imobiliarios", heavy: true },
   { key: "fii_macro_charts", label: "Macro charts (P/VP + prêmio)", blobPath: "data/fii_macro_charts.json", workflowName: "fii-pipeline.yml", cadence: "diario-util", painel: "fii" },

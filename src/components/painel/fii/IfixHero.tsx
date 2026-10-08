@@ -172,12 +172,12 @@ export function IfixHero({
             <MethodInfo className="ml-1.5 align-middle">
               {comparing
                 ? "Variação % acumulada desde o início da janela (todas as séries partem de 0%). FIIs em retorno total (preço + proventos reinvestidos); IFIX é índice de retorno total — comparação justa. "
-                : "IFIX via proxy XFIX11 (yfinance). "}
+                : "IFIX oficial da B3 (fechamento de cada pregão; durante o pregão, o valor do momento). "}
               {temTijolo
-                ? "Tijolo (AZ): índice próprio dos FIIs de tijolo mais negociados, com os rendimentos reinvestidos (regras e modelo na aba Analítico); o rendimento de cada mês entra aos poucos ao longo dos pregões do mês. "
+                ? "Tijolo (AZ): índice próprio dos FIIs de tijolo mais negociados, com os rendimentos reinvestidos (regras e modelo na aba Analítico); o rendimento de cada mês entra no 1º pregão do mês, quando a maioria dos FIIs fica ex-rendimento. "
                 : ""}
-              Benchmarks na mesma base: IMA-B/IMA-B5+ (ETFs), CDI (BCB SGS 12) e IBOV. Não é
-              recomendação.
+              Fontes: IFIX da B3; IMA-B e IMA-B5+ da ANBIMA (números-índice oficiais); CDI do Banco Central
+              (SGS 12); IBOV (Yahoo). Não é recomendação.
             </MethodInfo>
           </p>
           <AzPeriodSelector value={period} onChange={setPeriod} min={seriesMin} max={seriesMax} />

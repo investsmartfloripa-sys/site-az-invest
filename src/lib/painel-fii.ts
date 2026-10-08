@@ -3,8 +3,9 @@
  *
  * Pipelines (cron diário 22:35 UTC, workflow .github/workflows/fii-pipeline.yml):
  *  - build_fii_ifix.py       -> data/fii_ifix.json
- *      Série histórica do IFIX (proxy XFIX11.SA via yfinance, ~5a)
- *      + benchmarks (CDI BCB SGS 12, IBOV ^BVSP, IMAB11.SA, B5P211.SA)
+ *      Série histórica do IFIX (oficial da B3, GetPortfolioDay; spot do Yahoo no pregão de hoje; ~5a)
+ *      + benchmarks (CDI BCB SGS 12, IBOV ^BVSP, IMA-B e IMA-B5+ da ANBIMA com histórico em
+ *        data/anbima_ima_historico.json — os ETFs IMAB11/B5P211 do Yahoo ficaram sem cotação 2022–26)
  *      + métricas hero (valor atual, máx/mín 12m, variação 1d).
  *
  *  - build_fii_screener.py   -> data/fii_screener.json
@@ -41,7 +42,7 @@ export type FiiTimeSeriesPoint = {
 };
 
 export type FiiIfixHero = {
-  /** Valor absoluto do IFIX (proxy XFIX11 reescalado para escala do índice). */
+  /** Valor do IFIX: fechamento oficial da B3 ou, durante o pregão, o spot do IFIX.SA. */
   last_value: number;
   last_date: string;
   /** Variação diária em % */
@@ -55,7 +56,7 @@ export type FiiIfixData = {
   status: "ok" | "error";
   generated_at: string;
   source_primary: string; // ex.: "B3 GetPortfolioDay (composição)"
-  source_history: string; // ex.: "XFIX11.SA via yfinance (proxy)"
+  source_history: string; // ex.: "B3 — IFIX oficial (estatísticas de índices, fechamento diário)"
   benchmark_sources: Record<FiiBenchmarkKey, string>;
   hero: FiiIfixHero | null;
   /** Série diária completa (~5a). UI escolhe janela e renormaliza para base 100. */
