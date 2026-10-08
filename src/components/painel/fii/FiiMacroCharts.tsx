@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   Area,
   CartesianGrid,
@@ -48,6 +48,8 @@ const PREMIO_COLOR = AZ_BRAND.rust; // prêmio = série derivada em destaque
 
 type Props = {
   data: FiiMacroChartsData;
+  /** Substitui o gráfico 2 (prêmio sobre a NTN-B) — a página passa o do índice de tijolo. */
+  premio?: ReactNode;
 };
 
 // Corte pela janela do AzPeriodSelector — resolvePeriodRange trata os
@@ -105,7 +107,7 @@ function buildPvpData(tijolo: FiiPvpPoint[], papel: FiiPvpPoint[]): PvpRow[] {
   return [...byDate.values()].sort((a, b) => (a.date > b.date ? 1 : -1));
 }
 
-export function FiiMacroCharts({ data }: Props) {
+export function FiiMacroCharts({ data, premio }: Props) {
   // Seletores §8 controlados (estado local, sem querystring — página estática
   // dispensa Suspense porque o modo controlado não usa useSearchParams).
   const [pvpWin, setPvpWin] = useState<AzPeriodValue>({ id: "5y" });
@@ -299,8 +301,8 @@ export function FiiMacroCharts({ data }: Props) {
         </p>
       </article>
 
-      {/* GRÁFICO 2 — Prêmio NTN-B vs DY tijolo */}
-      <article className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
+      {/* GRÁFICO 2 — Prêmio NTN-B vs DY tijolo (o da página vem do índice de tijolo; este é o reserva) */}
+      {premio ?? <article className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
         <header className="flex flex-wrap items-start justify-between gap-2 pb-2">
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
@@ -427,7 +429,7 @@ export function FiiMacroCharts({ data }: Props) {
         <p className="mt-2 text-right">
           <DataStamp giro={data.generated_at} dado={latestPremio?.date ?? null} />
         </p>
-      </article>
+      </article>}
     </section>
   );
 }

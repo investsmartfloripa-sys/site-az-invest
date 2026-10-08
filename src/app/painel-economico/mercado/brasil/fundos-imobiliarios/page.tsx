@@ -4,7 +4,7 @@ import { FiiArtigosMaisLidos } from "@/components/painel/fii/FiiArtigosMaisLidos
 import { FiiComunidadeCta } from "@/components/painel/fii/FiiComunidadeCta";
 import { FiiMacroCharts } from "@/components/painel/fii/FiiMacroCharts";
 import { FiiNoticias } from "@/components/painel/fii/FiiNoticias";
-import { FiiTijoloModelo, TijoloIfixCard } from "@/components/painel/fii/FiiTijoloModelo";
+import { FiiTijoloModelo, PremioNtnbCard, TijoloIfixCard } from "@/components/painel/fii/FiiTijoloModelo";
 import { FundosImobiliariosClient } from "@/components/painel/fii/FundosImobiliariosClient";
 import {
   getFiiArtigosMaisLidos,
@@ -70,9 +70,9 @@ export default async function FundosImobiliariosPage() {
               <div className="space-y-4">
                 <Divisor
                   label="Tijolo × papel — P/VP e prêmio sobre a NTN-B"
-                  info="Mediana dos 25 FIIs mais líquidos de cada grupo, pela classificação de segmento do screener."
+                  info="P/VP: mediana dos 25 FIIs mais líquidos de cada grupo, pela classificação de segmento do screener. Prêmio: DY do índice de tijolo ÷ juro real da NTN-B de 30 anos, contra a média histórica."
                 />
-                <FiiMacroCharts data={macroCharts} />
+                <FiiMacroCharts data={macroCharts} premio={tijolo ? <PremioNtnbCard modelo={tijolo} /> : undefined} />
               </div>
             ) : null}
           </>

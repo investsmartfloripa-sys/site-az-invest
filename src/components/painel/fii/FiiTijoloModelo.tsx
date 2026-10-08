@@ -885,6 +885,195 @@ export function TijoloIfixCard({ modelo: m }: { modelo: FiiTijoloModeloData }) {
 }
 
 // ---------------------------------------------------------------------------
+// Prêmio do tijolo sobre a NTN-B: uma linha (DY ÷ juro real) contra a média histórica
+// ---------------------------------------------------------------------------
+
+const vezes = (v: number | null | undefined, dec = 2) => (v != null ? `${fmtNum(v, dec)}x` : "—");
+
+/**
+ * Quantas vezes o DY de 12 meses do índice de tijolo é o juro real da NTN-B de 30 anos, com a
+ * média e a faixa de ±1 desvio desde o início da série como referência (fixas, não mudam com a
+ * janela). Mesmos dados do modelo da aba Analítico.
+ */
+export function PremioNtnbCard({ modelo: m }: { modelo: FiiTijoloModeloData }) {
+  const rows = useMemo(
+    () =>
+      m.serie
+        .filter((r) => r.dy != null && r.r30 != null && r.r30 > 0)
+        .map((r) => ({ ...r, t: parseIsoUTC(r.date), razao: (r.dy as number) / (r.r30 as number) })),
+    [m],
+  );
+  const ref = useMemo(() => {
+    if (rows.length < 12) return null;
+    const v = rows.map((r) => r.razao);
+    const media = v.reduce((a, b) => a + b, 0) / v.length;
+    const dp = Math.sqrt(v.reduce((a, b) => a + (b - media) ** 2, 0) / v.length);
+    return { media, dp, desde: rows[0].date };
+  }, [rows]);
+  const [win, setWin] = useState<AzPeriodValue>({ id: "max" });
+  const vis = useMemo(() => {
+    if (!rows.length) return [];
+    const { from, to } = resolvePeriodRange(win, rows[0].date, rows[rows.length - 1].date);
+    return rows.filter((r) => r.date >= from && r.date <= to);
+  }, [rows, win]);
+  const span = vis.length > 1 ? Math.max(1, diffDaysUTC(vis[0].date, vis[vis.length - 1].date)) : 1;
+  const xTicks = useMemo(
+    () => buildTimeTicks(vis.map((r) => r.date), span).map((iso) => parseIsoUTC(iso)).filter((t) => Number.isFinite(t)),
+    [vis, span],
+  );
+  const eixo = useMemo(() => {
+    const v = vis.map((r) => r.razao);
+    if (ref) v.push(ref.media - ref.dp, ref.media + ref.dp);
+    if (!v.length) return null;
+    // Um degrau a mais em cima e embaixo, sem dado: é onde ficam "prêmio alto" e "prêmio baixo".
+    const passo = Math.max(...v) - Math.min(...v) > 0.6 ? 0.2 : 0.1;
+    const lo = Math.floor((Math.min(...v) - 0.03) / passo) * passo - passo;
+    const hi = Math.ceil((Math.max(...v) + 0.03) / passo) * passo + passo;
+    const ticks: number[] = [];
+    for (let x = lo; x <= hi + 1e-9; x += passo) ticks.push(Math.round(x * 10) / 10);
+    return { lo, hi, ticks };
+  }, [vis, ref]);
+  const ult = rows[rows.length - 1];
+  const leitura =
+    ult && ref
+      ? ult.razao > ref.media + ref.dp
+        ? "bem acima da média"
+        : ult.razao >= ref.media
+          ? "acima da média"
+          : ult.razao < ref.media - ref.dp
+            ? "bem abaixo da média"
+            : "abaixo da média"
+      : null;
+
+  return (
+    <article className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
+      <header className="flex flex-wrap items-start justify-between gap-2 pb-2">
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Prêmio do FII de tijolo sobre a NTN-B ({fmtMesCurto(m.hoje.date)})
+            <MethodInfo className="ml-1.5 align-middle">
+              Quantas vezes o rendimento de 12 meses sobre o preço (DY) do índice de tijolo (AZ) é o juro real da
+              NTN-B de 30 anos (Tesouro IPCA+). Como os aluguéis são corrigidos pela inflação, o DY do tijolo se
+              compara com o juro real. Acima da média, o FII paga mais do que costuma pagar frente ao Tesouro (prêmio
+              alto); abaixo, menos (prêmio baixo). Média e faixa (±1 desvio) calculadas
+              {ref ? ` desde ${fmtMesCurto(ref.desde)}` : ""}, fixas em qualquer janela. FII tem risco de vacância,
+              crédito e oscilação da cota que a NTN-B não tem. Não é recomendação.
+            </MethodInfo>
+          </h3>
+          <p className="mt-0.5 text-[11px] text-zinc-500">DY do índice de tijolo ÷ juro real da NTN-B 30 anos</p>
+        </div>
+        <AzPeriodSelector
+          value={win}
+          onChange={setWin}
+          min={rows[0]?.date}
+          max={rows[rows.length - 1]?.date}
+          periods={["1y", "5y", "max"]}
+        />
+      </header>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pb-2 text-[11px] text-zinc-600">
+        <span className="inline-flex items-center gap-1.5">
+          <Amostra cor={COR.just} />
+          Hoje <strong className="tabular-nums text-[#132960]">{vezes(ult?.razao)}</strong>
+          {leitura ? <span className="text-zinc-500">· {leitura}</span> : null}
+        </span>
+        {ref ? (
+          <span className="inline-flex items-center gap-1.5">
+            <Amostra cor={COR.indice} tracejado />
+            Média <strong className="tabular-nums text-[#132960]">{vezes(ref.media)}</strong>
+          </span>
+        ) : null}
+        {ref ? (
+          <span className="inline-flex items-center gap-1.5 text-zinc-500">
+            <span aria-hidden className="inline-block h-2.5 w-3 rounded-sm" style={{ backgroundColor: "rgba(19,41,96,0.08)" }} />
+            Faixa normal {vezes(ref.media - ref.dp)} a {vezes(ref.media + ref.dp)}
+          </span>
+        ) : null}
+      </div>
+
+      <div style={{ height: 230 }} className="relative w-full">
+        {vis.length < 2 || !eixo ? (
+          <div className="flex h-full items-center justify-center text-xs italic text-zinc-400">sem dados na janela</div>
+        ) : (
+          <>
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={vis} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+                <CartesianGrid {...azGridProps()} />
+                <XAxis
+                  {...azXAxisProps()}
+                  dataKey="t"
+                  type="number"
+                  scale="time"
+                  domain={["dataMin", "dataMax"]}
+                  ticks={xTicks.length ? xTicks : undefined}
+                  tickFormatter={(t) => formatTimeTickLabel(isoFromUTC(Number(t)), span)}
+                  minTickGap={28}
+                />
+                <YAxis
+                  {...azYAxisProps()}
+                  domain={[eixo.lo, eixo.hi]}
+                  ticks={eixo.ticks}
+                  interval={0}
+                  allowDataOverflow
+                  width={44}
+                  tickFormatter={(v) => vezes(Number(v), 1)}
+                />
+                {ref ? (
+                  <ReferenceArea
+                    y1={ref.media - ref.dp}
+                    y2={ref.media + ref.dp}
+                    fill={AZ_BRAND.navy}
+                    fillOpacity={0.06}
+                    ifOverflow="hidden"
+                  />
+                ) : null}
+                {ref ? (
+                  <ReferenceLine
+                    y={ref.media}
+                    stroke={COR.indice}
+                    strokeOpacity={0.7}
+                    strokeDasharray="5 4"
+                    label={{ value: "média", position: "insideBottomRight", fontSize: 10, fill: AZ_CHART.ticks }}
+                  />
+                ) : null}
+                <Tooltip
+                  cursor={{ stroke: AZ_BRAND.navy, strokeOpacity: 0.25 }}
+                  content={({ active, payload }) => {
+                    const r = active && payload?.[0]?.payload ? (payload[0].payload as (typeof vis)[number]) : null;
+                    if (!r) return null;
+                    return (
+                      <div style={caixaTooltip}>
+                        <p style={{ color: "#94A3B8", fontWeight: 600, margin: "0 0 4px" }}>
+                          {r.parcial ? fmtDataBR(r.date) : fmtMesCurto(r.date)}
+                        </p>
+                        <Item nome="Prêmio" valor={vezes(r.razao)} cor={COR.just} />
+                        <Item nome="DY do tijolo" valor={taxa(r.dy)} />
+                        <Item nome="NTN-B 30 anos" valor={taxa(r.r30)} />
+                      </div>
+                    );
+                  }}
+                />
+                <Line type="linear" dataKey="razao" stroke={COR.just} strokeWidth={2.2} dot={false} isAnimationActive={false} />
+              </ComposedChart>
+            </ResponsiveContainer>
+            <span className="pointer-events-none absolute left-[52px] top-2 text-[10px] font-semibold text-zinc-400">
+              ▲ prêmio alto
+            </span>
+            <span className="pointer-events-none absolute bottom-9 left-[52px] text-[10px] font-semibold text-zinc-400">
+              ▼ prêmio baixo
+            </span>
+          </>
+        )}
+      </div>
+      <p className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-400">
+        <span>Mesmos dados do índice de tijolo acima · não é recomendação</span>
+        <DataStamp giro={m.generated_at} dado={m.last_data_date} />
+      </p>
+    </article>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Composição
 // ---------------------------------------------------------------------------
 
