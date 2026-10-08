@@ -242,6 +242,14 @@ function Controle({
   );
 }
 
+/** Geometria do gráfico principal (px): altura total, margem de cima e altura do eixo X. */
+const ALT = 380;
+const TOPO = 8;
+const EIXO_X = 30;
+
+/** Variação até o fim da projeção, escrita à direita do gráfico na altura da linha. */
+type Ponta = { chave: string; rotulo: string; valor: string; cor: string; y: number };
+
 const PASSOS_INDICE = [25, 50, 100, 200, 250, 500, 1000];
 const PASSOS_DY = [0.25, 0.5, 1, 2, 2.5, 5];
 const serie = (lo: number, passo: number, n: number) => Array.from({ length: n + 1 }, (_, i) => lo + i * passo);
@@ -327,6 +335,40 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
   const pj = m.projecao;
   const pFim = pj?.pontos[pj.pontos.length - 1];
   const rg = m.indice.regras;
+
+  // Quanto o índice e o DY variam de hoje até o fim da projeção pela Selic implícita: escrito à
+  // direita do gráfico, na altura em que cada linha projetada termina.
+  const pontas = useMemo((): Ponta[] => {
+    if (!esc || !temProj || !pFim || pFim.just == null) return [];
+    const alturaUtil = ALT - TOPO - EIXO_X;
+    const yDe = (v: number, lo: number, hi: number) =>
+      Math.min(ALT - EIXO_X - 12, Math.max(14, TOPO + ((hi - v) / (hi - lo)) * alturaUtil));
+    const out: Ponta[] = [
+      {
+        chave: "indice",
+        rotulo: "Índice",
+        valor: `${fmtSignedNum((pFim.just / h.preco - 1) * 100, 1)}%`,
+        cor: COR.just,
+        y: yDe(pFim.just, esc.indice.lo, esc.indice.hi),
+      },
+    ];
+    if (esc.dy && pFim.dy_just != null) {
+      out.push({
+        chave: "dy",
+        rotulo: "DY",
+        valor: `${fmtSignedNum(pFim.dy_just - h.dy, 2)} pp`,
+        cor: COR.dy,
+        y: yDe(pFim.dy_just, esc.dy.lo, esc.dy.hi),
+      });
+    }
+    if (out.length === 2 && Math.abs(out[0].y - out[1].y) < 36) {
+      const meio = (out[0].y + out[1].y) / 2;
+      const sinal = out[0].y <= out[1].y ? -1 : 1;
+      out[0].y = meio + sinal * 18;
+      out[1].y = meio - sinal * 18;
+    }
+    return out;
+  }, [esc, temProj, pFim, h.preco, h.dy]);
 
   return (
     <article className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
@@ -422,155 +464,186 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
             ) : null}
           </div>
 
-          <div style={{ height: 380 }} className="w-full">
-            {vis.length < 2 || !esc ? (
-              <div className="flex h-full items-center justify-center text-xs italic text-zinc-400">sem dados na janela</div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={vis} margin={{ top: 8, right: 0, bottom: 0, left: 0 }}>
-                  <CartesianGrid {...azGridProps()} />
-                  <XAxis
-                    {...azXAxisProps()}
-                    dataKey="t"
-                    type="number"
-                    scale="time"
-                    domain={xDomain}
-                    ticks={xTicks.length ? xTicks : undefined}
-                    tickFormatter={(t) => formatTimeTickLabel(isoFromUTC(Number(t)), span)}
-                    minTickGap={28}
-                  />
-                  <YAxis
-                    {...azYAxisProps()}
-                    domain={[esc.indice.lo, esc.indice.hi]}
-                    ticks={esc.indice.ticks}
-                    interval={0}
-                    allowDataOverflow
-                    width={48}
-                    tickFormatter={(v) => fmtNum(Number(v), 0)}
-                  />
-                  {/* Exceção pedida pelo dono (08/10/2026) à regra de um eixo Y: o DY fica ao fundo, no
-                      eixo da direita, com as mesmas faixas do índice (ver escalas()). */}
-                  {esc.dy ? (
+          <div className="flex">
+            <div style={{ height: ALT }} className="min-w-0 flex-1">
+              {vis.length < 2 || !esc ? (
+                <div className="flex h-full items-center justify-center text-xs italic text-zinc-400">sem dados na janela</div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={vis} margin={{ top: 8, right: 0, bottom: 0, left: 0 }}>
+                    <CartesianGrid {...azGridProps()} />
+                    <XAxis
+                      {...azXAxisProps()}
+                      dataKey="t"
+                      height={EIXO_X}
+                      type="number"
+                      scale="time"
+                      domain={xDomain}
+                      ticks={xTicks.length ? xTicks : undefined}
+                      tickFormatter={(t) => formatTimeTickLabel(isoFromUTC(Number(t)), span)}
+                      minTickGap={28}
+                    />
                     <YAxis
                       {...azYAxisProps()}
-                      yAxisId="dy"
-                      orientation="right"
-                      domain={[esc.dy.lo, esc.dy.hi]}
-                      ticks={esc.dy.ticks}
+                      domain={[esc.indice.lo, esc.indice.hi]}
+                      ticks={esc.indice.ticks}
                       interval={0}
                       allowDataOverflow
-                      width={44}
-                      tick={{ ...azYAxisProps().tick, fill: COR.dy }}
-                      tickFormatter={(v) => `${fmtNum(Number(v), esc.dy?.dec ?? 0)}%`}
+                      width={48}
+                      tickFormatter={(v) => fmtNum(Number(v), 0)}
                     />
-                  ) : null}
-                  {temProj ? (
-                    <ReferenceArea
-                      x1={tHoje}
-                      x2={tFim}
-                      fill={AZ_BRAND.navy}
-                      fillOpacity={0.05}
-                      ifOverflow="hidden"
-                      label={{ value: "projeção", position: "insideTop", fontSize: 10, fill: AZ_CHART.ticks }}
-                    />
-                  ) : null}
-                  <Tooltip content={<TooltipJust />} cursor={{ stroke: AZ_BRAND.navy, strokeOpacity: 0.25 }} />
+                    {/* Exceção pedida pelo dono (08/10/2026) à regra de um eixo Y: o DY fica ao fundo, no
+                        eixo da direita, com as mesmas faixas do índice (ver escalas()). */}
+                    {esc.dy ? (
+                      <YAxis
+                        {...azYAxisProps()}
+                        yAxisId="dy"
+                        orientation="right"
+                        domain={[esc.dy.lo, esc.dy.hi]}
+                        ticks={esc.dy.ticks}
+                        interval={0}
+                        allowDataOverflow
+                        width={44}
+                        tick={{ ...azYAxisProps().tick, fill: COR.dy }}
+                        tickFormatter={(v) => `${fmtNum(Number(v), esc.dy?.dec ?? 0)}%`}
+                      />
+                    ) : null}
+                    {temProj ? (
+                      <ReferenceArea
+                        x1={tHoje}
+                        x2={tFim}
+                        fill={AZ_BRAND.navy}
+                        fillOpacity={0.05}
+                        ifOverflow="hidden"
+                        label={{ value: "projeção", position: "insideTop", fontSize: 10, fill: AZ_CHART.ticks }}
+                      />
+                    ) : null}
+                    <Tooltip content={<TooltipJust />} cursor={{ stroke: AZ_BRAND.navy, strokeOpacity: 0.25 }} />
 
-                  {/* Fundo: DY 12 meses, eixo da direita */}
-                  {esc.dy ? (
-                    <Line
-                      yAxisId="dy"
-                      type="linear"
-                      dataKey="dy_just"
-                      stroke={COR.dy}
-                      strokeOpacity={OPAC_DY_JUST}
-                      strokeWidth={1.6}
-                      strokeDasharray="6 4"
-                      dot={false}
-                      activeDot={false}
-                      isAnimationActive={false}
-                    />
-                  ) : null}
-                  {esc.dy && temProj ? (
-                    <Line
-                      yAxisId="dy"
-                      type="linear"
-                      dataKey="proj_dy"
-                      stroke={COR.dy}
-                      strokeOpacity={OPAC_DY_JUST}
-                      strokeWidth={1.8}
-                      strokeDasharray="2 3"
-                      dot={false}
-                      activeDot={false}
-                      isAnimationActive={false}
-                    />
-                  ) : null}
-                  {esc.dy ? (
-                    <Line
-                      yAxisId="dy"
-                      type="linear"
-                      dataKey="dy"
-                      stroke={COR.dy}
-                      strokeOpacity={OPAC_DY}
-                      strokeWidth={1.6}
-                      strokeDasharray="6 4"
-                      dot={false}
-                      activeDot={false}
-                      isAnimationActive={false}
-                    />
-                  ) : null}
-                  {esc.dy && barra ? (
-                    <ReferenceLine
-                      yAxisId="dy"
-                      segment={[
-                        { x: tHoje, y: dyCen },
-                        { x: tFim, y: dyCen },
-                      ]}
-                      stroke={COR.dy}
-                      strokeOpacity={OPAC_DY}
-                      strokeWidth={2.5}
-                      strokeLinecap="round"
-                    />
-                  ) : null}
+                    {/* Fundo: DY 12 meses, eixo da direita */}
+                    {esc.dy ? (
+                      <Line
+                        yAxisId="dy"
+                        type="linear"
+                        dataKey="dy_just"
+                        stroke={COR.dy}
+                        strokeOpacity={OPAC_DY_JUST}
+                        strokeWidth={1.6}
+                        strokeDasharray="6 4"
+                        dot={false}
+                        activeDot={false}
+                        isAnimationActive={false}
+                      />
+                    ) : null}
+                    {esc.dy && temProj ? (
+                      <Line
+                        yAxisId="dy"
+                        type="linear"
+                        dataKey="proj_dy"
+                        stroke={COR.dy}
+                        strokeOpacity={OPAC_DY_JUST}
+                        strokeWidth={1.8}
+                        strokeDasharray="2 3"
+                        dot={false}
+                        activeDot={false}
+                        isAnimationActive={false}
+                      />
+                    ) : null}
+                    {esc.dy ? (
+                      <Line
+                        yAxisId="dy"
+                        type="linear"
+                        dataKey="dy"
+                        stroke={COR.dy}
+                        strokeOpacity={OPAC_DY}
+                        strokeWidth={1.6}
+                        strokeDasharray="6 4"
+                        dot={false}
+                        activeDot={false}
+                        isAnimationActive={false}
+                      />
+                    ) : null}
+                    {esc.dy && barra ? (
+                      <ReferenceLine
+                        yAxisId="dy"
+                        segment={[
+                          { x: tHoje, y: dyCen },
+                          { x: tFim, y: dyCen },
+                        ]}
+                        stroke={COR.dy}
+                        strokeOpacity={OPAC_DY}
+                        strokeWidth={2.5}
+                        strokeLinecap="round"
+                      />
+                    ) : null}
 
-                  {/* Frente: índice e onde deveria estar, eixo da esquerda */}
-                  <Area
-                    type="linear"
-                    dataKey="faixa"
-                    stroke="none"
-                    fill={COR.just}
-                    fillOpacity={0.12}
-                    isAnimationActive={false}
-                    activeDot={false}
-                  />
-                  {temProj ? (
-                    <Line
+                    {/* Frente: índice e onde deveria estar, eixo da esquerda */}
+                    <Area
                       type="linear"
-                      dataKey="proj_just"
-                      stroke={COR.just}
-                      strokeWidth={2}
-                      strokeDasharray="2 3"
-                      dot={false}
+                      dataKey="faixa"
+                      stroke="none"
+                      fill={COR.just}
+                      fillOpacity={0.12}
                       isAnimationActive={false}
+                      activeDot={false}
                     />
-                  ) : null}
-                  <Line type="linear" dataKey="just" stroke={COR.just} strokeWidth={1.8} dot={false} isAnimationActive={false} />
-                  <Line type="linear" dataKey="preco" stroke={COR.indice} strokeWidth={2.2} dot={false} isAnimationActive={false} />
-                  {barra && nivel != null ? (
-                    <ReferenceLine
-                      segment={[
-                        { x: tHoje, y: nivel },
-                        { x: tFim, y: nivel },
-                      ]}
-                      stroke={COR.just}
-                      strokeWidth={3}
-                      strokeLinecap="round"
-                    />
-                  ) : null}
-                </ComposedChart>
-              </ResponsiveContainer>
-            )}
+                    {temProj ? (
+                      <Line
+                        type="linear"
+                        dataKey="proj_just"
+                        stroke={COR.just}
+                        strokeWidth={2}
+                        strokeDasharray="2 3"
+                        dot={false}
+                        isAnimationActive={false}
+                      />
+                    ) : null}
+                    <Line type="linear" dataKey="just" stroke={COR.just} strokeWidth={1.8} dot={false} isAnimationActive={false} />
+                    <Line type="linear" dataKey="preco" stroke={COR.indice} strokeWidth={2.2} dot={false} isAnimationActive={false} />
+                    {barra && nivel != null ? (
+                      <ReferenceLine
+                        segment={[
+                          { x: tHoje, y: nivel },
+                          { x: tFim, y: nivel },
+                        ]}
+                        stroke={COR.just}
+                        strokeWidth={3}
+                        strokeLinecap="round"
+                      />
+                    ) : null}
+                  </ComposedChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+            {pontas.length && pFim ? (
+              <div className="relative hidden w-[4.5rem] shrink-0 sm:block" style={{ height: ALT }}>
+                <p className="absolute left-2 top-0 text-[10px] leading-tight text-zinc-500">
+                  até {fmtMesCurto(pFim.date)}
+                </p>
+                {pontas.map((pt) => (
+                  <div key={pt.chave} className="absolute left-2 -translate-y-1/2 leading-tight" style={{ top: pt.y }}>
+                    <p className="text-[10px] text-zinc-500">{pt.rotulo}</p>
+                    <p className="text-sm font-bold tabular-nums" style={{ color: pt.cor }}>
+                      {pt.valor}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
+          {pontas.length && pFim ? (
+            <p className="flex flex-wrap gap-x-4 pt-2 text-[11px] text-zinc-500 sm:hidden">
+              <span>Até {fmtMesCurto(pFim.date)}:</span>
+              {pontas.map((pt) => (
+                <span key={pt.chave}>
+                  {pt.rotulo}{" "}
+                  <strong className="tabular-nums" style={{ color: pt.cor }}>
+                    {pt.valor}
+                  </strong>
+                </span>
+              ))}
+            </p>
+          ) : null}
         </div>
 
         <aside className="border-t border-[#132960]/10 pt-4 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-1">
