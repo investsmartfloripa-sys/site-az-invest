@@ -39,8 +39,14 @@ const COR = {
   dy: AZ_CHART.neg,
   ifix: AZ_BRAND.azure,
 } as const;
-/** Duas visões no mesmo card, alternadas por botão (dono, 08/10/2026): índice em pontos ou DY. */
-type Vista = "valor" | "dy";
+/** O DY pelos juros é o mesmo vermelho do DY do índice, mais claro. */
+const OPAC_DY_JUST = 0.4;
+/**
+ * O DY fica AO FUNDO do gráfico do índice, no mesmo gráfico (traço mais leve que as linhas da frente).
+ * Pedido do dono, 08/10/2026: "no tijolo é pra estar junto". O botão Valor | P/L do Ibovespa
+ * (AcoesPlModelo) NÃO se aplica aqui — não igualar os dois cards.
+ */
+const OPAC_DY = 0.8;
 
 const pts = (v: number | null | undefined, dec = 0) => (v != null ? fmtNum(v, dec) : "—");
 const taxa = (v: number | null | undefined) => (v != null ? `${fmtNum(v, 2)}%` : "—");
@@ -177,7 +183,7 @@ function TooltipJust({
           {fmtMesCurto(r.date)} · {cenario ? "seu cenário" : "projeção"}
         </p>
         <Item nome="Onde deveria estar" valor={pts(r.proj_just)} cor={COR.just} />
-        <Item nome="DY pelos juros" valor={taxa(r.proj_dy)} cor={COR.just} />
+        <Item nome="DY pelos juros" valor={taxa(r.proj_dy)} cor={COR.dy} />
         {cenario ? null : (
           <p style={{ margin: "4px 0 0", color: "#C7D2E8" }}>
             Selic implícita no mês <strong style={{ color: "#fff" }}>{taxa(r.proj_selic)}</strong>
@@ -197,8 +203,8 @@ function TooltipJust({
       </p>
       <Item nome="Índice de tijolo" valor={pts(r.preco)} cor={COR.indice} />
       <Item nome="Onde deveria estar" valor={pts(r.just)} cor={COR.just} />
-      <Item nome="DY do índice" valor={taxa(r.dy)} cor={COR.indice} />
-      <Item nome="DY pelos juros" valor={taxa(r.dy_just)} cor={COR.just} />
+      <Item nome="DY do índice" valor={taxa(r.dy)} cor={COR.dy} />
+      <Item nome="DY pelos juros" valor={taxa(r.dy_just)} />
       {r.distancia != null ? (
         <p style={{ margin: "4px 0 0", color: "#C7D2E8" }}>
           {r.distancia >= 0 ? "Abaixo" : "Acima"} do justificado em{" "}
@@ -266,34 +272,46 @@ type Ponta = { chave: string; rotulo: string; valor: string; sub?: string; cor: 
 
 const PASSOS_INDICE = [25, 50, 100, 200, 250, 500, 1000];
 const PASSOS_DY = [0.25, 0.5, 1, 2, 2.5, 5];
+const serie = (lo: number, passo: number, n: number) => Array.from({ length: n + 1 }, (_, i) => lo + i * passo);
 
-/** Eixo Y com passo "redondo" e até 8 faixas, com folga de 6% em cima e embaixo. */
-function escala(vals: number[], passos: number[]) {
-  if (!vals.length) return null;
-  const a = Math.min(...vals);
-  const b = Math.max(...vals);
-  const pad = (b - a) * 0.06 || passos[0];
-  let passo = passos[passos.length - 1];
-  for (const p of passos) {
-    if (Math.ceil((b + pad) / p) - Math.floor((a - pad) / p) <= 8) {
+/**
+ * Escalas do gráfico principal: índice no eixo da esquerda e DY ao fundo, no eixo da direita.
+ * Os dois eixos têm o mesmo número de faixas, então as linhas de grade valem para ambos; o DY
+ * ganha o menor passo que cabe nessas faixas, centrado, para ocupar a mesma altura que o índice.
+ */
+function escalas(ind: number[], dy: number[]) {
+  if (!ind.length) return null;
+  const a = Math.min(...ind);
+  const b = Math.max(...ind);
+  const pad = (b - a) * 0.06 || 10;
+  let passo = PASSOS_INDICE[PASSOS_INDICE.length - 1];
+  for (const p of PASSOS_INDICE) {
+    if ((Math.ceil((b + pad) / p) - Math.floor((a - pad) / p)) <= 8) {
       passo = p;
       break;
     }
   }
-  const lo = Math.max(0, Math.floor((a - pad) / passo) * passo);
-  const n = Math.ceil((b + pad) / passo) - Math.floor(lo / passo);
-  return {
-    lo,
-    hi: lo + n * passo,
-    ticks: Array.from({ length: n + 1 }, (_, i) => lo + i * passo),
-    dec: passo < 0.5 ? 2 : passo < 1 ? 1 : 0,
-  };
+  const lo = Math.floor((a - pad) / passo) * passo;
+  const n = Math.ceil((b + pad) / passo) - Math.floor((a - pad) / passo);
+  const indice = { lo, hi: lo + n * passo, ticks: serie(lo, passo, n), dec: 0 };
+  if (!dy.length) return { indice, dy: null };
+  const c = Math.min(...dy);
+  const d = Math.max(...dy);
+  for (const p of PASSOS_DY) {
+    const folga = 0.03 * n * p;
+    const dlo = Math.max(0, Math.floor(((c + d) / 2 - (n * p) / 2) / p) * p);
+    if (dlo <= c - folga && dlo + n * p >= d + folga) {
+      return { indice, dy: { lo: dlo, hi: dlo + n * p, ticks: serie(dlo, p, n), dec: p < 0.5 ? 2 : p < 1 ? 1 : 0 } };
+    }
+  }
+  const p = PASSOS_DY[PASSOS_DY.length - 1];
+  const dlo = Math.max(0, Math.floor(c / p) * p);
+  return { indice, dy: { lo: dlo, hi: dlo + n * p, ticks: serie(dlo, p, n), dec: 0 } };
 }
 
 function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
   const { hist, proj } = useMemo(() => montar(m), [m]);
   const [win, setWin] = useState<AzPeriodValue>({ id: "max" });
-  const [vista, setVista] = useState<Vista>("valor");
   const h = m.hoje;
   const c = m.modelo.coef;
 
@@ -353,31 +371,50 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
   const xDomain: [number, number] = vis.length ? [vis[0].t, vis[vis.length - 1].t] : [0, 1];
   const esc = useMemo(() => {
     const finito = (v: number | null | undefined): v is number => v != null && Number.isFinite(v);
-    if (vista === "dy") {
-      const dy = vis.flatMap((r) => [r.dy, r.dy_just, r.proj_dy ?? null]).filter(finito);
-      if (barra) dy.push(dyCen);
-      return escala(dy, PASSOS_DY);
-    }
     const ind = vis
       .flatMap((r) => [r.preco, r.just, r.proj_just ?? null, r.faixa?.[0] ?? null, r.faixa?.[1] ?? null])
       .filter(finito);
     if (barra && nivel != null) ind.push(nivel);
-    return escala(ind, PASSOS_INDICE);
-  }, [vis, barra, nivel, dyCen, vista]);
+    const dy = vis.flatMap((r) => [r.dy, r.dy_just, r.proj_dy ?? null]).filter(finito);
+    if (barra) dy.push(dyCen);
+    return escalas(ind, dy);
+  }, [vis, barra, nivel, dyCen]);
   const rg = m.indice.regras;
 
-  // No fim da projeção (a do simulador), escrito à direita do gráfico na altura em que a linha termina:
-  // quanto o índice varia (visão valor) ou onde fica o DY (visão DY).
+  // Quanto o índice varia e onde fica o DY no fim da projeção (a do simulador): escrito à direita
+  // do gráfico, na altura em que cada linha projetada termina.
   const pontas = useMemo((): Ponta[] => {
     if (!esc || !temProj || nivel == null) return [];
     const alturaUtil = ALT - TOPO - EIXO_X;
-    const yDe = (v: number) => Math.min(ALT - EIXO_X - 12, Math.max(14, TOPO + ((esc.hi - v) / (esc.hi - esc.lo)) * alturaUtil));
-    if (vista === "dy") {
-      return [{ chave: "dy", rotulo: "DY ao ano", valor: taxa(dyCen), sub: `${fmtNum(dyCen / 12, 2)}% ao mês`, cor: COR.just, y: yDe(dyCen) }];
+    const yDe = (v: number, lo: number, hi: number) =>
+      Math.min(ALT - EIXO_X - 12, Math.max(14, TOPO + ((hi - v) / (hi - lo)) * alturaUtil));
+    const out: Ponta[] = [
+      {
+        chave: "indice",
+        rotulo: "Índice",
+        valor: `${fmtSignedNum((nivel / h.preco - 1) * 100, 1)}%`,
+        cor: COR.just,
+        y: yDe(nivel, esc.indice.lo, esc.indice.hi),
+      },
+    ];
+    if (esc.dy) {
+      out.push({
+        chave: "dy",
+        rotulo: "DY ao ano",
+        valor: taxa(dyCen),
+        sub: `${fmtNum(dyCen / 12, 2)}% ao mês`,
+        cor: COR.dy,
+        y: yDe(dyCen, esc.dy.lo, esc.dy.hi),
+      });
     }
-    return [{ chave: "indice", rotulo: "Índice", valor: `${fmtSignedNum((nivel / h.preco - 1) * 100, 1)}%`, cor: COR.just, y: yDe(nivel) }];
-  }, [esc, temProj, nivel, dyCen, h.preco, vista]);
-  const fimVista = vista === "dy" ? dyCen : nivel; // altura da barra do cenário na visão ativa
+    if (out.length === 2 && Math.abs(out[0].y - out[1].y) < 48) {
+      const meio = (out[0].y + out[1].y) / 2;
+      const sinal = out[0].y <= out[1].y ? -1 : 1;
+      out[0].y = meio + sinal * 24;
+      out[1].y = meio - sinal * 24;
+    }
+    return out;
+  }, [esc, temProj, nivel, dyCen, h.preco]);
 
   return (
     <article className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
@@ -402,8 +439,8 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
               30 anos (R² {fmtNum(m.modelo.r2, 2)}, {fmtMesCurto(m.modelo.inicio)}–{fmtMesCurto(m.modelo.fim)}). O juro
               de 1 ano é o que o CDI deve pagar nos próximos 12 meses (curva prefixada); a NTN-B de 30 anos é o juro
               real do Tesouro IPCA+ mais longo, o ativo mais parecido com um imóvel de renda. Como DY = rendimento ÷
-              preço, o índice justificado é o índice × DY do índice ÷ DY pelos juros. O botão acima do gráfico
-              alterna entre o índice e o DY. A faixa é ±1 desvio do modelo.
+              preço, o índice justificado é o índice × DY do índice ÷ DY pelos juros; os dois DY ficam ao fundo, no
+              eixo da direita. A faixa é ±1 desvio do modelo.
               <br />
               <br />
               <strong>Projeção.</strong> Só a Selic implícita do Panorama se move: o juro de 1 ano de cada mês segue a
@@ -427,78 +464,48 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-5">
         <div className="min-w-0">
-          <div className="flex items-center gap-1 pb-2">
-            <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">Ver:</span>
-            {(
-              [
-                { id: "valor", label: "Valor (índice)" },
-                { id: "dy", label: "DY" },
-              ] as Array<{ id: Vista; label: string }>
-            ).map((opt) => {
-              const ativo = vista === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setVista(opt.id)}
-                  aria-pressed={ativo}
-                  className={
-                    "rounded-full border px-3 py-1 text-[11px] font-semibold transition " +
-                    (ativo
-                      ? "border-transparent bg-[#132960] text-white shadow-sm"
-                      : "border-[#132960]/15 bg-white text-zinc-600 hover:border-[#132960]/40 hover:text-[#132960]")
-                  }
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pb-2 text-[11px] text-zinc-600">
+            <span className="inline-flex items-center gap-1.5">
+              <Amostra cor={COR.indice} />
+              Índice <strong className="tabular-nums text-[#132960]">{pts(h.preco)}</strong>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Amostra cor={COR.just} />
+              Onde deveria estar <strong className="tabular-nums text-[#132960]">{pts(h.just)}</strong>
+              <span className="tabular-nums">({fmtSignedNum((h.just / h.preco - 1) * 100, 1)}%)</span>
+            </span>
+            {barra && mesFim ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Amostra cor={COR.just} pontilhado />
+                <Amostra cor={COR.just} barra />
+                {mexeu ? "Seu cenário" : "Pela Selic implícita"} · {mesFim}{" "}
+                <strong className="tabular-nums text-[#132960]">{pts(nivel)}</strong>
+              </span>
+            ) : null}
+            <span className="inline-flex items-center gap-1.5 text-zinc-500">
+              <span aria-hidden className="inline-block h-2.5 w-3 rounded-sm" style={{ backgroundColor: "rgba(2,125,252,0.14)" }} />
+              ±1 desvio do modelo
+            </span>
           </div>
 
-          {vista === "valor" ? (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pb-2 text-[11px] text-zinc-600">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pb-2 text-[11px] text-zinc-600">
+            <span className="font-semibold uppercase tracking-wide text-zinc-500">DY 12 meses · eixo da direita</span>
+            <span className="inline-flex items-center gap-1.5">
+              <Amostra cor={COR.dy} tracejado opacidade={OPAC_DY} />
+              Do índice <strong className="tabular-nums text-[#132960]">{taxa(h.dy)}</strong>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Amostra cor={COR.dy} tracejado opacidade={OPAC_DY_JUST} />
+              Pelos juros <strong className="tabular-nums text-[#132960]">{taxa(h.dy_just)}</strong>
+            </span>
+            {barra ? (
               <span className="inline-flex items-center gap-1.5">
-                <Amostra cor={COR.indice} />
-                Índice <strong className="tabular-nums text-[#132960]">{pts(h.preco)}</strong>
+                <Amostra cor={COR.dy} pontilhado opacidade={OPAC_DY_JUST} />
+                {mexeu ? "Seu cenário" : "Pela Selic implícita"}{" "}
+                <strong className="tabular-nums text-[#132960]">{taxa(dyCen)}</strong>
               </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Amostra cor={COR.just} />
-                Onde deveria estar <strong className="tabular-nums text-[#132960]">{pts(h.just)}</strong>
-                <span className="tabular-nums">({fmtSignedNum((h.just / h.preco - 1) * 100, 1)}%)</span>
-              </span>
-              {barra && mesFim ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <Amostra cor={COR.just} pontilhado />
-                  <Amostra cor={COR.just} barra />
-                  {mexeu ? "Seu cenário" : "Pela Selic implícita"} · {mesFim}{" "}
-                  <strong className="tabular-nums text-[#132960]">{pts(nivel)}</strong>
-                </span>
-              ) : null}
-              <span className="inline-flex items-center gap-1.5 text-zinc-500">
-                <span aria-hidden className="inline-block h-2.5 w-3 rounded-sm" style={{ backgroundColor: "rgba(2,125,252,0.14)" }} />
-                ±1 desvio do modelo
-              </span>
-            </div>
-          ) : (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pb-2 text-[11px] text-zinc-600">
-              <span className="inline-flex items-center gap-1.5">
-                <Amostra cor={COR.indice} />
-                DY 12 meses do índice <strong className="tabular-nums text-[#132960]">{taxa(h.dy)}</strong>
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Amostra cor={COR.just} />
-                DY pelos juros <strong className="tabular-nums text-[#132960]">{taxa(h.dy_just)}</strong>
-              </span>
-              {barra ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <Amostra cor={COR.just} pontilhado />
-                  <Amostra cor={COR.just} barra />
-                  {mexeu ? "Seu cenário" : "Pela Selic implícita"}
-                  {mesFim ? ` · ${mesFim}` : ""} <strong className="tabular-nums text-[#132960]">{taxa(dyCen)}</strong>
-                </span>
-              ) : null}
-            </div>
-          )}
+            ) : null}
+          </div>
 
           <div className="flex">
             <div style={{ height: ALT }} className="min-w-0 flex-1">
@@ -506,7 +513,7 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
                 <div className="flex h-full items-center justify-center text-xs italic text-zinc-400">sem dados na janela</div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={vis} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                  <ComposedChart data={vis} margin={{ top: 8, right: 0, bottom: 0, left: 0 }}>
                     <CartesianGrid {...azGridProps()} />
                     <XAxis
                       {...azXAxisProps()}
@@ -521,13 +528,29 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
                     />
                     <YAxis
                       {...azYAxisProps()}
-                      domain={[esc.lo, esc.hi]}
-                      ticks={esc.ticks}
+                      domain={[esc.indice.lo, esc.indice.hi]}
+                      ticks={esc.indice.ticks}
                       interval={0}
                       allowDataOverflow
                       width={48}
-                      tickFormatter={(v) => (vista === "dy" ? `${fmtNum(Number(v), esc.dec)}%` : fmtNum(Number(v), 0))}
+                      tickFormatter={(v) => fmtNum(Number(v), 0)}
                     />
+                    {/* Exceção pedida pelo dono (08/10/2026) à regra de um eixo Y: o DY fica ao fundo, no
+                        eixo da direita, com as mesmas faixas do índice (ver escalas()). */}
+                    {esc.dy ? (
+                      <YAxis
+                        {...azYAxisProps()}
+                        yAxisId="dy"
+                        orientation="right"
+                        domain={[esc.dy.lo, esc.dy.hi]}
+                        ticks={esc.dy.ticks}
+                        interval={0}
+                        allowDataOverflow
+                        width={44}
+                        tick={{ ...azYAxisProps().tick, fill: COR.dy }}
+                        tickFormatter={(v) => `${fmtNum(Number(v), esc.dy?.dec ?? 0)}%`}
+                      />
+                    ) : null}
                     {temProj ? (
                       <ReferenceArea
                         x1={tHoje}
@@ -539,21 +562,78 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
                       />
                     ) : null}
                     <Tooltip content={<TooltipJust cenario={mexeu} />} cursor={{ stroke: AZ_BRAND.navy, strokeOpacity: 0.25 }} />
-                    {vista === "valor" ? (
-                      <Area
+
+                    {/* Fundo: DY 12 meses, eixo da direita */}
+                    {esc.dy ? (
+                      <Line
+                        yAxisId="dy"
                         type="linear"
-                        dataKey="faixa"
-                        stroke="none"
-                        fill={COR.just}
-                        fillOpacity={0.12}
-                        isAnimationActive={false}
+                        dataKey="dy_just"
+                        stroke={COR.dy}
+                        strokeOpacity={OPAC_DY_JUST}
+                        strokeWidth={1.6}
+                        strokeDasharray="6 4"
+                        dot={false}
                         activeDot={false}
+                        isAnimationActive={false}
                       />
                     ) : null}
+                    {esc.dy && temProj ? (
+                      <Line
+                        yAxisId="dy"
+                        type="linear"
+                        dataKey="proj_dy"
+                        stroke={COR.dy}
+                        strokeOpacity={OPAC_DY_JUST}
+                        strokeWidth={1.8}
+                        strokeDasharray="2 3"
+                        dot={false}
+                        activeDot={false}
+                        isAnimationActive={false}
+                      />
+                    ) : null}
+                    {esc.dy ? (
+                      <Line
+                        yAxisId="dy"
+                        type="linear"
+                        dataKey="dy"
+                        stroke={COR.dy}
+                        strokeOpacity={OPAC_DY}
+                        strokeWidth={1.6}
+                        strokeDasharray="6 4"
+                        dot={false}
+                        activeDot={false}
+                        isAnimationActive={false}
+                      />
+                    ) : null}
+                    {esc.dy && barra ? (
+                      <ReferenceLine
+                        yAxisId="dy"
+                        segment={[
+                          { x: tHoje, y: dyCen },
+                          { x: tFim, y: dyCen },
+                        ]}
+                        stroke={COR.dy}
+                        strokeOpacity={OPAC_DY}
+                        strokeWidth={2.5}
+                        strokeLinecap="round"
+                      />
+                    ) : null}
+
+                    {/* Frente: índice e onde deveria estar, eixo da esquerda */}
+                    <Area
+                      type="linear"
+                      dataKey="faixa"
+                      stroke="none"
+                      fill={COR.just}
+                      fillOpacity={0.12}
+                      isAnimationActive={false}
+                      activeDot={false}
+                    />
                     {temProj ? (
                       <Line
                         type="linear"
-                        dataKey={vista === "dy" ? "proj_dy" : "proj_just"}
+                        dataKey="proj_just"
                         stroke={COR.just}
                         strokeWidth={2}
                         strokeDasharray="2 3"
@@ -561,27 +641,13 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
                         isAnimationActive={false}
                       />
                     ) : null}
-                    <Line
-                      type="linear"
-                      dataKey={vista === "dy" ? "dy_just" : "just"}
-                      stroke={COR.just}
-                      strokeWidth={1.8}
-                      dot={false}
-                      isAnimationActive={false}
-                    />
-                    <Line
-                      type="linear"
-                      dataKey={vista === "dy" ? "dy" : "preco"}
-                      stroke={COR.indice}
-                      strokeWidth={2.2}
-                      dot={false}
-                      isAnimationActive={false}
-                    />
-                    {barra && fimVista != null ? (
+                    <Line type="linear" dataKey="just" stroke={COR.just} strokeWidth={1.8} dot={false} isAnimationActive={false} />
+                    <Line type="linear" dataKey="preco" stroke={COR.indice} strokeWidth={2.2} dot={false} isAnimationActive={false} />
+                    {barra && nivel != null ? (
                       <ReferenceLine
                         segment={[
-                          { x: tHoje, y: fimVista },
-                          { x: tFim, y: fimVista },
+                          { x: tHoje, y: nivel },
+                          { x: tFim, y: nivel },
                         ]}
                         stroke={COR.just}
                         strokeWidth={3}
