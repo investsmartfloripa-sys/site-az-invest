@@ -33,10 +33,8 @@ import {
 } from "@/lib/format-br";
 import type { AcoesValuationData, IbovPlModeloData, IbovPlModeloRow } from "@/lib/painel-acoes";
 
-/** O P/L fica ao fundo, no eixo da direita, em cinza: traço mais leve que as linhas da frente. */
-const COR_PL = "#64748B";
-const OPAC_PL = 0.85;
-const OPAC_PL_JUST = 0.45;
+/** Duas visões no mesmo card, alternadas por botão (dono, 08/10/2026): valor em pontos ou P/L. */
+type Vista = "valor" | "pl";
 
 const pts = (v: number | null | undefined) => (v != null && Number.isFinite(v) ? fmtNum(v, 0) : "—");
 const vezes = (v: number | null | undefined) => (v != null && Number.isFinite(v) ? `${fmtNum(v, 1)}x` : "—");
@@ -99,6 +97,7 @@ function Item({ nome, valor, cor }: { nome: string; valor: string; cor?: string 
 type Linha = IbovPlModeloRow & {
   t: number;
   faixa: [number, number] | null;
+  faixa_pl: [number, number] | null;
   projetado?: boolean;
   h?: number; // meses desde hoje (projeção)
   base_completo?: number | null; // P/L projetado no JSON (implícitas do dia)
@@ -107,6 +106,7 @@ type Linha = IbovPlModeloRow & {
   proj_pts?: number | null;
   proj_pts_juros?: number | null;
   proj_pl?: number | null;
+  proj_pl_juros?: number | null;
   proj_lucro?: number | null;
   proj_selic?: number | null;
   proj_fed?: number | null;
@@ -121,6 +121,8 @@ function montar(m: IbovPlModeloData): { hist: Linha[]; proj: Linha[] } {
       ...r,
       t: parseIsoUTC(r.date),
       faixa: r.pts_lo != null && r.pts_hi != null ? [r.pts_lo, r.pts_hi] : null,
+      // a mesma faixa (±1 desvio do modelo) em P/L: pontos ÷ lucro do índice
+      faixa_pl: r.pts_lo != null && r.pts_hi != null && r.lucro ? [r.pts_lo / r.lucro, r.pts_hi / r.lucro] : null,
     }));
   const pj = m.projecao?.pontos ?? [];
   const proj: Linha[] = [];
@@ -135,6 +137,7 @@ function montar(m: IbovPlModeloData): { hist: Linha[]; proj: Linha[] } {
       proj_pts: p.pts_completo ?? null,
       proj_pts_juros: p.pts_juros ?? null,
       proj_pl: p.completo,
+      proj_pl_juros: p.juros,
       proj_lucro: p.lucro ?? null,
       proj_selic: p.selic,
       proj_fed: p.fed,
@@ -158,6 +161,7 @@ function montar(m: IbovPlModeloData): { hist: Linha[]; proj: Linha[] } {
       excl_sem_dado: null,
       ...extra,
       faixa: null,
+      faixa_pl: null,
       projetado: true,
       h: i,
       t: parseIsoUTC(p.date),
@@ -186,7 +190,7 @@ function TooltipIbov({
         </p>
         <Item nome="Onde deveria estar" valor={pts(r.proj_pts)} cor={PL_CORES.completo} />
         <Item nome="Só juros" valor={pts(r.proj_pts_juros)} cor={PL_CORES.juros} />
-        <Item nome="P/L justificado" valor={vezes(r.proj_pl)} cor={COR_PL} />
+        <Item nome="P/L justificado" valor={vezes(r.proj_pl)} />
         <p style={{ margin: "4px 0 0", color: "#C7D2E8" }}>
           Lucro do índice <strong style={{ color: "#fff" }}>{pts(r.proj_lucro)}</strong> pontos/ano
         </p>
@@ -204,7 +208,7 @@ function TooltipIbov({
       <Item nome="Ibovespa" valor={pts(r.ibov)} cor={PL_CORES.obs} />
       <Item nome="Onde deveria estar" valor={pts(r.pts_completo)} cor={PL_CORES.completo} />
       <Item nome="Só juros" valor={pts(r.pts_juros)} cor={PL_CORES.juros} />
-      <Item nome="P/L do Ibovespa" valor={vezes(r.pl)} cor={COR_PL} />
+      <Item nome="P/L do Ibovespa" valor={vezes(r.pl)} />
       <Item nome="P/L justificado" valor={vezes(r.fit_completo)} />
       {dist != null ? (
         <p style={{ margin: "4px 0 0", color: "#C7D2E8" }}>
@@ -275,20 +279,15 @@ type Ponta = { chave: string; rotulo: string; valor: string; cor: string; y: num
 
 const PASSOS_PONTOS = [5000, 10000, 20000, 25000, 50000, 100000];
 const PASSOS_PL = [0.5, 1, 2, 2.5, 5];
-const serie = (lo: number, passo: number, n: number) => Array.from({ length: n + 1 }, (_, i) => lo + i * passo);
 
-/**
- * Escalas do gráfico (mesma regra do card de FIIs de tijolo): pontos no eixo da esquerda e P/L ao
- * fundo, no eixo da direita. Os dois eixos têm o mesmo número de faixas, então a grade vale para
- * ambos; o P/L ganha o menor passo que cabe nessas faixas, centrado, e ocupa a mesma altura.
- */
-function escalas(ind: number[], pl: number[]) {
-  if (!ind.length) return null;
-  const a = Math.min(...ind);
-  const b = Math.max(...ind);
-  const pad = (b - a) * 0.06 || 1000;
-  let passo = PASSOS_PONTOS[PASSOS_PONTOS.length - 1];
-  for (const p of PASSOS_PONTOS) {
+/** Eixo Y com passo "redondo" e até 8 faixas, com folga de 6% em cima e embaixo. */
+function escala(vals: number[], passos: number[]) {
+  if (!vals.length) return null;
+  const a = Math.min(...vals);
+  const b = Math.max(...vals);
+  const pad = (b - a) * 0.06 || passos[0];
+  let passo = passos[passos.length - 1];
+  for (const p of passos) {
     if (Math.ceil((b + pad) / p) - Math.floor((a - pad) / p) <= 8) {
       passo = p;
       break;
@@ -296,25 +295,13 @@ function escalas(ind: number[], pl: number[]) {
   }
   const lo = Math.max(0, Math.floor((a - pad) / passo) * passo);
   const n = Math.ceil((b + pad) / passo) - Math.floor(lo / passo);
-  const pontos = { lo, hi: lo + n * passo, ticks: serie(lo, passo, n) };
-  if (!pl.length) return { pontos, pl: null };
-  const c = Math.min(...pl);
-  const d = Math.max(...pl);
-  for (const p of PASSOS_PL) {
-    const folga = 0.03 * n * p;
-    const plo = Math.max(0, Math.floor(((c + d) / 2 - (n * p) / 2) / p) * p);
-    if (plo <= c - folga && plo + n * p >= d + folga) {
-      return { pontos, pl: { lo: plo, hi: plo + n * p, ticks: serie(plo, p, n), dec: p < 1 ? 1 : 0 } };
-    }
-  }
-  const p = PASSOS_PL[PASSOS_PL.length - 1];
-  const plo = Math.max(0, Math.floor(c / p) * p);
-  return { pontos, pl: { lo: plo, hi: plo + n * p, ticks: serie(plo, p, n), dec: 0 } };
+  return { lo, hi: lo + n * passo, ticks: Array.from({ length: n + 1 }, (_, i) => lo + i * passo), dec: passo < 1 ? 1 : 0 };
 }
 
 function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
   const { hist, proj } = useMemo(() => montar(m), [m]);
   const [win, setWin] = useState<AzPeriodValue>({ id: "max" }); // abre sempre no histórico inteiro
+  const [vista, setVista] = useState<Vista>("valor");
   const h = m.hoje;
   const pj = m.projecao;
   const pFim = pj?.pontos[pj.pontos.length - 1];
@@ -364,6 +351,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
       return {
         ...r,
         proj_pl: plC,
+        proj_pl_juros: plJ,
         proj_pts: plC != null && lucro != null ? plC * lucro : null,
         proj_pts_juros: plJ != null && lucro != null ? plJ * lucro : null,
         proj_lucro: lucro,
@@ -376,6 +364,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
   const fim = projDin.length ? projDin[projDin.length - 1] : null;
   const nivel = fim?.proj_pts ?? null;
   const plFim = fim?.proj_pl ?? null;
+  const fimVista = vista === "pl" ? plFim : nivel; // altura da barra do cenário na visão ativa
   const varFim = nivel != null && h.ibov ? (nivel / h.ibov - 1) * 100 : null;
 
   const dMin = hist[0]?.date;
@@ -399,40 +388,31 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
   const xDomain: [number, number] = vis.length ? [vis[0].t, vis[vis.length - 1].t] : [0, 1];
   const esc = useMemo(() => {
     const finito = (v: number | null | undefined): v is number => v != null && Number.isFinite(v);
+    if (vista === "pl") {
+      // a faixa fica fora da escala: em P/L ela abre muito quando o lucro sobre preço justificado é baixo
+      // (2020–21) e achataria as linhas; é cortada nas bordas do gráfico
+      const pl = vis
+        .flatMap((r) => [r.pl, r.fit_completo, r.fit_juros, r.proj_pl ?? null, r.proj_pl_juros ?? null])
+        .filter(finito);
+      return escala(pl, PASSOS_PL);
+    }
     const ind = vis
       .flatMap((r) => [r.ibov, r.pts_completo, r.pts_juros, r.proj_pts ?? null, r.proj_pts_juros ?? null, r.faixa?.[0] ?? null, r.faixa?.[1] ?? null])
       .filter(finito);
-    const pl = vis.flatMap((r) => [r.pl, r.fit_completo, r.proj_pl ?? null]).filter(finito);
-    return escalas(ind, pl);
-  }, [vis]);
+    return escala(ind, PASSOS_PONTOS);
+  }, [vis, vista]);
 
-  // Quanto o Ibovespa varia e onde fica o P/L no fim da projeção (a do simulador): escrito à direita
-  // do gráfico, na altura em que cada linha projetada termina.
+  // No fim da projeção (a do simulador), escrito à direita do gráfico na altura em que a linha termina:
+  // quanto o Ibovespa varia (visão valor) ou onde fica o P/L (visão P/L).
   const pontas = useMemo((): Ponta[] => {
     if (!esc || !temProj || nivel == null || varFim == null) return [];
     const alturaUtil = ALT - TOPO - EIXO_X;
-    const yDe = (v: number, lo: number, hi: number) =>
-      Math.min(ALT - EIXO_X - 12, Math.max(14, TOPO + ((hi - v) / (hi - lo)) * alturaUtil));
-    const out: Ponta[] = [
-      {
-        chave: "ibov",
-        rotulo: "Ibovespa",
-        valor: `${fmtSignedNum(varFim, 1)}%`,
-        cor: PL_CORES.completo,
-        y: yDe(nivel, esc.pontos.lo, esc.pontos.hi),
-      },
-    ];
-    if (esc.pl && plFim != null) {
-      out.push({ chave: "pl", rotulo: "P/L", valor: vezes(plFim), cor: COR_PL, y: yDe(plFim, esc.pl.lo, esc.pl.hi) });
+    const yDe = (v: number) => Math.min(ALT - EIXO_X - 12, Math.max(14, TOPO + ((esc.hi - v) / (esc.hi - esc.lo)) * alturaUtil));
+    if (vista === "pl") {
+      return plFim != null ? [{ chave: "pl", rotulo: "P/L", valor: vezes(plFim), cor: PL_CORES.completo, y: yDe(plFim) }] : [];
     }
-    if (out.length === 2 && Math.abs(out[0].y - out[1].y) < 40) {
-      const meio = (out[0].y + out[1].y) / 2;
-      const sinal = out[0].y <= out[1].y ? -1 : 1;
-      out[0].y = meio + sinal * 20;
-      out[1].y = meio - sinal * 20;
-    }
-    return out;
-  }, [esc, temProj, nivel, varFim, plFim]);
+    return [{ chave: "ibov", rotulo: "Ibovespa", valor: `${fmtSignedNum(varFim, 1)}%`, cor: PL_CORES.completo, y: yDe(nivel) }];
+  }, [esc, temProj, nivel, varFim, plFim, vista]);
 
   const vars = new Map(m.variaveis.map((v) => [v.key, v]));
   const coefTxt = (k: "real_selic" | "dselic_e" | "fed_real") => fmtNum(Math.abs(vars.get(k)?.coef ?? 0), 2);
@@ -462,8 +442,8 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
               real, os juros reais de 5 e de 30 anos, a mudança esperada da Selic, o juro real americano de 10 anos e
               a sua tendência, a Fed Funds real e o cupom cambial (R² {fmtNum(m.modelos.completo.r2, 2)},{" "}
               {fmtMesCurto(m.amostra.inicio)}–{fmtMesCurto(m.amostra.fim)}, {m.amostra.n} meses). &quot;Só
-              juros&quot; usa apenas as três taxas brasileiras. A faixa é ±1 desvio do modelo. Os dois P/L ficam ao
-              fundo, no eixo da direita.
+              juros&quot; usa apenas as três taxas brasileiras. A faixa é ±1 desvio do modelo. O botão acima do
+              gráfico alterna entre o índice em pontos e o P/L.
               <br />
               <br />
               <strong>Projeção.</strong> A Selic implícita e a Fed implícita do dia, as mesmas do Panorama, fazem o
@@ -475,7 +455,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
             </MethodInfo>
           </h3>
           <p className="mt-0.5 text-[11px] text-zinc-500">
-            Pontos no último dia útil de cada mês · lucro do índice hoje {pts(h.lucro)} pontos por ano
+            Último dia útil de cada mês · lucro do índice hoje {pts(h.lucro)} pontos por ano
           </p>
         </div>
         <AzPeriodSelector value={win} onChange={setWin} min={dMin} max={dMax} periods={["ytd", "1y", "5y", "10y", "max"]} />
@@ -489,28 +469,61 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-5">
         <div className="min-w-0">
+          <div className="flex items-center gap-1 pb-2">
+            <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">Ver:</span>
+            {(
+              [
+                { id: "valor", label: "Valor (pontos)" },
+                { id: "pl", label: "P/L" },
+              ] as Array<{ id: Vista; label: string }>
+            ).map((opt) => {
+              const ativo = vista === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setVista(opt.id)}
+                  aria-pressed={ativo}
+                  className={
+                    "rounded-full border px-3 py-1 text-[11px] font-semibold transition " +
+                    (ativo
+                      ? "border-transparent bg-[#132960] text-white shadow-sm"
+                      : "border-[#132960]/15 bg-white text-zinc-600 hover:border-[#132960]/40 hover:text-[#132960]")
+                  }
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pb-2 text-[11px] text-zinc-600">
             <span className="inline-flex items-center gap-1.5">
               <Amostra cor={PL_CORES.obs} />
-              Ibovespa <strong className="tabular-nums text-[#132960]">{pts(h.ibov)}</strong>
+              {vista === "pl" ? "P/L do Ibovespa" : "Ibovespa"}{" "}
+              <strong className="tabular-nums text-[#132960]">{vista === "pl" ? vezes(h.pl) : pts(h.ibov)}</strong>
             </span>
             <span className="inline-flex items-center gap-1.5">
               <Amostra cor={PL_CORES.completo} />
-              Onde deveria estar <strong className="tabular-nums text-[#132960]">{pts(h.pts_completo)}</strong>
+              {vista === "pl" ? "Justificado" : "Onde deveria estar"}{" "}
+              <strong className="tabular-nums text-[#132960]">
+                {vista === "pl" ? vezes(h.justificado_completo) : pts(h.pts_completo)}
+              </strong>
               {h.pts_completo != null ? (
                 <span className="tabular-nums">({fmtSignedNum((h.pts_completo / h.ibov - 1) * 100, 1)}%)</span>
               ) : null}
             </span>
             <span className="inline-flex items-center gap-1.5">
               <Amostra cor={PL_CORES.juros} tracejado />
-              Só juros <strong className="tabular-nums text-[#132960]">{pts(h.pts_juros)}</strong>
+              Só juros{" "}
+              <strong className="tabular-nums text-[#132960]">{vista === "pl" ? vezes(h.justificado_juros) : pts(h.pts_juros)}</strong>
             </span>
             {barra && mesFim ? (
               <span className="inline-flex items-center gap-1.5">
                 <Amostra cor={PL_CORES.completo} pontilhado />
                 <Amostra cor={PL_CORES.completo} barra />
                 {mexeu ? "Seu cenário" : "Pelas implícitas"} · {mesFim}{" "}
-                <strong className="tabular-nums text-[#132960]">{pts(nivel)}</strong>
+                <strong className="tabular-nums text-[#132960]">{vista === "pl" ? vezes(plFim) : pts(nivel)}</strong>
               </span>
             ) : null}
             <span className="inline-flex items-center gap-1.5 text-zinc-500">
@@ -519,31 +532,13 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pb-2 text-[11px] text-zinc-600">
-            <span className="font-semibold uppercase tracking-wide text-zinc-500">P/L · eixo da direita</span>
-            <span className="inline-flex items-center gap-1.5">
-              <Amostra cor={COR_PL} tracejado opacidade={OPAC_PL} />
-              Do Ibovespa <strong className="tabular-nums text-[#132960]">{vezes(h.pl)}</strong>
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Amostra cor={COR_PL} tracejado opacidade={OPAC_PL_JUST} />
-              Justificado <strong className="tabular-nums text-[#132960]">{vezes(h.justificado_completo)}</strong>
-            </span>
-            {barra ? (
-              <span className="inline-flex items-center gap-1.5">
-                <Amostra cor={COR_PL} pontilhado opacidade={OPAC_PL_JUST} />
-                {mexeu ? "Seu cenário" : "Pelas implícitas"} <strong className="tabular-nums text-[#132960]">{vezes(plFim)}</strong>
-              </span>
-            ) : null}
-          </div>
-
           <div className="flex">
             <div style={{ height: ALT }} className="min-w-0 flex-1">
               {vis.length < 2 || !esc ? (
                 <div className="flex h-full items-center justify-center text-xs italic text-zinc-400">sem dados na janela</div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={vis} margin={{ top: 8, right: 0, bottom: 0, left: 0 }}>
+                  <ComposedChart data={vis} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
                     <CartesianGrid {...azGridProps()} />
                     <XAxis
                       {...azXAxisProps()}
@@ -558,29 +553,13 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
                     />
                     <YAxis
                       {...azYAxisProps()}
-                      domain={[esc.pontos.lo, esc.pontos.hi]}
-                      ticks={esc.pontos.ticks}
+                      domain={[esc.lo, esc.hi]}
+                      ticks={esc.ticks}
                       interval={0}
                       allowDataOverflow
-                      width={60}
-                      tickFormatter={(v) => fmtNum(Number(v), 0)}
+                      width={vista === "pl" ? 40 : 60}
+                      tickFormatter={(v) => (vista === "pl" ? `${fmtNum(Number(v), esc.dec)}x` : fmtNum(Number(v), 0))}
                     />
-                    {/* Mesma exceção do card de FIIs de tijolo (pedido do dono, 08/10/2026) à regra de um eixo Y:
-                        o P/L fica ao fundo, no eixo da direita, com as mesmas faixas dos pontos (ver escalas()). */}
-                    {esc.pl ? (
-                      <YAxis
-                        {...azYAxisProps()}
-                        yAxisId="pl"
-                        orientation="right"
-                        domain={[esc.pl.lo, esc.pl.hi]}
-                        ticks={esc.pl.ticks}
-                        interval={0}
-                        allowDataOverflow
-                        width={40}
-                        tick={{ ...azYAxisProps().tick, fill: COR_PL }}
-                        tickFormatter={(v) => `${fmtNum(Number(v), esc.pl?.dec ?? 0)}x`}
-                      />
-                    ) : null}
                     {temProj ? (
                       <ReferenceArea
                         x1={tHoje}
@@ -592,68 +571,9 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
                       />
                     ) : null}
                     <Tooltip content={<TooltipIbov cenario={mexeu} />} cursor={{ stroke: AZ_BRAND.navy, strokeOpacity: 0.25 }} />
-
-                    {/* Fundo: P/L, eixo da direita */}
-                    {esc.pl ? (
-                      <Line
-                        yAxisId="pl"
-                        type="linear"
-                        dataKey="fit_completo"
-                        stroke={COR_PL}
-                        strokeOpacity={OPAC_PL_JUST}
-                        strokeWidth={1.5}
-                        strokeDasharray="6 4"
-                        dot={false}
-                        activeDot={false}
-                        isAnimationActive={false}
-                      />
-                    ) : null}
-                    {esc.pl && temProj ? (
-                      <Line
-                        yAxisId="pl"
-                        type="linear"
-                        dataKey="proj_pl"
-                        stroke={COR_PL}
-                        strokeOpacity={OPAC_PL_JUST}
-                        strokeWidth={1.8}
-                        strokeDasharray="2 3"
-                        dot={false}
-                        activeDot={false}
-                        isAnimationActive={false}
-                      />
-                    ) : null}
-                    {esc.pl ? (
-                      <Line
-                        yAxisId="pl"
-                        type="linear"
-                        dataKey="pl"
-                        stroke={COR_PL}
-                        strokeOpacity={OPAC_PL}
-                        strokeWidth={1.5}
-                        strokeDasharray="6 4"
-                        dot={false}
-                        activeDot={false}
-                        isAnimationActive={false}
-                      />
-                    ) : null}
-                    {esc.pl && barra && plFim != null ? (
-                      <ReferenceLine
-                        yAxisId="pl"
-                        segment={[
-                          { x: tHoje, y: plFim },
-                          { x: tFim, y: plFim },
-                        ]}
-                        stroke={COR_PL}
-                        strokeOpacity={OPAC_PL}
-                        strokeWidth={2.5}
-                        strokeLinecap="round"
-                      />
-                    ) : null}
-
-                    {/* Frente: Ibovespa e onde deveria estar, eixo da esquerda */}
                     <Area
                       type="linear"
-                      dataKey="faixa"
+                      dataKey={vista === "pl" ? "faixa_pl" : "faixa"}
                       stroke="none"
                       fill={PL_CORES.completo}
                       fillOpacity={0.12}
@@ -663,7 +583,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
                     {temProj ? (
                       <Line
                         type="linear"
-                        dataKey="proj_pts_juros"
+                        dataKey={vista === "pl" ? "proj_pl_juros" : "proj_pts_juros"}
                         stroke={PL_CORES.juros}
                         strokeWidth={1.8}
                         strokeDasharray="2 3"
@@ -674,7 +594,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
                     {temProj ? (
                       <Line
                         type="linear"
-                        dataKey="proj_pts"
+                        dataKey={vista === "pl" ? "proj_pl" : "proj_pts"}
                         stroke={PL_CORES.completo}
                         strokeWidth={2}
                         strokeDasharray="2 3"
@@ -684,20 +604,34 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
                     ) : null}
                     <Line
                       type="linear"
-                      dataKey="pts_juros"
+                      dataKey={vista === "pl" ? "fit_juros" : "pts_juros"}
                       stroke={PL_CORES.juros}
                       strokeWidth={1.6}
                       strokeDasharray="6 4"
                       dot={false}
                       isAnimationActive={false}
                     />
-                    <Line type="linear" dataKey="pts_completo" stroke={PL_CORES.completo} strokeWidth={1.8} dot={false} isAnimationActive={false} />
-                    <Line type="linear" dataKey="ibov" stroke={PL_CORES.obs} strokeWidth={2.2} dot={false} isAnimationActive={false} />
-                    {barra && nivel != null ? (
+                    <Line
+                      type="linear"
+                      dataKey={vista === "pl" ? "fit_completo" : "pts_completo"}
+                      stroke={PL_CORES.completo}
+                      strokeWidth={1.8}
+                      dot={false}
+                      isAnimationActive={false}
+                    />
+                    <Line
+                      type="linear"
+                      dataKey={vista === "pl" ? "pl" : "ibov"}
+                      stroke={PL_CORES.obs}
+                      strokeWidth={2.2}
+                      dot={false}
+                      isAnimationActive={false}
+                    />
+                    {barra && fimVista != null ? (
                       <ReferenceLine
                         segment={[
-                          { x: tHoje, y: nivel },
-                          { x: tFim, y: nivel },
+                          { x: tHoje, y: fimVista },
+                          { x: tFim, y: fimVista },
                         ]}
                         stroke={PL_CORES.completo}
                         strokeWidth={3}
