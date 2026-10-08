@@ -27,6 +27,7 @@ import argparse
 import base64
 import json
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -46,7 +47,6 @@ B3_INDICE_URL = "https://sistemaswebb3-listados.b3.com.br/indexStatisticsProxy/I
 ANBIMA_IMA_URL = "https://www.anbima.com.br/informacoes/ima/ima-sh-down.asp"
 IMA_HIST_BLOB = "data/anbima_ima_historico.json"
 IMA_INDICES = {"IMA-B": "IMAB", "IMA-B 5+": "IMAB5P"}   # nome na ANBIMA -> coluna do JSON
-IMA_POR_RODADA = 40          # dias pedidos à ANBIMA numa rodada normal (sem histórico: todos)
 BRT = timezone(timedelta(hours=-3))
 SGS_URL = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{cod}/dados?formato=json&dataInicial={data_inicial}"
 # BCB SGS retorna 406 com Accept específico — usar Accept: */* ou nada.
@@ -128,10 +128,17 @@ def _b3_ifix_diario(anos: List[int]) -> pd.Series:
     out: Dict[pd.Timestamp, float] = {}
     for a in anos:
         p = base64.b64encode(json.dumps({"index": "IFIX", "language": "pt-br", "year": str(a)}).encode()).decode()
-        try:
-            j = requests.get(B3_INDICE_URL.format(p=p), headers=UA, timeout=60).json()
-        except Exception as e:  # noqa: BLE001
-            print(f"[b3] FAIL IFIX {a}: {repr(e)[:100]}", file=sys.stderr)
+        j: Dict = {}
+        for tentativa in range(4):
+            try:
+                j = requests.get(B3_INDICE_URL.format(p=p), headers=UA, timeout=60).json()
+                if j.get("results"):
+                    break
+            except Exception as e:  # noqa: BLE001
+                print(f"[b3] tentativa {tentativa + 1} IFIX {a}: {repr(e)[:100]}", file=sys.stderr)
+            time.sleep(3 * (tentativa + 1))
+        if not j.get("results"):
+            print(f"[b3] FAIL IFIX {a}: sem resultados", file=sys.stderr)
             continue
         for row in j.get("results", []):
             for m in range(1, 13):
@@ -186,8 +193,7 @@ def _ima_historico(dias: List[pd.Timestamp]) -> Tuple[pd.DataFrame, Optional[Dic
     faltam = [d for d in sorted(dias, reverse=True)
               if d.strftime("%Y-%m-%d") not in serie and d.strftime("%Y-%m-%d") not in sem_dado
               and (d < hoje or agora.hour >= 20)]                       # o IMA do dia sai à noite
-    limite = len(faltam) if not serie else IMA_POR_RODADA
-    pedir = faltam[:limite]
+    pedir = faltam          # normalmente 0–1 dia; buraco grande (1ª carga, falha antiga) sai inteiro em segundos
     if pedir:
         print(f"[anbima] pedindo {len(pedir)} dia(s) (faltavam {len(faltam)}; histórico com {len(serie)})")
         with ThreadPoolExecutor(max_workers=6) as ex:
@@ -269,6 +275,18 @@ def build_payload() -> Tuple[Dict, Optional[Dict]]:
     print(f"[fii_ifix] CDI rows={len(cdi_daily)}")
 
     scale_ratio = None
+    # Cobertura: todo ano da janela tem que ter vindo da B3 (um ano que falha virava 252 pregões repetidos
+    # pelo ffill em out/2026). Ano corrente: pelo menos os pregões até o mês passado.
+    janela_ini = pd.Timestamp(datetime.now(BRT).date()) - pd.Timedelta(days=int(LOOKBACK_YEARS * 365.25 + 30))
+    por_ano = b3[b3.index >= janela_ini].groupby(b3[b3.index >= janela_ini].index.year).size() if len(b3) else pd.Series(dtype=int)
+    anos_janela = range(janela_ini.year, ano + 1)
+    buracos = [a for a in anos_janela
+               if por_ano.get(a, 0) < (150 if a not in (janela_ini.year, ano) else 1)]
+    if buracos:
+        print(f"[fii_ifix] [WARN] IFIX da B3 incompleto na janela (anos {buracos}) — não publica", file=sys.stderr)
+        return {"status": "error", "generated_at": datetime.now(timezone.utc).isoformat(),
+                "source_primary": "B3", "source_history": f"B3 incompleto: {buracos}",
+                "benchmark_sources": {}, "hero": None, "series_daily": []}, None
     if len(b3) >= 250:
         ifix_history = b3.rename("IFIX")
         source_history = "B3 — IFIX oficial (estatísticas de índices, fechamento diário)"
@@ -329,7 +347,8 @@ def build_payload() -> Tuple[Dict, Optional[Dict]]:
     ibov_idx = _to_base_100(ibov.loc[ibov.index >= start_date])
 
     # IMA-B / IMA-B5+ da ANBIMA nos pregões do IFIX (histórico no Blob + o que falta)
-    ima, ima_payload, n_sem = _ima_historico([d for d in ifix_clip.index if d.weekday() < 5])
+    cal = ifix_clip.index.union(cdi_daily.index[cdi_daily.index >= start_date] if len(cdi_daily) else ifix_clip.index)
+    ima, ima_payload, n_sem = _ima_historico([d for d in cal if d.weekday() < 5])
     ima = ima[ima.index >= start_date]
     imab_idx = _to_base_100(ima["IMAB"]) if "IMAB" in ima else pd.Series(dtype="float64")
     imab5p_idx = _to_base_100(ima["IMAB5P"]) if "IMAB5P" in ima else pd.Series(dtype="float64")
@@ -351,10 +370,20 @@ def build_payload() -> Tuple[Dict, Optional[Dict]]:
     # Forward-fill em dias úteis sem cotação (ex.: CDI publica feriados, BVSP não)
     # IMA: ffill curto (feriado da ANBIMA em dia de pregão, ou o dia de hoje antes de a ANBIMA publicar);
     # nunca o ffill sem limite que escondeu o buraco dos ETFs por 914 pregões.
-    df[["ifix", "IBOV"]] = df[["ifix", "IBOV"]].ffill()
+    df[["ifix", "IBOV"]] = df[["ifix", "IBOV"]].ffill(limit=3)
     df[["IMAB", "IMAB5P"]] = df[["IMAB", "IMAB5P"]].ffill(limit=3)
     df["CDI"] = df["CDI"].ffill()
     df = df.dropna(subset=["ifix"])
+
+    for col in ("ifix", "IMAB", "IMAB5P", "CDI", "IBOV"):
+        v = df[col].dropna()
+        iguais = (v.diff() == 0).astype(int)
+        seq = int(iguais.groupby((iguais != iguais.shift()).cumsum()).sum().max()) if len(v) else 0
+        if seq > 5:
+            print(f"[fii_ifix] [WARN] {col} repete o mesmo valor por {seq} pregões — não publica", file=sys.stderr)
+            return {"status": "error", "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "source_primary": "trava", "source_history": f"{col} parado {seq} pregões",
+                    "benchmark_sources": {}, "hero": None, "series_daily": []}, ima_payload
 
     series_daily: List[Dict] = []
     for date, row in df.iterrows():
@@ -405,16 +434,17 @@ def main() -> int:
     out_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     print(f"[fii_ifix] Escreveu {out_path} ({out_path.stat().st_size:,} bytes)")
 
-    if payload.get("status") == "error":
-        print("[fii_ifix] Status=error, não fará upload.", file=sys.stderr)
-        return 1
-
     if ima_payload:
         ima_path = out_dir / "anbima_ima_historico.json"
         ima_path.write_text(json.dumps(ima_payload, ensure_ascii=False), encoding="utf-8")
         print(f"[fii_ifix] Escreveu {ima_path} ({ima_path.stat().st_size:,} bytes)")
         if args.upload:
             maybe_upload_json(ima_path, IMA_HIST_BLOB)
+
+    if payload.get("status") == "error":
+        print("[fii_ifix] Status=error, não fará upload do fii_ifix.json (site segue com o último bom).",
+              file=sys.stderr)
+        return 1
 
     if args.upload:
         maybe_upload_json(out_path, "data/fii_ifix.json")
