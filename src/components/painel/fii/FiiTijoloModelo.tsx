@@ -6,7 +6,6 @@ import {
   CartesianGrid,
   ComposedChart,
   Line,
-  LineChart,
   ReferenceArea,
   ReferenceLine,
   ResponsiveContainer,
@@ -777,118 +776,6 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
 }
 
 // ---------------------------------------------------------------------------
-// Visão geral: índice de tijolo ajustado pelo rendimento × IFIX
-// ---------------------------------------------------------------------------
-
-/**
- * Índice de tijolo (AZ) com os rendimentos reinvestidos contra o IFIX, em variação acumulada
- * na janela. Fica na aba Visão geral da página de FIIs.
- */
-export function TijoloIfixCard({ modelo: m }: { modelo: FiiTijoloModeloData }) {
-  const rows = useMemo(
-    () => m.serie.filter((r) => r.retorno_total != null).map((r) => ({ ...r, t: parseIsoUTC(r.date) })),
-    [m],
-  );
-  const [win, setWin] = useState<AzPeriodValue>({ id: "max" });
-  const vis = useMemo(() => {
-    if (!rows.length) return [];
-    const { from, to } = resolvePeriodRange(win, rows[0].date, rows[rows.length - 1].date);
-    const v = rows.filter((r) => r.date >= from && r.date <= to);
-    if (!v.length) return [];
-    const b0 = v[0];
-    const varia = (x: number | null, b: number | null) => (x != null && b ? (x / b - 1) * 100 : null);
-    return v.map((r) => ({ ...r, v_tr: varia(r.retorno_total, b0.retorno_total), v_ifix: varia(r.ifix, b0.ifix) }));
-  }, [rows, win]);
-  const ult = vis[vis.length - 1];
-  const span = vis.length > 1 ? Math.max(1, diffDaysUTC(vis[0].date, vis[vis.length - 1].date)) : 1;
-  const xTicks = useMemo(
-    () => buildTimeTicks(vis.map((r) => r.date), span).map((iso) => parseIsoUTC(iso)).filter((t) => Number.isFinite(t)),
-    [vis, span],
-  );
-  const pct = (v: number | null | undefined) => (v != null ? `${fmtSignedNum(v, 1)}%` : "—");
-
-  return (
-    <article className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
-      <header className="flex flex-wrap items-start justify-between gap-2 pb-2">
-        <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-            Índice de FIIs de tijolo × IFIX ({fmtMesCurto(m.hoje.date)})
-            <MethodInfo className="ml-1.5 align-middle">
-              Índice próprio da AZ com os FIIs de tijolo mais negociados ({m.hoje.n} fundos hoje; regras e modelo na aba
-              Analítico), com os rendimentos e amortizações de cada mês reinvestidos, como no IFIX — que reúne todos os
-              FIIs do índice da B3 (tijolo, papel e fundos de fundos). Variação acumulada desde o início da janela.
-              Fontes: B3 e CVM.
-            </MethodInfo>
-          </h3>
-          <p className="mt-0.5 text-[11px] text-zinc-500">Ajustado pelo rendimento · variação acumulada na janela</p>
-        </div>
-        <AzPeriodSelector
-          value={win}
-          onChange={setWin}
-          min={rows[0]?.date}
-          max={rows[rows.length - 1]?.date}
-          periods={["1y", "5y", "max"]}
-        />
-      </header>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pb-2 text-[11px] text-zinc-600">
-        <span className="inline-flex items-center gap-1.5">
-          <Amostra cor={COR.indice} />
-          Tijolo (AZ) <strong className="tabular-nums text-[#132960]">{pct(ult?.v_tr)}</strong>
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <Amostra cor={COR.ifix} />
-          IFIX <strong className="tabular-nums text-[#132960]">{pct(ult?.v_ifix)}</strong>
-        </span>
-      </div>
-      <div style={{ height: 260 }} className="w-full">
-        {vis.length < 2 ? (
-          <div className="flex h-full items-center justify-center text-xs italic text-zinc-400">sem dados na janela</div>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={vis} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
-              <CartesianGrid {...azGridProps()} />
-              <XAxis
-                {...azXAxisProps()}
-                dataKey="t"
-                type="number"
-                scale="time"
-                domain={["dataMin", "dataMax"]}
-                ticks={xTicks.length ? xTicks : undefined}
-                tickFormatter={(t) => formatTimeTickLabel(isoFromUTC(Number(t)), span)}
-                minTickGap={28}
-              />
-              <YAxis {...azYAxisProps()} width={44} tickFormatter={(v) => `${fmtNum(Number(v), 0)}%`} />
-              <ReferenceLine y={0} stroke={AZ_CHART.ticks} strokeOpacity={0.6} />
-              <Tooltip
-                cursor={{ stroke: AZ_BRAND.navy, strokeOpacity: 0.25 }}
-                content={({ active, payload }) => {
-                  const r = active && payload?.[0]?.payload ? (payload[0].payload as (typeof vis)[number]) : null;
-                  if (!r) return null;
-                  return (
-                    <div style={caixaTooltip}>
-                      <p style={{ color: "#94A3B8", fontWeight: 600, margin: "0 0 4px" }}>
-                        {r.parcial ? fmtDataBR(r.date) : fmtMesCurto(r.date)}
-                      </p>
-                      <Item nome="Tijolo (AZ)" valor={pct(r.v_tr)} cor={COR.indice} />
-                      <Item nome="IFIX" valor={pct(r.v_ifix)} cor={COR.ifix} />
-                    </div>
-                  );
-                }}
-              />
-              <Line type="linear" dataKey="v_ifix" stroke={COR.ifix} strokeWidth={1.8} dot={false} isAnimationActive={false} />
-              <Line type="linear" dataKey="v_tr" stroke={COR.indice} strokeWidth={2.2} dot={false} isAnimationActive={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </div>
-      <p className="flex justify-end pt-2">
-        <DataStamp giro={m.generated_at} dado={m.last_data_date} />
-      </p>
-    </article>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Prêmio do tijolo sobre a NTN-B: uma linha (DY ÷ juro real) contra a média histórica
 // ---------------------------------------------------------------------------
 
@@ -1120,8 +1007,8 @@ function Composicao({ m }: { m: FiiTijoloModeloData }) {
 /**
  * Aba Analítico dos FIIs: índice de tijolo (AZ) contra onde ele deveria estar pelos juros
  * (modelo de build_fii_tijolo_modelo.py), com o DY embaixo, a projeção pela Selic implícita,
- * o simulador de cenário ao lado e a composição. A comparação com o IFIX fica na Visão geral
- * (TijoloIfixCard).
+ * o simulador de cenário ao lado e a composição. A comparação com o IFIX fica no gráfico principal
+ * da Visão geral (IfixHero, série diária `diario`).
  */
 export function FiiTijoloModelo({ modelo }: { modelo: FiiTijoloModeloData }) {
   const [verComp, setVerComp] = useState(false);

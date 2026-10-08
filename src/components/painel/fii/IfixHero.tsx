@@ -33,6 +33,8 @@ type Props = {
   onRemoveOverlay?: (ticker: string) => void;
   /** Tickers cuja série ainda está carregando (chip "carregando"). */
   loadingTickers?: string[];
+  /** Índice de tijolo (AZ) ajustado pelo rendimento, diário — entra como comparação ligada por padrão. */
+  tijolo?: ReadonlyArray<AzSeriesPoint> | null;
   /** Janela CONTROLADA pelo pai (compartilhada com a tabela do comparador). */
   period?: AzPeriodValue;
   onPeriodChange?: (v: AzPeriodValue) => void;
@@ -49,12 +51,14 @@ const BENCH_META: Record<FiiBenchmarkKey, { label: string; color: string }> = {
 };
 
 const IFIX_COLOR = AZ_BRAND.azure; // série principal do hero — azul AZ
+const TIJOLO_COLOR = AZ_BRAND.navy; // índice próprio de tijolo — navy, como na aba Analítico
 
 export function IfixHero({
   data,
   overlays = [],
   onRemoveOverlay,
   loadingTickers = [],
+  tijolo = null,
   period: periodProp,
   onPeriodChange,
 }: Props) {
@@ -64,10 +68,20 @@ export function IfixHero({
   const period = periodProp ?? periodInternal;
   const setPeriod = onPeriodChange ?? setPeriodInternal;
   const [activeBenches, setActiveBenches] = useState<FiiBenchmarkKey[]>([]);
+  // O tijolo começa em 2017 e o IFIX diário em 2021: corta no início do IFIX para as duas
+  // linhas partirem do mesmo dia em qualquer janela (inclusive "Máx").
+  const ifixIni = data.series_daily[0]?.date;
+  const tijoloJanela = useMemo(
+    () => (tijolo && ifixIni ? tijolo.filter(([d]) => d >= ifixIni) : []),
+    [tijolo, ifixIni],
+  );
+  const temTijolo = tijoloJanela.length > 1;
+  const [tijoloOn, setTijoloOn] = useState(true);
+  const mostraTijolo = temTijolo && tijoloOn;
 
-  // Comparando quando há benchmark OU FII selecionado — tudo vira variação %
-  // acumulada desde o início da janela (base 0, leitura direta).
-  const comparing = activeBenches.length > 0 || overlays.length > 0;
+  // Comparando quando há benchmark, índice de tijolo OU FII selecionado — tudo vira
+  // variação % acumulada desde o início da janela (base 0, leitura direta).
+  const comparing = activeBenches.length > 0 || overlays.length > 0 || mostraTijolo;
 
   // Retorno na janela por FII selecionado — vai no chip, na cor da série.
   const overlayPcts = useMemo<Record<string, number | null>>(() => {
@@ -97,6 +111,9 @@ export function IfixHero({
         color: IFIX_COLOR,
         data: data.series_daily.map((p) => [p.date, p.ifix] as const),
       },
+      ...(mostraTijolo
+        ? [{ id: "tijolo", label: "Tijolo (AZ)", color: TIJOLO_COLOR, data: tijoloJanela }]
+        : []),
       ...overlays.map((o) => ({
         id: `ov-${o.ticker}`,
         label: o.ticker,
@@ -104,7 +121,7 @@ export function IfixHero({
         data: o.data,
       })),
     ],
-    [data, overlays],
+    [data, overlays, mostraTijolo, tijoloJanela],
   );
 
   const benchSeries = useMemo<AzTimeSeries[]>(
@@ -156,6 +173,9 @@ export function IfixHero({
               {comparing
                 ? "Variação % acumulada desde o início da janela (todas as séries partem de 0%). FIIs em retorno total (preço + proventos reinvestidos); IFIX é índice de retorno total — comparação justa. "
                 : "IFIX via proxy XFIX11 (yfinance). "}
+              {temTijolo
+                ? "Tijolo (AZ): índice próprio dos FIIs de tijolo mais negociados, com os rendimentos reinvestidos (regras e modelo na aba Analítico); o rendimento de cada mês entra aos poucos ao longo dos pregões do mês. "
+                : ""}
               Benchmarks na mesma base: IMA-B/IMA-B5+ (ETFs), CDI (BCB SGS 12) e IBOV. Não é
               recomendação.
             </MethodInfo>
@@ -225,6 +245,27 @@ export function IfixHero({
           <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
             Comparar com:
           </span>
+          {temTijolo ? (
+            <button
+              type="button"
+              onClick={() => setTijoloOn((v) => !v)}
+              aria-pressed={tijoloOn}
+              className={
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition " +
+                (tijoloOn
+                  ? "border-transparent text-white shadow-sm"
+                  : "border-[#132960]/15 bg-white text-zinc-600 hover:border-[#132960]/40 hover:text-[#132960]")
+              }
+              style={tijoloOn ? { backgroundColor: TIJOLO_COLOR } : undefined}
+            >
+              <span
+                aria-hidden
+                className="inline-block h-2 w-2 rounded-full"
+                style={{ backgroundColor: tijoloOn ? "#ffffff" : TIJOLO_COLOR }}
+              />
+              Tijolo (AZ)
+            </button>
+          ) : null}
           {(Object.keys(BENCH_META) as FiiBenchmarkKey[]).map((k) => {
             const active = activeBenches.includes(k);
             return (

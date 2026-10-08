@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useState } from "react";
 
 import { ComparadorTabela, type ComparadorAtivoRow } from "@/components/painel/acoes/ComparadorTabela";
 import { SimuladorCarteira, type SimAssetInput } from "@/components/painel/acoes/SimuladorCarteira";
@@ -16,18 +16,18 @@ import type { FiiIfixData, FiiScreenerData } from "@/lib/painel-fii";
  * do comparador/simulador são os MESMOS das ações (agnósticos de classe).
  */
 
-/** Paleta das séries sobrepostas — evita o azul AZ (reservado ao IFIX). */
-const OVERLAY_PALETTE = ["#132960", "#FF5713", "#1E8A5C", "#7C3AED", "#A16207", "#0891B2"];
+/** Paleta das séries sobrepostas — evita o azul AZ (IFIX) e o navy (índice de tijolo). */
+const OVERLAY_PALETTE = ["#FF5713", "#1E8A5C", "#7C3AED", "#A16207", "#0891B2", "#BE185D"];
 const MAX_SELECTED = 5;
 
 type Props = {
   ifix: FiiIfixData | null;
   screener: FiiScreenerData | null;
-  /** Card do índice de tijolo × IFIX, logo abaixo do bloco do IFIX. */
-  tijolo?: ReactNode;
+  /** Índice de tijolo (AZ) ajustado pelo rendimento, diário — vai para o gráfico principal. */
+  tijoloSerie?: AzSeriesPoint[] | null;
 };
 
-export function FundosImobiliariosClient({ ifix, screener, tijolo }: Props) {
+export function FundosImobiliariosClient({ ifix, screener, tijoloSerie }: Props) {
   // Janela do comparador — compartilhada entre gráfico e tabela.
   const [period, setPeriod] = useState<AzPeriodValue>({ id: "1y" });
 
@@ -131,6 +131,7 @@ export function FundosImobiliariosClient({ ifix, screener, tijolo }: Props) {
             overlays={overlays}
             loadingTickers={loading}
             onRemoveOverlay={toggleSelect}
+            tijolo={tijoloSerie}
             period={period}
             onPeriodChange={setPeriod}
           />
@@ -153,8 +154,6 @@ export function FundosImobiliariosClient({ ifix, screener, tijolo }: Props) {
           </p>
         </section>
       )}
-
-      {tijolo}
 
       {notice ? (
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
