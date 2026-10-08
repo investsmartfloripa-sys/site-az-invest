@@ -45,6 +45,14 @@ até o fim da curva da Selic: Selic real, mudança esperada da Selic e Fed Funds
 trajetória, ancorados no valor de hoje; o resto fica parado (no teste no passado, parar os juros longos
 foi o que menos errou). Sem curva da Selic -> sem projeção; a página segue sem ela.
 
+Pontos do Ibovespa (08/10/2026): o P/L justificado vira índice em pontos multiplicado pelo lucro do
+índice (pontos de lucro em 12 meses = Ibovespa ÷ P/L do mesmo dia). Na projeção, o lucro cresce pelo
+PIB nominal esperado (Focus: PIB real dos próximos 12 meses, ano corrente e seguinte pesados pelos meses,
+× IPCA esperado em 12 meses). Entre seis regras testadas fora da amostra (lucro parado, média histórica,
+ARIMA, inflação esperada, volta à média de 3 anos e PIB nominal), foi a que menos errou o lucro de 12
+meses à frente (2015–2025: ~23% contra 25–26% do lucro parado, da média e do ARIMA). Ibovespa: Yahoo
+^BVSP desde 2008 com o market_history_full do Blob (mesma série do resto do site) por cima.
+
 Uso:
     python data-pipeline/python/build_ibov_pl_modelo.py --out-dir data-pipeline/out --upload
 """
@@ -78,7 +86,7 @@ from shared.blob_download import download_json  # noqa: E402
 
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0.0.0", "Accept": "*/*"}
 BLOB_OUT = "data/ibov_pl_modelo.json"
-SCHEMA_VERSION = 4  # 4 = Fed Funds real no completo + projeção pelas implícitas do dia
+SCHEMA_VERSION = 5  # 5 = Ibovespa em pontos (P/L justificado × lucro do índice) + lucro projetado pelo PIB nominal
 INICIO_DADOS = "2008-01-01"     # explicativas baixadas desde aqui (t_us10 precisa de 12m antes)
 PISO_AMOSTRA = "2010-01"        # amostra começa no 1º mês com tudo, nunca antes disto
 HAC_LAGS = 6
@@ -475,6 +483,62 @@ def projetar(rj, rc, xh: pd.Series, mes_hoje: pd.Period, data_hoje: str, focS: D
 
 
 # ---------------------------------------------------------------------------
+# Pontos do Ibovespa e lucro do índice
+# ---------------------------------------------------------------------------
+
+def ibov_diario() -> Tuple[pd.Series, str]:
+    """Ibovespa diário (pontos): Yahoo ^BVSP desde INICIO_DADOS, com o market_history_full do Blob (últimos
+    anos, a série que o resto do site usa) por cima. Falhando as duas, série vazia: o modelo segue sem pontos."""
+    partes: List[pd.Series] = []
+    rota: List[str] = []
+    try:
+        import yfinance as yf  # noqa: PLC0415
+        df = yf.download("^BVSP", start=INICIO_DADOS, progress=False, auto_adjust=False, threads=False)
+        s = df["Close"]
+        if isinstance(s, pd.DataFrame):
+            s = s.iloc[:, 0]
+        s = pd.to_numeric(s, errors="coerce").dropna()
+        s.index = pd.DatetimeIndex(s.index).tz_localize(None).normalize()
+        if len(s) > 1000:
+            partes.append(s)
+            rota.append("Yahoo ^BVSP")
+    except Exception as e:  # noqa: BLE001
+        print(f"  [WARN] Yahoo ^BVSP falhou: {repr(e)[:100]}", file=sys.stderr)
+    full = download_json("data/market_history_full.json", timeout=120) or {}
+    raw = (((full.get("tickers") or {}).get("^BVSP") or {}).get("series_daily")) or []
+    if raw:
+        s2 = pd.Series(pd.to_numeric([p[1] for p in raw], errors="coerce"),
+                       index=pd.to_datetime([p[0] for p in raw], errors="coerce")).dropna()
+        s2 = s2[s2.index.notna()]
+        s2.index = pd.DatetimeIndex(s2.index).normalize()
+        if len(s2):
+            partes.append(s2)
+            rota.append("market_history_full (Blob)")
+    if not partes:
+        print("  [WARN] Ibovespa indisponível — sem pontos", file=sys.stderr)
+        return pd.Series(dtype="float64"), "indisponível"
+    s = partes[0]
+    for p in partes[1:]:
+        s = p.combine_first(s)  # a série do site vence nos dias em comum
+    s = s[~s.index.duplicated(keep="last")].sort_index()
+    print(f"  Ibovespa: {len(s)} dias {s.index.min().date()} -> {s.index.max().date()} ({' + '.join(rota)})")
+    return s, " + ".join(rota)
+
+
+def pib_12m(focP: Dict[pd.Timestamp, Dict[int, float]], d: pd.Timestamp) -> Optional[float]:
+    """PIB real esperado nos 12 meses seguintes a d: Focus anual (última pesquisa até d) do ano corrente
+    e do seguinte, pesados pelos meses que faltam em cada um."""
+    ks = [k for k in focP if k <= d]
+    if not ks:
+        return None
+    r = focP[max(ks)]
+    a, w = d.year, (12 - d.month) / 12
+    if a not in r or a + 1 not in r:
+        return None
+    return float(w * r[a] + (1 - w) * r[a + 1])
+
+
+# ---------------------------------------------------------------------------
 # Curva real em prazo constante (NTN-B) a partir do treasury_history.json do site
 # ---------------------------------------------------------------------------
 
@@ -595,6 +659,8 @@ def build(out_dir: Path) -> Dict:
     cam_e12 = esperado_12m(focus_anuais("C%C3%A2mbio"), usd)
     us10, be10, rota_eua = eua_10a()
     effr = fed_funds_diaria()
+    focP = focus_anuais("PIB%20Total")
+    ibov_d, rota_ibov = ibov_diario()
 
     fontes_ult = {
         "NTN-B (treasury_history)": curva.dropna(how="all").index.max(),
@@ -602,6 +668,7 @@ def build(out_dir: Path) -> Dict:
         "Focus IPCA 12m": ipca_e.index.max(), "Focus Selic": sel_e12.index.max(),
         "Focus câmbio": cam_e12.index.max(), "Juro real EUA 10a": us10.index.max(),
         "Inflação implícita EUA 10a": be10.index.max(), "Fed Funds efetiva": effr.index.max(),
+        "Ibovespa": ibov_d.index.max() if len(ibov_d) else None,
     }
 
     fim = pd.Timestamp(last_data)
@@ -683,6 +750,29 @@ def build(out_dir: Path) -> Dict:
     fit_c = pd.Series(np.nan, index=m_out.index)
     fit_j[tem_xj] = para_pl(sm.add_constant(m_out.loc[tem_xj, JUROS], has_constant="add") @ rj.params.values)
     fit_c[tem_xc] = para_pl(sm.add_constant(m_out.loc[tem_xc, COMPLETO], has_constant="add") @ rc.params.values)
+
+    # ---- pontos do Ibovespa: P/L justificado × lucro do índice (Ibovespa ÷ P/L do mesmo dia) ----
+    sigma_ey = float(np.std(rc.resid, ddof=len(rc.params)))
+    ibov_m = pd.Series(np.nan, index=m_out.index)
+    if len(ibov_d):
+        for p, row in m_out.iterrows():
+            d_ref = pd.Timestamp(row["date"]) if isinstance(row["date"], str) else (
+                pd.Timestamp(last_data) if p >= mes_corrente else p.to_timestamp(how="end"))
+            ant = ibov_d[ibov_d.index <= d_ref]
+            if len(ant) and ant.index[-1].to_period("M") == p:
+                ibov_m[p] = float(ant.iloc[-1])
+    lucro_m = ibov_m / m_out["pl"]
+
+    def pts_de(pl_just, lucro):
+        return pl_just * lucro if pl_just is not None and np.isfinite(pl_just) and np.isfinite(lucro) else np.nan
+
+    def faixa_pts(pl_just, lucro):
+        """±1 desvio-padrão do resíduo do completo (no lucro sobre preço), em pontos."""
+        if not (np.isfinite(pl_just) and np.isfinite(lucro)):
+            return np.nan, np.nan
+        ey = 100.0 / pl_just
+        hi = 100.0 / (ey - sigma_ey) * lucro if ey - sigma_ey > 1.0 else np.nan
+        return 100.0 / (ey + sigma_ey) * lucro, hi
 
     # "hoje": último mês com P/L e todas as explicativas (normalmente o mês corrente, parcial)
     ult = m_out[m_out["pl"].notna() & tem_xc].index.max()
@@ -820,6 +910,10 @@ def build(out_dir: Path) -> Dict:
                 "pl": _r(row["pl"], 3), "fit_juros": _r(fit_j[p], 3), "fit_completo": _r(fit_c[p], 3),
                 "excl": _r(row["excl"], 1), "excl_teto": _r(row["excl_teto"], 1),
                 "excl_prejuizo": _r(row["excl_prejuizo"], 1), "excl_sem_dado": _r(row["excl_sem_dado"], 1)}
+        lo_p, hi_p = faixa_pts(fit_c[p], lucro_m[p])
+        item.update({"ibov": _r(ibov_m[p], 0), "lucro": _r(lucro_m[p], 1),
+                     "pts_completo": _r(pts_de(fit_c[p], lucro_m[p]), 0), "pts_juros": _r(pts_de(fit_j[p], lucro_m[p]), 0),
+                     "pts_lo": _r(lo_p, 0), "pts_hi": _r(hi_p, 0)})
         for c in COMPLETO:
             item[c] = _r(row[c], 3)
         serie.append(item)
@@ -839,6 +933,9 @@ def build(out_dir: Path) -> Dict:
         "ey": _r(100 / pl_hoje, 3), "ey_justificado_juros": _r(ey_j, 3), "ey_justificado_completo": _r(ey_c, 3),
         "desvio_juros_pct": _r((pl_hoje / eq_j - 1) * 100, 1),
         "desvio_completo_pct": _r((pl_hoje / eq_c - 1) * 100, 1),
+        "ibov": _r(ibov_m[ult], 0), "lucro": _r(lucro_m[ult], 1),
+        "pts_completo": _r(pts_de(eq_c, lucro_m[ult]), 0), "pts_juros": _r(pts_de(eq_j, lucro_m[ult]), 0),
+        "pts_lo": _r(faixa_pts(eq_c, lucro_m[ult])[0], 0), "pts_hi": _r(faixa_pts(eq_c, lucro_m[ult])[1], 0),
         "excl": {"total": _r(xh["excl"], 1), "teto": _r(xh["excl_teto"], 1),
                  "prejuizo": _r(xh["excl_prejuizo"], 1), "sem_dado": _r(xh["excl_sem_dado"], 1)},
     }
@@ -852,6 +949,42 @@ def build(out_dir: Path) -> Dict:
                             float(be10.dropna().iloc[-1]), meta_hoje)
     except Exception as e:  # noqa: BLE001
         print(f"::warning::projeção do P/L não gerada: {repr(e)[:160]}")
+
+    # ---- lucro do índice na projeção: cresce pelo PIB nominal esperado (Focus) ----
+    def g12_em(d: pd.Timestamp) -> Optional[float]:
+        """Crescimento nominal esperado em 12 meses (fração) com o Focus disponível em d."""
+        pb = pib_12m(focP, d)
+        ie = ipca_e[ipca_e.index <= d].dropna()
+        return None if pb is None or ie.empty else (1 + pb / 100) * (1 + float(ie.iloc[-1]) / 100) - 1
+
+    lm = lucro_m[lucro_m.index < mes_corrente].dropna()
+    erros = []
+    for p in lm.index:
+        g_ = g12_em(p.to_timestamp(how="end")) if p + 12 in lm.index else None
+        if g_ is not None:
+            erros.append(float(np.log(lm[p + 12] / lm[p]) - np.log(1 + g_)))
+    erro_lucro = float(np.sqrt(np.mean(np.square(erros))) * 100) if len(erros) >= 24 else None
+    lu0 = float(lucro_m[ult]) if np.isfinite(lucro_m[ult]) else None
+    g0 = g12_em(pd.Timestamp(last_data))
+    if projecao and lu0 and g0 is not None:
+        for pt in projecao["pontos"]:
+            lu = lu0 * (1 + g0) ** ((pd.Period(pt["mes"], "M") - ult).n / 12)
+            pt["lucro"] = _r(lu, 1)
+            pt["pts_completo"] = _r(pt["completo"] * lu, 0) if pt.get("completo") else None
+            pt["pts_juros"] = _r(pt["juros"] * lu, 0) if pt.get("juros") else None
+        ip12 = float(ipca_e.dropna().iloc[-1])
+        projecao["lucro"] = {
+            "hoje": _r(lu0, 1), "crescimento_12m": _r(g0 * 100, 2), "pib_12m": _r(pib_12m(focP, pd.Timestamp(last_data)), 2),
+            "ipca_12m": _r(ip12, 2), "erro_12m": _r(erro_lucro, 1), "n_erro": len(erros),
+            "metodo": "PIB nominal esperado: PIB real dos próximos 12 meses e IPCA esperado em 12 meses (Focus)",
+        }
+        # o que o simulador da página precisa para refazer a projeção (mudanças lineares no lucro sobre preço)
+        projecao["simulador"] = {
+            "ipca_e": _r(ip12, 3), "be10": _r(float(be10.dropna().iloc[-1]), 3),
+            "coef": {c: _r(rc.params[c], 4) for c in ("real_selic", "dselic_e", "fed_real")},
+            "coef_juros": {"real_selic": _r(rj.params["real_selic"], 4)},
+        }
+        projecao["premissas"] += " Lucro do índice cresce pelo PIB nominal esperado (Focus: PIB real + IPCA em 12 meses)."
     hist_item = {"mes": estimado_ate, "forma": "ey", "n": int(len(amostra)), "r2": _r(rc.rsquared, 3),
                  "r2_juros": _r(rj.rsquared, 3),
                  "coefs": {c: _r(rc.params[c], 4) for c in ["const"] + COMPLETO}}
@@ -899,6 +1032,8 @@ def build(out_dir: Path) -> Dict:
             "eua": f"{rota_eua} — juro real (TIPS) e inflação implícita de 10 anos",
             "fed": "NY Fed — Fed Funds efetiva (EFFR); FRED DFF de reserva",
             "projecao": "Selic implícita (charts/tables/selic_implicita.json) e Fed implícita (/api/global-rates/us) do dia",
+            "ibov": f"{rota_ibov} — pontos de fechamento no dia do P/L",
+            "lucro": "BCB Olinda — ExpectativasMercadoAnuais (PIB Total) e ExpectativasMercadoInflacao12Meses (IPCA)",
         },
         "_meta": {"hac_lags": HAC_LAGS, "piso_amostra": PISO_AMOSTRA, "ffill_dias_uteis": FFILL_DIAS_UTEIS,
                   "juros": JUROS, "completo": COMPLETO},
@@ -935,6 +1070,9 @@ def main() -> int:
         u = pj["pontos"][-1]
         print(f"[pl_modelo] projeção até {pj['fim']}: só juros {u['juros']} | completo {u['completo']} | "
               f"Selic {u['selic']} | Fed {u['fed']}")
+        if pj.get("lucro"):
+            print(f"[pl_modelo] pontos: hoje {h.get('ibov')} | onde deveria estar {h.get('pts_completo')} | {pj['fim']}: "
+                  f"{u.get('pts_completo')} (lucro +{pj['lucro']['crescimento_12m']}% em 12m; erro histórico {pj['lucro']['erro_12m']}%)")
     for a in payload["avisos"]:
         print(f"::warning::{a}")
     if args.upload:
