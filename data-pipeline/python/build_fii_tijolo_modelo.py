@@ -322,6 +322,7 @@ def elegiveis(P: pd.DataFrame, mes: pd.Period) -> pd.DataFrame:
 def construir(P: pd.DataFrame):
     meses = pd.period_range(BASE_MES, P.index.get_level_values(1).max(), freq="M")
     linhas, X_ant, ult = [], None, None
+    pesos: Dict[pd.Period, tuple] = {}   # mês -> (pesos usados no retorno do mês, nível no fim do mês anterior)
     nivel = nivel_p = 1000.0
     for m in meses:
         if X_ant is not None and len(X_ant):
@@ -332,6 +333,7 @@ def construir(P: pd.DataFrame):
             ok = R["ret"].notna()
             if ok.any():
                 w = X_ant.loc[ok, "w"] / X_ant.loc[ok, "w"].sum()
+                pesos[m] = (w, nivel)
                 nivel *= 1 + float((w * R.loc[ok, "ret"]).sum())
                 nivel_p *= 1 + float((w * R.loc[ok, "ret_preco"]).sum())
         X = elegiveis(P, m)
@@ -345,7 +347,45 @@ def construir(P: pd.DataFrame):
             X_ant = X
         linhas.append(row)
     S = pd.DataFrame(linhas).set_index("mes")
-    return S, ult
+    return S, ult, pesos
+
+
+def diario_retorno_total(q: pd.DataFrame, mp: pd.Series, P: pd.DataFrame, pesos: Dict[pd.Period, tuple]) -> pd.Series:
+    """Índice ajustado pelo rendimento em cada pregão, para o gráfico diário da Visão geral. Dentro do mês: os
+    mesmos fundos e pesos do índice mensal, o fechamento do dia (mesmo código e mesmo ajuste de desdobramento do
+    mês) e o rendimento + amortização do mês creditados no 1º pregão — é quando a maioria dos FIIs fica
+    ex-rendimento; testado contra creditar aos poucos ou no último pregão, é o que tira o salto artificial da
+    virada do mês e o que mais acompanha o IFIX diário. No último pregão do mês o valor é exatamente o do mensal."""
+    q = q[q.cod_isin.isin(mp.index)].copy()
+    q["cnpj"] = q.cod_isin.map(mp)
+    q["mes"] = q.data.dt.to_period("M")
+    datas_mes = q.groupby("mes").data.unique()
+    pontos = {BASE_MES.to_timestamp(how="end").normalize(): 1000.0}
+    for m, (w, nivel_ant) in sorted(pesos.items()):
+        dias = sorted(datas_mes.get(m, []))
+        if not dias:
+            continue
+        try:
+            Pm, Pa = P.xs(m, level=1).reindex(w.index), P.xs(m - 1, level=1).reindex(w.index)
+        except KeyError:
+            continue
+        Qm = q[(q.mes == m) & q.cnpj.isin(w.index)]
+        Qm = Qm[Qm.ticker.values == Pm["ticker"].reindex(Qm.cnpj).values]
+        fech = Qm.pivot_table(index="data", columns="cnpj", values="fech", aggfunc="last").reindex(dias).ffill()
+        fech = fech.reindex(columns=w.index)
+        p_ant = Pa["p_adj"]
+        # Desdobramento/grupamento no mês: o fator do mês vale do evento em diante; nos pregões antes dele o preço
+        # ainda é o antigo. Cada pregão fica com o fator (antes ou depois) que deixa o preço perto do mês anterior —
+        # o evento muda o preço ~10x, um pregão normal alguns %, então não há ambiguidade.
+        depois = fech / Pm["F"]
+        antes = fech / (Pm["F"] * Pm["fat_ev"])
+        usa_antes = (np.log(antes / p_ant).abs() < np.log(depois / p_ant).abs()) & (Pm["fat_ev"] != 1.0)
+        p_adj = depois.mask(usa_antes, antes).fillna(p_ant)   # antes do 1º negócio do mês: preço do mês anterior
+        r = (p_adj - p_ant + Pm["dist_adj"].fillna(0)) / p_ant
+        nivel = nivel_ant * (1 + (r * w).sum(axis=1))
+        for d, v in nivel.items():
+            pontos[pd.Timestamp(d)] = float(v)
+    return pd.Series(pontos).sort_index()
 
 
 # ---------------------------------------------------------------------------
@@ -419,7 +459,7 @@ def build(cache: Path) -> Dict:
     q = cotahist(cache, ano)
     mp, sem_cnpj = mapear(q, cvm)
     P = preparar(painel(q, mp, cvm))
-    S, comp = construir(P)
+    S, comp, pesos = construir(P)
     data_hoje = q.data.max()
     mes_hoje = data_hoje.to_period("M")
     S = S[S.index <= mes_hoje]
@@ -455,6 +495,18 @@ def build(cache: Path) -> Dict:
     S["just_lo"] = S["nivel_preco"] * S["dy"] / (S["dy_just"] + sd)
     S["just_hi"] = S["nivel_preco"] * S["dy"] / (S["dy_just"] - sd)
     hoje_row = S.loc[mes_hoje]
+
+    # série diária (retorno total) — tem que fechar com o mensal no último pregão de cada mês
+    diario = diario_retorno_total(q, mp, P, pesos)
+    fim_mes = diario.groupby(diario.index.to_period("M")).last()
+    dif = (fim_mes / S["nivel"].reindex(fim_mes.index) - 1).abs()
+    if not len(diario) or dif.max() > 1e-6:
+        print(f"[tijolo] [WARN] série diária não fecha com a mensal (dif. máx. {dif.max():.2e}) — fora do JSON",
+              file=sys.stderr)
+        diario = pd.Series(dtype=float)
+    else:
+        print(f"[tijolo] diário: {len(diario)} pregões, {diario.index.min().date()} a {diario.index.max().date()}, "
+              f"fecha com o mensal (dif. máx. {dif.max():.1e})")
     dy_hoje, p_hoje, dyj_hoje = float(hoje_row["dy"]), float(hoje_row["nivel_preco"]), float(hoje_row["dy_just"])
 
     # trava
@@ -540,6 +592,7 @@ def build(cache: Path) -> Dict:
                                  "juntos": _r(-(b["p1"] + b["r30"]) * 0.1 / dyj_hoje * 100, 2)}},
         "projecao": projecao,
         "serie": serie,
+        "diario": [[d.strftime("%Y-%m-%d"), _r(v, 2)] for d, v in diario.items()],
         "composicao": composicao,
         "indice": {"base": str(BASE_MES), "n_hoje": int(hoje_row["n"]), "volume_sem_cnpj": _r(sem_cnpj * 100, 2),
                    "regras": {"limiar_tijolo": _r(LIMIAR_TIJOLO, 4), "janela_classificacao_meses": JANELA_CLASS,

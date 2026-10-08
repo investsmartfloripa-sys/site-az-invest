@@ -267,6 +267,8 @@ export type FiiTijoloModeloData = {
     premissas: string;
   } | null;
   serie: FiiTijoloRow[];
+  /** Índice ajustado pelo rendimento em cada pregão [data, nível] (fecha com o mensal no fim de cada mês). */
+  diario?: Array<[string, number]>;
   composicao: Array<{ ticker: string; peso: number | null; pvp: number | null; dy: number | null }>;
   indice: {
     base: string;
