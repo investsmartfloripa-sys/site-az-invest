@@ -174,10 +174,12 @@ function TooltipIbov({
   active,
   payload,
   cenario = false,
+  vista = "valor",
 }: {
   active?: boolean;
   payload?: ReadonlyArray<{ payload?: unknown }>;
   cenario?: boolean;
+  vista?: Vista;
 }) {
   if (!active || !payload || payload.length === 0) return null;
   const r = payload[0]?.payload as Linha | undefined;
@@ -189,8 +191,8 @@ function TooltipIbov({
           {fmtMesCurto(r.date)} · {cenario ? "seu cenário" : "projeção"}
         </p>
         <Item nome="Onde deveria estar" valor={pts(r.proj_pts)} cor={PL_CORES.completo} />
-        <Item nome="Só juros" valor={pts(r.proj_pts_juros)} cor={PL_CORES.juros} />
         <Item nome="P/L justificado" valor={vezes(r.proj_pl)} />
+        {vista === "pl" ? <Item nome="Só juros" valor={vezes(r.proj_pl_juros)} cor={PL_CORES.juros} /> : null}
         <p style={{ margin: "4px 0 0", color: "#C7D2E8" }}>
           Lucro do índice <strong style={{ color: "#fff" }}>{pts(r.proj_lucro)}</strong> pontos/ano
         </p>
@@ -207,9 +209,9 @@ function TooltipIbov({
       <p style={{ color: "#94A3B8", fontWeight: 600, margin: "0 0 4px" }}>{rotuloMes(r)}</p>
       <Item nome="Ibovespa" valor={pts(r.ibov)} cor={PL_CORES.obs} />
       <Item nome="Onde deveria estar" valor={pts(r.pts_completo)} cor={PL_CORES.completo} />
-      <Item nome="Só juros" valor={pts(r.pts_juros)} cor={PL_CORES.juros} />
       <Item nome="P/L do Ibovespa" valor={vezes(r.pl)} />
       <Item nome="P/L justificado" valor={vezes(r.fit_completo)} />
+      {vista === "pl" ? <Item nome="Só juros" valor={vezes(r.fit_juros)} cor={PL_CORES.juros} /> : null}
       {dist != null ? (
         <p style={{ margin: "4px 0 0", color: "#C7D2E8" }}>
           {dist >= 0 ? "Abaixo" : "Acima"} de onde deveria estar em{" "}
@@ -397,7 +399,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
       return escala(pl, PASSOS_PL);
     }
     const ind = vis
-      .flatMap((r) => [r.ibov, r.pts_completo, r.pts_juros, r.proj_pts ?? null, r.proj_pts_juros ?? null, r.faixa?.[0] ?? null, r.faixa?.[1] ?? null])
+      .flatMap((r) => [r.ibov, r.pts_completo, r.proj_pts ?? null, r.faixa?.[0] ?? null, r.faixa?.[1] ?? null])
       .filter(finito);
     return escala(ind, PASSOS_PONTOS);
   }, [vis, vista]);
@@ -446,7 +448,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
               real, os juros reais de 5 e de 30 anos, a mudança esperada da Selic, o juro real americano de 10 anos e
               a sua tendência, a Fed Funds real e o cupom cambial (R² {fmtNum(m.modelos.completo.r2, 2)},{" "}
               {fmtMesCurto(m.amostra.inicio)}–{fmtMesCurto(m.amostra.fim)}, {m.amostra.n} meses). &quot;Só
-              juros&quot; usa apenas as três taxas brasileiras. A faixa é ±1 desvio do modelo. O botão acima do
+              juros&quot; (na visão P/L) usa apenas as três taxas brasileiras. A faixa é ±1 desvio do modelo. O botão acima do
               gráfico alterna entre o índice em pontos e o P/L.
               <br />
               <br />
@@ -517,11 +519,12 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
                 <span className="tabular-nums">({fmtSignedNum((h.pts_completo / h.ibov - 1) * 100, 1)}%)</span>
               ) : null}
             </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Amostra cor={PL_CORES.juros} tracejado />
-              Só juros{" "}
-              <strong className="tabular-nums text-[#132960]">{vista === "pl" ? vezes(h.justificado_juros) : pts(h.pts_juros)}</strong>
-            </span>
+            {vista === "pl" ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Amostra cor={PL_CORES.juros} tracejado />
+                Só juros <strong className="tabular-nums text-[#132960]">{vezes(h.justificado_juros)}</strong>
+              </span>
+            ) : null}
             {barra && mesFim ? (
               <span className="inline-flex items-center gap-1.5">
                 <Amostra cor={PL_CORES.completo} pontilhado />
@@ -574,7 +577,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
                         label={{ value: "projeção", position: "insideTop", fontSize: 10, fill: AZ_CHART.ticks }}
                       />
                     ) : null}
-                    <Tooltip content={<TooltipIbov cenario={mexeu} />} cursor={{ stroke: AZ_BRAND.navy, strokeOpacity: 0.25 }} />
+                    <Tooltip content={<TooltipIbov cenario={mexeu} vista={vista} />} cursor={{ stroke: AZ_BRAND.navy, strokeOpacity: 0.25 }} />
                     <Area
                       type="linear"
                       dataKey={vista === "pl" ? "faixa_pl" : "faixa"}
@@ -584,10 +587,10 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
                       isAnimationActive={false}
                       activeDot={false}
                     />
-                    {temProj ? (
+                    {temProj && vista === "pl" ? (
                       <Line
                         type="linear"
-                        dataKey={vista === "pl" ? "proj_pl_juros" : "proj_pts_juros"}
+                        dataKey="proj_pl_juros"
                         stroke={PL_CORES.juros}
                         strokeWidth={1.8}
                         strokeDasharray="2 3"
@@ -606,15 +609,17 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
                         isAnimationActive={false}
                       />
                     ) : null}
-                    <Line
-                      type="linear"
-                      dataKey={vista === "pl" ? "fit_juros" : "pts_juros"}
-                      stroke={PL_CORES.juros}
-                      strokeWidth={1.6}
-                      strokeDasharray="6 4"
-                      dot={false}
-                      isAnimationActive={false}
-                    />
+                    {vista === "pl" ? (
+                      <Line
+                        type="linear"
+                        dataKey="fit_juros"
+                        stroke={PL_CORES.juros}
+                        strokeWidth={1.6}
+                        strokeDasharray="6 4"
+                        dot={false}
+                        isAnimationActive={false}
+                      />
+                    ) : null}
                     <Line
                       type="linear"
                       dataKey={vista === "pl" ? "fit_completo" : "pts_completo"}
