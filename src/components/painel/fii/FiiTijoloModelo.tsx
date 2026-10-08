@@ -248,7 +248,7 @@ const TOPO = 8;
 const EIXO_X = 30;
 
 /** Variação até o fim da projeção, escrita à direita do gráfico na altura da linha. */
-type Ponta = { chave: string; rotulo: string; valor: string; cor: string; y: number };
+type Ponta = { chave: string; rotulo: string; valor: string; sub?: string; cor: string; y: number };
 
 const PASSOS_INDICE = [25, 50, 100, 200, 250, 500, 1000];
 const PASSOS_DY = [0.25, 0.5, 1, 2, 2.5, 5];
@@ -355,20 +355,21 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
     if (esc.dy && pFim.dy_just != null) {
       out.push({
         chave: "dy",
-        rotulo: "DY",
-        valor: `${fmtSignedNum(pFim.dy_just - h.dy, 2)} pp`,
+        rotulo: "DY ao ano",
+        valor: taxa(pFim.dy_just),
+        sub: `${fmtNum(pFim.dy_just / 12, 2)}% ao mês`,
         cor: COR.dy,
         y: yDe(pFim.dy_just, esc.dy.lo, esc.dy.hi),
       });
     }
-    if (out.length === 2 && Math.abs(out[0].y - out[1].y) < 36) {
+    if (out.length === 2 && Math.abs(out[0].y - out[1].y) < 48) {
       const meio = (out[0].y + out[1].y) / 2;
       const sinal = out[0].y <= out[1].y ? -1 : 1;
-      out[0].y = meio + sinal * 18;
-      out[1].y = meio - sinal * 18;
+      out[0].y = meio + sinal * 24;
+      out[1].y = meio - sinal * 24;
     }
     return out;
-  }, [esc, temProj, pFim, h.preco, h.dy]);
+  }, [esc, temProj, pFim, h.preco]);
 
   return (
     <article className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
@@ -616,7 +617,7 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
               )}
             </div>
             {pontas.length && pFim ? (
-              <div className="relative hidden w-[4.5rem] shrink-0 sm:block" style={{ height: ALT }}>
+              <div className="relative hidden w-[5rem] shrink-0 sm:block" style={{ height: ALT }}>
                 <p className="absolute left-2 top-0 text-[10px] leading-tight text-zinc-500">
                   até {fmtMesCurto(pFim.date)}
                 </p>
@@ -626,6 +627,7 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
                     <p className="text-sm font-bold tabular-nums" style={{ color: pt.cor }}>
                       {pt.valor}
                     </p>
+                    {pt.sub ? <p className="text-[10px] tabular-nums text-zinc-500">{pt.sub}</p> : null}
                   </div>
                 ))}
               </div>
@@ -640,6 +642,7 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
                   <strong className="tabular-nums" style={{ color: pt.cor }}>
                     {pt.valor}
                   </strong>
+                  {pt.sub ? <span className="tabular-nums"> ({pt.sub})</span> : null}
                 </span>
               ))}
             </p>
@@ -689,8 +692,9 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
               </p>
             </div>
             <div>
-              <p className="text-[11px] text-zinc-500">DY pelos juros</p>
+              <p className="text-[11px] text-zinc-500">DY ao ano pelos juros</p>
               <p className="text-xl font-semibold tabular-nums text-[#132960]">{taxa(dyCen)}</p>
+              <p className="text-[10px] tabular-nums text-zinc-500">{fmtNum(dyCen / 12, 2)}% ao mês</p>
               <p className="text-[11px] tabular-nums text-zinc-500">hoje {taxa(h.dy)}</p>
             </div>
           </div>
