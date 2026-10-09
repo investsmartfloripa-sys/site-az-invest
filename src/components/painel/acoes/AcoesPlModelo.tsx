@@ -90,7 +90,7 @@ function Item({ nome, valor, cor }: { nome: string; valor: string; cor?: string 
 }
 
 // ---------------------------------------------------------------------------
-// Ibovespa em pontos × onde deveria estar pelos juros, P/L ao fundo, simulador ao lado
+// Ibovespa em pontos × estimado pelos juros, botão Valor | P/L, simulador ao lado
 // ---------------------------------------------------------------------------
 
 /** Linha do gráfico: mês do histórico ou mês projetado (proj_*: pelas implícitas do dia ou pelo cenário). */
@@ -190,8 +190,8 @@ function TooltipIbov({
         <p style={{ color: "#94A3B8", fontWeight: 600, margin: "0 0 4px" }}>
           {fmtMesCurto(r.date)} · {cenario ? "seu cenário" : "projeção"}
         </p>
-        <Item nome="Onde deveria estar" valor={pts(r.proj_pts)} cor={PL_CORES.completo} />
-        <Item nome="P/L justificado" valor={vezes(r.proj_pl)} />
+        <Item nome="Projetado" valor={pts(r.proj_pts)} cor={PL_CORES.completo} />
+        <Item nome="P/L projetado" valor={vezes(r.proj_pl)} />
         {vista === "pl" ? <Item nome="Só juros" valor={vezes(r.proj_pl_juros)} cor={PL_CORES.juros} /> : null}
         <p style={{ margin: "4px 0 0", color: "#C7D2E8" }}>
           Lucro do índice <strong style={{ color: "#fff" }}>{pts(r.proj_lucro)}</strong> pontos/ano
@@ -208,13 +208,13 @@ function TooltipIbov({
     <div style={caixaTooltip}>
       <p style={{ color: "#94A3B8", fontWeight: 600, margin: "0 0 4px" }}>{rotuloMes(r)}</p>
       <Item nome="Ibovespa" valor={pts(r.ibov)} cor={PL_CORES.obs} />
-      <Item nome="Onde deveria estar" valor={pts(r.pts_completo)} cor={PL_CORES.completo} />
+      <Item nome="Estimado" valor={pts(r.pts_completo)} cor={PL_CORES.completo} />
       <Item nome="P/L do Ibovespa" valor={vezes(r.pl)} />
-      <Item nome="P/L justificado" valor={vezes(r.fit_completo)} />
+      <Item nome="P/L estimado" valor={vezes(r.fit_completo)} />
       {vista === "pl" ? <Item nome="Só juros" valor={vezes(r.fit_juros)} cor={PL_CORES.juros} /> : null}
       {dist != null ? (
         <p style={{ margin: "4px 0 0", color: "#C7D2E8" }}>
-          {dist >= 0 ? "Abaixo" : "Acima"} de onde deveria estar em{" "}
+          {dist >= 0 ? "Abaixo" : "Acima"} do estimado em{" "}
           <strong style={{ color: "#fff" }}>{fmtNum(Math.abs(dist), 1)}%</strong>
         </p>
       ) : (
@@ -436,14 +436,14 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
       <header className="flex flex-wrap items-start justify-between gap-2 pb-2">
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-            Ibovespa × onde deveria estar pelos juros ({fmtMesCurto(h.data)})
+            Ibovespa × estimado pelos juros ({fmtMesCurto(h.data)})
             <MethodInfo className="ml-1.5 align-middle">
               <strong>P/L do Ibovespa.</strong> Lucro por ação reportado nos últimos 12 meses (pela data de anúncio)
               contra o preço, agregado pela média harmônica com os pesos atuais do índice; último dia útil de cada mês.
               Meses em que menos de 60% do índice tem lucro positivo ficam sem P/L.
               <br />
               <br />
-              <strong>Onde deveria estar.</strong> O P/L que os juros justificam vezes o lucro do índice (Ibovespa ÷
+              <strong>Estimado.</strong> O P/L que os juros justificam vezes o lucro do índice (Ibovespa ÷
               P/L, em pontos de lucro por ano). O modelo explica o lucro sobre preço (o inverso do P/L) pela Selic
               real, os juros reais de 5 e de 30 anos, a mudança esperada da Selic, o juro real americano de 10 anos e
               a sua tendência, a Fed Funds real e o cupom cambial (R² {fmtNum(m.modelos.completo.r2, 2)},{" "}
@@ -510,8 +510,8 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
               <strong className="tabular-nums text-[#132960]">{vista === "pl" ? vezes(h.pl) : pts(h.ibov)}</strong>
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <Amostra cor={PL_CORES.completo} />
-              {vista === "pl" ? "Justificado" : "Onde deveria estar"}{" "}
+              <Amostra cor={PL_CORES.completo} tracejado />
+              Estimado{" "}
               <strong className="tabular-nums text-[#132960]">
                 {vista === "pl" ? vezes(h.justificado_completo) : pts(h.pts_completo)}
               </strong>
@@ -529,7 +529,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
               <span className="inline-flex items-center gap-1.5">
                 <Amostra cor={PL_CORES.completo} pontilhado />
                 <Amostra cor={PL_CORES.completo} barra />
-                {mexeu ? "Seu cenário" : "Pelas implícitas"} · {mesFim}{" "}
+                {mexeu ? "Seu cenário" : "Projetado"} · {mesFim}{" "}
                 <strong className="tabular-nums text-[#132960]">{vista === "pl" ? vezes(plFim) : pts(nivel)}</strong>
               </span>
             ) : null}
@@ -625,6 +625,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
                       dataKey={vista === "pl" ? "fit_completo" : "pts_completo"}
                       stroke={PL_CORES.completo}
                       strokeWidth={1.8}
+                      strokeDasharray="6 4"
                       dot={false}
                       isAnimationActive={false}
                     />
@@ -786,7 +787,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
 }
 
 /**
- * Seção Valuation da aba Analítico (Bolsa): o Ibovespa em pontos contra onde deveria estar pelos juros
+ * Seção Valuation da aba Analítico (Bolsa): o Ibovespa em pontos contra o estimado pelos juros
  * (P/L justificado do modelo de build_ibov_pl_modelo.py × lucro do índice), com o P/L ao fundo, a
  * projeção pelas implícitas do dia e o simulador; depois, o prêmio sobre a NTN-B.
  */
@@ -795,7 +796,7 @@ export function AcoesPlModelo({ modelo, valuation }: { modelo: IbovPlModeloData;
     <div className="space-y-4">
       <Divisor
         label="Valuation — Ibovespa × juros"
-        info="O Ibovespa em pontos comparado com onde deveria estar: o P/L que os juros justificam vezes o lucro do índice. Acima, a bolsa está mais cara do que os juros explicam; abaixo, mais barata. A projeção usa as curvas de juros do dia e o lucro crescendo com a economia."
+        info="O Ibovespa em pontos comparado com o estimado: o P/L que os juros justificam vezes o lucro do índice. Acima, a bolsa está mais cara do que os juros explicam; abaixo, mais barata. A projeção usa as curvas de juros do dia e o lucro crescendo com a economia."
       />
       <IbovValuationCard m={modelo} />
       {valuation && valuation.status === "ok" ? <AcoesPremioNtnb data={valuation} /> : null}
