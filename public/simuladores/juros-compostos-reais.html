@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador de juros compostos reais | AZ Invest</title>
+<meta name="description" content="Projete um investimento com aportes mensais e veja o resultado em poder de compra, já descontada a inflação.">
+<meta name="theme-color" content="#132960">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AZ Invest">
+<meta property="og:title" content="Simulador de juros compostos reais | AZ Invest">
+<meta property="og:description" content="Projete um investimento com aportes mensais e veja o resultado em poder de compra, já descontada a inflação.">
+<meta property="og:image" content="https://investimentosdeaz.com.br/simuladores/assets/compartilhar.png">
+<meta property="og:url" content="https://investimentosdeaz.com.br/simuladores/juros-compostos-reais.html">
+<link rel="canonical" href="https://investimentosdeaz.com.br/simuladores/juros-compostos-reais.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="assets/az.css">
+</head>
+<body>
+<header class="az-topo"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest: todos os simuladores"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a><nav><a href="index.html">Todos os simuladores</a></nav></div></header>
+<main>
+<section class="az-hero"><div class="az-larg">
+<p class="az-trilha"><a href="index.html">Simuladores</a> / <a href="index.html#independencia">Independência financeira</a></p>
+<h1>Simulador de juros compostos reais</h1>
+<p class="az-intro">Informe os valores aplicados, a taxa de juros e a inflação esperada. O simulador mostra quanto o saldo valerá em dinheiro de hoje e qual parte do ganho é real.</p>
+</div></section>
+<div class="az-larg">
+<section class="az-app" id="az-app" data-ref="cdi,ipca"><noscript><div class="az-cartao az-vazio">Ative o JavaScript do navegador para usar o simulador.</div></noscript></section>
+<section class="az-cartao az-sobre"><h2>Como funciona</h2>
+<div class="az-sobre-corpo"><p>Juro real é o que sobra da rentabilidade depois de descontada a inflação. A conta correta não é uma subtração simples: <code>taxa real = (1 + taxa nominal) ÷ (1 + inflação) − 1</code>. Uma aplicação que rende 10% em um ano com inflação de 4% tem ganho real de 5,77%, e não de 6%.</p>
+<p>O simulador projeta o saldo nominal mês a mês, com a taxa mensal equivalente e aportes no fim de cada mês, e depois divide cada valor pela inflação acumulada até aquela data. O resultado é o saldo em dinheiro de hoje, ou seja, em poder de compra.</p>
+<p>Na opção de aporte corrigido pela inflação, o depósito mensal sobe um pouco a cada mês para manter sempre o mesmo poder de compra. Nesse caso, o resultado é igual ao de uma simulação comum de juros compostos feita diretamente com a taxa real. Na opção de aporte fixo em reais, o depósito não muda e cada parcela vale menos que a anterior em termos reais.</p>
+<p>A inflação sugerida é o IPCA acumulado nos últimos 12 meses, e a taxa sugerida é o CDI atual. Ambos variam ao longo dos anos, portanto trate o resultado como um cenário, não como previsão. A simulação não desconta imposto de renda nem taxas, que incidem sobre o rendimento nominal e reduzem ainda mais o ganho real.</p></div>
+</section>
+<section class="az-cta" id="az-cta" hidden><div><h2></h2><p></p></div><a class="az-botao az-lar" href="#" target="_blank" rel="noopener"></a></section>
+<section class="az-rel"><h2>Outros simuladores de independência financeira</h2><div class="az-grade">
+<a class="az-item" href="juros-compostos.html" data-k="juros sobre juros aporte mensal montante investimento Projete quanto um valor inicial e aportes mensais acumulam com juros sobre juros."><b>Simulador de juros compostos</b></a>
+<a class="az-item" href="calculadora-juros-compostos.html" data-k="juros sobre juros aporte necessário prazo necessário taxa necessária meta reajuste do aporte anos e meses Descubra o valor final, o aporte, o prazo, a taxa ou o valor inicial de um investimento com aportes mensais."><b>Calculadora de juros compostos</b></a>
+<a class="az-item" href="independencia-financeira.html" data-k="aposentadoria viver de renda renda passiva patrimônio saque mensal renda vitalícia acumulação Calcule o patrimônio acumulado até a independência financeira e a renda mensal que ele sustenta depois."><b>Simulador de independência financeira</b></a>
+<a class="az-item" href="regra-dos-4-por-cento.html" data-k="taxa de retirada viver de renda aposentadoria patrimônio necessário renda passiva regra dos 300 25 vezes Descubra o patrimônio necessário para sustentar uma renda mensal com determinada taxa de retirada anual."><b>Calculadora da regra dos 4%</b></a>
+<a class="az-item" href="juntar-dinheiro.html" data-k="orçamento poupar meta financeira objetivo regra 50 30 20 quanto tempo reserva Divida a renda entre despesas básicas, estilo de vida e investimentos e veja em quanto tempo atinge um objetivo."><b>Plano para juntar dinheiro</b></a>
+<a class="az-item" href="carteira-de-investimentos.html" data-k="diversificação alocação portfólio rentabilidade média carteira distribuição ponderada Distribua um valor entre vários investimentos e veja a rentabilidade da carteira e a contribuição de cada um."><b>Simulador de carteira de investimentos</b></a>
+</div></section>
+</div>
+</main>
+<footer class="az-rodape"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a>
+<p>As simulações têm caráter exclusivamente educativo. Os resultados dependem das premissas informadas por você, são estimativas e não constituem recomendação de investimento, oferta de produto ou garantia de rentabilidade. Rentabilidade passada não representa garantia de rentabilidade futura.</p>
+<p>Antes de decidir, confirme taxas, prazos, tributação e condições diretamente com a instituição responsável pelo produto.</p></div></footer>
+<script src="assets/config.js"></script>
+<script src="assets/az.js"></script>
+<script>
+AZ.registrar({
+  slug: 'juros-compostos-reais',
+  titulo: 'Simulador de juros compostos reais',
+  categoria: 'independencia',
+  ordem: 3,
+  resumo: 'Projete um investimento com aportes mensais e veja o resultado em poder de compra, já descontada a inflação.',
+  palavras: ['inflação', 'juro real', 'poder de compra', 'ganho real', 'IPCA', 'aporte mensal'],
+  intro: 'Informe os valores aplicados, a taxa de juros e a inflação esperada. O simulador mostra quanto o saldo valerá em dinheiro de hoje e qual parte do ganho é real.',
+  campos: [
+    { id: 'inicial', rotulo: 'Valor inicial', tipo: 'moeda', padrao: 10000, min: 0 },
+    { id: 'aporte', rotulo: 'Aporte mensal', tipo: 'moeda', padrao: 500, min: 0 },
+    { id: 'prazo', rotulo: 'Prazo', tipo: 'int', padrao: 20, min: 1, max: 1200,
+      unidades: [{ v: 'ano', t: 'anos' }, { v: 'mes', t: 'meses' }] },
+    { id: 'taxa', rotulo: 'Taxa de juros nominal', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.cdi; }, min: -99, max: 1000, sufixo: '% ao ano', largura: 'meia',
+      ajuda: 'Rentabilidade esperada antes de descontar a inflação.' },
+    { id: 'inflacao', rotulo: 'Inflação esperada', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: -50, max: 1000, sufixo: '% ao ano', largura: 'meia', opcional: true,
+      ajuda: 'Deixe em branco para simular apenas valores nominais.' },
+    { id: 'correcao', rotulo: 'Aporte mensal ao longo do tempo', tipo: 'segmento', padrao: 'corrigido',
+      opcoes: [{ v: 'corrigido', t: 'Corrigido pela inflação' }, { v: 'fixo', t: 'Fixo em reais' }] }
+  ],
+  calcular: function (v, AZ) {
+    var F = AZ.f, fin = AZ.fin;
+    var n = v.prazoUn === 'ano' ? v.prazo * 12 : v.prazo;
+    if (n > 1200) return { erro: 'O prazo máximo da simulação é de 100 anos.' };
+    var nomAa = v.taxa / 100, infAa = (v.inflacao || 0) / 100, temInf = Math.abs(infAa) > 1e-12;
+    var i = fin.aaParaAm(nomAa), im = fin.aaParaAm(infAa), corrigido = v.correcao === 'corrigido';
+    var realAa = fin.real(nomAa, infAa) * 100;
+    var s = v.inicial, invNom = v.inicial, invReal = v.inicial, defl = 1, m, ap;
+    var l = [{ mes: 0, nominal: s, real: s, invReal: invReal, invNom: invNom, aporte: 0 }];
+    for (m = 1; m <= n; m++) {
+      defl *= 1 + im;                          /* nível de preços acumulado até o mês m */
+      ap = corrigido ? v.aporte * defl : v.aporte;
+      s = s * (1 + i) + ap;
+      invNom += ap; invReal += ap / defl;
+      l.push({ mes: m, nominal: s, real: s / defl, invReal: invReal, invNom: invNom, aporte: ap });
+    }
+    var f = l[n], jurosReais = f.real - f.invReal, perda = f.nominal - f.real;
+    var porMes = n <= 36, pontos = porMes ? l : l.filter(function (x) { return x.mes % 12 === 0 || x.mes === n; });
+    var destaques = [
+      { rotulo: temInf ? 'Valor final em dinheiro de hoje' : 'Valor final', valor: f.real, formato: 'brl', tom: 'primario', nota: 'em ' + F.prazo(n) + (temInf ? ', descontada a inflação' : '') },
+      { rotulo: 'Taxa de juro real', valor: F.pct(realAa) + ' ao ano', tom: 'destaque', nota: temInf ? 'taxa nominal de ' + F.pct(v.taxa) + ', descontada a inflação de ' + F.pct(v.inflacao) : 'sem inflação informada, igual à taxa nominal' },
+      { rotulo: temInf ? 'Total investido em dinheiro de hoje' : 'Total investido', valor: f.invReal, formato: 'brl', nota: temInf ? F.brl(f.invNom) + ' em valores nominais' : '' },
+      { rotulo: temInf ? 'Ganho real com juros' : 'Total em juros', valor: jurosReais, formato: 'brl', tom: jurosReais >= 0 ? 'positivo' : 'negativo',
+        nota: f.real > 0 ? F.pct(jurosReais / f.real * 100, 1) + ' do valor final' : '' }
+    ];
+    if (temInf) destaques.push({ rotulo: 'Valor final nominal', valor: f.nominal, formato: 'brl', nota: 'o número que aparecerá no extrato' });
+    var series = [];
+    if (temInf) series.push({ nome: 'Saldo nominal', cor: 1, dados: pontos.map(function (x) { return x.nominal; }) });
+    series.push({ nome: temInf ? 'Saldo em dinheiro de hoje' : 'Saldo', cor: 3, dados: pontos.map(function (x) { return x.real; }) });
+    series.push({ nome: temInf ? 'Investido em dinheiro de hoje' : 'Valor investido', cor: 5, dados: pontos.map(function (x) { return x.invReal; }) });
+    var resumo = temInf
+      ? '<p>Daqui a ' + F.prazo(n) + ' o extrato deve mostrar <strong>' + F.brl(f.nominal) + '</strong>, mas esse valor comprará o mesmo que <strong>' + F.brl(f.real) + '</strong> compram hoje. A diferença de ' + F.brl(Math.abs(perda)) + (perda >= 0 ? ' corresponde à perda de poder de compra causada pela inflação no período.</p>' : ' a favor do valor em dinheiro de hoje corresponde ao ganho de poder de compra causado pela deflação no período.</p>')
+      : '<p>Sem inflação informada, os valores são nominais: em ' + F.prazo(n) + ' o saldo chega a <strong>' + F.brl(f.nominal) + '</strong>.</p>';
+    return {
+      alertaTom: 'atencao', alerta: realAa < 0 ? 'A taxa informada é menor que a inflação. O juro real é negativo e o dinheiro aplicado perde poder de compra ao longo do tempo.' : undefined,
+      destaques: destaques,
+      resumo: resumo,
+      graficos: [{
+        tipo: 'linha', titulo: temInf ? 'Saldo nominal e saldo em poder de compra' : 'Evolução do saldo', formato: 'brl',
+        rotuloDica: porMes ? 'Mês' : 'Ano',
+        rotulos: pontos.map(function (x) { return porMes ? String(x.mes) : String(Math.ceil(x.mes / 12)); }),
+        series: series
+      }],
+      tabelas: [{
+        titulo: 'Evolução mês a mês',
+        colunas: temInf
+          ? [{ t: 'Mês', f: 'int' }, { t: 'Aporte', f: 'brl' }, { t: 'Saldo nominal', f: 'brl' }, { t: 'Investido real', f: 'brl' }, { t: 'Ganho real', f: 'brl' }, { t: 'Saldo real', f: 'brl' }]
+          : [{ t: 'Mês', f: 'int' }, { t: 'Aporte', f: 'brl' }, { t: 'Total investido', f: 'brl' }, { t: 'Juros acumulados', f: 'brl' }, { t: 'Saldo', f: 'brl' }],
+        linhas: l.slice(1).map(function (x) {
+          return temInf ? [x.mes, x.aporte, x.nominal, x.invReal, x.real - x.invReal, x.real] : [x.mes, x.aporte, x.invReal, x.real - x.invReal, x.real];
+        }),
+        nota: temInf ? 'As colunas "Aporte" e "Saldo nominal" estão em valores nominais. As colunas com "real" estão em dinheiro de hoje: os valores nominais divididos pela inflação acumulada até o mês.' : ''
+      }]
+    };
+  },
+  explicacao: [
+    '<p>Juro real é o que sobra da rentabilidade depois de descontada a inflação. A conta correta não é uma subtração simples: <code>taxa real = (1 + taxa nominal) ÷ (1 + inflação) − 1</code>. Uma aplicação que rende 10% em um ano com inflação de 4% tem ganho real de 5,77%, e não de 6%.</p>',
+    '<p>O simulador projeta o saldo nominal mês a mês, com a taxa mensal equivalente e aportes no fim de cada mês, e depois divide cada valor pela inflação acumulada até aquela data. O resultado é o saldo em dinheiro de hoje, ou seja, em poder de compra.</p>',
+    '<p>Na opção de aporte corrigido pela inflação, o depósito mensal sobe um pouco a cada mês para manter sempre o mesmo poder de compra. Nesse caso, o resultado é igual ao de uma simulação comum de juros compostos feita diretamente com a taxa real. Na opção de aporte fixo em reais, o depósito não muda e cada parcela vale menos que a anterior em termos reais.</p>',
+    '<p>A inflação sugerida é o IPCA acumulado nos últimos 12 meses, e a taxa sugerida é o CDI atual. Ambos variam ao longo dos anos, portanto trate o resultado como um cenário, não como previsão. A simulação não desconta imposto de renda nem taxas, que incidem sobre o rendimento nominal e reduzem ainda mais o ganho real.</p>'
+  ].join('\n')
+});
+</script>
+</body>
+</html>

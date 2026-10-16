@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora de taxa de juros real | AZ Invest</title>
+<meta name="description" content="Desconte a inflação de uma taxa nominal para obter o juro real, ou faça a conta inversa.">
+<meta name="theme-color" content="#132960">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AZ Invest">
+<meta property="og:title" content="Calculadora de taxa de juros real | AZ Invest">
+<meta property="og:description" content="Desconte a inflação de uma taxa nominal para obter o juro real, ou faça a conta inversa.">
+<meta property="og:image" content="https://investimentosdeaz.com.br/simuladores/assets/compartilhar.png">
+<meta property="og:url" content="https://investimentosdeaz.com.br/simuladores/rentabilidade-real.html">
+<link rel="canonical" href="https://investimentosdeaz.com.br/simuladores/rentabilidade-real.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="assets/az.css">
+</head>
+<body>
+<header class="az-topo"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest: todos os simuladores"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a><nav><a href="index.html">Todos os simuladores</a></nav></div></header>
+<main>
+<section class="az-hero"><div class="az-larg">
+<p class="az-trilha"><a href="index.html">Simuladores</a> / <a href="index.html#reais">Juros reais e inflação</a></p>
+<h1>Calculadora de taxa de juros real</h1>
+<p class="az-intro">Informe a taxa nominal de um investimento ou de uma dívida e a inflação do mesmo período para saber o juro real. Também é possível descobrir a taxa nominal necessária para um ganho real desejado, ou a inflação embutida em duas taxas.</p>
+</div></section>
+<div class="az-larg">
+<section class="az-app" id="az-app" data-ref="ipca"><noscript><div class="az-cartao az-vazio">Ative o JavaScript do navegador para usar o simulador.</div></noscript></section>
+<section class="az-cartao az-sobre"><h2>Como funciona</h2>
+<div class="az-sobre-corpo"><p>A taxa nominal é a que aparece no contrato ou no extrato. A taxa real é a nominal descontada da inflação, e mostra quanto o poder de compra de fato aumentou (em um investimento) ou quanto uma dívida custa além da alta geral dos preços. A relação entre as três é a equação de Fisher: <code>(1 + nominal) = (1 + real) × (1 + inflação)</code>.</p>
+<p>Dela saem as três contas da calculadora: <code>real = (1 + nominal) ÷ (1 + inflação) − 1</code>, <code>nominal = (1 + real) × (1 + inflação) − 1</code> e <code>inflação = (1 + nominal) ÷ (1 + real) − 1</code>. Subtrair ou somar as taxas diretamente é uma aproximação que funciona para taxas pequenas e se distancia do valor correto conforme elas crescem.</p>
+<p>As taxas devem ter o mesmo período: todas ao ano, todas ao mês ou todas acumuladas no mesmo intervalo. Quando o período é anual ou mensal, o resultado também é mostrado na taxa equivalente do outro período.</p>
+<p>O imposto de renda incide sobre o rendimento nominal, e não sobre o ganho real. Por isso, ao selecionar uma alíquota, a calculadora primeiro reduz a taxa nominal (<code>nominal × (1 − alíquota)</code>) e só depois desconta a inflação. Esse desconto direto na taxa é exato quando o imposto é pago sobre o rendimento do próprio período informado. A inflação usada é a que você informa: o campo vem preenchido com o IPCA acumulado em 12 meses.</p></div>
+</section>
+<section class="az-cta" id="az-cta" hidden><div><h2></h2><p></p></div><a class="az-botao az-lar" href="#" target="_blank" rel="noopener"></a></section>
+<section class="az-rel"><h2>Outros simuladores de juros reais e inflação</h2><div class="az-grade">
+<a class="az-item" href="juros-reais.html" data-k="juro real inflação poder de compra aporte corrigido longo prazo valor presente Projete um investimento com aportes mensais e veja o resultado nominal e em poder de compra de hoje."><b>Simulador de investimento com juros reais</b></a>
+<a class="az-item" href="inflacao-dolar.html" data-k="inflação americana CPI poder de compra do dólar corrigir dólar câmbio dólar real Corrija um valor em dólares pela inflação dos Estados Unidos desde 1913 e compare com o câmbio e o IPCA."><b>Simulador de inflação do dólar</b></a>
+</div></section>
+</div>
+</main>
+<footer class="az-rodape"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a>
+<p>As simulações têm caráter exclusivamente educativo. Os resultados dependem das premissas informadas por você, são estimativas e não constituem recomendação de investimento, oferta de produto ou garantia de rentabilidade. Rentabilidade passada não representa garantia de rentabilidade futura.</p>
+<p>Antes de decidir, confirme taxas, prazos, tributação e condições diretamente com a instituição responsável pelo produto.</p></div></footer>
+<script src="assets/config.js"></script>
+<script src="assets/az.js"></script>
+<script>
+AZ.registrar({
+  slug: 'rentabilidade-real',
+  titulo: 'Calculadora de taxa de juros real',
+  categoria: 'reais',
+  ordem: 2,
+  resumo: 'Desconte a inflação de uma taxa nominal para obter o juro real, ou faça a conta inversa.',
+  palavras: ['juro real', 'taxa nominal', 'inflação', 'ganho real', 'Fisher', 'acima da inflação'],
+  intro: 'Informe a taxa nominal de um investimento ou de uma dívida e a inflação do mesmo período para saber o juro real. Também é possível descobrir a taxa nominal necessária para um ganho real desejado, ou a inflação embutida em duas taxas.',
+  campos: [
+    { id: 'modo', rotulo: 'O que calcular', tipo: 'select', padrao: 'real',
+      opcoes: [{ v: 'real', t: 'Taxa de juros real' }, { v: 'nominal', t: 'Taxa nominal necessária' }, { v: 'inflacao', t: 'Inflação implícita' }] },
+    { id: 'nominal', rotulo: 'Taxa de juros nominal', tipo: 'pct', padrao: 10, min: -99, max: 100000, largura: 'meia', mostrarSe: function (v) { return v.modo !== 'nominal'; } },
+    { id: 'infl', rotulo: 'Inflação', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: -99, max: 100000, largura: 'meia', mostrarSe: function (v) { return v.modo !== 'inflacao'; } },
+    { id: 'real', rotulo: 'Taxa de juros real', tipo: 'pct', padrao: 5, min: -99, max: 100000, largura: 'meia', mostrarSe: function (v) { return v.modo !== 'real'; } },
+    { id: 'periodo', rotulo: 'Período das taxas', tipo: 'segmento', padrao: 'ano',
+      opcoes: [{ v: 'ano', t: 'Ao ano' }, { v: 'mes', t: 'Ao mês' }, { v: 'outro', t: 'Outro período' }],
+      ajuda: 'As taxas precisam se referir ao mesmo período.' },
+    { id: 'ir', rotulo: 'Imposto de renda sobre o rendimento', tipo: 'select', padrao: '0',
+      opcoes: [{ v: '0', t: 'Não considerar' }, { v: '22.5', t: '22,5% (até 180 dias)' }, { v: '20', t: '20% (181 a 360 dias)' }, { v: '17.5', t: '17,5% (361 a 720 dias)' }, { v: '15', t: '15% (acima de 720 dias)' }],
+      ajuda: 'Deixe sem considerar se o investimento é isento ou se a taxa já é líquida. Se escolher uma alíquota, o imposto é descontado do rendimento nominal antes de descontar a inflação.' }
+  ],
+  calcular: function (v, AZ) {
+    var f = AZ.f, a = +v.ir / 100, termo = function (x, c) { return (x < 0 ? '(1 − ' : '(1 + ') + f.pct(Math.abs(x), c) + ')'; }, un = { ano: ' ao ano', mes: ' ao mês', outro: ' no período' }[v.periodo];
+    var nom, infl, real, liq, d, resumo, tabelas = [];
+    function outra(x) {   /* equivalente no outro período, quando faz sentido */
+      if (v.periodo === 'ano') return f.pct(AZ.fin.aaParaAm(x / 100) * 100, 4) + ' ao mês';
+      if (v.periodo === 'mes') return f.pct(AZ.fin.amParaAa(x / 100) * 100) + ' ao ano';
+      return '';
+    }
+    if (v.modo === 'real') {
+      nom = v.nominal; infl = v.infl; liq = nom > 0 ? nom * (1 - a) : nom;
+      real = ((1 + liq / 100) / (1 + infl / 100) - 1) * 100;
+      d = [
+        { rotulo: a ? 'Taxa real líquida' : 'Taxa de juros real', valor: f.pct(real, 3) + un, tom: 'primario', nota: outra(real) },
+        { rotulo: 'Subtração simples', valor: f.pct(liq - infl, 3), nota: 'aproximação, com erro de ' + f.num(Math.abs(liq - infl - real), 3) + (Math.abs(liq - infl - real) >= 2 ? ' pontos percentuais' : ' ponto percentual') }
+      ];
+      if (a) d.splice(1, 0, { rotulo: 'Taxa nominal líquida de IR', valor: f.pct(liq, 3) + un, nota: 'IR de ' + f.pct(a * 100, 1) + ' sobre o rendimento' },
+        { rotulo: 'Taxa real antes do IR', valor: f.pct(((1 + nom / 100) / (1 + infl / 100) - 1) * 100, 3) + un });
+      resumo = '<p>' + termo(liq, (a || v.modo === 'nominal') ? 3 : 2) + ' ÷ ' + termo(infl) + ' − 1 = <strong>' + f.pct(real, 3) + '</strong>' + un + '. ' +
+        (real > 0 ? 'O rendimento supera a inflação e o poder de compra aumenta.' : real < 0 ? 'O rendimento fica abaixo da inflação e o poder de compra diminui.' : 'O rendimento apenas repõe a inflação.') + '</p>';
+      var cen = [-2, -1, 0, 1, 2].map(function (k) { return infl + k; }).filter(function (x) { return x > -100; });
+      tabelas.push({
+        titulo: 'Sensibilidade à inflação', csv: false, destaque: cen.indexOf(infl),
+        colunas: [{ t: 'Inflação', f: 'pct' }, { t: a ? 'Taxa nominal líquida' : 'Taxa nominal', f: 'pct' }, { t: a ? 'Taxa real líquida' : 'Taxa real', f: function (x) { return f.pct(x, 3); } }],
+        linhas: cen.map(function (x) { return [x, liq, ((1 + liq / 100) / (1 + x / 100) - 1) * 100]; })
+      });
+    } else if (v.modo === 'nominal') {
+      infl = v.infl; real = v.real;
+      liq = ((1 + real / 100) * (1 + infl / 100) - 1) * 100; nom = liq > 0 ? liq / (1 - a) : liq;
+      d = [
+        { rotulo: a ? 'Taxa nominal bruta necessária' : 'Taxa nominal necessária', valor: f.pct(nom, 3) + un, tom: 'primario', nota: outra(nom) },
+        { rotulo: 'Soma simples', valor: f.pct(real + infl, 3), nota: 'aproximação, sem considerar o efeito composto' }
+      ];
+      if (a) d.splice(1, 0, { rotulo: 'Taxa nominal líquida', valor: f.pct(liq, 3) + un, nota: 'depois do IR de ' + f.pct(a * 100, 1) });
+      resumo = '<p>Para ganhar ' + f.pct(real) + ' acima de uma inflação de ' + f.pct(infl) + ', a taxa ' + (a ? 'líquida ' : '') + 'precisa ser de ' + termo(real) + ' × ' + termo(infl) + ' − 1 = <strong>' + f.pct(liq, 3) + '</strong>' + un + '.' +
+        (a ? ' Com IR de ' + f.pct(a * 100, 1) + ' sobre o rendimento, ' + (nom > liq + 1e-9 ? 'a taxa bruta necessária sobe para <strong>' + f.pct(nom, 3) + '</strong>.' : 'a taxa bruta é a mesma, porque não há rendimento a tributar.') : '') + '</p>';
+    } else {
+      nom = v.nominal; real = v.real; liq = nom > 0 ? nom * (1 - a) : nom;
+      infl = ((1 + liq / 100) / (1 + real / 100) - 1) * 100;
+      d = [
+        { rotulo: 'Inflação implícita', valor: f.pct(infl, 3) + un, tom: 'primario', nota: outra(infl) },
+        { rotulo: 'Subtração simples', valor: f.pct(liq - real, 3), nota: 'aproximação' }
+      ];
+      if (a) d.splice(1, 0, { rotulo: 'Taxa nominal líquida de IR', valor: f.pct(liq, 3) + un });
+      resumo = '<p>Uma taxa nominal' + (a ? ' líquida' : '') + ' de ' + f.pct(liq, (a || v.modo === 'nominal') ? 3 : 2) + ' só equivale a um juro real de ' + f.pct(real) + ' se a inflação do período for de <strong>' + f.pct(infl, 3) + '</strong>. É a conta usada, por exemplo, para comparar um título prefixado com um título indexado à inflação: se a inflação ficar acima desse nível, o indexado rende mais.</p>';
+    }
+    var base = 1000, fimNom = base * (1 + liq / 100), manter = base * (1 + infl / 100);
+    return {
+      destaques: d,
+      resumo: resumo,
+      tabelas: tabelas,
+      blocos: [{
+        titulo: 'Exemplo com ' + f.brl(base),
+        html: '<p>Aplicados à taxa nominal' + (a ? ' líquida' : '') + ' de ' + f.pct(liq, (a || v.modo === 'nominal') ? 3 : 2) + ', ' + f.brl(base) + ' se tornam <strong>' + f.brl(fimNom) + '</strong>. Com inflação de ' + f.pct(infl, v.modo === 'inflacao' ? 3 : 2) + ', são necessários ' + f.brl(manter) + ' para comprar o que ' + f.brl(base) + ' compravam antes. A diferença, ' + f.brl(fimNom - manter) + ', dividida por ' + f.brl(manter) + ', é o ganho real de ' + f.pct((fimNom / manter - 1) * 100, 3) + '.</p>'
+      }]
+    };
+  },
+  explicacao: [
+    '<p>A taxa nominal é a que aparece no contrato ou no extrato. A taxa real é a nominal descontada da inflação, e mostra quanto o poder de compra de fato aumentou (em um investimento) ou quanto uma dívida custa além da alta geral dos preços. A relação entre as três é a equação de Fisher: <code>(1 + nominal) = (1 + real) × (1 + inflação)</code>.</p>',
+    '<p>Dela saem as três contas da calculadora: <code>real = (1 + nominal) ÷ (1 + inflação) − 1</code>, <code>nominal = (1 + real) × (1 + inflação) − 1</code> e <code>inflação = (1 + nominal) ÷ (1 + real) − 1</code>. Subtrair ou somar as taxas diretamente é uma aproximação que funciona para taxas pequenas e se distancia do valor correto conforme elas crescem.</p>',
+    '<p>As taxas devem ter o mesmo período: todas ao ano, todas ao mês ou todas acumuladas no mesmo intervalo. Quando o período é anual ou mensal, o resultado também é mostrado na taxa equivalente do outro período.</p>',
+    '<p>O imposto de renda incide sobre o rendimento nominal, e não sobre o ganho real. Por isso, ao selecionar uma alíquota, a calculadora primeiro reduz a taxa nominal (<code>nominal × (1 − alíquota)</code>) e só depois desconta a inflação. Esse desconto direto na taxa é exato quando o imposto é pago sobre o rendimento do próprio período informado. A inflação usada é a que você informa: o campo vem preenchido com o IPCA acumulado em 12 meses.</p>'
+  ].join('\n')
+});
+</script>
+</body>
+</html>

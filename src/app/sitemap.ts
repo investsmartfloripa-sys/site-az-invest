@@ -5,6 +5,7 @@ import { getSiteUrl } from "@/lib/site-url";
 import { postPath } from "@/lib/post-path";
 import { prisma } from "@/lib/prisma";
 import { simuladores } from "@/data/simuladores";
+import simuladoresEstaticos from "@/data/simuladores-estaticos.json";
 import { listBriefings } from "@/lib/cafe-com-mercado";
 import { listDossies } from "@/lib/dossies";
 
@@ -21,7 +22,7 @@ const STATIC_PATHS: { path: string; changeFrequency: MetadataRoute.Sitemap[numbe
   { path: "/painel-economico/economia", changeFrequency: "daily", priority: 0.7 },
   { path: "/painel-economico/mercado", changeFrequency: "daily", priority: 0.7 },
   { path: "/videos", changeFrequency: "daily", priority: 0.7 },
-  { path: "/simuladores", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/simuladores/index.html", changeFrequency: "monthly", priority: 0.7 },
   { path: "/nosso-time", changeFrequency: "weekly", priority: 0.6 },
 ];
 
@@ -81,6 +82,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const sim of simuladores) {
     entries.push({
       url: `${siteUrl}/simuladores/${sim.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    });
+  }
+
+  // Páginas estáticas do gerador de simuladores (public/simuladores/<slug>.html)
+  for (const slug of simuladoresEstaticos) {
+    entries.push({
+      url: `${siteUrl}/simuladores/${slug}.html`,
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.6,

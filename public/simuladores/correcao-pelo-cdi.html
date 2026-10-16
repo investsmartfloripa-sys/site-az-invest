@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Correção de valores pelo CDI | AZ Invest</title>
+<meta name="description" content="Corrija um valor por um percentual do CDI entre duas datas e veja quanto um CDB, LCI ou LCA teria rendido.">
+<meta name="theme-color" content="#132960">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AZ Invest">
+<meta property="og:title" content="Correção de valores pelo CDI | AZ Invest">
+<meta property="og:description" content="Corrija um valor por um percentual do CDI entre duas datas e veja quanto um CDB, LCI ou LCA teria rendido.">
+<meta property="og:image" content="https://investimentosdeaz.com.br/simuladores/assets/compartilhar.png">
+<meta property="og:url" content="https://investimentosdeaz.com.br/simuladores/correcao-pelo-cdi.html">
+<link rel="canonical" href="https://investimentosdeaz.com.br/simuladores/correcao-pelo-cdi.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="assets/az.css">
+</head>
+<body>
+<header class="az-topo"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest: todos os simuladores"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a><nav><a href="index.html">Todos os simuladores</a></nav></div></header>
+<main>
+<section class="az-hero"><div class="az-larg">
+<p class="az-trilha"><a href="index.html">Simuladores</a> / <a href="index.html#correcao">Correção de valores</a></p>
+<h1>Correção de valores pelo CDI</h1>
+<p class="az-intro">Informe o valor, as datas e o percentual do CDI para ver o resultado acumulado com as taxas diárias do período. É a conta de quanto rendeu, no passado, um título pós-fixado como CDB, LCI ou LCA.</p>
+</div></section>
+<div class="az-larg">
+<section class="az-app" id="az-app"><noscript><div class="az-cartao az-vazio">Ative o JavaScript do navegador para usar o simulador.</div></noscript></section>
+<section class="az-cartao az-sobre"><h2>Como funciona</h2>
+<div class="az-sobre-corpo"><p>O CDI é a taxa média dos empréstimos de um dia entre bancos e serve de referência para a maior parte da renda fixa pós-fixada. Um título que paga, por exemplo, 95% do CDI rende a cada dia útil 95% da taxa DI daquele dia.</p>
+<p>O cálculo aplica, para cada dia útil do intervalo, o fator <code>1 + taxa DI do dia × percentual contratado</code> e multiplica todos eles. Entram as taxas a partir da data inicial até o dia útil anterior à data final. Como o percentual incide sobre a taxa diária, 120% do CDI não é o mesmo que o CDI acumulado multiplicado por 1,2: a diferença cresce com o prazo.</p>
+<p>Com a opção de imposto marcada, o rendimento é tributado pela tabela regressiva da renda fixa: 22,5% até 180 dias corridos, 20% de 181 a 360, 17,5% de 361 a 720 e 15% acima de 720 dias. Em prazos inferiores a 30 dias há também IOF regressivo sobre o rendimento, descontado antes do imposto de renda. LCI e LCA são isentas para a pessoa física.</p>
+<p>Limites: a conta considera uma aplicação única, mantida do início ao fim, sem taxas de custódia ou de administração. Trata-se de resultado passado, calculado com as taxas já divulgadas, e não indica rentabilidade futura. As datas ficam restritas ao intervalo de dados embarcados nesta página.</p></div>
+</section>
+<section class="az-cta" id="az-cta" hidden><div><h2></h2><p></p></div><a class="az-botao az-lar" href="#" target="_blank" rel="noopener"></a></section>
+<section class="az-rel"><h2>Outros simuladores de correção de valores</h2><div class="az-grade">
+<a class="az-item" href="correcao-pela-selic.html" data-k="selic atualização monetária corrigir valor taxa básica juros banco central débito restituição Atualize um valor pela taxa Selic acumulada entre duas datas, com as taxas diárias do Banco Central."><b>Correção de valores pela Selic</b></a>
+<a class="az-item" href="correcao-pela-poupanca.html" data-k="poupança caderneta rendimento da poupança aniversário regra antiga regra nova TR corrigir valor Veja quanto um depósito na caderneta de poupança rendeu entre duas datas, pela regra antiga ou pela atual."><b>Correção de valores pela poupança</b></a>
+<a class="az-item" href="correcao-pela-inflacao.html" data-k="inflação ipca igp-m igpm igp-di inpc atualização monetária poder de compra reajuste aluguel corrigir valor Atualize um valor do passado pelo IPCA, IGP-M, IGP-DI ou INPC e veja quanto ele representa hoje."><b>Correção de valores pela inflação</b></a>
+<a class="az-item" href="correcao-pela-taxa-legal.html" data-k="taxa legal juros legais juros de mora lei 14.905 código civil artigo 406 dívida indenização selic menos ipca Calcule os juros pela taxa legal da Lei 14.905/2024 (Selic menos inflação) entre duas datas."><b>Correção de valores pela taxa legal</b></a>
+</div></section>
+</div>
+</main>
+<footer class="az-rodape"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a>
+<p>As simulações têm caráter exclusivamente educativo. Os resultados dependem das premissas informadas por você, são estimativas e não constituem recomendação de investimento, oferta de produto ou garantia de rentabilidade. Rentabilidade passada não representa garantia de rentabilidade futura.</p>
+<p>Antes de decidir, confirme taxas, prazos, tributação e condições diretamente com a instituição responsável pelo produto.</p></div></footer>
+<script src="assets/config.js"></script>
+<script src="assets/dados-diarios.js"></script>
+<script src="assets/az.js"></script>
+<script>
+AZ.registrar({
+  slug: 'correcao-pelo-cdi',
+  titulo: 'Correção de valores pelo CDI',
+  categoria: 'correcao',
+  ordem: 2,
+  resumo: 'Corrija um valor por um percentual do CDI entre duas datas e veja quanto um CDB, LCI ou LCA teria rendido.',
+  palavras: ['cdi', 'percentual do cdi', 'cdb', 'lci', 'lca', 'di', 'rendimento passado', 'pós-fixado', 'corrigir valor'],
+  intro: 'Informe o valor, as datas e o percentual do CDI para ver o resultado acumulado com as taxas diárias do período. É a conta de quanto rendeu, no passado, um título pós-fixado como CDB, LCI ou LCA.',
+  dados: ['diarios'],
+  campos: [
+    { id: 'valor', rotulo: 'Valor inicial', tipo: 'moeda', padrao: 10000, min: 0.01 },
+    { id: 'pct', rotulo: 'Percentual do CDI', tipo: 'pct', padrao: 100, min: 0, max: 1000, sufixo: '% do CDI' },
+    { id: 'inicio', rotulo: 'Data inicial', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { var D = AZ.dados.diarios, f = AZ.datas.somarUteis(AZ.datas.somar(AZ.datas.deIso(D.base), D.d[D.d.length - 1]), 1); return new Date(f.getFullYear() - 2, f.getMonth(), f.getDate()); } },
+    { id: 'fim', rotulo: 'Data final', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { var D = AZ.dados.diarios; return AZ.datas.somarUteis(AZ.datas.somar(AZ.datas.deIso(D.base), D.d[D.d.length - 1]), 1); } },
+    { id: 'ir', rotulo: 'Descontar imposto de renda (CDB e outros títulos tributados)', tipo: 'check', padrao: false,
+      ajuda: 'Deixe desmarcado para LCI, LCA e outros títulos isentos, ou para obter apenas a correção bruta.' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, F = AZ.f, B = AZ.dados.diarios;
+    var curto = function (ym) { return F.mesAno(ym).slice(0, 4) + ym.slice(2, 4); };
+    var prim = D.deIso(B.base), ult = D.somar(prim, B.d[B.d.length - 1]), fimMax = D.somarUteis(ult, 1);
+    if (v.inicio < prim) return { erro: 'A série diária do CDI embarcada começa em ' + F.data(prim) + '. Escolha uma data inicial a partir desse dia.' };
+    if (v.fim > fimMax) return { erro: 'Há taxas embarcadas até ' + F.data(ult) + '. A data final pode ser, no máximo, ' + F.data(fimMax) + '.' };
+    var dc = D.corridos(v.inicio, v.fim);
+    if (dc < 1) return { erro: 'A data final deve ser posterior à data inicial.' };
+    var r = AZ.serie.diaria('cdi', v.inicio, v.fim);
+    if (!r.dias) return { erro: 'Não há dia útil entre as datas informadas, portanto não há taxa a aplicar.' };
+
+    var p = v.pct / 100, meses = [], at = null, f = 1, diarios = [];
+    r.pontos.forEach(function (x) {
+      var ym = D.iso(x.data).slice(0, 7), fd = 1 + x.taxa / 100 * p;
+      if (!at || at.ym !== ym) { at = { ym: ym, dias: 0, cdi: 1, fator: 1, acum: 1 }; meses.push(at); }
+      at.dias++; at.cdi *= 1 + x.taxa / 100; at.fator *= fd; f *= fd; at.acum = f; diarios.push(f);
+    });
+    var bruto = v.valor * f, rend = bruto - v.valor, cdiPct = (r.fator - 1) * 100, titPct = (f - 1) * 100;
+    var aa = (Math.pow(f, 252 / r.dias) - 1) * 100;
+    var iofFr = v.ir ? AZ.fin.iof(dc) : 0, iof = rend * iofFr, aliq = v.ir ? AZ.fin.irRegressivo(dc) : 0, ir = (rend - iof) * aliq, liq = bruto - iof - ir;
+
+    var diario = r.pontos.length <= 90, rot = ['Início'], serie = [v.valor], ref = [v.valor];
+    if (diario) r.pontos.forEach(function (x, i) { rot.push(F.data(x.data).slice(0, 5)); serie.push(v.valor * diarios[i]); ref.push(v.valor * x.fator); });
+    else { var fc = 1; meses.forEach(function (m) { fc *= m.cdi; rot.push(curto(m.ym)); serie.push(v.valor * m.acum); ref.push(v.valor * fc); }); }
+    var series = [{ nome: F.num(v.pct, v.pct % 1 ? 2 : 0) + '% do CDI', cor: 1, dados: serie }];
+    if (Math.abs(v.pct - 100) > 1e-9) series.push({ nome: '100% do CDI', cor: 5, dados: ref });
+
+    var dest;
+    if (v.ir) dest = [
+      { rotulo: 'Valor líquido', valor: liq, formato: 'brl', tom: 'primario', nota: 'em ' + F.data(v.fim) + ', após impostos' },
+      { rotulo: 'Valor bruto', valor: bruto, formato: 'brl', nota: 'rendimento bruto de ' + F.brl(rend) },
+      { rotulo: 'Imposto de renda', valor: ir, formato: 'brl', tom: 'negativo', nota: 'alíquota de ' + F.pct(aliq * 100, 1) + ' para ' + F.int(dc) + (dc === 1 ? ' dia corrido' : ' dias corridos') + (iof > 0 ? ', mais IOF de ' + F.brl(iof) : '') },
+      { rotulo: 'CDI acumulado', valor: F.pct(cdiPct, 4), nota: 'título rendeu ' + F.pct(titPct, 4) + ' bruto' }
+    ];
+    else dest = [
+      { rotulo: 'Valor corrigido', valor: bruto, formato: 'brl', tom: 'primario', nota: 'em ' + F.data(v.fim) },
+      { rotulo: 'Rendimento', valor: rend, formato: 'brl', tom: 'positivo', nota: F.pct(titPct, 4) + ' no período' },
+      { rotulo: 'CDI acumulado', valor: F.pct(cdiPct, 4), nota: 'fator ' + F.num(r.fator, 8) },
+      { rotulo: 'Taxa média do período', valor: F.pct(aa, 2) + ' ao ano', nota: 'do título, base de 252 dias úteis' }
+    ];
+    return {
+      destaques: dest,
+      resumo: '<p>Entre ' + F.data(v.inicio) + ' e ' + F.data(v.fim) + ' houve <strong>' + F.int(r.dias) + (r.dias === 1 ? ' dia útil' : ' dias úteis') + '</strong> com taxa (de ' + F.data(r.ini) + ' a ' + F.data(r.fim) + '). O CDI acumulou ' + F.pct(cdiPct, 2) +
+        ' e uma aplicação a ' + F.num(v.pct, v.pct % 1 ? 2 : 0) + '% do CDI acumulou <strong>' + F.pct(titPct, 2) + '</strong>, o que leva ' + F.brl(v.valor) + ' a ' + F.brl(bruto) + (v.ir ? ' antes dos impostos e a <strong>' + F.brl(liq) + '</strong> líquidos' : '') + '.</p>' +
+        '<p>Dados embarcados: taxas diárias de ' + F.data(prim) + ' a ' + F.data(ult) + '.</p>',
+      graficos: r.pontos.length > 2 ? [{ tipo: 'linha', titulo: 'Evolução do valor bruto', formato: 'brl', zero: false, rotulos: rot, series: series }] : [],
+      tabelas: [{
+        titulo: 'CDI mês a mês no período',
+        colunas: [{ t: 'Mês' }, { t: 'Dias úteis', f: 'int' }, { t: 'CDI no mês', f: 'pct4' }, { t: 'Título no mês', f: 'pct4' }, { t: 'Título acumulado', f: 'pct4' }, { t: 'Valor bruto', f: 'brl' }],
+        linhas: meses.map(function (m) { return [F.mesAno(m.ym), m.dias, (m.cdi - 1) * 100, (m.fator - 1) * 100, (m.acum - 1) * 100, v.valor * m.acum]; }),
+        nota: 'O primeiro e o último mês consideram apenas os dias úteis dentro do intervalo informado.'
+      }]
+    };
+  },
+  explicacao: [
+    '<p>O CDI é a taxa média dos empréstimos de um dia entre bancos e serve de referência para a maior parte da renda fixa pós-fixada. Um título que paga, por exemplo, 95% do CDI rende a cada dia útil 95% da taxa DI daquele dia.</p>',
+    '<p>O cálculo aplica, para cada dia útil do intervalo, o fator <code>1 + taxa DI do dia × percentual contratado</code> e multiplica todos eles. Entram as taxas a partir da data inicial até o dia útil anterior à data final. Como o percentual incide sobre a taxa diária, 120% do CDI não é o mesmo que o CDI acumulado multiplicado por 1,2: a diferença cresce com o prazo.</p>',
+    '<p>Com a opção de imposto marcada, o rendimento é tributado pela tabela regressiva da renda fixa: 22,5% até 180 dias corridos, 20% de 181 a 360, 17,5% de 361 a 720 e 15% acima de 720 dias. Em prazos inferiores a 30 dias há também IOF regressivo sobre o rendimento, descontado antes do imposto de renda. LCI e LCA são isentas para a pessoa física.</p>',
+    '<p>Limites: a conta considera uma aplicação única, mantida do início ao fim, sem taxas de custódia ou de administração. Trata-se de resultado passado, calculado com as taxas já divulgadas, e não indica rentabilidade futura. As datas ficam restritas ao intervalo de dados embarcados nesta página.</p>'
+  ].join('\n')
+});
+</script>
+</body>
+</html>

@@ -15,6 +15,18 @@ try {
 }
 
 const nextConfig: NextConfig = {
+  /**
+   * Simuladores: o índice e as páginas novas são HTML estático em public/simuladores (gerador próprio).
+   * As páginas usam links relativos, então o índice precisa abrir em /simuladores/index.html.
+   * Rotas Next que continuam: consorcio, aposentadoria, pgbl, compromissadas, sucessao-seguro.
+   */
+  async redirects() {
+    return [
+      { source: "/simuladores", destination: "/simuladores/index.html", permanent: false },
+      { source: "/simuladores/juros-compostos", destination: "/simuladores/juros-compostos.html", permanent: true },
+      { source: "/simuladores/financiamento", destination: "/simuladores/financiamento-imovel-tr-price.html", permanent: true },
+    ];
+  },
   images: {
     remotePatterns: [
       ...(blobHostname

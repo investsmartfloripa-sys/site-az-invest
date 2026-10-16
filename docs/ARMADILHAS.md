@@ -127,3 +127,11 @@ Desde 21/09/2026 as divulgações de IPCA/IGP-M não são artigos: categoria `Bo
 - O COTAHIST anual do ano corrente é atualizado pela B3 todo dia (traz até D-1); os anos fechados (~550 MB) ficam no cache do Actions do `fii-tijolo-pipeline.yml`.
 - pandas com dtype `str`: atribuir NaN de um `Index.map` numa coluna de texto levanta `Invalid value for dtype 'str'` — crie a coluna como `object` antes.
 
+
+## 14. Simuladores: `public/simuladores` é gerado, não editado
+
+- O índice `/simuladores` e as 94 páginas `public/simuladores/<slug>.html` saem de um **gerador próprio** (fora deste repo; código-fonte no artefato "Simuladores AZ Invest" do Claude, em `fonte/pacote.json`). Edição à mão em `public/simuladores` é perdida na próxima geração: corrija no gerador, regenere com `AZ_URL=https://investimentosdeaz.com.br/simuladores/ node tools/build.js` e copie `dist/` inteiro para cá.
+- As páginas usam **links relativos** (`assets/az.js`, `index.html`). Por isso `/simuladores` redireciona para `/simuladores/index.html` em `next.config.ts`: servido em `/simuladores` (sem barra), os relativos resolveriam na raiz do site e quebrariam.
+- Continuam como rotas Next: `consorcio`, `aposentadoria`, `pgbl`, `compromissadas`, `sucessao-seguro` (cartões no índice via `src/externos.js` do gerador). `juros-compostos` e `financiamento` foram substituídas e redirecionam para as páginas novas.
+- Taxas preenchidas (Selic, CDI, IPCA, IGP-M, TR, poupança, dólar) ficam em `public/simuladores/assets/config.js`; as séries históricas em `assets/dados-*.js`. Não há pipeline automático: atualizar exige regenerar.
+- A lista de páginas do sitemap é `src/data/simuladores-estaticos.json` (regenerar junto com as páginas).

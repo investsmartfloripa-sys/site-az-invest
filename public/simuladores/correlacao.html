@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora de correlação entre dois ativos | AZ Invest</title>
+<meta name="description" content="Cole duas séries de preços ou de retornos e veja o coeficiente de correlação, a leitura do resultado e as séries em base 100.">
+<meta name="theme-color" content="#132960">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AZ Invest">
+<meta property="og:title" content="Calculadora de correlação entre dois ativos | AZ Invest">
+<meta property="og:description" content="Cole duas séries de preços ou de retornos e veja o coeficiente de correlação, a leitura do resultado e as séries em base 100.">
+<meta property="og:image" content="https://investimentosdeaz.com.br/simuladores/assets/compartilhar.png">
+<meta property="og:url" content="https://investimentosdeaz.com.br/simuladores/correlacao.html">
+<link rel="canonical" href="https://investimentosdeaz.com.br/simuladores/correlacao.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="assets/az.css">
+</head>
+<body>
+<header class="az-topo"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest: todos os simuladores"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a><nav><a href="index.html">Todos os simuladores</a></nav></div></header>
+<main>
+<section class="az-hero"><div class="az-larg">
+<p class="az-trilha"><a href="index.html">Simuladores</a> / <a href="index.html#renda-variavel">Renda variável</a></p>
+<h1>Calculadora de correlação entre dois ativos</h1>
+<p class="az-intro">Cole as séries históricas de dois ativos, uma em cada campo, com um valor por linha e na mesma ordem de datas. A calculadora devolve o coeficiente de correlação entre os retornos, a interpretação e a evolução dos dois ativos em base 100. Os dados são informados por você: a página não consulta cotações.</p>
+</div></section>
+<div class="az-larg">
+<section class="az-app" id="az-app"><noscript><div class="az-cartao az-vazio">Ative o JavaScript do navegador para usar o simulador.</div></noscript></section>
+<section class="az-cartao az-sobre"><h2>Como funciona</h2>
+<div class="az-sobre-corpo"><p>O coeficiente de correlação de Pearson mede o quanto dois ativos variam juntos. Ele vai de -1 (movimentos sempre opostos) a +1 (movimentos sempre no mesmo sentido), e valores perto de zero indicam que um ativo não ajuda a prever o outro. A fórmula é <code>covariância(A, B) ÷ (desvio padrão de A × desvio padrão de B)</code>.</p>
+<p>O cálculo é feito sobre os <strong>retornos</strong> de cada período. Quando você cola preços, o retorno é a variação percentual entre uma linha e a seguinte, portanto uma série com 25 preços gera 24 observações. As duas séries precisam cobrir exatamente as mesmas datas, na mesma ordem e com a mesma periodicidade (diária, semanal ou mensal).</p>
+<p>O gráfico em base 100 mostra quanto valeriam 100 unidades aplicadas em cada ativo no início do período, o que permite comparar ativos com preços de tamanhos muito diferentes.</p>
+<p>Limites: a correlação descreve o passado e muda conforme a janela e a periodicidade escolhidas. Ela costuma aumentar em momentos de crise, justamente quando a diversificação faz mais falta. O coeficiente mede apenas relações lineares e não indica causa. Esta página não consulta cotações: o resultado depende inteiramente dos dados informados, e o exemplo que vem preenchido é fictício.</p></div>
+</section>
+<section class="az-cta" id="az-cta" hidden><div><h2></h2><p></p></div><a class="az-botao az-lar" href="#" target="_blank" rel="noopener"></a></section>
+<section class="az-rel"><h2>Outros simuladores de renda variável</h2><div class="az-grade">
+<a class="az-item" href="recuperar-perdas.html" data-k="prejuízo queda recuperação ações bolsa perda percentual assimetria Descubra quanto um ativo precisa subir para voltar ao preço de compra depois de uma queda."><b>Simulador de ganho necessário para recuperar perdas</b></a>
+<a class="az-item" href="preco-justo-acao-fdc.html" data-k="fcd dcf valuation valor intrínseco perpetuidade taxa de desconto gordon margem de segurança Estime o preço justo de uma ação projetando o lucro por 10 anos e trazendo a valor presente com uma taxa de desconto."><b>Preço justo de uma ação por fluxo de caixa descontado</b></a>
+<a class="az-item" href="simulador-volatilidade.html" data-k="risco desvio padrão índice de sharpe carteira sorteio retorno mensal oscilação Sorteie retornos mensais para uma carteira volátil e outra estável e compare resultado, risco e índice de Sharpe."><b>Simulador de volatilidade de duas carteiras</b></a>
+<a class="az-item" href="consultar-volatilidade.html" data-k="desvio padrão risco volatilidade histórica drawdown ações etf fundo imobiliário bdr Cole a série de preços de uma ação, ETF ou fundo e calcule a volatilidade anualizada, a maior queda e o drawdown máximo."><b>Calculadora de volatilidade de um ativo</b></a>
+<a class="az-item" href="cara-ou-coroa.html" data-k="probabilidade sorteio moeda binomial lei dos grandes números acaso sorte Sorteie lançamentos de moedas, compare o resultado com a probabilidade teórica e veja a lei dos grandes números em ação."><b>Simulador de cara ou coroa</b></a>
+</div></section>
+</div>
+</main>
+<footer class="az-rodape"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a>
+<p>As simulações têm caráter exclusivamente educativo. Os resultados dependem das premissas informadas por você, são estimativas e não constituem recomendação de investimento, oferta de produto ou garantia de rentabilidade. Rentabilidade passada não representa garantia de rentabilidade futura.</p>
+<p>Antes de decidir, confirme taxas, prazos, tributação e condições diretamente com a instituição responsável pelo produto.</p></div></footer>
+<script src="assets/config.js"></script>
+<script src="assets/az.js"></script>
+<script>
+AZ.registrar({
+  slug: 'correlacao',
+  titulo: 'Calculadora de correlação entre dois ativos',
+  categoria: 'renda-variavel',
+  ordem: 1,
+  resumo: 'Cole duas séries de preços ou de retornos e veja o coeficiente de correlação, a leitura do resultado e as séries em base 100.',
+  palavras: ['coeficiente de correlação', 'pearson', 'diversificação', 'ativos', 'carteira', 'dólar', 'ações'],
+  intro: 'Cole as séries históricas de dois ativos, uma em cada campo, com um valor por linha e na mesma ordem de datas. A calculadora devolve o coeficiente de correlação entre os retornos, a interpretação e a evolução dos dois ativos em base 100. Os dados são informados por você: a página não consulta cotações.',
+  campos: [
+    { id: 'tipo', rotulo: 'Os valores colados são', tipo: 'segmento', padrao: 'precos',
+      opcoes: [{ v: 'precos', t: 'Preços' }, { v: 'retornos', t: 'Retornos em %' }],
+      ajuda: 'Em preços, o retorno de cada período é calculado pela variação entre uma linha e a seguinte. Em retornos, informe a variação percentual de cada período (por exemplo, 1,25 ou -0,80).' },
+    { id: 'nomeA', rotulo: 'Nome do primeiro ativo', tipo: 'texto', padrao: 'Ações (exemplo)', largura: 'meia' },
+    { id: 'nomeB', rotulo: 'Nome do segundo ativo', tipo: 'texto', padrao: 'Dólar (exemplo)', largura: 'meia' },
+    { id: 'serieA', rotulo: 'Série do primeiro ativo', tipo: 'texto', linhas: 10, largura: 'meia', exemplo: '100,00\n101,50\n99,80',
+      padrao: '100,00\n107,71\n122,12\n121,97\n132,92\n125,32\n135,12\n135,74\n136,17\n123,74\n128,26\n118,83\n128,11\n134,47\n123,19\n119,32\n127,05\n124,08\n115,75\n107,73\n106,24\n106,42\n116,47\n111,54\n110,59',
+      ajuda: 'Um valor por linha, do mais antigo para o mais recente. Use vírgula como separador decimal.' },
+    { id: 'serieB', rotulo: 'Série do segundo ativo', tipo: 'texto', linhas: 10, largura: 'meia', exemplo: '5,20\n5,14\n5,31',
+      padrao: '5,20\n5,00\n4,99\n5,03\n4,79\n5,12\n4,88\n4,91\n4,89\n5,14\n4,70\n5,02\n4,92\n4,76\n5,06\n4,99\n4,92\n4,99\n5,27\n5,22\n5,56\n5,30\n5,27\n5,62\n5,40',
+      ajuda: 'Os valores que já vêm preenchidos são um exemplo ilustrativo, com 25 preços mensais fictícios. Substitua pelos seus dados.' }
+  ],
+  calcular: function (v, AZ) {
+    /* AZ.esc só existe no navegador; versão local para o cálculo também rodar nos testes em Node */
+    function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    /* interpreta o texto colado: um valor por linha (também aceita ponto e vírgula ou tabulação como separador) */
+    function ler(txt) {
+      var itens = String(txt || '').split(/[\n\r;\t]+/).map(function (x) { return x.trim(); }).filter(Boolean), lidos = AZ.lerSerie(itens), nums = [], ruins = [], i;
+      for (i = 0; i < itens.length; i++) { if (isFinite(lidos[i])) nums.push(lidos[i]); else ruins.push(itens[i]); }
+      return { nums: nums, ruins: ruins };
+    }
+    function retornos(p) { var r = [], i; for (i = 1; i < p.length; i++) r.push((p[i] / p[i - 1] - 1) * 100); return r; }
+    function base100(r) { var b = [100], i; for (i = 0; i < r.length; i++) b.push(b[i] * (1 + r[i] / 100)); return b; }
+    function faixa(c) {
+      var a = Math.abs(c);
+      return a < 0.2 ? 0 : a < 0.4 ? 1 : a < 0.7 ? 2 : a < 0.9 ? 3 : 4;
+    }
+    /* evita exibir "-0,00" quando o valor arredonda para zero */
+    function n2(x) { return AZ.f.num(Math.abs(x) < 0.005 ? 0 : x, 2); }
+    var nomeA = (v.nomeA || '').trim() || 'Ativo 1', nomeB = (v.nomeB || '').trim() || 'Ativo 2';
+    if (nomeA === nomeB) { nomeA += ' (1)'; nomeB += ' (2)'; }
+    var a = ler(v.serieA), b = ler(v.serieB), precos = v.tipo !== 'retornos';
+    if (a.ruins.length) return { erro: 'Não foi possível ler o valor "' + a.ruins[0] + '" na série do primeiro ativo. Deixe apenas números, um por linha.' };
+    if (b.ruins.length) return { erro: 'Não foi possível ler o valor "' + b.ruins[0] + '" na série do segundo ativo. Deixe apenas números, um por linha.' };
+    if (!a.nums.length || !b.nums.length) return { erro: 'Cole as duas séries de valores para calcular a correlação.' };
+    if (a.nums.length !== b.nums.length) return { erro: 'As duas séries precisam ter a mesma quantidade de valores e as mesmas datas. A primeira tem ' + a.nums.length + ' e a segunda tem ' + b.nums.length + '.' };
+    var minimo = precos ? 4 : 3;
+    if (a.nums.length < minimo) return { erro: 'Informe pelo menos ' + minimo + ' valores em cada série. Com poucos dados a correlação não tem significado.' };
+    if (a.nums.length > 5000) return { erro: 'O limite é de 5.000 valores por série.' };
+    var ra, rb;
+    if (precos) {
+      if (a.nums.some(function (x) { return x <= 0; }) || b.nums.some(function (x) { return x <= 0; })) return { erro: 'Os preços precisam ser maiores que zero. Se os valores são variações percentuais, selecione "Retornos em %".' };
+      ra = retornos(a.nums); rb = retornos(b.nums);
+    } else {
+      if (a.nums.some(function (x) { return x <= -100; }) || b.nums.some(function (x) { return x <= -100; })) return { erro: 'Um retorno não pode ser igual ou inferior a -100%.' };
+      ra = a.nums; rb = b.nums;
+    }
+    var n = ra.length, da = AZ.est.desvio(ra), db = AZ.est.desvio(rb);
+    if (!(da > 1e-12) || !(db > 1e-12)) return { erro: 'Uma das séries não varia de um período para o outro. Sem variação não é possível calcular a correlação.' };
+    var c = Math.max(-1, Math.min(1, AZ.est.correlacao(ra, rb)));
+    var ba = base100(ra), bb = base100(rb), fx = faixa(c);
+    var sinal = Math.abs(c) < 0.2 ? '' : c > 0 ? ' positiva' : ' negativa';
+    var nomesFaixa = ['Muito fraca ou nula', 'Fraca', 'Moderada', 'Forte', 'Muito forte'];
+    var leitura = nomesFaixa[fx] + (fx === 0 ? '' : sinal);
+    var frase;
+    if (fx === 0) frase = 'Os retornos dos dois ativos praticamente não se acompanham: saber que um subiu ou caiu diz pouco sobre o outro.';
+    else if (c > 0) frase = 'Os dois ativos tendem a subir e a cair nos mesmos períodos. Quanto mais perto de +1, menor é o ganho de diversificação ao combinar os dois.';
+    else frase = 'Os dois ativos tendem a andar em sentidos opostos: quando um sobe, o outro costuma cair. Essa é a combinação que mais reduz a oscilação de uma carteira.';
+    var beta = c * da / db;
+    var destaques = [
+      { rotulo: 'Coeficiente de correlação', valor: n2(c), tom: 'primario', nota: 'escala de -1 a +1' },
+      { rotulo: 'Interpretação', valor: leitura, tom: c < -0.2 ? 'destaque' : null },
+      { rotulo: 'Observações', valor: n, formato: 'int', nota: (n === 1 ? 'retorno comparado' : 'retornos comparados') + (precos ? ', a partir de ' + a.nums.length + ' preços' : '') },
+      { rotulo: 'Variação em comum (R²)', valor: c * c * 100, formato: 'pct1', nota: 'parcela da oscilação de um ativo associada à do outro' }
+    ];
+    var alta = function (r) { var x = Math.max.apply(null, r); return x > 0 ? AZ.f.pct(x) : 'Nenhuma'; };
+    var queda = function (r) { var x = Math.min.apply(null, r); return x < 0 ? AZ.f.pct(x) : 'Nenhuma'; };
+    var linhasResumo = [
+      ['Retorno acumulado', AZ.f.pct(ba[n] - 100), AZ.f.pct(bb[n] - 100)],
+      ['Retorno médio por período', AZ.f.pct(AZ.est.media(ra)), AZ.f.pct(AZ.est.media(rb))],
+      ['Volatilidade por período', AZ.f.pct(da), AZ.f.pct(db)],
+      ['Maior alta', alta(ra), alta(rb)],
+      ['Maior queda', queda(ra), queda(rb)]
+    ];
+    var textos = ['<p>' + frase + ' Em média, neste histórico, para cada 1% de variação de ' + esc(nomeB) + ', ' + esc(nomeA) + ' variou ' + n2(beta) + '% (inclinação da reta de regressão).</p>'];
+    if (precos) {
+      var cn = AZ.est.correlacao(a.nums, b.nums);
+      if (isFinite(cn)) textos.push('<p>A correlação calculada diretamente sobre os preços, sem converter em retornos, seria de <strong>' + n2(cn) + '</strong>. Essa medida aparece em algumas plataformas de gráficos, mas é distorcida por tendências: dois ativos que apenas sobem ao longo do tempo parecem muito correlacionados mesmo que oscilem de forma independente. Por isso o resultado principal usa os retornos.</p>');
+    }
+    if (n < 20) textos.push('<p>O cálculo usou apenas ' + n + ' observações. Com menos de 20 períodos, o coeficiente muda bastante a cada novo dado e deve ser lido com cautela.</p>');
+    var rot = ba.map(function (x, i) { return String(i); });
+    return {
+      destaques: destaques,
+      resumo: '<p>A correlação entre os retornos de <strong>' + esc(nomeA) + '</strong> e de <strong>' + esc(nomeB) + '</strong> foi de <strong>' + n2(c) + '</strong> em ' + n + ' períodos: ' + leitura.toLowerCase() + '.</p>',
+      graficos: [{
+        tipo: 'linha', titulo: 'Evolução dos dois ativos em base 100', formato: 'num', zero: false, rotulos: rot, rotuloDica: 'Período',
+        series: [{ nome: nomeA, cor: 1, dados: ba }, { nome: nomeB, cor: 3, dados: bb }]
+      }],
+      tabelas: [{
+        titulo: 'Resumo das séries', csv: false,
+        colunas: [{ t: 'Medida', f: 'texto' }, { t: nomeA, f: 'texto', alinhar: 'dir' }, { t: nomeB, f: 'texto', alinhar: 'dir' }],
+        linhas: linhasResumo
+      }, {
+        titulo: 'Como ler o coeficiente', csv: false, destaque: fx,
+        colunas: [{ t: 'Valor absoluto', f: 'texto' }, { t: 'Leitura', f: 'texto' }],
+        linhas: [
+          ['0,00 a 0,19', 'Muito fraca ou nula: os ativos oscilam de forma praticamente independente'],
+          ['0,20 a 0,39', 'Fraca: há alguma relação, mas ela explica pouco dos movimentos'],
+          ['0,40 a 0,69', 'Moderada: os movimentos se acompanham em boa parte dos períodos'],
+          ['0,70 a 0,89', 'Forte: os movimentos se acompanham na maioria dos períodos'],
+          ['0,90 a 1,00', 'Muito forte: os ativos se comportam quase como um só']
+        ],
+        nota: 'Sinal positivo: os ativos andam no mesmo sentido. Sinal negativo: andam em sentidos opostos. As faixas são uma convenção de leitura, não uma regra estatística.'
+      }],
+      textos: textos
+    };
+  },
+  explicacao: [
+    '<p>O coeficiente de correlação de Pearson mede o quanto dois ativos variam juntos. Ele vai de -1 (movimentos sempre opostos) a +1 (movimentos sempre no mesmo sentido), e valores perto de zero indicam que um ativo não ajuda a prever o outro. A fórmula é <code>covariância(A, B) ÷ (desvio padrão de A × desvio padrão de B)</code>.</p>',
+    '<p>O cálculo é feito sobre os <strong>retornos</strong> de cada período. Quando você cola preços, o retorno é a variação percentual entre uma linha e a seguinte, portanto uma série com 25 preços gera 24 observações. As duas séries precisam cobrir exatamente as mesmas datas, na mesma ordem e com a mesma periodicidade (diária, semanal ou mensal).</p>',
+    '<p>O gráfico em base 100 mostra quanto valeriam 100 unidades aplicadas em cada ativo no início do período, o que permite comparar ativos com preços de tamanhos muito diferentes.</p>',
+    '<p>Limites: a correlação descreve o passado e muda conforme a janela e a periodicidade escolhidas. Ela costuma aumentar em momentos de crise, justamente quando a diversificação faz mais falta. O coeficiente mede apenas relações lineares e não indica causa. Esta página não consulta cotações: o resultado depende inteiramente dos dados informados, e o exemplo que vem preenchido é fictício.</p>'
+  ].join('\n')
+});
+</script>
+</body>
+</html>

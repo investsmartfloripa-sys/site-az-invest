@@ -2,14 +2,12 @@ import type { LucideIcon } from "lucide-react";
 import {
   Armchair,
   CreditCard,
-  Home,
   Hourglass,
   Landmark,
   Percent,
   PiggyBank,
   Shield,
   Sprout,
-  TrendingUp,
 } from "lucide-react";
 
 export type CategoriaSlug =
@@ -87,17 +85,6 @@ export type Simulador = {
 
 export const simuladores: Simulador[] = [
   {
-    slug: "juros-compostos",
-    title: "Juros compostos",
-    description:
-      "Veja quanto seu patrimônio pode crescer com aportes mensais e o efeito bola de neve dos juros.",
-    categoria: "investir",
-    pergunta: "Quanto meu dinheiro pode crescer com aportes mensais?",
-    tempoMin: 2,
-    popular: true,
-    icone: TrendingUp,
-  },
-  {
     slug: "compromissadas",
     title: "Compromissadas",
     description:
@@ -127,16 +114,6 @@ export const simuladores: Simulador[] = [
     pergunta: "Quanto de IR eu economizo investindo em PGBL?",
     tempoMin: 3,
     icone: PiggyBank,
-  },
-  {
-    slug: "financiamento",
-    title: "Financiamento x investimento",
-    description:
-      "Compare se vale a pena adiar a compra de um imóvel e investir o valor da entrada por enquanto.",
-    categoria: "credito",
-    pergunta: "Quanto vou pagar de verdade no Price e no SAC?",
-    tempoMin: 4,
-    icone: Home,
   },
   {
     slug: "consorcio",
