@@ -1,27 +1,28 @@
 # Snapshot do dia anterior — Café com Mercado
 
-**Rodada:** 2026-10-15 (quinta), disparada 13:23 BRT (agendada 10:02 — disparo atrasou ~3h20). `.md` e capa em main (HEAD f377094). ✅ Deploy run `38770340409` (push) success; edição e capa 200. ✅ WhatsApp postado (EXITCODE=0, capa anexada, confirmado no histórico às 13:38). Obs.: frontmatter com `hora: 13:50 BRT`; publicação real ~13:37.
+**Rodada:** 2026-10-16 (sexta), disparada 10:03 BRT. `.md` e capa em main (HEAD f22d84c). ✅ Deploy run `38906326738` (push) success; edição e capa 200. ✅ WhatsApp postado (EXITCODE=0, capa anexada, confirmado no histórico às 10:17). Obs.: frontmatter com `hora: 10:40 BRT`; publicação real ~10:16.
 
 ## 🔧 INFRAESTRUTURA
-- GitHub API segue bloqueada no sandbox da nuvem (403) → todo tráfego GitHub via `device_bash` com PAT do `.env.vercel.local`. Arquivos levados ao device via `device_commit_files` em `Enviador de Noticias\_transcripts\` (edicao.md, capa.jpg).
-- Transcrição: nuvem com IpBlocked; via Desktop Commander (tr.py) 3/5: Spyer MMK9H2wmspY, BTG b8TKJX8SNW0 (Luiz Molo, ações internacionais), XP 1F_nsQMispI (Mayara Rodrigues RF + Caio Souza estrategista). FALHAS: Genial Ytjev60vM5U = TranscriptsDisabled (legenda desativada, ~2h após fim da live — não é atraso de processamento); Money Times XlqcWiV_Sic = TranscriptsDisabled (placeholder antigo reaproveitado).
-- Painel Blob: caminhos em `data/<key>.json` (src/lib/data-manifest.ts). Ásia no 1d do world_indices estava defasada (14/10) — não usar para Ásia no mesmo dia.
-- Capa: Higgsfield OK, `cinematic_studio_2_5`, variante 63b6e37a (fábrica, balança equilibrada, wafer de chip estilhaçado, capacete amarelo e marmita, painel laranja). Manchete "PPI QUENTE, CHIPS EM QUEDA" (2 linhas), sub "Quaest empata; Senado aprova fim da 6x1".
+- GitHub API segue bloqueada no sandbox da nuvem (403; curl de diagnóstico negado pelo classificador) → todo tráfego GitHub via `device_bash` com PAT do `.env.vercel.local`. Arquivos levados ao device via `device_commit_files` em `Enviador de Noticias\_transcripts\` (edicao.md, capa.jpg). O commit re-codifica o JPEG (bytes diferentes, mesma imagem — conferido por fingerprint).
+- `device_bash` (VM Linux) também leva IpBlocked no YouTube; transcrição só pelo Desktop Commander (PowerShell, `C:\Python313\python.exe tr_hoje.py`). RSS funciona no device_bash.
+- Transcrição 3/5: Spyer 7IkmS8KIcWc, XP 6FWK2F04h9o (Rafael + Giba, análise técnica), Money Times XlqcWiV_Sic (é o Giro de 15/10 meio-dia, placeholder reaproveitado — valor baixo). FALHAS: BTG Qqhe_Bo4of4 = TranscriptsDisabled (2 tentativas, ~10:05 e ~10:12; vídeo publicado 09:30); Genial -frQrhQ1Rt4 = TranscriptsDisabled (2 tentativas; RSS updated 09:59 — provavelmente legenda ainda processando).
+- Capa: Higgsfield OK, `cinematic_studio_2_5`, variante 7dbe3523 (púlpitos de debate vazios, barra azul/vermelha, mina de cobre a céu aberto + catodos, sala limpa de chips, navio ao fundo). Variante 7f150997 descartada (moldura no topo). Manchete "DATAFOLHA ESTREITA, DÓLAR SOBE" (2 linhas), sub "IBC-Br +0,3%; Warsh esfria aposta de alta".
 
-## 📌 NARRATIVA (15/10) — PPI QUENTE, LIQUIDAÇÃO EM CHIPS, QUAEST EMPATADA, 6x1 APROVADA
-- Quarta 14/10 fechamento: Ibov 206.506 (−0,18%; mín ~203,5 mil; vol R$ 45,4 bi; 55/85 em queda); dólar R$ 5,0298 (+0,14%); DI F27 13,468, F29 12,436, F31 12,494. Altas PETR4 +2,2, PRIO3 +2,3; baixas MGLU3 −4,5, CYRE3 −4,3, TEND3 −5,5, BPAC11 −2,8.
-- 15/10 intradiário: dólar abriu R$ 5,063, ~5,04-5,05 à tarde (painel +0,38%); Ibov mín ~203,1 mil, perto de 206,5 mil às 12h30; DI longos +16 pb às 9h (F29 ~12,59, F31 ~12,65); IPCA+ 2050 6,74%.
-- PMC ago: restrito +0,1% m/m (BTG esperava 0,7; XP ~1,0); ampliado −0,2%. PMS ago −0,1%. ASA: PIB 3T −0,2%.
-- Política: Quaest 14/10 Flávio 46 × Lula 44 (válidos ~51×49; anterior 44×42). Datafolha 15/10 noite (anterior 49×45). Lula no JN 15/10, Flávio 16/10. Futura Inteligência: Flávio 50 × Lula 46,6 (título Money Times, não usado). PEC 6x1 aprovada no Senado 75×1, 44h→40h, vai à promulgação. Ministro da Fazenda: Dario Durigan.
-- Global: CPI set 3,7% a/a, núcleo 2,6%. PPI set +1,3% m/m, 6,3% a/a (maior desde dez/22), núcleo 5,0%. Varejo +0,8% (controle +0,1%); claims 199 mil; Empire 25,5; Philly 20,9. UST10 5,19 (14/10) → ~5,05 (15/10); UST30 ~5,40; DXY ~102,0. FedWatch out ~34% alta (pós-PPI), dez ~65%. Fed 3,75-4,00%. Kospi −8% (circuit breaker), Nikkei −5%, Taiex −3,4%. S&P 14/10 7.718,94 (−1,11%), Nasdaq 26.692,87 (−1,88%). Brent ~104 de manhã → ~106,1 à tarde (painel); WTI 96,6; ouro 4.169; BTC ~81 mil. TSMC lucro +69%, margem 66,4%. Navio de Singapura afundado em Ormuz.
+## 📌 NARRATIVA (16/10) — DATAFOLHA ESTREITA, WARSH ESFRIA ALTA, ÁSIA RECUPERA
+- Quinta 15/10 fechamento: Ibov 204.324,26 (−1,06%; mín 203.110, máx 206.520; vol ~R$ 40,9 bi); dólar R$ 5,0885 (+1,17%; Estadão 5,0868), 3ª alta seguida, maior desde 2/10. DI ajuste F27 13,512, F29 12,634, F31 12,684. Altas EMBJ3 +2,7, YDUQ3 +2,1; baixas DIRR3 −9,26, MRVE3 −4,94, VAMO3 −4,27, MGLU3 −4,24.
+- 16/10 manhã: Ibov fut 209.105 (+0,35%); dólar R$ 5,076 (−0,2%); DIs mistos. Vencimento de opções sobre ações.
+- IBC-Br ago +0,3% m/m (jul −0,2%); indústria +0,9, serviços +0,2, agro −1,8; tri −0,6%; 12m +1,6%. Consenso: Reuters 0,3 / Broadcast 0,12. IPC-S 2ª quadri out +0,46% (12m 4,29%).
+- Política: Datafolha 13-15/10 Flávio 47 × Lula 45 (válidos 51×49; antes 52×48). PoderData/Aya 50×50 válidos. Hoje: Veritá (12h), Futura, MDA, Vox Populi. Lula anunciou ônibus grátis fim de semana (tarifa zero). Lula pós-JN: não corta gasto social. Flávio na Globo 21h15. PEC 6x1 promulgada hoje (42h em 2 meses, 40h em 12 meses).
+- Global: NY 15/10 Dow 52.177,69 (+1,08%), S&P 7.744,06 (+0,33%), Nasdaq 26.713,02 (+0,08%). UST10 5,085 (−10,5 pb), UST2 ~4,74, UST30 5,426. DXY 101,77. Warsh FMI sem sinal; alta out FedWatch ~15% (de ~27%). Hammack hawkish. Nikkei 65.324 +1,39%, Kospi 5.668 +2,05%, Taiex +0,3%, Indonésia −11,6%. DAX +1%. Brent ~105-106, WTI ~96-97, AIE 100 mi bbl. Ouro 4.185, cobre +1,2% (greves Escondida/Centinela). BTC ~82 mil. Ueda segue subindo juros. China PIB 3T no domingo 18/10 (cons 4,4%).
 
 ## 🎯 Teses das casas
-- **XP (Caio Souza):** Ibov voltou à média de 10 anos em P/L; financeiras ~1 DP acima da média, cíclicas domésticas ~1 DP abaixo → potencial ~80% no otimista (defensivas 32%, commodities 55%); estrangeiro faz preço no curto prazo (potencial R$ 60-270 bi), local depende de Selic. 6x1 já no preço. Mais sensíveis a juros citados: MRV, CSN, Raia Drogasil.
-- **BTG (Molo):** temporada de bancos EUA começa bem; IA ainda vista positiva (hyperscalers 18-20x P/L); queda de small caps/imob = realização após +19% em outubro. Carteira out: cenário Flávio +11-20%, cenário Lula ~170 mil e dólar 5,70-6.
-- **Daycoval:** redução de posições, reavaliação do fiscal do próximo governo.
-- **Genial:** sem transcrição hoje.
+- **XP (Rafael + Giba):** normalização pós-1º turno; bandeira de alta no Ibov; acima de 210 mil pós-eleição → 237-240 mil; abaixo, 187 mil. Compra SMAL11 com venda de BOVA. PRIO > PETR. Itaú > Santander. Vale "caça-fundo" acima de 67. Dólar futuro 5.077 pivô; alvo 4,88 vs correção 5,33. Brent: resistência 110.
+- **Spyer:** medidas eleitoreiras pesam pelo fiscal; Fed 85% manutenção.
+- **Manchester / Wagner / Sincra:** dólar = proteção eleitoral; Wagner vê R$ 4,80 com Flávio.
+- **BTG:** sem transcrição hoje (tese citada é a carteira de out: cenário Lula ~170 mil, dólar 5,70-6).
+- **Genial:** sem transcrição.
 
-## Próxima rodada (sexta 16/10)
-- Conferir: Datafolha 15/10; fechamento Ibov/dólar/DI de 15/10; IBC-Br ago; leilão OPA Braskem; fala Hammack; Conselho Europeu; promulgação da PEC 6x1.
-- AGENDA: 16/10 IBC-Br, OPA Braskem, Flávio no JN, PoderData/Futura · 17/10 Ipespe · 18/10 debate Band · 23/10 debate Globo · 25/10 2º turno · 27-28/10 FOMC · 29-30/10 BoJ · 03-04/11 Copom.
-- Capa: evitar wafer de chip, balança, capacete/marmita, painel de cotações laranja, sala de servidores — além da lista anterior (refinaria em chamas, colunas neoclássicas, bandeira pintada em muro, figura encapuzada, tomates, torres de alta tensão, bico de bomba, cabine de votação, míssil, aeroporto, tanques, urna, barris, petroleiro, navio de guerra, Torre Eiffel, bandeira em mastro, Congresso, telas verdes, relógio, plataforma, touro, multidão, cédulas).
+## Próxima rodada (segunda 19/10 — cobre desde sexta 18h)
+- Conferir: fechamento Ibov/dólar/DI de 16/10; resultado do leilão da OPA Braskem; Veritá e demais pesquisas de 16/10; entrevista Flávio JN; debate Band 18/10; PIB China 3T (18/10); produção industrial EUA set; resultados bancos regionais EUA.
+- AGENDA: 18/10 debate Band, PIB China · 23/10 debate Globo · 25/10 2º turno · 27-28/10 FOMC · 28-29/10 BCE · 29-30/10 BoJ · 03-04/11 Copom.
+- Capa: evitar púlpitos de debate, barra azul/vermelha, mina de cobre/catodos, sala limpa de chips, navio afundando — além da lista anterior (wafer de chip, balança, capacete/marmita, painel de cotações laranja, sala de servidores, refinaria em chamas, colunas neoclássicas, bandeira pintada em muro, figura encapuzada, tomates, torres de alta tensão, bico de bomba, cabine de votação, míssil, aeroporto, tanques, urna, barris, petroleiro, navio de guerra, Torre Eiffel, bandeira em mastro, Congresso, telas verdes, relógio, plataforma, touro, multidão, cédulas).
