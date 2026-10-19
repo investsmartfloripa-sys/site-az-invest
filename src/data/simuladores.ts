@@ -5,7 +5,6 @@ import {
   Hourglass,
   Landmark,
   Percent,
-  PiggyBank,
   Shield,
   Sprout,
 } from "lucide-react";
@@ -106,16 +105,6 @@ export const simuladores: Simulador[] = [
     icone: Armchair,
   },
   {
-    slug: "pgbl",
-    title: "PGBL e restituição",
-    description:
-      "Descubra quanto você pode deduzir no IR com PGBL e o efeito da restituição reinvestida no longo prazo.",
-    categoria: "aposentadoria",
-    pergunta: "Quanto de IR eu economizo investindo em PGBL?",
-    tempoMin: 3,
-    icone: PiggyBank,
-  },
-  {
     slug: "consorcio",
     title: "Consórcio inteligente",
     description:
@@ -124,15 +113,5 @@ export const simuladores: Simulador[] = [
     pergunta: "Consórcio ou financiamento: qual caminho custa menos?",
     tempoMin: 5,
     icone: Percent,
-  },
-  {
-    slug: "sucessao-seguro",
-    title: "Sucessão e seguro de vida",
-    description:
-      "Planeje a sucessão patrimonial e veja como o seguro de vida protege a família e reduz custos do inventário.",
-    categoria: "protecao",
-    pergunta: "Minha família fica protegida se eu faltar?",
-    tempoMin: 5,
-    icone: Shield,
   },
 ];

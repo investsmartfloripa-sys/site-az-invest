@@ -40,7 +40,11 @@ const ADMS = [
 ];
 
 const VALORIZACAO_IMOVEL = 0.05;
-const CDI_PROJECAO = 0.10;
+// CDI de outubro de 2026 (13,65% ao ano, série 4389 do Banco Central), a mesma taxa de public/simuladores/assets/config.js.
+// Atualizar junto com as taxas dos simuladores. Até 19/10/2026 era 10% fixo, apresentado como "média histórica".
+const CDI_PROJECAO = 0.1365;
+const pctTexto = (x: number) => (x * 100).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+const PREMISSAS_TEXTO = `Valorização do imóvel de ${pctTexto(VALORIZACAO_IMOVEL)}% ao ano (conservadora, oscila por região). CDI de ${pctTexto(CDI_PROJECAO)}% ao ano (taxa de outubro de 2026), para o que fica aplicado. Valores brutos de IR.`;
 
 // ===== Tipos de bem =====
 const TIPOS_BEM = {
@@ -371,10 +375,8 @@ export default function Simulador() {
   }, [prazo, isCarro, isMoto, valorLanceTotal, valorBem, numCartas]);
 
   const mes50 = dadosProbabilidade.find(x => (numCartas > 1 ? x.multiplas : x.individual) >= 50)?.mes || Math.round(prazo / 2);
-  const prob12 = numCartas > 1 ? (dadosProbabilidade[11]?.multiplas || 0) : (dadosProbabilidade[11]?.individual || 0);
-  const prob36Idx = Math.min(35, prazo - 1);
-  const prob36 = numCartas > 1 ? (dadosProbabilidade[prob36Idx]?.multiplas || 0) : (dadosProbabilidade[prob36Idx]?.individual || 0);
-  const probIndividual12 = dadosProbabilidade[11]?.individual || 0;
+  // Os cartões "Chance em 12 meses" e "Chance em 36 meses" e a frase da chance com várias cartas saíram em 19/10/2026:
+  // vinham das faixas de "força do lance" acima, sem fonte. O mês da virada e o gráfico ainda usam a mesma regra (revisão na Fase 5).
 
   const pagoAteContemplacao = parcelaAtual * mes50;
   const saldoAposContemplacao = Math.max(0, saldoTotalPlano - pagoAteContemplacao - valorLanceTotal);
@@ -1014,11 +1016,9 @@ export default function Simulador() {
             Todo cotista é contemplado até o fim do prazo. O que muda é <strong style={{ color: SIM.dark }}>quando</strong>.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+          <div className="grid grid-cols-1 gap-3 mb-5 max-w-xs">
             {[
               { label: 'Mês da virada (50%)', valor: `${mes50}º`, sub: `≈ ${(mes50 / 12).toFixed(1)} anos` },
-              { label: 'Chance em 12 meses', valor: `${prob12.toFixed(0)}%`, sub: 'Primeiro ano' },
-              { label: 'Chance em 36 meses', valor: `${prob36.toFixed(0)}%`, sub: 'Primeiros 3 anos' },
             ].map((c, i) => (
               <div key={i} className="rounded-xl p-4" style={{ backgroundColor: '#f1f5f9' }}>
                 <div className="text-[11px] uppercase tracking-wider mb-1" style={{ color: SIM.textDim }}>{c.label}</div>
@@ -1060,14 +1060,6 @@ export default function Simulador() {
             </ResponsiveContainer>
           </div>
 
-          {numCartas > 1 && (
-            <div className="mt-3 p-3 rounded-lg flex items-start gap-2" style={{ backgroundColor: SIM.blueBgSoft, border: `1px solid ${SIM.blueBg}` }}>
-              <Layers className="w-4 h-4 shrink-0 mt-0.5" style={{ color: SIM.navy }} />
-              <div className="text-sm" style={{ color: '#334155' }}>
-                Com <strong>{numCartas} cartas</strong>, a chance de contemplar ao menos uma em 12 meses sobe para <strong style={{ color: SIM.navy }}>{prob12.toFixed(0)}%</strong> (vs. {probIndividual12.toFixed(0)}% com carta única).
-              </div>
-            </div>
-          )}
         </div>
 
         {/* COMPARATIVO */}
@@ -1230,7 +1222,7 @@ export default function Simulador() {
             </div>
             <div className="mt-3 text-[11px] flex items-start gap-1.5" style={{ color: SIM.textDim }}>
               <Info className="w-3 h-3 mt-0.5 shrink-0" />
-              <span>Valorização do imóvel <strong>5% a.a.</strong> (conservadora — oscila por região). CDI <strong>10% a.a.</strong> (média histórica). Brutos de IR.</span>
+              <span>{PREMISSAS_TEXTO}</span>
             </div>
           </div>
         )}
@@ -1287,6 +1279,10 @@ export default function Simulador() {
                   Ativos de {fmt(ativosRendaFim)} − {fmt(ativosRendaFim - liquidoRendaFim)} desembolsados no plano
                 </div>
               </div>
+            </div>
+            <div className="mt-3 text-[11px] flex items-start gap-1.5" style={{ color: SIM.textDim }}>
+              <Info className="w-3 h-3 mt-0.5 shrink-0" />
+              <span>{PREMISSAS_TEXTO}</span>
             </div>
           </div>
         )}

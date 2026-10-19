@@ -31,7 +31,8 @@
 <div class="az-sobre-corpo"><p>A taxa nominal é a que aparece no contrato ou no extrato. A taxa real é a nominal descontada da inflação, e mostra quanto o poder de compra de fato aumentou (em um investimento) ou quanto uma dívida custa além da alta geral dos preços. A relação entre as três é a equação de Fisher: <code>(1 + nominal) = (1 + real) × (1 + inflação)</code>.</p>
 <p>Dela saem as três contas da calculadora: <code>real = (1 + nominal) ÷ (1 + inflação) − 1</code>, <code>nominal = (1 + real) × (1 + inflação) − 1</code> e <code>inflação = (1 + nominal) ÷ (1 + real) − 1</code>. Subtrair ou somar as taxas diretamente é uma aproximação que funciona para taxas pequenas e se distancia do valor correto conforme elas crescem.</p>
 <p>As taxas devem ter o mesmo período: todas ao ano, todas ao mês ou todas acumuladas no mesmo intervalo. Quando o período é anual ou mensal, o resultado também é mostrado na taxa equivalente do outro período.</p>
-<p>O imposto de renda incide sobre o rendimento nominal, e não sobre o ganho real. Por isso, ao selecionar uma alíquota, a calculadora primeiro reduz a taxa nominal (<code>nominal × (1 − alíquota)</code>) e só depois desconta a inflação. Esse desconto direto na taxa é exato quando o imposto é pago sobre o rendimento do próprio período informado. A inflação usada é a que você informa: o campo vem preenchido com o IPCA acumulado em 12 meses.</p></div>
+<p>O imposto de renda incide sobre o rendimento nominal, e não sobre o ganho real. Por isso, ao selecionar uma alíquota, a calculadora primeiro reduz a taxa nominal (<code>nominal × (1 − alíquota)</code>) e só depois desconta a inflação. Esse desconto direto na taxa é exato quando o imposto é pago sobre o rendimento do próprio período informado. A inflação usada é a que você informa: o campo vem preenchido com o IPCA acumulado em 12 meses.</p>
+<p>Na inflação implícita, o que importa é quem paga imposto. Quando os dois títulos pagam a mesma alíquota, ou os dois são isentos, o imposto não muda o empate: <code>nominal × (1 − alíquota)</code> dos dois lados se iguala exatamente quando as taxas brutas se igualam, e o empate fica em <code>(1 + prefixado) ÷ (1 + taxa acima da inflação) − 1</code>. Quando só o prefixado paga (contra uma LCI, LCA ou debênture incentivada indexada à inflação), a conta usa a taxa prefixada depois do imposto, <code>prefixado × (1 − alíquota)</code>. Quando só o indexado paga (uma LCI ou LCA prefixada contra o Tesouro IPCA+), o indexado precisa render <code>prefixado ÷ (1 − alíquota)</code> antes do imposto. O desconto direto na taxa vale para o imposto pago sobre o rendimento do próprio período; em prazos de vários anos, com o imposto cobrado só no resgate, o empate muda um pouco.</p></div>
 </section>
 <section class="az-cta" id="az-cta" hidden><div><h2></h2><p></p></div><a class="az-botao az-lar" href="#" target="_blank" rel="noopener"></a></section>
 <section class="az-rel"><h2>Outros simuladores de juros reais e inflação</h2><div class="az-grade">
@@ -59,16 +60,30 @@ AZ.registrar({
       opcoes: [{ v: 'real', t: 'Taxa de juros real' }, { v: 'nominal', t: 'Taxa nominal necessária' }, { v: 'inflacao', t: 'Inflação implícita' }] },
     { id: 'nominal', rotulo: 'Taxa de juros nominal', tipo: 'pct', padrao: 10, min: -99, max: 100000, largura: 'meia', mostrarSe: function (v) { return v.modo !== 'nominal'; } },
     { id: 'infl', rotulo: 'Inflação', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: -99, max: 100000, largura: 'meia', mostrarSe: function (v) { return v.modo !== 'inflacao'; } },
-    { id: 'real', rotulo: 'Taxa de juros real', tipo: 'pct', padrao: 5, min: -99, max: 100000, largura: 'meia', mostrarSe: function (v) { return v.modo !== 'real'; } },
+    { id: 'real', rotulo: 'Taxa de juros real', tipo: 'pct', padrao: 5, min: -99, max: 100000, largura: 'meia', mostrarSe: function (v) { return v.modo !== 'real'; },
+      ajuda: 'Taxa acima da inflação, no mesmo período das outras. Para um título que paga IPCA mais 7%, informe 7.' },
+    { id: 'trib', rotulo: 'Imposto de renda nos dois títulos', tipo: 'select', padrao: 'iguais',
+      opcoes: [{ v: 'iguais', t: 'Os dois pagam a mesma alíquota, ou os dois são isentos' }, { v: 'pre', t: 'Só o prefixado paga (o indexado é isento)' }, { v: 'ipca', t: 'Só o indexado paga (o prefixado é isento)' }],
+      ajuda: 'LCI, LCA, CRI, CRA e debêntures incentivadas são isentas para pessoa física; CDB e Tesouro Direto pagam imposto.',
+      mostrarSe: function (v) { return v.modo === 'inflacao'; } },
     { id: 'periodo', rotulo: 'Período das taxas', tipo: 'segmento', padrao: 'ano',
       opcoes: [{ v: 'ano', t: 'Ao ano' }, { v: 'mes', t: 'Ao mês' }, { v: 'outro', t: 'Outro período' }],
       ajuda: 'As taxas precisam se referir ao mesmo período.' },
     { id: 'ir', rotulo: 'Imposto de renda sobre o rendimento', tipo: 'select', padrao: '0',
       opcoes: [{ v: '0', t: 'Não considerar' }, { v: '22.5', t: '22,5% (até 180 dias)' }, { v: '20', t: '20% (181 a 360 dias)' }, { v: '17.5', t: '17,5% (361 a 720 dias)' }, { v: '15', t: '15% (acima de 720 dias)' }],
-      ajuda: 'Deixe sem considerar se o investimento é isento ou se a taxa já é líquida. Se escolher uma alíquota, o imposto é descontado do rendimento nominal antes de descontar a inflação.' }
+      ajuda: 'Deixe sem considerar se o investimento é isento ou se a taxa já é líquida. Se escolher uma alíquota, o imposto é descontado do rendimento nominal antes de descontar a inflação.',
+      mostrarSe: function (v) { return v.modo !== 'inflacao' || v.trib !== 'iguais'; } }
+  ],
+  casos: [
+    { nome: 'empate entre prefixado de 13% e IPCA mais 7%, com imposto de 15% nos dois', entradas: { modo: 'inflacao', nominal: 13, real: 7, ir: '15', trib: 'iguais' }, espera: { 'Inflação implícita': '5,607%' } },
+    { nome: 'CDB prefixado de 13% com 15% de imposto contra LCA IPCA mais 5,5% isenta', entradas: { modo: 'inflacao', nominal: 13, real: 5.5, ir: '15', trib: 'pre' }, espera: { 'Inflação implícita': '5,261%' } },
+    { nome: 'LCA prefixada de 11% isenta contra Tesouro IPCA mais 7% com 15% de imposto', entradas: { modo: 'inflacao', nominal: 11, real: 7, ir: '15', trib: 'ipca' }, espera: { 'Inflação implícita': '5,553%' } },
+    { nome: 'juro real líquido de 13% com 15% de imposto e inflação de 4%', entradas: { modo: 'real', nominal: 13, infl: 4, ir: '15' }, espera: { 'Taxa real líquida': '6,779%' } }
   ],
   calcular: function (v, AZ) {
-    var f = AZ.f, a = +v.ir / 100, termo = function (x, c) { return (x < 0 ? '(1 − ' : '(1 + ') + f.pct(Math.abs(x), c) + ')'; }, un = { ano: ' ao ano', mes: ' ao mês', outro: ' no período' }[v.periodo];
+    /* na inflação implícita, com a mesma alíquota nos dois títulos o imposto incide sobre o rendimento nominal de ambos e não muda o empate;
+       ele só entra quando um dos dois é isento */
+    var f = AZ.f, a = v.modo === 'inflacao' && v.trib === 'iguais' ? 0 : +v.ir / 100, termo = function (x, c) { return (x < 0 ? '(1 − ' : '(1 + ') + f.pct(Math.abs(x), c) + ')'; }, un = { ano: ' ao ano', mes: ' ao mês', outro: ' no período' }[v.periodo];
     var nom, infl, real, liq, d, resumo, tabelas = [];
     function outra(x) {   /* equivalente no outro período, quando faz sentido */
       if (v.periodo === 'ano') return f.pct(AZ.fin.aaParaAm(x / 100) * 100, 4) + ' ao mês';
@@ -103,14 +118,22 @@ AZ.registrar({
       resumo = '<p>Para ganhar ' + f.pct(real) + ' acima de uma inflação de ' + f.pct(infl) + ', a taxa ' + (a ? 'líquida ' : '') + 'precisa ser de ' + termo(real) + ' × ' + termo(infl) + ' − 1 = <strong>' + f.pct(liq, 3) + '</strong>' + un + '.' +
         (a ? ' Com IR de ' + f.pct(a * 100, 1) + ' sobre o rendimento, ' + (nom > liq + 1e-9 ? 'a taxa bruta necessária sobe para <strong>' + f.pct(nom, 3) + '</strong>.' : 'a taxa bruta é a mesma, porque não há rendimento a tributar.') : '') + '</p>';
     } else {
-      nom = v.nominal; real = v.real; liq = nom > 0 ? nom * (1 - a) : nom;
-      infl = ((1 + liq / 100) / (1 + real / 100) - 1) * 100;
+      nom = v.nominal; real = v.real;
+      /* taxa nominal do indexado, antes do imposto dele, que iguala o prefixado depois dos impostos de cada um */
+      var alvo = v.trib === 'pre' ? (nom > 0 ? nom * (1 - a) : nom) : v.trib === 'ipca' && a ? (nom > 0 ? nom / (1 - a) : nom) : nom;
+      liq = v.trib === 'iguais' ? nom : (v.trib === 'pre' ? alvo : nom);
+      infl = ((1 + alvo / 100) / (1 + real / 100) - 1) * 100;
       d = [
         { rotulo: 'Inflação implícita', valor: f.pct(infl, 3) + un, tom: 'primario', nota: outra(infl) },
-        { rotulo: 'Subtração simples', valor: f.pct(liq - real, 3), nota: 'aproximação' }
+        { rotulo: 'Subtração simples', valor: f.pct(alvo - real, 3), nota: 'aproximação' }
       ];
-      if (a) d.splice(1, 0, { rotulo: 'Taxa nominal líquida de IR', valor: f.pct(liq, 3) + un });
-      resumo = '<p>Uma taxa nominal' + (a ? ' líquida' : '') + ' de ' + f.pct(liq, (a || v.modo === 'nominal') ? 3 : 2) + ' só equivale a um juro real de ' + f.pct(real) + ' se a inflação do período for de <strong>' + f.pct(infl, 3) + '</strong>. É a conta usada, por exemplo, para comparar um título prefixado com um título indexado à inflação: se a inflação ficar acima desse nível, o indexado rende mais.</p>';
+      if (v.trib === 'pre' && a) d.splice(1, 0, { rotulo: 'Prefixado depois do imposto', valor: f.pct(alvo, 3) + un, nota: 'imposto de ' + f.pct(a * 100, 1) + ' sobre o rendimento; o indexado isento não paga' });
+      if (v.trib === 'ipca' && a) d.splice(1, 0, { rotulo: 'Taxa bruta que o indexado precisa', valor: f.pct(alvo, 3) + un, nota: 'para render, depois do imposto de ' + f.pct(a * 100, 1) + ', os ' + f.pct(nom) + ' do prefixado isento' });
+      var indexado = real < 0 ? 'a inflação menos ' + f.pct(-real) : 'a inflação mais ' + f.pct(real);
+      resumo = '<p>Um prefixado de ' + f.pct(nom) + un + ' e um título que paga ' + indexado + un + ' rendem o mesmo se a inflação do período for de <strong>' + f.pct(infl, 3) + un + '</strong>. Se a inflação ficar acima desse nível, o indexado rende mais; abaixo, o prefixado. ' +
+        (v.trib === 'iguais' ? 'Com a mesma alíquota nos dois títulos, o imposto de renda não muda esse empate, porque incide sobre o rendimento nominal de ambos.'
+          : v.trib === 'pre' ? 'Como só o prefixado paga imposto, a comparação usa a taxa dele depois do imposto, de ' + f.pct(alvo, 3) + '.'
+          : 'Como só o indexado paga imposto, ele precisa render ' + f.pct(alvo, 3) + ' antes do imposto para empatar com o prefixado isento.') + '</p>';
     }
     var base = 1000, fimNom = base * (1 + liq / 100), manter = base * (1 + infl / 100);
     return {
@@ -127,7 +150,8 @@ AZ.registrar({
     '<p>A taxa nominal é a que aparece no contrato ou no extrato. A taxa real é a nominal descontada da inflação, e mostra quanto o poder de compra de fato aumentou (em um investimento) ou quanto uma dívida custa além da alta geral dos preços. A relação entre as três é a equação de Fisher: <code>(1 + nominal) = (1 + real) × (1 + inflação)</code>.</p>',
     '<p>Dela saem as três contas da calculadora: <code>real = (1 + nominal) ÷ (1 + inflação) − 1</code>, <code>nominal = (1 + real) × (1 + inflação) − 1</code> e <code>inflação = (1 + nominal) ÷ (1 + real) − 1</code>. Subtrair ou somar as taxas diretamente é uma aproximação que funciona para taxas pequenas e se distancia do valor correto conforme elas crescem.</p>',
     '<p>As taxas devem ter o mesmo período: todas ao ano, todas ao mês ou todas acumuladas no mesmo intervalo. Quando o período é anual ou mensal, o resultado também é mostrado na taxa equivalente do outro período.</p>',
-    '<p>O imposto de renda incide sobre o rendimento nominal, e não sobre o ganho real. Por isso, ao selecionar uma alíquota, a calculadora primeiro reduz a taxa nominal (<code>nominal × (1 − alíquota)</code>) e só depois desconta a inflação. Esse desconto direto na taxa é exato quando o imposto é pago sobre o rendimento do próprio período informado. A inflação usada é a que você informa: o campo vem preenchido com o IPCA acumulado em 12 meses.</p>'
+    '<p>O imposto de renda incide sobre o rendimento nominal, e não sobre o ganho real. Por isso, ao selecionar uma alíquota, a calculadora primeiro reduz a taxa nominal (<code>nominal × (1 − alíquota)</code>) e só depois desconta a inflação. Esse desconto direto na taxa é exato quando o imposto é pago sobre o rendimento do próprio período informado. A inflação usada é a que você informa: o campo vem preenchido com o IPCA acumulado em 12 meses.</p>',
+    '<p>Na inflação implícita, o que importa é quem paga imposto. Quando os dois títulos pagam a mesma alíquota, ou os dois são isentos, o imposto não muda o empate: <code>nominal × (1 − alíquota)</code> dos dois lados se iguala exatamente quando as taxas brutas se igualam, e o empate fica em <code>(1 + prefixado) ÷ (1 + taxa acima da inflação) − 1</code>. Quando só o prefixado paga (contra uma LCI, LCA ou debênture incentivada indexada à inflação), a conta usa a taxa prefixada depois do imposto, <code>prefixado × (1 − alíquota)</code>. Quando só o indexado paga (uma LCI ou LCA prefixada contra o Tesouro IPCA+), o indexado precisa render <code>prefixado ÷ (1 − alíquota)</code> antes do imposto. O desconto direto na taxa vale para o imposto pago sobre o rendimento do próprio período; em prazos de vários anos, com o imposto cobrado só no resgate, o empate muda um pouco.</p>'
   ].join('\n')
 });
 </script>

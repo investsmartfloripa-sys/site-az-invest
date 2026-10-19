@@ -18,11 +18,14 @@ const nextConfig: NextConfig = {
   /**
    * Simuladores: o índice e as páginas novas são HTML estático em public/simuladores (gerador próprio).
    * As páginas usam links relativos, então o índice precisa abrir em /simuladores/index.html.
-   * Rotas Next que continuam: consorcio, aposentadoria, pgbl, compromissadas, sucessao-seguro.
+   * Rotas Next que continuam: consorcio, aposentadoria, compromissadas.
+   * pgbl e sucessao-seguro saíram em 19/10/2026 (contas erradas); começam em 307 e viram 308 se ficarem 30 dias sem reversão.
    */
   async redirects() {
     return [
       { source: "/simuladores", destination: "/simuladores/index.html", permanent: false },
+      { source: "/simuladores/pgbl", destination: "/simuladores/restituicao-imposto-de-renda.html", permanent: false },
+      { source: "/simuladores/sucessao-seguro", destination: "/simuladores/custos-de-sucessao.html", permanent: false },
       { source: "/simuladores/juros-compostos", destination: "/simuladores/juros-compostos.html", permanent: true },
       { source: "/simuladores/financiamento", destination: "/simuladores/financiamento-imovel-tr-price.html", permanent: true },
     ];

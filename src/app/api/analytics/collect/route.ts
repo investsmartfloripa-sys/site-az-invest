@@ -8,6 +8,10 @@ import { getClientIp, rateLimit } from "@/lib/rate-limit";
 // evento no front (ex.: whatsapp_click), adicione o type aqui.
 const ALLOWED_TYPES = new Set(["page_view"]);
 
+// Só grava visitas que chegam pelo domínio do site. `next dev`/`next start` local (cujo .env aponta para o banco
+// de PRODUÇÃO) e os endereços *.vercel.app respondem 204 sem gravar, para teste não virar visita.
+const HOSTS_DO_SITE = new Set(["investimentosdeaz.com.br", "www.investimentosdeaz.com.br"]);
+
 const MAX_PATH_LENGTH = 500;
 const MAX_REFERRER_LENGTH = 500;
 const MAX_UTM_LENGTH = 200;
@@ -18,6 +22,11 @@ function asTrimmedString(value: unknown, maxLength: number): string | undefined 
 }
 
 export async function POST(request: Request) {
+  const host = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "").split(":")[0].toLowerCase();
+  if (!HOSTS_DO_SITE.has(host)) {
+    return new NextResponse(null, { status: 204 });
+  }
+
   // Rate limit best-effort por IP (janela deslizante em memória — vale por
   // instância serverless e zera em cold start; ver src/lib/rate-limit.ts).
   const ip = getClientIp(request.headers);

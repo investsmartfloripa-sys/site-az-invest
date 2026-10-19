@@ -775,11 +775,34 @@
       }
     });
   }
+  /* ───────────── contador de visitas ─────────────
+     Envia ao coletor do site (/api/analytics/collect, o mesmo das páginas Next) só o endereço da página, sem query nem
+     fragmento (é lá que ficam os valores digitados), a origem externa (sem query) e as utm. Só conta no domínio do site;
+     não conta robôs (navigator.webdriver ou agente headless, de busca ou de captura), páginas embutidas (embed=1, a página
+     que embute já conta) nem a equipe: um link com ?nao-contar=1 grava a marca neste navegador e ?nao-contar=0 a apaga.
+     O parâmetro sai da barra logo depois de lido, para não ir junto no "Copiar link da simulação". */
+  function contarVisita() {
+    try {
+      var host = location.hostname, q = new URLSearchParams(location.search);
+      if (q.has('nao-contar')) {
+        try { if (q.get('nao-contar') === '1') localStorage.setItem('az-nao-contar', '1'); else localStorage.removeItem('az-nao-contar'); } catch (e) { }
+        var q2 = new URLSearchParams(location.search); q2.delete('nao-contar'); var s = q2.toString();
+        try { history.replaceState(history.state, '', location.pathname + (s ? '?' + s : '') + location.hash); } catch (e) { }
+      }
+      if (!/(^|\.)investimentosdeaz\.com\.br$/.test(host) || navigator.webdriver || q.get('embed') === '1') return;
+      if (/HeadlessChrome|Lighthouse|\bbot\b|bot\/|crawler|spider|slurp/i.test(navigator.userAgent || '')) return;
+      try { if (localStorage.getItem('az-nao-contar') === '1') return; } catch (e) { }
+      var corpo = { type: 'page_view', path: location.pathname.slice(0, 500) };
+      try { var r = document.referrer && new URL(document.referrer); if (r && r.hostname !== host) corpo.referrer = (r.origin + r.pathname).slice(0, 500); } catch (e) { }
+      ['utm_source', 'utm_medium', 'utm_campaign'].forEach(function (k) { var x = q.get(k); if (x) corpo[k] = x.slice(0, 200); });
+      fetch('/api/analytics/collect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo), keepalive: true }).catch(function () { });
+    } catch (e) { }
+  }
   /* ───────────── página índice: busca ───────────── */
   function norm(t) { return t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
   document.addEventListener('DOMContentLoaded', function () {
     try { if (/[?&]embed=1/.test(location.search)) document.documentElement.classList.add('az-embed'); } catch (e) { }
-    montarMenu(); montarTrilha(); montarAviso(); montarRodape();
+    montarMenu(); montarTrilha(); montarAviso(); montarRodape(); contarVisita();
     /* índice com duas vistas: principais OU outros. Com "Outros simuladores" aberto e sem busca, os principais ficam ocultos. */
     var outrosEl = document.getElementById('az-outros');
     function vista() { var b = document.getElementById('az-busca'), q = !!(b && b.value.trim()); document.documentElement.classList.toggle('az-so-outros', !!(outrosEl && outrosEl.open && !q)); document.documentElement.classList.toggle('az-buscando', q); }
