@@ -1,0 +1,1842 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador de financiamento e empréstimo | AZ Invest</title>
+<meta name="description" content="Calcule parcela, valor, taxa ou prazo de um financiamento ou empréstimo, pelo SAC ou pela Price, e compare a taxa com a dos bancos.">
+<meta name="theme-color" content="#132960">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AZ Invest">
+<meta property="og:title" content="Simulador de financiamento e empréstimo | AZ Invest">
+<meta property="og:description" content="Calcule parcela, valor, taxa ou prazo de um financiamento ou empréstimo, pelo SAC ou pela Price, e compare a taxa com a dos bancos.">
+<meta property="og:image" content="https://investimentosdeaz.com.br/simuladores/assets/compartilhar.png">
+<meta property="og:url" content="https://investimentosdeaz.com.br/simuladores/financiamento-unificado.html">
+<link rel="canonical" href="https://investimentosdeaz.com.br/simuladores/financiamento-unificado.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="assets/az.css">
+</head>
+<body>
+<header class="az-topo"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest: todos os simuladores"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a><nav><a href="index.html">Todos os simuladores</a></nav></div></header>
+<main>
+<section class="az-hero"><div class="az-larg">
+<p class="az-trilha"><a href="index.html">Simuladores</a> / <a href="index.html#credito">Crédito e compras</a></p>
+<h1>Simulador de financiamento e empréstimo</h1>
+<p class="az-intro">Calcule a parcela e o custo de um financiamento ou empréstimo, descubra a taxa embutida num parcelamento e compare com a dos bancos.</p>
+</div></section>
+<div class="az-larg">
+<section class="az-app" id="az-app" data-ref="ipca,tr"><noscript><div class="az-cartao az-vazio">Ative o JavaScript do navegador para usar o simulador.</div></noscript></section>
+<section class="az-cartao az-sobre"><details><summary><h2>Como funciona</h2></summary>
+<div class="az-sobre-corpo"><h3>SAC e tabela Price</h3>
+<p>Em cada mês, <code>juros = saldo devedor × taxa mensal</code> e <code>parcela = amortização + juros</code>, com a taxa anual convertida em <code>(1 + taxa anual)^(1/12) − 1</code>. No SAC, a amortização é fixa e a parcela cai junto com o saldo. Na Price, a parcela é fixa, mas o saldo cai mais devagar, e por isso o total pago é maior. No crédito imobiliário, o saldo ainda é corrigido todo mês pela TR ou pelo IPCA antes dos juros, com o índice informado constante por todo o prazo.</p>
+<h3>Parcela fixa</h3>
+<p>Conhecendo três elementos entre valor, taxa, prazo e parcela, o simulador calcula o quarto, o que revela os juros embutidos numa compra parcelada. A primeira parcela vence em 30 dias ou, se você escolher, no ato: nesse caso ela não tem juros e funciona como uma entrada.</p>
+<h3>Taxa dos bancos</h3>
+<p>São as taxas médias das operações de cada instituição, publicadas pelo Banco Central, num retrato de setembro de 2026 (no imóvel, de agosto). A taxa oferecida a cada cliente depende do perfil, do prazo e das garantias, e por isso pode ficar longe da média.</p>
+<p>Seguros e tarifas entram no custo total do crédito, e o custo efetivo estimado é a taxa que iguala o valor recebido às parcelas. O simulador não calcula o IOF nem considera carência. Compare propostas reais pelo custo efetivo total (CET) de cada instituição.</p></div>
+</details></section>
+<section class="az-cta" id="az-cta" hidden><div><h2></h2><p></p></div><a class="az-botao az-lar" href="#" target="_blank" rel="noopener"></a></section>
+<section class="az-rel"><h2>Mais em crédito e compras</h2><div class="az-grade">
+<a class="az-item" href="https://investimentosdeaz.com.br/simuladores/consorcio" data-k="Consórcio ou financiamento Simulador de consórcio x financiamento Simule a carta de crédito e compare o consórcio com o financiamento pela Price e pelo SAC. consórcio carta de crédito lance contemplação financiamento"><b>Consórcio ou financiamento</b></a>
+<a class="az-item" href="a-vista-ou-parcelado.html" data-k="À vista ou parcelado Pagar à vista ou parcelado Compare o desconto à vista, inclusive na cota única do IPVA e do IPTU, com o rendimento de parcelar e deixar o dinheiro aplicado. à vista ou a prazo comprar à vista ou a prazo parcelado parcelar desconto à vista sem juros valor presente juros embutidos cartão de crédito pix IPVA IPTU cota única parcelar imposto licenciamento CDI imposto de renda Comprar à vista ou a prazo parcelado parcelar desconto à vista sem juros valor presente juros embutidos cartão de crédito pix IPVA e IPTU: à vista ou parcelado cota única desconto à vista parcelar imposto IPVA IPTU licenciamento CDI valor presente"><b>À vista ou parcelado</b></a>
+<a class="az-item" href="custo-de-verdade.html" data-k="Quanto custa de verdade uma compra Quanto custa de verdade uma compra Veja quanto uma compra ou um gasto de todo mês custa em horas de trabalho e no rendimento que o dinheiro deixa de ter. custo de oportunidade comprar ou investir juros perdidos rendimento que deixa de ganhar compra à vista carro decisão de compra tempo de vida horas de trabalho valor da hora consumo consciente quanto custa em tempo salário cachorro quanto custa ter um cachorro cão pet animal de estimação ração veterinário custo de vida planejamento orçamento gasto mensal assinatura Calculadora de custo de oportunidade comprar ou investir juros perdidos rendimento que deixa de ganhar compra à vista carro decisão de compra Calculadora do custo em tempo de vida horas de trabalho valor da hora consumo consciente quanto custa em tempo salário Quanto custa ter um cachorro cão pet animal de estimação ração veterinário custo de vida planejamento orçamento"><b>Quanto custa de verdade uma compra</b></a>
+<a class="az-item" href="combustivel.html" data-k="Etanol ou gasolina Etanol ou gasolina: qual compensa Compare o custo por quilômetro do etanol e da gasolina com o consumo real do seu carro e os preços do posto. álcool ou gasolina combustível flex custo por km regra dos 70% abastecer consumo"><b>Etanol ou gasolina</b></a>
+</div></section>
+</div>
+</main>
+<footer class="az-rodape"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a>
+<p>As simulações têm caráter exclusivamente educativo. Os resultados dependem das premissas informadas por você, são estimativas e não constituem recomendação de investimento, oferta de produto ou garantia de rentabilidade. Rentabilidade passada não representa garantia de rentabilidade futura.</p>
+<p>Antes de decidir, confirme taxas, prazos, tributação e condições diretamente com a instituição responsável pelo produto.</p></div></footer>
+<script src="assets/config.js"></script>
+<script src="assets/az.js"></script>
+<script>AZ._registrar = AZ.registrar; AZ.registrar = function (x) { AZ.specs.push(x); }; AZ.antigo = function (slug) { var s = AZ.specs.filter(function (x) { return x.slug === slug; })[0]; if (!s) throw new Error("página antiga não carregada: " + slug); return s; };</script>
+<script>
+AZ.registrar({
+  slug: 'financiamento-sac',
+  titulo: 'Simulador de financiamento pelo SAC',
+  categoria: 'financiamentos',
+  subgrupo: 'imoveis',
+  ordem: 5,
+  resumo: 'Calcule as parcelas decrescentes de um financiamento pelo sistema SAC, com tabela mês a mês e comparação com a tabela Price.',
+  palavras: ['SAC', 'amortização constante', 'parcelas decrescentes', 'financiamento imobiliário', 'tabela Price'],
+  intro: 'Informe o valor financiado, a taxa de juros e o prazo para ver as parcelas decrescentes do sistema de amortização constante (SAC), o total de juros e a comparação com a tabela Price.',
+  campos: [
+    { id: 'valor', rotulo: 'Valor financiado', tipo: 'moeda', padrao: 400000, min: 1,
+      ajuda: 'Valor do imóvel menos a entrada.' },
+    { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: 10.5, min: 0, max: 100,
+      unidades: [{ v: 'ano', t: 'ao ano' }, { v: 'mes', t: 'ao mês' }] },
+    { id: 'prazo', rotulo: 'Prazo', tipo: 'int', padrao: 30, min: 1, max: 600,
+      unidades: [{ v: 'ano', t: 'anos' }, { v: 'mes', t: 'meses' }] },
+    { id: 'extras', rotulo: 'Seguros e tarifas por mês', tipo: 'moeda', padrao: 0, min: 0, opcional: true,
+      ajuda: 'Opcional. Valor fixo somado a cada parcela (seguros obrigatórios e taxa de administração).' }
+  ],
+  calcular: function (v, AZ) {
+    var IDX = '', SIS = 'sac', NOME = '', PELO = '', OIDX = '';
+    var n = v.prazoUn === 'ano' ? v.prazo * 12 : v.prazo;
+    if (n > 600) return { erro: 'O prazo máximo da simulação é de 50 anos (600 meses).' };
+    var i = v.taxaUn === 'ano' ? AZ.fin.aaParaAm(v.taxa / 100) : v.taxa / 100;
+    var c = !IDX ? 0 : (IDX === 'ipca' || v.corrUn === 'ano') ? AZ.fin.aaParaAm(v.corr / 100) : v.corr / 100;
+    var ex = v.extras || 0;
+    /* saldo corrigido pelo índice antes de calcular juros e amortização */
+    function tabela(sistema, corr) {
+      var s = v.valor, l = [], k, cor, j, a, r;
+      for (k = 1; k <= n; k++) {
+        cor = s * corr; s += cor; j = s * i; r = n - k + 1;
+        a = sistema === 'sac' ? s / r : AZ.fin.pmtVp(s, i, r) - j;
+        s = k === n ? 0 : s - a;
+        l.push({ n: k, correcao: cor, juros: j, amortizacao: a, parcela: a + j, saldo: s });
+      }
+      return l;
+    }
+    function totais(l) {
+      var t = { pago: 0, juros: 0, correcao: 0, pico: v.valor, mesPico: 0 };
+      l.forEach(function (x) { t.pago += x.parcela; t.juros += x.juros; t.correcao += x.correcao; if (x.saldo > t.pico) { t.pico = x.saldo; t.mesPico = x.n; } });
+      return t;
+    }
+    var l = tabela(SIS, c), t = totais(l), pri = l[0], ult = l[n - 1];
+    var seguros = ex * n, pagoTotal = t.pago + seguros, custo = Math.max(0, pagoTotal - v.valor);
+    var semCorr = IDX ? tabela(SIS, 0) : null;
+    var outro = IDX ? null : tabela('price', 0), tOutro = outro ? totais(outro) : null;
+    var maior = l.reduce(function (m, x) { return x.parcela > m.parcela ? x : m; }, pri);
+    var rot = l.map(function (x) { return String(x.n); });
+    function col(k) { return l.map(function (x) { return x[k]; }); }
+
+    /* nos cartões, valores a partir de R$ 1 milhão aparecem sem centavos para caber; as tabelas trazem os centavos */
+    var M = function (x) { return Math.abs(x) >= 1e6 ? 'R$ ' + AZ.f.int(x) : AZ.f.brl(x); };
+    var destaques = [
+      { rotulo: 'Primeira parcela', valor: pri.parcela + ex, formato: M, tom: 'primario',
+        nota: (ex ? 'com ' + AZ.f.brl(ex) + ' de seguros e tarifas, ' : '') + 'em ' + n + (n === 1 ? ' parcela' : ' parcelas') },
+      { rotulo: 'Última parcela', valor: ult.parcela + ex, formato: M,
+        nota: IDX === 'ipca' && c > 0 ? AZ.f.brl((ult.parcela + ex) / Math.pow(1 + c, n)) + ' em valores de hoje' : (maior.n > 1 && maior.n < n && maior.parcela > Math.max(pri.parcela, ult.parcela) + 0.005 ? 'a maior é a do mês ' + maior.n + ': ' + AZ.f.brl(maior.parcela + ex) : '') },
+      { rotulo: 'Total pago', valor: pagoTotal, formato: M, nota: AZ.f.num(pagoTotal / v.valor, 2) + ' vezes o valor financiado' },
+      { rotulo: 'Total de juros', valor: t.juros, formato: M, tom: 'negativo' }
+    ];
+    if (IDX) destaques.push({ rotulo: 'Correção ' + PELO, valor: t.correcao, formato: M, tom: 'negativo', nota: 'soma das atualizações mensais do saldo' });
+    else destaques.push({ rotulo: 'Custo total do crédito', valor: custo, formato: M, tom: 'destaque', nota: AZ.f.pct(custo / v.valor * 100, 1) + ' do valor financiado' });
+
+    var comp = [['Valor financiado', v.valor, v.valor / pagoTotal * 100], ['Juros', t.juros, t.juros / pagoTotal * 100]];
+    if (IDX) comp.push(['Correção monetária (' + NOME + ')', t.correcao, t.correcao / pagoTotal * 100]);
+    if (ex) comp.push(['Seguros e tarifas', seguros, seguros / pagoTotal * 100]);
+    comp.push(['Custo total do crédito (tudo além do valor financiado)', custo, custo / pagoTotal * 100]);
+    comp.push(['Total pago', pagoTotal, 100]);
+
+    var colunas = [{ t: 'Mês', f: 'int' }], campos = [];
+    if (IDX) { colunas.push({ t: 'Correção', f: 'brl' }); campos.push('correcao'); }
+    colunas.push({ t: 'Juros', f: 'brl' }, { t: 'Amortização', f: 'brl' }, { t: 'Parcela', f: 'brl' });
+    campos.push('juros', 'amortizacao', 'parcela');
+    if (ex) colunas.push({ t: 'Com seguros e tarifas', f: 'brl' });
+    colunas.push({ t: 'Saldo devedor', f: 'brl' });
+    var linhas = l.map(function (x) {
+      var r = [x.n].concat(campos.map(function (k) { return x[k]; }));
+      if (ex) r.push(x.parcela + ex);
+      r.push(x.saldo); return r;
+    });
+
+    var tabelas = [
+      { titulo: 'Composição do total pago', csv: false, destaque: [comp.length - 2, comp.length - 1],
+        colunas: [{ t: 'Item', f: 'texto' }, { t: 'Valor', f: 'brl' }, { t: 'Parte do total', f: 'pct1' }], linhas: comp }
+    ];
+    if (outro) tabelas.push({
+      titulo: 'SAC e tabela Price com os mesmos dados', csv: false,
+      colunas: [{ t: 'Item', f: 'texto' }, { t: 'SAC', f: 'brl' }, { t: 'Price', f: 'brl' }],
+      linhas: [
+        ['Primeira parcela', pri.parcela + ex, outro[0].parcela + ex],
+        ['Última parcela', ult.parcela + ex, outro[n - 1].parcela + ex],
+        ['Total de juros', t.juros, tOutro.juros],
+        ['Total pago', pagoTotal, tOutro.pago + seguros]
+      ],
+      nota: tOutro.juros - t.juros < 0.005 ? 'Com estes dados, o total de juros é igual nos dois sistemas.' : 'Pelo SAC, o total de juros é ' + AZ.f.brl(tOutro.juros - t.juros) + ' menor que pela tabela Price.'
+    });
+    tabelas.push({ titulo: 'Tabela mês a mês', colunas: colunas, linhas: linhas,
+      nota: IDX ? 'A coluna de correção mostra quanto o saldo devedor aumentou ' + PELO + ' antes do cálculo dos juros do mês.' : null });
+
+    var graficos = [
+      { tipo: 'linha', titulo: 'Evolução da parcela', formato: 'brl', rotuloDica: 'Mês', rotulos: rot,
+        series: [{ nome: 'Parcela', cor: 1, dados: col('parcela') }, { nome: 'Juros', cor: 2, dados: col('juros') }, { nome: 'Amortização', cor: 3, dados: col('amortizacao') }] },
+      { tipo: 'area', titulo: 'Evolução do saldo devedor', formato: 'brl', rotuloDica: 'Mês', rotulos: rot,
+        series: [{ nome: IDX ? 'Saldo com correção' : 'Saldo pelo SAC', cor: 1, dados: col('saldo') }]
+          .concat(IDX ? [{ nome: 'Saldo sem correção', cor: 5, dados: semCorr.map(function (x) { return x.saldo; }) }]
+            : [{ nome: 'Saldo pela tabela Price', cor: 5, dados: outro.map(function (x) { return x.saldo; }) }]) }
+    ];
+
+    var textos = [];
+    if (IDX && t.mesPico > 0) textos.push('<p>Com a correção mensal, o saldo devedor sobe até o mês ' + t.mesPico + ', quando chega a <strong>' + AZ.f.brl(t.pico) + '</strong>, acima do valor financiado, mesmo com as parcelas pagas em dia. Só depois disso começa a cair.</p>');
+    if (IDX) textos.push('<p>A simulação mantém ' + OIDX + ' constante por todo o prazo. Na prática o índice varia a cada mês, e as parcelas e o saldo acompanham essa variação.</p>');
+
+    return {
+      destaques: destaques,
+      resumo: '<p>Ao fim de ' + AZ.f.prazo(n) + ', o total pago é de <strong>' + AZ.f.brl(pagoTotal) + '</strong>. O custo total do crédito, ou seja, tudo o que se paga além do valor financiado (juros' + (IDX ? ', correção monetária' : '') + (ex ? ', seguros e tarifas' : '') + '), é de <strong>' + AZ.f.brl(custo) + '</strong>, o equivalente a ' + AZ.f.pct(custo / v.valor * 100, 1) + ' do valor financiado.</p>',
+      graficos: graficos, tabelas: tabelas, textos: textos
+    };
+  },
+  explicacao: [
+    '<p>No sistema de amortização constante (SAC), a dívida é dividida em partes iguais: a amortização de cada mês é o valor financiado dividido pelo número de parcelas. Os juros incidem sobre o saldo devedor, que cai todo mês, e por isso a parcela começa mais alta e diminui até o fim do contrato.</p>',
+    '<p>Em cada mês: <code>juros = saldo devedor × taxa mensal</code> e <code>parcela = amortização + juros</code>. A taxa anual é convertida para a taxa mensal equivalente, <code>(1 + taxa anual)^(1/12) − 1</code>.</p>',
+    '<p>A comparação com a tabela Price usa o mesmo valor, a mesma taxa e o mesmo prazo. Na Price a parcela é fixa e começa menor, mas o saldo devedor cai mais devagar, o que aumenta o total de juros. O SAC exige mais renda no início e custa menos ao longo do contrato.</p>',
+    '<p>Esta simulação não aplica correção monetária (TR ou IPCA) ao saldo devedor. O campo de seguros e tarifas aceita um valor fixo por mês; nos contratos reais, os seguros costumam variar com o saldo devedor e com a idade do comprador. Para comparar propostas, peça o custo efetivo total (CET) de cada uma.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'financiamento-imovel-tr-sac',
+  titulo: 'Financiamento de imóvel com TR no sistema SAC',
+  categoria: 'financiamentos',
+  subgrupo: 'imoveis',
+  ordem: 4,
+  resumo: 'Simule o financiamento imobiliário corrigido pela TR com amortização constante (SAC) e veja a tabela mês a mês.',
+  palavras: ['financiamento imobiliário', 'TR', 'taxa referencial', 'SAC', 'amortização constante', 'casa própria'],
+  intro: 'Informe o valor financiado, a taxa de juros, a TR esperada e o prazo. O simulador corrige o saldo devedor pela TR todo mês e divide o saldo corrigido pelo número de parcelas restantes (SAC).',
+  campos: [
+    { id: 'valor', rotulo: 'Valor financiado', tipo: 'moeda', padrao: 400000, min: 1,
+      ajuda: 'Valor do imóvel menos a entrada.' },
+    { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: 10.5, min: 0, max: 100,
+      unidades: [{ v: 'ano', t: 'ao ano' }, { v: 'mes', t: 'ao mês' }] },
+    { id: 'corr', rotulo: 'TR esperada', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.tr; }, min: 0, max: 100,
+      unidades: [{ v: 'mes', t: 'ao mês' }, { v: 'ano', t: 'ao ano' }],
+      ajuda: 'Taxa Referencial média que você espera para o período. O padrão é a TR mensal mais recente.' },
+    { id: 'prazo', rotulo: 'Prazo', tipo: 'int', padrao: 30, min: 1, max: 600,
+      unidades: [{ v: 'ano', t: 'anos' }, { v: 'mes', t: 'meses' }] },
+    { id: 'extras', rotulo: 'Seguros e tarifas por mês', tipo: 'moeda', padrao: 0, min: 0, opcional: true,
+      ajuda: 'Opcional. Valor fixo somado a cada parcela (seguros obrigatórios e taxa de administração).' }
+  ],
+  calcular: function (v, AZ) {
+    var IDX = 'tr', SIS = 'sac', NOME = 'TR', PELO = 'pela TR', OIDX = 'a TR';
+    var n = v.prazoUn === 'ano' ? v.prazo * 12 : v.prazo;
+    if (n > 600) return { erro: 'O prazo máximo da simulação é de 50 anos (600 meses).' };
+    var i = v.taxaUn === 'ano' ? AZ.fin.aaParaAm(v.taxa / 100) : v.taxa / 100;
+    var c = !IDX ? 0 : (IDX === 'ipca' || v.corrUn === 'ano') ? AZ.fin.aaParaAm(v.corr / 100) : v.corr / 100;
+    var ex = v.extras || 0;
+    /* saldo corrigido pelo índice antes de calcular juros e amortização */
+    function tabela(sistema, corr) {
+      var s = v.valor, l = [], k, cor, j, a, r;
+      for (k = 1; k <= n; k++) {
+        cor = s * corr; s += cor; j = s * i; r = n - k + 1;
+        a = sistema === 'sac' ? s / r : AZ.fin.pmtVp(s, i, r) - j;
+        s = k === n ? 0 : s - a;
+        l.push({ n: k, correcao: cor, juros: j, amortizacao: a, parcela: a + j, saldo: s });
+      }
+      return l;
+    }
+    function totais(l) {
+      var t = { pago: 0, juros: 0, correcao: 0, pico: v.valor, mesPico: 0 };
+      l.forEach(function (x) { t.pago += x.parcela; t.juros += x.juros; t.correcao += x.correcao; if (x.saldo > t.pico) { t.pico = x.saldo; t.mesPico = x.n; } });
+      return t;
+    }
+    var l = tabela(SIS, c), t = totais(l), pri = l[0], ult = l[n - 1];
+    var seguros = ex * n, pagoTotal = t.pago + seguros, custo = Math.max(0, pagoTotal - v.valor);
+    var semCorr = IDX ? tabela(SIS, 0) : null;
+    var outro = IDX ? null : tabela('price', 0), tOutro = outro ? totais(outro) : null;
+    var maior = l.reduce(function (m, x) { return x.parcela > m.parcela ? x : m; }, pri);
+    var rot = l.map(function (x) { return String(x.n); });
+    function col(k) { return l.map(function (x) { return x[k]; }); }
+
+    /* nos cartões, valores a partir de R$ 1 milhão aparecem sem centavos para caber; as tabelas trazem os centavos */
+    var M = function (x) { return Math.abs(x) >= 1e6 ? 'R$ ' + AZ.f.int(x) : AZ.f.brl(x); };
+    var destaques = [
+      { rotulo: 'Primeira parcela', valor: pri.parcela + ex, formato: M, tom: 'primario',
+        nota: (ex ? 'com ' + AZ.f.brl(ex) + ' de seguros e tarifas, ' : '') + 'em ' + n + (n === 1 ? ' parcela' : ' parcelas') },
+      { rotulo: 'Última parcela', valor: ult.parcela + ex, formato: M,
+        nota: IDX === 'ipca' && c > 0 ? AZ.f.brl((ult.parcela + ex) / Math.pow(1 + c, n)) + ' em valores de hoje' : (maior.n > 1 && maior.n < n && maior.parcela > Math.max(pri.parcela, ult.parcela) + 0.005 ? 'a maior é a do mês ' + maior.n + ': ' + AZ.f.brl(maior.parcela + ex) : '') },
+      { rotulo: 'Total pago', valor: pagoTotal, formato: M, nota: AZ.f.num(pagoTotal / v.valor, 2) + ' vezes o valor financiado' },
+      { rotulo: 'Total de juros', valor: t.juros, formato: M, tom: 'negativo' }
+    ];
+    if (IDX) destaques.push({ rotulo: 'Correção ' + PELO, valor: t.correcao, formato: M, tom: 'negativo', nota: 'soma das atualizações mensais do saldo' });
+    else destaques.push({ rotulo: 'Custo total do crédito', valor: custo, formato: M, tom: 'destaque', nota: AZ.f.pct(custo / v.valor * 100, 1) + ' do valor financiado' });
+
+    var comp = [['Valor financiado', v.valor, v.valor / pagoTotal * 100], ['Juros', t.juros, t.juros / pagoTotal * 100]];
+    if (IDX) comp.push(['Correção monetária (' + NOME + ')', t.correcao, t.correcao / pagoTotal * 100]);
+    if (ex) comp.push(['Seguros e tarifas', seguros, seguros / pagoTotal * 100]);
+    comp.push(['Custo total do crédito (tudo além do valor financiado)', custo, custo / pagoTotal * 100]);
+    comp.push(['Total pago', pagoTotal, 100]);
+
+    var colunas = [{ t: 'Mês', f: 'int' }], campos = [];
+    if (IDX) { colunas.push({ t: 'Correção', f: 'brl' }); campos.push('correcao'); }
+    colunas.push({ t: 'Juros', f: 'brl' }, { t: 'Amortização', f: 'brl' }, { t: 'Parcela', f: 'brl' });
+    campos.push('juros', 'amortizacao', 'parcela');
+    if (ex) colunas.push({ t: 'Com seguros e tarifas', f: 'brl' });
+    colunas.push({ t: 'Saldo devedor', f: 'brl' });
+    var linhas = l.map(function (x) {
+      var r = [x.n].concat(campos.map(function (k) { return x[k]; }));
+      if (ex) r.push(x.parcela + ex);
+      r.push(x.saldo); return r;
+    });
+
+    var tabelas = [
+      { titulo: 'Composição do total pago', csv: false, destaque: [comp.length - 2, comp.length - 1],
+        colunas: [{ t: 'Item', f: 'texto' }, { t: 'Valor', f: 'brl' }, { t: 'Parte do total', f: 'pct1' }], linhas: comp }
+    ];
+    if (outro) tabelas.push({
+      titulo: 'SAC e tabela Price com os mesmos dados', csv: false,
+      colunas: [{ t: 'Item', f: 'texto' }, { t: 'SAC', f: 'brl' }, { t: 'Price', f: 'brl' }],
+      linhas: [
+        ['Primeira parcela', pri.parcela + ex, outro[0].parcela + ex],
+        ['Última parcela', ult.parcela + ex, outro[n - 1].parcela + ex],
+        ['Total de juros', t.juros, tOutro.juros],
+        ['Total pago', pagoTotal, tOutro.pago + seguros]
+      ],
+      nota: tOutro.juros - t.juros < 0.005 ? 'Com estes dados, o total de juros é igual nos dois sistemas.' : 'Pelo SAC, o total de juros é ' + AZ.f.brl(tOutro.juros - t.juros) + ' menor que pela tabela Price.'
+    });
+    tabelas.push({ titulo: 'Tabela mês a mês', colunas: colunas, linhas: linhas,
+      nota: IDX ? 'A coluna de correção mostra quanto o saldo devedor aumentou ' + PELO + ' antes do cálculo dos juros do mês.' : null });
+
+    var graficos = [
+      { tipo: 'linha', titulo: 'Evolução da parcela', formato: 'brl', rotuloDica: 'Mês', rotulos: rot,
+        series: [{ nome: 'Parcela', cor: 1, dados: col('parcela') }, { nome: 'Juros', cor: 2, dados: col('juros') }, { nome: 'Amortização', cor: 3, dados: col('amortizacao') }] },
+      { tipo: 'area', titulo: 'Evolução do saldo devedor', formato: 'brl', rotuloDica: 'Mês', rotulos: rot,
+        series: [{ nome: IDX ? 'Saldo com correção' : 'Saldo pelo SAC', cor: 1, dados: col('saldo') }]
+          .concat(IDX ? [{ nome: 'Saldo sem correção', cor: 5, dados: semCorr.map(function (x) { return x.saldo; }) }]
+            : [{ nome: 'Saldo pela tabela Price', cor: 5, dados: outro.map(function (x) { return x.saldo; }) }]) }
+    ];
+
+    var textos = [];
+    if (IDX && t.mesPico > 0) textos.push('<p>Com a correção mensal, o saldo devedor sobe até o mês ' + t.mesPico + ', quando chega a <strong>' + AZ.f.brl(t.pico) + '</strong>, acima do valor financiado, mesmo com as parcelas pagas em dia. Só depois disso começa a cair.</p>');
+    if (IDX) textos.push('<p>A simulação mantém ' + OIDX + ' constante por todo o prazo. Na prática o índice varia a cada mês, e as parcelas e o saldo acompanham essa variação.</p>');
+
+    return {
+      destaques: destaques,
+      resumo: '<p>Ao fim de ' + AZ.f.prazo(n) + ', o total pago é de <strong>' + AZ.f.brl(pagoTotal) + '</strong>. O custo total do crédito, ou seja, tudo o que se paga além do valor financiado (juros' + (IDX ? ', correção monetária' : '') + (ex ? ', seguros e tarifas' : '') + '), é de <strong>' + AZ.f.brl(custo) + '</strong>, o equivalente a ' + AZ.f.pct(custo / v.valor * 100, 1) + ' do valor financiado.</p>',
+      graficos: graficos, tabelas: tabelas, textos: textos
+    };
+  },
+  explicacao: [
+    '<p>Nas linhas tradicionais de crédito imobiliário, o saldo devedor é atualizado todo mês pela Taxa Referencial (TR), calculada pelo Banco Central, e sobre o saldo atualizado incidem os juros do contrato. A TR costuma ser baixa e chega a zero quando os juros básicos caem, mas não há garantia sobre o seu valor futuro.</p>',
+    '<p>O cálculo de cada mês segue esta ordem:</p><ul><li>o saldo devedor é corrigido: <code>saldo × (1 + TR do mês)</code>;</li><li>os juros incidem sobre o saldo corrigido: <code>saldo corrigido × taxa mensal</code>;</li><li>a amortização é o saldo corrigido dividido pelo número de parcelas que resta, e a parcela é a amortização mais os juros.</li></ul>',
+    '<p>No SAC sem correção a parcela cairia todo mês. Com a correção mensal, a queda fica mais lenta e, se o índice for alto em relação aos juros, a parcela pode subir em parte do contrato. Ainda assim, a amortização é mais rápida que na tabela Price, o que reduz o total de juros e de correção.</p>',
+    '<p>As taxas anuais são convertidas para a taxa mensal equivalente, <code>(1 + taxa anual)^(1/12) − 1</code>. A TR informada é uma hipótese mantida constante por todo o prazo; a taxa real varia a cada mês e pode ser zero.</p>',
+    '<p>O campo de seguros e tarifas aceita um valor fixo por mês. Nos contratos reais, os seguros obrigatórios (morte e invalidez, danos ao imóvel) variam com o saldo devedor e com a idade do comprador, e há arredondamento de centavos. Use o resultado como estimativa e compare propostas pelo custo efetivo total (CET).</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'financiamento-imovel-tr-price',
+  titulo: 'Financiamento de imóvel com TR na tabela Price',
+  categoria: 'financiamentos',
+  subgrupo: 'imoveis',
+  ordem: 3,
+  resumo: 'Simule o financiamento imobiliário corrigido pela TR com parcelas pela tabela Price e veja a tabela mês a mês.',
+  palavras: ['financiamento imobiliário', 'TR', 'taxa referencial', 'tabela Price', 'saldo devedor', 'casa própria'],
+  intro: 'Informe o valor financiado, a taxa de juros, a TR esperada e o prazo. O simulador corrige o saldo devedor pela TR todo mês e recalcula a parcela pela tabela Price.',
+  campos: [
+    { id: 'valor', rotulo: 'Valor financiado', tipo: 'moeda', padrao: 400000, min: 1,
+      ajuda: 'Valor do imóvel menos a entrada.' },
+    { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: 10.5, min: 0, max: 100,
+      unidades: [{ v: 'ano', t: 'ao ano' }, { v: 'mes', t: 'ao mês' }] },
+    { id: 'corr', rotulo: 'TR esperada', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.tr; }, min: 0, max: 100,
+      unidades: [{ v: 'mes', t: 'ao mês' }, { v: 'ano', t: 'ao ano' }],
+      ajuda: 'Taxa Referencial média que você espera para o período. O padrão é a TR mensal mais recente.' },
+    { id: 'prazo', rotulo: 'Prazo', tipo: 'int', padrao: 30, min: 1, max: 600,
+      unidades: [{ v: 'ano', t: 'anos' }, { v: 'mes', t: 'meses' }] },
+    { id: 'extras', rotulo: 'Seguros e tarifas por mês', tipo: 'moeda', padrao: 0, min: 0, opcional: true,
+      ajuda: 'Opcional. Valor fixo somado a cada parcela (seguros obrigatórios e taxa de administração).' }
+  ],
+  calcular: function (v, AZ) {
+    var IDX = 'tr', SIS = 'price', NOME = 'TR', PELO = 'pela TR', OIDX = 'a TR';
+    var n = v.prazoUn === 'ano' ? v.prazo * 12 : v.prazo;
+    if (n > 600) return { erro: 'O prazo máximo da simulação é de 50 anos (600 meses).' };
+    var i = v.taxaUn === 'ano' ? AZ.fin.aaParaAm(v.taxa / 100) : v.taxa / 100;
+    var c = !IDX ? 0 : (IDX === 'ipca' || v.corrUn === 'ano') ? AZ.fin.aaParaAm(v.corr / 100) : v.corr / 100;
+    var ex = v.extras || 0;
+    /* saldo corrigido pelo índice antes de calcular juros e amortização */
+    function tabela(sistema, corr) {
+      var s = v.valor, l = [], k, cor, j, a, r;
+      for (k = 1; k <= n; k++) {
+        cor = s * corr; s += cor; j = s * i; r = n - k + 1;
+        a = sistema === 'sac' ? s / r : AZ.fin.pmtVp(s, i, r) - j;
+        s = k === n ? 0 : s - a;
+        l.push({ n: k, correcao: cor, juros: j, amortizacao: a, parcela: a + j, saldo: s });
+      }
+      return l;
+    }
+    function totais(l) {
+      var t = { pago: 0, juros: 0, correcao: 0, pico: v.valor, mesPico: 0 };
+      l.forEach(function (x) { t.pago += x.parcela; t.juros += x.juros; t.correcao += x.correcao; if (x.saldo > t.pico) { t.pico = x.saldo; t.mesPico = x.n; } });
+      return t;
+    }
+    var l = tabela(SIS, c), t = totais(l), pri = l[0], ult = l[n - 1];
+    var seguros = ex * n, pagoTotal = t.pago + seguros, custo = Math.max(0, pagoTotal - v.valor);
+    var semCorr = IDX ? tabela(SIS, 0) : null;
+    var outro = IDX ? null : tabela('price', 0), tOutro = outro ? totais(outro) : null;
+    var maior = l.reduce(function (m, x) { return x.parcela > m.parcela ? x : m; }, pri);
+    var rot = l.map(function (x) { return String(x.n); });
+    function col(k) { return l.map(function (x) { return x[k]; }); }
+
+    /* nos cartões, valores a partir de R$ 1 milhão aparecem sem centavos para caber; as tabelas trazem os centavos */
+    var M = function (x) { return Math.abs(x) >= 1e6 ? 'R$ ' + AZ.f.int(x) : AZ.f.brl(x); };
+    var destaques = [
+      { rotulo: 'Primeira parcela', valor: pri.parcela + ex, formato: M, tom: 'primario',
+        nota: (ex ? 'com ' + AZ.f.brl(ex) + ' de seguros e tarifas, ' : '') + 'em ' + n + (n === 1 ? ' parcela' : ' parcelas') },
+      { rotulo: 'Última parcela', valor: ult.parcela + ex, formato: M,
+        nota: IDX === 'ipca' && c > 0 ? AZ.f.brl((ult.parcela + ex) / Math.pow(1 + c, n)) + ' em valores de hoje' : (maior.n > 1 && maior.n < n && maior.parcela > Math.max(pri.parcela, ult.parcela) + 0.005 ? 'a maior é a do mês ' + maior.n + ': ' + AZ.f.brl(maior.parcela + ex) : '') },
+      { rotulo: 'Total pago', valor: pagoTotal, formato: M, nota: AZ.f.num(pagoTotal / v.valor, 2) + ' vezes o valor financiado' },
+      { rotulo: 'Total de juros', valor: t.juros, formato: M, tom: 'negativo' }
+    ];
+    if (IDX) destaques.push({ rotulo: 'Correção ' + PELO, valor: t.correcao, formato: M, tom: 'negativo', nota: 'soma das atualizações mensais do saldo' });
+    else destaques.push({ rotulo: 'Custo total do crédito', valor: custo, formato: M, tom: 'destaque', nota: AZ.f.pct(custo / v.valor * 100, 1) + ' do valor financiado' });
+
+    var comp = [['Valor financiado', v.valor, v.valor / pagoTotal * 100], ['Juros', t.juros, t.juros / pagoTotal * 100]];
+    if (IDX) comp.push(['Correção monetária (' + NOME + ')', t.correcao, t.correcao / pagoTotal * 100]);
+    if (ex) comp.push(['Seguros e tarifas', seguros, seguros / pagoTotal * 100]);
+    comp.push(['Custo total do crédito (tudo além do valor financiado)', custo, custo / pagoTotal * 100]);
+    comp.push(['Total pago', pagoTotal, 100]);
+
+    var colunas = [{ t: 'Mês', f: 'int' }], campos = [];
+    if (IDX) { colunas.push({ t: 'Correção', f: 'brl' }); campos.push('correcao'); }
+    colunas.push({ t: 'Juros', f: 'brl' }, { t: 'Amortização', f: 'brl' }, { t: 'Parcela', f: 'brl' });
+    campos.push('juros', 'amortizacao', 'parcela');
+    if (ex) colunas.push({ t: 'Com seguros e tarifas', f: 'brl' });
+    colunas.push({ t: 'Saldo devedor', f: 'brl' });
+    var linhas = l.map(function (x) {
+      var r = [x.n].concat(campos.map(function (k) { return x[k]; }));
+      if (ex) r.push(x.parcela + ex);
+      r.push(x.saldo); return r;
+    });
+
+    var tabelas = [
+      { titulo: 'Composição do total pago', csv: false, destaque: [comp.length - 2, comp.length - 1],
+        colunas: [{ t: 'Item', f: 'texto' }, { t: 'Valor', f: 'brl' }, { t: 'Parte do total', f: 'pct1' }], linhas: comp }
+    ];
+    if (outro) tabelas.push({
+      titulo: 'SAC e tabela Price com os mesmos dados', csv: false,
+      colunas: [{ t: 'Item', f: 'texto' }, { t: 'SAC', f: 'brl' }, { t: 'Price', f: 'brl' }],
+      linhas: [
+        ['Primeira parcela', pri.parcela + ex, outro[0].parcela + ex],
+        ['Última parcela', ult.parcela + ex, outro[n - 1].parcela + ex],
+        ['Total de juros', t.juros, tOutro.juros],
+        ['Total pago', pagoTotal, tOutro.pago + seguros]
+      ],
+      nota: tOutro.juros - t.juros < 0.005 ? 'Com estes dados, o total de juros é igual nos dois sistemas.' : 'Pelo SAC, o total de juros é ' + AZ.f.brl(tOutro.juros - t.juros) + ' menor que pela tabela Price.'
+    });
+    tabelas.push({ titulo: 'Tabela mês a mês', colunas: colunas, linhas: linhas,
+      nota: IDX ? 'A coluna de correção mostra quanto o saldo devedor aumentou ' + PELO + ' antes do cálculo dos juros do mês.' : null });
+
+    var graficos = [
+      { tipo: 'linha', titulo: 'Evolução da parcela', formato: 'brl', rotuloDica: 'Mês', rotulos: rot,
+        series: [{ nome: 'Parcela', cor: 1, dados: col('parcela') }, { nome: 'Juros', cor: 2, dados: col('juros') }, { nome: 'Amortização', cor: 3, dados: col('amortizacao') }] },
+      { tipo: 'area', titulo: 'Evolução do saldo devedor', formato: 'brl', rotuloDica: 'Mês', rotulos: rot,
+        series: [{ nome: IDX ? 'Saldo com correção' : 'Saldo pelo SAC', cor: 1, dados: col('saldo') }]
+          .concat(IDX ? [{ nome: 'Saldo sem correção', cor: 5, dados: semCorr.map(function (x) { return x.saldo; }) }]
+            : [{ nome: 'Saldo pela tabela Price', cor: 5, dados: outro.map(function (x) { return x.saldo; }) }]) }
+    ];
+
+    var textos = [];
+    if (IDX && t.mesPico > 0) textos.push('<p>Com a correção mensal, o saldo devedor sobe até o mês ' + t.mesPico + ', quando chega a <strong>' + AZ.f.brl(t.pico) + '</strong>, acima do valor financiado, mesmo com as parcelas pagas em dia. Só depois disso começa a cair.</p>');
+    if (IDX) textos.push('<p>A simulação mantém ' + OIDX + ' constante por todo o prazo. Na prática o índice varia a cada mês, e as parcelas e o saldo acompanham essa variação.</p>');
+
+    return {
+      destaques: destaques,
+      resumo: '<p>Ao fim de ' + AZ.f.prazo(n) + ', o total pago é de <strong>' + AZ.f.brl(pagoTotal) + '</strong>. O custo total do crédito, ou seja, tudo o que se paga além do valor financiado (juros' + (IDX ? ', correção monetária' : '') + (ex ? ', seguros e tarifas' : '') + '), é de <strong>' + AZ.f.brl(custo) + '</strong>, o equivalente a ' + AZ.f.pct(custo / v.valor * 100, 1) + ' do valor financiado.</p>',
+      graficos: graficos, tabelas: tabelas, textos: textos
+    };
+  },
+  explicacao: [
+    '<p>Nas linhas tradicionais de crédito imobiliário, o saldo devedor é atualizado todo mês pela Taxa Referencial (TR), calculada pelo Banco Central, e sobre o saldo atualizado incidem os juros do contrato. A TR costuma ser baixa e chega a zero quando os juros básicos caem, mas não há garantia sobre o seu valor futuro.</p>',
+    '<p>O cálculo de cada mês segue esta ordem:</p><ul><li>o saldo devedor é corrigido: <code>saldo × (1 + TR do mês)</code>;</li><li>os juros incidem sobre o saldo corrigido: <code>saldo corrigido × taxa mensal</code>;</li><li>a parcela é recalculada pela tabela Price para quitar o saldo corrigido no número de meses que resta, e a amortização é a parcela menos os juros.</li></ul>',
+    '<p>Na tabela Price sem correção a parcela seria fixa. Com a correção mensal, ela cresce no mesmo ritmo do índice. Como a amortização é pequena no início, o saldo devedor pode ficar acima do valor financiado durante vários anos, mesmo com todas as parcelas em dia.</p>',
+    '<p>As taxas anuais são convertidas para a taxa mensal equivalente, <code>(1 + taxa anual)^(1/12) − 1</code>. A TR informada é uma hipótese mantida constante por todo o prazo; a taxa real varia a cada mês e pode ser zero.</p>',
+    '<p>O campo de seguros e tarifas aceita um valor fixo por mês. Nos contratos reais, os seguros obrigatórios (morte e invalidez, danos ao imóvel) variam com o saldo devedor e com a idade do comprador, e há arredondamento de centavos. Use o resultado como estimativa e compare propostas pelo custo efetivo total (CET).</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'financiamento-imovel-ipca-sac',
+  titulo: 'Financiamento de imóvel com IPCA no sistema SAC',
+  categoria: 'financiamentos',
+  subgrupo: 'imoveis',
+  ordem: 2,
+  resumo: 'Simule o financiamento imobiliário corrigido pelo IPCA com amortização constante (SAC) e veja a tabela mês a mês.',
+  palavras: ['financiamento imobiliário', 'IPCA', 'SAC', 'amortização constante', 'inflação', 'casa própria'],
+  intro: 'Informe o valor financiado, a taxa de juros, a inflação esperada e o prazo. O simulador corrige o saldo devedor pelo IPCA todo mês e divide o saldo corrigido pelo número de parcelas restantes (SAC).',
+  campos: [
+    { id: 'valor', rotulo: 'Valor financiado', tipo: 'moeda', padrao: 400000, min: 1,
+      ajuda: 'Valor do imóvel menos a entrada.' },
+    { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: 8, min: 0, max: 100,
+      unidades: [{ v: 'ano', t: 'ao ano' }, { v: 'mes', t: 'ao mês' }] },
+    { id: 'corr', rotulo: 'IPCA esperado', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: 0, max: 100, sufixo: '% ao ano',
+      ajuda: 'Inflação média que você espera para o período. O padrão é o IPCA acumulado em 12 meses.' },
+    { id: 'prazo', rotulo: 'Prazo', tipo: 'int', padrao: 30, min: 1, max: 600,
+      unidades: [{ v: 'ano', t: 'anos' }, { v: 'mes', t: 'meses' }] },
+    { id: 'extras', rotulo: 'Seguros e tarifas por mês', tipo: 'moeda', padrao: 0, min: 0, opcional: true,
+      ajuda: 'Opcional. Valor fixo somado a cada parcela (seguros obrigatórios e taxa de administração).' }
+  ],
+  calcular: function (v, AZ) {
+    var IDX = 'ipca', SIS = 'sac', NOME = 'IPCA', PELO = 'pelo IPCA', OIDX = 'o IPCA';
+    var n = v.prazoUn === 'ano' ? v.prazo * 12 : v.prazo;
+    if (n > 600) return { erro: 'O prazo máximo da simulação é de 50 anos (600 meses).' };
+    var i = v.taxaUn === 'ano' ? AZ.fin.aaParaAm(v.taxa / 100) : v.taxa / 100;
+    var c = !IDX ? 0 : (IDX === 'ipca' || v.corrUn === 'ano') ? AZ.fin.aaParaAm(v.corr / 100) : v.corr / 100;
+    var ex = v.extras || 0;
+    /* saldo corrigido pelo índice antes de calcular juros e amortização */
+    function tabela(sistema, corr) {
+      var s = v.valor, l = [], k, cor, j, a, r;
+      for (k = 1; k <= n; k++) {
+        cor = s * corr; s += cor; j = s * i; r = n - k + 1;
+        a = sistema === 'sac' ? s / r : AZ.fin.pmtVp(s, i, r) - j;
+        s = k === n ? 0 : s - a;
+        l.push({ n: k, correcao: cor, juros: j, amortizacao: a, parcela: a + j, saldo: s });
+      }
+      return l;
+    }
+    function totais(l) {
+      var t = { pago: 0, juros: 0, correcao: 0, pico: v.valor, mesPico: 0 };
+      l.forEach(function (x) { t.pago += x.parcela; t.juros += x.juros; t.correcao += x.correcao; if (x.saldo > t.pico) { t.pico = x.saldo; t.mesPico = x.n; } });
+      return t;
+    }
+    var l = tabela(SIS, c), t = totais(l), pri = l[0], ult = l[n - 1];
+    var seguros = ex * n, pagoTotal = t.pago + seguros, custo = Math.max(0, pagoTotal - v.valor);
+    var semCorr = IDX ? tabela(SIS, 0) : null;
+    var outro = IDX ? null : tabela('price', 0), tOutro = outro ? totais(outro) : null;
+    var maior = l.reduce(function (m, x) { return x.parcela > m.parcela ? x : m; }, pri);
+    var rot = l.map(function (x) { return String(x.n); });
+    function col(k) { return l.map(function (x) { return x[k]; }); }
+
+    /* nos cartões, valores a partir de R$ 1 milhão aparecem sem centavos para caber; as tabelas trazem os centavos */
+    var M = function (x) { return Math.abs(x) >= 1e6 ? 'R$ ' + AZ.f.int(x) : AZ.f.brl(x); };
+    var destaques = [
+      { rotulo: 'Primeira parcela', valor: pri.parcela + ex, formato: M, tom: 'primario',
+        nota: (ex ? 'com ' + AZ.f.brl(ex) + ' de seguros e tarifas, ' : '') + 'em ' + n + (n === 1 ? ' parcela' : ' parcelas') },
+      { rotulo: 'Última parcela', valor: ult.parcela + ex, formato: M,
+        nota: IDX === 'ipca' && c > 0 ? AZ.f.brl((ult.parcela + ex) / Math.pow(1 + c, n)) + ' em valores de hoje' : (maior.n > 1 && maior.n < n && maior.parcela > Math.max(pri.parcela, ult.parcela) + 0.005 ? 'a maior é a do mês ' + maior.n + ': ' + AZ.f.brl(maior.parcela + ex) : '') },
+      { rotulo: 'Total pago', valor: pagoTotal, formato: M, nota: AZ.f.num(pagoTotal / v.valor, 2) + ' vezes o valor financiado' },
+      { rotulo: 'Total de juros', valor: t.juros, formato: M, tom: 'negativo' }
+    ];
+    if (IDX) destaques.push({ rotulo: 'Correção ' + PELO, valor: t.correcao, formato: M, tom: 'negativo', nota: 'soma das atualizações mensais do saldo' });
+    else destaques.push({ rotulo: 'Custo total do crédito', valor: custo, formato: M, tom: 'destaque', nota: AZ.f.pct(custo / v.valor * 100, 1) + ' do valor financiado' });
+
+    var comp = [['Valor financiado', v.valor, v.valor / pagoTotal * 100], ['Juros', t.juros, t.juros / pagoTotal * 100]];
+    if (IDX) comp.push(['Correção monetária (' + NOME + ')', t.correcao, t.correcao / pagoTotal * 100]);
+    if (ex) comp.push(['Seguros e tarifas', seguros, seguros / pagoTotal * 100]);
+    comp.push(['Custo total do crédito (tudo além do valor financiado)', custo, custo / pagoTotal * 100]);
+    comp.push(['Total pago', pagoTotal, 100]);
+
+    var colunas = [{ t: 'Mês', f: 'int' }], campos = [];
+    if (IDX) { colunas.push({ t: 'Correção', f: 'brl' }); campos.push('correcao'); }
+    colunas.push({ t: 'Juros', f: 'brl' }, { t: 'Amortização', f: 'brl' }, { t: 'Parcela', f: 'brl' });
+    campos.push('juros', 'amortizacao', 'parcela');
+    if (ex) colunas.push({ t: 'Com seguros e tarifas', f: 'brl' });
+    colunas.push({ t: 'Saldo devedor', f: 'brl' });
+    var linhas = l.map(function (x) {
+      var r = [x.n].concat(campos.map(function (k) { return x[k]; }));
+      if (ex) r.push(x.parcela + ex);
+      r.push(x.saldo); return r;
+    });
+
+    var tabelas = [
+      { titulo: 'Composição do total pago', csv: false, destaque: [comp.length - 2, comp.length - 1],
+        colunas: [{ t: 'Item', f: 'texto' }, { t: 'Valor', f: 'brl' }, { t: 'Parte do total', f: 'pct1' }], linhas: comp }
+    ];
+    if (outro) tabelas.push({
+      titulo: 'SAC e tabela Price com os mesmos dados', csv: false,
+      colunas: [{ t: 'Item', f: 'texto' }, { t: 'SAC', f: 'brl' }, { t: 'Price', f: 'brl' }],
+      linhas: [
+        ['Primeira parcela', pri.parcela + ex, outro[0].parcela + ex],
+        ['Última parcela', ult.parcela + ex, outro[n - 1].parcela + ex],
+        ['Total de juros', t.juros, tOutro.juros],
+        ['Total pago', pagoTotal, tOutro.pago + seguros]
+      ],
+      nota: tOutro.juros - t.juros < 0.005 ? 'Com estes dados, o total de juros é igual nos dois sistemas.' : 'Pelo SAC, o total de juros é ' + AZ.f.brl(tOutro.juros - t.juros) + ' menor que pela tabela Price.'
+    });
+    tabelas.push({ titulo: 'Tabela mês a mês', colunas: colunas, linhas: linhas,
+      nota: IDX ? 'A coluna de correção mostra quanto o saldo devedor aumentou ' + PELO + ' antes do cálculo dos juros do mês.' : null });
+
+    var graficos = [
+      { tipo: 'linha', titulo: 'Evolução da parcela', formato: 'brl', rotuloDica: 'Mês', rotulos: rot,
+        series: [{ nome: 'Parcela', cor: 1, dados: col('parcela') }, { nome: 'Juros', cor: 2, dados: col('juros') }, { nome: 'Amortização', cor: 3, dados: col('amortizacao') }] },
+      { tipo: 'area', titulo: 'Evolução do saldo devedor', formato: 'brl', rotuloDica: 'Mês', rotulos: rot,
+        series: [{ nome: IDX ? 'Saldo com correção' : 'Saldo pelo SAC', cor: 1, dados: col('saldo') }]
+          .concat(IDX ? [{ nome: 'Saldo sem correção', cor: 5, dados: semCorr.map(function (x) { return x.saldo; }) }]
+            : [{ nome: 'Saldo pela tabela Price', cor: 5, dados: outro.map(function (x) { return x.saldo; }) }]) }
+    ];
+
+    var textos = [];
+    if (IDX && t.mesPico > 0) textos.push('<p>Com a correção mensal, o saldo devedor sobe até o mês ' + t.mesPico + ', quando chega a <strong>' + AZ.f.brl(t.pico) + '</strong>, acima do valor financiado, mesmo com as parcelas pagas em dia. Só depois disso começa a cair.</p>');
+    if (IDX) textos.push('<p>A simulação mantém ' + OIDX + ' constante por todo o prazo. Na prática o índice varia a cada mês, e as parcelas e o saldo acompanham essa variação.</p>');
+
+    return {
+      destaques: destaques,
+      resumo: '<p>Ao fim de ' + AZ.f.prazo(n) + ', o total pago é de <strong>' + AZ.f.brl(pagoTotal) + '</strong>. O custo total do crédito, ou seja, tudo o que se paga além do valor financiado (juros' + (IDX ? ', correção monetária' : '') + (ex ? ', seguros e tarifas' : '') + '), é de <strong>' + AZ.f.brl(custo) + '</strong>, o equivalente a ' + AZ.f.pct(custo / v.valor * 100, 1) + ' do valor financiado.</p>',
+      graficos: graficos, tabelas: tabelas, textos: textos
+    };
+  },
+  explicacao: [
+    '<p>Neste tipo de contrato, a taxa de juros costuma ser menor que a das linhas tradicionais, mas o saldo devedor é atualizado todo mês pela inflação medida pelo IPCA. A dívida, portanto, acompanha os preços: se a inflação subir, o saldo e as parcelas sobem junto.</p>',
+    '<p>O cálculo de cada mês segue esta ordem:</p><ul><li>o saldo devedor é corrigido: <code>saldo × (1 + IPCA do mês)</code>;</li><li>os juros incidem sobre o saldo corrigido: <code>saldo corrigido × taxa mensal</code>;</li><li>a amortização é o saldo corrigido dividido pelo número de parcelas que resta, e a parcela é a amortização mais os juros.</li></ul>',
+    '<p>No SAC sem correção a parcela cairia todo mês. Com a correção mensal, a queda fica mais lenta e, se o índice for alto em relação aos juros, a parcela pode subir em parte do contrato. Ainda assim, a amortização é mais rápida que na tabela Price, o que reduz o total de juros e de correção.</p>',
+    '<p>As taxas anuais são convertidas para a taxa mensal equivalente, <code>(1 + taxa anual)^(1/12) − 1</code>. O IPCA informado é uma hipótese mantida constante por todo o prazo; a inflação real varia a cada mês. Os valores são nominais: a última parcela também aparece em valores de hoje, descontada pela inflação informada.</p>',
+    '<p>O campo de seguros e tarifas aceita um valor fixo por mês. Nos contratos reais, os seguros obrigatórios (morte e invalidez, danos ao imóvel) variam com o saldo devedor e com a idade do comprador, e há arredondamento de centavos. Use o resultado como estimativa e compare propostas pelo custo efetivo total (CET).</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'financiamento-imovel-ipca-price',
+  titulo: 'Financiamento de imóvel com IPCA na tabela Price',
+  categoria: 'financiamentos',
+  subgrupo: 'imoveis',
+  ordem: 1,
+  resumo: 'Simule o financiamento imobiliário corrigido pelo IPCA com parcelas pela tabela Price e veja a tabela mês a mês.',
+  palavras: ['financiamento imobiliário', 'IPCA', 'tabela Price', 'inflação', 'saldo devedor', 'casa própria'],
+  intro: 'Informe o valor financiado, a taxa de juros, a inflação esperada e o prazo. O simulador corrige o saldo devedor pelo IPCA todo mês e recalcula a parcela pela tabela Price.',
+  campos: [
+    { id: 'valor', rotulo: 'Valor financiado', tipo: 'moeda', padrao: 400000, min: 1,
+      ajuda: 'Valor do imóvel menos a entrada.' },
+    { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: 8, min: 0, max: 100,
+      unidades: [{ v: 'ano', t: 'ao ano' }, { v: 'mes', t: 'ao mês' }] },
+    { id: 'corr', rotulo: 'IPCA esperado', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: 0, max: 100, sufixo: '% ao ano',
+      ajuda: 'Inflação média que você espera para o período. O padrão é o IPCA acumulado em 12 meses.' },
+    { id: 'prazo', rotulo: 'Prazo', tipo: 'int', padrao: 30, min: 1, max: 600,
+      unidades: [{ v: 'ano', t: 'anos' }, { v: 'mes', t: 'meses' }] },
+    { id: 'extras', rotulo: 'Seguros e tarifas por mês', tipo: 'moeda', padrao: 0, min: 0, opcional: true,
+      ajuda: 'Opcional. Valor fixo somado a cada parcela (seguros obrigatórios e taxa de administração).' }
+  ],
+  calcular: function (v, AZ) {
+    var IDX = 'ipca', SIS = 'price', NOME = 'IPCA', PELO = 'pelo IPCA', OIDX = 'o IPCA';
+    var n = v.prazoUn === 'ano' ? v.prazo * 12 : v.prazo;
+    if (n > 600) return { erro: 'O prazo máximo da simulação é de 50 anos (600 meses).' };
+    var i = v.taxaUn === 'ano' ? AZ.fin.aaParaAm(v.taxa / 100) : v.taxa / 100;
+    var c = !IDX ? 0 : (IDX === 'ipca' || v.corrUn === 'ano') ? AZ.fin.aaParaAm(v.corr / 100) : v.corr / 100;
+    var ex = v.extras || 0;
+    /* saldo corrigido pelo índice antes de calcular juros e amortização */
+    function tabela(sistema, corr) {
+      var s = v.valor, l = [], k, cor, j, a, r;
+      for (k = 1; k <= n; k++) {
+        cor = s * corr; s += cor; j = s * i; r = n - k + 1;
+        a = sistema === 'sac' ? s / r : AZ.fin.pmtVp(s, i, r) - j;
+        s = k === n ? 0 : s - a;
+        l.push({ n: k, correcao: cor, juros: j, amortizacao: a, parcela: a + j, saldo: s });
+      }
+      return l;
+    }
+    function totais(l) {
+      var t = { pago: 0, juros: 0, correcao: 0, pico: v.valor, mesPico: 0 };
+      l.forEach(function (x) { t.pago += x.parcela; t.juros += x.juros; t.correcao += x.correcao; if (x.saldo > t.pico) { t.pico = x.saldo; t.mesPico = x.n; } });
+      return t;
+    }
+    var l = tabela(SIS, c), t = totais(l), pri = l[0], ult = l[n - 1];
+    var seguros = ex * n, pagoTotal = t.pago + seguros, custo = Math.max(0, pagoTotal - v.valor);
+    var semCorr = IDX ? tabela(SIS, 0) : null;
+    var outro = IDX ? null : tabela('price', 0), tOutro = outro ? totais(outro) : null;
+    var maior = l.reduce(function (m, x) { return x.parcela > m.parcela ? x : m; }, pri);
+    var rot = l.map(function (x) { return String(x.n); });
+    function col(k) { return l.map(function (x) { return x[k]; }); }
+
+    /* nos cartões, valores a partir de R$ 1 milhão aparecem sem centavos para caber; as tabelas trazem os centavos */
+    var M = function (x) { return Math.abs(x) >= 1e6 ? 'R$ ' + AZ.f.int(x) : AZ.f.brl(x); };
+    var destaques = [
+      { rotulo: 'Primeira parcela', valor: pri.parcela + ex, formato: M, tom: 'primario',
+        nota: (ex ? 'com ' + AZ.f.brl(ex) + ' de seguros e tarifas, ' : '') + 'em ' + n + (n === 1 ? ' parcela' : ' parcelas') },
+      { rotulo: 'Última parcela', valor: ult.parcela + ex, formato: M,
+        nota: IDX === 'ipca' && c > 0 ? AZ.f.brl((ult.parcela + ex) / Math.pow(1 + c, n)) + ' em valores de hoje' : (maior.n > 1 && maior.n < n && maior.parcela > Math.max(pri.parcela, ult.parcela) + 0.005 ? 'a maior é a do mês ' + maior.n + ': ' + AZ.f.brl(maior.parcela + ex) : '') },
+      { rotulo: 'Total pago', valor: pagoTotal, formato: M, nota: AZ.f.num(pagoTotal / v.valor, 2) + ' vezes o valor financiado' },
+      { rotulo: 'Total de juros', valor: t.juros, formato: M, tom: 'negativo' }
+    ];
+    if (IDX) destaques.push({ rotulo: 'Correção ' + PELO, valor: t.correcao, formato: M, tom: 'negativo', nota: 'soma das atualizações mensais do saldo' });
+    else destaques.push({ rotulo: 'Custo total do crédito', valor: custo, formato: M, tom: 'destaque', nota: AZ.f.pct(custo / v.valor * 100, 1) + ' do valor financiado' });
+
+    var comp = [['Valor financiado', v.valor, v.valor / pagoTotal * 100], ['Juros', t.juros, t.juros / pagoTotal * 100]];
+    if (IDX) comp.push(['Correção monetária (' + NOME + ')', t.correcao, t.correcao / pagoTotal * 100]);
+    if (ex) comp.push(['Seguros e tarifas', seguros, seguros / pagoTotal * 100]);
+    comp.push(['Custo total do crédito (tudo além do valor financiado)', custo, custo / pagoTotal * 100]);
+    comp.push(['Total pago', pagoTotal, 100]);
+
+    var colunas = [{ t: 'Mês', f: 'int' }], campos = [];
+    if (IDX) { colunas.push({ t: 'Correção', f: 'brl' }); campos.push('correcao'); }
+    colunas.push({ t: 'Juros', f: 'brl' }, { t: 'Amortização', f: 'brl' }, { t: 'Parcela', f: 'brl' });
+    campos.push('juros', 'amortizacao', 'parcela');
+    if (ex) colunas.push({ t: 'Com seguros e tarifas', f: 'brl' });
+    colunas.push({ t: 'Saldo devedor', f: 'brl' });
+    var linhas = l.map(function (x) {
+      var r = [x.n].concat(campos.map(function (k) { return x[k]; }));
+      if (ex) r.push(x.parcela + ex);
+      r.push(x.saldo); return r;
+    });
+
+    var tabelas = [
+      { titulo: 'Composição do total pago', csv: false, destaque: [comp.length - 2, comp.length - 1],
+        colunas: [{ t: 'Item', f: 'texto' }, { t: 'Valor', f: 'brl' }, { t: 'Parte do total', f: 'pct1' }], linhas: comp }
+    ];
+    if (outro) tabelas.push({
+      titulo: 'SAC e tabela Price com os mesmos dados', csv: false,
+      colunas: [{ t: 'Item', f: 'texto' }, { t: 'SAC', f: 'brl' }, { t: 'Price', f: 'brl' }],
+      linhas: [
+        ['Primeira parcela', pri.parcela + ex, outro[0].parcela + ex],
+        ['Última parcela', ult.parcela + ex, outro[n - 1].parcela + ex],
+        ['Total de juros', t.juros, tOutro.juros],
+        ['Total pago', pagoTotal, tOutro.pago + seguros]
+      ],
+      nota: tOutro.juros - t.juros < 0.005 ? 'Com estes dados, o total de juros é igual nos dois sistemas.' : 'Pelo SAC, o total de juros é ' + AZ.f.brl(tOutro.juros - t.juros) + ' menor que pela tabela Price.'
+    });
+    tabelas.push({ titulo: 'Tabela mês a mês', colunas: colunas, linhas: linhas,
+      nota: IDX ? 'A coluna de correção mostra quanto o saldo devedor aumentou ' + PELO + ' antes do cálculo dos juros do mês.' : null });
+
+    var graficos = [
+      { tipo: 'linha', titulo: 'Evolução da parcela', formato: 'brl', rotuloDica: 'Mês', rotulos: rot,
+        series: [{ nome: 'Parcela', cor: 1, dados: col('parcela') }, { nome: 'Juros', cor: 2, dados: col('juros') }, { nome: 'Amortização', cor: 3, dados: col('amortizacao') }] },
+      { tipo: 'area', titulo: 'Evolução do saldo devedor', formato: 'brl', rotuloDica: 'Mês', rotulos: rot,
+        series: [{ nome: IDX ? 'Saldo com correção' : 'Saldo pelo SAC', cor: 1, dados: col('saldo') }]
+          .concat(IDX ? [{ nome: 'Saldo sem correção', cor: 5, dados: semCorr.map(function (x) { return x.saldo; }) }]
+            : [{ nome: 'Saldo pela tabela Price', cor: 5, dados: outro.map(function (x) { return x.saldo; }) }]) }
+    ];
+
+    var textos = [];
+    if (IDX && t.mesPico > 0) textos.push('<p>Com a correção mensal, o saldo devedor sobe até o mês ' + t.mesPico + ', quando chega a <strong>' + AZ.f.brl(t.pico) + '</strong>, acima do valor financiado, mesmo com as parcelas pagas em dia. Só depois disso começa a cair.</p>');
+    if (IDX) textos.push('<p>A simulação mantém ' + OIDX + ' constante por todo o prazo. Na prática o índice varia a cada mês, e as parcelas e o saldo acompanham essa variação.</p>');
+
+    return {
+      destaques: destaques,
+      resumo: '<p>Ao fim de ' + AZ.f.prazo(n) + ', o total pago é de <strong>' + AZ.f.brl(pagoTotal) + '</strong>. O custo total do crédito, ou seja, tudo o que se paga além do valor financiado (juros' + (IDX ? ', correção monetária' : '') + (ex ? ', seguros e tarifas' : '') + '), é de <strong>' + AZ.f.brl(custo) + '</strong>, o equivalente a ' + AZ.f.pct(custo / v.valor * 100, 1) + ' do valor financiado.</p>',
+      graficos: graficos, tabelas: tabelas, textos: textos
+    };
+  },
+  explicacao: [
+    '<p>Neste tipo de contrato, a taxa de juros costuma ser menor que a das linhas tradicionais, mas o saldo devedor é atualizado todo mês pela inflação medida pelo IPCA. A dívida, portanto, acompanha os preços: se a inflação subir, o saldo e as parcelas sobem junto.</p>',
+    '<p>O cálculo de cada mês segue esta ordem:</p><ul><li>o saldo devedor é corrigido: <code>saldo × (1 + IPCA do mês)</code>;</li><li>os juros incidem sobre o saldo corrigido: <code>saldo corrigido × taxa mensal</code>;</li><li>a parcela é recalculada pela tabela Price para quitar o saldo corrigido no número de meses que resta, e a amortização é a parcela menos os juros.</li></ul>',
+    '<p>Na tabela Price sem correção a parcela seria fixa. Com a correção mensal, ela cresce no mesmo ritmo do índice. Como a amortização é pequena no início, o saldo devedor pode ficar acima do valor financiado durante vários anos, mesmo com todas as parcelas em dia.</p>',
+    '<p>As taxas anuais são convertidas para a taxa mensal equivalente, <code>(1 + taxa anual)^(1/12) − 1</code>. O IPCA informado é uma hipótese mantida constante por todo o prazo; a inflação real varia a cada mês. Os valores são nominais: a última parcela também aparece em valores de hoje, descontada pela inflação informada.</p>',
+    '<p>O campo de seguros e tarifas aceita um valor fixo por mês. Nos contratos reais, os seguros obrigatórios (morte e invalidez, danos ao imóvel) variam com o saldo devedor e com a idade do comprador, e há arredondamento de centavos. Use o resultado como estimativa e compare propostas pelo custo efetivo total (CET).</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'financiamento',
+  titulo: 'Simulador de financiamento com prestações fixas',
+  categoria: 'financiamentos',
+  subgrupo: 'geral',
+  ordem: 3,
+  resumo: 'Informe três dados de um financiamento com parcelas fixas e descubra o quarto: parcela, valor financiado, taxa de juros ou prazo.',
+  palavras: ['tabela Price', 'prestação fixa', 'taxa de juros embutida', 'crediário', 'parcelamento', 'número de parcelas', 'valor financiado'],
+  intro: 'Um financiamento com prestações fixas tem quatro elementos: valor financiado, taxa de juros, número de parcelas e valor da parcela. Escolha o que deseja calcular e informe os outros três.',
+  campos: [
+    { id: 'calc', rotulo: 'O que calcular', tipo: 'select', padrao: 'parcela',
+      opcoes: [{ v: 'parcela', t: 'Valor da parcela' }, { v: 'valor', t: 'Valor financiado' }, { v: 'taxa', t: 'Taxa de juros' }, { v: 'prazo', t: 'Número de parcelas' }] },
+    { id: 'valor', rotulo: 'Valor financiado', tipo: 'moeda', padrao: 30000, min: 0.01, mostrarSe: function (v) { return v.calc !== 'valor'; } },
+    { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: 2, min: 0, max: 1000,
+      unidades: [{ v: 'mes', t: 'ao mês' }, { v: 'ano', t: 'ao ano' }], mostrarSe: function (v) { return v.calc !== 'taxa'; } },
+    { id: 'prazo', rotulo: 'Número de parcelas', tipo: 'int', padrao: 48, min: 1, max: 600, sufixo: 'meses', mostrarSe: function (v) { return v.calc !== 'prazo'; } },
+    { id: 'parcela', rotulo: 'Valor da parcela', tipo: 'moeda', padrao: 1000, min: 0.01, mostrarSe: function (v) { return v.calc !== 'parcela'; } }
+  ],
+  calcular: function (v, AZ) {
+    /* nos cartões, valores a partir de R$ 1 milhão aparecem sem centavos para caber; as tabelas trazem os centavos */
+    var M = function (x) { return Math.abs(x) >= 1e6 ? 'R$ ' + AZ.f.int(x) : AZ.f.brl(x); };
+    var F = AZ.fin, modo = v.calc;
+    var i = v.taxaUn === 'ano' ? F.aaParaAm(v.taxa / 100) : v.taxa / 100;
+    var pv = v.valor, n = v.prazo, p = v.parcela, principal, aviso = null, nExato = null;
+    if (modo === 'parcela') { p = F.pmtVp(pv, i, n); principal = { rotulo: 'Valor da parcela', valor: p, formato: M, nota: n === 1 ? 'parcela única' : 'fixa, da primeira à última das ' + n + ' parcelas' }; }
+    else if (modo === 'valor') { pv = F.vp(0, i, n, p); principal = { rotulo: 'Valor financiado', valor: pv, formato: M, nota: 'quanto ' + n + (n === 1 ? ' parcela de ' : ' parcelas de ') + AZ.f.brl(p) + (n === 1 ? ' consegue pagar' : ' conseguem pagar') }; }
+    else if (modo === 'taxa') {
+      if (p * n < pv - 0.005) return { erro: 'As parcelas somam ' + AZ.f.brl(p * n) + ', menos que o valor financiado. Confira os valores informados.' };
+      /* a taxa que iguala o valor presente das parcelas ao valor financiado fica entre zero e parcela / valor financiado */
+      i = Math.abs(p * n - pv) < 0.005 ? 0 : F.raiz(function (x) { return F.vp(0, x, n, p) - pv; }, 0, p / pv + 1, 1e-9);
+      if (!isFinite(i)) return { erro: 'Não foi possível encontrar uma taxa para esses valores. Confira os dados informados.' };
+      principal = { rotulo: 'Taxa de juros', valor: AZ.f.pct(i * 100, 2) + ' ao mês', nota: AZ.f.pct(F.amParaAa(i) * 100, 2) + ' ao ano' };
+    } else {
+      if (i > 0 && p <= pv * i) return { erro: 'A parcela de ' + AZ.f.brl(p) + ' não cobre os juros do primeiro mês (' + AZ.f.brl(pv * i) + '). Com esse valor a dívida nunca é quitada.' };
+      nExato = F.nperVp(pv, i, p);
+      n = Math.max(1, Math.ceil(nExato - 1e-9));
+      if (n > 1200) return { erro: 'Com essa parcela, o prazo passa de 100 anos. Aumente a parcela ou reduza a taxa.' };
+      principal = { rotulo: 'Número de parcelas', valor: AZ.f.int(n), nota: AZ.f.prazo(n) };
+    }
+    principal.tom = 'primario';
+    /* tabela: parcelas iguais; quando o prazo é calculado, a última parcela quita o saldo restante */
+    var l = [], s = pv, k, j, a, pg, pago = 0, juros = 0;
+    for (k = 1; k <= n; k++) {
+      j = s * i;
+      pg = (modo === 'prazo' && k === n) ? s + j : p;
+      a = pg - j; s = k === n ? 0 : s - a;
+      pago += pg; juros += j;
+      l.push({ n: k, parcela: pg, juros: j, amortizacao: a, saldo: s });
+    }
+    var ult = l[n - 1].parcela, ajuste = modo === 'prazo' && Math.abs(ult - p) > 0.005;
+    var unica = ajuste && n === 1;
+    if (unica) aviso = 'A parcela informada, de ' + AZ.f.brl(p) + ', é maior que o necessário para quitar a dívida no primeiro mês. Basta uma parcela única de ' + AZ.f.brl(ult) + '.';
+    else if (ajuste) aviso = 'O prazo exato seria de ' + AZ.f.num(nExato, 2) + ' meses. Por isso são ' + (n - 1) + (n - 1 === 1 ? ' parcela de ' : ' parcelas de ') + AZ.f.brl(p) + ' e uma última, menor, de ' + AZ.f.brl(ult) + '.';
+    var destaques = [principal];
+    if (modo !== 'parcela') destaques.push({ rotulo: ajuste && !unica ? 'Primeira e última parcela' : 'Valor da parcela', valor: unica ? AZ.f.brl(ult) : ajuste ? AZ.f.brl(p) + ' e ' + AZ.f.brl(ult) : AZ.f.brl(p), nota: unica ? 'parcela única, menor que a informada' : ajuste ? 'a última quita o saldo restante' : 'fixa, da primeira à última' });
+    if (modo !== 'taxa') destaques.push({ rotulo: 'Taxa de juros', valor: AZ.f.pct(i * 100, 2) + ' ao mês', nota: AZ.f.pct(F.amParaAa(i) * 100, 2) + ' ao ano' });
+    destaques.push({ rotulo: 'Total pago', valor: pago, formato: M, nota: pv > 0 ? AZ.f.num(pago / pv, 2) + ' vezes o valor financiado' : '' });
+    destaques.push({ rotulo: 'Total de juros', valor: juros, formato: M, tom: 'negativo', nota: 'custo total do crédito: ' + AZ.f.pct(pv > 0 ? juros / pv * 100 : 0, 1) + ' do valor financiado' });
+    var curto = n <= 40, rot = l.map(function (x) { return String(x.n); });
+    return {
+      alerta: aviso,
+      destaques: destaques,
+      resumo: '<p>Um financiamento de <strong>' + AZ.f.brl(pv) + '</strong> a ' + AZ.f.pct(i * 100, 2) + ' ao mês, pago em ' + n + (n === 1 ? ' parcela' : ' parcelas') + (ajuste ? '' : ' de ' + AZ.f.brl(p)) + ', soma <strong>' + AZ.f.brl(pago) + '</strong>. Os juros, de ' + AZ.f.brl(juros) + ', são o custo total do crédito nesta simulação, que não inclui tarifas nem impostos.</p>',
+      graficos: [
+        { tipo: curto ? 'barras-empilhadas' : 'linha', titulo: 'Composição de cada parcela', formato: 'brl', rotuloDica: 'Mês', rotulos: rot,
+          series: [{ nome: 'Amortização', cor: 1, dados: l.map(function (x) { return x.amortizacao; }) }, { nome: 'Juros', cor: 2, dados: l.map(function (x) { return x.juros; }) }] },
+        { tipo: 'area', titulo: 'Evolução do saldo devedor', formato: 'brl', rotuloDica: 'Mês', rotulos: ['0'].concat(rot),
+          series: [{ nome: 'Saldo devedor', cor: 1, dados: [pv].concat(l.map(function (x) { return x.saldo; })) }] }
+      ],
+      tabelas: [{
+        titulo: 'Tabela mês a mês',
+        colunas: [{ t: 'Mês', f: 'int' }, { t: 'Parcela', f: 'brl' }, { t: 'Juros', f: 'brl' }, { t: 'Amortização', f: 'brl' }, { t: 'Saldo devedor', f: 'brl' }],
+        linhas: l.map(function (x) { return [x.n, x.parcela, x.juros, x.amortizacao, x.saldo]; })
+      }]
+    };
+  },
+  explicacao: [
+    '<p>No sistema de prestações fixas (tabela Price), o valor financiado é igual ao valor presente de todas as parcelas, descontadas pela taxa de juros: <code>valor financiado = parcela × (1 − (1 + taxa)^(−n)) / taxa</code>, com taxa mensal e <code>n</code> parcelas. Conhecendo três desses elementos, o quarto fica determinado.</p>',
+    '<ul><li><strong>Parcela e valor financiado</strong> saem diretamente da fórmula.</li><li><strong>Número de parcelas</strong>: <code>n = −ln(1 − valor × taxa / parcela) / ln(1 + taxa)</code>. Quando o resultado não é inteiro, o simulador arredonda para cima e ajusta a última parcela para quitar exatamente o saldo.</li><li><strong>Taxa de juros</strong>: não existe fórmula direta, então a taxa é encontrada por aproximações sucessivas até que o valor presente das parcelas iguale o valor financiado.</li></ul>',
+    '<p>Calcular a taxa é útil para descobrir os juros embutidos em uma compra parcelada: informe o preço à vista como valor financiado, o número de parcelas e o valor de cada uma. Se houver entrada, desconte-a do preço à vista.</p>',
+    '<p>A simulação considera a primeira parcela um mês depois da contratação e juros compostos mensais. Não inclui IOF, tarifas nem seguros. Para comparar propostas reais, use o custo efetivo total (CET), que reúne todos esses encargos em uma única taxa.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'emprestimo',
+  titulo: 'Simulador de empréstimo',
+  categoria: 'financiamentos',
+  subgrupo: 'geral',
+  ordem: 2,
+  resumo: 'Calcule a parcela de um empréstimo com prestações fixas, o total de juros e o custo total, com tabela mês a mês.',
+  palavras: ['empréstimo pessoal', 'prestação', 'parcela fixa', 'tabela Price', 'crédito pessoal', 'CET', 'juros'],
+  intro: 'Informe o valor do empréstimo, a taxa de juros e o número de parcelas para ver a prestação mensal, quanto do total pago são juros e a evolução da dívida mês a mês.',
+  campos: [
+    { id: 'valor', rotulo: 'Valor do empréstimo', tipo: 'moeda', padrao: 20000, min: 1 },
+    { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: 2.5, min: 0, max: 1000,
+      unidades: [{ v: 'mes', t: 'ao mês' }, { v: 'ano', t: 'ao ano' }],
+      ajuda: 'Se a instituição informar o custo efetivo total (CET), use essa taxa: ela já inclui tarifas, seguros e impostos.' },
+    { id: 'prazo', rotulo: 'Número de parcelas', tipo: 'int', padrao: 36, min: 1, max: 600, sufixo: 'meses' },
+    { id: 'tarifas', rotulo: 'Tarifas e seguros pagos na contratação', tipo: 'moeda', padrao: 0, min: 0, opcional: true,
+      ajuda: 'Opcional. Valores descontados do dinheiro que você recebe (tarifa de cadastro, seguro, IOF). Servem para estimar o custo efetivo.' }
+  ],
+  calcular: function (v, AZ) {
+    /* nos cartões, valores a partir de R$ 1 milhão aparecem sem centavos para caber; as tabelas trazem os centavos */
+    var M = function (x) { return Math.abs(x) >= 1e6 ? 'R$ ' + AZ.f.int(x) : AZ.f.brl(x); };
+    var n = v.prazo, i = v.taxaUn === 'ano' ? AZ.fin.aaParaAm(v.taxa / 100) : v.taxa / 100;
+    var tar = v.tarifas || 0;
+    if (tar >= v.valor) return { erro: 'As tarifas devem ser menores que o valor do empréstimo.' };
+    var l = AZ.fin.price(v.valor, i, n), p = l[0].parcela;
+    var pago = p * n, juros = pago - v.valor, custo = juros + tar;
+    /* taxa interna de retorno do fluxo: valor recebido hoje contra n parcelas. A raiz fica entre a taxa do contrato e parcela / valor recebido */
+    var liq = v.valor - tar;
+    var cet = tar > 0 ? AZ.fin.raiz(function (x) { return AZ.fin.vp(0, x, n, p) - liq; }, i, p / liq + 1, 1e-9) : i;
+    var curto = n <= 40;
+    var rot = l.map(function (x) { return String(x.n); });
+    var destaques = [
+      { rotulo: 'Parcela mensal', valor: p, formato: M, tom: 'primario', nota: n === 1 ? 'parcela única' : 'fixa, da primeira à última das ' + n + ' parcelas' },
+      { rotulo: 'Total pago', valor: pago, formato: M, nota: AZ.f.num(pago / v.valor, 2) + ' vezes o valor emprestado' },
+      { rotulo: 'Total de juros', valor: juros, formato: M, tom: 'negativo', nota: AZ.f.pct(juros / v.valor * 100, 2) + ' do valor emprestado' },
+      { rotulo: 'Custo total do crédito', valor: custo, formato: M, tom: 'destaque', nota: tar > 0 ? 'juros mais tarifas e seguros' : 'igual aos juros, pois não há tarifas informadas' }
+    ];
+    if (tar > 0) destaques.push({ rotulo: 'Custo efetivo estimado', valor: AZ.f.pct(cet * 100, 2) + ' ao mês', nota: AZ.f.pct(AZ.fin.amParaAa(cet) * 100, 2) + ' ao ano, sobre os ' + AZ.f.brl(liq) + ' recebidos' });
+    return {
+      destaques: destaques,
+      resumo: '<p>Para cada R$ 100,00 emprestados, você devolve <strong>' + AZ.f.brl(pago / v.valor * 100) + '</strong>, dos quais ' + AZ.f.brl(juros / v.valor * 100) + ' são juros. Os juros representam ' + AZ.f.pct(pago > 0 ? juros / pago * 100 : 0, 1) + ' de tudo o que será pago. A taxa usada equivale a ' + AZ.f.pct(i * 100, 2) + ' ao mês ou ' + AZ.f.pct(AZ.fin.amParaAa(i) * 100, 2) + ' ao ano.</p>',
+      graficos: [
+        { tipo: curto ? 'barras-empilhadas' : 'linha', titulo: 'Composição de cada parcela', formato: 'brl', rotuloDica: 'Mês', rotulos: rot,
+          series: [{ nome: 'Amortização', cor: 1, dados: l.map(function (x) { return x.amortizacao; }) }, { nome: 'Juros', cor: 2, dados: l.map(function (x) { return x.juros; }) }] },
+        { tipo: 'area', titulo: 'Evolução do saldo devedor', formato: 'brl', rotuloDica: 'Mês', rotulos: ['0'].concat(rot),
+          series: [{ nome: 'Saldo devedor', cor: 1, dados: [v.valor].concat(l.map(function (x) { return x.saldo; })) }] }
+      ],
+      tabelas: [{
+        titulo: 'Tabela mês a mês',
+        colunas: [{ t: 'Mês', f: 'int' }, { t: 'Parcela', f: 'brl' }, { t: 'Juros', f: 'brl' }, { t: 'Amortização', f: 'brl' }, { t: 'Saldo devedor', f: 'brl' }],
+        linhas: l.map(function (x) { return [x.n, x.parcela, x.juros, x.amortizacao, x.saldo]; })
+      }],
+      textos: ['<p>A parcela é a mesma todos os meses, mas a sua composição muda: no início a maior parte é de juros, e a amortização da dívida cresce a cada pagamento. Por isso, quitar parcelas antecipadamente reduz mais juros quando feito no começo do contrato.</p>']
+    };
+  },
+  explicacao: [
+    '<p>O cálculo usa o sistema de prestações fixas (tabela Price), padrão no crédito pessoal e no consignado. A parcela é <code>valor × taxa / (1 − (1 + taxa)^(−n))</code>, em que <code>taxa</code> é a taxa mensal e <code>n</code> é o número de parcelas. Quando a taxa é informada ao ano, ela é convertida para a taxa mensal equivalente, <code>(1 + taxa anual)^(1/12) − 1</code>.</p>',
+    '<p>Em cada mês, os juros são o saldo devedor multiplicado pela taxa mensal, e a amortização é a parcela menos os juros. A primeira parcela é considerada um mês depois da contratação.</p>',
+    '<p>Se você informar tarifas e seguros pagos na contratação, o simulador estima o custo efetivo: a taxa que iguala o valor realmente recebido (empréstimo menos tarifas) ao fluxo das parcelas. Esse número é uma aproximação do custo efetivo total (CET) que a instituição é obrigada a informar antes da contratação.</p>',
+    '<p>A simulação não calcula o IOF nem considera carência, parcelas em atraso ou arredondamento de centavos. Para comparar propostas, use sempre o CET informado por cada instituição.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'financiamento-carro',
+  titulo: 'Simulador de financiamento de carro',
+  categoria: 'financiamentos',
+  subgrupo: 'veiculos',
+  ordem: 1,
+  resumo: 'Calcule a parcela do financiamento de um veículo, o total de juros e quanto o carro custa ao final, com entrada e prazo.',
+  palavras: ['financiamento de veículo', 'carro financiado', 'moto', 'CDC', 'entrada', 'parcela', 'tabela Price'],
+  intro: 'Informe o preço do veículo, a entrada, a taxa de juros e o prazo para ver a parcela mensal, o total de juros e quanto o carro custa ao fim do financiamento.',
+  campos: [
+    { id: 'preco', rotulo: 'Preço do veículo', tipo: 'moeda', padrao: 80000, min: 1 },
+    { id: 'entrada', rotulo: 'Entrada', tipo: 'moeda', padrao: 24000, min: 0 },
+    { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: 1.8, min: 0, max: 1000,
+      unidades: [{ v: 'mes', t: 'ao mês' }, { v: 'ano', t: 'ao ano' }],
+      ajuda: 'Se a proposta informar o custo efetivo total (CET), use essa taxa.' },
+    { id: 'prazo', rotulo: 'Prazo', tipo: 'int', padrao: 48, min: 1, max: 120, sufixo: 'meses' },
+    { id: 'custos', rotulo: 'Tarifas, seguros e IOF financiados', tipo: 'moeda', padrao: 0, min: 0, opcional: true,
+      ajuda: 'Opcional. Valores somados ao financiamento e pagos dentro das parcelas.' }
+  ],
+  calcular: function (v, AZ) {
+    /* nos cartões, valores a partir de R$ 1 milhão aparecem sem centavos para caber; as tabelas trazem os centavos */
+    var M = function (x) { return Math.abs(x) >= 1e6 ? 'R$ ' + AZ.f.int(x) : AZ.f.brl(x); };
+    if (v.entrada >= v.preco) return { erro: 'A entrada deve ser menor que o preço do veículo. Com entrada igual ao preço não há financiamento.' };
+    var n = v.prazo, i = v.taxaUn === 'ano' ? AZ.fin.aaParaAm(v.taxa / 100) : v.taxa / 100;
+    var cst = v.custos || 0, fin = v.preco - v.entrada + cst;
+    var l = AZ.fin.price(fin, i, n), p = l[0].parcela;
+    var pago = p * n, juros = pago - fin, total = v.entrada + pago, acima = total - v.preco;
+    var curto = n <= 40, rot = l.map(function (x) { return String(x.n); });
+    var comp = [['Entrada', v.entrada, v.entrada / total * 100], ['Valor financiado do veículo', v.preco - v.entrada, (v.preco - v.entrada) / total * 100]];
+    if (cst) comp.push(['Tarifas, seguros e IOF financiados', cst, cst / total * 100]);
+    comp.push(['Juros', juros, juros / total * 100], ['Custo total do veículo', total, 100]);
+    return {
+      destaques: [
+        { rotulo: 'Parcela mensal', valor: p, formato: M, tom: 'primario', nota: n === 1 ? 'parcela única' : 'fixa, da primeira à última das ' + n + ' parcelas' },
+        { rotulo: 'Valor financiado', valor: fin, formato: M, nota: AZ.f.pct((v.preco - v.entrada) / v.preco * 100, 1) + ' do preço' + (cst ? ', mais os custos financiados' : '') },
+        { rotulo: 'Total pago nas parcelas', valor: pago, formato: M },
+        { rotulo: 'Total de juros', valor: juros, formato: M, tom: 'negativo', nota: AZ.f.pct(juros / fin * 100, 2) + ' do valor financiado' },
+        { rotulo: 'Custo total do veículo', valor: total, formato: M, tom: 'destaque', nota: 'entrada mais parcelas' }
+      ],
+      resumo: '<p>Somando a entrada e ' + (n === 1 ? 'a parcela única' : 'as ' + n + ' parcelas') + ', o veículo de ' + AZ.f.brl(v.preco) + ' custa <strong>' + AZ.f.brl(total) + '</strong>, ou seja, ' + AZ.f.brl(acima) + ' (' + AZ.f.pct(acima / v.preco * 100, 1) + ') acima do preço à vista. Para cada R$ 100,00 financiados, você paga ' + AZ.f.brl(pago / fin * 100) + '. A taxa usada equivale a ' + AZ.f.pct(i * 100, 2) + ' ao mês ou ' + AZ.f.pct(AZ.fin.amParaAa(i) * 100, 2) + ' ao ano.</p>',
+      graficos: [
+        { tipo: curto ? 'barras-empilhadas' : 'linha', titulo: 'Composição de cada parcela', formato: 'brl', rotuloDica: 'Mês', rotulos: rot,
+          series: [{ nome: 'Amortização', cor: 1, dados: l.map(function (x) { return x.amortizacao; }) }, { nome: 'Juros', cor: 2, dados: l.map(function (x) { return x.juros; }) }] },
+        { tipo: 'area', titulo: 'Evolução do saldo devedor', formato: 'brl', rotuloDica: 'Mês', rotulos: ['0'].concat(rot),
+          series: [{ nome: 'Saldo devedor', cor: 1, dados: [fin].concat(l.map(function (x) { return x.saldo; })) }] }
+      ],
+      tabelas: [
+        { titulo: 'Composição do custo do veículo', csv: false, destaque: comp.length - 1,
+          colunas: [{ t: 'Item', f: 'texto' }, { t: 'Valor', f: 'brl' }, { t: 'Parte do total', f: 'pct1' }], linhas: comp },
+        { titulo: 'Tabela mês a mês',
+          colunas: [{ t: 'Mês', f: 'int' }, { t: 'Parcela', f: 'brl' }, { t: 'Juros', f: 'brl' }, { t: 'Amortização', f: 'brl' }, { t: 'Saldo devedor', f: 'brl' }],
+          linhas: l.map(function (x) { return [x.n, x.parcela, x.juros, x.amortizacao, x.saldo]; }) }
+      ],
+      textos: ['<p>O saldo devedor cai devagar no início, porque a maior parte das primeiras parcelas é de juros. Como o veículo perde valor com o uso, é comum que nos primeiros meses a dívida seja maior do que o preço de revenda. Uma entrada maior ou um prazo menor reduzem esse risco e o total de juros.</p>']
+    };
+  },
+  explicacao: [
+    '<p>O financiamento de veículos no Brasil (crédito direto ao consumidor) usa parcelas fixas, calculadas pela tabela Price: <code>parcela = valor financiado × taxa / (1 − (1 + taxa)^(−n))</code>, com taxa mensal e <code>n</code> parcelas. O valor financiado é o preço menos a entrada, mais os custos que forem incluídos no contrato.</p>',
+    '<p>Em cada mês, os juros são o saldo devedor multiplicado pela taxa mensal, e o restante da parcela amortiza a dívida. Quando a taxa é informada ao ano, ela é convertida para a taxa mensal equivalente, <code>(1 + taxa anual)^(1/12) − 1</code>.</p>',
+    '<p>O custo total do veículo soma a entrada e todas as parcelas. Ele não inclui despesas de propriedade, como IPVA, seguro do automóvel, licenciamento e manutenção, nem a desvalorização do veículo.</p>',
+    '<p>A simulação não calcula o IOF nem as tarifas de cadastro e de registro do contrato: se quiser considerá-los, informe o valor no campo de custos financiados ou use como taxa o custo efetivo total (CET) da proposta. Considera a primeira parcela um mês depois da contratação e não arredonda centavos.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+(function () {
+  function taxaMes(v, AZ) { return v.taxaUn === 'ano' ? AZ.fin.aaParaAm(v.taxa / 100) : v.taxa / 100; }
+  function nMeses(v) { var p = Math.round(v.prazo); return v.prazoUn === 'ano' ? p * 12 : p; }
+
+  AZ.registrar({
+    slug: 'parcelas-valor-presente',
+    titulo: 'Valor da parcela de um empréstimo ou parcelamento',
+    categoria: 'matematica',
+    subgrupo: 'series',
+    ordem: 4,
+    resumo: 'Calcule a parcela fixa mensal que quita um valor recebido hoje, com o total de juros e a evolução do saldo devedor.',
+    palavras: ['PGTO', 'PMT', 'prestação', 'parcela fixa', 'tabela Price', 'valor presente', 'empréstimo', 'financiamento', 'crediário'],
+    intro: 'Informe o valor recebido ou financiado hoje, a taxa de juros e o número de parcelas. O resultado é a parcela fixa (a função PGTO das calculadoras financeiras) que quita a dívida no prazo, com a divisão entre juros e amortização em cada mês.',
+    campos: [
+      { id: 'pv', rotulo: 'Valor financiado', tipo: 'moeda', padrao: 30000, min: 0.01, ajuda: 'Valor presente: quanto você recebe hoje ou o preço à vista do bem.' },
+      { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: 1.8, min: 0, max: 1000,
+        unidades: [{ v: 'mes', t: 'ao mês' }, { v: 'ano', t: 'ao ano' }] },
+      { id: 'prazo', rotulo: 'Número de parcelas', tipo: 'int', padrao: 36, min: 1, max: 1200,
+        unidades: [{ v: 'mes', t: 'meses' }, { v: 'ano', t: 'anos' }], ajuda: 'Uma parcela por mês.' },
+      { id: 'momento', rotulo: 'Quando vence cada parcela', tipo: 'segmento', padrao: 'fim',
+        opcoes: [{ v: 'fim', t: 'Fim do mês' }, { v: 'inicio', t: 'Início do mês' }],
+        ajuda: 'Fim do mês: série postecipada, com a primeira parcela daqui a um mês (sem entrada). Início do mês: série antecipada, com a primeira parcela paga no ato.' }
+    ],
+    calcular: function (v, AZ) {
+      var n = nMeses(v), i = taxaMes(v, AZ), ini = v.momento === 'inicio', pv = v.pv;
+      if (n > 1200) return { erro: 'O prazo máximo da simulação é de 1.200 meses (100 anos).' };
+      var pmt = AZ.fin.pmtVp(pv, i, n, ini), total = pmt * n, juros = Math.max(0, total - pv);
+      var outro = AZ.fin.pmtVp(pv, i, n, !ini);
+      /* saldo após a k-ésima parcela = valor presente das parcelas que faltam (forma fechada, estável em prazos longos) */
+      var l = [], ant = pv, k, s, am;
+      for (k = 1; k <= n; k++) {
+        s = AZ.fin.vp(0, i, n - k, pmt, false); am = ant - s;
+        /* com taxa zero ou na parcela paga no ato (série antecipada) não há juros: evita resíduo de ponto flutuante exibido como valor negativo */
+        l.push({ k: k, juros: i === 0 || (ini && k === 1) ? 0 : pmt - am, amort: am, saldo: s });
+        ant = s;
+      }
+      var porMes = n <= 36, rot = [], sJ = [], sA = [], a, fatia;
+      if (porMes) l.forEach(function (x) { rot.push(String(x.k)); sA.push(x.amort); sJ.push(x.juros); });
+      else for (a = 0; a < n; a += 12) {
+        fatia = l.slice(a, a + 12); rot.push(String(a / 12 + 1));
+        sA.push(fatia.reduce(function (t, x) { return t + x.amort; }, 0)); sJ.push(fatia.reduce(function (t, x) { return t + x.juros; }, 0));
+      }
+      var txt = AZ.f.pct(v.taxa) + (v.taxaUn === 'ano' ? ' ao ano (' + AZ.f.pct(i * 100, 4) + ' ao mês)' : ' ao mês');
+      return {
+        destaques: [
+          { rotulo: 'Valor da parcela', valor: pmt, formato: 'brl', tom: 'primario',
+            nota: AZ.f.int(n) + (n === 1 ? ' parcela' : ' parcelas mensais') + (ini ? ', a primeira no ato' : ', a primeira em um mês') },
+          { rotulo: 'Total pago', valor: total, formato: 'brl' },
+          { rotulo: 'Total de juros', valor: juros, formato: 'brl', tom: 'negativo', nota: AZ.f.pct(juros / pv * 100, 1) + ' do valor financiado' },
+          { rotulo: ini ? 'Se a 1ª parcela fosse em um mês' : 'Se a 1ª parcela fosse no ato', valor: outro, formato: 'brl', nota: 'valor de cada parcela' }
+        ],
+        resumo: '<p>Para quitar <strong>' + AZ.f.brl(pv) + '</strong> em ' + AZ.f.int(n) + (n === 1 ? ' parcela' : ' parcelas mensais') + ', a uma taxa de ' + txt +
+          ', cada parcela é de <strong>' + AZ.f.brl(pmt) + '</strong>. Ao final, o total pago é de ' + AZ.f.brl(total) + ', dos quais ' + AZ.f.brl(juros) + ' são juros.</p>',
+        graficos: [{
+          tipo: 'barras-empilhadas', titulo: porMes ? 'Composição de cada parcela' : 'Composição das parcelas de cada ano',
+          formato: 'brl', rotuloDica: porMes ? 'Parcela' : 'Ano', rotulos: rot,
+          series: [
+            { nome: 'Amortização', cor: 1, dados: sA },
+            { nome: 'Juros', cor: 2, dados: sJ }
+          ]
+        }],
+        tabelas: [{
+          titulo: 'Evolução parcela a parcela',
+          colunas: [{ t: 'Parcela', f: 'int' }, { t: 'Valor da parcela', f: 'brl' }, { t: 'Juros', f: 'brl' }, { t: 'Amortização', f: 'brl' }, { t: 'Saldo devedor', f: 'brl' }],
+          linhas: l.map(function (x) { return [x.k, pmt, x.juros, x.amort, x.saldo]; }),
+          nota: 'Juros são os encargos acumulados sobre o saldo devedor desde o pagamento anterior. Amortização é a parte da parcela que reduz a dívida.' +
+            (ini ? ' Na série antecipada, a primeira parcela é paga no ato e abate a dívida por inteiro, sem juros.' : '')
+        }]
+      };
+    },
+    explicacao: [
+      '<p>Esta é a função PGTO (ou PMT) das calculadoras financeiras aplicada a um valor presente: dado o valor recebido hoje, a taxa e o número de períodos, ela devolve a parcela constante que quita a dívida. É o mesmo cálculo do sistema de parcelas fixas, conhecido como tabela Price.</p>',
+      '<p>Com parcelas no fim de cada período (série postecipada), a fórmula é <code>PGTO = VP × i ÷ [1 − (1 + i)^(−n)]</code>, em que <code>VP</code> é o valor financiado, <code>i</code> a taxa por período e <code>n</code> o número de parcelas. Com parcelas no início de cada período (série antecipada), a primeira é paga no ato e o resultado é dividido por <code>(1 + i)</code>. Com taxa zero, a parcela é o valor dividido pelo número de parcelas.</p>',
+      '<p>Em cada parcela, os juros incidem sobre o saldo devedor e o restante amortiza a dívida. Por isso as primeiras parcelas têm mais juros e as últimas, mais amortização. Quando a taxa é informada ao ano, ela é convertida para a taxa mensal equivalente: <code>(1 + taxa anual)^(1/12) − 1</code>.</p>',
+      '<p>A simulação considera apenas os juros. Operações de crédito reais costumam incluir IOF, tarifas e seguros, que elevam o custo efetivo total (CET) e o valor da parcela. Compare sempre o CET informado pela instituição, e não apenas a taxa de juros.</p>'
+    ].join('\n')
+  });
+})();
+</script>
+<script>
+(function () {
+  function taxaMes(v, AZ) { return v.taxaUn === 'ano' ? AZ.fin.aaParaAm(v.taxa / 100) : v.taxa / 100; }
+  function nMeses(v) { var p = Math.round(v.prazo); return v.prazoUn === 'ano' ? p * 12 : p; }
+
+  AZ.registrar({
+    slug: 'vp-serie-pagamentos',
+    titulo: 'Quanto vale hoje uma série de pagamentos mensais',
+    categoria: 'matematica',
+    subgrupo: 'series',
+    ordem: 1,
+    resumo: 'Calcule o valor à vista equivalente a pagamentos mensais iguais: o saldo para quitar uma dívida hoje ou a reserva que banca saques fixos.',
+    palavras: ['valor presente', 'VP', 'PV', 'série uniforme', 'anuidade', 'quitar dívida', 'antecipar parcelas', 'valor à vista', 'renda mensal'],
+    intro: 'Informe o valor de cada pagamento mensal, a taxa de juros e a quantidade de pagamentos. O resultado é o valor presente da série: quanto todos esses pagamentos futuros valem hoje, já descontados os juros.',
+    campos: [
+      { id: 'pmt', rotulo: 'Valor de cada pagamento', tipo: 'moeda', padrao: 1500, min: 0.01 },
+      { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: 1, min: 0, max: 1000,
+        unidades: [{ v: 'mes', t: 'ao mês' }, { v: 'ano', t: 'ao ano' }] },
+      { id: 'prazo', rotulo: 'Quantidade de pagamentos', tipo: 'int', padrao: 24, min: 1, max: 1200,
+        unidades: [{ v: 'mes', t: 'meses' }, { v: 'ano', t: 'anos' }], ajuda: 'Um pagamento por mês.' },
+      { id: 'momento', rotulo: 'Quando ocorre cada pagamento', tipo: 'segmento', padrao: 'fim',
+        opcoes: [{ v: 'fim', t: 'Fim do mês' }, { v: 'inicio', t: 'Início do mês' }],
+        ajuda: 'Fim do mês: série postecipada, com o primeiro pagamento daqui a um mês. Início do mês: série antecipada, com o primeiro pagamento hoje.' }
+    ],
+    calcular: function (v, AZ) {
+      var n = nMeses(v), i = taxaMes(v, AZ), ini = v.momento === 'inicio', pmt = v.pmt;
+      if (n > 1200) return { erro: 'O prazo máximo da simulação é de 1.200 meses (100 anos).' };
+      var vp = AZ.fin.vp(0, i, n, pmt, ini), soma = pmt * n, desc = Math.max(0, soma - vp);
+      /* saldo após o k-ésimo pagamento = valor presente dos pagamentos que ainda faltam (forma fechada, estável em prazos longos) */
+      var l = [], ant = vp, k, s, vpk;
+      for (k = 1; k <= n; k++) {
+        s = AZ.fin.vp(0, i, n - k, pmt, false);
+        vpk = pmt / Math.pow(1 + i, ini ? k - 1 : k);
+        /* com taxa zero ou no pagamento feito hoje (série antecipada) não há juros: evita resíduo de ponto flutuante exibido como valor negativo */
+        l.push({ k: k, juros: i === 0 || (ini && k === 1) ? 0 : pmt - (ant - s), vpk: vpk, saldo: s });
+        ant = s;
+      }
+      var porMes = n <= 36, rot = [], sVp = [], sDesc = [], a, acVp;
+      if (porMes) l.forEach(function (x) { rot.push(String(x.k)); sVp.push(x.vpk); sDesc.push(pmt - x.vpk); });
+      else for (a = 0; a < n; a += 12) {
+        acVp = l.slice(a, a + 12).reduce(function (t, x) { return t + x.vpk; }, 0);
+        rot.push(String(a / 12 + 1)); sVp.push(acVp); sDesc.push(pmt * Math.min(12, n - a) - acVp);
+      }
+      var txt = AZ.f.pct(v.taxa) + (v.taxaUn === 'ano' ? ' ao ano (' + AZ.f.pct(i * 100, 4) + ' ao mês)' : ' ao mês');
+      return {
+        destaques: [
+          { rotulo: 'Valor presente', valor: vp, formato: 'brl', tom: 'primario',
+            nota: 'valor hoje de ' + AZ.f.int(n) + (n === 1 ? ' pagamento' : ' pagamentos') + ' de ' + AZ.f.brl(pmt) },
+          { rotulo: 'Soma dos pagamentos', valor: soma, formato: 'brl', nota: 'sem descontar os juros' },
+          { rotulo: 'Juros embutidos', valor: desc, formato: 'brl', tom: 'destaque',
+            nota: soma > 0 ? AZ.f.pct(desc / soma * 100, 1) + ' da soma dos pagamentos' : '' }
+        ],
+        resumo: '<p>A uma taxa de ' + txt + ', ' + AZ.f.int(n) + (n === 1 ? ' pagamento mensal' : ' pagamentos mensais') + ' de <strong>' + AZ.f.brl(pmt) +
+          '</strong>, ' + (n === 1 ? (ini ? 'feito hoje' : 'feito daqui a um mês') + ', equivale a <strong>' : (ini ? 'o primeiro hoje' : 'o primeiro daqui a um mês') + ', equivalem a <strong>') + AZ.f.brl(vp) + '</strong> à vista. ' +
+          'Esse é o valor que quitaria hoje uma dívida com essas parcelas, ou a reserva que, aplicada à mesma taxa, sustentaria esses saques até zerar.</p>',
+        graficos: [{
+          tipo: 'barras-empilhadas', titulo: porMes ? 'Quanto cada pagamento vale hoje' : 'Quanto os pagamentos de cada ano valem hoje',
+          formato: 'brl', rotuloDica: porMes ? 'Pagamento' : 'Ano', rotulos: rot,
+          series: [
+            { nome: 'Valor presente', cor: 1, dados: sVp },
+            { nome: 'Desconto de juros', cor: 5, dados: sDesc }
+          ]
+        }],
+        tabelas: [{
+          titulo: 'Evolução pagamento a pagamento',
+          colunas: [{ t: 'Nº', f: 'int' }, { t: 'Juros do período', f: 'brl' }, { t: 'Pagamento', f: 'brl' }, { t: 'Valor presente', f: 'brl' }, { t: 'Saldo restante', f: 'brl' }],
+          linhas: l.map(function (x) { return [x.k, x.juros, pmt, x.vpk, x.saldo]; }),
+          nota: 'A coluna "Valor presente" mostra quanto cada pagamento vale hoje. O saldo parte do valor presente total (' + AZ.f.brl(vp) + '), recebe os juros de cada período e é reduzido por cada pagamento até zerar.' +
+            (ini ? ' Na série antecipada, o primeiro pagamento ocorre hoje, antes de qualquer juro.' : '')
+        }]
+      };
+    },
+    explicacao: [
+      '<p>Valor presente (VP, ou PV nas calculadoras financeiras) é quanto um dinheiro futuro vale hoje. Como o dinheiro pode render juros, um pagamento que só acontece daqui a alguns meses vale menos do que o mesmo valor em mãos agora. Para uma série de pagamentos iguais, o valor presente é a soma de cada pagamento trazido para hoje pela taxa de juros.</p>',
+      '<p>Com pagamentos no fim de cada período (série postecipada), a fórmula é <code>VP = PGTO × [1 − (1 + i)^(−n)] ÷ i</code>, em que <code>PGTO</code> é o pagamento, <code>i</code> a taxa por período e <code>n</code> a quantidade de pagamentos. Com pagamentos no início de cada período (série antecipada), cada pagamento ocorre um mês antes e o resultado é multiplicado por <code>(1 + i)</code>. Com taxa zero, o valor presente é simplesmente a soma dos pagamentos.</p>',
+      '<p>O mesmo cálculo responde a perguntas diferentes: quanto pagar hoje para quitar parcelas que ainda vão vencer, qual o preço à vista equivalente a um parcelamento, ou quanto é preciso ter aplicado para fazer saques mensais fixos por um prazo determinado. A tabela mostra essa leitura: o saldo começa no valor presente, rende juros e é consumido pelos pagamentos até chegar a zero.</p>',
+      '<p>Os pagamentos são mensais. Quando a taxa é informada ao ano, ela é convertida para a taxa mensal equivalente em juros compostos: <code>(1 + taxa anual)^(1/12) − 1</code>. A simulação não considera impostos, tarifas, seguros nem multas. Em uma quitação antecipada real, o saldo calculado pela instituição pode diferir por causa desses encargos e da taxa usada no desconto.</p>'
+    ].join('\n')
+  });
+})();
+</script>
+<script>
+(function () {
+  /* raiz de g(i) = 0 para g crescente em i, por bisseção com limite superior expansível. Devolve NaN se não houver raiz. */
+  function raizCrescente(g) {
+    var lo = -0.99, hi = 0.01, k, m;
+    if (!(g(lo) < 0)) return NaN;
+    while (g(hi) < 0) { hi *= 2; if (hi > 1e4) return NaN; }
+    for (k = 0; k < 300 && hi - lo > 1e-15; k++) { m = (lo + hi) / 2; if (g(m) < 0) lo = m; else hi = m; }
+    m = (lo + hi) / 2;
+    return Math.abs(m) < 1e-10 ? 0 : m;
+  }
+  /* valor presente de n pagamentos iguais, em forma numericamente estável para taxas próximas de zero ou negativas */
+  function vpSerie(i, n, pmt, ini) {
+    var fator = Math.abs(i) < 1e-12 ? n : -Math.expm1(-n * Math.log1p(i)) / i;
+    return pmt * fator * (ini ? 1 + i : 1);
+  }
+
+  AZ.registrar({
+    slug: 'taxa-serie-valor-presente',
+    titulo: 'Taxa de juros embutida em um parcelamento',
+    categoria: 'matematica',
+    subgrupo: 'series',
+    ordem: 6,
+    resumo: 'Descubra a taxa de juros cobrada em um empréstimo ou compra parcelada a partir do valor à vista, da parcela e do prazo.',
+    palavras: ['taxa', 'TAXA', 'RATE', 'juros embutidos', 'valor presente', 'parcelamento', 'empréstimo', 'crediário', 'à vista ou a prazo', 'série uniforme'],
+    intro: 'Informe o valor à vista (ou o valor recebido no empréstimo), o valor de cada parcela e o número de parcelas. O resultado é a taxa de juros (a função TAXA das calculadoras financeiras) embutida nesse parcelamento.',
+    campos: [
+      { id: 'pv', rotulo: 'Valor à vista ou valor recebido', tipo: 'moeda', padrao: 5000, min: 0.01, ajuda: 'Valor presente: o preço à vista do bem ou o dinheiro que entra hoje no empréstimo.' },
+      { id: 'pmt', rotulo: 'Valor de cada parcela', tipo: 'moeda', padrao: 480, min: 0.01 },
+      { id: 'prazo', rotulo: 'Número de parcelas', tipo: 'int', padrao: 12, min: 1, max: 1200, sufixo: 'parcelas mensais' },
+      { id: 'momento', rotulo: 'Quando vence cada parcela', tipo: 'segmento', padrao: 'fim',
+        opcoes: [{ v: 'fim', t: 'Fim do mês' }, { v: 'inicio', t: 'Início do mês' }],
+        ajuda: 'Fim do mês: série postecipada, com a primeira parcela daqui a um mês (sem entrada). Início do mês: série antecipada, com a primeira parcela paga no ato.' }
+    ],
+    calcular: function (v, AZ) {
+      var n = Math.round(v.prazo), ini = v.momento === 'inicio', pv = v.pv, pmt = v.pmt;
+      if (ini && n === 1) return { erro: 'Com uma única parcela paga no ato, não há prazo para incidir juros. Aumente o número de parcelas ou escolha o vencimento no fim do mês.' };
+      if (ini && pmt >= pv) return { erro: 'Com a primeira parcela paga no ato, o valor da parcela precisa ser menor que o valor à vista.' };
+      var i = Math.abs(pmt * n - pv) <= 1e-9 * pv ? 0 : raizCrescente(function (x) { return pv - vpSerie(x, n, pmt, ini); });
+      if (!isFinite(i)) return { erro: 'Não foi possível encontrar uma taxa de juros para esses valores. Revise o valor à vista, a parcela e o número de parcelas.' };
+      var aa = Math.pow(1 + i, 12) - 1, total = pmt * n, juros = total - pv;
+      var confere = vpSerie(i, n, pmt, ini);
+      /* saldo após a k-ésima parcela = valor presente das parcelas que faltam (forma fechada, estável em prazos longos) */
+      var l = [], ant = pv, k, s, am;
+      for (k = 1; k <= n; k++) {
+        s = vpSerie(i, n - k, pmt, false); am = ant - s;
+        /* com taxa zero ou na parcela paga no ato (série antecipada) não há juros: evita resíduo de ponto flutuante exibido como valor negativo */
+        l.push({ k: k, juros: i === 0 || (ini && k === 1) ? 0 : pmt - am, amort: am, saldo: s });
+        ant = s;
+      }
+      var porMes = n <= 36, rot = [], sJ = [], sA = [], a, fatia;
+      if (porMes) l.forEach(function (x) { rot.push(String(x.k)); sA.push(x.amort); sJ.push(x.juros); });
+      else for (a = 0; a < n; a += 12) {
+        fatia = l.slice(a, a + 12); rot.push(String(a / 12 + 1));
+        sA.push(fatia.reduce(function (t, x) { return t + x.amort; }, 0)); sJ.push(fatia.reduce(function (t, x) { return t + x.juros; }, 0));
+      }
+      var aaOk = isFinite(aa) && aa < 1e9;
+      var r = {
+        destaques: [
+          { rotulo: 'Taxa de juros ao mês', valor: i * 100, formato: 'pct4', tom: 'primario',
+            nota: AZ.f.int(n) + (n === 1 ? ' parcela de ' : ' parcelas de ') + AZ.f.brl(pmt) + (ini ? ', a primeira no ato' : '') },
+          { rotulo: 'Equivalente ao ano', valor: aaOk ? AZ.f.pct(aa * 100) : 'acima de 1 bilhão %', nota: 'em juros compostos' },
+          { rotulo: 'Total pago', valor: total, formato: 'brl' },
+          { rotulo: juros >= 0 ? 'Total de juros' : 'Desconto sobre o valor à vista', valor: Math.abs(juros), formato: 'brl', tom: juros > 0 ? 'negativo' : undefined,
+            nota: AZ.f.pct(Math.abs(juros) / pv * 100, 1) + ' do valor à vista' }
+        ],
+        resumo: '<p>Pagar ' + AZ.f.int(n) + (n === 1 ? ' parcela' : ' parcelas mensais') + ' de <strong>' + AZ.f.brl(pmt) + '</strong>' + (ini ? ', a primeira no ato,' : '') +
+          ' em vez de <strong>' + AZ.f.brl(pv) + '</strong> à vista equivale a uma taxa de juros de <strong>' + AZ.f.pct(i * 100, 4) + ' ao mês</strong>' +
+          (aaOk ? ' (' + AZ.f.pct(aa * 100) + ' ao ano)' : '') + '. ' +
+          (i > 0 ? 'Se o seu dinheiro rende menos que isso, líquido de impostos, pagar à vista tende a custar menos. Se rende mais, o parcelamento tende a custar menos.' :
+            i === 0 ? 'A soma das parcelas é igual ao valor à vista: o parcelamento não tem juros.' : '') + '</p>',
+        tabelas: [{
+          titulo: 'Evolução parcela a parcela com a taxa encontrada',
+          colunas: [{ t: 'Parcela', f: 'int' }, { t: 'Valor da parcela', f: 'brl' }, { t: 'Juros', f: 'brl' }, { t: 'Amortização', f: 'brl' }, { t: 'Saldo devedor', f: 'brl' }],
+          linhas: l.map(function (x) { return [x.k, pmt, x.juros, x.amort, x.saldo]; }),
+          nota: 'Conferência: o valor presente das parcelas, descontadas pela taxa encontrada, é de ' + AZ.f.brl(confere) + '.' +
+            (ini ? ' Na série antecipada, a primeira parcela é paga no ato e abate a dívida por inteiro, sem juros.' : '')
+        }]
+      };
+      if (i >= 0) r.graficos = [{
+        tipo: 'barras-empilhadas', titulo: porMes ? 'Composição de cada parcela' : 'Composição das parcelas de cada ano',
+        formato: 'brl', rotuloDica: porMes ? 'Parcela' : 'Ano', rotulos: rot,
+        series: [
+          { nome: 'Amortização', cor: 1, dados: sA },
+          { nome: 'Juros', cor: 2, dados: sJ }
+        ]
+      }];
+      else r.alerta = 'A soma das parcelas (' + AZ.f.brl(total) + ') é menor que o valor à vista. Por isso a taxa encontrada é negativa. Confira se os valores foram informados corretamente.';
+      return r;
+    },
+    explicacao: [
+      '<p>Esta é a função TAXA (RATE, ou a tecla <code>i</code>) das calculadoras financeiras aplicada a um valor presente: conhecidos o valor à vista, a parcela e o número de parcelas, ela devolve a taxa de juros por período que torna as duas formas de pagamento equivalentes.</p>',
+      '<p>A relação entre as variáveis é <code>VP = PGTO × [1 − (1 + i)^(−n)] ÷ i</code> para parcelas no fim de cada período (série postecipada, sem entrada). Para parcelas no início (série antecipada, com a primeira no ato), o lado direito é multiplicado por <code>(1 + i)</code>. Não existe fórmula direta que isole a taxa <code>i</code>. O simulador a encontra por aproximações sucessivas (bisseção) até que o valor presente das parcelas coincida com o valor à vista.</p>',
+      '<p>A taxa ao ano é a equivalente em juros compostos: <code>(1 + taxa mensal)^12 − 1</code>. Se a soma das parcelas for igual ao valor à vista, a taxa é zero. Em um parcelamento anunciado como "sem juros", use como valor à vista o preço com o desconto oferecido para pagamento imediato: a taxa encontrada é o custo real de parcelar.</p>',
+      '<p>O resultado considera apenas o valor à vista e as parcelas informadas. Se houver tarifas, seguros ou impostos cobrados à parte, inclua esses valores nas parcelas ou desconte do valor recebido para obter uma medida mais próxima do custo efetivo total (CET). A comparação com o rendimento das suas aplicações deve usar a rentabilidade líquida de impostos.</p>'
+    ].join('\n')
+  });
+})();
+</script>
+<script>
+(function () {
+  function taxaMes(v, AZ) { return v.taxaUn === 'ano' ? AZ.fin.aaParaAm(v.taxa / 100) : v.taxa / 100; }
+
+  AZ.registrar({
+    slug: 'numero-pagamentos-valor-presente',
+    titulo: 'Quantas parcelas para quitar uma dívida',
+    categoria: 'matematica',
+    subgrupo: 'series',
+    ordem: 7,
+    resumo: 'Descubra em quantas parcelas mensais uma dívida é quitada, dado o valor que cabe no seu orçamento e a taxa de juros.',
+    palavras: ['NPER', 'número de parcelas', 'prazo', 'quitar dívida', 'valor presente', 'empréstimo', 'série uniforme', 'quanto tempo para pagar'],
+    intro: 'Informe o valor da dívida hoje, a taxa de juros e quanto pode pagar por mês. O resultado é o número de parcelas (a função NPER das calculadoras financeiras) necessário para zerar o saldo, com o total de juros pagos no caminho.',
+    campos: [
+      { id: 'pv', rotulo: 'Valor da dívida hoje', tipo: 'moeda', padrao: 20000, min: 0.01, ajuda: 'Valor presente: o saldo devedor atual ou o valor recebido no empréstimo.' },
+      { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: 2, min: 0, max: 1000,
+        unidades: [{ v: 'mes', t: 'ao mês' }, { v: 'ano', t: 'ao ano' }] },
+      { id: 'pmt', rotulo: 'Valor de cada parcela', tipo: 'moeda', padrao: 900, min: 0.01 },
+      { id: 'momento', rotulo: 'Quando vence cada parcela', tipo: 'segmento', padrao: 'fim',
+        opcoes: [{ v: 'fim', t: 'Fim do mês' }, { v: 'inicio', t: 'Início do mês' }],
+        ajuda: 'Fim do mês: série postecipada, com a primeira parcela daqui a um mês. Início do mês: série antecipada, com a primeira parcela paga hoje.' }
+    ],
+    calcular: function (v, AZ) {
+      var i = taxaMes(v, AZ), ini = v.momento === 'inicio', pv = v.pv, pmt = v.pmt;
+      /* parcela equivalente no fim do período: na série antecipada cada parcela vale (1 + i) vezes a postecipada */
+      var pmtEq = ini ? pmt * (1 + i) : pmt, minimo = ini ? pv * i / (1 + i) : pv * i;
+      if (i > 0 && pmtEq <= pv * i * (1 + 1e-12)) return { erro: 'A parcela de ' + AZ.f.brl(pmt) + (ini ? ' não cobre os juros mensais sobre o saldo que resta depois da primeira parcela, paga hoje (' : ' não cobre os juros mensais da dívida (') + AZ.f.brl(minimo) +
+        '). Com esse valor, o saldo devedor nunca diminui. Informe uma parcela maior que ' + AZ.f.brl(minimo) + '.' };
+      var nEx = i > 0 ? -Math.log(1 - pv * i / pmtEq) / Math.log(1 + i) : pv / pmt;
+      if (nEx > 1200.5) return { erro: 'Com essa parcela, a quitação levaria mais de 1.200 meses (100 anos). Informe uma parcela maior.' };
+      /* o número de parcelas sai da própria evolução do saldo: paga-se a parcela cheia até que o saldo com juros caiba em uma parcela (tolerância de meio centavo) */
+      var l = [], s = pv, k, j, pg, total = 0, n = 0;
+      for (k = 1; k <= 1201; k++) {
+        j = (ini && k === 1) ? 0 : s * i;
+        pg = s + j <= pmt + 0.005 ? s + j : pmt;
+        s = s + j - pg; total += pg;
+        l.push({ k: k, pg: pg, juros: j, amort: pg - j, saldo: pg < pmt || s < 0.005 ? 0 : s });
+        if (l[k - 1].saldo === 0) { n = k; break; }
+      }
+      if (!n) return { erro: 'Com essa parcela, a quitação levaria mais de 1.200 meses (100 anos). Informe uma parcela maior.' };
+      var ultima = l[n - 1].pg, igual = Math.abs(ultima - pmt) < 0.005, juros = total - pv;
+      var porMes = n <= 36, rot = [], sJ = [], sA = [], a, fatia;
+      if (porMes) l.forEach(function (x) { rot.push(String(x.k)); sA.push(x.amort); sJ.push(x.juros); });
+      else for (a = 0; a < n; a += 12) {
+        fatia = l.slice(a, a + 12); rot.push(String(a / 12 + 1));
+        sA.push(fatia.reduce(function (t, x) { return t + x.amort; }, 0)); sJ.push(fatia.reduce(function (t, x) { return t + x.juros; }, 0));
+      }
+      var txt = AZ.f.pct(v.taxa) + (v.taxaUn === 'ano' ? ' ao ano (' + AZ.f.pct(i * 100, 4) + ' ao mês)' : ' ao mês');
+      var comp = n === 1 ? 'parcela única de ' + AZ.f.brl(ultima) : igual ? 'todas de ' + AZ.f.brl(pmt) :
+        AZ.f.int(n - 1) + ' de ' + AZ.f.brl(pmt) + ' e a última de ' + AZ.f.brl(ultima);
+      return {
+        destaques: [
+          { rotulo: 'Número de parcelas', valor: n, formato: 'int', tom: 'primario', nota: comp },
+          { rotulo: 'Prazo pela fórmula', valor: AZ.f.num(nEx, 2), nota: 'períodos (resultado fracionário da função NPER)' },
+          { rotulo: 'Total pago', valor: total, formato: 'brl', nota: ini && n === 1 ? 'em parcela única, paga hoje' : 'em ' + AZ.f.prazo(ini ? n - 1 : n) + (ini ? ', com a primeira parcela hoje' : '') },
+          { rotulo: 'Total de juros', valor: juros, formato: 'brl', tom: 'negativo', nota: AZ.f.pct(juros / pv * 100, 1) + ' do valor da dívida' }
+        ],
+        resumo: '<p>Pagando <strong>' + AZ.f.brl(pmt) + '</strong> no ' + (ini ? 'início' : 'fim') + ' de cada mês, a uma taxa de ' + txt + ', a dívida de <strong>' + AZ.f.brl(pv) +
+          '</strong> é quitada em <strong>' + AZ.f.int(n) + (n === 1 ? ' parcela' : ' parcelas') + '</strong>' +
+          (n > 1 && !igual ? ': ' + AZ.f.int(n - 1) + ' no valor cheio e uma última, menor, de ' + AZ.f.brl(ultima) : '') +
+          '. A fórmula devolve ' + AZ.f.num(nEx, 2) + ' períodos. ' + (igual ? 'Neste caso o resultado é inteiro e todas as parcelas têm o mesmo valor.' :
+            n === 1 ? 'Como a parcela informada é maior que o necessário, basta um pagamento, no valor do saldo devido.' :
+            'Como não existe fração de parcela, o número é arredondado para cima e a última parcela quita apenas o saldo que restar.') + '</p>',
+        graficos: [{
+          tipo: 'barras-empilhadas', titulo: porMes ? 'Composição de cada parcela' : 'Composição das parcelas de cada ano',
+          formato: 'brl', rotuloDica: porMes ? 'Parcela' : 'Ano', rotulos: rot,
+          series: [
+            { nome: 'Amortização', cor: 1, dados: sA },
+            { nome: 'Juros', cor: 2, dados: sJ }
+          ]
+        }],
+        tabelas: [{
+          titulo: 'Evolução parcela a parcela',
+          colunas: [{ t: 'Parcela', f: 'int' }, { t: 'Valor pago', f: 'brl' }, { t: 'Juros', f: 'brl' }, { t: 'Amortização', f: 'brl' }, { t: 'Saldo devedor', f: 'brl' }],
+          linhas: l.map(function (x) { return [x.k, x.pg, x.juros, x.amort, x.saldo]; }),
+          nota: 'Juros são os encargos acumulados sobre o saldo devedor desde o pagamento anterior. Amortização é a parte da parcela que reduz a dívida.' +
+            (ini ? ' Na série antecipada, a primeira parcela é paga hoje e abate a dívida por inteiro, sem juros.' : '')
+        }]
+      };
+    },
+    explicacao: [
+      '<p>Esta é a função NPER (ou a tecla <code>n</code>) das calculadoras financeiras aplicada a um valor presente: conhecidos o valor da dívida, a taxa e a parcela, ela devolve o número de períodos necessário para zerar o saldo.</p>',
+      '<p>Com parcelas no fim de cada período (série postecipada), a fórmula é <code>n = −ln(1 − VP × i ÷ PGTO) ÷ ln(1 + i)</code>, em que <code>VP</code> é a dívida, <code>i</code> a taxa por período e <code>PGTO</code> a parcela. Com parcelas no início de cada período (série antecipada), usa-se <code>PGTO × (1 + i)</code> no lugar de <code>PGTO</code>. Com taxa zero, o prazo é a dívida dividida pela parcela.</p>',
+      '<p>O resultado da fórmula raramente é um número inteiro. O simulador arredonda para cima e ajusta a última parcela para o saldo restante, de modo que a tabela fecha exatamente em zero. A conta só tem solução quando a parcela é maior que os juros de um mês sobre a dívida (na série antecipada, sobre o saldo que resta depois da primeira parcela). Se for igual ou menor, o saldo devedor não cai e a dívida nunca é quitada.</p>',
+      '<p>As parcelas são mensais. Quando a taxa é informada ao ano, ela é convertida para a taxa mensal equivalente: <code>(1 + taxa anual)^(1/12) − 1</code>. A simulação considera apenas os juros, sem IOF, tarifas, seguros, multas ou encargos por atraso, que em operações reais alteram o saldo e o prazo.</p>'
+    ].join('\n')
+  });
+})();
+</script>
+<script>
+/* Retrato das taxas médias de juros por instituição, extraído da API de dados abertos do Banco Central
+   (Olinda, serviço taxaJuros, versão v2) em 30/09/2026. Cada item: [instituição, % ao mês, % ao ano], na ordem publicada.
+   Modalidades 's': recurso TaxasJurosDiariaPorInicioPeriodo, período de 10/09/2026 a 16/09/2026, pessoa física.
+   Modalidades 'm': recurso TaxasJurosMensalPorMes, mês de agosto de 2026. Registros com taxa zero foram descartados. */
+(function () {
+  var REF = { s: 'de 10/09/2026 a 16/09/2026', m: 'de agosto de 2026', extracao: '30/09/2026' };
+  var DADOS = [
+    { id: 'pessoal', nome: 'Crédito pessoal não consignado', per: 's', parc: 1, l: [['DM SCFI', 1.2, 15.34], ['BANCO SICOOB S.A.', 1.62, 21.25], ['BCO SAFRA S.A.', 1.64, 21.59], ['BCO. J.SAFRA S.A.', 1.68, 22.09], ['ASA SCFI S.A.', 1.69, 22.25], ['BCO C6 CONSIG', 1.8, 23.91], ['BANCO INTER', 1.81, 24.06], ['BANCO ORIGINAL', 1.85, 24.53], ['PAN FINAN', 1.89, 25.15], ['BCO INDUSTRIAL DO BRASIL S.A.', 1.9, 25.39], ['PLANTAE CFI', 1.96, 26.18], ['PARANA BCO S.A.', 1.98, 26.52], ['TENTOS S.A. CFI', 2, 26.81], ['BCO RODOBENS S.A.', 2.08, 27.96], ['BCO DA AMAZONIA S.A.', 2.1, 28.35], ['BCO TOYOTA DO BRASIL S.A.', 2.24, 30.52], ['AL5 S.A. SCFI', 2.46, 33.86], ['SINOSSERRA S/A - SCFI', 2.5, 34.56], ['BCO C6 S.A.', 2.53, 35], ['BCO BRADESCO FINANC. S.A.', 2.59, 35.91], ['BARU SCFI S/A', 2.69, 37.54], ['BANCO BTG PACTUAL S.A.', 2.69, 37.56], ['BCO VOTORANTIM S.A.', 2.72, 38.03], ['SANTANDER SCFI S.A.', 2.8, 39.32], ['BCO XP S.A.', 3.16, 45.29], ['BCO DO BRASIL S.A.', 3.23, 46.51], ['BCO DO EST. DE SE S.A.', 3.31, 47.77], ['BCO SANTANDER (BRASIL) S.A.', 3.52, 51.48], ['OMNI SA CFI', 3.78, 56.04], ['CAIXA ECONOMICA FEDERAL', 3.84, 57.14], ['BCO DO ESTADO DO RS S.A.', 3.88, 57.95], ['ITAÚ UNIBANCO S.A.', 4.02, 60.56], ['BANCO BARI S.A.', 4.21, 64.03], ['BCO DO NORDESTE DO BRASIL S.A.', 4.34, 66.5], ['BCO YAMAHA MOTOR S.A.', 4.42, 68.07], ['BRB - BCO DE BRASILIA S.A.', 4.82, 76], ['BANCOSEGURO S.A.', 4.86, 76.81], ['BCO BANESTES S.A.', 4.91, 77.73], ['PORTOSEG S.A. CFI', 5.23, 84.42], ['RPW S.A. SCFI', 5.26, 84.9], ['BCO BRADESCO S.A.', 5.63, 93], ['FINAMAX S.A. CFI', 6.43, 111.21], ['BCO AFINZ S.A. - BM', 6.45, 111.7], ['NU FINANCEIRA S.A. CFI', 6.54, 113.97], ['BCO DO EST. DO PA S.A.', 6.87, 121.85], ['KREDILIG S.A. - CFI', 7.46, 137.18], ['BANCO PAN', 8.04, 152.99], ['BCO AGIBANK S.A.', 8.15, 155.92], ['BANCO DIGIO', 8.16, 156.36], ['NEON FINANCEIRA - SCFI S.A.', 8.2, 157.54], ['BECKER FINANCEIRA SA - CFI', 8.3, 160.28], ['MERCADO CRÉDITO SCFI S.A.', 8.58, 168.54], ['GAZINCRED S.A. SCFI', 8.75, 173.55], ['PICPAY BANK - BANCO MÚLTIPLO S.A', 9.23, 188.34], ['99PAY SCFI', 9.32, 191.37], ['AGORACRED S/A SCFI', 10.13, 218.22], ['GRAZZIOTIN FINANCEIRA S/A', 11.08, 252.85], ['LEBES FINANCEIRA S.A. - CFI', 11.36, 263.84], ['CENTROCRED S.A. CFI', 11.59, 272.96], ['PEFISA S.A. - C.F.I.', 11.66, 275.67], ['BCO MERCANTIL DO BRASIL S.A.', 11.88, 284.6], ['CREDIARE CFI S.A.', 12.21, 298.31], ['CLOUDWALK FINANCEIRA S.A. CFI', 12.22, 298.89], ['CREFISA S.A. CFI', 12.31, 302.77], ['BCO SENFF S.A.', 12.52, 311.68], ['BANCO SEMEAR', 12.67, 318.49], ['ZEMA CFI S/A', 12.69, 319.32], ['BCO ARBI S.A.', 12.89, 328.56], ['MIDWAY S.A. - SCFI', 12.94, 330.89], ['NEGRESCO S.A. - CFI', 13.42, 353.04], ['BCO BMG S.A.', 13.89, 376.43], ['HS FINANCEIRA', 14, 381.56], ['FACTA S.A. CFI', 14.05, 384.34], ['CALCRED S.A.', 14.61, 413.7], ['REALIZE SCFI S.A.', 14.7, 418.67], ['VIA CERTA FINANCIADORA S.A. - CFI', 14.73, 420.22], ['VALOR S/A SCFI', 14.84, 426.38], ['JBCRED S.A. SCFI', 14.98, 433.86], ['COBUCCIO S.A. SCFI', 15.93, 489.37], ['BCO DAYCOVAL S.A', 17.82, 615.33]] },
+    { id: 'consigPub', nome: 'Consignado para servidores públicos', per: 's', parc: 1, l: [['BANCO COOPERATIVO SICREDI', 1.49, 19.46], ['BCO ALFA S.A.', 1.54, 20.19], ['BANCO INTER', 1.56, 20.37], ['NU FINANCEIRA S.A. CFI', 1.56, 20.39], ['FINANCEIRA ALFA S.A. - SCFI', 1.58, 20.71], ['BCO SAFRA S.A.', 1.61, 21.06], ['BANCO INBURSA', 1.61, 21.09], ['BCO C6 CONSIG', 1.61, 21.1], ['MIDWAY S.A. - SCFI', 1.62, 21.27], ['BCO ARBI S.A.', 1.63, 21.42], ['BCO AGIBANK S.A.', 1.66, 21.79], ['BRB - CFI S/A', 1.69, 22.23], ['BCO BANESTES S.A.', 1.71, 22.52], ['ITAÚ UNIBANCO S.A.', 1.73, 22.89], ['PICPAY BANK - BANCO MÚLTIPLO S.A', 1.73, 22.9], ['CAIXA ECONOMICA FEDERAL', 1.75, 23.19], ['BCO DO ESTADO DO RS S.A.', 1.77, 23.38], ['BCO BRADESCO S.A.', 1.79, 23.65], ['BANCO SICOOB S.A.', 1.79, 23.66], ['BCO SANTANDER (BRASIL) S.A.', 1.84, 24.4], ['BANCO DIGIO', 1.84, 24.47], ['BCO DO EST. DO PA S.A.', 1.84, 24.49], ['BCO DO BRASIL S.A.', 1.86, 24.78], ['BANCO PAN', 1.87, 24.82], ['FACTA S.A. CFI', 1.88, 25.11], ['BRB - BCO DE BRASILIA S.A.', 1.89, 25.15], ['BCO BMG S.A.', 1.95, 26.07], ['PARANA BCO S.A.', 1.97, 26.38], ['BCO DO NORDESTE DO BRASIL S.A.', 1.98, 26.6], ['BANCO BARI S.A.', 2, 26.78], ['SANTINVEST S.A. - CFI', 2.02, 27.05], ['GAZINCRED S.A. SCFI', 2.14, 28.9], ['BCO DO EST. DE SE S.A.', 2.15, 29.06], ['BCO SENFF S.A.', 2.2, 29.88], ['BCO INDUSTRIAL DO BRASIL S.A.', 2.29, 31.18], ['BCO DAYCOVAL S.A', 2.45, 33.64], ['COMPREV CFI S.A.', 2.75, 38.51], ['LECCA CFI S.A.', 3.38, 48.93], ['BARU SCFI S/A', 3.52, 51.51], ['BCO PAULISTA S.A.', 3.94, 58.98], ['PLACARPAY S.A - SCFI', 5.49, 89.95], ['VALOR S/A SCFI', 7.02, 125.82]] },
+    { id: 'consigInss', nome: 'Consignado para aposentados e pensionistas do INSS', per: 's', parc: 1, l: [['NU FINANCEIRA S.A. CFI', 1.48, 19.31], ['BCO PAULISTA S.A.', 1.51, 19.68], ['BANCOSEGURO S.A.', 1.51, 19.71], ['BCO SAFRA S.A.', 1.54, 20.13], ['BANCO INBURSA', 1.54, 20.18], ['FINANCEIRA ALFA S.A. - SCFI', 1.59, 20.84], ['BCO AGIBANK S.A.', 1.61, 21.18], ['BANCO INTER', 1.62, 21.25], ['MEUTUDO SCFI', 1.66, 21.78], ['BCO DO ESTADO DO RS S.A.', 1.66, 21.89], ['PICPAY BANK - BANCO MÚLTIPLO S.A', 1.68, 22.12], ['MIDWAY S.A. - SCFI', 1.72, 22.66], ['BCO DAYCOVAL S.A', 1.72, 22.68], ['BANCO SICOOB S.A.', 1.74, 22.93], ['BANCO COOPERATIVO SICREDI', 1.74, 22.94], ['BANCO PAN', 1.74, 23.02], ['BANCO BARI S.A.', 1.75, 23.17], ['ITAÚ UNIBANCO S.A.', 1.77, 23.5], ['BCO DO EST. DE SE S.A.', 1.8, 23.84], ['BCO C6 CONSIG', 1.8, 23.86], ['BCO BANESTES S.A.', 1.8, 23.86], ['BCO BMG S.A.', 1.8, 23.93], ['FACTA S.A. CFI', 1.83, 24.34], ['BCO DO BRASIL S.A.', 1.83, 24.35], ['BCO BRADESCO S.A.', 1.83, 24.36], ['BECKER FINANCEIRA SA - CFI', 1.84, 24.43], ['CAIXA ECONOMICA FEDERAL', 1.84, 24.45], ['PARANA BCO S.A.', 1.85, 24.58], ['NOVO BCO CONTINENTAL S.A. - BM', 1.85, 24.6], ['BCO MERCANTIL DO BRASIL S.A.', 1.85, 24.63], ['BCO SANTANDER (BRASIL) S.A.', 1.86, 24.68], ['BANCO DIGIO', 1.88, 24.97], ['BANCO SEMEAR', 1.88, 24.97], ['BRB - CFI S/A', 1.88, 25.06], ['GAZINCRED S.A. SCFI', 1.88, 25.08], ['BCO CSF S.A.', 1.89, 25.16]] },
+    { id: 'consigPriv', nome: 'Consignado para trabalhadores do setor privado', per: 's', parc: 1, l: [['COBUCCIO S.A. SCFI', 1.61, 21.18], ['COMPREV CFI S.A.', 1.95, 26.14], ['BCO SENFF S.A.', 2.03, 27.19], ['BCO VOLKSWAGEN S.A', 2.04, 27.46], ['BCO XP S.A.', 2.13, 28.76], ['PORTOSEG S.A. CFI', 2.2, 29.91], ['BCO DO NORDESTE DO BRASIL S.A.', 2.24, 30.52], ['SANTINVEST S.A. - CFI', 2.26, 30.76], ['BANCO SICOOB S.A.', 2.32, 31.65], ['BANCO DIGIO', 2.51, 34.68], ['BCO BANESTES S.A.', 2.53, 34.94], ['BCO INDUSTRIAL DO BRASIL S.A.', 2.53, 35], ['BCO DO EST. DE SE S.A.', 2.55, 35.2], ['BCO SANTANDER (BRASIL) S.A.', 2.64, 36.66], ['BANCO INBURSA', 2.72, 38.01], ['HS FINANCEIRA', 2.78, 38.96], ['BCO SAFRA S.A.', 2.89, 40.78], ['NOVO BCO CONTINENTAL S.A. - BM', 3.02, 42.83], ['BANCO INTER', 3.03, 43.12], ['AL5 S.A. SCFI', 3.04, 43.32], ['CAIXA ECONOMICA FEDERAL', 3.05, 43.36], ['BCO DO BRASIL S.A.', 3.08, 43.96], ['MERCADO CRÉDITO SCFI S.A.', 3.09, 44.06], ['BCO DO EST. DO PA S.A.', 3.12, 44.61], ['BCO BMG S.A.', 3.14, 44.91], ['BECKER FINANCEIRA SA - CFI', 3.15, 45.04], ['GAZINCRED S.A. SCFI', 3.31, 47.8], ['BCO BRADESCO S.A.', 3.35, 48.44], ['BANCO BTG PACTUAL S.A.', 3.35, 48.46], ['MEUTUDO SCFI', 3.44, 50.04], ['MIDWAY S.A. - SCFI', 3.46, 50.37], ['ZEMA CFI S/A', 3.47, 50.56], ['ITAÚ UNIBANCO S.A.', 3.48, 50.77], ['NU FINANCEIRA S.A. CFI', 3.61, 53.11], ['BCO BV S.A.', 3.67, 54.19], ['BCO MERCANTIL DO BRASIL S.A.', 3.68, 54.34], ['BANCOSEGURO S.A.', 3.71, 54.88], ['BCO DO ESTADO DO RS S.A.', 3.8, 56.52], ['PAN FINAN', 3.88, 57.87], ['PICPAY BANK - BANCO MÚLTIPLO S.A', 4.18, 63.54], ['NEON FINANCEIRA - SCFI S.A.', 4.23, 64.33], ['BANCO PAN', 4.26, 64.88], ['BCO PAULISTA S.A.', 4.34, 66.41], ['BCO AGIBANK S.A.', 4.37, 67.09], ['BCO C6 CONSIG', 4.65, 72.59], ['BCO ARBI S.A.', 4.67, 72.95], ['VALOR S/A SCFI', 4.89, 77.27], ['BCO DAYCOVAL S.A', 4.92, 78.01], ['FACTA S.A. CFI', 4.96, 78.85], ['RPW S.A. SCFI', 5.01, 79.7], ['NEGRESCO S.A. - CFI', 5.63, 92.9]] },
+    { id: 'veiculos', nome: 'Aquisição de veículos', per: 's', parc: 1, l: [['BCO MERCEDES-BENZ S.A.', 0.4, 4.85], ['BANCO CNH INDUSTRIAL CAPITAL S.A', 0.87, 10.98], ['BMW SA CFI', 0.91, 11.44], ['BCO STELLANTIS S.A.', 0.94, 11.82], ['BCO RCI BRASIL S.A.', 0.98, 12.42], ['CAIXA ECONOMICA FEDERAL', 1.01, 12.75], ['BCO DO BRASIL S.A.', 1.1, 14], ['BCO DA AMAZONIA S.A.', 1.1, 14.05], ['BANCO HYUNDAI CAPITAL BRASIL', 1.21, 15.48], ['BCO GM S.A.', 1.31, 16.89], ['BANCO TRATON BRASIL S.A.', 1.4, 18.18], ['BCO VOLVO BRASIL S.A.', 1.54, 20.09], ['SCANIA BCO S.A.', 1.56, 20.43], ['STELLANTIS FINANCIAMENTOS CFI', 1.56, 20.48], ['BCO DO EST. DO PA S.A.', 1.62, 21.25], ['BCO DO ESTADO DO RS S.A.', 1.63, 21.48], ['BANCO INTER', 1.64, 21.6], ['SAFRA SCFI S.A.', 1.66, 21.82], ['BCO VOLKSWAGEN S.A', 1.68, 22.14], ['BCO RODOBENS S.A.', 1.75, 23.16], ['BCO BRADESCO S.A.', 1.78, 23.56], ['BCO TOYOTA DO BRASIL S.A.', 1.83, 24.34], ['BRB - CFI S/A', 1.86, 24.69], ['SANTANDER SCFI S.A.', 1.9, 25.29], ['BANCO MONEO S.A.', 1.9, 25.3], ['BCO BANESTES S.A.', 1.94, 25.99], ['BCO C6 S.A.', 1.98, 26.53], ['ITAÚ UNIBANCO HOLDING S.A.', 1.98, 26.57], ['PORTOSEG S.A. CFI', 1.99, 26.64], ['SINOSSERRA S/A - SCFI', 2, 26.84], ['BCO BRASILEIRO DE CRÉDITO S.A.', 2.01, 26.98], ['BCO BRADESCO FINANC. S.A.', 2.05, 27.63], ['BCO VOTORANTIM S.A.', 2.23, 30.34], ['OMNI BANCO S.A.', 2.32, 31.61], ['BCO HONDA S.A.', 2.5, 34.47], ['BCO YAMAHA MOTOR S.A.', 2.65, 36.79], ['BANCO PAN', 2.81, 39.49], ['FINAMAX S.A. CFI', 2.86, 40.19], ['AGORACRED S/A SCFI', 2.9, 40.94], ['BCO DAYCOVAL S.A', 3.24, 46.57], ['OMNI SA CFI', 3.37, 48.8]] },
+    { id: 'imovReg', nome: 'Financiamento imobiliário com TR (taxas reguladas)', per: 'm', parc: 1, l: [['CAIXA ECONOMICA FEDERAL', 0.65, 8.1], ['APE POUPEX', 0.74, 9.3], ['BANCO INTER', 0.74, 9.3], ['BANCO SICOOB S.A.', 0.79, 9.92], ['BCO DO ESTADO DO RS S.A.', 0.81, 10.1], ['BCO DO EST. DE SE S.A.', 0.81, 10.1], ['BCO DO EST. DO PA S.A.', 0.83, 10.43], ['BANCO COOPERATIVO SICREDI', 0.84, 10.5], ['BCO DO BRASIL S.A.', 0.84, 10.54], ['BCO BANESTES S.A.', 0.84, 10.61], ['BRB - BCO DE BRASILIA S.A.', 0.85, 10.7], ['BCO BRADESCO S.A.', 0.93, 11.77], ['BCO SANTANDER (BRASIL) S.A.', 0.94, 11.82], ['ITAÚ UNIBANCO S.A.', 0.94, 11.87]] },
+    { id: 'imovMer', nome: 'Financiamento imobiliário com TR (taxas de mercado)', per: 'm', parc: 1, l: [['BCO DO ESTADO DO RS S.A.', 0.76, 9.56], ['BCO DO EST. DO PA S.A.', 0.8, 9.99], ['BCO BANESTES S.A.', 0.85, 10.75], ['BANCO SICOOB S.A.', 0.87, 10.89], ['BCO DO EST. DE SE S.A.', 0.89, 11.25], ['BANCO COOPERATIVO SICREDI', 0.91, 11.45], ['ITAÚ UNIBANCO S.A.', 0.95, 12.06], ['CAIXA ECONOMICA FEDERAL', 0.96, 12.12], ['BCO SANTANDER (BRASIL) S.A.', 0.97, 12.29], ['BCO BRADESCO S.A.', 0.97, 12.3], ['BANCO INTER', 0.98, 12.47], ['BCO DO BRASIL S.A.', 1.14, 14.51]] },
+    { id: 'cheque', nome: 'Cheque especial', per: 's', parc: 0, l: [['OURIBANK S.A.', 2.18, 29.48], ['BANCO PAN', 2.46, 33.91], ['BANCO ORIGINAL', 3.2, 45.85], ['BANCO SEMEAR', 3.42, 49.7], ['BCO PINE S.A.', 3.46, 50.39], ['BCO BMG S.A.', 3.56, 52.15], ['BANCO SICOOB S.A.', 4.45, 68.62], ['BCO DO NORDESTE DO BRASIL S.A.', 5.18, 83.3], ['BCO BANESTES S.A.', 5.99, 100.97], ['BRB - BCO DE BRASILIA S.A.', 6.03, 101.98], ['BCO DO EST. DO PA S.A.', 7.38, 135.05], ['BCO DO ESTADO DO RS S.A.', 7.47, 137.41], ['BCO XP S.A.', 7.52, 138.75], ['BCO SAFRA S.A.', 7.7, 143.56], ['BCO DA AMAZONIA S.A.', 8.12, 155.23], ['BCO RENDIMENTO S.A.', 8.13, 155.49], ['BCO DO BRASIL S.A.', 8.16, 156.33], ['CAIXA ECONOMICA FEDERAL', 8.17, 156.73], ['BANCO BTG PACTUAL S.A.', 8.21, 157.67], ['BCO MERCANTIL DO BRASIL S.A.', 8.23, 158.43], ['BCO DO EST. DE SE S.A.', 8.24, 158.63], ['BANCO INTER', 8.26, 159.24], ['BCO SOFISA S.A.', 8.26, 159.3], ['BCO SANTANDER (BRASIL) S.A.', 8.27, 159.4], ['BCO CREFISA S.A.', 8.27, 159.59], ['BCO C6 S.A.', 8.27, 159.6], ['BCO BRADESCO S.A.', 8.3, 160.43], ['ITAÚ UNIBANCO S.A.', 8.34, 161.57], ['BCO DAYCOVAL S.A', 8.49, 165.8], ['BCO RIBEIRAO PRETO S.A.', 12.18, 297.38]] },
+    { id: 'rotativo', nome: 'Cartão de crédito rotativo', per: 's', parc: 0, l: [['ZEMA CFI S/A', 0.18, 2.12], ['GAZINCRED S.A. SCFI', 0.83, 10.4], ['PARANA BCO S.A.', 2.94, 41.55], ['BCO AGIBANK S.A.', 3.26, 46.9], ['BCO BMG S.A.', 3.61, 53.01], ['BCO DAYCOVAL S.A', 4.08, 61.57], ['BCO INDUSTRIAL DO BRASIL S.A.', 4.65, 72.52], ['BCO MERCANTIL DO BRASIL S.A.', 6.19, 105.59], ['BANCO GENIAL', 9.07, 183.42], ['BCO STELLANTIS S.A.', 9.07, 183.5], ['BCO DA AMAZONIA S.A.', 9.58, 199.66], ['BANCO BTG PACTUAL S.A.', 9.97, 212.79], ['BCO XP S.A.', 10.06, 215.81], ['BANCO SICOOB S.A.', 10.14, 218.76], ['BCO RENDIMENTO S.A.', 10.63, 236.13], ['BCO SAFRA S.A.', 10.63, 236.18], ['BANCO BARI S.A.', 10.95, 248.1], ['ASA SCFI S.A.', 11.82, 282.31], ['BCO DO NORDESTE DO BRASIL S.A.', 12.01, 290.18], ['BCO SOFISA S.A.', 12.07, 292.69], ['CAIXA ECONOMICA FEDERAL', 12.17, 296.74], ['CARUANA SCFI', 12.18, 297.38], ['BCO DO BRASIL S.A.', 12.92, 329.81], ['BCO BANESTES S.A.', 12.95, 331.16], ['NU FINANCEIRA S.A. CFI', 13.14, 339.95], ['KREDILIG S.A. - CFI', 13.61, 362.52], ['BCO BRADESCO S.A.', 13.82, 372.49], ['ITAÚ UNIBANCO HOLDING S.A.', 14.41, 402.96], ['ASAAS CFI S.A', 14.98, 434.17], ['SCFI EFÍ S.A.', 15.05, 437.81], ['NOVO BCO CONTINENTAL S.A. - BM', 15.14, 442.77], ['GOLCRED S/A - CFI', 15.14, 442.81], ['BCO SANTANDER (BRASIL) S.A.', 15.99, 493.21], ['BANCO INTER', 16.11, 500.27], ['BCO C6 S.A.', 16.14, 502.23], ['BANCO CNH INDUSTRIAL CAPITAL S.A', 16.17, 504.39], ['HS FINANCEIRA', 16.23, 507.99], ['FIN. ITAU CBD CFI', 16.35, 515.28], ['CREDIARE CFI S.A.', 16.53, 526.78], ['PORTOSEG S.A. CFI', 16.81, 545.51], ['BANCO INVESTCRED UNIBANCO S.A.', 16.87, 549.55], ['LUIZACRED S.A. SCFI', 16.95, 554.6], ['BCO DO EST. DO PA S.A.', 17.12, 565.82], ['BCO BV S.A.', 17.44, 588.25], ['BANCO BRADESCARD', 17.8, 614.21], ['MERCADO CRÉDITO SCFI S.A.', 18.01, 629.16], ['BCO DO ESTADO DO RS S.A.', 18.16, 640.68], ['BANCO DIGIO', 19.02, 708.25], ['BCO SENFF S.A.', 19.04, 709.41], ['BCO CSF S.A.', 19.2, 722.83], ['BANCO PAN', 19.31, 731.74], ['PICPAY BANK - BANCO MÚLTIPLO S.A', 19.42, 741.06], ['BCO DO EST. DE SE S.A.', 19.49, 747.34], ['REALIZE SCFI S.A.', 19.57, 753.59], ['VIA CERTA FINANCIADORA S.A. - CFI', 19.64, 759.98], ['MIDWAY S.A. - SCFI', 20.08, 798.37], ['NEON FINANCEIRA - SCFI S.A.', 21.05, 890.12], ['COBUCCIO S.A. SCFI', 21.07, 891.92], ['BCO CREFISA S.A.', 21.35, 919.86], ['CALCRED S.A.', 21.38, 922.56], ['BCO AFINZ S.A. - BM', 21.45, 930.28], ['BCO TRIANGULO S.A.', 22.04, 992.04], ['DM SCFI', 22.47, 1038.34], ['PEFISA S.A. - C.F.I.', 24.99, 1353.68]] },
+    { id: 'parcelado', nome: 'Cartão de crédito parcelado', per: 's', parc: 1, l: [['BCO DA AMAZONIA S.A.', 0.02, 0.26], ['ZEMA CFI S/A', 1.15, 14.64], ['BCO BMG S.A.', 2.72, 38.05], ['BCO AGIBANK S.A.', 2.81, 39.46], ['BCO DAYCOVAL S.A', 3.48, 50.84], ['BCO INDUSTRIAL DO BRASIL S.A.', 3.5, 51.1], ['BCO MERCANTIL DO BRASIL S.A.', 3.51, 51.36], ['BCO ARBI S.A.', 3.83, 57.03], ['BANCO GENIAL', 4.47, 69.01], ['VIA CERTA FINANCIADORA S.A. - CFI', 5.51, 90.23], ['BANCO BARI S.A.', 5.61, 92.48], ['BANCO BTG PACTUAL S.A.', 5.93, 99.66], ['BCO C6 S.A.', 5.95, 100.15], ['BRB - BCO DE BRASILIA S.A.', 6.28, 107.72], ['KREDILIG S.A. - CFI', 6.37, 109.9], ['ASA SCFI S.A.', 6.53, 113.56], ['HS FINANCEIRA', 6.55, 114.12], ['BCO RENDIMENTO S.A.', 6.58, 114.86], ['RP FINANCEIRA', 6.99, 124.9], ['SCFI EFÍ S.A.', 7, 125.2], ['BCO DO NORDESTE DO BRASIL S.A.', 7.44, 136.52], ['BANCO SICOOB S.A.', 7.68, 143.05], ['GOLCRED S/A - CFI', 7.77, 145.34], ['PORTOSEG S.A. CFI', 7.78, 145.73], ['BCO XP S.A.', 7.81, 146.52], ['CARUANA SCFI', 8.01, 152.03], ['BCO STELLANTIS S.A.', 8.18, 156.75], ['BCO BRADESCO S.A.', 8.45, 164.61], ['BCO DO ESTADO DO RS S.A.', 8.48, 165.63], ['CAIXA ECONOMICA FEDERAL', 8.66, 170.91], ['BCO DO BRASIL S.A.', 8.69, 171.67], ['BANCO BRADESCARD', 8.71, 172.4], ['BCO DO EST. DO PA S.A.', 8.89, 177.74], ['NU FINANCEIRA S.A. CFI', 9.04, 182.36], ['BCO SAFRA S.A.', 9.06, 183.09], ['GAZINCRED S.A. SCFI', 9.08, 183.78], ['BCO TRIANGULO S.A.', 9.22, 188.11], ['BANCO CNH INDUSTRIAL CAPITAL S.A', 9.3, 190.69], ['BCO AFINZ S.A. - BM', 9.51, 197.38], ['ITAÚ UNIBANCO HOLDING S.A.', 9.69, 203.3], ['NEON FINANCEIRA - SCFI S.A.', 9.81, 207.53], ['BCO SANTANDER (BRASIL) S.A.', 9.87, 209.52], ['BCO BANESTES S.A.', 9.88, 209.61], ['PICPAY BANK - BANCO MÚLTIPLO S.A', 10.2, 220.73], ['BCO BV S.A.', 10.24, 222.32], ['BANCO INTER', 10.26, 222.92], ['BCO SOFISA S.A.', 10.78, 241.5], ['BCO CSF S.A.', 10.8, 242.35], ['DM SCFI', 11.44, 267], ['FIN. ITAU CBD CFI', 11.73, 278.4], ['BANCO INVESTCRED UNIBANCO S.A.', 11.86, 283.98], ['BANCO PAN', 12.15, 295.95], ['LUIZACRED S.A. SCFI', 12.25, 300.18], ['BANCO DIGIO', 13.14, 340.08], ['CALCRED S.A.', 13.6, 362.05], ['BCO CREFISA S.A.', 13.77, 370.07], ['PEFISA S.A. - C.F.I.', 15.06, 438.61], ['MERCADO CRÉDITO SCFI S.A.', 15.5, 463.44], ['MIDWAY S.A. - SCFI', 15.55, 466.72], ['BCO SENFF S.A.', 15.84, 483.78], ['REALIZE SCFI S.A.', 16.47, 523.09], ['BCO DO EST. DE SE S.A.', 19.49, 747.34]] }
+  ];
+  function achar(id) { for (var k = 0; k < DADOS.length; k++) if (DADOS[k].id === id) return DADOS[k]; return DADOS[0]; }
+  function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function nomeInst(s) { return s.replace(/^BCO\.? /, 'Banco ').replace(/ BCO /, ' Banco '); }
+
+  AZ.registrar({
+    slug: 'bancos-melhores-juros',
+    titulo: 'Ranking de juros dos bancos por modalidade de crédito',
+    categoria: 'financiamentos',
+    subgrupo: 'geral',
+    ordem: 1,
+    resumo: 'Veja as taxas médias de juros cobradas por banco em cada modalidade de crédito e compare com a taxa que lhe ofereceram.',
+    palavras: ['taxa de juros', 'bancos', 'ranking', 'crédito pessoal', 'consignado', 'cheque especial', 'cartão de crédito', 'rotativo', 'veículos', 'Banco Central'],
+    intro: 'Escolha a modalidade de crédito para ver o ranking das instituições, da menor para a maior taxa média, conforme os dados públicos do Banco Central. Se tiver uma proposta em mãos, informe a taxa para saber em que posição ela ficaria. Retrato de setembro de 2026 (crédito imobiliário: agosto de 2026).',
+    campos: [
+      { id: 'mod', rotulo: 'Modalidade de crédito', tipo: 'select', padrao: 'pessoal',
+        opcoes: DADOS.map(function (m) { return { v: m.id, t: m.nome }; }) },
+      { id: 'taxa', rotulo: 'Taxa que lhe ofereceram', tipo: 'pct', min: 0, max: 2000, opcional: true,
+        unidades: [{ v: 'mes', t: 'ao mês' }, { v: 'ano', t: 'ao ano' }],
+        ajuda: 'Opcional. Informe a taxa da sua proposta para ver a posição dela no ranking.' },
+      { tipo: 'titulo', rotulo: 'Efeito da taxa em reais (opcional)', mostrarSe: function (v) { return !!achar(v.mod).parc; } },
+      { id: 'valor', rotulo: 'Valor do crédito', tipo: 'moeda', padrao: 10000, min: 0, opcional: true, largura: 'meia',
+        mostrarSe: function (v) { return !!achar(v.mod).parc; } },
+      { id: 'prazo', rotulo: 'Prazo', tipo: 'int', padrao: 24, min: 0, max: 600, sufixo: 'meses', opcional: true, largura: 'meia',
+        mostrarSe: function (v) { return !!achar(v.mod).parc; } }
+    ],
+    calcular: function (v, AZ) {
+      var m = achar(v.mod), l = m.l, n = l.length, F = AZ.fin;
+      var ord = l.map(function (x) { return x[1]; }).sort(function (a, b) { return a - b; });
+      var medAm = n % 2 ? ord[(n - 1) / 2] : (ord[n / 2 - 1] + ord[n / 2]) / 2;
+      var pri = l[0], ult = l[n - 1];
+      var tem = v.taxa > 0, am = 0, aa = 0, abaixo = 0;
+      if (tem) {
+        am = v.taxaUn === 'ano' ? F.aaParaAm(v.taxa / 100) * 100 : v.taxa;
+        aa = v.taxaUn === 'ano' ? v.taxa : F.amParaAa(v.taxa / 100) * 100;
+        /* compara na unidade informada, para não depender do arredondamento publicado */
+        var col = v.taxaUn === 'ano' ? 2 : 1, ref = v.taxaUn === 'ano' ? aa : am;
+        l.forEach(function (x) { if (x[col] < ref) abaixo++; });
+      }
+      var periodo = m.per === 's' ? 'contratadas ' + REF.s : 'contratadas no mês ' + REF.m;
+      var indexado = m.per === 'm';
+
+      var destaques = [
+        { rotulo: 'Menor taxa média', valor: AZ.f.pct(pri[1], 2) + ' ao mês', tom: 'primario', nota: AZ.f.pct(pri[2], 2) + ' ao ano · ' + esc(nomeInst(pri[0])) },
+        { rotulo: 'Taxa mediana', valor: AZ.f.pct(medAm, 2) + ' ao mês', nota: AZ.f.pct(F.amParaAa(medAm / 100) * 100, 2) + ' ao ano · metade das ' + n + ' instituições cobra menos' },
+        { rotulo: 'Maior taxa média', valor: AZ.f.pct(ult[1], 2) + ' ao mês', tom: 'negativo', nota: AZ.f.pct(ult[2], 2) + ' ao ano · ' + esc(nomeInst(ult[0])) }
+      ];
+      if (tem) destaques.push({ rotulo: 'Posição da sua proposta', valor: (abaixo + 1) + 'º lugar', tom: 'destaque',
+        nota: abaixo === 0 ? (ref < l[0][col] ? 'abaixo de todas as ' + n + ' taxas médias do ranking' : 'igual à menor taxa média do ranking') : abaixo === n ? 'acima de todas as ' + n + ' taxas médias do ranking' : abaixo + (abaixo === 1 ? ' instituição cobra' : ' instituições cobram') + ' menos, em média' });
+
+      var linhas = l.map(function (x, k) { return [String(k + 1), nomeInst(x[0]), x[1], x[2]]; }), dest = null;
+      if (tem) { linhas.splice(abaixo, 0, ['', 'Sua proposta', am, aa]); dest = abaixo; }
+
+      var itens = [{ nome: 'Menor taxa', valor: pri[1] }, { nome: 'Mediana', valor: medAm }];
+      if (tem) itens.push({ nome: 'Sua proposta', valor: am });
+      itens.push({ nome: 'Maior taxa', valor: ult[1] });
+
+      var tabelas = [{
+        titulo: 'Ranking: ' + m.nome, destaque: dest, mostrar: tem ? Math.min(linhas.length, Math.max(12, abaixo + 3)) : null,
+        colunas: [{ t: 'Posição', f: 'texto' }, { t: 'Instituição', f: 'texto' }, { t: 'Taxa ao mês', f: 'pct' }, { t: 'Taxa ao ano', f: 'pct' }],
+        linhas: linhas,
+        nota: 'Fonte: Banco Central do Brasil, taxas médias das operações ' + periodo + '. Nomes das instituições conforme a publicação.' + (indexado ? ' Nesta modalidade, a taxa é cobrada além da variação da TR.' : '')
+      }];
+
+      if (m.parc && v.valor > 0 && v.prazo > 0) {
+        var cen = [['Menor taxa média', pri[1]], ['Taxa mediana', medAm]];
+        if (tem) cen.push(['Sua proposta', am]);
+        cen.push(['Maior taxa média', ult[1]]);
+        var base = F.pmtVp(v.valor, pri[1] / 100, v.prazo) * v.prazo;
+        tabelas.push({
+          titulo: 'Efeito da taxa em ' + AZ.f.brl(v.valor) + ' pagos em ' + v.prazo + (v.prazo === 1 ? ' parcela' : ' parcelas'), csv: false, destaque: tem ? 2 : null,
+          colunas: [{ t: 'Cenário', f: 'texto' }, { t: 'Taxa ao mês', f: 'pct' }, { t: 'Parcela', f: 'brl' }, { t: 'Total pago', f: 'brl' }, { t: 'Custo a mais', f: 'brl' }],
+          linhas: cen.map(function (c) { var p = F.pmtVp(v.valor, c[1] / 100, v.prazo), t = p * v.prazo; return [c[0], c[1], p, t, t - base]; }),
+          nota: 'Custo a mais: diferença no total pago em relação à menor taxa média. Parcelas fixas pela tabela Price, sem tarifas, seguros e impostos' + (indexado ? ' e sem a correção do saldo pela TR' : '') + '.'
+        });
+      }
+
+      var resumo = '<p>Entre as ' + n + ' instituições com operações nesta modalidade, a taxa média vai de ' + AZ.f.pct(pri[1], 2) + ' a ' + AZ.f.pct(ult[1], 2) + ' ao mês.';
+      if (tem) resumo += ' A taxa informada, de <strong>' + AZ.f.pct(am, 2) + ' ao mês</strong> (' + AZ.f.pct(aa, 2) + ' ao ano), ' +
+        (Math.round(am * 100) < Math.round(medAm * 100) ? 'fica abaixo da mediana de ' + AZ.f.pct(medAm, 2) + ' ao mês.' : Math.round(am * 100) > Math.round(medAm * 100) ? 'fica acima da mediana de ' + AZ.f.pct(medAm, 2) + ' ao mês: vale pedir propostas a outras instituições.' : 'é igual à mediana do ranking.');
+      resumo += '</p>';
+
+      return {
+        alerta: '<strong>Data de referência dos dados:</strong> operações ' + periodo + ', conforme o Banco Central do Brasil (consulta feita em ' + REF.extracao + '). Esta página é um retrato estático: as taxas mudam ' + (indexado ? 'todo mês' : 'toda semana') + '.',
+        destaques: destaques,
+        resumo: resumo,
+        graficos: [{ tipo: 'barras-h', titulo: 'Taxa ao mês: ' + m.nome, formato: 'pct', itens: itens }],
+        tabelas: tabelas,
+        textos: [
+          '<p>As taxas do ranking são médias de todas as operações que cada instituição contratou no período. A taxa oferecida a cada cliente depende do seu perfil de risco, do relacionamento com a instituição, do prazo e das garantias, e pode ficar bem acima ou abaixo da média. Taxas muito baixas podem refletir operações específicas, como promoções de montadoras ou parcelamentos sem juros lançados no cartão.</p>'
+        ]
+      };
+    },
+    explicacao: [
+      '<p>As instituições financeiras informam ao Banco Central as taxas de juros das operações de crédito que contratam. O Banco Central calcula a taxa média de cada instituição em cada modalidade e publica o resultado, da menor para a maior taxa. Nas modalidades de crédito ao consumidor, a média considera as operações de cinco dias úteis consecutivos; no financiamento imobiliário, as operações do mês.</p>',
+      '<p>Este simulador traz um retrato desses dados, com a data de referência indicada no topo do resultado. Ele não consulta o Banco Central em tempo real. Para os números mais recentes, consulte a página de taxas de juros no site do Banco Central.</p>',
+      '<p>A posição da sua proposta é calculada contando quantas instituições têm taxa média menor que a taxa informada. A conversão entre taxa mensal e anual usa juros compostos: <code>(1 + taxa mensal)^12 − 1</code>. A mediana é a taxa que divide o ranking ao meio: metade das instituições cobra menos e metade cobra mais.</p>',
+      '<p>A tabela de efeito em reais usa parcelas fixas (tabela Price) e serve apenas para dar ordem de grandeza à diferença entre as taxas. Ao comparar propostas reais, use o custo efetivo total (CET), que inclui tarifas, seguros e impostos. No cheque especial e no cartão rotativo não há parcelas fixas, por isso a comparação em reais não é apresentada.</p>',
+      '<p>Foram incluídas as modalidades mais procuradas por pessoas físicas. No financiamento imobiliário, as taxas mostradas são as dos contratos corrigidos pela TR e se somam à variação desse índice. Registros publicados com taxa zero foram desconsiderados. O ranking não é recomendação de instituição nem garantia de que a taxa estará disponível.</p>'
+    ].join('\n')
+  });
+})();
+</script>
+<script>AZ.registrar = AZ._registrar;</script>
+<script>
+AZ.registrar({
+  slug: 'financiamento-unificado',
+  usa: ['financiamento-sac', 'financiamento-imovel-tr-sac', 'financiamento-imovel-tr-price', 'financiamento-imovel-ipca-sac', 'financiamento-imovel-ipca-price', 'financiamento', 'emprestimo', 'financiamento-carro',
+    'parcelas-valor-presente', 'vp-serie-pagamentos', 'taxa-serie-valor-presente', 'numero-pagamentos-valor-presente', 'bancos-melhores-juros'],
+  /* endereço antigo → modo e valores padrão da página antiga; o valor financiado da antiga vira o valor do bem, com entrada zero */
+  atalhos: {
+    'financiamento-sac': { correcao: 'nenhuma', bem: 400000, entrada: 0 },
+    'financiamento-imovel-tr-sac': { bem: 400000, entrada: 0 },
+    'financiamento-imovel-tr-price': { sistema: 'price', bem: 400000, entrada: 0 },
+    'financiamento-imovel-ipca-sac': { correcao: 'ipca', taxa: 8, bem: 400000, entrada: 0 },
+    'financiamento-imovel-ipca-price': { sistema: 'price', correcao: 'ipca', taxa: 8, bem: 400000, entrada: 0 },
+    'financiamento': { sistema: 'price', correcao: 'nenhuma', bem: 30000, entrada: 0, taxa: 2, taxaUn: 'mes', prazo: 48, prazoUn: 'mes', parcela: 1000 },
+    /* no empréstimo, as tarifas saíam do dinheiro recebido */
+    'emprestimo': { sistema: 'price', correcao: 'nenhuma', bem: 20000, entrada: 0, taxa: 2.5, taxaUn: 'mes', prazo: 36, prazoUn: 'mes', custosModo: 'descontados' },
+    'financiamento-carro': { sistema: 'price', correcao: 'nenhuma', bem: 80000, entrada: 24000, taxa: 1.8, taxaUn: 'mes', prazo: 48, prazoUn: 'mes' },
+    'parcelas-valor-presente': { sistema: 'price', correcao: 'nenhuma', bem: 30000, entrada: 0, taxa: 1.8, taxaUn: 'mes', prazo: 36, prazoUn: 'mes' },
+    'vp-serie-pagamentos': { calc: 'valor', parcela: 1500, taxa: 1, taxaUn: 'mes', prazo: 24, prazoUn: 'mes' },
+    'taxa-serie-valor-presente': { calc: 'taxa', bem: 5000, entrada: 0, parcela: 480, prazo: 12, prazoUn: 'mes' },
+    'numero-pagamentos-valor-presente': { calc: 'prazo', bem: 20000, entrada: 0, taxa: 2, taxaUn: 'mes', parcela: 900 },
+    /* o ranking abria no crédito pessoal e mostrava R$ 10.000,00 em 24 parcelas pela Price, sem taxa informada; aqui a taxa é obrigatória
+       e entra a mediana da modalidade (5,445% ao mês), que repete nos cartões a linha da taxa mediana da página antiga */
+    'bancos-melhores-juros': { bancos: true, mod: 'pessoal', sistema: 'price', correcao: 'nenhuma', bem: 10000, entrada: 0, taxa: 5.445, taxaUn: 'mes', prazo: 24, prazoUn: 'mes' }
+  },
+  titulo: 'Simulador de financiamento e empréstimo',
+  categoria: 'financiamentos',
+  subgrupo: 'geral',
+  ordem: 1,
+  resumo: 'Calcule parcela, valor, taxa ou prazo de um financiamento ou empréstimo, pelo SAC ou pela Price, e compare a taxa com a dos bancos.',
+  palavras: ['financiamento', 'empréstimo', 'SAC', 'tabela Price', 'TR', 'IPCA', 'financiamento imobiliário', 'financiamento de carro', 'parcela', 'CET', 'taxa embutida',
+    'PGTO', 'PMT', 'prestação', 'parcela fixa', 'valor presente', 'VP', 'PV', 'série uniforme', 'anuidade', 'quitar dívida', 'antecipar parcelas', 'valor à vista',
+    'TAXA', 'RATE', 'juros embutidos', 'parcelamento', 'crediário', 'à vista ou a prazo', 'NPER', 'número de parcelas', 'quanto tempo para pagar', 'primeira parcela no ato',
+    'taxa de juros', 'bancos', 'ranking de juros', 'melhores juros', 'crédito pessoal', 'consignado', 'cheque especial', 'cartão de crédito', 'rotativo', 'veículos', 'Banco Central'],
+  intro: 'Calcule a parcela e o custo de um financiamento ou empréstimo, descubra a taxa embutida num parcelamento e compare com a dos bancos.',
+  campos: [
+    { id: 'calc', rotulo: 'O que calcular', tipo: 'select', padrao: 'parcela',
+      opcoes: [{ v: 'parcela', t: 'Valor da parcela' }, { v: 'valor', t: 'Valor financiado' }, { v: 'taxa', t: 'Taxa de juros' }, { v: 'prazo', t: 'Número de parcelas' }],
+      ajuda: 'Valor financiado, taxa e número de parcelas são calculados a partir de uma parcela fixa (tabela Price), sem correção do saldo.' },
+    /* botões no cabeçalho do gráfico da parcela */
+    { id: 'sistema', rotulo: 'Sistema', tipo: 'segmento', padrao: 'sac', noGrafico: 0,
+      opcoes: [{ v: 'sac', t: 'SAC' }, { v: 'price', t: 'Price' }, { v: 'ambos', t: 'Os dois' }],
+      mostrarSe: function (v) { return v.calc === 'parcela'; } },
+    { id: 'correcao', rotulo: 'Correção', tipo: 'segmento', padrao: 'tr', noGrafico: 0,
+      opcoes: [{ v: 'nenhuma', t: 'Nenhuma' }, { v: 'tr', t: 'TR' }, { v: 'ipca', t: 'IPCA' }],
+      mostrarSe: function (v) { return v.calc === 'parcela'; } },
+    /* liga a parcela na taxa mediana e na menor taxa dos bancos (página antiga do ranking do Banco Central) */
+    { id: 'bancos', rotulo: 'Taxa dos bancos', tipo: 'check', padrao: false, noGrafico: 0,
+      mostrarSe: function (v) { return v.calc === 'parcela' && v.sistema !== 'ambos'; } },
+    { id: 'bem', rotulo: 'Valor do bem', tipo: 'moeda', padrao: 500000, min: 1,
+      ajuda: 'Preço do imóvel ou do veículo. Num empréstimo em dinheiro, informe o valor pedido e deixe a entrada em zero.',
+      mostrarSe: function (v) { return v.calc !== 'valor'; } },
+    { id: 'entrada', rotulo: 'Entrada', tipo: 'moeda', padrao: 100000, min: 0, opcional: true,
+      mostrarSe: function (v) { return v.calc !== 'valor'; } },
+    { id: 'parcela', rotulo: 'Valor da parcela', tipo: 'moeda', padrao: 3500, min: 0.01,
+      mostrarSe: function (v) { return v.calc !== 'parcela'; } },
+    { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: 10.5, min: 0, max: 1000,
+      unidades: [{ v: 'ano', t: 'ao ano' }, { v: 'mes', t: 'ao mês' }],
+      ajuda: 'Se a proposta informar o custo efetivo total (CET), use essa taxa para comparar propostas.',
+      mostrarSe: function (v) { return v.calc !== 'taxa'; } },
+    /* as modalidades e as taxas são as da página antiga do ranking, embutida antes deste spec */
+    { id: 'mod', rotulo: 'Modalidade de crédito', tipo: 'select', padrao: 'imovReg',
+      opcoes: AZ.antigo('bancos-melhores-juros').campos.filter(function (c) { return c.id === 'mod'; })[0].opcoes,
+      ajuda: 'Taxas médias de cada instituição, publicadas pelo Banco Central, de setembro de 2026 (no imóvel, de agosto).',
+      mostrarSe: function (v) { return v.bancos && v.calc === 'parcela' && v.sistema !== 'ambos'; } },
+    { id: 'prazo', rotulo: 'Prazo', tipo: 'int', padrao: 30, min: 1, max: 600,
+      unidades: [{ v: 'ano', t: 'anos' }, { v: 'mes', t: 'meses' }],
+      mostrarSe: function (v) { return v.calc !== 'prazo'; } },
+    /* só a parcela fixa tem conta com a primeira parcela no ato: nos outros sistemas o campo some */
+    { id: 'momento', rotulo: 'Primeira parcela', tipo: 'segmento', padrao: 'fim',
+      opcoes: [{ v: 'fim', t: 'Em 30 dias' }, { v: 'inicio', t: 'No ato' }],
+      ajuda: 'No ato, a primeira parcela é paga na contratação e não tem juros, como uma entrada.',
+      mostrarSe: function (v) { return v.calc !== 'parcela' || (v.sistema === 'price' && v.correcao === 'nenhuma'); } },
+    { id: 'tr', rotulo: 'TR esperada', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.tr; }, min: 0, max: 100,
+      unidades: [{ v: 'mes', t: 'ao mês' }, { v: 'ano', t: 'ao ano' }],
+      ajuda: 'Taxa Referencial média que você espera para o período. O padrão é a TR mensal mais recente.',
+      mostrarSe: function (v) { return v.calc === 'parcela' && v.correcao === 'tr'; } },
+    { id: 'ipca', rotulo: 'IPCA esperado', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: 0, max: 100, sufixo: '% ao ano',
+      ajuda: 'Inflação média que você espera para o período. O padrão é o IPCA acumulado em 12 meses.',
+      mostrarSe: function (v) { return v.calc === 'parcela' && v.correcao === 'ipca'; } },
+    { id: 'extras', rotulo: 'Seguros e tarifas por mês', tipo: 'moeda', padrao: 0, min: 0, opcional: true,
+      ajuda: 'Opcional. Valor fixo somado a cada parcela (seguros obrigatórios e taxa de administração do financiamento imobiliário).',
+      mostrarSe: function (v) { return v.calc === 'parcela'; } },
+    { id: 'custos', rotulo: 'Tarifas, seguros e IOF na contratação', tipo: 'moeda', padrao: 0, min: 0, opcional: true,
+      ajuda: 'Opcional. Valores cobrados uma única vez, ao contratar (tarifa de cadastro, registro do contrato, seguro, IOF).',
+      mostrarSe: function (v) { return v.calc === 'parcela'; } },
+    { id: 'custosModo', rotulo: 'Como esses custos são pagos', tipo: 'segmento', padrao: 'financiados',
+      opcoes: [{ v: 'financiados', t: 'Entram no financiamento' }, { v: 'descontados', t: 'Saem do valor liberado' }],
+      ajuda: 'No financiamento de veículos é comum somá-los ao valor financiado, e no empréstimo pessoal é comum descontá-los do dinheiro recebido.',
+      mostrarSe: function (v) { return v.calc === 'parcela' && v.custos > 0; } }
+  ],
+  calcular: function (v, AZ) {
+    /* nos cartões, valores a partir de R$ 1 milhão aparecem sem centavos para caber; as tabelas trazem os centavos */
+    var M = function (x) { return Math.abs(x) >= 1e6 ? 'R$ ' + AZ.f.int(x) : AZ.f.brl(x); };
+    var B = AZ.f.brl, P = AZ.f.pct;
+    var n = v.prazoUn === 'ano' ? v.prazo * 12 : v.prazo;
+    if (v.calc !== 'prazo' && n > 600) return { erro: 'O prazo máximo da simulação é de 50 anos (600 meses).' };
+    if (v.calc !== 'valor' && v.entrada >= v.bem) return { erro: 'A entrada deve ser menor que o valor do bem. Com entrada igual ao valor do bem não há financiamento.' };
+    var liquido = v.bem - (v.entrada || 0);
+    /* primeira parcela no ato: só com parcela fixa (os outros modos do "O que calcular" e a Price sem correção) */
+    var ato = v.momento === 'inicio' && (v.calc !== 'parcela' || (v.sistema === 'price' && v.correcao === 'nenhuma'));
+    function dest(r, ini) { return (r.destaques || []).filter(function (d) { return d.rotulo.indexOf(ini) === 0; })[0] || null; }
+
+    /* valor financiado, taxa ou prazo a partir de uma parcela fixa: a conta é a das páginas antigas de séries de pagamento,
+       com a primeira parcela em 30 dias (série postecipada) ou no ato (antecipada); o resultado é remontado no formato da página
+       de prestações fixas. Elas calculam o saldo em forma fechada (estável com taxa alta e prazo longo) e, no prazo, quitam junto
+       com a última parcela cheia um resto de até meio centavo, em vez de criar mais uma parcela de R$ 0,00 */
+    function serie() {
+      var mom = ato ? 'inicio' : 'fim', i = v.taxaUn === 'ano' ? AZ.fin.aaParaAm(v.taxa / 100) : v.taxa / 100, r, ls, pv, principal, pago, juros;
+      if (v.calc === 'valor') {
+        r = AZ.antigo('vp-serie-pagamentos').calcular({ pmt: v.parcela, taxa: v.taxa, taxaUn: v.taxaUn, prazo: n, prazoUn: 'mes', momento: mom }, AZ);
+        if (r.erro) return r;
+        pv = dest(r, 'Valor presente').valor; pago = dest(r, 'Soma dos pagamentos').valor; juros = dest(r, 'Juros embutidos').valor;
+        /* a tabela antiga traz nº, juros, pagamento, valor de hoje e saldo; a amortização é o que o pagamento abate do saldo */
+        ls = r.tabelas[0].linhas.map(function (x) { return [x[0], x[2], x[1], x[2] - x[1], x[4]]; });
+        principal = { rotulo: 'Valor financiado', valor: pv, formato: M };
+      } else if (v.calc === 'taxa') {
+        /* os mesmos limites da página antiga, com as opções desta página no texto */
+        if (ato && n === 1) return { erro: 'Com uma única parcela paga no ato, não há prazo para os juros. Aumente o número de parcelas ou escolha a primeira parcela em 30 dias.' };
+        if (ato && v.parcela >= liquido) return { erro: 'Com a primeira parcela paga no ato, o valor da parcela precisa ser menor que o valor financiado.' };
+        /* taxa negativa: as parcelas somam menos que o valor financiado (o aviso da página de prestações fixas) */
+        var somaMenor = { erro: 'As parcelas somam ' + B(v.parcela * n) + ', menos que o valor financiado. Confira os valores informados.' };
+        if (v.parcela * n < liquido - 0.005) return somaMenor;
+        r = AZ.antigo('taxa-serie-valor-presente').calcular({ pv: liquido, pmt: v.parcela, prazo: n, momento: mom }, AZ);
+        if (r.erro) return { erro: 'Não foi possível encontrar uma taxa para esses valores. Confira os dados informados.' };
+        if (r.alerta) return somaMenor;
+        pv = liquido; i = dest(r, 'Taxa de juros ao mês').valor / 100; pago = dest(r, 'Total pago').valor; juros = dest(r, 'Total de juros').valor;
+        ls = r.tabelas[0].linhas.map(function (x) { return x.slice(); });
+        principal = { rotulo: 'Taxa de juros', valor: P(i * 100) + ' ao mês', nota: dest(r, 'Equivalente ao ano').valor + ' ao ano' };
+      } else {
+        r = AZ.antigo('numero-pagamentos-valor-presente').calcular({ pv: liquido, taxa: v.taxa, taxaUn: v.taxaUn, pmt: v.parcela, momento: mom }, AZ);
+        if (r.erro) return r;
+        pv = liquido; pago = dest(r, 'Total pago').valor; juros = dest(r, 'Total de juros').valor;
+        ls = r.tabelas[0].linhas.map(function (x) { return x.slice(); });
+        /* no ato, a última vence um mês antes do que venceria com a primeira em 30 dias */
+        principal = { rotulo: 'Número de parcelas', valor: AZ.f.int(ls.length),
+          nota: !ato ? AZ.f.prazo(ls.length) : ls.length === 1 ? 'parcela única, no ato' : AZ.f.prazo(ls.length - 1) + ' até a última' };
+      }
+      principal.tom = 'primario';
+      var des = [principal];
+      if (v.calc !== 'taxa') des.push({ rotulo: 'Taxa de juros', valor: P(i * 100) + ' ao mês', nota: P(AZ.fin.amParaAa(i) * 100) + ' ao ano' });
+      des.push({ rotulo: 'Total pago', valor: pago, formato: M, nota: pv > 0 ? AZ.f.num(pago / pv, 2) + ' vezes o valor financiado' : '' },
+        { rotulo: 'Total de juros', valor: juros, formato: M, tom: 'negativo', nota: P(pv > 0 ? juros / pv * 100 : 0, 1) + ' do valor financiado' });
+      /* em 30 dias, a parcela k vence no mês k: tabela e dica por mês, como na página de prestações fixas; no ato, por parcela */
+      var rt = ls.map(function (x) { return String(x[0]); }), col = function (k) { return ls.map(function (x) { return x[k]; }); }, dica = ato ? 'Parcela' : 'Mês';
+      return {
+        destaques: des,
+        graficos: [
+          { tipo: ls.length <= 40 ? 'barras-empilhadas' : 'linha', titulo: 'Parcela mês a mês', formato: 'brl', rotuloDica: dica, rotulos: rt,
+            series: [{ nome: 'Amortização', cor: 1, dados: col(3) }, { nome: 'Juros', cor: 2, dados: col(2) }] },
+          { tipo: 'area', titulo: 'Saldo devedor mês a mês', formato: 'brl', rotuloDica: dica, rotulos: ['0'].concat(rt),
+            series: [{ nome: 'Saldo devedor', cor: 1, dados: [pv].concat(col(4)) }] }
+        ],
+        tabelas: [{ titulo: ato ? 'Tabela parcela a parcela' : 'Tabela mês a mês', nota: ato ? 'A primeira parcela, paga no ato, abate a dívida por inteiro, sem juros.' : null,
+          colunas: [{ t: ato ? 'Parcela' : 'Mês', f: 'int' }, { t: ato ? 'Valor da parcela' : 'Parcela', f: 'brl' }, { t: 'Juros', f: 'brl' }, { t: 'Amortização', f: 'brl' }, { t: 'Saldo devedor', f: 'brl' }], linhas: ls }]
+      };
+    }
+
+    if (v.calc !== 'parcela') {
+      var r0 = serie();
+      if (r0.erro) return r0;
+      /* o cartão da parcela só repete o valor digitado (que está na tabela): sai, e a última parcela ajustada vai para a leitura, no lugar do aviso */
+      var ls = r0.tabelas[0].linhas, nn = ls.length, ult0 = ls[nn - 1][1], ajuste = Math.abs(ult0 - v.parcela) > 0.005;
+      var d0 = function (ini) { return r0.destaques.filter(function (d) { return d.rotulo.indexOf(ini) === 0; })[0]; };
+      var juros0 = d0('Total de juros').valor, pv0 = v.calc === 'valor' ? r0.destaques[0].valor : liquido;
+      var parc = function (k) { return k + (k === 1 ? ' parcela' : ' parcelas'); };
+      r0.destaques = r0.destaques.filter(function (d) { return d.rotulo !== 'Valor da parcela' && d.rotulo !== 'Primeira e última parcela'; });
+      r0.destaques.forEach(function (d) {
+        if (d.rotulo === 'Valor financiado') d.nota = 'o que ' + parc(nn) + ' de ' + B(v.parcela) + (nn === 1 ? ' paga' : ' pagam');
+        if (d.rotulo === 'Total de juros') d.nota = d.nota.replace('custo total do crédito: ', '');
+      });
+      r0.alerta = null;
+      /* o parágrafo do gráfico da parcela fala da parcela: o resultado e os totais já estão nos cartões */
+      var div0 = B(ls[0][2]) + ' de juros e ' + B(ls[0][3]) + ' de amortização.';
+      var ultMenor = v.calc === 'prazo' && ajuste;
+      /* no ato, a primeira parcela não tem juros: a divisão entre juros e amortização é contada pela segunda */
+      var div2 = nn > 1 ? B(ls[1][2]) + ' de juros e ' + B(ls[1][3]) + ' de amortização.' : '';
+      r0.resumo = '<p>' + (ultMenor && nn === 1 ? 'A parcela informada, de ' + B(v.parcela) + ', passa do necessário: uma parcela única de <strong>' + B(ult0) + '</strong> quita a dívida de ' + B(pv0) + '.'
+        : (ultMenor ? 'São ' + (nn - 1) + ' parcelas de ' + B(v.parcela) + ' e uma última, menor, de <strong>' + B(ult0) + '</strong>. ' : '') +
+          (ato && nn === 1 ? 'A parcela única, paga no ato, quita a dívida sem juros.'
+          : juros0 < 0.005 ? 'Como não há juros, ' + (nn === 1 ? 'a parcela única' : 'cada parcela') + ' só abate a dívida.'
+          : ato ? 'A primeira parcela, paga no ato, só abate a dívida. A segunda tem ' + div2 + (ultMenor ? '' : ' Com o tempo, os juros caem e a amortização cresce.')
+          : nn === 1 ? 'A parcela única tem ' + div0
+          : ultMenor ? 'A primeira tem ' + div0
+          : 'A primeira parcela tem ' + div0 + ' Com o tempo, os juros caem e a amortização cresce.')) + '</p>';
+      if (r0.graficos && r0.graficos[1]) r0.graficos[1].leitura = nn === 1 ? (ato ? 'Com uma parcela só, paga no ato, a dívida é quitada na contratação.' : 'Com uma parcela só, a dívida é quitada no primeiro mês.')
+        : juros0 < 0.005 ? 'Sem juros, o saldo cai o mesmo valor a cada parcela.'
+        : 'O saldo cai devagar no começo e acelera no fim. Por isso, antecipar parcelas no início reduz mais os juros.';
+      /* mesmos títulos e cores do modo principal: amortização em azul, saldo da Price em marinho */
+      (r0.graficos || []).forEach(function (g, k) {
+        g.titulo = k === 0 ? 'Parcela mês a mês' : 'Saldo devedor mês a mês';
+        g.series.forEach(function (s) { if (s.nome === 'Amortização') s.cor = 4; if (s.nome === 'Saldo devedor') s.cor = 3; });
+      });
+      return r0;
+    }
+
+    var ex = v.extras || 0, cst = v.custos || 0, desc = cst > 0 && v.custosModo === 'descontados';
+    if (desc && cst >= liquido) return { erro: 'Os custos descontados devem ser menores que o valor financiado.' };
+    var F = liquido + (cst > 0 && !desc ? cst : 0);   /* valor do contrato */
+    var L = liquido - (desc ? cst : 0);               /* o que você recebe: o bem financiado ou o dinheiro liberado */
+    var corr = v.correcao, ambos = v.sistema === 'ambos', fixa = !ambos && v.sistema === 'price' && corr === 'nenhuma';
+    var PELO = { tr: 'pela TR', ipca: 'pelo IPCA' }[corr];
+    var COR = { sac: 1, price: 3 }, PELOS = { sac: 'pelo SAC', price: 'pela Price' };
+
+    /* primeira parcela no ato (Price sem correção): a conta é a da página antiga da parcela de uma série antecipada */
+    function rodarNoAto(tx) {
+      var r = AZ.antigo('parcelas-valor-presente').calcular({ pv: F, taxa: tx.taxa, taxaUn: tx.un, prazo: n, prazoUn: 'mes', momento: 'inicio' }, AZ);
+      if (r.erro) return r;
+      var t = r.tabelas[0], pmt = dest(r, 'Valor da parcela').valor, pago = dest(r, 'Total pago').valor + ex * n, cet = null;
+      /* custo efetivo com custos da contratação e sem seguros mensais, como na Price em 30 dias: a taxa da série antecipada sobre o valor recebido */
+      if (cst > 0 && !ex) {
+        var rc = AZ.antigo('taxa-serie-valor-presente').calcular({ pv: L, pmt: pmt, prazo: n, momento: 'inicio' }, AZ);
+        if (!rc.erro && !rc.alerta) cet = { valor: P(dest(rc, 'Taxa de juros ao mês').valor) + ' ao mês', nota: dest(rc, 'Equivalente ao ano').valor + ' ao ano, sobre os ' + B(L) + ' recebidos' };
+      }
+      var tabela = { titulo: 'Tabela parcela a parcela', nota: 'A primeira parcela, paga no ato, abate a dívida por inteiro, sem juros.',
+        colunas: [{ t: 'Parcela', f: 'int' }, { t: 'Valor da parcela', f: 'brl' }].concat(ex ? [{ t: 'Com seguros e tarifas', f: 'brl' }] : [], [{ t: 'Juros', f: 'brl' }, { t: 'Amortização', f: 'brl' }, { t: 'Saldo devedor', f: 'brl' }]),
+        linhas: t.linhas.map(function (x) { return ex ? [x[0], x[1], x[1] + ex, x[2], x[3], x[4]] : x.slice(); }) };
+      return { sis: 'price', slug: 'parcelas-valor-presente', r: r, tabela: tabela, pri: pmt + ex, priNota: '', ult: pmt + ex, ultNota: '',
+        linhas: t.linhas.map(function (x) { return { n: x[0], correcao: 0, juros: x[2], amortizacao: x[3], parcela: x[1], saldo: x[4] }; }),
+        pago: pago, juros: dest(r, 'Total de juros').valor, correcao: 0, corrNota: '', cet: cet, semCorr: null, pico: F, mesPico: 0, custo: Math.max(0, pago - L) };
+    }
+    /* roda a página antiga certa para o sistema e a correção escolhidos e lê o resultado dela; tx troca a taxa (taxa dos bancos) */
+    function rodar(sis, tx) {
+      tx = tx || { taxa: v.taxa, un: v.taxaUn };
+      if (ato) return rodarNoAto(tx);
+      var base = { valor: F, taxa: tx.taxa, taxaUn: tx.un, prazo: v.prazo, prazoUn: v.prazoUn, extras: ex }, slug, ent;
+      if (corr === 'tr') { slug = 'financiamento-imovel-tr-' + sis; ent = Object.assign(base, { corr: v.tr, corrUn: v.trUn }); }
+      else if (corr === 'ipca') { slug = 'financiamento-imovel-ipca-' + sis; ent = Object.assign(base, { corr: v.ipca }); }
+      else if (sis === 'sac') { slug = 'financiamento-sac'; ent = base; }
+      else if (ex > 0) { slug = 'financiamento-imovel-tr-price'; ent = Object.assign(base, { corr: 0, corrUn: 'mes' }); }   /* Price com TR zero = Price sem correção, com os seguros mensais */
+      else { slug = 'emprestimo'; ent = { valor: F, taxa: tx.taxa, taxaUn: tx.un, prazo: n, tarifas: cst }; }   /* Price sem correção, com o custo efetivo */
+      var r = AZ.antigo(slug).calcular(ent, AZ);
+      if (r.erro) return r;
+      var t = r.tabelas.filter(function (x) { return x.titulo === 'Tabela mês a mês'; })[0], ci = {};
+      t.colunas.forEach(function (c, k) { ci[c.t] = k; });
+      var linhas = t.linhas.map(function (x) {
+        return { n: x[ci['Mês']], correcao: ci['Correção'] != null ? x[ci['Correção']] : 0, juros: x[ci['Juros']], amortizacao: x[ci['Amortização']], parcela: x[ci['Parcela']], saldo: x[ci['Saldo devedor']] };
+      });
+      /* Price sem correção pela página da TR com TR zero: a tabela sai sem a coluna de correção (toda zerada) e sem a nota sobre a TR */
+      if (slug === 'financiamento-imovel-tr-price' && corr === 'nenhuma') {
+        var kc = ci['Correção'];
+        t = { titulo: t.titulo, colunas: t.colunas.filter(function (c, j) { return j !== kc; }), linhas: t.linhas.map(function (x) { return x.filter(function (c, j) { return j !== kc; }); }) };
+      }
+      var emp = slug === 'emprestimo', pri = dest(r, emp ? 'Parcela mensal' : 'Primeira parcela'), ult = emp ? pri : dest(r, 'Última parcela');
+      var cd = corr !== 'nenhuma' ? dest(r, 'Correção') : null;
+      var gs = (r.graficos || []).filter(function (g) { return g.titulo === 'Evolução do saldo devedor'; })[0];
+      var sc = corr !== 'nenhuma' && gs ? gs.series.filter(function (s) { return s.nome === 'Saldo sem correção'; })[0] : null;
+      var pico = F, mesPico = 0;
+      linhas.forEach(function (x) { if (x.saldo > pico) { pico = x.saldo; mesPico = x.n; } });
+      var pago = dest(r, 'Total pago').valor;
+      return { sis: sis, slug: slug, r: r, tabela: t, linhas: linhas, pri: pri.valor, priNota: pri.nota, ult: ult.valor, ultNota: emp ? '' : ult.nota,
+        pago: pago, juros: dest(r, 'Total de juros').valor, correcao: cd ? cd.valor : 0, corrNota: cd ? cd.nota : '',
+        cet: dest(r, 'Custo efetivo estimado'), semCorr: sc ? sc.dados : null, pico: pico, mesPico: mesPico,
+        custo: Math.max(0, pago - L) };
+    }
+
+    var sis = ambos ? ['sac', 'price'] : [v.sistema], R = [];
+    for (var q = 0; q < sis.length; q++) { var o = rodar(sis[q]); if (o.erro) return o; R.push(o); }
+    var rot = R[0].linhas.map(function (x) { return String(x.n); }), curto = n <= 40;
+    /* um nome só para a base de cada caso: com custos financiados, "valor do bem financiado" na compra com entrada e "valor recebido" no empréstimo */
+    var seguros = ex * n, baseNome = desc ? 'liberado' : cst > 0 ? (v.entrada > 0 ? 'do bem financiado' : 'recebido') : 'financiado';
+    /* itens do custo total, separados por vírgula e com "e" só antes do último; nenhum item leva "e" no nome, para não sair "juros e seguros e tarifas" */
+    var partes = ['juros'].concat(corr !== 'nenhuma' ? ['correção ' + PELO] : [], ex ? ['seguros', 'tarifas mensais'] : [], cst ? ['custos da contratação'] : []);
+    var lista = partes.length > 1 ? partes.slice(0, -1).join(', ') + ' e ' + partes[partes.length - 1] : partes[0];
+    /* sem entrada, o total pago é comparado com a mesma base dos cartões vizinhos (o que você recebe) */
+    var notaTotal = function (o) { return v.entrada > 0 ? M(v.entrada + o.pago) + ' somando a entrada' : AZ.f.num(o.pago / L, 2) + ' vezes o valor ' + baseNome; };
+    /* parágrafo da primeira tabela: o que entra no custo total do crédito (o percentual só quando não está nos cartões) */
+    var notaCusto = function (o, pct) {
+      return o.custo < 0.005 ? 'Sem juros nem outros custos, as parcelas somam só o valor ' + baseNome + '.'
+        : 'O custo total do crédito ' + (pct ? 'equivale a ' + P(o.custo / L * 100, 1) + ' do valor ' + baseNome + ' e reúne tudo o que você paga além dele'
+          : 'reúne tudo o que você paga além do valor ' + baseNome) + (partes.length > 1 ? ': ' + lista : ', neste caso só os juros') + '.';
+    };
+    var destaques, resumo, graficos, tabelas;
+
+    if (!ambos) {
+      var o1 = R[0], m1 = o1.linhas[0];
+      /* o total de juros sai dos cartões: está na tabela de composição, logo abaixo */
+      if (fixa) {
+        destaques = [
+          { rotulo: 'Parcela mensal', valor: o1.pri, formato: M, tom: 'primario',
+            nota: ato ? (n === 1 ? 'parcela única, no ato' : ex ? 'com seguros e tarifas, a primeira no ato' : 'fixa nas ' + n + ' parcelas, a primeira no ato')
+              : (n === 1 ? 'parcela única' : 'fixa nas ' + n + ' parcelas') + (ex ? ', com seguros e tarifas' : '') },
+          { rotulo: 'Total pago', valor: o1.pago, formato: M, nota: notaTotal(o1) },
+          { rotulo: 'Custo total do crédito', valor: o1.custo, formato: M, tom: 'destaque', nota: P(o1.custo / L * 100, 1) + ' do valor ' + baseNome }
+        ];
+        if (o1.cet) destaques.push({ rotulo: 'Custo efetivo estimado', valor: o1.cet.valor, nota: o1.cet.nota.replace(/, sobre os .*$/, ', sobre o ' + (baseNome === 'do bem financiado' ? 'bem financiado' : 'valor ' + baseNome)) });
+      } else {
+        destaques = [
+          { rotulo: 'Primeira parcela', valor: o1.pri, formato: M, tom: 'primario', nota: 'em ' + n + (n === 1 ? ' parcela' : ' parcelas') + (ex ? ', com seguros e tarifas' : '') },
+          { rotulo: 'Última parcela', valor: o1.ult, formato: M, nota: o1.ultNota },
+          { rotulo: 'Total pago', valor: o1.pago, formato: M, nota: notaTotal(o1) },
+          corr !== 'nenhuma' ? { rotulo: 'Correção ' + PELO, valor: o1.correcao, formato: M, tom: 'negativo', nota: o1.corrNota }
+            : { rotulo: 'Custo total do crédito', valor: o1.custo, formato: M, tom: 'destaque', nota: P(o1.custo / L * 100, 1) + ' do valor ' + baseNome }
+        ];
+      }
+      /* parágrafo do gráfico da parcela: como ela evolui e do que é feita a primeira (o total e o custo estão nos cartões e na tabela) */
+      var div1 = B(m1.juros) + ' de juros e ' + B(m1.amortizacao) + ' de amortização' + (ex ? ', além de ' + B(ex) + ' de seguros e tarifas' : '') + '.';
+      var Ps = o1.sis === 'sac' ? 'Pelo SAC' : 'Pela Price';
+      var pm = o1.linhas.reduce(function (a, x) { return x.parcela > a.parcela ? x : a; }, m1);
+      var semJuros = 'Como não há juros, ' + (n === 1 ? 'a parcela única' : 'cada parcela') + (ex ? ', fora os seguros e tarifas,' : '') + ' só abate a dívida.';
+      /* no ato, a primeira parcela não tem juros: a divisão entre juros e amortização é contada pela segunda */
+      var m2 = o1.linhas[1], div2 = m2 ? B(m2.juros) + ' de juros e ' + B(m2.amortizacao) + ' de amortização' + (ex ? ', além de ' + B(ex) + ' de seguros e tarifas' : '') + '.' : '';
+      resumo = '<p>' + (ato && n === 1 ? 'A parcela única, paga no ato, quita a dívida sem juros.'
+        : ato && v.taxa > 0 ? 'Pela Price, a primeira parcela, paga no ato, só abate a dívida. A segunda tem ' + div2 + ' Com o tempo, os juros caem e a amortização cresce.'
+        : n === 1 ? (m1.juros < 0.005 ? semJuros : 'A parcela única tem ' + div1)
+        : corr !== 'nenhuma'
+        ? (pm.n > 1 && pm.n < n ? Ps + ', com o saldo corrigido ' + PELO + ', a parcela sobe até o mês ' + pm.n + ', quando chega a <strong>' + B(pm.parcela + ex) + '</strong>, e depois cai.'
+          : o1.ult > o1.pri + 0.005 ? Ps + ', a parcela sobe ao longo do prazo, porque é recalculada sobre o saldo corrigido ' + PELO + '.'
+          : o1.ult < o1.pri - 0.005 ? Ps + ', a parcela cai ao longo do prazo' + (o1.correcao > 0.005 ? ', mas a correção ' + PELO + ' freia essa queda' : '') + '.'
+          : Ps + ', a parcela fica igual do começo ao fim.') + (v.taxa > 0 ? ' A primeira tem ' + div1 : '')
+        : !(v.taxa > 0) ? semJuros
+        : o1.sis === 'sac' ? 'Pelo SAC, a amortização é fixa e os juros caem junto com o saldo, por isso a parcela diminui. A primeira tem ' + div1
+        : 'Pela Price, a primeira parcela tem ' + div1 + ' Com o tempo, os juros caem e a amortização cresce.') + '</p>';
+      /* com o índice em zero não há correção a comentar: vale o texto do saldo sem correção */
+      var leitura = n === 1 ? (ato ? 'Com uma parcela só, paga no ato, a dívida é quitada na contratação.' : 'Com uma parcela só, a dívida é quitada no primeiro mês.')
+        : corr !== 'nenhuma' && o1.correcao > 0.005
+        ? (o1.mesPico > 0 ? 'Com a correção ' + PELO + ', o saldo sobe até o mês ' + o1.mesPico + ' e chega a <strong>' + B(o1.pico) + '</strong>, acima do valor financiado, mesmo com as parcelas em dia.'
+          : 'Com a correção ' + PELO + ', o saldo cai mais devagar do que cairia sem ela.')
+        : !(v.taxa > 0) ? 'Sem juros, o saldo cai o mesmo valor a cada parcela.'
+        : o1.sis === 'sac' ? 'O saldo cai em linha reta, o mesmo valor a cada mês, até zerar na última parcela.'
+        : 'O saldo cai devagar no começo e acelera no fim. Por isso, antecipar parcelas no início reduz mais os juros.';
+
+      /* taxa dos bancos: a mesma simulação refeita na menor taxa, na mediana e na maior taxa média da modalidade (página antiga do ranking) */
+      var banc = null, dica = ato ? 'Parcela' : 'Mês';
+      if (v.bancos) {
+        var rb = AZ.antigo('bancos-melhores-juros').calcular({ mod: v.mod, taxa: v.taxa, taxaUn: v.taxaUn, valor: 0, prazo: 0 }, AZ);
+        var item = function (nome) { return rb.graficos[0].itens.filter(function (x) { return x.nome === nome; })[0]; };
+        var sua = item('Sua proposta');
+        banc = { rb: rb, am: sua ? sua.valor : 0, pos: dest(rb, 'Posição'), cen: [] };
+        var cb = [['Menor taxa média', item('Menor taxa').valor], ['Taxa mediana', item('Mediana').valor], ['Maior taxa média', item('Maior taxa').valor]];
+        for (var b = 0; b < cb.length; b++) { var ob = rodar(o1.sis, { taxa: cb[b][1], un: 'mes' }); if (ob.erro) return ob; banc.cen.push({ nome: cb[b][0], taxa: cb[b][1], o: ob }); }
+        banc.menor = banc.cen[0]; banc.med = banc.cen[1];
+      }
+      var g0 = banc
+        ? { tipo: n <= 12 ? 'barras' : 'linha', titulo: 'Parcela mês a mês', formato: 'brl', rotuloDica: dica, rotulos: rot,
+            /* a sua parcela vem por último, para ficar por cima quando a sua taxa está perto da mediana */
+            series: [{ nome: 'Na menor taxa dos bancos', cor: 4, dados: banc.menor.o.linhas.map(function (x) { return x.parcela + ex; }) },
+              { nome: 'Na taxa mediana dos bancos', cor: 5, dados: banc.med.o.linhas.map(function (x) { return x.parcela + ex; }) },
+              { nome: 'Parcela na sua taxa', cor: COR[o1.sis], dados: o1.linhas.map(function (x) { return x.parcela + ex; }) }] }
+        : curto
+        ? { tipo: 'barras-empilhadas', titulo: 'Parcela mês a mês', formato: 'brl', rotuloDica: dica, rotulos: rot,
+            series: [{ nome: 'Amortização', cor: 4, dados: o1.linhas.map(function (x) { return x.amortizacao; }) }, { nome: 'Juros', cor: 2, dados: o1.linhas.map(function (x) { return x.juros; }) }]
+              .concat(ex ? [{ nome: 'Seguros e tarifas', cor: 5, dados: o1.linhas.map(function () { return ex; }) }] : []) }
+        : { tipo: 'linha', titulo: 'Parcela mês a mês', formato: 'brl', rotuloDica: dica, rotulos: rot,
+            series: [{ nome: ex ? 'Parcela com seguros e tarifas' : 'Parcela ' + PELOS[o1.sis], cor: COR[o1.sis], dados: o1.linhas.map(function (x) { return x.parcela + ex; }) },
+              { nome: 'Juros', cor: 2, dados: o1.linhas.map(function (x) { return x.juros; }) },
+              { nome: 'Amortização', cor: 4, dados: o1.linhas.map(function (x) { return x.amortizacao; }) }] };
+      graficos = [g0,
+        { tipo: 'area', titulo: 'Saldo devedor mês a mês', formato: 'brl', rotuloDica: dica, rotulos: ['0'].concat(rot), leitura: leitura,
+          series: [{ nome: corr !== 'nenhuma' ? 'Saldo com correção' : 'Saldo devedor', cor: COR[o1.sis], dados: [F].concat(o1.linhas.map(function (x) { return x.saldo; })) }]
+            .concat(o1.semCorr ? [{ nome: 'Saldo sem correção', cor: 5, dados: [F].concat(o1.semCorr) }] : []) }];
+
+      var tot = o1.pago + (v.entrada > 0 ? v.entrada : 0);
+      var comp = [];
+      if (v.entrada > 0) comp.push(['Entrada', v.entrada, v.entrada / tot * 100]);
+      /* rótulos curtos, para a tabela caber no celular; o que entra no custo total do crédito vai para a nota */
+      comp.push(['Valor ' + baseNome, L, L / tot * 100], ['Juros', o1.juros, o1.juros / tot * 100]);
+      if (corr !== 'nenhuma') comp.push(['Correção ' + PELO, o1.correcao, o1.correcao / tot * 100]);
+      if (ex) comp.push(['Seguros e tarifas mensais', seguros, seguros / tot * 100]);
+      if (cst) comp.push(['Custos da contratação', cst, cst / tot * 100]);
+      comp.push(['Custo total do crédito', o1.custo, o1.custo / tot * 100]);
+      comp.push([v.entrada > 0 ? 'Custo total do bem' : 'Total pago', tot, 100]);
+      tabelas = [
+        { titulo: v.entrada > 0 ? 'Composição do custo do bem' : 'Composição do total pago', csv: false, destaque: [comp.length - 2, comp.length - 1], nota: notaCusto(o1, corr !== 'nenhuma'),
+          colunas: [{ t: 'Item', f: 'texto' }, { t: 'Valor', f: 'brl' }, { t: 'Parte do total', f: 'pct1' }], linhas: comp },
+        o1.tabela
+      ];
+      if (banc) {
+        /* a comparação abre a lista de tabelas; o ranking da página antiga fica recolhido no fim, com a sua taxa na posição dela */
+        var cs = banc.cen.slice(0, 2).concat([{ nome: 'Sua taxa', taxa: banc.am, o: o1 }], banc.cen.slice(2)).sort(function (a, b) { return a.taxa - b.taxa; });
+        var rk = banc.rb.tabelas[0];
+        tabelas.unshift({ titulo: 'Sua taxa e a dos bancos', csv: false, destaque: cs.map(function (c) { return c.o; }).indexOf(o1),
+          colunas: [{ t: 'Cenário', f: 'texto' }, { t: 'Taxa ao mês', f: 'pct' }, { t: fixa ? 'Parcela' : 'Primeira parcela', f: 'brl' }, { t: 'Total pago', f: 'brl' }, { t: 'Diferença no total', f: 'brl' }],
+          linhas: cs.map(function (c) { return [c.nome, c.taxa, c.o.pri, c.o.pago, c.o.pago - banc.menor.o.pago]; }),
+          nota: 'Mesmo valor, prazo, sistema e custos da sua simulação, só com a taxa trocada pela taxa média dos bancos. A diferença no total pago é contada a partir da menor taxa.' });
+        tabelas.push({ titulo: rk.titulo, colunas: rk.colunas, nota: rk.nota, destaque: rk.destaque, mostrar: rk.mostrar,
+          linhas: rk.linhas.map(function (x) { return x[1] === 'Sua proposta' ? [x[0], 'Sua taxa', x[2], x[3]] : x; }) });
+        /* o parágrafo do gráfico passa a comparar com os bancos: a posição no ranking e a parcela na mediana e na menor taxa */
+        var X = banc.pos ? parseInt(banc.pos.valor, 10) : 0, N = rk.linhas.length - (banc.pos ? 1 : 0), aParc = fixa ? 'a parcela' : 'a primeira parcela';
+        /* com as duas taxas iguais na tela (a padrão, de 10,5% ao ano, cai na mediana do imóvel), o texto não repete a mesma taxa com outra parcela */
+        var naMediana = banc.pos && P(banc.am) === P(banc.med.taxa);
+        resumo = '<p>' + (banc.pos ? 'Sua taxa, de <strong>' + P(banc.am) + ' ao mês</strong>, fica ' + (X > 1 && X <= N ? 'em <strong>' + X + 'º lugar</strong> no ranking: ' : '') + banc.pos.nota + '. ' : '') +
+          (naMediana ? 'Na prática, é a taxa mediana dos bancos. Na menor, de ' + P(banc.menor.taxa) + ' ao mês, ' + aParc + ' seria de <strong>' + B(banc.menor.o.pri) + '</strong>.'
+            : 'Na taxa mediana dos bancos, de ' + P(banc.med.taxa) + ' ao mês, ' + aParc + ' seria de <strong>' + B(banc.med.o.pri) + '</strong>; na menor, de ' + P(banc.menor.taxa) + ' ao mês, de ' + B(banc.menor.o.pri) + '.') + '</p>';
+      }
+    } else {
+      /* a diferença da primeira parcela, que só aparece no texto, sai dos valores em centavos mostrados nos cartões */
+      var s = R[0], p = R[1], dif = p.pago - s.pago, difPri = Math.round(s.pri * 100) / 100 - Math.round(p.pri * 100) / 100;
+      /* os totais pagos de cada sistema saem dos cartões: estão na tabela de comparação, logo abaixo */
+      destaques = [
+        { rotulo: 'Diferença no total pago', valor: Math.max(0, dif), formato: M, tom: 'primario',
+          nota: dif < 0.005 ? 'os dois sistemas custam o mesmo' : 'quanto a Price custa a mais' },
+        { rotulo: 'Primeira parcela pelo SAC', valor: s.pri, formato: M, nota: 'a última é de ' + B(s.ult) },
+        { rotulo: 'Primeira parcela pela Price', valor: p.pri, formato: M, nota: corr === 'nenhuma' ? 'fixa até a última' : 'a última é de ' + B(p.ult) }
+      ];
+      resumo = '<p>' + (difPri > 0.005 ? 'A primeira parcela pelo SAC é <strong>' + B(difPri) + '</strong> maior que pela Price. ' : 'A primeira parcela é igual nos dois sistemas. ') +
+        (dif < 0.005 ? 'O total pago também é igual.' : (difPri > 0.005 ? 'Em compensação' : 'Ainda assim') + ', a Price custa <strong>' + B(dif) + '</strong> a mais em ' + AZ.f.prazo(n) + ', porque o saldo cai mais devagar e rende mais juros' + (corr !== 'nenhuma' ? ' e mais correção' : '') + '.') + '</p>';
+      var picos = R.filter(function (o) { return o.mesPico > 0; }).map(function (o, k) { return PELOS[o.sis] + (k ? ', até' : ' sobe até') + ' o mês ' + o.mesPico + ' (<strong>' + B(o.pico) + '</strong>)'; });
+      var leitura2 = n === 1 ? 'Com uma parcela só, a dívida é quitada no primeiro mês.'
+        : picos.length ? 'Com a correção ' + PELO + ', o saldo ' + picos.join(' e, ') + ', acima do valor financiado.'
+        : !(v.taxa > 0) || dif < 0.005 ? 'Com estes dados, os dois sistemas têm o mesmo saldo a cada mês.'
+        : 'A área entre as duas curvas é o saldo a mais que a Price carrega, e os juros incidem também sobre ele.';
+      graficos = [
+        { tipo: n <= 12 ? 'barras' : 'linha', titulo: 'Parcela mês a mês', formato: 'brl', rotuloDica: 'Mês', rotulos: rot,
+          series: R.map(function (o) { return { nome: 'Parcela ' + PELOS[o.sis], cor: COR[o.sis], dados: o.linhas.map(function (x) { return x.parcela + ex; }) }; }) },
+        { tipo: 'area', titulo: 'Saldo devedor mês a mês', formato: 'brl', rotuloDica: 'Mês', rotulos: ['0'].concat(rot), leitura: leitura2,
+          series: R.map(function (o) { return { nome: 'Saldo ' + PELOS[o.sis], cor: COR[o.sis], dados: [F].concat(o.linhas.map(function (x) { return x.saldo; })) }; }) }
+      ];
+      var lc = [['Primeira parcela', s.pri, p.pri], ['Última parcela', s.ult, p.ult], ['Total de juros', s.juros, p.juros]];
+      if (corr !== 'nenhuma') lc.push(['Correção ' + PELO, s.correcao, p.correcao]);
+      if (ex) lc.push(['Seguros e tarifas mensais', seguros, seguros]);
+      if (cst) lc.push(['Custos da contratação', cst, cst]);   /* fazem parte do custo total do crédito nos dois sistemas */
+      lc.push(['Total pago', s.pago, p.pago], ['Custo total do crédito', s.custo, p.custo]);
+      tabelas = [
+        { titulo: 'SAC e tabela Price com os mesmos dados', csv: false, destaque: lc.length - 2,
+          colunas: [{ t: 'Item', f: 'texto' }, { t: 'SAC', f: 'brl' }, { t: 'Price', f: 'brl' }], linhas: lc,
+          nota: notaCusto(s, false) },
+        { titulo: 'Parcelas e saldos mês a mês', nota: ex ? 'As parcelas incluem ' + B(ex) + ' de seguros e tarifas por mês.' : null,
+          colunas: [{ t: 'Mês', f: 'int' }, { t: 'Parcela pelo SAC', f: 'brl' }, { t: 'Parcela pela Price', f: 'brl' }, { t: 'Saldo pelo SAC', f: 'brl' }, { t: 'Saldo pela Price', f: 'brl' }],
+          linhas: s.linhas.map(function (x, k) { return [x.n, x.parcela + ex, p.linhas[k].parcela + ex, x.saldo, p.linhas[k].saldo]; }) }
+      ];
+    }
+    return { destaques: destaques, resumo: resumo, graficos: graficos, tabelas: tabelas };
+  },
+  /* valores esperados tirados das páginas antigas de matemática financeira (séries de pagamento) */
+  casos: [
+    { nome: 'parcela fixa em 30 dias (parcelas-valor-presente)', entradas: { calc: 'parcela', sistema: 'price', correcao: 'nenhuma', bem: 30000, entrada: 0, taxa: 1.8, taxaUn: 'mes', prazo: 36, prazoUn: 'mes' },
+      espera: { 'Parcela mensal': 'R$ 1.139,51', 'Total pago': 'R$ 41.022,54' } },
+    { nome: 'parcela fixa com a primeira no ato (parcelas-valor-presente)', entradas: { calc: 'parcela', sistema: 'price', correcao: 'nenhuma', bem: 30000, entrada: 0, taxa: 1.8, taxaUn: 'mes', prazo: 36, prazoUn: 'mes', momento: 'inicio' },
+      espera: { 'Parcela mensal': 'R$ 1.119,37', 'Total pago': 'R$ 40.297,19' } },
+    { nome: 'valor financiado com a primeira no ato (vp-serie-pagamentos)', entradas: { calc: 'valor', parcela: 1500, taxa: 1, taxaUn: 'mes', prazo: 24, prazoUn: 'mes', momento: 'inicio' },
+      espera: { 'Valor financiado': 'R$ 32.183,73', 'Total de juros': 'R$ 3.816,27' } },
+    { nome: 'taxa embutida com a primeira no ato (taxa-serie-valor-presente)', entradas: { calc: 'taxa', bem: 5000, entrada: 0, parcela: 480, prazo: 12, prazoUn: 'mes', momento: 'inicio' },
+      espera: { 'Taxa de juros': '2,68% ao mês', 'Total de juros': 'R$ 760,00' } },
+    { nome: 'número de parcelas com a primeira no ato (numero-pagamentos-valor-presente)', entradas: { calc: 'prazo', bem: 20000, entrada: 0, taxa: 2, taxaUn: 'mes', parcela: 900, momento: 'inicio' },
+      espera: { 'Número de parcelas': '29', 'Total pago': 'R$ 26.007,47' } },
+    /* o valor financiado mostrado (R$ 28.370,89, de 24 parcelas de R$ 1.500,00 a 2% ao mês) volta em 24 parcelas, sem uma 25ª de R$ 0,00 */
+    { nome: 'número de parcelas com valor arredondado em centavos (numero-pagamentos-valor-presente)', entradas: { calc: 'prazo', bem: 28370.89, entrada: 0, taxa: 2, taxaUn: 'mes', parcela: 1500 },
+      espera: { 'Número de parcelas': '24', 'Total pago': 'R$ 36.000,00' } },
+    /* taxa alta em prazo longo: o saldo em forma fechada não acumula erro de arredondamento */
+    { nome: 'taxa embutida de 10% ao mês em 360 parcelas (taxa-serie-valor-presente)', entradas: { calc: 'taxa', bem: 50000, entrada: 0, parcela: 5000, prazo: 30, prazoUn: 'ano' },
+      espera: { 'Taxa de juros': '10,00% ao mês', 'Total de juros': 'R$ 1.750.000' } }
+  ],
+  explicacao: [
+    '<h3>SAC e tabela Price</h3>',
+    '<p>Em cada mês, <code>juros = saldo devedor × taxa mensal</code> e <code>parcela = amortização + juros</code>, com a taxa anual convertida em <code>(1 + taxa anual)^(1/12) − 1</code>. No SAC, a amortização é fixa e a parcela cai junto com o saldo. Na Price, a parcela é fixa, mas o saldo cai mais devagar, e por isso o total pago é maior. No crédito imobiliário, o saldo ainda é corrigido todo mês pela TR ou pelo IPCA antes dos juros, com o índice informado constante por todo o prazo.</p>',
+    '<h3>Parcela fixa</h3>',
+    '<p>Conhecendo três elementos entre valor, taxa, prazo e parcela, o simulador calcula o quarto, o que revela os juros embutidos numa compra parcelada. A primeira parcela vence em 30 dias ou, se você escolher, no ato: nesse caso ela não tem juros e funciona como uma entrada.</p>',
+    '<h3>Taxa dos bancos</h3>',
+    '<p>São as taxas médias das operações de cada instituição, publicadas pelo Banco Central, num retrato de setembro de 2026 (no imóvel, de agosto). A taxa oferecida a cada cliente depende do perfil, do prazo e das garantias, e por isso pode ficar longe da média.</p>',
+    '<p>Seguros e tarifas entram no custo total do crédito, e o custo efetivo estimado é a taxa que iguala o valor recebido às parcelas. O simulador não calcula o IOF nem considera carência. Compare propostas reais pelo custo efetivo total (CET) de cada instituição.</p>'
+  ].join('\n')
+});
+</script>
+</body>
+</html>

@@ -394,3 +394,135 @@ table.az-tab{border-collapse:collapse;width:100%;font-size:18px;font-variant-num
 /* índice: ao abrir "Outros simuladores", os principais saem de cena (voltam ao fechar ou ao buscar) */
 .az-so-outros .az-principais{display:none}
 .az-so-outros .az-outros{margin-top:22px}
+/* botões no gráfico (campo com noGrafico): trocam a variação da conta sem sair do gráfico */
+.az-gbar{display:flex;flex-wrap:wrap;gap:8px 20px;margin:0 0 12px}
+.az-gbtn{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.az-gbtn-rot{font-size:14px;color:var(--tinta2);margin-right:2px}
+.az-gb{font:inherit;font-size:15px;font-weight:600;line-height:1.2;padding:7px 13px;border-radius:999px;border:1px solid var(--borda);background:var(--sup2);color:var(--tinta2);cursor:pointer}
+.az-gb:hover{color:var(--tinta);border-color:var(--tinta2)}
+.az-gb.az-on{background:var(--marinho);border-color:var(--marinho);color:#fff}
+.az-gb:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(2,125,252,.3)}
+/* menos texto à vista: ajuda atrás de "?", leitura embaixo do gráfico, "Como funciona" recolhido */
+.az-cab{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.az-cab>label,.az-cab>.az-rot{margin-bottom:0!important}
+.az-info{flex:none;width:20px;height:20px;border-radius:50%;border:1px solid var(--borda);background:var(--sup2);color:var(--tinta3);font:inherit;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.az-info:hover,.az-info[aria-expanded=true]{color:#fff;background:var(--azul);border-color:var(--azul)}
+.az-ajuda[hidden]{display:none}
+.az-campo>.az-ajuda{margin:6px 0 2px;font-size:15px}
+.az-leitura{margin-top:14px;padding-top:12px;border-top:1px solid var(--borda);font-size:17px;line-height:1.55;color:var(--tinta2)}
+.az-leitura p{margin:0}.az-leitura p+p{margin-top:8px}
+.az-fonte{font-size:14px;margin-top:12px}
+.az-kpi .az-k-nota{font-size:15px}
+.az-sobre details>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.az-sobre details>summary::-webkit-details-marker{display:none}
+.az-sobre details>summary h2{margin:0}
+.az-sobre details>summary::after{content:"Ver como a conta é feita";font-size:15px;font-weight:600;color:var(--azul);white-space:nowrap}
+.az-sobre details[open]>summary::after{content:"Recolher"}
+.az-sobre details[open]>summary{margin-bottom:16px}
+/* índice: mais utilizados no topo e todos os simuladores por tema, abertos */
+.az-principais>h2{color:var(--marinho)!important;font-size:17px}
+.az-temas{margin-top:40px}
+.az-temas-tit{font-family:var(--titulo);font-weight:400;font-size:26px;color:var(--marinho);margin:0 0 6px}
+.az-tema{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:8px 32px;margin-top:0;padding:22px 0;border-top:1px solid var(--linha)}
+.az-tema-cab h3{font-family:var(--texto)!important;font-size:18px!important;font-weight:700;letter-spacing:0!important;text-transform:none!important;color:var(--tc)!important;margin:0 0 4px;padding-left:12px;border-left:4px solid var(--tc)}
+.az-tema-cab p{margin:0;padding-left:16px;font-size:15px;color:var(--tinta3);line-height:1.45}
+.az-tema-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:0 24px;align-content:start}
+.az-cat .az-item.az-lin{flex:none;background:none;border:0;border-bottom:1px solid var(--linha);border-radius:0;padding:9px 0;box-shadow:none;transform:none}
+.az-cat .az-item.az-lin b{font-family:var(--texto);font-weight:500;font-size:16px;color:var(--tinta)}
+.az-cat .az-item.az-lin:hover b{color:var(--tc)}
+.az-cat .az-item.az-lin::after{font-size:15px}
+.az-cat .az-item.az-lin:hover::after{color:var(--tc)}
+@media (max-width:760px){.az-tema{grid-template-columns:1fr;padding:18px 0}}
+.az-cat .az-item.az-lin::after{content:none}
+/* tabelas secundárias recolhidas: uma linha fina por tabela, abre no clique */
+details.az-dobra{padding-top:0;padding-bottom:0;margin-top:10px}
+.az-dobra>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 0}
+.az-dobra>summary::-webkit-details-marker{display:none}
+.az-dobra>summary h2{margin:0}
+.az-dobra>summary::after{content:"Ver tabela";font-size:15px;font-weight:600;color:var(--azul);white-space:nowrap}
+.az-dobra[open]>summary::after{content:"Recolher"}
+.az-dobra[open]{padding-bottom:18px}
+.az-dobra[open]>summary{padding-bottom:8px}
+.az-rolo+.az-leitura{margin-top:12px}
+/* botões do gráfico: opções exclusivas juntas numa pílula; liga-desliga com marca própria */
+.az-gseg{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--borda);border-radius:999px;background:var(--sup2);max-width:100%;overflow-x:auto;scrollbar-width:none}
+.az-gseg::-webkit-scrollbar{display:none}
+.az-gseg .az-gb{border:0;background:transparent;padding:6px 12px;white-space:nowrap;flex:none}
+.az-gseg .az-gb.az-on{background:var(--marinho);color:#fff}
+.az-gb.az-chk{background:#fff;white-space:nowrap}
+.az-gb.az-chk::before{content:"+";display:inline-block;width:1em;margin-right:4px;font-weight:700;color:var(--tinta3)}
+.az-gb.az-chk.az-on{background:rgba(2,125,252,.09);border-color:var(--azul);color:var(--azul-esc)}
+.az-gb.az-chk.az-on::before{content:"\2713";color:var(--azul)}
+.az-bloco.az-texto>.az-gbar{margin-bottom:14px}
+/* celular: cartões em 2 x 2 e tabelas que cabem na tela (primeira coluna fixa quando ainda rolar) */
+@media (max-width:600px){
+  .az-kpis,.az-app .az-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px}
+  .az-kpis.az-n1>*,.az-kpis.az-n3>:first-child,.az-kpis.az-n5>:first-child{grid-column:1/-1!important}
+  .az-kpi{padding:11px 12px}
+  .az-kpi .az-k-rot{font-size:14px}
+  .az-kpi .az-k-val{font-size:22px;margin-top:4px}
+  .az-kpi .az-k-nota{font-size:13px;margin-top:4px}
+  table.az-tab{font-size:16px}
+  .az-tab th{font-size:13px;padding:7px 7px;white-space:normal}
+  .az-tab td{padding:8px 7px}
+  .az-tab td.az-e{min-width:0;white-space:normal}
+  .az-rolo .az-tab td:first-child,.az-rolo .az-tab th:first-child{position:sticky;left:0;z-index:1;background:#fff}
+  .az-rolo .az-tab tbody tr:nth-child(even) td:first-child{background:#F8FAFD}
+  .az-rolo .az-tab tr.az-dest td:first-child{background:#EEF5FF}
+  .az-gbar{gap:8px 12px}
+}
+/* índice: subtítulo por categoria nos temas longos, contagem, cabeçalho fixo ao rolar, temas recolhíveis no celular */
+.az-tema-sub{grid-column:1/-1;margin:14px 0 2px;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--tinta3)}
+.az-tema-sub:first-child{margin-top:4px}
+.az-tema-n{display:none}
+@media (min-width:761px){.az-tema-cab{position:sticky;top:96px;align-self:start}}
+@media (max-width:760px){
+  .az-tema{gap:0}
+  .az-tema-cab{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:12px;cursor:pointer}
+  .az-tema-cab p{grid-column:1}
+  .az-tema-n{display:block;grid-column:2;grid-row:1/3;font-size:14px;color:var(--tinta3);white-space:nowrap}
+  .az-tema-n::after{content:" \25BE";color:var(--tc)}
+  .az-tema:not(.az-fechado) .az-tema-n::after{content:" \25B4"}
+  .az-tema:not(.az-fechado) .az-tema-lista{margin-top:10px}
+  .az-tema.az-fechado .az-tema-lista{display:none}
+  .az-buscando .az-tema.az-fechado .az-tema-lista{display:grid}
+}
+.az-buscando .az-principais,.az-buscando .az-tema-sub,.az-buscando .az-tema-cab p{display:none}
+/* o grupo de botões nunca passa da largura do cartão: no celular a pílula quebra em mais de uma linha, sem rolar a página de lado */
+.az-gbtn{min-width:0;max-width:100%}
+@media (max-width:600px){.az-gseg{flex-wrap:wrap;border-radius:18px;overflow:visible}}
+/* índice enxuto: os dois títulos no mesmo rótulo discreto (o peso fica com os cartões); os temas em cartões, numa grade 3 x 2 */
+.az-principais>h2,.az-temas-tit{font-family:var(--texto)!important;font-size:15px!important;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--tinta3)!important;margin:0 0 14px!important}
+.az-principais>h2::after{display:none}
+.az-temas{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:36px}
+.az-temas-tit{grid-column:1/-1}
+.az-temas .az-tema{display:block;margin:0;padding:18px 20px 8px;border:1px solid var(--linha);border-top:3px solid var(--azul);border-radius:var(--raio);background:var(--sup);box-shadow:var(--sombra)}
+.az-temas .az-tema-cab{position:static}
+.az-temas .az-tema-cab h3{color:var(--marinho)!important;border-left:0;padding-left:0;margin:0 0 4px}
+.az-temas .az-tema-cab p{padding-left:0;margin:0 0 6px}
+.az-temas .az-tema-lista{display:block}
+.az-temas .az-item.az-lin{display:flex;padding:10px 0}
+.az-temas .az-item.az-lin:last-child{border-bottom:0}
+.az-temas .az-item.az-lin:hover b{color:var(--azul)}
+.az-buscando .az-tema-n{display:none!important}
+.az-vazio .az-principais{display:block!important}
+/* caixa de marcar: a regra geral do rótulo do campo não pode anular o alinhamento da caixa com o texto */
+.az-campo>label.az-check{display:flex;gap:10px;align-items:flex-start;font-size:18px}
+/* "Como funciona" com o mesmo rótulo dos outros blocos recolhíveis */
+.az-sobre details>summary h2{font-family:var(--texto);font-size:16px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--marinho)}
+@media (max-width:760px){
+  .az-temas{gap:10px;margin-top:28px}
+  .az-temas .az-tema{padding:14px 16px}
+  .az-temas .az-tema-cab p{display:none}
+  .az-temas .az-tema-cab h3{margin:0}
+  .az-temas .az-tema-n{grid-row:1;font-weight:600;background:var(--sup2);border-radius:999px;padding:3px 10px;color:var(--tinta2)}
+  .az-temas .az-tema-n::after{color:var(--azul)}
+}
+@media (max-width:600px){
+  .az-gb,.az-gseg .az-gb{min-height:40px;padding:9px 13px}
+  .az-info{width:26px;height:26px;font-size:13px}
+  .az-trilha .az-voltar{display:none}
+  .az-trilha .az-pill::before{content:"\2190  ";color:inherit;margin-right:0}
+  .az-acoes{gap:6px 18px}
+  .az-acoes .az-botao{border:0;background:none;padding:4px 0;color:var(--azul);font-size:15px}
+}

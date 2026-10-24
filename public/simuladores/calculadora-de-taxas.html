@@ -1,0 +1,1189 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora de taxas: ao mês, ao ano, CDI e inflação | AZ Invest</title>
+<meta name="description" content="Converta taxas entre dia, mês e ano, some taxas acumuladas, veja quanto rende um percentual do CDI e calcule o juro real.">
+<meta name="theme-color" content="#132960">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AZ Invest">
+<meta property="og:title" content="Calculadora de taxas: ao mês, ao ano, CDI e inflação | AZ Invest">
+<meta property="og:description" content="Converta taxas entre dia, mês e ano, some taxas acumuladas, veja quanto rende um percentual do CDI e calcule o juro real.">
+<meta property="og:image" content="https://investimentosdeaz.com.br/simuladores/assets/compartilhar.png">
+<meta property="og:url" content="https://investimentosdeaz.com.br/simuladores/calculadora-de-taxas.html">
+<link rel="canonical" href="https://investimentosdeaz.com.br/simuladores/calculadora-de-taxas.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="assets/az.css">
+</head>
+<body>
+<header class="az-topo"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest: todos os simuladores"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a><nav><a href="index.html">Todos os simuladores</a></nav></div></header>
+<main>
+<section class="az-hero"><div class="az-larg">
+<p class="az-trilha"><a href="index.html">Simuladores</a> / <a href="index.html#contas">Correção e contas rápidas</a></p>
+<h1>Calculadora de taxas: ao mês, ao ano, CDI e inflação</h1>
+<p class="az-intro">Converta uma taxa entre dia, mês e ano, veja quanto rende um percentual do CDI e desconte o imposto e a inflação.</p>
+</div></section>
+<div class="az-larg">
+<section class="az-app" id="az-app" data-ref="selic,cdi,ipca"><noscript><div class="az-cartao az-vazio">Ative o JavaScript do navegador para usar o simulador.</div></noscript></section>
+<section class="az-cartao az-sobre"><details><summary><h2>Como funciona</h2></summary>
+<div class="az-sobre-corpo"><h3>Taxas equivalentes</h3>
+<p>Em juros compostos, a taxa de um período vira a de outro por potência: <code>(1 + taxa)^(período desejado ÷ período da taxa) − 1</code>. Na planilha, com a taxa em A1 e os dois períodos em B1 e C1, use <code>=(1+A1)^(C1/B1)-1</code>. O ano tem 12 meses, 252 dias úteis e 360 ou 365 dias corridos. A regra de três, que só multiplica ou divide a taxa, aparece apenas para comparação.</p>
+<h3>Taxas acumuladas</h3>
+<p>Taxas seguidas não se somam, multiplicam-se: <code>(1 + t1) × (1 + t2) × ... − 1</code>. A taxa média é a que, repetida no mesmo número de períodos, dá o mesmo total.</p>
+<h3>Percentual do CDI e imposto</h3>
+<p>O título rende, a cada dia útil, o percentual contratado da taxa diária do CDI, <code>(1 + CDI)^(1/252) − 1</code>. Por isso, 110% do CDI rende um pouco mais que 1,1 vez o CDI. O imposto de renda incide sobre o rendimento, com alíquota pelo prazo: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima.</p>
+<h3>Juro real</h3>
+<p>O juro real tira a inflação pela equação de Fisher, <code>(1 + nominal) ÷ (1 + inflação) − 1</code>, depois de descontar o imposto do rendimento nominal. A inflação de empate é a que faz um prefixado e um título atrelado à inflação renderem o mesmo. As contas supõem taxas constantes e não consideram IOF nem taxas de administração.</p></div>
+</details></section>
+<section class="az-cta" id="az-cta" hidden><div><h2></h2><p></p></div><a class="az-botao az-lar" href="#" target="_blank" rel="noopener"></a></section>
+<section class="az-rel"><h2>Mais em correção e contas rápidas</h2><div class="az-grade">
+<a class="az-item" href="correcao-unificada.html" data-k="Correção de valores Correção de valores pela inflação, CDI, Selic e poupança Atualize um valor do passado pelo IPCA, IGP-M, CDI, Selic, poupança ou taxa legal e veja quanto ele ganhou da inflação. correção monetária atualizar valor corrigir valor ipca igp-m igpm inpc igp-di cdi percentual do cdi selic selic acumulada fator acumulado tesouro selic lft poupança aniversário inflação acumulada poder de compra taxa legal juros legais juros de mora lei 14.905 código civil artigo 406 dívida indenização selic menos ipca quanto teria hoje na poupança valor no passado rendimento histórico caderneta correção pela poupança rentabilidade real ganho real poupança e inflação juro real da poupança tabela da poupança rendimento da poupança histórico da poupança rendimento mensal acumulado no ano 12 meses TR Correção de valores pela inflação inflação ipca igp-m igpm igp-di inpc atualização monetária poder de compra reajuste aluguel corrigir valor Correção de valores pelo CDI cdi percentual do cdi cdb lci lca di rendimento passado pós-fixado corrigir valor Correção de valores pela Selic selic atualização monetária corrigir valor taxa básica juros banco central débito restituição Correção de valores pela poupança poupança caderneta rendimento da poupança aniversário regra antiga regra nova TR corrigir valor Selic acumulada entre duas datas selic acumulada fator acumulado taxa selic tesouro selic lft fator diário selic no ano Correção de valores pela taxa legal taxa legal juros legais juros de mora lei 14.905 código civil artigo 406 dívida indenização selic menos ipca Quanto teria hoje na poupança correção pela poupança valor no passado rendimento histórico atualizar valor caderneta Rentabilidade real da poupança poupança e inflação ganho real IPCA poder de compra juro real da poupança Tabela de rendimento da poupança histórico da poupança rendimento mensal acumulado no ano 12 meses TR tabela"><b>Correção de valores</b></a>
+<a class="az-item" href="inflacao-dolar.html" data-k="Inflação do dólar Simulador de inflação do dólar Corrija um valor em dólares pela inflação dos Estados Unidos desde 1913 e compare com o câmbio e o IPCA. inflação americana CPI poder de compra do dólar corrigir dólar câmbio dólar real"><b>Inflação do dólar</b></a>
+<a class="az-item" href="porcentagem-unificada.html" data-k="Porcentagem e desconto Calculadora de porcentagem, desconto e regra de três Calcule porcentagem, aumento, variação, preço de venda, descontos em sequência e regra de três direta ou inversa, com a conta à vista. porcentagem percentual por cento aumento desconto variação percentual margem de lucro markup valor original preço de venda promoção liquidação preço com desconto cupom abatimento porcentagem de desconto economia desconto em sequência pix regra de três regra de 3 proporção proporcional grandezas diretamente proporcional inversamente proporcional Calculadora de porcentagem percentual por cento aumento desconto variação percentual margem de lucro markup valor original Calculadora de desconto promoção liquidação preço com desconto cupom abatimento porcentagem de desconto economia Calculadora de regra de três proporção proporcional regra de 3 grandezas diretamente proporcional inversamente proporcional"><b>Porcentagem e desconto</b></a>
+<a class="az-item" href="datas-unificada.html" data-k="Dias úteis e prazos Calculadora de dias úteis e prazos Conte dias úteis e corridos entre duas datas ou descubra em que data cai um prazo, com os feriados nacionais do caminho. dias úteis dias corridos feriados feriados nacionais prazo calendário bancário anbima fim de semana contar dias diferença entre datas somar dias subtrair dias vencimento data futura data passada calendário dia útil seguinte Calculadora de dias úteis entre duas datas dias úteis dias corridos feriados feriados nacionais prazo calendário bancário anbima fim de semana contar dias Calculadora para somar ou subtrair dias de uma data somar dias subtrair dias prazo vencimento dias úteis dias corridos data futura data passada calendário"><b>Dias úteis e prazos</b></a>
+</div></section>
+</div>
+</main>
+<footer class="az-rodape"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a>
+<p>As simulações têm caráter exclusivamente educativo. Os resultados dependem das premissas informadas por você, são estimativas e não constituem recomendação de investimento, oferta de produto ou garantia de rentabilidade. Rentabilidade passada não representa garantia de rentabilidade futura.</p>
+<p>Antes de decidir, confirme taxas, prazos, tributação e condições diretamente com a instituição responsável pelo produto.</p></div></footer>
+<script src="assets/config.js"></script>
+<script src="assets/az.js"></script>
+<script>AZ._registrar = AZ.registrar; AZ.registrar = function (x) { AZ.specs.push(x); }; AZ.antigo = function (slug) { var s = AZ.specs.filter(function (x) { return x.slug === slug; })[0]; if (!s) throw new Error("página antiga não carregada: " + slug); return s; };</script>
+<script>
+AZ.registrar({
+  slug: 'juros-equivalentes',
+  titulo: 'Simulador de taxas equivalentes',
+  categoria: 'equivalentes',
+  ordem: 1,
+  resumo: 'Converta uma taxa de juros compostos de qualquer período para outro: dias, dias úteis, meses ou anos.',
+  palavras: ['taxa equivalente', 'conversão de taxas', 'juros compostos', 'ao dia', 'ao mês', 'ao ano', 'dias úteis', 'taxa acumulada'],
+  intro: 'Informe a taxa, o período a que ela se refere e o período desejado. O simulador devolve a taxa equivalente em juros compostos e mostra a mesma taxa nos períodos mais usados.',
+  campos: [
+    { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.cdi; }, min: -99.99, max: 1000000, casas: 6 },
+    { id: 'de', rotulo: 'Período da taxa informada', tipo: 'int', padrao: 1, min: 1, max: 100000,
+      unidades: [{ v: 'ano', t: 'ano(s)' }, { v: 'mes', t: 'mês(es)' }, { v: 'du', t: 'dia(s) útil(eis)' }, { v: 'dia', t: 'dia(s) corrido(s)' }],
+      ajuda: 'Exemplo: uma taxa acumulada em 60 meses tem período de 60 meses.' },
+    { id: 'para', rotulo: 'Período da taxa desejada', tipo: 'int', padrao: 1, min: 1, max: 100000,
+      unidades: [{ v: 'ano', t: 'ano(s)' }, { v: 'mes', t: 'mês(es)' }, { v: 'du', t: 'dia(s) útil(eis)' }, { v: 'dia', t: 'dia(s) corrido(s)' }],
+      unidadePadrao: 'du' },
+    { id: 'base', rotulo: 'Dias corridos em um ano', tipo: 'segmento', padrao: '360',
+      opcoes: [{ v: '360', t: '360 dias' }, { v: '365', t: '365 dias' }],
+      ajuda: 'Ano comercial de 360 dias (mês de 30) ou ano civil de 365 dias.',
+      mostrarSe: function (v) { return v.deUn === 'dia' || v.paraUn === 'dia'; } }
+  ],
+  calcular: function (v, AZ) {
+    /* campos inteiros: o formulário só arredonda o valor ao sair do campo, sem recalcular */
+    v.de = Math.round(v.de); v.para = Math.round(v.para);
+    var base = v.base === '365' ? 365 : 360;
+    /* duração de cada unidade em anos */
+    var ANOS = { ano: 1, mes: 1 / 12, du: 1 / 252, dia: 1 / base };
+    var NOME = { ano: ['ano', 'anos'], mes: ['mês', 'meses'], du: ['dia útil', 'dias úteis'], dia: ['dia corrido', 'dias corridos'] };
+    function nome(q, un) { return AZ.f.int(q) + ' ' + NOME[un][q === 1 ? 0 : 1]; }
+    var i = v.taxa / 100, tDe = v.de * ANOS[v.deUn], tPara = v.para * ANOS[v.paraUn];
+    var razao = tPara / tDe;
+    function eq(t) { return (Math.pow(1 + i, t / tDe) - 1) * 100; }
+    var equivalente = eq(tPara), proporcional = v.taxa * razao;
+    if (!isFinite(equivalente) || Math.abs(equivalente) > 1e15) return { erro: 'A taxa equivalente resultante é grande demais para ser exibida. Revise a taxa e os períodos informados.' };
+    var usaDia = v.deUn === 'dia' || v.paraUn === 'dia';
+    var padroes = [
+      ['1 dia útil', ANOS.du], ['1 dia corrido', ANOS.dia], ['1 mês', 1 / 12], ['1 trimestre', 0.25], ['1 semestre', 0.5], ['1 ano', 1]
+    ];
+    var linhas = padroes.map(function (p) {
+      var e = eq(p[1]);
+      return [p[0], isFinite(e) && Math.abs(e) < 1e15 ? e : 'muito alta', v.taxa * p[1] / tDe];
+    });
+    var nomeDe = nome(v.de, v.deUn), nomePara = nome(v.para, v.paraUn);
+    var casas = Math.abs(equivalente) < 0.1 ? 6 : 4;
+    return {
+      destaques: [
+        { rotulo: 'Taxa equivalente', valor: AZ.f.pct(equivalente, casas), tom: 'primario', nota: 'para ' + nomePara },
+        { rotulo: 'Taxa proporcional', valor: AZ.f.pct(proporcional, casas), nota: 'regra de três (juros simples), apenas para comparação' },
+        { rotulo: 'Relação entre os períodos', valor: new Intl.NumberFormat('pt-BR', { maximumSignificantDigits: 7 }).format(razao),
+          nota: 'expoente usado na fórmula' }
+      ],
+      resumo: '<p>Uma taxa de <strong>' + AZ.f.pct(v.taxa, 4) + '</strong> para ' + nomeDe + ' equivale, em juros compostos, a <strong>' +
+        AZ.f.pct(equivalente, casas) + '</strong> para ' + nomePara + '. Aplicar uma ou outra sobre o mesmo valor, pelo mesmo tempo total, produz o mesmo montante.</p>',
+      tabelas: [{
+        titulo: 'A mesma taxa em outros períodos', csv: false,
+        colunas: [{ t: 'Período' }, { t: 'Equivalente (compostos)', f: 'pct6' }, { t: 'Proporcional (simples)', f: 'pct6' }],
+        linhas: linhas,
+        nota: 'Convenções: ano de 12 meses, 252 dias úteis e ' + base + ' dias corridos' + (usaDia ? '' : ' (padrão comercial)') + '.'
+      }]
+    };
+  },
+  explicacao: [
+    '<p>Duas taxas são equivalentes quando, aplicadas sobre o mesmo capital durante o mesmo tempo total, produzem o mesmo montante. Em juros compostos a conversão não é feita por multiplicação ou divisão, e sim por potência: <code>taxa equivalente = (1 + taxa)^(período desejado / período informado) − 1</code>.</p>',
+    '<p>O simulador aceita períodos formados por qualquer quantidade de anos, meses, dias úteis ou dias corridos. Assim é possível, por exemplo, transformar uma rentabilidade acumulada em 60 meses na taxa média mensal, ou uma taxa anual na taxa de um dia útil.</p>',
+    '<p>Para comparar unidades diferentes, o cálculo adota ano de 12 meses e de 252 dias úteis (convenção do mercado financeiro brasileiro, que resulta em 21 dias úteis por mês). Para dias corridos, escolha entre o ano comercial de 360 dias (mês de 30 dias) e o ano civil de 365 dias. Contratos podem usar convenções diferentes, e o número real de dias úteis varia de um mês para outro.</p>',
+    '<p>A taxa proporcional aparece apenas como referência. Ela corresponde à regra de três dos juros simples e se afasta da taxa equivalente à medida que a taxa ou a distância entre os períodos aumenta.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'juro-anual-para-mensal',
+  titulo: 'Conversor de taxa de juros anual para mensal',
+  categoria: 'equivalentes',
+  ordem: 3,
+  resumo: 'Converta uma taxa anual na taxa mensal equivalente em juros compostos e veja os demais períodos.',
+  palavras: ['taxa anual', 'taxa mensal', 'ao ano para ao mês', 'taxa equivalente', 'juros compostos', 'rendimento mensal'],
+  intro: 'Informe a taxa ao ano para obter a taxa equivalente ao mês. O resultado também traz a taxa nos períodos intermediários e a conferência de que a taxa mensal, acumulada por 12 meses, devolve a taxa anual.',
+  campos: [
+    { id: 'taxa', rotulo: 'Taxa de juros anual', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.selic; }, min: -99.99, max: 1000000, sufixo: '% ao ano', casas: 6 }
+  ],
+  calcular: function (v, AZ) {
+    var i = v.taxa / 100;
+    function eq(porAno) { return (Math.pow(1 + i, 1 / porAno) - 1) * 100; }
+    var mensal = eq(12), simples = v.taxa / 12, im = mensal / 100;
+    var periodos = [['Dia útil', 252], ['Dia corrido', 360], ['Mês', 12], ['Bimestre', 6], ['Trimestre', 4], ['Semestre', 2]];
+    var conf = [], k;
+    for (k = 1; k <= 12; k++) conf.push([k, Math.pow(1 + im, k), (Math.pow(1 + im, k) - 1) * 100]);
+    return {
+      destaques: [
+        { rotulo: 'Taxa mensal equivalente', valor: mensal, formato: 'pct4', tom: 'primario', nota: 'juros compostos' },
+        { rotulo: 'Divisão simples por 12', valor: simples, formato: 'pct4',
+          nota: i > 0 ? 'superestima a taxa mensal' : i < 0 ? 'subestima a perda mensal' : 'igual à taxa equivalente' },
+        { rotulo: 'Taxa por dia útil', valor: eq(252), formato: 'pct6', nota: 'ano de 252 dias úteis' }
+      ],
+      resumo: '<p>Uma taxa de <strong>' + AZ.f.pct(v.taxa, 4) + ' ao ano</strong> equivale a <strong>' + AZ.f.pct(mensal, 4) + ' ao mês</strong>. ' +
+        (Math.abs(i) < 1e-12 ? '' : 'Dividir a taxa anual por 12 resultaria em ' + AZ.f.pct(simples, 4) + ', valor que, capitalizado por 12 meses, daria ' +
+          AZ.f.pct((Math.pow(1 + simples / 100, 12) - 1) * 100, 4) + ' ao ano, e não a taxa informada.') + '</p>',
+      tabelas: [{
+        titulo: 'Taxa equivalente em outros períodos', csv: false,
+        colunas: [{ t: 'Período' }, { t: 'Períodos em um ano', f: 'int' }, { t: 'Taxa equivalente', f: 'pct6' }, { t: 'Divisão simples', f: 'pct6' }],
+        linhas: periodos.map(function (p) { return [p[0], p[1], eq(p[1]), v.taxa / p[1]]; }),
+        destaque: 2,
+        nota: 'Dia corrido em ano comercial de 360 dias. Dia útil na convenção de 252 dias úteis por ano.'
+      }, {
+        titulo: 'Conferência: taxa mensal acumulada mês a mês', csv: false,
+        colunas: [{ t: 'Mês', f: 'int' }, { t: 'Fator acumulado', f: function (x) { return AZ.f.num(x, 6); } }, { t: 'Taxa acumulada', f: 'pct4' }],
+        linhas: conf,
+        destaque: 11,
+        nota: 'No mês 12 a taxa acumulada volta a ser a taxa anual informada.'
+      }]
+    };
+  },
+  explicacao: [
+    '<p>Para transformar uma taxa anual em mensal nos juros compostos, extrai-se a raiz de ordem 12 do fator anual: <code>taxa mensal = (1 + taxa anual)^(1/12) − 1</code>. O mesmo raciocínio vale para qualquer fração do ano: basta trocar o 12 pelo número de períodos que cabem em um ano.</p>',
+    '<p>Dividir a taxa anual por 12 produz a taxa proporcional, usada em juros simples. Como os juros de cada mês passam a render nos meses seguintes, a taxa mensal equivalente é sempre um pouco menor que a divisão simples quando a taxa é positiva.</p>',
+    '<p>A conversão ajuda a estimar o rendimento mensal de uma aplicação divulgada ao ano, ou a comparar um financiamento anunciado ao ano com outro anunciado ao mês. O resultado é bruto: não desconta imposto de renda, taxas nem inflação. Em títulos pós-fixados a taxa anual também muda ao longo do tempo, portanto a taxa mensal obtida é uma referência para a taxa informada hoje.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'juro-mensal-para-anual',
+  titulo: 'Conversor de taxa de juros mensal para anual',
+  categoria: 'equivalentes',
+  ordem: 2,
+  resumo: 'Descubra a taxa anual equivalente a uma taxa mensal em juros compostos e veja o acúmulo mês a mês.',
+  palavras: ['taxa mensal', 'taxa anual', 'ao mês para ao ano', 'taxa equivalente', 'juros compostos', 'custo anual'],
+  intro: 'Informe a taxa ao mês para obter a taxa equivalente ao ano. A tabela mostra como a taxa se acumula a cada mês e quanto ela supera a simples multiplicação por 12.',
+  campos: [
+    { id: 'taxa', rotulo: 'Taxa de juros mensal', tipo: 'pct', padrao: 1.5, min: -99.99, max: 500, sufixo: '% ao mês', casas: 6 },
+    { id: 'valor', rotulo: 'Valor para ilustrar', tipo: 'moeda', padrao: 1000, min: 0,
+      ajuda: 'Usado apenas para mostrar o efeito da taxa em reais ao longo de 12 meses.' }
+  ],
+  calcular: function (v, AZ) {
+    var i = v.taxa / 100, anual = (Math.pow(1 + i, 12) - 1) * 100, simples = v.taxa * 12, dif = anual - simples;
+    var meses = [], k;
+    for (k = 0; k <= 12; k++) meses.push({ k: k, comp: (Math.pow(1 + i, k) - 1) * 100, simp: v.taxa * k, valor: v.valor * Math.pow(1 + i, k) });
+    var fim = meses[12];
+    return {
+      destaques: [
+        { rotulo: 'Taxa anual equivalente', valor: anual, formato: 'pct4', tom: 'primario', nota: 'juros compostos, 12 meses' },
+        { rotulo: 'Multiplicação simples por 12', valor: simples, formato: 'pct4',
+          nota: 'ignora os juros sobre juros: diferença de ' + AZ.f.num(Math.abs(dif), 4) + ' ponto(s) percentual(is)' },
+        { rotulo: 'Valor após 12 meses', valor: fim.valor, formato: 'brl', nota: 'partindo de ' + AZ.f.brl(v.valor) }
+      ],
+      resumo: '<p>Uma taxa de <strong>' + AZ.f.pct(v.taxa, 4) + ' ao mês</strong> equivale a <strong>' + AZ.f.pct(anual, 4) + ' ao ano</strong>. ' +
+        (Math.abs(dif) < 1e-9 ? 'Com taxa zero não há diferença entre juros simples e compostos.'
+          : 'A conta de multiplicar por 12 daria ' + AZ.f.pct(simples, 4) + ', porque ignora que os juros de cada mês também rendem (ou pesam) nos meses seguintes.') + '</p>',
+      graficos: [{
+        tipo: 'linha', titulo: 'Taxa acumulada ao longo de 12 meses', formato: 'pct', rotuloDica: 'Mês',
+        rotulos: meses.map(function (m) { return String(m.k); }),
+        series: [
+          { nome: 'Juros compostos', cor: 1, dados: meses.map(function (m) { return m.comp; }) },
+          { nome: 'Multiplicação simples', cor: 5, dados: meses.map(function (m) { return m.simp; }) }
+        ]
+      }],
+      tabelas: [{
+        titulo: 'Acúmulo mês a mês', csv: false,
+        colunas: [{ t: 'Mês', f: 'int' }, { t: 'Taxa acumulada (composta)', f: 'pct4' }, { t: 'Taxa × meses (simples)', f: 'pct4' }, { t: 'Valor acumulado', f: 'brl' }],
+        linhas: meses.slice(1).map(function (m) { return [m.k, m.comp, m.simp, m.valor]; }),
+        destaque: 11,
+        nota: 'As linhas 2, 3 e 6 correspondem às taxas equivalentes ao bimestre, ao trimestre e ao semestre.'
+      }]
+    };
+  },
+  explicacao: [
+    '<p>Em juros compostos, a taxa anual equivalente a uma taxa mensal é obtida por potência, e não por multiplicação: <code>taxa anual = (1 + taxa mensal)^12 − 1</code>. O expoente 12 representa os doze períodos mensais contidos em um ano.</p>',
+    '<p>A diferença em relação à multiplicação por 12 cresce rapidamente com o tamanho da taxa. Em taxas pequenas, como as de investimentos conservadores, ela é de frações de ponto percentual. Em taxas de crédito rotativo ou de cheque especial, a taxa anual efetiva pode ser muito maior do que 12 vezes a mensal.</p>',
+    '<p>A conversão é útil para comparar ofertas divulgadas em bases diferentes, por exemplo um empréstimo anunciado ao mês com um investimento anunciado ao ano. O resultado considera apenas a taxa de juros informada: não inclui tarifas, seguros, impostos nem outros encargos que compõem o custo efetivo total de uma operação de crédito.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'juros-equivalentes-periodos',
+  titulo: 'Calculadora de taxa equivalente por número de períodos',
+  categoria: 'equivalentes',
+  ordem: 4,
+  resumo: 'Calcule a taxa equivalente para qualquer número de períodos e copie a fórmula pronta para a planilha.',
+  palavras: ['taxa equivalente', 'fórmula', 'planilha', 'Excel', 'períodos', 'juros compostos', 'potência'],
+  intro: 'Informe a taxa, quantos períodos ela cobre e para quantos períodos deseja a taxa equivalente. Além do resultado, a calculadora entrega a fórmula no formato usado em planilhas eletrônicas.',
+  campos: [
+    { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: 0.8, min: -99.99, max: 1000000, casas: 6 },
+    { id: 'n1', rotulo: 'Períodos cobertos pela taxa informada', tipo: 'num', padrao: 1, min: 0.000001, max: 100000, largura: 'meia',
+      ajuda: 'Use 1 para uma taxa de um único período (um mês, por exemplo).' },
+    { id: 'n2', rotulo: 'Períodos da taxa desejada', tipo: 'num', padrao: 12, min: 0.000001, max: 100000, largura: 'meia',
+      ajuda: 'Na mesma unidade do campo anterior. Exemplo: 12 para sair de um mês para um ano.' }
+  ],
+  calcular: function (v, AZ) {
+    var i = v.taxa / 100, exp = v.n2 / v.n1;
+    var eq = (Math.pow(1 + i, exp) - 1) * 100;
+    if (!isFinite(eq) || Math.abs(eq) > 1e15) return { erro: 'A taxa equivalente resultante é grande demais para ser exibida. Revise a taxa e os períodos informados.' };
+    function n(x) { return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 6, useGrouping: false }).format(x); }
+    function seguro(x) { return isFinite(x) && Math.abs(x) < 1e15 ? x : 'muito alta'; }
+    function conv(e) { return seguro((Math.pow(1 + i, e) - 1) * 100); }
+    var taxaTxt = v.taxa < 0 ? '(' + n(v.taxa) + '%)' : n(v.taxa) + '%';
+    var casas = Math.abs(eq) < 0.1 ? 6 : 4;
+    var usuais = [
+      ['Dia para mês', '=(1+' + taxaTxt + ')^30-1', conv(30)],
+      ['Mês para dia', '=(1+' + taxaTxt + ')^(1/30)-1', conv(1 / 30)],
+      ['Mês para ano', '=(1+' + taxaTxt + ')^12-1', conv(12)],
+      ['Ano para mês', '=(1+' + taxaTxt + ')^(1/12)-1', conv(1 / 12)],
+      ['Dia para ano', '=(1+' + taxaTxt + ')^360-1', conv(360)],
+      ['Ano para dia', '=(1+' + taxaTxt + ')^(1/360)-1', conv(1 / 360)]
+    ];
+    var tabelas = [];
+    /* evolução período a período: só faz sentido com períodos inteiros e em quantidade razoável */
+    var inteiros = v.n1 === Math.round(v.n1) && v.n2 === Math.round(v.n2), maior = Math.max(v.n1, v.n2);
+    if (inteiros && maior >= 2 && maior <= 600) {
+      var unit = Math.pow(1 + i, 1 / v.n1), linhas = [], k, dest = [];
+      for (k = 1; k <= maior; k++) {
+        linhas.push([k, (Math.pow(unit, k) - 1) * 100, k === v.n1 && k === v.n2 ? 'taxa informada e taxa desejada' : k === v.n1 ? 'taxa informada' : k === v.n2 ? 'taxa desejada' : '']);
+        if (k === v.n1 || k === v.n2) dest.push(k - 1);
+      }
+      tabelas.push({
+        titulo: 'Taxa acumulada período a período',
+        colunas: [{ t: 'Períodos', f: 'int' }, { t: 'Taxa acumulada', f: casas === 6 ? 'pct6' : 'pct4' }, { t: 'Observação', f: 'texto' }],
+        linhas: linhas, destaque: dest, mostrar: maior <= 15 ? maior : 12,
+        nota: 'Taxa de um período: ' + AZ.f.pct((unit - 1) * 100, 6) + '.'
+      });
+    }
+    tabelas.push({
+      titulo: 'Conversões usuais com a mesma taxa', csv: false,
+      colunas: [{ t: 'Conversão' }, { t: 'Fórmula', f: 'texto' }, { t: 'Resultado', f: 'pct6' }],
+      linhas: usuais,
+      nota: 'Cada linha lê a taxa informada (' + taxaTxt + ') como se fosse do período de origem indicado. Mês de 30 dias e ano de 360 dias.'
+    });
+    return {
+      destaques: [
+        { rotulo: 'Taxa equivalente', valor: AZ.f.pct(eq, casas), tom: 'primario', nota: 'para ' + n(v.n2) + (v.n2 === 1 ? ' período' : ' períodos') },
+        { rotulo: 'Expoente da fórmula', valor: n(exp), nota: n(v.n2) + ' ÷ ' + n(v.n1) },
+        { rotulo: 'Fator de capitalização', valor: AZ.f.num(1 + eq / 100, 6), nota: 'multiplique o capital por este número' }
+      ],
+      resumo: '<p><strong>Fórmula para planilha</strong>, com os valores informados:</p><p><code>=(1+' + taxaTxt + ')^(' + n(v.n2) + '/' + n(v.n1) + ')-1</code></p>' +
+          '<p>Com referências a células (taxa em A1, períodos da taxa em B1 e períodos desejados em C1):</p><p><code>=(1+A1)^(C1/B1)-1</code></p>' +
+          '<p>Formate a célula do resultado como porcentagem. As fórmulas acima usam vírgula decimal, padrão das planilhas configuradas em português. Em planilhas configuradas em inglês, troque a vírgula por ponto.</p>',
+      tabelas: tabelas
+    };
+  },
+  explicacao: [
+    '<p>A taxa equivalente em juros compostos é dada por <code>(1 + taxa)^(períodos desejados / períodos da taxa) − 1</code>. Os dois números de períodos precisam estar na mesma unidade (dias, meses, anos ou qualquer outra). Quando o expoente é maior que 1, a taxa está sendo acumulada; quando é menor que 1, está sendo fracionada.</p>',
+    '<p>Alguns exemplos de uso: de mensal para anual, informe 1 e 12; de anual para mensal, 12 e 1; de uma rentabilidade acumulada em 18 meses para a taxa de 12 meses, 18 e 12; de uma taxa anual para 45 dias em ano de 360 dias, 360 e 45.</p>',
+    '<p>Nas planilhas, o acento circunflexo representa a potência. A tabela de conversões usuais aplica a mesma lógica com expoentes fixos e considera mês de 30 dias e ano de 360 dias. Para outras convenções, como 252 dias úteis ou 365 dias corridos, basta informar os números de períodos correspondentes nos campos.</p>',
+    '<p>O cálculo supõe taxa constante e capitalização composta em todo o intervalo. Não há desconto de impostos ou tarifas.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'tabela-juros-equivalentes',
+  titulo: 'Tabela de juros equivalentes: dia, mês e ano',
+  categoria: 'equivalentes',
+  ordem: 5,
+  resumo: 'Veja de uma só vez quanto uma taxa representa ao dia, ao mês e ao ano, em quatro convenções de contagem de dias.',
+  palavras: ['tabela de taxas', 'taxa ao dia', 'taxa ao mês', 'taxa ao ano', 'base 360', 'base 365', 'base 252', 'dias úteis'],
+  intro: 'Informe um número e escolha a convenção de dias. A tabela lê esse número como taxa ao dia, ao mês e ao ano e mostra, em cada caso, os equivalentes nos outros dois períodos.',
+  campos: [
+    { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: 1, min: -99.99, max: 100000, casas: 6 },
+    { id: 'base', rotulo: 'Convenção de dias', tipo: 'select', padrao: 'comercial',
+      ajuda: 'Define quantos dias formam um mês e um ano. Veja os detalhes em "Como funciona".',
+      opcoes: [
+        { v: 'comercial', t: 'Comercial (30/360)' },
+        { v: 'misto', t: 'Mês de 30, ano de 365' },
+        { v: 'civil', t: 'Civil (ano de 365)' },
+        { v: 'mercado', t: 'Mercado (252 dias úteis)' }
+      ] }
+  ],
+  calcular: function (v, AZ) {
+    var BASES = {
+      comercial: { nome: 'Comercial 30/360', dm: 30, da: 360 },
+      misto: { nome: 'Mês 30, ano 365', dm: 30, da: 365 },
+      civil: { nome: 'Civil 365', dm: 365 / 12, da: 365 },
+      mercado: { nome: 'Mercado 252', dm: 21, da: 252 }
+    };
+    var i = v.taxa / 100;
+    function p(e) { var x = (Math.pow(1 + i, e) - 1) * 100; return isFinite(x) && Math.abs(x) < 1e12 ? x : 'muito alta'; }
+    function matriz(b) {
+      return {
+        dia: [v.taxa, p(b.dm), p(b.da)],
+        mes: [p(1 / b.dm), v.taxa, p(b.da / b.dm)],
+        ano: [p(1 / b.da), p(b.dm / b.da), v.taxa]
+      };
+    }
+    var b = BASES[v.base] || BASES.comercial, m = matriz(b);
+    var f = function (x) { return typeof x === 'string' ? x : AZ.f.pct(x, Math.abs(x) < 0.1 && x !== 0 ? 6 : 4); };
+    var txt = AZ.f.pct(v.taxa, 4), ordem = ['comercial', 'misto', 'civil', 'mercado'];
+    var diaNome = v.base === 'mercado' ? 'dia útil' : 'dia';
+    return {
+      destaques: [
+        { rotulo: txt + ' ao ano equivale a', valor: f(m.ano[1]), tom: 'primario', nota: 'ao mês, ou ' + f(m.ano[0]) + ' ao ' + diaNome },
+        { rotulo: txt + ' ao mês equivale a', valor: f(m.mes[2]), nota: 'ao ano, ou ' + f(m.mes[0]) + ' ao ' + diaNome },
+        { rotulo: txt + ' ao ' + diaNome + ' equivale a', valor: f(m.dia[1]), nota: 'ao mês, ou ' + f(m.dia[2]) + ' ao ano' }
+      ],
+      resumo: '<p>Uma taxa de ' + txt + ' ao ano equivale a <strong>' + f(m.ano[1]) + ' ao mês</strong>. A mesma taxa, se for ao mês, equivale a <strong>' + f(m.mes[2]) + ' ao ano</strong>.</p>',
+      tabelas: [{
+        titulo: 'Equivalências da taxa de ' + txt, csv: false,
+        colunas: [{ t: 'Taxa informada' }, { t: 'Ao ' + diaNome, f: f }, { t: 'Ao mês', f: f }, { t: 'Ao ano', f: f }],
+        linhas: [
+          ['Se for ao ' + diaNome].concat(m.dia),
+          ['Se for ao mês'].concat(m.mes),
+          ['Se for ao ano'].concat(m.ano)
+        ],
+        nota: 'Convenção: ' + b.nome + '. Mês com ' + AZ.f.num(b.dm, b.dm === Math.round(b.dm) ? 0 : 4) + ' dias e ano com ' + b.da + ' dias' + (v.base === 'mercado' ? ' úteis' : '') + '.'
+      }, {
+        titulo: 'Efeito da convenção de dias', csv: false,
+        colunas: [{ t: 'Convenção' }, { t: 'Anual → dia', f: f }, { t: 'Mensal → dia', f: f }, { t: 'Diária → ano', f: f }],
+        linhas: ordem.map(function (k) { var x = matriz(BASES[k]); return [BASES[k].nome, x.ano[0], x.mes[0], x.dia[2]]; }),
+        destaque: ordem.indexOf(v.base),
+        nota: 'A mesma taxa de ' + txt + ', convertida nas quatro convenções. Cada coluna indica o período de origem e o de destino. Na convenção de mercado, o dia é o dia útil.'
+      }]
+    };
+  },
+  explicacao: [
+    '<p>A tabela aplica a fórmula dos juros compostos, <code>(1 + taxa de destino) = (1 + taxa de origem)^n</code>, em que <code>n</code> é a quantidade de períodos de origem contida no período de destino (ou a fração, quando o destino é menor). Os cálculos usam todas as casas decimais e o arredondamento ocorre apenas na exibição.</p>',
+    '<p>O que muda entre as convenções é quantos dias formam um mês e um ano:</p>',
+    '<ul><li><strong>Comercial:</strong> mês de 30 dias e ano de 360 dias, comum em contratos de crédito.</li><li><strong>30 e 365:</strong> mês de 30 dias e ano de 365 dias. Nessa base um ano contém pouco mais de 12 meses (365 ÷ 30), por isso a conversão entre mês e ano difere ligeiramente da potência 12.</li><li><strong>Civil:</strong> ano de 365 dias e mês médio de 365 ÷ 12 dias (cerca de 30,42).</li><li><strong>Mercado:</strong> 252 dias úteis no ano e 21 no mês, padrão de CDI, Selic e títulos prefixados no Brasil.</li></ul>',
+    '<p>A conversão entre mês e ano é idêntica nas convenções comercial, civil e de mercado, pois em todas elas o ano tem exatamente 12 meses. As diferenças aparecem nas taxas diárias. Meses reais têm números variados de dias corridos e úteis, de modo que o valor cobrado ou creditado em um mês específico pode divergir um pouco da tabela.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'somar-juros-acumulados',
+  titulo: 'Calculadora de taxas acumuladas',
+  categoria: 'gerais',
+  ordem: 1,
+  resumo: 'Acumule várias taxas de juros, inflação ou rentabilidade de forma composta e veja o total do período.',
+  palavras: ['somar juros', 'somar taxas', 'taxa acumulada', 'inflação acumulada', 'rentabilidade acumulada', 'juros compostos', 'porcentagem acumulada'],
+  intro: 'Informe as taxas de cada período (meses, anos ou qualquer sequência) e quantas vezes cada uma se repete. A calculadora devolve a taxa acumulada de forma composta, que é diferente da soma simples dos percentuais.',
+  campos: [
+    { id: 'taxas', rotulo: 'Taxas a acumular', tipo: 'lista', minLinhas: 1, maxLinhas: 60, rotuloAdicionar: 'Adicionar taxa',
+      colunas: [
+        { id: 'taxa', rotulo: 'Taxa do período (%)', tipo: 'pct', peso: 1.4 },
+        { id: 'vezes', rotulo: 'Repetições', tipo: 'int', padrao: 1, peso: 1 }
+      ],
+      padrao: [{ taxa: 1.1, vezes: 3 }, { taxa: 0.9, vezes: 6 }, { taxa: -0.4, vezes: 1 }, { taxa: 1.3, vezes: 2 }],
+      ajuda: 'Taxas negativas são aceitas (por exemplo, um mês de deflação ou de queda). Em "Repetições", informe por quantos períodos seguidos a mesma taxa se repete. Linhas sem taxa são ignoradas.' },
+    { id: 'valor', rotulo: 'Valor inicial (opcional)', tipo: 'moeda', padrao: 1000, min: 0, opcional: true,
+      ajuda: 'Se informado, mostra quanto esse valor se torna depois de todas as taxas.' }
+  ],
+  calcular: function (v, AZ) {
+    var seq = [], i, k, l, t, n;
+    for (i = 0; i < v.taxas.length; i++) {
+      l = v.taxas[i]; t = l.taxa;
+      if (!isFinite(t)) continue;
+      n = isFinite(l.vezes) ? Math.round(l.vezes) : 1;
+      if (n < 1) continue;
+      if (t <= -100) return { erro: 'Cada taxa precisa ser maior que -100%. Uma queda de 100% zera o valor e não pode ser acumulada.' };
+      if (seq.length + n > 1200) return { erro: 'O limite da calculadora é de 1.200 períodos no total.' };
+      for (k = 0; k < n; k++) seq.push(t);
+    }
+    if (!seq.length) return { erro: 'Informe pelo menos uma taxa.' };
+    var fator = 1, soma = 0, pontos = [];
+    seq.forEach(function (tx, j) { fator *= 1 + tx / 100; soma += tx; pontos.push({ n: j + 1, taxa: tx, fator: fator, acum: (fator - 1) * 100 }); });
+    var acum = (fator - 1) * 100, np = seq.length;
+    var media = (Math.pow(fator, 1 / np) - 1) * 100, dif = acum - soma;
+    var temValor = v.valor > 0;
+    var destaques = [
+      { rotulo: 'Taxa acumulada', valor: AZ.f.pct(acum, 4), tom: 'primario', nota: 'em ' + np + (np === 1 ? ' período' : ' períodos') + ', de forma composta' },
+      { rotulo: 'Soma simples das taxas', valor: AZ.f.pct(soma, 4), nota: Math.abs(dif) < 5e-5 ? 'igual à taxa acumulada' : 'diferença de ' + AZ.f.num(Math.abs(dif), 4) + (Math.abs(dif) < 2 ? ' ponto percentual' : ' pontos percentuais') },
+      { rotulo: 'Taxa média por período', valor: AZ.f.pct(media, 4), nota: 'média geométrica, que repetida ' + np + (np === 1 ? ' vez' : ' vezes') + ' gera o mesmo total' },
+      { rotulo: 'Fator acumulado', valor: AZ.f.num(fator, 6), nota: 'multiplique qualquer valor por este fator' }
+    ];
+    if (temValor) destaques.push({ rotulo: 'Valor final', valor: v.valor * fator, formato: 'brl', tom: fator >= 1 ? 'positivo' : 'negativo', nota: 'a partir de ' + AZ.f.brl(v.valor) });
+    var colunas = [{ t: 'Período', f: 'int' }, { t: 'Taxa do período', f: 'pct4' }, { t: 'Fator acumulado', f: function (x) { return AZ.f.num(x, 6); } }, { t: 'Taxa acumulada', f: 'pct4' }];
+    if (temValor) colunas.push({ t: 'Valor', f: 'brl' });
+    var r = {
+      destaques: destaques,
+      resumo: '<p>' + (np === 1 ? 'A taxa informada acumula' : 'As ' + np + ' taxas informadas acumulam') + ' <strong>' + AZ.f.pct(acum, 4) + '</strong>. ' +
+        (np === 1 ? 'Com um único período, a taxa acumulada é a própria taxa informada.' :
+          'A soma simples daria ' + AZ.f.pct(soma, 4) + '. A diferença existe porque cada taxa incide sobre o valor já alterado pelas taxas anteriores.') + '</p>',
+      tabelas: [{
+        titulo: 'Acumulação período a período', colunas: colunas,
+        linhas: pontos.map(function (p) { var li = [p.n, p.taxa, p.fator, p.acum]; if (temValor) li.push(v.valor * p.fator); return li; })
+      }]
+    };
+    if (np >= 3) r.graficos = [{
+      tipo: np <= 40 ? 'barras' : 'linha', titulo: 'Taxa acumulada ao fim de cada período', formato: 'pct', rotuloDica: 'Período',
+      rotulos: pontos.map(function (p) { return String(p.n); }),
+      series: [{ nome: 'Taxa acumulada', cor: 1, dados: pontos.map(function (p) { return p.acum; }) }]
+    }];
+    return r;
+  },
+  explicacao: [
+    '<p>Percentuais sucessivos não se somam: eles se multiplicam. Cada taxa é transformada em um fator (<code>1 + taxa / 100</code>), os fatores são multiplicados entre si e, no fim, subtrai-se 1 para voltar ao percentual:</p>',
+    '<p><code>taxa acumulada = [(1 + t1) × (1 + t2) × ... × (1 + tn) − 1] × 100</code></p>',
+    '<p>Doze meses seguidos de 1% ao mês, por exemplo, acumulam 12,6825%, e não 12%. Quando há taxas negativas, o efeito é o inverso do que a intuição sugere: uma queda de 50% seguida de uma alta de 50% deixa o valor 25% abaixo do inicial.</p>',
+    '<p>A taxa média por período é a média geométrica das taxas, ou seja, a taxa constante que produziria o mesmo resultado acumulado. Ela é sempre igual ou menor que a média aritmética.</p>',
+    '<p>O cálculo serve para qualquer sequência de percentuais: inflação mensal, rentabilidade de um investimento mês a mês, reajustes anuais de aluguel ou de salário. Ele não considera impostos, taxas nem aportes e resgates no meio do caminho.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'cdi-hoje',
+  titulo: 'Quanto rende o CDI hoje',
+  categoria: 'renda-fixa',
+  subgrupo: 'pos',
+  ordem: 1,
+  resumo: 'Converta um percentual do CDI em taxa ao dia útil, ao mês e ao ano, bruta e líquida de imposto de renda.',
+  palavras: ['cdi', 'taxa di', '100% do cdi', 'rendimento diário', 'rendimento mensal', 'taxa líquida'],
+  intro: 'Informe a taxa do CDI e o percentual pago pelo investimento para ver quanto isso representa ao dia útil, ao mês e ao ano, antes e depois do imposto de renda, em taxa e em reais.',
+  campos: [
+    { id: 'cdi', rotulo: 'Taxa do CDI', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.cdi; }, min: 0.01, max: 100, sufixo: '% ao ano', largura: 'meia',
+      ajuda: 'Preenchida com a taxa de referência mais recente. Altere para testar outro cenário.' },
+    { id: 'pct', rotulo: 'Percentual do CDI', tipo: 'pct', padrao: 100, min: 0, max: 500, sufixo: '% do CDI', largura: 'meia' },
+    { id: 'valor', rotulo: 'Valor aplicado', tipo: 'moeda', padrao: 10000, min: 0, opcional: true,
+      ajuda: 'Usado para mostrar o rendimento em reais.' },
+    { id: 'ir', rotulo: 'Imposto de renda', tipo: 'select', padrao: '17.5', opcoes: [
+      { v: '22.5', t: '22,5% (resgate em até 180 dias)' },
+      { v: '20', t: '20% (de 181 a 360 dias)' },
+      { v: '17.5', t: '17,5% (de 361 a 720 dias)' },
+      { v: '15', t: '15% (acima de 720 dias)' },
+      { v: '0', t: 'Isento (LCI, LCA e outros títulos isentos)' }] }
+  ],
+  calcular: function (v, AZ) {
+    var f = AZ.f, aliq = parseFloat(v.ir) / 100;
+    var dCdi = Math.pow(1 + v.cdi / 100, 1 / 252) - 1, d = dCdi * v.pct / 100;
+    function taxa(du) { return Math.pow(1 + d, du) - 1; }
+    var per = [
+      { nome: '1 dia útil', du: 1 },
+      { nome: '1 mês (21 dias úteis)', du: 21 },
+      { nome: '1 ano (252 dias úteis)', du: 252 }
+    ].map(function (p) { var b = taxa(p.du); return { nome: p.nome, bruta: b * 100, liq: b * (1 - aliq) * 100, rb: v.valor * b, rl: v.valor * b * (1 - aliq) }; });
+    var dia = per[0], mes = per[1], ano = per[2];
+    var lista = [], p;
+    for (p = 80; p <= 150; p += 5) lista.push(p);
+    if (lista.indexOf(v.pct) < 0) { lista.push(v.pct); lista.sort(function (a, b) { return a - b; }); }
+    var linhas = lista.map(function (q) {
+      var dq = dCdi * q / 100, a = Math.pow(1 + dq, 252) - 1, m = Math.pow(1 + dq, 21) - 1;
+      return [f.pct(q, q % 1 ? 2 : 0), dq * 100, m * 100, a * 100, a * (1 - aliq) * 100];
+    });
+    var isento = aliq === 0;
+    return {
+      destaques: [
+        { rotulo: 'Taxa bruta ao ano', valor: ano.bruta, formato: 'pct', tom: 'primario', nota: f.pct(v.pct, v.pct % 1 ? 2 : 0) + ' de um CDI de ' + f.pct(v.cdi) + ' ao ano' },
+        { rotulo: 'Taxa bruta ao mês', valor: mes.bruta, formato: 'pct4', nota: 'mês de 21 dias úteis' },
+        { rotulo: 'Taxa bruta ao dia útil', valor: dia.bruta, formato: 'pct6' },
+        { rotulo: isento ? 'Taxa ao ano (isenta de IR)' : 'Taxa líquida ao ano', valor: ano.liq, formato: 'pct', tom: 'destaque', nota: isento ? 'igual à taxa bruta' : 'após IR de ' + f.pct(aliq * 100, 1) + ' sobre o rendimento' }
+      ],
+      resumo: v.valor > 0 ? '<p>Com o CDI em ' + f.pct(v.cdi) + ' ao ano, ' + f.brl(v.valor) + ' aplicados a ' + f.pct(v.pct, v.pct % 1 ? 2 : 0) + ' do CDI rendem cerca de <strong>' + f.brl(dia.rb) + ' por dia útil</strong>, <strong>' + f.brl(mes.rb) + ' em um mês</strong> e <strong>' + f.brl(ano.rb) + ' em um ano</strong>, antes do imposto de renda' + (isento ? '.' : '. Depois do IR de ' + f.pct(aliq * 100, 1) + ', restam ' + f.brl(mes.rl) + ' no mês e ' + f.brl(ano.rl) + ' no ano.') + '</p>' : '',
+      tabelas: [{
+        titulo: 'Rendimento por período', csv: false,
+        colunas: [{ t: 'Período' }, { t: 'Taxa bruta', f: 'pct4' }, { t: 'Taxa líquida', f: 'pct4' }, { t: 'Rendimento bruto', f: 'brl' }, { t: 'Rendimento líquido', f: 'brl' }],
+        linhas: per.map(function (x) { return [x.nome, x.bruta, x.liq, x.rb, x.rl]; }),
+        nota: 'A taxa líquida aplica a alíquota escolhida sobre o rendimento de cada período. O imposto só é cobrado de fato no resgate ou no vencimento.'
+      }, {
+        titulo: 'Outros percentuais do CDI',
+        colunas: [{ t: 'Percentual do CDI' }, { t: 'Ao dia útil', f: 'pct6' }, { t: 'Ao mês', f: 'pct4' }, { t: 'Ao ano (bruta)', f: 'pct' }, { t: 'Ao ano (líquida)', f: 'pct' }],
+        linhas: linhas, destaque: lista.indexOf(v.pct), mostrar: 16
+      }]
+    };
+  },
+  explicacao: [
+    '<p>O CDI é divulgado como taxa anual, mas os títulos pós-fixados rendem um pouco a cada dia útil. A taxa diária do CDI é <code>(1 + CDI ao ano)^(1/252) − 1</code>, em base de 252 dias úteis por ano.</p>',
+    '<p>Um investimento que paga um percentual do CDI rende esse percentual da taxa diária: <code>taxa diária do título = taxa diária do CDI × percentual</code>. As taxas ao mês (21 dias úteis) e ao ano (252 dias úteis) são obtidas capitalizando a taxa diária. Por isso, 110% do CDI ao ano não é exatamente 1,1 vez a taxa anual do CDI: a diferença é pequena, mas aparece nas casas decimais.</p>',
+    '<p>A taxa líquida desconta o imposto de renda da tabela regressiva (22,5%, 20%, 17,5% ou 15%, conforme o prazo em dias corridos até o resgate), que incide apenas sobre o rendimento. LCI, LCA e poupança são isentas para a pessoa física. O cálculo não considera IOF, cobrado em resgates com menos de 30 dias.</p>',
+    '<p>O resultado supõe que o CDI fique constante no nível informado. Na prática a taxa muda ao longo do tempo, acompanhando a taxa Selic, e meses com mais ou menos dias úteis rendem um pouco mais ou um pouco menos do que o mês padrão de 21 dias úteis.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'regra-de-tres-taxas',
+  titulo: 'Regra de três para comparar taxas',
+  categoria: 'gerais',
+  ordem: 4,
+  resumo: 'Converta percentual do CDI em taxa ao ano (e o inverso) por regra de três e compare com a equivalência composta.',
+  palavras: ['percentual do CDI', '% do CDI', 'taxa equivalente', 'proporção', 'pós-fixado', 'prefixado', 'regra de 3'],
+  intro: 'Um título que paga um percentual do CDI pode ser comparado com uma taxa anual por regra de três. A conta é rápida, mas aproximada. Informe a taxa de referência e o percentual (ou a taxa anual) para ver o resultado pela proporção simples e pela equivalência composta, que é a convenção usada no mercado.',
+  campos: [
+    { id: 'modo', rotulo: 'O que calcular', tipo: 'segmento', padrao: 'pct', opcoes: [{ v: 'pct', t: 'Taxa ao ano de um percentual do CDI' }, { v: 'taxa', t: 'Percentual do CDI de uma taxa ao ano' }] },
+    { id: 'ref', rotulo: 'Taxa de referência (CDI ou Selic)', tipo: 'pct', sufixo: '% ao ano', min: 0.01, max: 500,
+      padrao: function (AZ) { return AZ.cfg.cdi; }, ajuda: 'Taxa anual que corresponde a 100% do indexador.' },
+    { id: 'pct', rotulo: 'Percentual do indexador', tipo: 'pct', sufixo: '% do CDI', padrao: 110, min: 0, max: 1000,
+      mostrarSe: function (v) { return v.modo === 'pct'; } },
+    { id: 'taxa', rotulo: 'Taxa a comparar', tipo: 'pct', sufixo: '% ao ano', padrao: 15, min: 0, max: 5000,
+      mostrarSe: function (v) { return v.modo === 'taxa'; } }
+  ],
+  calcular: function (v, AZ) {
+    var ref = v.ref / 100, refDia = Math.pow(1 + ref, 1 / 252) - 1;
+    /* percentual do indexador -> taxa ao ano */
+    function simples(p) { return v.ref * p / 100; }
+    function composta(p) { return (Math.pow(1 + refDia * p / 100, 252) - 1) * 100; }
+    /* taxa ao ano -> percentual do indexador */
+    function pctSimples(t) { return t / v.ref * 100; }
+    function pctComposto(t) { return (Math.pow(1 + t / 100, 1 / 252) - 1) / refDia * 100; }
+    var r = { destaques: [], tabelas: [], textos: [] }, dif, pcts, tx, linhas, alvo;
+    if (v.modo === 'pct') {
+      var s = simples(v.pct), c = composta(v.pct); dif = c - s;
+      r.destaques = [
+        { rotulo: 'Taxa pela equivalência composta', valor: AZ.f.pct(c, 4) + ' ao ano', tom: 'primario', nota: AZ.f.pct(v.pct, 2).replace(',00%', '%') + ' da taxa diária, capitalizada por 252 dias úteis' },
+        { rotulo: 'Taxa pela regra de três', valor: AZ.f.pct(s, 4) + ' ao ano', nota: AZ.f.num(v.ref, 2) + ' × ' + AZ.f.num(v.pct, 2) + ' ÷ 100' },
+        { rotulo: 'Diferença em pontos percentuais', valor: AZ.f.num(Math.abs(dif) < 5e-5 ? 0 : dif, 4), tom: 'destaque', nota: Math.abs(dif) < 5e-5 ? 'os dois métodos coincidem' : 'a regra de três ' + (dif > 0 ? 'subestima' : 'superestima') + ' a taxa anual' }
+      ];
+      r.blocos = [{ titulo: 'Regra de três montada', html:
+        '<p><code>100% do indexador está para ' + AZ.f.pct(v.ref) + ' ao ano</code><br><code>' + AZ.f.pct(v.pct) + ' do indexador está para X</code></p>' +
+        '<p><code>X = ' + AZ.f.num(v.ref, 2) + ' × ' + AZ.f.num(v.pct, 2) + ' ÷ 100 = ' + AZ.f.pct(s, 4) + ' ao ano</code></p>' }];
+      pcts = [80, 90, 100, 110, 120, 130, 150];
+      if (pcts.indexOf(v.pct) < 0) { pcts.push(v.pct); pcts.sort(function (a, b) { return a - b; }); }
+      alvo = pcts.indexOf(v.pct);
+      r.tabelas.push({
+        titulo: 'Proporção simples e equivalência composta', csv: false, destaque: alvo,
+        colunas: [{ t: 'Percentual do indexador', f: 'pct' }, { t: 'Regra de três (ao ano)', f: 'pct4' }, { t: 'Equivalência composta (ao ano)', f: 'pct4' }, { t: 'Diferença (pontos percentuais)', f: 'num4' }],
+        linhas: pcts.map(function (p) { return [p, simples(p), composta(p), composta(p) - simples(p)]; }),
+        nota: 'Taxa de referência de ' + AZ.f.pct(v.ref) + ' ao ano. Em 100% os dois métodos coincidem por definição.'
+      });
+      r.resumo = ('<p>Um título que paga ' + AZ.f.pct(v.pct, 2) + ' de um indexador de ' + AZ.f.pct(v.ref) + ' ao ano rende, mantida essa taxa por um ano, <strong>' + AZ.f.pct(c, 4) + '</strong>. A regra de três indica ' + AZ.f.pct(s, 4) + '.</p>');
+    } else {
+      if (v.taxa <= 0) return { erro: 'Informe uma taxa a comparar maior que zero.' };
+      var ps = pctSimples(v.taxa), pc = pctComposto(v.taxa); dif = pc - ps;
+      r.destaques = [
+        { rotulo: 'Percentual pela equivalência composta', valor: AZ.f.pct(pc, 2) + ' do indexador', tom: 'primario', nota: 'razão entre as taxas diárias, em base de 252 dias úteis' },
+        { rotulo: 'Percentual pela regra de três', valor: AZ.f.pct(ps, 2) + ' do indexador', nota: AZ.f.num(v.taxa, 2) + ' ÷ ' + AZ.f.num(v.ref, 2) + ' × 100' },
+        { rotulo: 'Diferença em pontos percentuais', valor: AZ.f.num(Math.abs(dif) < 5e-3 ? 0 : dif, 2), tom: 'destaque', nota: Math.abs(dif) < 5e-3 ? 'os dois métodos coincidem' : 'a regra de três ' + (dif > 0 ? 'subestima' : 'superestima') + ' o percentual' }
+      ];
+      r.blocos = [{ titulo: 'Regra de três montada', html:
+        '<p><code>' + AZ.f.pct(v.ref) + ' ao ano está para 100% do indexador</code><br><code>' + AZ.f.pct(v.taxa) + ' ao ano está para X</code></p>' +
+        '<p><code>X = ' + AZ.f.num(v.taxa, 2) + ' × 100 ÷ ' + AZ.f.num(v.ref, 2) + ' = ' + AZ.f.pct(ps, 2) + ' do indexador</code></p>' }];
+      tx = [0.5, 0.75, 1, 1.25, 1.5, 2].map(function (m) { return Math.round(v.ref * m * 100) / 100; });
+      if (tx.indexOf(v.taxa) < 0) { tx.push(v.taxa); tx.sort(function (a, b) { return a - b; }); }
+      alvo = tx.indexOf(v.taxa);
+      linhas = tx.map(function (t) { return [t, pctSimples(t), pctComposto(t), pctComposto(t) - pctSimples(t)]; });
+      r.tabelas.push({
+        titulo: 'Proporção simples e equivalência composta', csv: false, destaque: alvo,
+        colunas: [{ t: 'Taxa ao ano', f: 'pct' }, { t: 'Regra de três (% do indexador)', f: 'pct' }, { t: 'Equivalência composta (% do indexador)', f: 'pct' }, { t: 'Diferença (pontos percentuais)', f: 'num' }],
+        linhas: linhas,
+        nota: 'Taxa de referência de ' + AZ.f.pct(v.ref) + ' ao ano. Quando a taxa comparada é igual à referência, os dois métodos dão 100%.'
+      });
+      r.resumo = ('<p>Para render ' + AZ.f.pct(v.taxa) + ' ao ano com o indexador em ' + AZ.f.pct(v.ref) + ' ao ano, um título pós-fixado precisaria pagar <strong>' + AZ.f.pct(pc, 2) + '</strong> do indexador. A regra de três indica ' + AZ.f.pct(ps, 2) + '.</p>');
+    }
+    r.textos.push('<p>Na faixa em que os títulos costumam ser negociados (da metade do indexador para cima), a diferença entre os métodos cresce quanto mais o percentual se afasta de 100% e quanto maior é a taxa de referência. Para estimativas rápidas a regra de três é suficiente. Para comparar dois investimentos com taxas próximas, use a equivalência composta.</p>');
+    return r;
+  },
+  explicacao: [
+    '<p>A regra de três trata a relação entre o percentual do indexador e a taxa anual como uma proporção direta: se 100% do CDI equivale à taxa do CDI, 110% equivale a 1,1 vez essa taxa. A conta é <code>taxa anual = taxa de referência × percentual ÷ 100</code>.</p>',
+    '<p>Na prática, os títulos pós-fixados não aplicam o percentual sobre a taxa anual, e sim sobre a taxa de cada dia útil. A taxa diária do indexador é <code>(1 + taxa anual)^(1/252) − 1</code>. O título rende, a cada dia útil, essa taxa multiplicada pelo percentual contratado, e o resultado é capitalizado:</p>',
+    '<p><code>taxa anual do título = [1 + taxa diária × percentual ÷ 100]^252 − 1</code></p>',
+    '<p>Por causa da capitalização, percentuais acima de 100% rendem um pouco mais do que a regra de três indica, e percentuais abaixo de 100% rendem um pouco menos. A página mostra os dois resultados e a diferença em pontos percentuais.</p>',
+    '<p>As duas contas supõem que a taxa de referência fique constante durante um ano, o que não acontece: CDI e Selic mudam ao longo do tempo. O resultado também é bruto, sem imposto de renda nem IOF. Para comparar um título tributado com um isento, é preciso considerar a alíquota correspondente ao prazo.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'comparador-percentuais-cdi',
+  titulo: 'Comparador de dois percentuais do CDI',
+  categoria: 'renda-fixa',
+  subgrupo: 'pos',
+  ordem: 4,
+  resumo: 'Veja quanto rende a mais, em taxa e em reais, um investimento de 110% do CDI em relação a outro de 100%.',
+  palavras: ['comparar', 'percentual do cdi', '100% do cdi', '110% do cdi', 'diferença', 'taxa anual', 'taxa mensal'],
+  intro: 'Informe a taxa do CDI e os percentuais de dois investimentos do mesmo tipo para comparar as taxas ao dia, ao mês e ao ano e a diferença em reais no prazo escolhido.',
+  campos: [
+    { id: 'cdi', rotulo: 'Taxa do CDI', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.cdi; }, min: 0.01, max: 100, sufixo: '% ao ano' },
+    { id: 'p1', rotulo: 'Investimento 1', tipo: 'pct', padrao: 100, min: 0, max: 500, sufixo: '% do CDI', largura: 'meia' },
+    { id: 'p2', rotulo: 'Investimento 2', tipo: 'pct', padrao: 110, min: 0, max: 500, sufixo: '% do CDI', largura: 'meia' },
+    { id: 'valor', rotulo: 'Valor aplicado', tipo: 'moeda', padrao: 10000, min: 0.01, largura: 'meia' },
+    { id: 'prazo', rotulo: 'Prazo', tipo: 'int', padrao: 12, min: 1, max: 1200, largura: 'meia',
+      unidades: [{ v: 'mes', t: 'meses' }, { v: 'ano', t: 'anos' }] },
+    { id: 'trib', rotulo: 'Tributação dos dois investimentos', tipo: 'segmento', padrao: 'ir', opcoes: [
+      { v: 'ir', t: 'Tributados (CDB, fundos DI)' }, { v: 'isento', t: 'Isentos (LCI, LCA)' }],
+      ajuda: 'Para comparar um título tributado com um isento, use a calculadora de equivalência entre CDB e LCI ou LCA.' }
+  ],
+  calcular: function (v, AZ) {
+    var f = AZ.f, meses = v.prazoUn === 'ano' ? v.prazo * 12 : v.prazo;
+    if (meses > 1200) return { erro: 'O prazo máximo é de 100 anos.' };
+    var du = meses * 21, dc = Math.round(meses * 365 / 12), aliq = v.trib === 'isento' ? 0 : AZ.fin.irRegressivo(dc);
+    var dCdi = Math.pow(1 + v.cdi / 100, 1 / 252) - 1;
+    function inv(p) {
+      var d = dCdi * p / 100, bruto = v.valor * Math.pow(1 + d, du), rend = bruto - v.valor, ir = rend * aliq;
+      return { p: p, dia: d * 100, mes: (Math.pow(1 + d, 21) - 1) * 100, ano: (Math.pow(1 + d, 252) - 1) * 100, bruto: bruto, rend: rend, ir: ir, liq: bruto - ir };
+    }
+    var a = inv(v.p1), b = inv(v.p2), cdiBase = inv(100), porPonto = inv(101).ano - cdiBase.ano;
+    var p0 = function (x) { return f.pct(x, x % 1 ? 2 : 0); };
+    var maior = b.ano > a.ano ? 2 : a.ano > b.ano ? 1 : 0, difAno = Math.abs(b.ano - a.ano), difLiq = Math.abs(b.liq - a.liq);
+    var pp = f.pontos;
+    var linhas = [
+      ['Percentual do CDI', p0(a.p), p0(b.p), pp(b.p - a.p, 2)],
+      ['Taxa ao dia útil', f.pct(a.dia, 6), f.pct(b.dia, 6), pp(b.dia - a.dia, 6)],
+      ['Taxa ao mês', f.pct(a.mes, 4), f.pct(b.mes, 4), pp(b.mes - a.mes, 4)],
+      ['Taxa ao ano', f.pct(a.ano), f.pct(b.ano), pp(b.ano - a.ano, 2)],
+      ['Valor bruto no fim do prazo', f.brl(a.bruto), f.brl(b.bruto), f.brl(b.bruto - a.bruto)],
+      ['Rendimento bruto', f.brl(a.rend), f.brl(b.rend), f.brl(b.rend - a.rend)]
+    ];
+    if (aliq > 0) linhas.push(['Imposto de renda (' + f.pct(aliq * 100, 1) + ')', f.brl(a.ir), f.brl(b.ir), f.brl(b.ir - a.ir)]);
+    linhas.push([aliq > 0 ? 'Valor líquido no fim do prazo' : 'Valor no fim do prazo (isento)', f.brl(a.liq), f.brl(b.liq), f.brl(b.liq - a.liq)]);
+    return {
+      destaques: [
+        { rotulo: 'Diferença de taxa ao ano', valor: pp(difAno, 2), tom: 'primario',
+          nota: maior ? 'a favor do investimento ' + maior + ', antes do imposto' : 'os dois rendem o mesmo' },
+        { rotulo: 'Investimento 1: ' + p0(a.p) + ' do CDI', valor: a.ano, formato: 'pct', nota: (aliq > 0 ? 'bruta ao ano, ou ' : 'ao ano, ou ') + f.pct(a.mes, 2) + ' ao mês' },
+        { rotulo: 'Investimento 2: ' + p0(b.p) + ' do CDI', valor: b.ano, formato: 'pct', nota: (aliq > 0 ? 'bruta ao ano, ou ' : 'ao ano, ou ') + f.pct(b.mes, 2) + ' ao mês' },
+        { rotulo: 'Diferença em ' + f.prazo(meses), valor: difLiq, formato: 'brl', tom: 'destaque',
+          nota: (aliq > 0 ? 'líquida de IR de ' + f.pct(aliq * 100, 1) : 'sem imposto de renda') + ', para ' + f.brl(v.valor) + ' aplicados' }
+      ],
+      resumo: '<p>Com o CDI em ' + f.pct(v.cdi) + ' ao ano (' + f.pct(cdiBase.mes, 2) + ' ao mês), cada ponto percentual do CDI a mais, em torno de 100% do CDI, vale cerca de ' + f.num(porPonto, 2) + ' ponto percentual de taxa ao ano. ' +
+        (maior ? 'Entre ' + p0(a.p) + ' e ' + p0(b.p) + ' do CDI, a diferença é de <strong>' + pp(difAno, 2) + ' ao ano</strong>, o que representa <strong>' + f.brl(difLiq) + '</strong> ' + (aliq > 0 ? 'líquidos ' : '') + 'em ' + f.prazo(meses) + ' para o valor aplicado.' : 'Os dois percentuais informados são iguais.') + '</p>',
+      graficos: [{
+        tipo: 'barras-h', titulo: (aliq > 0 ? 'Rendimento líquido em ' : 'Rendimento em ') + f.prazo(meses), formato: 'brl',
+        itens: [
+          { nome: 'Investimento 1 (' + p0(a.p) + ' do CDI)', valor: a.liq - v.valor, cor: 1 },
+          { nome: 'Investimento 2 (' + p0(b.p) + ' do CDI)', valor: b.liq - v.valor, cor: 3 },
+          { nome: 'Referência: 100% do CDI', valor: cdiBase.liq - v.valor, cor: 5 }
+        ]
+      }],
+      tabelas: [{
+        titulo: 'Comparação lado a lado', csv: false,
+        colunas: [{ t: 'Item', f: 'texto' }, { t: 'Investimento 1', f: 'texto', alinhar: 'dir' }, { t: 'Investimento 2', f: 'texto', alinhar: 'dir' }, { t: 'Diferença (2 − 1)', f: 'texto', alinhar: 'dir' }],
+        linhas: linhas, destaque: [3, linhas.length - 1]
+      }]
+    };
+  },
+  explicacao: [
+    '<p>Esta ferramenta compara dois investimentos do mesmo tipo que pagam percentuais diferentes do CDI, por exemplo dois CDBs ou duas LCIs. A taxa diária de cada um é o percentual contratado aplicado sobre a taxa diária do CDI, <code>(1 + CDI ao ano)^(1/252) − 1</code>. As taxas ao mês e ao ano resultam da capitalização dessa taxa por 21 e por 252 dias úteis.</p>',
+    '<p>A diferença em reais considera o valor aplicado rendendo pelo prazo informado, com meses de 21 dias úteis. Quando os investimentos são tributados, o imposto de renda da tabela regressiva (22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima de 720 dias corridos) é descontado do rendimento dos dois, com a mesma alíquota, já que o prazo é o mesmo.</p>',
+    '<p>Como os dois investimentos têm a mesma tributação, o que tem o maior percentual do CDI sempre rende mais. A questão que a ferramenta responde é quanto a mais, para que a diferença possa ser pesada contra outros fatores, como liquidez, prazo e risco do emissor. Quando um dos títulos é isento e o outro não, a comparação direta dos percentuais deixa de valer e é preciso descontar o imposto antes.</p>',
+    '<p>O cálculo supõe CDI constante na taxa informada e não considera IOF, cobrado em resgates com menos de 30 dias. As taxas ao dia, ao mês e ao ano exibidas são brutas, e o imposto é descontado uma única vez, no fim do prazo. Em fundos de investimento, o imposto é parcialmente antecipado a cada semestre (come-cotas) e há taxa de administração, de modo que o resultado líquido de um fundo fica abaixo do calculado aqui.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'rentabilidade-real',
+  titulo: 'Calculadora de taxa de juros real',
+  categoria: 'reais',
+  ordem: 2,
+  resumo: 'Desconte a inflação de uma taxa nominal para obter o juro real, ou faça a conta inversa.',
+  palavras: ['juro real', 'taxa nominal', 'inflação', 'ganho real', 'Fisher', 'acima da inflação'],
+  intro: 'Informe a taxa nominal de um investimento ou de uma dívida e a inflação do mesmo período para saber o juro real. Também é possível descobrir a taxa nominal necessária para um ganho real desejado, ou a inflação embutida em duas taxas.',
+  campos: [
+    { id: 'modo', rotulo: 'O que calcular', tipo: 'select', padrao: 'real',
+      opcoes: [{ v: 'real', t: 'Taxa de juros real' }, { v: 'nominal', t: 'Taxa nominal necessária' }, { v: 'inflacao', t: 'Inflação implícita' }] },
+    { id: 'nominal', rotulo: 'Taxa de juros nominal', tipo: 'pct', padrao: 10, min: -99, max: 100000, largura: 'meia', mostrarSe: function (v) { return v.modo !== 'nominal'; } },
+    { id: 'infl', rotulo: 'Inflação', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: -99, max: 100000, largura: 'meia', mostrarSe: function (v) { return v.modo !== 'inflacao'; } },
+    { id: 'real', rotulo: 'Taxa de juros real', tipo: 'pct', padrao: 5, min: -99, max: 100000, largura: 'meia', mostrarSe: function (v) { return v.modo !== 'real'; },
+      ajuda: 'Taxa acima da inflação, no mesmo período das outras. Para um título que paga IPCA mais 7%, informe 7.' },
+    { id: 'trib', rotulo: 'Imposto de renda nos dois títulos', tipo: 'select', padrao: 'iguais',
+      opcoes: [{ v: 'iguais', t: 'Os dois pagam a mesma alíquota, ou os dois são isentos' }, { v: 'pre', t: 'Só o prefixado paga (o indexado é isento)' }, { v: 'ipca', t: 'Só o indexado paga (o prefixado é isento)' }],
+      ajuda: 'LCI, LCA, CRI, CRA e debêntures incentivadas são isentas para pessoa física; CDB e Tesouro Direto pagam imposto.',
+      mostrarSe: function (v) { return v.modo === 'inflacao'; } },
+    { id: 'periodo', rotulo: 'Período das taxas', tipo: 'segmento', padrao: 'ano',
+      opcoes: [{ v: 'ano', t: 'Ao ano' }, { v: 'mes', t: 'Ao mês' }, { v: 'outro', t: 'Outro período' }],
+      ajuda: 'As taxas precisam se referir ao mesmo período.' },
+    { id: 'ir', rotulo: 'Imposto de renda sobre o rendimento', tipo: 'select', padrao: '0',
+      opcoes: [{ v: '0', t: 'Não considerar' }, { v: '22.5', t: '22,5% (até 180 dias)' }, { v: '20', t: '20% (181 a 360 dias)' }, { v: '17.5', t: '17,5% (361 a 720 dias)' }, { v: '15', t: '15% (acima de 720 dias)' }],
+      ajuda: 'Deixe sem considerar se o investimento é isento ou se a taxa já é líquida. Se escolher uma alíquota, o imposto é descontado do rendimento nominal antes de descontar a inflação.',
+      mostrarSe: function (v) { return v.modo !== 'inflacao' || v.trib !== 'iguais'; } }
+  ],
+  casos: [
+    { nome: 'empate entre prefixado de 13% e IPCA mais 7%, com imposto de 15% nos dois', entradas: { modo: 'inflacao', nominal: 13, real: 7, ir: '15', trib: 'iguais' }, espera: { 'Inflação implícita': '5,607%' } },
+    { nome: 'CDB prefixado de 13% com 15% de imposto contra LCA IPCA mais 5,5% isenta', entradas: { modo: 'inflacao', nominal: 13, real: 5.5, ir: '15', trib: 'pre' }, espera: { 'Inflação implícita': '5,261%' } },
+    { nome: 'LCA prefixada de 11% isenta contra Tesouro IPCA mais 7% com 15% de imposto', entradas: { modo: 'inflacao', nominal: 11, real: 7, ir: '15', trib: 'ipca' }, espera: { 'Inflação implícita': '5,553%' } },
+    { nome: 'juro real líquido de 13% com 15% de imposto e inflação de 4%', entradas: { modo: 'real', nominal: 13, infl: 4, ir: '15' }, espera: { 'Taxa real líquida': '6,779%' } }
+  ],
+  calcular: function (v, AZ) {
+    /* na inflação implícita, com a mesma alíquota nos dois títulos o imposto incide sobre o rendimento nominal de ambos e não muda o empate;
+       ele só entra quando um dos dois é isento */
+    var f = AZ.f, a = v.modo === 'inflacao' && v.trib === 'iguais' ? 0 : +v.ir / 100, termo = function (x, c) { return (x < 0 ? '(1 − ' : '(1 + ') + f.pct(Math.abs(x), c) + ')'; }, un = { ano: ' ao ano', mes: ' ao mês', outro: ' no período' }[v.periodo];
+    var nom, infl, real, liq, d, resumo, tabelas = [];
+    function outra(x) {   /* equivalente no outro período, quando faz sentido */
+      if (v.periodo === 'ano') return f.pct(AZ.fin.aaParaAm(x / 100) * 100, 4) + ' ao mês';
+      if (v.periodo === 'mes') return f.pct(AZ.fin.amParaAa(x / 100) * 100) + ' ao ano';
+      return '';
+    }
+    if (v.modo === 'real') {
+      nom = v.nominal; infl = v.infl; liq = nom > 0 ? nom * (1 - a) : nom;
+      real = ((1 + liq / 100) / (1 + infl / 100) - 1) * 100;
+      d = [
+        { rotulo: a ? 'Taxa real líquida' : 'Taxa de juros real', valor: f.pct(real, 3) + un, tom: 'primario', nota: outra(real) },
+        { rotulo: 'Subtração simples', valor: f.pct(liq - infl, 3), nota: 'aproximação, com erro de ' + f.num(Math.abs(liq - infl - real), 3) + (Math.abs(liq - infl - real) >= 2 ? ' pontos percentuais' : ' ponto percentual') }
+      ];
+      if (a) d.splice(1, 0, { rotulo: 'Taxa nominal líquida de IR', valor: f.pct(liq, 3) + un, nota: 'IR de ' + f.pct(a * 100, 1) + ' sobre o rendimento' },
+        { rotulo: 'Taxa real antes do IR', valor: f.pct(((1 + nom / 100) / (1 + infl / 100) - 1) * 100, 3) + un });
+      resumo = '<p>' + termo(liq, (a || v.modo === 'nominal') ? 3 : 2) + ' ÷ ' + termo(infl) + ' − 1 = <strong>' + f.pct(real, 3) + '</strong>' + un + '. ' +
+        (real > 0 ? 'O rendimento supera a inflação e o poder de compra aumenta.' : real < 0 ? 'O rendimento fica abaixo da inflação e o poder de compra diminui.' : 'O rendimento apenas repõe a inflação.') + '</p>';
+      var cen = [-2, -1, 0, 1, 2].map(function (k) { return infl + k; }).filter(function (x) { return x > -100; });
+      tabelas.push({
+        titulo: 'Sensibilidade à inflação', csv: false, destaque: cen.indexOf(infl),
+        colunas: [{ t: 'Inflação', f: 'pct' }, { t: a ? 'Taxa nominal líquida' : 'Taxa nominal', f: 'pct' }, { t: a ? 'Taxa real líquida' : 'Taxa real', f: function (x) { return f.pct(x, 3); } }],
+        linhas: cen.map(function (x) { return [x, liq, ((1 + liq / 100) / (1 + x / 100) - 1) * 100]; })
+      });
+    } else if (v.modo === 'nominal') {
+      infl = v.infl; real = v.real;
+      liq = ((1 + real / 100) * (1 + infl / 100) - 1) * 100; nom = liq > 0 ? liq / (1 - a) : liq;
+      d = [
+        { rotulo: a ? 'Taxa nominal bruta necessária' : 'Taxa nominal necessária', valor: f.pct(nom, 3) + un, tom: 'primario', nota: outra(nom) },
+        { rotulo: 'Soma simples', valor: f.pct(real + infl, 3), nota: 'aproximação, sem considerar o efeito composto' }
+      ];
+      if (a) d.splice(1, 0, { rotulo: 'Taxa nominal líquida', valor: f.pct(liq, 3) + un, nota: 'depois do IR de ' + f.pct(a * 100, 1) });
+      resumo = '<p>Para ganhar ' + f.pct(real) + ' acima de uma inflação de ' + f.pct(infl) + ', a taxa ' + (a ? 'líquida ' : '') + 'precisa ser de ' + termo(real) + ' × ' + termo(infl) + ' − 1 = <strong>' + f.pct(liq, 3) + '</strong>' + un + '.' +
+        (a ? ' Com IR de ' + f.pct(a * 100, 1) + ' sobre o rendimento, ' + (nom > liq + 1e-9 ? 'a taxa bruta necessária sobe para <strong>' + f.pct(nom, 3) + '</strong>.' : 'a taxa bruta é a mesma, porque não há rendimento a tributar.') : '') + '</p>';
+    } else {
+      nom = v.nominal; real = v.real;
+      /* taxa nominal do indexado, antes do imposto dele, que iguala o prefixado depois dos impostos de cada um */
+      var alvo = v.trib === 'pre' ? (nom > 0 ? nom * (1 - a) : nom) : v.trib === 'ipca' && a ? (nom > 0 ? nom / (1 - a) : nom) : nom;
+      liq = v.trib === 'iguais' ? nom : (v.trib === 'pre' ? alvo : nom);
+      infl = ((1 + alvo / 100) / (1 + real / 100) - 1) * 100;
+      d = [
+        { rotulo: 'Inflação implícita', valor: f.pct(infl, 3) + un, tom: 'primario', nota: outra(infl) },
+        { rotulo: 'Subtração simples', valor: f.pct(alvo - real, 3), nota: 'aproximação' }
+      ];
+      if (v.trib === 'pre' && a) d.splice(1, 0, { rotulo: 'Prefixado depois do imposto', valor: f.pct(alvo, 3) + un, nota: 'imposto de ' + f.pct(a * 100, 1) + ' sobre o rendimento; o indexado isento não paga' });
+      if (v.trib === 'ipca' && a) d.splice(1, 0, { rotulo: 'Taxa bruta que o indexado precisa', valor: f.pct(alvo, 3) + un, nota: 'para render, depois do imposto de ' + f.pct(a * 100, 1) + ', os ' + f.pct(nom) + ' do prefixado isento' });
+      var indexado = real < 0 ? 'a inflação menos ' + f.pct(-real) : 'a inflação mais ' + f.pct(real);
+      resumo = '<p>Um prefixado de ' + f.pct(nom) + un + ' e um título que paga ' + indexado + un + ' rendem o mesmo se a inflação do período for de <strong>' + f.pct(infl, 3) + un + '</strong>. Se a inflação ficar acima desse nível, o indexado rende mais; abaixo, o prefixado. ' +
+        (v.trib === 'iguais' ? 'Com a mesma alíquota nos dois títulos, o imposto de renda não muda esse empate, porque incide sobre o rendimento nominal de ambos.'
+          : v.trib === 'pre' ? 'Como só o prefixado paga imposto, a comparação usa a taxa dele depois do imposto, de ' + f.pct(alvo, 3) + '.'
+          : 'Como só o indexado paga imposto, ele precisa render ' + f.pct(alvo, 3) + ' antes do imposto para empatar com o prefixado isento.') + '</p>';
+    }
+    var base = 1000, fimNom = base * (1 + liq / 100), manter = base * (1 + infl / 100);
+    return {
+      destaques: d,
+      resumo: resumo,
+      tabelas: tabelas,
+      blocos: [{
+        titulo: 'Exemplo com ' + f.brl(base),
+        html: '<p>Aplicados à taxa nominal' + (a ? ' líquida' : '') + ' de ' + f.pct(liq, (a || v.modo === 'nominal') ? 3 : 2) + ', ' + f.brl(base) + ' se tornam <strong>' + f.brl(fimNom) + '</strong>. Com inflação de ' + f.pct(infl, v.modo === 'inflacao' ? 3 : 2) + ', são necessários ' + f.brl(manter) + ' para comprar o que ' + f.brl(base) + ' compravam antes. A diferença, ' + f.brl(fimNom - manter) + ', dividida por ' + f.brl(manter) + ', é o ganho real de ' + f.pct((fimNom / manter - 1) * 100, 3) + '.</p>'
+      }]
+    };
+  },
+  explicacao: [
+    '<p>A taxa nominal é a que aparece no contrato ou no extrato. A taxa real é a nominal descontada da inflação, e mostra quanto o poder de compra de fato aumentou (em um investimento) ou quanto uma dívida custa além da alta geral dos preços. A relação entre as três é a equação de Fisher: <code>(1 + nominal) = (1 + real) × (1 + inflação)</code>.</p>',
+    '<p>Dela saem as três contas da calculadora: <code>real = (1 + nominal) ÷ (1 + inflação) − 1</code>, <code>nominal = (1 + real) × (1 + inflação) − 1</code> e <code>inflação = (1 + nominal) ÷ (1 + real) − 1</code>. Subtrair ou somar as taxas diretamente é uma aproximação que funciona para taxas pequenas e se distancia do valor correto conforme elas crescem.</p>',
+    '<p>As taxas devem ter o mesmo período: todas ao ano, todas ao mês ou todas acumuladas no mesmo intervalo. Quando o período é anual ou mensal, o resultado também é mostrado na taxa equivalente do outro período.</p>',
+    '<p>O imposto de renda incide sobre o rendimento nominal, e não sobre o ganho real. Por isso, ao selecionar uma alíquota, a calculadora primeiro reduz a taxa nominal (<code>nominal × (1 − alíquota)</code>) e só depois desconta a inflação. Esse desconto direto na taxa é exato quando o imposto é pago sobre o rendimento do próprio período informado. A inflação usada é a que você informa: o campo vem preenchido com o IPCA acumulado em 12 meses.</p>',
+    '<p>Na inflação implícita, o que importa é quem paga imposto. Quando os dois títulos pagam a mesma alíquota, ou os dois são isentos, o imposto não muda o empate: <code>nominal × (1 − alíquota)</code> dos dois lados se iguala exatamente quando as taxas brutas se igualam, e o empate fica em <code>(1 + prefixado) ÷ (1 + taxa acima da inflação) − 1</code>. Quando só o prefixado paga (contra uma LCI, LCA ou debênture incentivada indexada à inflação), a conta usa a taxa prefixada depois do imposto, <code>prefixado × (1 − alíquota)</code>. Quando só o indexado paga (uma LCI ou LCA prefixada contra o Tesouro IPCA+), o indexado precisa render <code>prefixado ÷ (1 − alíquota)</code> antes do imposto. O desconto direto na taxa vale para o imposto pago sobre o rendimento do próprio período; em prazos de vários anos, com o imposto cobrado só no resgate, o empate muda um pouco.</p>'
+  ].join('\n')
+});
+</script>
+<script>AZ.registrar = AZ._registrar;</script>
+<script>
+/* Protótipo unificado (23/10/2026): uma calculadora para as contas com taxas de juros.
+   Substitui juros-equivalentes, juro-anual-para-mensal, juro-mensal-para-anual, juros-equivalentes-periodos,
+   tabela-juros-equivalentes, somar-juros-acumulados, cdi-hoje, regra-de-tres-taxas, comparador-percentuais-cdi e rentabilidade-real.
+   Toda conta vem das páginas antigas (AZ.antigo(slug).calcular); aqui só se traduzem os campos e se monta o resultado.
+   Quatro contas no formulário ("O que fazer") e três botões liga-desliga no gráfico: imposto de renda, inflação e outro percentual do CDI. */
+AZ.registrar({
+  slug: 'calculadora-de-taxas',
+  usa: ['juros-equivalentes', 'juro-anual-para-mensal', 'juro-mensal-para-anual', 'juros-equivalentes-periodos', 'tabela-juros-equivalentes',
+    'somar-juros-acumulados', 'cdi-hoje', 'regra-de-tres-taxas', 'comparador-percentuais-cdi', 'rentabilidade-real'],
+  /* endereços antigos (?veio=<slug>): o modo e os números padrão de cada página antiga */
+  atalhos: {
+    'juros-equivalentes': { paraUn: 'du' },
+    /* a antiga abria com a Selic (AZ.cfg.selic, 13,75% em outubro de 2026); o atalho não aceita função, então o número fica escrito */
+    'juro-anual-para-mensal': { taxa: 13.75 },
+    'juro-mensal-para-anual': { taxa: 1.5, deUn: 'mes', paraUn: 'ano' },
+    'juros-equivalentes-periodos': { taxa: 0.8, deUn: 'mes', para: 12, paraUn: 'mes' },
+    'tabela-juros-equivalentes': { taxa: 1, deUn: 'mes', paraUn: 'ano' },
+    'somar-juros-acumulados': { modo: 'somar' },
+    'cdi-hoje': { modo: 'cdi', pct: 100, ir: true },
+    'regra-de-tres-taxas': { modo: 'cdi' },
+    'comparador-percentuais-cdi': { modo: 'cdi', comparar: true, ir: true },
+    'rentabilidade-real': { modo: 'real' }
+  },
+  titulo: 'Calculadora de taxas: ao mês, ao ano, CDI e inflação',
+  categoria: 'equivalentes',
+  ordem: 1,
+  resumo: 'Converta taxas entre dia, mês e ano, some taxas acumuladas, veja quanto rende um percentual do CDI e calcule o juro real.',
+  palavras: ['taxa equivalente', 'juros equivalentes', 'conversão de taxas', 'juros compostos', 'ao dia', 'ao mês', 'ao ano', 'dias úteis', 'dia útil', 'dias corridos',
+    'taxa anual', 'taxa mensal', 'taxa diária', 'ao ano para ao mês', 'ao mês para ao ano', 'anual para mensal', 'mensal para anual', 'rendimento mensal', 'custo anual',
+    'fórmula', 'planilha', 'Excel', 'períodos', 'potência', 'tabela de taxas', 'base 360', 'base 365', 'base 252', 'convenção de dias',
+    'somar juros', 'somar taxas', 'taxa acumulada', 'inflação acumulada', 'rentabilidade acumulada', 'porcentagem acumulada', 'taxa média',
+    'cdi', 'cdi hoje', 'taxa di', '100% do cdi', '110% do cdi', 'percentual do cdi', '% do cdi', 'rendimento diário', 'taxa líquida', 'imposto de renda',
+    'regra de três', 'regra de 3', 'proporção', 'pós-fixado', 'prefixado', 'comparar percentuais', 'diferença entre percentuais',
+    'juro real', 'juros reais', 'taxa real', 'taxa nominal', 'inflação', 'ipca', 'ganho real', 'Fisher', 'acima da inflação', 'inflação implícita', 'inflação de empate'],
+  intro: 'Converta uma taxa entre dia, mês e ano, veja quanto rende um percentual do CDI e desconte o imposto e a inflação.',
+  campos: [
+    { id: 'modo', rotulo: 'O que fazer', tipo: 'select', padrao: 'converter', opcoes: [
+      { v: 'converter', t: 'Converter uma taxa' },
+      { v: 'somar', t: 'Somar taxas acumuladas' },
+      { v: 'cdi', t: 'Quanto rende o CDI' },
+      { v: 'real', t: 'Juro real e inflação' }
+    ] },
+    /* botões no cabeçalho do gráfico (sem gráfico, no alto do parágrafo), só nas contas em que fazem sentido */
+    { id: 'ir', rotulo: 'Descontar o imposto de renda', tipo: 'check', padrao: false, noGrafico: 0,
+      mostrarSe: function (v) { return v.modo === 'cdi' || v.modo === 'real'; } },
+    { id: 'inflacao', rotulo: 'Descontar a inflação', tipo: 'check', padrao: false, noGrafico: 0,
+      mostrarSe: function (v) { return v.modo === 'converter' || v.modo === 'cdi'; } },
+    { id: 'comparar', rotulo: 'Comparar com outro percentual', tipo: 'check', padrao: false, noGrafico: 0,
+      mostrarSe: function (v) { return v.modo === 'cdi'; } },
+
+    /* converter (juros-equivalentes) */
+    { id: 'taxa', rotulo: 'Taxa de juros', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.cdi; }, min: -99.99, max: 1000000, casas: 6,
+      mostrarSe: function (v) { return v.modo === 'converter'; } },
+    { id: 'de', rotulo: 'Período da taxa', tipo: 'int', padrao: 1, min: 1, max: 100000,
+      unidades: [{ v: 'ano', t: 'ano(s)' }, { v: 'mes', t: 'mês(es)' }, { v: 'du', t: 'dia(s) útil(eis)' }, { v: 'dia', t: 'dia(s) corrido(s)' }],
+      ajuda: 'Uma taxa acumulada em 60 meses tem período de 60 meses.',
+      mostrarSe: function (v) { return v.modo === 'converter'; } },
+    { id: 'para', rotulo: 'Converter para', tipo: 'int', padrao: 1, min: 1, max: 100000, unidadePadrao: 'mes',
+      unidades: [{ v: 'ano', t: 'ano(s)' }, { v: 'mes', t: 'mês(es)' }, { v: 'du', t: 'dia(s) útil(eis)' }, { v: 'dia', t: 'dia(s) corrido(s)' }],
+      mostrarSe: function (v) { return v.modo === 'converter'; } },
+    { id: 'base', rotulo: 'Dias corridos em um ano', tipo: 'segmento', padrao: '360',
+      opcoes: [{ v: '360', t: '360 dias' }, { v: '365', t: '365 dias' }],
+      ajuda: 'Ano comercial de 360 dias (mês de 30) ou ano civil de 365 dias.',
+      mostrarSe: function (v) { return v.modo === 'converter' && (v.deUn === 'dia' || v.paraUn === 'dia'); } },
+
+    /* somar (somar-juros-acumulados) */
+    { id: 'taxas', rotulo: 'Taxas a acumular', tipo: 'lista', minLinhas: 1, maxLinhas: 60, rotuloAdicionar: 'Adicionar taxa',
+      colunas: [
+        { id: 'taxa', rotulo: 'Taxa do período (%)', tipo: 'pct', peso: 1.4 },
+        { id: 'vezes', rotulo: 'Repetições', tipo: 'int', padrao: 1, peso: 1 }
+      ],
+      padrao: [{ taxa: 1.1, vezes: 3 }, { taxa: 0.9, vezes: 6 }, { taxa: -0.4, vezes: 1 }, { taxa: 1.3, vezes: 2 }],
+      ajuda: 'Aceita taxas negativas. Em Repetições, informe por quantos períodos seguidos a mesma taxa vale.',
+      mostrarSe: function (v) { return v.modo === 'somar'; } },
+    { id: 'unSoma', rotulo: 'Período de cada taxa', tipo: 'segmento', padrao: 'mes',
+      opcoes: [{ v: 'mes', t: 'Mês' }, { v: 'ano', t: 'Ano' }, { v: 'du', t: 'Dia útil' }],
+      mostrarSe: function (v) { return v.modo === 'somar'; } },
+    { id: 'valorIni', rotulo: 'Valor inicial', tipo: 'moeda', padrao: 1000, min: 0, opcional: true,
+      ajuda: 'Opcional. Mostra quanto esse valor se torna depois de todas as taxas.',
+      mostrarSe: function (v) { return v.modo === 'somar'; } },
+
+    /* percentual do CDI (cdi-hoje, regra-de-tres-taxas e comparador-percentuais-cdi) */
+    { id: 'cdi', rotulo: 'Taxa do CDI', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.cdi; }, min: 0.01, max: 100, sufixo: '% ao ano', largura: 'meia',
+      mostrarSe: function (v) { return v.modo === 'cdi'; } },
+    { id: 'pct', rotulo: 'Rentabilidade', tipo: 'pct', padrao: 110, min: 0, max: 5000,
+      unidades: [{ v: 'cdi', t: 'do CDI' }, { v: 'ano', t: 'ao ano' }],
+      ajuda: 'Em percentual do CDI ou, para descobrir o percentual equivalente, como taxa prefixada ao ano.',
+      mostrarSe: function (v) { return v.modo === 'cdi'; } },
+    { id: 'p2', rotulo: 'Outro percentual do CDI', tipo: 'pct', padrao: 100, min: 0, max: 1000, sufixo: '% do CDI',
+      mostrarSe: function (v) { return v.modo === 'cdi' && !!v.comparar; } },
+    { id: 'valor', rotulo: 'Valor aplicado', tipo: 'moeda', padrao: 10000, min: 0.01, largura: 'meia',
+      mostrarSe: function (v) { return v.modo === 'cdi'; } },
+
+    /* juro real (rentabilidade-real) */
+    { id: 'calcReal', rotulo: 'Calcular', tipo: 'select', padrao: 'real',
+      opcoes: [{ v: 'real', t: 'Juro real' }, { v: 'nominal', t: 'Taxa nominal necessária' }, { v: 'inflacao', t: 'Inflação de empate' }],
+      ajuda: 'A inflação de empate é a que iguala um prefixado a um título que paga a inflação mais uma taxa.',
+      mostrarSe: function (v) { return v.modo === 'real'; } },
+    { id: 'nominal', rotulo: 'Taxa nominal', tipo: 'pct', padrao: 10, min: -99, max: 100000, largura: 'meia',
+      ajuda: 'A taxa do contrato ou do extrato. Na inflação de empate, a taxa do prefixado.',
+      mostrarSe: function (v) { return v.modo === 'real' && v.calcReal !== 'nominal'; } },
+    { id: 'infl', rotulo: 'Inflação', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: -99, max: 100000, largura: 'meia',
+      mostrarSe: function (v) { return v.modo === 'real' && v.calcReal !== 'inflacao'; } },
+    { id: 'acima', rotulo: 'Taxa acima da inflação', tipo: 'pct', padrao: 5, min: -99, max: 100000, largura: 'meia',
+      ajuda: 'Para um título que paga IPCA mais 7%, informe 7.',
+      mostrarSe: function (v) { return v.modo === 'real' && v.calcReal !== 'real'; } },
+    { id: 'periodo', rotulo: 'Período das taxas', tipo: 'segmento', padrao: 'ano',
+      opcoes: [{ v: 'ano', t: 'Ao ano' }, { v: 'mes', t: 'Ao mês' }],
+      ajuda: 'Todas as taxas precisam se referir ao mesmo período.',
+      mostrarSe: function (v) { return v.modo === 'real'; } },
+    { id: 'trib', rotulo: 'Quem paga imposto', tipo: 'select', padrao: 'pre',
+      opcoes: [{ v: 'pre', t: 'Só o prefixado' }, { v: 'ipca', t: 'Só o título atrelado à inflação' }, { v: 'iguais', t: 'Os dois, com a mesma alíquota' }],
+      ajuda: 'LCI, LCA, CRI, CRA e debêntures incentivadas são isentas; CDB e Tesouro Direto pagam imposto.',
+      mostrarSe: function (v) { return v.modo === 'real' && v.calcReal === 'inflacao' && !!v.ir; } },
+
+    /* comuns */
+    { id: 'prazo', rotulo: 'Prazo até o resgate', tipo: 'int', padrao: 12, min: 1, max: 1200,
+      unidades: [{ v: 'mes', t: 'meses' }, { v: 'ano', t: 'anos' }],
+      ajuda: 'Define a alíquota do imposto: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima.',
+      mostrarSe: function (v) { return v.modo === 'cdi' || (v.modo === 'real' && !!v.ir && !(v.calcReal === 'inflacao' && v.trib === 'iguais')); } },
+    { id: 'ipca', rotulo: 'Inflação esperada', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: -50, max: 1000, sufixo: '% ao ano',
+      ajuda: 'O padrão é o IPCA acumulado em 12 meses.',
+      mostrarSe: function (v) { return (v.modo === 'converter' || v.modo === 'cdi') && !!v.inflacao; } }
+  ],
+  calcular: function (v, AZ) {
+    var F = AZ.f, modo = v.modo;
+    var ant = function (slug, x) { return AZ.antigo(slug).calcular(Object.assign({ _n: 1 }, x), AZ) || {}; };
+    /* taxas nas tabelas: 6 casas abaixo de 0,1% e 4 acima, como na tabela-juros-equivalentes; texto ("muito alta") passa direto */
+    var fx = function (x) { return typeof x === 'string' ? x : F.pct(x, Math.abs(x) < 0.1 && x !== 0 ? 6 : 4); };
+    /* taxa digitada, com as casas que ela tem (até 6) */
+    var pc = function (x) { var c = 2; while (c < 6 && Math.abs(x * Math.pow(10, c) - Math.round(x * Math.pow(10, c))) > 1e-7) c++; return F.pct(x, c); };
+    var pTxt = function (p) { return F.pct(p, p % 1 ? 2 : 0); };
+    /* número de um valor já formatado por uma página antiga ("5,183% ao ano") */
+    var num = function (s) { return AZ.lerNumero(String(s).replace(/[−–]/g, '-').replace(/[^\d,.\-]/g, '')); };
+    var ir = !!v.ir && (modo === 'cdi' || modo === 'real');
+    var infl = !!v.inflacao && (modo === 'converter' || modo === 'cdi');
+    var comp = !!v.comparar && modo === 'cdi';
+    var meses = v.prazoUn === 'ano' ? v.prazo * 12 : v.prazo, prazoTxt = F.prazo(meses);
+    /* alíquota pelo prazo, com a contagem da página comparador-percentuais-cdi (meses de 365/12 dias corridos);
+       sai no formato do campo "Imposto de renda" de cdi-hoje e rentabilidade-real */
+    var aliqStr = ir ? { '0.225': '22.5', '0.2': '20', '0.175': '17.5', '0.15': '15' }[String(AZ.fin.irRegressivo(Math.round(meses * 365 / 12)))] : '0';
+    var aliqTxt = F.pct(parseFloat(aliqStr), 1);
+    /* a mesma taxa ao dia, ao mês e ao ano: a tabela da página juros-equivalentes, que vale para todas as contas */
+    var equiv = function (taxa, de, deUn) { return ant('juros-equivalentes', { taxa: taxa, de: de, deUn: deUn, para: 1, paraUn: 'mes', base: v.base }); };
+    var notaEq = 'Ano de 12 meses, 252 dias úteis e ' + (v.base === '365' ? 365 : 360) + ' dias corridos.';
+
+    /* ── converter uma taxa entre períodos ── */
+    if (modo === 'converter') {
+      var base = v.base === '365' ? 365 : 360, de = Math.round(v.de), para = Math.round(v.para);
+      var je = ant('juros-equivalentes', { taxa: v.taxa, de: de, deUn: v.deUn, para: para, paraUn: v.paraUn, base: v.base });
+      if (je.erro) return je;
+      var NOME = { ano: ['ano', 'anos'], mes: ['mês', 'meses'], du: ['dia útil', 'dias úteis'], dia: ['dia corrido', 'dias corridos'] };
+      var nome = function (q, un) { return F.int(q) + ' ' + NOME[un][q === 1 ? 0 : 1]; };
+      /* os dois períodos na menor das duas unidades: se derem números inteiros, a página juros-equivalentes-periodos
+         monta o acúmulo período a período (com eles em anos, dá a mesma taxa, sem a tabela) */
+      var ANOS = { ano: 1, mes: 1 / 12, du: 1 / 252, dia: 1 / base }, u = ANOS[v.deUn] <= ANOS[v.paraUn] ? v.deUn : v.paraUn;
+      var n1 = de * ANOS[v.deUn] / ANOS[u], n2 = para * ANOS[v.paraUn] / ANOS[u];
+      if (Math.abs(n1 - Math.round(n1)) < 1e-9 && Math.abs(n2 - Math.round(n2)) < 1e-9) { n1 = Math.round(n1); n2 = Math.round(n2); }
+      else { n1 = de * ANOS[v.deUn]; n2 = para * ANOS[v.paraUn]; }
+      var jp = ant('juros-equivalentes-periodos', { taxa: v.taxa, n1: n1, n2: n2 });
+      if (jp.erro) return jp;
+      var tp = (jp.tabelas || []).filter(function (t) { return t.titulo === 'Taxa acumulada período a período'; })[0];
+      var UN = { ano: ['Ano', 'ano'], mes: ['Mês', 'mês'], du: ['Dia útil', 'dia útil'], dia: ['Dia', 'dia'] }[u];
+      var d = je.destaques, t1 = je.tabelas[0];
+      var tabelas = [], graficos = [];
+
+      /* inflação: a taxa vira anual (linha "1 ano" da tabela), a rentabilidade-real tira a inflação anual
+         e a juros-equivalentes leva o juro real de volta ao período pedido */
+      var realPara = null, jr = null, realAnual = null;
+      if (infl && typeof t1.linhas[5][1] === 'number') {
+        var rr = ant('rentabilidade-real', { modo: 'real', nominal: t1.linhas[5][1], infl: v.ipca, ir: '0', trib: 'iguais', periodo: 'ano' }), ts = rr.tabelas[0];
+        realAnual = ts.linhas[ts.destaque][2];
+        jr = ant('juros-equivalentes', { taxa: realAnual, de: 1, deUn: 'ano', para: para, paraUn: v.paraUn, base: v.base });
+        if (jr.erro) jr = null; else realPara = jr.destaques[0].valor;
+      }
+
+      var destaques = [{ rotulo: 'Taxa equivalente', valor: d[0].valor, tom: 'primario', nota: 'para ' + nome(para, v.paraUn) + ', em juros compostos' }];
+      if (realPara) destaques.push({ rotulo: 'Juro real', valor: realPara, tom: realAnual >= 0 ? 'positivo' : 'negativo', nota: 'acima da inflação de ' + F.pct(v.ipca) + ' ao ano' });
+      destaques.push({ rotulo: 'Pela regra de três', valor: d[1].valor, nota: 'juros simples, só para comparação' },
+        { rotulo: 'Fator de capitalização', valor: jp.destaques[2].valor, nota: 'expoente de ' + d[2].valor });
+
+      var resumo = '<p>Uma taxa de ' + pc(v.taxa) + ' em ' + nome(de, v.deUn) + ' equivale a <strong>' + d[0].valor + '</strong> em ' + nome(para, v.paraUn) + ', com juros compostos.' +
+        (d[0].valor === d[1].valor ? '' : ' A regra de três daria ' + d[1].valor + ', porque ignora os juros sobre juros.') +
+        (realPara ? ' Descontada a inflação de ' + F.pct(v.ipca) + ' ao ano, sobram <strong>' + realPara + '</strong>.' : '') + '</p>';
+
+      /* acúmulo período a período (juros-equivalentes-periodos): juros compostos contra a regra de três, que é a taxa
+         proporcional da juros-equivalentes (taxa × períodos ÷ períodos da taxa) */
+      if (tp) {
+        var lp = tp.linhas.map(function (l) { return [l[0], l[1], v.taxa * l[0] / n1, 1 + l[1] / 100]; });
+        graficos.push({ tipo: 'linha', titulo: 'Taxa acumulada a cada ' + UN[1], formato: 'pct', rotuloDica: UN[0],
+          rotulos: ['0'].concat(lp.map(function (l) { return String(l[0]); })),
+          series: [{ nome: 'Juros compostos', cor: 1, dados: [0].concat(lp.map(function (l) { return l[1]; })) },
+            { nome: 'Regra de três', cor: 5, dados: [0].concat(lp.map(function (l) { return l[2]; })) }] });
+      }
+      var cols1 = [{ t: 'Período' }, { t: 'Juros compostos', f: fx }, { t: 'Regra de três', f: fx }];
+      if (jr) cols1.push({ t: 'Juro real', f: fx });
+      tabelas.push({ titulo: 'A mesma taxa ao dia, ao mês e ao ano', csv: false, colunas: cols1,
+        linhas: t1.linhas.map(function (l, i) { return jr ? l.concat([jr.tabelas[0].linhas[i][1]]) : l.slice(); }),
+        nota: notaEq });
+      if (tp) tabelas.push({ titulo: 'Taxa acumulada período a período', destaque: tp.destaque, mostrar: tp.mostrar,
+        colunas: [{ t: UN[0], f: 'int' }, { t: 'Juros compostos', f: fx }, { t: 'Regra de três', f: fx }, { t: 'Fator acumulado', f: function (x) { return F.num(x, 6); } }],
+        linhas: lp, nota: 'As linhas destacadas são a taxa informada e a taxa convertida.' });
+
+      /* convenções de dias (tabela-juros-equivalentes): a taxa de um período da unidade informada, lida em cada convenção */
+      var r1 = t1.linhas[{ du: 0, dia: 1, mes: 2, ano: 5 }[v.deUn]][1], li = { du: 0, dia: 0, mes: 1, ano: 2 }[v.deUn];
+      if (typeof r1 === 'number') {
+        var CONV = [['comercial', 'Comercial (30/360)'], ['misto', 'Mês de 30, ano de 365'], ['civil', 'Civil (ano de 365)'], ['mercado', 'Mercado (252 dias úteis)']];
+        tabelas.push({ titulo: 'Convenções de contagem de dias', csv: false,
+          colunas: [{ t: 'Convenção' }, { t: 'Ao dia', f: fx }, { t: 'Ao mês', f: fx }, { t: 'Ao ano', f: fx }],
+          linhas: CONV.map(function (c) { var l = ant('tabela-juros-equivalentes', { taxa: r1, base: c[0] }).tabelas[0].linhas[li]; return [c[1], l[1], l[2], l[3]]; }),
+          /* taxa ao dia (corrido ou útil): cada convenção a lê como taxa do seu próprio dia */
+          nota: 'A taxa de ' + (de === 1 ? pc(v.taxa) : fx(r1)) + (li === 0 ? ', lida como taxa ao dia,' : ' ao ' + NOME[v.deUn][0]) + ' em cada convenção. Nas três primeiras, o dia é corrido; na de mercado, é útil.' });
+      }
+      return { destaques: destaques, resumo: resumo, graficos: graficos, tabelas: tabelas };
+    }
+
+    /* ── somar taxas acumuladas ── */
+    if (modo === 'somar') {
+      var S = ant('somar-juros-acumulados', { taxas: v.taxas, valor: v.valorIni });
+      if (S.erro) return S;
+      var US = { mes: ['Mês', 'mês', 'meses', 'mensais'], ano: ['Ano', 'ano', 'anos', 'anuais'], du: ['Dia útil', 'dia útil', 'dias úteis', 'diárias'] }[v.unSoma];
+      var ta = S.tabelas[0], np = ta.linhas.length, acum = ta.linhas[np - 1][3], dq = S.destaques;
+      var nova = function (x, o) { return Object.assign({}, x, o); };
+      var dS = [nova(dq[0], { nota: 'em ' + F.int(np) + ' ' + (np === 1 ? US[1] : US[2]) + ', de forma composta' }),
+        nova(dq[1], { nota: 'conta simples, sem juros sobre juros' }),
+        nova(dq[2], { rotulo: 'Taxa média por ' + US[1], nota: np === 1 ? 'igual à própria taxa' : 'repetida ' + F.int(np) + ' vezes, gera o mesmo total' })];
+      dS.push(dq[4] ? nova(dq[4], { nota: 'a partir de ' + F.brl(v.valorIni) }) : nova(dq[3], { nota: 'multiplique qualquer valor por este fator' }));
+      var gS = (S.graficos || []).map(function (g) { return nova(g, { titulo: 'Taxa acumulada a cada ' + US[1], rotuloDica: US[0] }); });
+      var resS = '<p>' + (np === 1 ? 'Com uma taxa só, a taxa acumulada é a própria taxa, <strong>' + dq[0].valor + '</strong>.'
+        : 'As ' + F.int(np) + ' taxas ' + US[3] + ' acumulam <strong>' + dq[0].valor + '</strong>' +
+          (dq[0].valor === dq[1].valor ? ', o mesmo que a soma simples.' : ', e não os ' + dq[1].valor + ' da soma simples, porque cada uma incide sobre o valor já corrigido pelas anteriores.')) +
+        (dq[4] ? ' Assim, ' + F.brl(v.valorIni) + ' viram <strong>' + F.brl(dq[4].valor) + '</strong>.' : '') + '</p>';
+      ta.titulo = 'Acumulação a cada ' + US[1];
+      ta.colunas[0] = { t: US[0], f: 'int' };
+      var tabS = [ta];
+      /* taxa média ao dia, ao mês e ao ano: a taxa acumulada, em np períodos, levada pela juros-equivalentes */
+      var eS = equiv(acum, np, v.unSoma);
+      if (!eS.erro) tabS.push({ titulo: 'Taxa média ao dia, ao mês e ao ano', csv: false, colunas: [{ t: 'Período' }, { t: 'Taxa média', f: fx }],
+        linhas: eS.tabelas[0].linhas.map(function (l) { return [l[0], l[1]]; }),
+        nota: 'A taxa constante que, no lugar das informadas, daria o mesmo total. ' + notaEq });
+      return { destaques: dS, resumo: resS, graficos: gS, tabelas: tabS };
+    }
+
+    /* ── quanto rende um percentual do CDI ── */
+    if (modo === 'cdi') {
+      var p1 = v.pct, rtI = null;
+      /* taxa ao ano: o percentual do CDI equivalente vem da regra-de-tres-taxas (equivalência composta) */
+      if (v.pctUn === 'ano') {
+        rtI = ant('regra-de-tres-taxas', { modo: 'taxa', ref: v.cdi, taxa: v.pct, pct: 100 });
+        if (rtI.erro) return { erro: 'Informe uma taxa ao ano maior que zero.' };
+        p1 = rtI.tabelas[0].linhas[rtI.tabelas[0].destaque][2];
+      }
+      var p2 = comp ? v.p2 : 100;
+      var H = ant('cdi-hoje', { cdi: v.cdi, pct: p1, valor: v.valor, ir: aliqStr });
+      /* na comparador, o investimento 1 é o outro percentual (ou 100%) e o 2 é o desta página: a diferença dela (2 − 1) sai a favor deste */
+      var C = ant('comparador-percentuais-cdi', { cdi: v.cdi, p1: p2, p2: p1, valor: v.valor, prazo: v.prazo, prazoUn: v.prazoUn, trib: ir ? 'ir' : 'isento' });
+      if (C.erro) return C;
+      var hd = H.destaques, anoB = hd[0].valor, it = C.graficos[0].itens, rend1 = it[1].valor, rend2 = it[0].valor;
+      var H2 = comp ? ant('cdi-hoje', { cdi: v.cdi, pct: p2, valor: v.valor, ir: aliqStr }) : null;
+      /* juro real ao ano (rentabilidade-real, com a mesma alíquota) e a inflação do prazo em reais:
+         a comparador-percentuais-cdi capitaliza uma taxa anual por (meses × 21) dias úteis de 252, que é (1 + IPCA)^(meses/12) */
+      var real = function (ano) { var rr = ant('rentabilidade-real', { modo: 'real', nominal: ano, infl: v.ipca, ir: aliqStr, trib: 'iguais', periodo: 'ano' }), ts = rr.tabelas[0]; return ts.linhas[ts.destaque][2]; };
+      var real1 = infl ? real(anoB) : null, real2 = infl && comp ? real(H2.destaques[0].valor) : null;
+      var inflR = infl ? ant('comparador-percentuais-cdi', { cdi: v.ipca, p1: 100, p2: 100, valor: v.valor, prazo: v.prazo, prazoUn: v.prazoUn, trib: 'isento' }).graficos[0].itens[0].valor : null;
+      var jr1 = infl ? equiv(real1, 1, 'ano') : null;
+
+      var dC, resC;
+      if (!comp) {
+        dC = [v.pctUn === 'ano'
+          ? { rotulo: 'Percentual do CDI', valor: p1, formato: 'pct', tom: 'primario', nota: 'equivale a ' + pc(v.pct) + ' ao ano' }
+          : { rotulo: 'Taxa ao ano', valor: anoB, formato: 'pct', tom: 'primario', nota: pTxt(p1) + ' de um CDI de ' + F.pct(v.cdi) + ' ao ano' },
+          { rotulo: 'Taxa ao mês', valor: hd[1].valor, formato: 'pct4', nota: 'ou ' + F.pct(hd[2].valor, 6) + ' ao dia útil' }];
+        if (ir) dC.push({ rotulo: 'Taxa líquida ao ano', valor: hd[3].valor, formato: 'pct', tom: 'destaque', nota: 'IR de ' + aliqTxt + ' no resgate em ' + prazoTxt });
+        if (infl) dC.push({ rotulo: 'Juro real ao ano', valor: real1, formato: 'pct', tom: real1 >= 0 ? 'positivo' : 'negativo', nota: (ir ? 'depois do IR e da inflação de ' + F.pct(v.ipca) : 'acima da inflação de ' + F.pct(v.ipca) + ' ao ano') });
+        dC.push({ rotulo: 'Rendimento em ' + prazoTxt, valor: rend1, formato: 'brl', tom: 'positivo', nota: (ir ? 'líquido, ' : '') + 'para ' + F.brl(v.valor) + ' aplicados' });
+        dC = dC.slice(0, 4);
+        resC = '<p>Com o CDI em ' + F.pct(v.cdi) + ' ao ano, ' + (v.pctUn === 'ano' ? 'uma taxa de ' + pc(v.pct) + ' ao ano equivale a <strong>' + pTxt(p1) + ' do CDI</strong>.'
+          : pTxt(p1) + ' do CDI rendem <strong>' + F.pct(anoB) + ' ao ano</strong>' + (ir || infl ? '.' : ', ou ' + F.pct(hd[1].valor, 4) + ' ao mês.')) +
+          ' Em ' + prazoTxt + ', ' + F.brl(v.valor) + ' rendem <strong>' + F.brl(rend1) + '</strong>' + (ir ? ' líquidos' : '') + '.' +
+          (infl ? ' Acima da inflação de ' + F.pct(v.ipca) + ', o juro real é de <strong>' + F.pct(real1) + '</strong> ao ano.' : '') + '</p>';
+      } else {
+        var a = C.destaques[2].valor, b = C.destaques[1].valor, maior = b > a ? p2 : a > b ? p1 : null;
+        var notaInv = function (ano, mes, liq, re) { return 'ao ano, ou ' + (infl ? F.pct(re) + (ir ? ' além da inflação e do IR' : ' acima da inflação') : ir ? F.pct(liq) + ' depois do IR' : F.pct(mes) + ' ao mês'); };
+        dC = [{ rotulo: 'Diferença em ' + prazoTxt, valor: C.destaques[3].valor, formato: 'brl', tom: 'primario',
+            nota: maior == null ? 'os dois rendem o mesmo' : 'a favor de ' + pTxt(maior) + ' do CDI' + (ir ? ', depois do IR' : '') },
+          { rotulo: 'Com ' + pTxt(p1) + ' do CDI', valor: a, formato: 'pct', nota: notaInv(a, hd[1].valor, hd[3].valor, real1) },
+          { rotulo: 'Com ' + pTxt(p2) + ' do CDI', valor: b, formato: 'pct', nota: notaInv(b, H2.destaques[1].valor, H2.destaques[3].valor, real2) }];
+        resC = '<p>' + (maior == null ? 'Os dois percentuais são iguais e rendem ' + F.pct(a) + ' ao ano.'
+          : 'Entre ' + pTxt(p1) + ' e ' + pTxt(p2) + ' do CDI, a taxa vai de ' + F.pct(a) + ' para ' + F.pct(b) + ' ao ano. Em ' + prazoTxt + ', a diferença é de <strong>' +
+            F.brl(C.destaques[3].valor) + '</strong>' + (ir ? ' líquidos' : '') + ' para ' + F.brl(v.valor) + ' aplicados.') +
+          (infl ? ' A inflação de ' + F.pct(v.ipca) + ' ao ano leva ' + F.brl(inflR) + ' do rendimento de cada um.' : '') + '</p>';
+      }
+
+      /* gráfico da comparador-percentuais-cdi: rendimento no prazo, com a referência de 100% do CDI e, com a inflação, o que só a repõe */
+      var itens = [{ nome: pTxt(p1) + ' do CDI', valor: rend1, cor: 1 }];
+      if (comp) itens.push({ nome: pTxt(p2) + ' do CDI', valor: rend2, cor: 3 });
+      if (p1 !== 100 && (!comp || p2 !== 100)) itens.push({ nome: 'Referência: 100% do CDI', valor: it[2].valor, cor: 5 });
+      if (infl) itens.push({ nome: 'Só repõe a inflação', valor: inflR, cor: 2 });
+      var gC = [{ tipo: 'barras-h', titulo: 'Rendimento de ' + F.brl(v.valor) + ' em ' + prazoTxt + (ir ? ', depois do IR' : ''), formato: 'brl', itens: itens }];
+
+      /* rendimento ao dia, ao mês e ao ano (cdi-hoje); com a inflação, o juro real nos mesmos períodos */
+      var tH = H.tabelas[0], colH = [{ t: 'Período' }, { t: ir ? 'Taxa bruta' : 'Taxa', f: fx }];
+      if (ir) colH.push({ t: 'Taxa líquida', f: fx });
+      if (infl) colH.push({ t: 'Juro real', f: fx });
+      colH.push({ t: ir ? 'Rendimento bruto' : 'Rendimento', f: 'brl' });
+      if (ir) colH.push({ t: 'Rendimento líquido', f: 'brl' });
+      var tabRend = { titulo: 'Rendimento ao dia, ao mês e ao ano', csv: false, colunas: colH,
+        linhas: tH.linhas.map(function (l, i) {
+          var x = [l[0], l[1]]; if (ir) x.push(l[2]); if (infl) x.push(jr1.tabelas[0].linhas[[0, 2, 5][i]][1]); x.push(l[3]); if (ir) x.push(l[4]); return x;
+        }),
+        nota: ir ? 'A taxa líquida tira o IR de ' + aliqTxt + ' do rendimento de cada período, mas o imposto só é cobrado no resgate.' : 'Mês de 21 e ano de 252 dias úteis, com o CDI constante.' };
+
+      /* outros percentuais (cdi-hoje), com a regra de três de cada um (regra-de-tres-taxas) */
+      var tO = H.tabelas[1], colO = [{ t: 'Percentual do CDI' }, { t: 'Ao dia útil', f: fx }, { t: 'Ao mês', f: fx }, { t: 'Ao ano', f: 'pct' }];
+      if (ir) colO.push({ t: 'Ao ano, líquida', f: 'pct' });
+      colO.push({ t: 'Regra de três (ao ano)', f: 'pct' });
+      var tabOutros = { titulo: 'Outros percentuais do CDI', colunas: colO, destaque: tO.destaque, mostrar: tO.mostrar,
+        linhas: tO.linhas.map(function (l, i) {
+          var p = i === tO.destaque ? p1 : num(l[0]), rt = ant('regra-de-tres-taxas', { modo: 'pct', ref: v.cdi, pct: p, taxa: 15 }).tabelas[0];
+          var x = l.slice(0, 4); if (ir) x.push(l[4]); x.push(rt.linhas[rt.destaque][1]); return x;
+        }),
+        nota: 'A regra de três só multiplica o CDI pelo percentual: acima de 100% ela fica abaixo da taxa correta, e abaixo de 100%, acima.' };
+
+      var tabC = [];
+      if (comp) {
+        /* comparação lado a lado (comparador-percentuais-cdi): a diferença fica só nas linhas em reais */
+        var tc = C.tabelas[0], lc = tc.linhas.map(function (l) { return [l[0], l[2], l[1], /^[-−]?R\$/.test(String(l[3]).replace(/\s/g, '')) ? l[3] : '']; });
+        var dest = [3, lc.length - 1];
+        if (infl) { lc.splice(4, 0, ['Juro real ao ano', F.pct(real1), F.pct(real2), '']); dest = [3, lc.length - 1]; }
+        tabC.push({ titulo: 'Comparação lado a lado', csv: false, destaque: dest, linhas: lc,
+          colunas: [{ t: 'Item', f: 'texto' }, { t: pTxt(p1) + ' do CDI', f: 'texto', alinhar: 'dir' }, { t: pTxt(p2) + ' do CDI', f: 'texto', alinhar: 'dir' }, { t: 'Diferença', f: 'texto', alinhar: 'dir' }],
+          nota: 'Mesmo prazo e mesma tributação para os dois.' });
+      }
+      tabC.push(tabRend, tabOutros);
+      if (rtI) {
+        var tI = rtI.tabelas[0];
+        tabC.push({ titulo: 'Outras taxas ao ano em percentual do CDI', csv: false, destaque: tI.destaque,
+          colunas: [{ t: 'Taxa ao ano', f: 'pct' }, { t: 'Percentual do CDI', f: 'pct' }, { t: 'Pela regra de três', f: 'pct' }],
+          linhas: tI.linhas.map(function (l) { return [l[0], l[2], l[1]]; }),
+          nota: 'O percentual do CDI que rende cada taxa, com o CDI em ' + F.pct(v.cdi) + ' ao ano. A regra de três só divide uma taxa pela outra.' });
+      }
+      return { destaques: dC, resumo: resC, graficos: gC, tabelas: tabC };
+    }
+
+    /* ── juro real (rentabilidade-real) ── */
+    var calc = v.calcReal, trib = calc === 'inflacao' && ir ? v.trib : 'iguais';
+    var aR = calc === 'inflacao' && trib === 'iguais' ? '0' : aliqStr, temIr = aR !== '0';
+    var R = ant('rentabilidade-real', { modo: calc, nominal: v.nominal, infl: v.infl, real: v.acima, trib: trib, periodo: v.periodo, ir: aR });
+    var un = v.periodo === 'mes' ? ' ao mês' : ' ao ano';
+    var NOVO = {
+      'Taxa de juros real': ['Juro real'], 'Taxa real líquida': ['Juro real depois do IR'], 'Taxa real antes do IR': ['Juro real antes do IR'],
+      'Taxa nominal líquida de IR': ['Taxa nominal depois do IR'], 'Taxa nominal líquida': ['Taxa líquida necessária'],
+      'Subtração simples': ['Pela subtração simples', 'conta aproximada, sem efeito composto'], 'Soma simples': ['Pela soma simples', 'conta aproximada, sem efeito composto'],
+      'Inflação implícita': ['Inflação de empate'], 'Prefixado depois do imposto': ['Prefixado depois do imposto', 'imposto de ' + aliqTxt + ' só no prefixado'],
+      'Taxa bruta que o indexado precisa': ['Taxa bruta do título indexado', 'para empatar depois do imposto de ' + aliqTxt]
+    };
+    var dR = R.destaques.map(function (x) { var n = NOVO[x.rotulo] || [x.rotulo]; return Object.assign({}, x, { rotulo: n[0], nota: n[1] || x.nota }); });
+    var dR0 = R.destaques[0].valor, x0 = calc === 'real' ? R.tabelas[0].linhas[R.tabelas[0].destaque][2] : num(dR0);
+    var resR;
+    if (calc === 'real') resR = '<p>Com taxa nominal de ' + pc(v.nominal) + ' e inflação de ' + pc(v.infl) + un + ', o juro real é de <strong>' + dR0 + '</strong>' +
+      (temIr ? ', já descontado o IR de ' + aliqTxt : '') + '. ' + (x0 > 0 ? 'O poder de compra cresce.' : x0 < 0 ? 'O poder de compra diminui.' : 'O rendimento só repõe a inflação.') + '</p>';
+    else if (calc === 'nominal') resR = '<p>Para ganhar ' + pc(v.acima) + ' acima de uma inflação de ' + pc(v.infl) + un + ', a taxa precisa ser de <strong>' + (temIr ? R.destaques[1].valor : dR0) + '</strong>' +
+      (temIr ? ' depois do IR. Com IR de ' + aliqTxt + ', a taxa bruta sobe para <strong>' + dR0 + '</strong>.' : '.') + '</p>';
+    else resR = '<p>Um prefixado de ' + pc(v.nominal) + un + ' e um título que paga a inflação ' + (v.acima < 0 ? 'menos ' + pc(-v.acima) : 'mais ' + pc(v.acima)) + ' empatam com inflação de <strong>' + dR0 + '</strong>. ' +
+      'Acima disso, o atrelado à inflação rende mais; abaixo, o prefixado.' + (trib !== 'iguais' && temIr ? ' A conta considera imposto de ' + aliqTxt + ' só no ' + (trib === 'pre' ? 'prefixado.' : 'atrelado à inflação.') : '') +
+      (ir && trib === 'iguais' ? ' Imposto igual nos dois não muda o empate.' : '') + '</p>';
+    var tabR = [];
+    var eR = equiv(x0, 1, v.periodo), NR = { real: 'Juro real', nominal: 'Taxa nominal', inflacao: 'Inflação de empate' }[calc];
+    /* na taxa nominal e na inflação de empate, x0 vem do cartão, com 3 casas: a tabela não mostra mais casas do que ele tem */
+    var fR = calc === 'real' ? fx : function (x) { return typeof x === 'string' ? x : F.pct(x, Math.abs(x) < 0.1 && x !== 0 ? 4 : 3); };
+    if (!eR.erro) tabR.push({ titulo: NR + ' ao dia, ao mês e ao ano', csv: false, colunas: [{ t: 'Período' }, { t: NR, f: fR }],
+      linhas: eR.tabelas[0].linhas.map(function (l) { return [l[0], l[1]]; }), nota: 'Taxas equivalentes em juros compostos. ' + notaEq });
+    if (calc === 'real') {
+      var tsR = R.tabelas[0];
+      tabR.push({ titulo: 'Juro real com outras inflações', csv: false, destaque: tsR.destaque, linhas: tsR.linhas,
+        colunas: [{ t: 'Inflação', f: 'pct' }, { t: temIr ? 'Taxa nominal depois do IR' : 'Taxa nominal', f: 'pct' }, { t: temIr ? 'Juro real depois do IR' : 'Juro real', f: function (x) { return F.pct(x, 3); } }],
+        nota: 'A mesma taxa nominal com inflações um pouco maiores ou menores que a informada.' });
+    }
+    return { destaques: dR, resumo: resR, tabelas: tabR };
+  },
+  casos: [
+    { nome: '1% ao mês equivale a 12,6825% ao ano (juro-mensal-para-anual)', entradas: { modo: 'converter', taxa: 1, de: 1, deUn: 'mes', para: 1, paraUn: 'ano' }, espera: { 'Taxa equivalente': '12,6825%' } },
+    { nome: '110% de um CDI de 13,65% ao ano (cdi-hoje)', entradas: { modo: 'cdi', cdi: 13.65, pct: 110, pctUn: 'cdi' }, espera: { 'Taxa ao ano': '15,11%' } },
+    { nome: 'taxas da página somar-juros-acumulados', entradas: { modo: 'somar', valorIni: 1000 }, espera: { 'Taxa acumulada': '11,4496%', 'Valor final': 'R$ 1.114,50' } },
+    { nome: 'juro real de 13% com 15% de imposto e inflação de 4% (rentabilidade-real)', entradas: { modo: 'real', calcReal: 'real', nominal: 13, infl: 4, ir: true, prazo: 24 }, espera: { 'Juro real depois do IR': '6,779%' } },
+    { nome: 'empate entre prefixado de 13% com 15% de imposto e IPCA mais 5,5% isento (rentabilidade-real)', entradas: { modo: 'real', calcReal: 'inflacao', nominal: 13, acima: 5.5, ir: true, trib: 'pre', prazo: 3, prazoUn: 'ano' }, espera: { 'Inflação de empate': '5,261%' } }
+  ],
+  explicacao: [
+    '<h3>Taxas equivalentes</h3>',
+    '<p>Em juros compostos, a taxa de um período vira a de outro por potência: <code>(1 + taxa)^(período desejado ÷ período da taxa) − 1</code>. Na planilha, com a taxa em A1 e os dois períodos em B1 e C1, use <code>=(1+A1)^(C1/B1)-1</code>. O ano tem 12 meses, 252 dias úteis e 360 ou 365 dias corridos. A regra de três, que só multiplica ou divide a taxa, aparece apenas para comparação.</p>',
+    '<h3>Taxas acumuladas</h3>',
+    '<p>Taxas seguidas não se somam, multiplicam-se: <code>(1 + t1) × (1 + t2) × ... − 1</code>. A taxa média é a que, repetida no mesmo número de períodos, dá o mesmo total.</p>',
+    '<h3>Percentual do CDI e imposto</h3>',
+    '<p>O título rende, a cada dia útil, o percentual contratado da taxa diária do CDI, <code>(1 + CDI)^(1/252) − 1</code>. Por isso, 110% do CDI rende um pouco mais que 1,1 vez o CDI. O imposto de renda incide sobre o rendimento, com alíquota pelo prazo: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima.</p>',
+    '<h3>Juro real</h3>',
+    '<p>O juro real tira a inflação pela equação de Fisher, <code>(1 + nominal) ÷ (1 + inflação) − 1</code>, depois de descontar o imposto do rendimento nominal. A inflação de empate é a que faz um prefixado e um título atrelado à inflação renderem o mesmo. As contas supõem taxas constantes e não consideram IOF nem taxas de administração.</p>'
+  ].join('\n')
+});
+</script>
+</body>
+</html>

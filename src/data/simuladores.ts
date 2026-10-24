@@ -1,6 +1,5 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Armchair,
   CreditCard,
   Hourglass,
   Landmark,
@@ -92,17 +91,6 @@ export const simuladores: Simulador[] = [
     pergunta: "Onde o caixa da empresa rende mais entre 1 e 30 dias?",
     tempoMin: 3,
     icone: Landmark,
-  },
-  {
-    slug: "aposentadoria",
-    title: "Aposentadoria",
-    description:
-      "Estime o patrimônio necessário para a sua aposentadoria e quanto investir por mês para chegar lá.",
-    categoria: "aposentadoria",
-    pergunta: "Quanto preciso acumular — e aportar por mês — para me aposentar?",
-    tempoMin: 3,
-    popular: true,
-    icone: Armchair,
   },
   {
     slug: "consorcio",

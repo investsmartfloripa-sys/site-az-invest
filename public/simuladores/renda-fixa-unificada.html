@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador de renda fixa: CDB, LCI e LCA | AZ Invest</title>
+<meta name="description" content="Simule CDB, LCI e LCA pós, pré ou IPCA entre duas datas: valor bruto, imposto de renda, valor líquido e tabela regressiva.">
+<meta name="theme-color" content="#132960">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AZ Invest">
+<meta property="og:title" content="Simulador de renda fixa: CDB, LCI e LCA | AZ Invest">
+<meta property="og:description" content="Simule CDB, LCI e LCA pós, pré ou IPCA entre duas datas: valor bruto, imposto de renda, valor líquido e tabela regressiva.">
+<meta property="og:image" content="https://investimentosdeaz.com.br/simuladores/assets/compartilhar.png">
+<meta property="og:url" content="https://investimentosdeaz.com.br/simuladores/renda-fixa-unificada.html">
+<link rel="canonical" href="https://investimentosdeaz.com.br/simuladores/renda-fixa-unificada.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="assets/az.css">
+</head>
+<body>
+<header class="az-topo"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest: todos os simuladores"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a><nav><a href="index.html">Todos os simuladores</a></nav></div></header>
+<main>
+<section class="az-hero"><div class="az-larg">
+<p class="az-trilha"><a href="index.html">Simuladores</a> / <a href="index.html#renda-fixa">Renda fixa</a></p>
+<h1>Simulador de renda fixa: CDB, LCI e LCA</h1>
+<p class="az-intro">Descubra quanto um CDB, uma LCI ou uma LCA entrega no resgate, já com o imposto de renda descontado.</p>
+</div></section>
+<div class="az-larg">
+<section class="az-app" id="az-app" data-ref="selic,cdi,ipca"><noscript><div class="az-cartao az-vazio">Ative o JavaScript do navegador para usar o simulador.</div></noscript></section>
+<section class="az-cartao az-sobre"><details><summary><h2>Como funciona</h2></summary>
+<div class="az-sobre-corpo"><p>O simulador calcula quanto uma aplicação de renda fixa entrega entre a data da aplicação e a do resgate, contando os dias úteis pelo calendário bancário.</p>
+<h3>Como cada tipo rende</h3>
+<p>No percentual do CDI, o título rende a cada dia útil o percentual contratado da taxa diária do CDI. No prefixado, a taxa anual é capitalizada pelos dias úteis: <code>valor × (1 + taxa)^(dias úteis / 252)</code>. No IPCA mais taxa, as duas partes se multiplicam, <code>(1 + IPCA) × (1 + taxa fixa) − 1</code>, e o valor final acompanha a inflação que de fato ocorrer.</p>
+<h3>Imposto de renda e IOF</h3>
+<p>O imposto incide só sobre o rendimento, com alíquota pelo prazo em dias corridos: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima disso. Resgates com menos de 30 dias pagam também IOF. No IPCA mais taxa, o imposto alcança até a parte que só repõe a inflação, o que reduz o ganho real. A tabela por faixa considera resgates em 180, 360, 720 e 1.080 dias, sem IOF.</p>
+<h3>Títulos isentos</h3>
+<p>LCI e LCA não pagam IR nem IOF. O CDB equivalente é o percentual do CDI que um CDB precisaria pagar para entregar o mesmo valor líquido: o rendimento da letra dividido por <code>1 − alíquota</code>. Essas letras têm prazo mínimo e, em geral, só podem ser resgatadas no vencimento. A isenção decorre da lei em vigor e pode mudar.</p>
+<h3>Premissas</h3>
+<p>A simulação supõe CDI e IPCA constantes nos valores informados e o título mantido até o vencimento, ou resgatado pela taxa contratada nas datas intermediárias. Não considera venda antecipada com deságio nem taxas de custódia.</p></div>
+</details></section>
+<section class="az-cta" id="az-cta" hidden><div><h2></h2><p></p></div><a class="az-botao az-lar" href="#" target="_blank" rel="noopener"></a></section>
+<section class="az-rel"><h2>Mais em renda fixa</h2><div class="az-grade">
+<a class="az-item" href="comparador-renda-fixa.html" data-k="Comparar aplicações de renda fixa Comparador de renda fixa: CDB, LCI, Tesouro, poupança e fundo Compare CDB, LCI ou LCA, Tesouro Selic, poupança e fundo DI no mesmo prazo e veja a taxa que empata uma oferta com a outra. comparador comparar cdb lci lca tesouro selic tesouro direto lft poupança caderneta fundo DI fundo de investimento taxa de administração taxa de equilíbrio selic cdi taxa DI percentual do cdi % do CDI cdb pós cdb x lci poupança ou CDB comparar poupança isento imposto de renda rendimento líquido taxa de custódia b3 equivalência taxa equivalente tabela faixa de ir gross up prefixado prêmio de risco reserva de emergência Comparador de renda fixa pós-fixada cdb lci lca tesouro selic poupança comparar selic cdi taxa de custódia b3 Tesouro Selic x CDB pós-fixado lft cdb pós percentual do cdi cdi selic comparador taxa de custódia prêmio de risco Tesouro Selic x LCI e LCA lft lci lca isento percentual do cdi comparador selic imposto de renda Tesouro Selic x poupança lft tesouro direto caderneta comparador selic reserva de emergência rendimento líquido Poupança x fundo de renda fixa fundo DI taxa de administração imposto de renda fundo de investimento taxa de equilíbrio CDI CDB ou LCI e LCA: qual percentual do CDI rende mais equivalência cdb x lci lca percentual do cdi isento gross up taxa equivalente Tabela de taxas equivalentes entre CDB e LCI ou LCA tabela equivalência cdb lci lca percentual do cdi faixa de ir gross up LCI e LCA prefixadas x CDB prefixado isento imposto de renda taxa equivalente prefixado gross up Rendimento da poupança em percentual do CDI % do CDI poupança ou CDB comparar poupança taxa DI equivalência"><b>Comparar aplicações de renda fixa</b></a>
+<a class="az-item" href="tesouro-prefixado-unificado.html" data-k="Tesouro Prefixado Tesouro Prefixado: no vencimento ou vendendo antes Rentabilidade líquida do Tesouro Prefixado no vencimento ou na venda antecipada, e o preço do título para cada taxa de juros. tesouro prefixado ltn tesouro direto preço unitário pu venda antecipada marcação a mercado taxa de custódia b3 rentabilidade líquida taxa de juros preço e taxa duration duração modificada sensibilidade Calculadora do Tesouro Prefixado ltn tesouro direto preço unitário venda antecipada marcação a mercado taxa de custódia b3 rentabilidade líquida Simulador de preço e taxa do Tesouro Prefixado marcação a mercado ltn preço unitário pu taxa de juros duration sensibilidade tesouro direto"><b>Tesouro Prefixado</b></a>
+<a class="az-item" href="https://investimentosdeaz.com.br/simuladores/compromissadas" data-k="Operações compromissadas Simulador de operações compromissadas Compare operações compromissadas com CDB e outras opções de renda fixa para o caixa de curto prazo. compromissada caixa empresa curto prazo cdb"><b>Operações compromissadas</b></a>
+</div></section>
+</div>
+</main>
+<footer class="az-rodape"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a>
+<p>As simulações têm caráter exclusivamente educativo. Os resultados dependem das premissas informadas por você, são estimativas e não constituem recomendação de investimento, oferta de produto ou garantia de rentabilidade. Rentabilidade passada não representa garantia de rentabilidade futura.</p>
+<p>Antes de decidir, confirme taxas, prazos, tributação e condições diretamente com a instituição responsável pelo produto.</p></div></footer>
+<script src="assets/config.js"></script>
+<script src="assets/az.js"></script>
+<script>AZ._registrar = AZ.registrar; AZ.registrar = function (x) { AZ.specs.push(x); }; AZ.antigo = function (slug) { var s = AZ.specs.filter(function (x) { return x.slug === slug; })[0]; if (!s) throw new Error("página antiga não carregada: " + slug); return s; };</script>
+<script>
+AZ.registrar({
+  slug: 'cdb-pos-fixado',
+  titulo: 'Simulador de CDB pós-fixado',
+  categoria: 'renda-fixa',
+  subgrupo: 'pos',
+  ordem: 2,
+  resumo: 'Simule um CDB atrelado ao CDI entre duas datas: valor bruto, IOF, imposto de renda e valor líquido no resgate.',
+  palavras: ['cdb', 'cdi', 'rentabilidade líquida', 'imposto de renda', 'resgate', 'dias úteis', 'rdb', 'lc'],
+  intro: 'Informe o valor, as datas de aplicação e de resgate, a taxa do CDI e o percentual contratado. O simulador conta os dias úteis, aplica o imposto de renda do prazo e mostra quanto sobra no resgate.',
+  campos: [
+    { id: 'valor', rotulo: 'Valor aplicado', tipo: 'moeda', padrao: 10000, min: 0.01 },
+    { id: 'inicio', rotulo: 'Data da aplicação', tipo: 'data', padrao: 'hoje', largura: 'meia' },
+    { id: 'fim', rotulo: 'Data do resgate', tipo: 'data', padrao: 'hoje+730', largura: 'meia' },
+    { id: 'cdi', rotulo: 'Taxa do CDI', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.cdi; }, min: 0.01, max: 100, sufixo: '% ao ano', largura: 'meia',
+      ajuda: 'Média esperada para o período.' },
+    { id: 'pct', rotulo: 'Percentual do CDI', tipo: 'pct', padrao: 110, min: 0, max: 500, sufixo: '% do CDI', largura: 'meia' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, f = AZ.f, dc = D.corridos(v.inicio, v.fim);
+    if (dc < 1) return { erro: 'A data do resgate deve ser posterior à data da aplicação.' };
+    if (dc > 36600) return { erro: 'O prazo máximo da simulação é de 100 anos.' };
+    var du = D.uteis(v.inicio, v.fim);
+    if (du < 1) return { erro: 'O período precisa ter pelo menos um dia útil.' };
+    var dCdi = Math.pow(1 + v.cdi / 100, 1 / 252) - 1, d = dCdi * v.pct / 100;
+    function ponto(dias, uteis) {
+      var bruto = v.valor * Math.pow(1 + d, uteis), rend = bruto - v.valor;
+      var iof = rend * AZ.fin.iof(dias), aliq = AZ.fin.irRegressivo(dias), ir = (rend - iof) * aliq;
+      return { dc: dias, du: uteis, bruto: bruto, rend: rend, iof: iof, aliq: aliq, ir: ir, liq: bruto - iof - ir };
+    }
+    var r = ponto(dc, du), fl = r.liq / v.valor;
+    var liqDia = Math.pow(fl, 1 / du) - 1, liqMes = Math.pow(fl, 21 / du) - 1, liqAno = Math.pow(fl, 252 / du) - 1;
+    var pctLiq = liqDia / dCdi * 100, fCdi = Math.pow(1 + dCdi, du);
+
+    /* evolução: um ponto por mês (ou trimestre/ano em prazos longos), mais o resgate */
+    var meses = 0; while (D.somarMeses(v.inicio, meses + 1) <= v.fim) meses++;
+    var passo = meses <= 36 ? 1 : meses <= 120 ? 3 : 12, ev = [], ant = v.inicio, acum = 0, m, dt;
+    for (m = passo; m <= meses; m += passo) {
+      dt = D.somarMeses(v.inicio, m); acum += D.uteis(ant, dt); ant = dt;
+      ev.push({ data: dt, p: ponto(D.corridos(v.inicio, dt), acum) });
+    }
+    if (!ev.length || D.corridos(ev[ev.length - 1].data, v.fim) > 0) ev.push({ data: v.fim, p: r });
+    var tabelas = [{
+      titulo: 'Valores no resgate', csv: false,
+      colunas: [{ t: 'Item', f: 'texto' }, { t: 'Valor', f: 'texto', alinhar: 'dir' }],
+      linhas: [
+        ['Valor bruto no resgate', f.brl(r.bruto)],
+        ['Rendimento bruto', f.brl(r.rend)],
+        ['IOF', r.iof > 0 ? f.brl(r.iof) + ' (' + f.pct(AZ.fin.iof(dc) * 100, 0) + ' do rendimento)' : 'Não há (30 dias ou mais)'],
+        ['Alíquota de imposto de renda', f.pct(r.aliq * 100, 1)],
+        ['Imposto de renda', f.brl(r.ir)],
+        ['Valor líquido no resgate', f.brl(r.liq)]
+      ],
+      destaque: 5
+    }, {
+      titulo: 'Prazo e taxas', csv: false,
+      colunas: [{ t: 'Item', f: 'texto' }, { t: 'Valor', f: 'texto', alinhar: 'dir' }],
+      linhas: [
+        ['Prazo em dias corridos', f.int(dc)],
+        ['Prazo em dias úteis', f.int(du)],
+        ['Taxa do CDI por dia útil', f.pct(dCdi * 100, 6)],
+        ['Taxa bruta do CDB por dia útil', f.pct(d * 100, 6)],
+        ['CDI acumulado no período', f.pct((fCdi - 1) * 100)],
+        ['Rentabilidade bruta no período', f.pct(r.rend / v.valor * 100)],
+        ['Rentabilidade líquida no período', f.pct((fl - 1) * 100)],
+        ['Rentabilidade líquida por dia útil', f.pct(liqDia * 100, 6)],
+        ['Rentabilidade líquida ao mês', f.pct(liqMes * 100, 4)],
+        ['Rentabilidade líquida ao ano', f.pct(liqAno * 100)],
+        ['Percentual do CDI líquido', f.pct(pctLiq) + ' do CDI']
+      ],
+      destaque: 10
+    }];
+    var graficos = [];
+    if (ev.length >= 3) {
+      graficos.push({
+        tipo: 'linha', titulo: 'Rendimento bruto e líquido se resgatado em cada data', formato: 'brl', rotuloDica: 'Mês',
+        rotulos: ev.map(function (e) { return f.mesAno(D.iso(e.data).slice(0, 7)).replace('/20', '/'); }),
+        series: [
+          { nome: 'Rendimento bruto', cor: 5, dados: ev.map(function (e) { return e.p.rend; }) },
+          { nome: 'Rendimento líquido', cor: 1, dados: ev.map(function (e) { return e.p.liq - v.valor; }) }
+        ]
+      });
+      tabelas.push({
+        titulo: 'Evolução até o resgate',
+        colunas: [{ t: 'Data', f: 'texto' }, { t: 'Dias corridos', f: 'int' }, { t: 'Dias úteis', f: 'int' }, { t: 'Valor bruto', f: 'brl' }, { t: 'Alíquota de IR', f: 'pct1' }, { t: 'IR e IOF', f: 'brl' }, { t: 'Valor líquido', f: 'brl' }],
+        linhas: ev.map(function (e) { return [f.data(e.data), e.p.dc, e.p.du, e.p.bruto, e.p.aliq * 100, e.p.ir + e.p.iof, e.p.liq]; }),
+        nota: 'Cada linha mostra quanto seria recebido se o resgate ocorresse naquela data, com a alíquota de IR correspondente ao prazo decorrido. Supõe que o CDB tenha liquidez ou que a data coincida com o vencimento.'
+      });
+    }
+    return {
+      alerta: r.iof > 0 ? 'Resgates com menos de 30 dias pagam IOF sobre o rendimento, além do imposto de renda. Neste prazo, o IOF consome ' + f.pct(AZ.fin.iof(dc) * 100, 0) + ' do rendimento.' : '',
+      destaques: [
+        { rotulo: 'Valor líquido no resgate', valor: r.liq, formato: 'brl', tom: 'primario', nota: 'em ' + f.int(dc) + (dc === 1 ? ' dia corrido (' : ' dias corridos (') + f.int(du) + (du === 1 ? ' dia útil)' : ' dias úteis)') },
+        { rotulo: 'Rendimento líquido', valor: r.liq - v.valor, formato: 'brl', tom: 'positivo', nota: f.pct((fl - 1) * 100) + ' no período' },
+        { rotulo: 'Imposto de renda', valor: r.ir, formato: 'brl', tom: 'negativo', nota: 'alíquota de ' + f.pct(r.aliq * 100, 1) + (r.iof > 0 ? ', mais ' + f.brl(r.iof) + ' de IOF' : '') },
+        { rotulo: 'Rentabilidade líquida ao ano', valor: liqAno * 100, formato: 'pct', nota: f.pct(liqMes * 100, 2) + ' ao mês' },
+        { rotulo: 'Percentual do CDI líquido', valor: f.pct(pctLiq) + ' do CDI', tom: 'destaque', nota: 'contratado: ' + f.pct(v.pct, v.pct % 1 ? 2 : 0) + ' do CDI' }
+      ],
+      resumo: '<p>Aplicando ' + f.brl(v.valor) + ' a ' + f.pct(v.pct, v.pct % 1 ? 2 : 0) + ' do CDI, com o CDI em ' + f.pct(v.cdi) + ' ao ano, o resgate líquido é de <strong>' + f.brl(r.liq) + '</strong> depois de ' + f.int(du) + (du === 1 ? ' dia útil' : ' dias úteis') + '. Descontados os impostos, o rendimento equivale a <strong>' + f.pct(pctLiq) + ' do CDI</strong>.</p>',
+      graficos: graficos,
+      tabelas: tabelas
+    };
+  },
+  explicacao: [
+    '<p>O CDB pós-fixado rende, a cada dia útil, um percentual da taxa diária do CDI. A taxa diária do CDI é <code>(1 + CDI ao ano)^(1/252) − 1</code>, e o valor bruto no resgate é <code>valor × (1 + taxa diária do CDI × percentual)^(dias úteis)</code>. Os dias úteis entre as duas datas são contados pelo calendário bancário, com os feriados nacionais.</p>',
+    '<p>O imposto de renda incide somente sobre o rendimento, com alíquota definida pelo prazo em dias corridos: 22,5% até 180 dias, 20% de 181 a 360 dias, 17,5% de 361 a 720 dias e 15% acima de 720 dias. Em resgates com menos de 30 dias há também IOF regressivo, que começa em 96% do rendimento no primeiro dia e chega a zero no trigésimo. O IOF é descontado antes do cálculo do IR.</p>',
+    '<p>O percentual do CDI líquido mostra a que percentual do CDI, sem imposto, o resultado final equivale. É a medida adequada para comparar o CDB com títulos isentos, como LCI e LCA, no mesmo prazo.</p>',
+    '<p>A simulação supõe que o CDI permaneça constante na taxa informada durante todo o período, o que não ocorre na prática. O mesmo cálculo serve para RDB, LC e outros títulos privados atrelados ao CDI com tributação regressiva. Não são consideradas taxas de custódia ou de corretagem, que em geral não existem nesses títulos.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'lci-lca',
+  titulo: 'Simulador de LCI e LCA pós-fixadas',
+  categoria: 'renda-fixa',
+  subgrupo: 'pos',
+  ordem: 7,
+  resumo: 'Simule uma LCI ou LCA atrelada ao CDI entre duas datas e veja o CDB que seria preciso para render o mesmo.',
+  palavras: ['lci', 'lca', 'isento', 'letra de crédito', 'cdi', 'cdb equivalente', 'cri', 'cra'],
+  intro: 'Informe o valor, as datas, a taxa do CDI e o percentual contratado para ver o valor no vencimento de uma LCI ou LCA, isenta de imposto de renda, e o percentual do CDI que um CDB tributado precisaria pagar para entregar o mesmo resultado.',
+  campos: [
+    { id: 'valor', rotulo: 'Valor aplicado', tipo: 'moeda', padrao: 10000, min: 0.01 },
+    { id: 'inicio', rotulo: 'Data da aplicação', tipo: 'data', padrao: 'hoje', largura: 'meia' },
+    { id: 'fim', rotulo: 'Data do vencimento', tipo: 'data', padrao: 'hoje+365', largura: 'meia' },
+    { id: 'cdi', rotulo: 'Taxa do CDI', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.cdi; }, min: 0.01, max: 100, sufixo: '% ao ano', largura: 'meia',
+      ajuda: 'Média esperada para o período.' },
+    { id: 'pct', rotulo: 'Percentual do CDI', tipo: 'pct', padrao: 92, min: 0, max: 500, sufixo: '% do CDI', largura: 'meia' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, f = AZ.f, dc = D.corridos(v.inicio, v.fim);
+    if (dc < 1) return { erro: 'A data do vencimento deve ser posterior à data da aplicação.' };
+    if (dc > 36600) return { erro: 'O prazo máximo da simulação é de 100 anos.' };
+    var du = D.uteis(v.inicio, v.fim);
+    if (du < 1) return { erro: 'O período precisa ter pelo menos um dia útil.' };
+    var dCdi = Math.pow(1 + v.cdi / 100, 1 / 252) - 1, d = dCdi * v.pct / 100;
+    var fator = Math.pow(1 + d, du), final = v.valor * fator, rend = final - v.valor;
+    var mes = Math.pow(1 + d, 21) - 1, ano = Math.pow(1 + d, 252) - 1, fCdi = Math.pow(1 + dCdi, du);
+    /* CDB que entrega o mesmo valor líquido neste prazo: rendimento bruto = rendimento da LCI / (1 − alíquota) */
+    var aliq = AZ.fin.irRegressivo(dc), fIof = AZ.fin.iof(dc);
+    var cdbEq = (Math.pow(1 + (fator - 1) / (1 - aliq) / (1 - fIof), 1 / du) - 1) / dCdi * 100;
+    var txtTrib = 'IR de ' + f.pct(aliq * 100, 1) + (fIof > 0 ? ' e IOF de ' + f.pct(fIof * 100, 0) : '');
+    var cdbSimples = v.pct / (1 - aliq);
+
+    var meses = 0; while (D.somarMeses(v.inicio, meses + 1) <= v.fim) meses++;
+    var passo = meses <= 36 ? 1 : meses <= 120 ? 3 : 12, ev = [], ant = v.inicio, acum = 0, m, dt;
+    for (m = passo; m <= meses; m += passo) {
+      dt = D.somarMeses(v.inicio, m); acum += D.uteis(ant, dt); ant = dt;
+      ev.push({ data: dt, dc: D.corridos(v.inicio, dt), du: acum, saldo: v.valor * Math.pow(1 + d, acum) });
+    }
+    if (!ev.length || D.corridos(ev[ev.length - 1].data, v.fim) > 0) ev.push({ data: v.fim, dc: dc, du: du, saldo: final });
+    var graficos = [], tabelas = [{
+      titulo: 'Valores e equivalência', csv: false,
+      colunas: [{ t: 'Item', f: 'texto' }, { t: 'Valor', f: 'texto', alinhar: 'dir' }],
+      linhas: [
+        ['Rendimento no período', f.brl(rend)],
+        ['Imposto de renda', 'Isento'],
+        ['Valor no vencimento', f.brl(final)],
+        ['CDB equivalente neste prazo (' + txtTrib + ')', f.pct(cdbEq) + ' do CDI'],
+        ['CDB equivalente pela regra simples' + (fIof > 0 ? ' (sem IOF)' : ''), f.pct(cdbSimples) + ' do CDI']
+      ],
+      destaque: [2, 3]
+    }, {
+      titulo: 'Prazo e taxas', csv: false,
+      colunas: [{ t: 'Item', f: 'texto' }, { t: 'Valor', f: 'texto', alinhar: 'dir' }],
+      linhas: [
+        ['Prazo em dias corridos', f.int(dc)],
+        ['Prazo em dias úteis', f.int(du)],
+        ['Taxa do CDI por dia útil', f.pct(dCdi * 100, 6)],
+        ['Rentabilidade por dia útil', f.pct(d * 100, 6)],
+        ['Rentabilidade ao mês (21 dias úteis)', f.pct(mes * 100, 4)],
+        ['Rentabilidade ao ano', f.pct(ano * 100)],
+        ['CDI acumulado no período', f.pct((fCdi - 1) * 100)],
+        ['Rentabilidade no período', f.pct((fator - 1) * 100)]
+      ]
+    }];
+    if (ev.length >= 3) {
+      graficos.push({
+        tipo: 'area', titulo: 'Rendimento acumulado até o vencimento', formato: 'brl', rotuloDica: 'Mês',
+        rotulos: ev.map(function (e) { return f.mesAno(D.iso(e.data).slice(0, 7)).replace('/20', '/'); }),
+        series: [{ nome: 'Rendimento acumulado', cor: 1, dados: ev.map(function (e) { return e.saldo - v.valor; }) }]
+      });
+      tabelas.push({
+        titulo: 'Evolução do saldo',
+        colunas: [{ t: 'Data', f: 'texto' }, { t: 'Dias corridos', f: 'int' }, { t: 'Dias úteis', f: 'int' }, { t: 'Rendimento acumulado', f: 'brl' }, { t: 'Saldo', f: 'brl' }],
+        linhas: ev.map(function (e) { return [f.data(e.data), e.dc, e.du, e.saldo - v.valor, e.saldo]; }),
+        nota: 'Saldo contábil em cada data. LCI e LCA costumam ter carência e, em muitos casos, só podem ser resgatadas no vencimento.'
+      });
+    }
+    return {
+      alerta: dc < 180 ? 'LCI e LCA têm prazo mínimo de vencimento definido pelo Conselho Monetário Nacional, que desde maio de 2025 é de seis meses para as letras sem atualização por índice de preços. O prazo informado fica abaixo desse mínimo. A simulação foi feita mesmo assim, como referência.' : '',
+      destaques: [
+        { rotulo: 'Valor no vencimento', valor: final, formato: 'brl', tom: 'primario', nota: 'isento de IR, em ' + f.int(dc) + (dc === 1 ? ' dia corrido (' : ' dias corridos (') + f.int(du) + (du === 1 ? ' dia útil)' : ' dias úteis)') },
+        { rotulo: 'Rendimento no período', valor: rend, formato: 'brl', tom: 'positivo', nota: f.pct((fator - 1) * 100) + ' no período' },
+        { rotulo: 'Rentabilidade ao ano', valor: ano * 100, formato: 'pct', nota: f.pct(mes * 100, 2) + ' ao mês' },
+        { rotulo: 'CDB equivalente', valor: f.pct(cdbEq) + ' do CDI', tom: 'destaque', nota: 'percentual que um CDB precisaria pagar neste prazo, com ' + txtTrib }
+      ],
+      resumo: '<p>Para render o mesmo que esta LCI ou LCA de ' + f.pct(v.pct, v.pct % 1 ? 2 : 0) + ' do CDI em ' + f.int(dc) + (dc === 1 ? ' dia' : ' dias') + ', um CDB tributado precisaria pagar <strong>' + f.pct(cdbEq) + ' do CDI</strong>. Ofertas de CDB abaixo desse percentual rendem menos depois do imposto; acima dele, rendem mais.</p>',
+      graficos: graficos,
+      tabelas: tabelas
+    };
+  },
+  explicacao: [
+    '<p>LCI (Letra de Crédito Imobiliário) e LCA (Letra de Crédito do Agronegócio) pós-fixadas rendem, a cada dia útil, um percentual da taxa diária do CDI. O valor no vencimento é <code>valor × (1 + taxa diária do CDI × percentual)^(dias úteis)</code>, com a taxa diária do CDI igual a <code>(1 + CDI ao ano)^(1/252) − 1</code>. O rendimento é isento de imposto de renda para a pessoa física, e não há IOF.</p>',
+    '<p>O CDB equivalente é o percentual do CDI que um CDB tributado teria de pagar para chegar ao mesmo valor líquido no mesmo prazo. O cálculo divide o rendimento da LCI ou LCA por <code>1 − alíquota de IR</code> do prazo (22,5% até 180 dias, 20% de 181 a 360, 17,5% de 361 a 720 e 15% acima de 720 dias corridos) e converte o resultado de volta em percentual do CDI. Em prazos inferiores a 30 dias, o CDB pagaria também IOF regressivo sobre o rendimento, descontado antes do IR, e a conta leva isso em consideração. A regra simples, <code>percentual ÷ (1 − alíquota)</code>, é uma aproximação que fica mais distante do valor exato quanto maiores o prazo e a taxa de juros.</p>',
+    '<p>A simulação supõe CDI constante na taxa informada e título mantido até o vencimento. LCI e LCA têm prazo mínimo de vencimento fixado pelo Conselho Monetário Nacional, hoje de seis meses para as letras sem atualização por índice de preços (a regra mudou mais de uma vez desde 2024), e normalmente não oferecem liquidez antes desse prazo. Confirme com a instituição o prazo mínimo e a carência vigentes.</p>',
+    '<p>A isenção de imposto de renda decorre da legislação em vigor e pode ser alterada. O mesmo cálculo serve para CRI, CRA e outros títulos isentos atrelados a um percentual do CDI.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'cdb-prefixado',
+  titulo: 'Simulador de CDB prefixado',
+  categoria: 'renda-fixa',
+  subgrupo: 'pre',
+  ordem: 1,
+  resumo: 'Calcule o rendimento bruto e líquido de um CDB prefixado entre duas datas, com dias úteis, IR e IOF.',
+  palavras: ['cdb pré', 'taxa prefixada', 'rendimento líquido', 'imposto de renda', 'dias úteis', 'lc', 'letra de câmbio'],
+  intro: 'Informe o valor aplicado, as datas de aplicação e de resgate e a taxa anual contratada. O simulador conta os dias úteis do período, desconta o imposto de renda e mostra a rentabilidade líquida por dia útil, por mês e por ano.',
+  campos: [
+    { id: 'valor', rotulo: 'Valor aplicado', tipo: 'moeda', padrao: 10000, min: 0.01 },
+    { id: 'inicio', rotulo: 'Data da aplicação', tipo: 'data', padrao: 'hoje', largura: 'meia' },
+    { id: 'fim', rotulo: 'Data do resgate ou vencimento', tipo: 'data', padrao: 'hoje+730', largura: 'meia' },
+    { id: 'taxa', rotulo: 'Taxa prefixada', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.selic; }, min: 0, max: 500, sufixo: '% ao ano',
+      ajuda: 'Taxa bruta informada pelo banco ou pela corretora, em base de 252 dias úteis.' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, F = AZ.f, i = v.taxa / 100;
+    var dc = D.corridos(v.inicio, v.fim);
+    if (dc < 1) return { erro: 'A data do resgate deve ser posterior à data da aplicação.' };
+    if (dc > 36600) return { erro: 'O prazo máximo da simulação é de 100 anos.' };
+    var du = D.uteis(v.inicio, v.fim);
+    if (du < 1) return { erro: 'O prazo precisa ter pelo menos um dia útil.' };
+    function em(data) {
+      var c = D.corridos(v.inicio, data), u = D.uteis(v.inicio, data);
+      var bruto = v.valor * Math.pow(1 + i, u / 252), rend = bruto - v.valor;
+      var iof = rend * AZ.fin.iof(c), aliq = AZ.fin.irRegressivo(c), ir = (rend - iof) * aliq;
+      return { dc: c, du: u, bruto: bruto, rend: rend, iof: iof, aliq: aliq, ir: ir, liq: bruto - iof - ir };
+    }
+    var r = em(v.fim), rb = r.bruto / v.valor - 1, rl = r.liq / v.valor - 1;
+    var eq = function (x, n) { return (Math.pow(1 + x, n / du) - 1) * 100; };
+    var n = Math.min(dc, 36), rotulos = [], sBruto = [], sLiq = [], k, d, p;
+    var curto = dc <= 366;
+    for (k = 0; k <= n; k++) {
+      d = D.somar(v.inicio, Math.round(dc * k / n));
+      p = k === 0 ? { bruto: v.valor, liq: v.valor } : em(d);
+      rotulos.push(curto ? F.data(d).slice(0, 5) : F.data(d).slice(3));
+      sBruto.push(p.bruto); sLiq.push(p.liq);
+    }
+    var linhas = [
+      ['Dias corridos', F.int(dc)],
+      ['Dias úteis', F.int(du)],
+      ['Valor aplicado', F.brl(v.valor)],
+      ['Valor bruto no resgate', F.brl(r.bruto)],
+      ['Rendimento bruto', F.brl(r.rend)]
+    ];
+    if (r.iof > 0) linhas.push(['IOF (' + F.pct(AZ.fin.iof(dc) * 100, 0) + ' do rendimento)', F.brl(r.iof)]);
+    linhas.push(['Alíquota de IR', F.pct(r.aliq * 100, 1)], ['Imposto de renda', F.brl(r.ir)]);
+    var iLiq = linhas.length;
+    linhas.push(['Valor líquido no resgate', F.brl(r.liq)], ['Rendimento líquido', F.brl(r.liq - v.valor)]);
+    return {
+      alerta: r.iof > 0 ? 'Resgates em menos de 30 dias pagam IOF sobre o rendimento, além do imposto de renda. Neste prazo, o IOF consome ' + F.pct(AZ.fin.iof(dc) * 100, 0) + ' do rendimento bruto.' : '',
+      destaques: [
+        { rotulo: 'Valor líquido no resgate', valor: r.liq, formato: 'brl', tom: 'primario', nota: 'em ' + F.data(v.fim) + ', após ' + F.pl(du, 'dia útil', 'dias úteis') },
+        { rotulo: 'Rendimento líquido', valor: r.liq - v.valor, formato: 'brl', tom: 'positivo', nota: F.pct(rl * 100) + ' no período' },
+        { rotulo: 'Rentabilidade líquida ao ano', valor: eq(rl, 252), formato: 'pct', nota: 'contra ' + F.pct(v.taxa) + ' ao ano de taxa bruta' },
+        { rotulo: r.iof > 0 ? 'Imposto de renda e IOF' : 'Imposto de renda', valor: r.ir + r.iof, formato: 'brl', tom: 'negativo', nota: 'alíquota de ' + F.pct(r.aliq * 100, 1) + ' para ' + F.pl(dc, 'dia corrido', 'dias corridos') + (r.iof > 0 ? ', mais IOF de ' + F.brl(r.iof) : '') }
+      ],
+      resumo: '<p>Depois do imposto, este CDB rende o equivalente a <strong>' + F.pct(eq(rl, 252)) + ' ao ano</strong>. É essa a taxa que um título isento de IR, como LCI ou LCA prefixada de mesmo prazo, precisaria pagar para entregar o mesmo valor líquido.</p>',
+      graficos: [{
+        tipo: 'linha', titulo: 'Evolução do valor se resgatado em cada data', formato: 'brl', zero: false, rotuloDica: curto ? 'Dia' : 'Mês',
+        rotulos: rotulos,
+        series: [{ nome: 'Valor bruto', cor: 5, dados: sBruto }, { nome: 'Valor líquido', cor: 1, dados: sLiq }]
+      }],
+      tabelas: [
+        { titulo: 'Detalhamento', csv: false, colunas: [{ t: 'Item', f: 'texto' }, { t: 'Valor', f: 'texto', alinhar: 'dir' }], linhas: linhas, destaque: iLiq },
+        { titulo: 'Rentabilidade equivalente', csv: false,
+          colunas: [{ t: 'Período', f: 'texto' }, { t: 'Bruta', f: 'pct4' }, { t: 'Líquida', f: 'pct4' }],
+          linhas: [
+            ['No período', rb * 100, rl * 100],
+            ['Por dia útil', eq(rb, 1), eq(rl, 1)],
+            ['Por mês', eq(rb, 21), eq(rl, 21)],
+            ['Por ano', eq(rb, 252), eq(rl, 252)]
+          ],
+          nota: 'As taxas por dia útil, por mês (21 dias úteis) e por ano (252 dias úteis) são equivalentes em juros compostos à rentabilidade do período.' }
+      ],
+      textos: ['<p>No gráfico, os degraus da linha do valor líquido aparecem nas datas em que a alíquota do imposto de renda diminui (181, 361 e 721 dias corridos após a aplicação). O valor em datas intermediárias supõe resgate pela própria taxa contratada, o que nem sempre é possível: muitos CDBs prefixados só têm liquidez no vencimento.</p>']
+    };
+  },
+  explicacao: [
+    '<p>No CDB prefixado, a taxa é combinada no momento da aplicação e não muda até o vencimento. A taxa anual é capitalizada pelos dias úteis do período, em base de 252 dias úteis por ano: <code>valor bruto = valor aplicado × (1 + taxa)^(dias úteis / 252)</code>.</p>',
+    '<p>Os dias úteis são contados pelo calendário bancário, excluindo fins de semana e feriados nacionais. A contagem vai da data da aplicação (inclusive) até a data do resgate (exclusive).</p>',
+    '<p>O imposto de renda incide apenas sobre o rendimento, pela tabela regressiva: 22,5% até 180 dias corridos, 20% de 181 a 360 dias, 17,5% de 361 a 720 dias e 15% acima de 720 dias. Em resgates com menos de 30 dias há também IOF regressivo sobre o rendimento, cobrado antes do IR.</p>',
+    '<p>A rentabilidade líquida é o valor líquido dividido pelo valor aplicado. Como o imposto reduz o rendimento, a taxa líquida anual é sempre menor que a taxa contratada. O mesmo cálculo vale para outros títulos prefixados tributados, como LC e RDB.</p>',
+    '<p>O simulador não considera marcação a mercado nem deságio em venda antecipada. As regras de tributação podem mudar, portanto confirme a regra vigente antes de investir.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'cdb-ipca',
+  titulo: 'Simulador de CDB IPCA + juro real',
+  categoria: 'renda-fixa',
+  subgrupo: 'ipca',
+  ordem: 1,
+  resumo: 'Projete um CDB indexado ao IPCA mais uma taxa fixa: valor bruto, imposto de renda e ganho real líquido.',
+  palavras: ['ipca+', 'inflação', 'juro real', 'híbrido', 'cdb inflação', 'rendimento líquido', 'ganho real'],
+  intro: 'Informe o valor, as datas, a taxa fixa contratada acima do IPCA e a inflação que você espera para o período. O simulador combina as duas taxas, desconta o imposto de renda e mostra quanto sobra de ganho acima da inflação.',
+  campos: [
+    { id: 'valor', rotulo: 'Valor investido', tipo: 'moeda', padrao: 10000, min: 0.01 },
+    { id: 'inicio', rotulo: 'Data do investimento', tipo: 'data', padrao: 'hoje', largura: 'meia' },
+    { id: 'fim', rotulo: 'Data do vencimento', tipo: 'data', padrao: 'hoje+1095', largura: 'meia' },
+    { id: 'juro', rotulo: 'Taxa fixa acima do IPCA', tipo: 'pct', padrao: 6.5, min: 0, max: 100, sufixo: '% ao ano', largura: 'meia',
+      ajuda: 'A parte prefixada do título. Em "IPCA + 6,5%", informe 6,5.' },
+    { id: 'ipca', rotulo: 'IPCA esperado', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: -20, max: 500, sufixo: '% ao ano', largura: 'meia',
+      ajuda: 'Inflação média anual que você projeta até o vencimento. O padrão é o IPCA acumulado em 12 meses.' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, F = AZ.f, juro = v.juro / 100, ipca = v.ipca / 100;
+    var dc = D.corridos(v.inicio, v.fim);
+    if (dc < 1) return { erro: 'A data do vencimento deve ser posterior à data do investimento.' };
+    if (dc > 36600) return { erro: 'O prazo máximo da simulação é de 100 anos.' };
+    var du = D.uteis(v.inicio, v.fim);
+    if (du < 1) return { erro: 'O prazo precisa ter pelo menos um dia útil.' };
+    var nominal = (1 + juro) * (1 + ipca) - 1, anos = du / 252;
+    var bruto = v.valor * Math.pow(1 + nominal, anos), rend = bruto - v.valor;
+    var fIof = rend > 0 ? AZ.fin.iof(dc) : 0, iof = Math.max(0, rend) * fIof;
+    var aliq = AZ.fin.irRegressivo(dc), ir = Math.max(0, rend - iof) * aliq, liq = bruto - iof - ir;
+    var corrigido = v.valor * Math.pow(1 + ipca, anos);
+    var rb = bruto / v.valor - 1, rl = liq / v.valor - 1, realLiq = liq / corrigido - 1;
+    var eq = function (x, n) { return (Math.pow(1 + x, n / du) - 1) * 100; };
+    var realLiqAa = eq(realLiq, 252);
+    var linhas = [
+      ['Taxa nominal ao ano', F.pct(nominal * 100)],
+      ['Dias corridos', F.int(dc)],
+      ['Dias úteis', F.int(du)],
+      ['Valor bruto no vencimento', F.brl(bruto)],
+      ['Rendimento bruto', F.brl(rend)]
+    ];
+    linhas.push(['Alíquota de IR', F.pct(aliq * 100, 1)], [iof > 0 ? 'Imposto de renda e IOF' : 'Imposto de renda', F.brl(ir + iof)]);
+    var iLiq = linhas.length;
+    linhas.push(['Valor líquido no vencimento', F.brl(liq)], ['Rendimento líquido', F.brl(liq - v.valor)],
+      ['Valor corrigido pelo IPCA', F.brl(corrigido)], ['Ganho real líquido', F.brl(liq - corrigido)]);
+    var partes = [
+      { nome: 'Valor investido', valor: v.valor, cor: 5 },
+      { nome: 'Correção pelo IPCA', valor: corrigido - v.valor, cor: 4 },
+      { nome: 'Juro real bruto', valor: bruto - corrigido, cor: 1 },
+      { nome: 'Imposto de renda' + (iof > 0 ? ' e IOF' : ''), valor: ir + iof, cor: 2 }
+    ];
+    return {
+      alerta: iof > 0 ? 'Resgates em menos de 30 dias pagam IOF sobre o rendimento, além do imposto de renda.' : '',
+      destaques: [
+        { rotulo: 'Valor líquido no vencimento', valor: liq, formato: 'brl', tom: 'primario', nota: 'em ' + F.data(v.fim) + ', com IPCA de ' + F.pct(v.ipca) + ' ao ano' },
+        { rotulo: 'Rentabilidade líquida ao ano', valor: eq(rl, 252), formato: 'pct', nota: 'taxa bruta combinada de ' + F.pct(nominal * 100) + ' ao ano' },
+        { rotulo: 'Juro real líquido ao ano', valor: realLiqAa, formato: 'pct', tom: realLiqAa >= 0 ? 'positivo' : 'negativo', nota: 'acima do IPCA, depois do imposto' },
+        { rotulo: iof > 0 ? 'Imposto de renda e IOF' : 'Imposto de renda', valor: ir + iof, formato: 'brl', tom: 'negativo', nota: 'alíquota de ' + F.pct(aliq * 100, 1) + (iof > 0 ? ' mais IOF de ' + F.brl(iof) : '') }
+      ],
+      resumo: '<p>A taxa contratada é IPCA + ' + F.pct(v.juro) + ' ao ano, mas o imposto de renda incide sobre todo o rendimento nominal, inclusive sobre a parte que apenas repõe a inflação. Por isso o ganho real depois do imposto cai para <strong>' + F.pct(realLiqAa) + ' ao ano</strong> neste cenário. Quanto maior a inflação, maior a parcela do juro real consumida pelo imposto.</p>',
+      graficos: [{ tipo: 'barras-h', titulo: 'Composição do valor bruto no vencimento', formato: 'brl', itens: partes }],
+      tabelas: [
+        { titulo: 'Detalhamento', csv: false, colunas: [{ t: 'Item', f: 'texto' }, { t: 'Valor', f: 'texto', alinhar: 'dir' }], linhas: linhas, destaque: iLiq },
+        { titulo: 'Rentabilidade equivalente', csv: false,
+          colunas: [{ t: 'Período', f: 'texto' }, { t: 'Bruta', f: 'pct4' }, { t: 'Líquida', f: 'pct4' }],
+          linhas: [
+            ['No período', rb * 100, rl * 100],
+            ['Por dia útil', eq(rb, 1), eq(rl, 1)],
+            ['Por mês', eq(rb, 21), eq(rl, 21)],
+            ['Por ano', eq(rb, 252), eq(rl, 252)]
+          ],
+          nota: 'Mês de 21 dias úteis e ano de 252 dias úteis. Descontada a inflação informada, a rentabilidade líquida real é de ' + F.pct(realLiq * 100) + ' no período e de ' + F.pct(realLiqAa) + ' ao ano.' }
+      ]
+    };
+  },
+  explicacao: [
+    '<p>Um CDB indexado ao IPCA paga a variação da inflação mais uma taxa fixa. As duas partes se multiplicam, não se somam: <code>taxa nominal = (1 + IPCA) × (1 + taxa fixa) − 1</code>. Com IPCA de 4% e taxa fixa de 6%, a taxa nominal é 10,24% ao ano, e não 10%.</p>',
+    '<p>O valor bruto é calculado pela taxa nominal capitalizada pelos dias úteis do período, em base de 252 dias úteis por ano. A contagem vai da data do investimento (inclusive) até a data do vencimento (exclusive). A inflação futura não é conhecida: o resultado depende do IPCA que você informar, e o valor efetivo no vencimento acompanhará a inflação que de fato ocorrer. Na prática, o título é corrigido pelo índice mensal divulgado pelo IBGE, com defasagem e critério de rateio definidos pelo emissor, o que gera pequenas diferenças em relação a esta projeção.</p>',
+    '<p>O imposto de renda segue a tabela regressiva (22,5% até 180 dias corridos, 20% de 181 a 360, 17,5% de 361 a 720 e 15% acima de 720 dias) e incide sobre o rendimento total, incluindo a correção monetária. O juro real líquido compara o valor líquido com o valor investido corrigido pelo IPCA: <code>valor líquido ÷ valor corrigido − 1</code>.</p>',
+    '<p>A simulação supõe que o título seja mantido até o vencimento. Em venda antecipada, o preço depende das taxas de mercado do dia e pode resultar em ganho ou perda em relação à curva contratada.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'cdb-pos-fixado-liquido',
+  titulo: 'CDB pós-fixado: percentual líquido do CDI',
+  categoria: 'renda-fixa',
+  subgrupo: 'pos',
+  ordem: 5,
+  resumo: 'Descubra a quanto do CDI um CDB equivale depois do imposto de renda, em cada uma das quatro faixas de prazo.',
+  palavras: ['cdb líquido', 'percentual do cdi', 'imposto de renda', 'tabela regressiva', 'taxa líquida'],
+  intro: 'Informe o percentual do CDI pago pelo CDB. A calculadora desconta o imposto de renda de cada faixa de prazo e devolve o percentual líquido do CDI, que pode ser comparado diretamente com títulos isentos.',
+  campos: [
+    { id: 'pct', rotulo: 'Percentual do CDI pago pelo CDB', tipo: 'pct', padrao: 110, min: 0, max: 500, sufixo: '% do CDI' },
+    { id: 'cdi', rotulo: 'Taxa do CDI', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.cdi; }, min: 0.01, max: 100, sufixo: '% ao ano',
+      ajuda: 'Necessária para o cálculo com capitalização e para a taxa líquida ao ano.' }
+  ],
+  calcular: function (v, AZ) {
+    var f = AZ.f, dCdi = Math.pow(1 + v.cdi / 100, 1 / 252) - 1, d = dCdi * v.pct / 100;
+    var brutaAno = (Math.pow(1 + d, 252) - 1) * 100;
+    var faixas = [
+      { nome: 'Até 180 dias', curto: 'Até 180 dias', dias: 180, aliq: 0.225 },
+      { nome: 'De 181 a 360 dias', curto: '181 a 360 dias', dias: 360, aliq: 0.20 },
+      { nome: 'De 361 a 720 dias', curto: '361 a 720 dias', dias: 720, aliq: 0.175 },
+      { nome: 'Acima de 720 dias', curto: 'Acima de 720 dias', dias: 1080, aliq: 0.15 }
+    ].map(function (x) {
+      var du = Math.round(x.dias * 252 / 365), liq = (Math.pow(1 + d, du) - 1) * (1 - x.aliq), dl = Math.pow(1 + liq, 1 / du) - 1;
+      x.du = du; x.simples = v.pct * (1 - x.aliq); x.exato = dl / dCdi * 100; x.liqAno = (Math.pow(1 + dl, 252) - 1) * 100; x.liqPer = liq * 100;
+      return x;
+    });
+    var p0 = f.pct(v.pct, v.pct % 1 ? 2 : 0);
+    return {
+      destaques: faixas.map(function (x, i) {
+        return { rotulo: x.curto, valor: f.pct(x.simples) + ' do CDI', tom: i === 0 ? 'primario' : undefined, nota: 'regra simples, com IR de ' + f.pct(x.aliq * 100, 1) + '; com capitalização em ' + f.int(x.dias) + ' dias, ' + f.pct(x.exato) + ' do CDI ou ' + f.pct(x.liqAno) + ' ao ano' };
+      }),
+      resumo: '<p>Um CDB de ' + p0 + ' do CDI rende ' + f.pct(brutaAno) + ' ao ano antes do imposto. Depois do IR, equivale a um título isento que pague de <strong>' + f.pct(faixas[0].simples) + '</strong> (resgate em até 180 dias) a <strong>' + f.pct(faixas[3].simples) + ' do CDI</strong> (acima de 720 dias), pela regra simples. Como referência, uma LCI ou LCA precisa pagar pelo menos o percentual da faixa correspondente ao prazo para competir com este CDB. O cálculo com capitalização, na tabela, eleva um pouco essa exigência.</p>',
+      graficos: [{
+        tipo: 'barras-h', titulo: 'Percentual líquido do CDI por faixa de prazo (regra simples)', formato: function (x) { return AZ.f.pct(x) + ' do CDI'; },
+        itens: [{ nome: 'Bruto contratado', valor: v.pct, cor: 5 }].concat(faixas.map(function (x) { return { nome: x.nome + ' (IR de ' + f.pct(x.aliq * 100, 1) + ')', valor: x.simples, cor: 1 }; }))
+      }],
+      tabelas: [{
+        titulo: 'Percentual líquido do CDI em cada faixa de IR', csv: false,
+        colunas: [{ t: 'Prazo do resgate', f: 'texto' }, { t: 'IR', f: 'pct1' }, { t: 'Regra simples', f: 'pct' }, { t: 'Com capitalização', f: 'pct' }, { t: 'Líquido ao ano', f: 'pct' }],
+        linhas: faixas.map(function (x) { return [x.nome, x.aliq * 100, x.simples, x.exato, x.liqAno]; }),
+        nota: 'As colunas "Regra simples" e "Com capitalização" trazem o percentual líquido em % do CDI. A coluna com capitalização e a taxa líquida ao ano consideram resgates em 180, 360, 720 e 1.080 dias corridos, com o CDI informado.'
+      }]
+    };
+  },
+  explicacao: [
+    '<p>O rendimento do CDB paga imposto de renda pela tabela regressiva: 22,5% para resgates em até 180 dias, 20% de 181 a 360 dias, 17,5% de 361 a 720 dias e 15% acima de 720 dias corridos. O percentual líquido do CDI mostra quanto sobra do percentual contratado depois desse desconto.</p>',
+    '<p>Pela regra simples, <code>percentual líquido = percentual do CDB × (1 − alíquota)</code>. Um CDB de 110% do CDI resgatado depois de dois anos fica com 110 × 0,85 = 93,5% do CDI. É a conta usada habitualmente no mercado e a exibida nos cartões de resultado.</p>',
+    '<p>A coluna com capitalização refaz a conta considerando que o imposto só é cobrado no resgate, sobre o rendimento acumulado: o rendimento bruto é capitalizado por todo o prazo, o IR é descontado no final e o resultado é convertido de volta em percentual do CDI. Como o imposto não reduz o saldo que rende ao longo do caminho, o percentual líquido fica um pouco acima do da regra simples, e a distância cresce com o prazo e com o nível dos juros.</p>',
+    '<p>O cálculo supõe CDI constante na taxa informada, estima os dias úteis em 252 a cada 365 dias corridos e não considera IOF (resgates com menos de 30 dias). Vale também para RDB, LC e outros títulos com a mesma tributação.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'aliquota-ir-regressivo',
+  titulo: 'Calculadora da alíquota de IR na renda fixa',
+  categoria: 'renda-fixa',
+  subgrupo: 'ir',
+  ordem: 1,
+  resumo: 'Descubra a alíquota da tabela regressiva pelas datas de aplicação e resgate e veja quando ela muda.',
+  palavras: ['tabela regressiva', 'imposto de renda', 'dias corridos', 'cdb', 'tesouro direto', '22,5%', '15%', 'iof'],
+  intro: 'Informe a data da aplicação e a data do resgate. A calculadora conta os dias corridos, indica a alíquota de imposto de renda da tabela regressiva e mostra as datas em que a alíquota diminui.',
+  campos: [
+    { id: 'inicio', rotulo: 'Data da aplicação', tipo: 'data', padrao: 'hoje', largura: 'meia' },
+    { id: 'fim', rotulo: 'Data do resgate ou vencimento', tipo: 'data', padrao: 'hoje+365', largura: 'meia' },
+    { id: 'rend', rotulo: 'Rendimento bruto (opcional)', tipo: 'moeda', opcional: true, min: 0,
+      ajuda: 'Se informar o rendimento bruto do período, a calculadora mostra o imposto em reais.' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, F = AZ.f;
+    var dc = D.corridos(v.inicio, v.fim);
+    if (dc < 0) return { erro: 'A data do resgate não pode ser anterior à data da aplicação.' };
+    if (dc === 0) return { erro: 'Informe uma data de resgate posterior à data da aplicação.' };
+    var aliq = AZ.fin.irRegressivo(dc), du = D.uteis(v.inicio, v.fim);
+    var faixas = [
+      { de: 1, ate: 180, a: 22.5 }, { de: 181, ate: 360, a: 20 }, { de: 361, ate: 720, a: 17.5 }, { de: 721, ate: null, a: 15 }
+    ];
+    var atual = dc <= 180 ? 0 : dc <= 360 ? 1 : dc <= 720 ? 2 : 3, prox = faixas[atual + 1];
+    var linhas = faixas.map(function (f) {
+      return [
+        f.ate ? f.de + ' a ' + f.ate + ' dias: resgates de ' + F.data(D.somar(v.inicio, f.de)) + ' a ' + F.data(D.somar(v.inicio, f.ate))
+          : 'Acima de 720 dias: resgates a partir de ' + F.data(D.somar(v.inicio, f.de)),
+        F.pct(f.a, 1)
+      ];
+    });
+    var destaques = [
+      { rotulo: 'Alíquota de imposto de renda', valor: F.pct(aliq * 100, 1), tom: 'primario', nota: 'sobre o rendimento, para resgate em ' + F.data(v.fim) },
+      { rotulo: 'Prazo em dias corridos', valor: dc, formato: 'int', nota: F.int(du) + (du === 1 ? ' dia útil' : ' dias úteis') + ' no período' }
+    ];
+    if (prox) {
+      var dProx = D.somar(v.inicio, prox.de);
+      destaques.push({ rotulo: 'Próxima redução', valor: F.data(dProx), tom: 'destaque',
+        nota: 'a alíquota cai para ' + F.pct(prox.a, 1) + ', ' + F.int(prox.de - dc) + (prox.de - dc === 1 ? ' dia' : ' dias') + ' depois do resgate informado' });
+    } else {
+      destaques.push({ rotulo: 'Próxima redução', valor: 'Não há', tom: 'positivo', nota: 'o prazo já está na menor alíquota da tabela' });
+    }
+    var fIof = AZ.fin.iof(dc), iof = v.rend * fIof, ir = (v.rend - iof) * aliq;
+    if (v.rend > 0) destaques.push({ rotulo: 'Imposto de renda', valor: ir, formato: 'brl', tom: 'negativo',
+      nota: 'rendimento líquido de ' + F.brl(v.rend - iof - ir) + (iof > 0 ? ', após IOF de ' + F.brl(iof) : '') });
+    var resumo = '<p>Entre ' + F.data(v.inicio) + ' e ' + F.data(v.fim) + ' há <strong>' + F.int(dc) + (dc === 1 ? ' dia corrido' : ' dias corridos') + '</strong>. Nesse prazo, o imposto de renda é de <strong>' + F.pct(aliq * 100, 1) + '</strong> do rendimento.';
+    if (prox) resumo += ' Adiar o resgate para ' + F.data(D.somar(v.inicio, prox.de)) + ' ou depois reduz a alíquota para ' + F.pct(prox.a, 1) + '.';
+    resumo += '</p>';
+    return {
+      alerta: fIof > 0 ? 'Resgates em menos de 30 dias também pagam IOF. Com ' + F.int(dc) + (dc === 1 ? ' dia' : ' dias') + ', o IOF retém ' + F.pct(fIof * 100, 0) + ' do rendimento, e o imposto de renda incide sobre o que sobra. O IOF deixa de ser cobrado a partir de ' + F.data(D.somar(v.inicio, 30)) + '.' : '',
+      destaques: destaques,
+      resumo: resumo,
+      tabelas: [{
+        titulo: 'Tabela regressiva aplicada às suas datas', csv: false,
+        colunas: [{ t: 'Prazo e datas de resgate', f: 'texto' }, { t: 'Alíquota', f: 'texto', alinhar: 'dir' }],
+        linhas: linhas, destaque: atual,
+        nota: 'A linha destacada é a faixa em que a data de resgate informada se encontra. As datas não consideram se o dia é útil: resgates só são liquidados em dias úteis.'
+      }]
+    };
+  },
+  explicacao: [
+    '<p>O imposto de renda da renda fixa é cobrado somente sobre o rendimento e retido na fonte no resgate, no vencimento ou no pagamento de juros. A alíquota depende do prazo em dias corridos entre a aplicação e o resgate:</p>',
+    '<ul><li>até 180 dias: 22,5%</li><li>de 181 a 360 dias: 20%</li><li>de 361 a 720 dias: 17,5%</li><li>acima de 720 dias: 15%</li></ul>',
+    '<p>A contagem é feita em dias corridos, incluindo fins de semana e feriados: o prazo é a diferença entre a data do resgate e a data da aplicação. A alíquota muda, portanto, no 181º, no 361º e no 721º dia após a aplicação. Em aplicações feitas em várias datas, cada aporte tem sua própria contagem.</p>',
+    '<p>A tabela vale para CDB, RDB, LC, títulos públicos do Tesouro Direto, debêntures comuns e fundos de renda fixa de longo prazo, entre outros. LCI, LCA, CRI, CRA, debêntures incentivadas e a poupança são isentos para a pessoa física. Fundos de investimento têm regras próprias, como a antecipação semestral do imposto (come-cotas) e a tabela de curto prazo.</p>',
+    '<p>Nos primeiros 29 dias há ainda o IOF regressivo, que começa em 96% do rendimento para resgate em um dia e chega a zero no 30º dia. Instituições podem considerar como data da aplicação o dia da efetiva liquidação, que pode ser o dia útil seguinte ao pedido. As regras de tributação podem mudar, portanto confirme a regra vigente.</p>'
+  ].join('\n')
+});
+</script>
+<script>AZ.registrar = AZ._registrar;</script>
+<script>
+/* Protótipo unificado (23/10/2026): uma página para "quanto rende até o resgate, já com imposto".
+   Substitui cdb-pos-fixado, lci-lca, cdb-prefixado, cdb-ipca, cdb-pos-fixado-liquido e aliquota-ir-regressivo.
+   Toda conta vem das páginas antigas (AZ.antigo(slug).calcular); aqui só se traduzem os campos e se monta o resultado.
+   Isento com taxa prefixada ou IPCA não tem página antiga: o valor é o valor bruto calculado pela página do CDB
+   correspondente (mesma fórmula, sem IR nem IOF), sem conta nova. */
+AZ.registrar({
+  slug: 'renda-fixa-unificada',
+  usa: ['cdb-pos-fixado', 'lci-lca', 'cdb-prefixado', 'cdb-ipca', 'cdb-pos-fixado-liquido', 'aliquota-ir-regressivo'],
+  atalhos: {
+    'cdb-pos-fixado': {},
+    'lci-lca': { imposto: 'isento', fim: 'hoje+365', pct: 92 },
+    'cdb-prefixado': { tipo: 'pre' },
+    'cdb-ipca': { tipo: 'ipca', fim: 'hoje+1095' },
+    'cdb-pos-fixado-liquido': {},
+    'aliquota-ir-regressivo': { fim: 'hoje+365' }
+  },
+  titulo: 'Simulador de renda fixa: CDB, LCI e LCA',
+  categoria: 'renda-fixa',
+  subgrupo: 'geral',
+  resumo: 'Simule CDB, LCI e LCA pós, pré ou IPCA entre duas datas: valor bruto, imposto de renda, valor líquido e tabela regressiva.',
+  palavras: ['cdb', 'lci', 'lca', 'cdi', 'prefixado', 'ipca', 'imposto de renda', 'tabela regressiva', 'iof', 'isento', 'rendimento líquido', 'percentual do cdi'],
+  intro: 'Descubra quanto um CDB, uma LCI ou uma LCA entrega no resgate, já com o imposto de renda descontado.',
+  campos: [
+    { id: 'valor', rotulo: 'Valor aplicado', tipo: 'moeda', padrao: 10000, min: 0.01 },
+    { id: 'inicio', rotulo: 'Data da aplicação', tipo: 'data', padrao: 'hoje', largura: 'meia' },
+    { id: 'fim', rotulo: 'Data do resgate ou vencimento', tipo: 'data', padrao: 'hoje+730', largura: 'meia' },
+    { id: 'tipo', rotulo: 'Rentabilidade', tipo: 'segmento', padrao: 'pos', noGrafico: 0, rotuloNoGrafico: false,
+      opcoes: [{ v: 'pos', t: 'Percentual do CDI' }, { v: 'pre', t: 'Prefixado' }, { v: 'ipca', t: 'IPCA mais taxa' }] },
+    { id: 'imposto', rotulo: 'Imposto', tipo: 'segmento', padrao: 'ir', noGrafico: 0, rotuloNoGrafico: false,
+      opcoes: [{ v: 'ir', t: 'Com IR (CDB)' }, { v: 'isento', t: 'Isento (LCI, LCA)' }] },
+    { id: 'cdi', rotulo: 'Taxa do CDI', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.cdi; }, min: 0.01, max: 100, sufixo: '% ao ano', largura: 'meia',
+      ajuda: 'Média anual que você espera para o CDI até o resgate.', mostrarSe: function (v) { return v.tipo === 'pos'; } },
+    { id: 'pct', rotulo: 'Percentual do CDI', tipo: 'pct', padrao: 110, min: 0, max: 500, sufixo: '% do CDI', largura: 'meia',
+      mostrarSe: function (v) { return v.tipo === 'pos'; } },
+    { id: 'taxa', rotulo: 'Taxa prefixada', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.selic; }, min: 0, max: 500, sufixo: '% ao ano',
+      ajuda: 'Taxa bruta informada pelo banco ou pela corretora, em base de 252 dias úteis.', mostrarSe: function (v) { return v.tipo === 'pre'; } },
+    { id: 'juro', rotulo: 'Taxa fixa acima do IPCA', tipo: 'pct', padrao: 6.5, min: 0, max: 100, sufixo: '% ao ano', largura: 'meia',
+      ajuda: 'A parte prefixada do título. Em "IPCA + 6,5%", informe 6,5.', mostrarSe: function (v) { return v.tipo === 'ipca'; } },
+    { id: 'ipca', rotulo: 'IPCA esperado', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: -20, max: 500, sufixo: '% ao ano', largura: 'meia',
+      ajuda: 'Inflação média anual que você projeta até o vencimento. O padrão é o IPCA acumulado em 12 meses.', mostrarSe: function (v) { return v.tipo === 'ipca'; } }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, F = AZ.f, tipo = v.tipo, isento = v.imposto === 'isento';
+    var slugIr = tipo === 'pre' ? 'cdb-prefixado' : tipo === 'ipca' ? 'cdb-ipca' : 'cdb-pos-fixado';
+    /* tradução dos campos para cada página antiga */
+    function entradas(fim) {
+      if (tipo === 'pre') return { valor: v.valor, inicio: v.inicio, fim: fim, taxa: v.taxa };
+      if (tipo === 'ipca') return { valor: v.valor, inicio: v.inicio, fim: fim, juro: v.juro, ipca: v.ipca };
+      return { valor: v.valor, inicio: v.inicio, fim: fim, cdi: v.cdi, pct: v.pct };
+    }
+    function rodar(slug, fim) { return AZ.antigo(slug).calcular(entradas(fim), AZ); }
+    /* valor bruto e líquido de um resgate na data, lidos do resultado da página antiga */
+    function ler(r, fim) {
+      var o = { liq: r.destaques[0].valor };
+      if (tipo === 'pos') o.bruto = isento ? o.liq : rodar('lci-lca', fim).destaques[0].valor;
+      else if (tipo === 'pre') { var s = r.graficos[0].series[0].dados; o.bruto = s[s.length - 1]; }
+      else { o.bruto = o.liq + r.destaques[3].valor; o.corr = v.valor + r.graficos[0].itens[1].valor; }
+      return o;
+    }
+    var slugPrinc = isento && tipo === 'pos' ? 'lci-lca' : slugIr;
+    var R = rodar(slugPrinc, v.fim);
+    /* erro da página antiga (datas, prazo): a mesma mensagem, como nota de atenção (mesma aparência do erro).
+       Assim o sistema ainda desenha os botões, no topo do resultado, e o visitante vê o modo e pode trocá-lo.
+       Quando o az.js chamar botoesNoGrafico() também nos ramos de erro, isto pode voltar a ser "return R". */
+    if (R.erro) return { alerta: AZ.esc(R.erro.replace('data do investimento', 'data da aplicação').replace(/data do (resgate|vencimento)/, 'data do resgate ou vencimento')), alertaTom: 'atencao' };
+    var dc = D.corridos(v.inicio, v.fim), du = D.uteis(v.inicio, v.fim), k, m;
+    var rotMes = function (d) { return F.mesAno(D.iso(d).slice(0, 7)).replace('/20', '/'); };
+    var rotDia = function (d) { return F.data(d).slice(0, 5); };
+
+    /* pontos do gráfico: resgate em cada data, sempre com números das páginas antigas.
+       Pós-fixado: a grade mensal e a tabela "Evolução" da própria página antiga.
+       Prefixado: os pontos do gráfico da página de CDB prefixado.
+       IPCA (e pós-fixado de menos de 2 meses): a página antiga rodada com o resgate em cada data. */
+    var pts = [], rotulos = [], mensal = true, tabAntiga = null;
+    if (tipo === 'pos' && R.tabelas[2]) {
+      tabAntiga = R.tabelas[2];
+      rotulos = [rotMes(v.inicio)].concat(R.graficos[0].rotulos);
+      tabAntiga.linhas.forEach(function (l) { pts.push(isento ? { dc: l[1], du: l[2], bruto: l[4], liq: l[4] } : { dc: l[1], du: l[2], bruto: l[3], liq: l[6] }); pts[pts.length - 1].data = l[0]; });
+    } else if (tipo === 'pre') {
+      var sg = R.graficos[0].series, n0 = sg[0].dados.length - 1, ant0 = v.inicio, ac0 = 0;
+      mensal = dc > 366; rotulos.push(mensal ? rotMes(v.inicio) : rotDia(v.inicio));
+      for (k = 1; k <= n0; k++) {
+        var dk = D.somar(v.inicio, Math.round(dc * k / n0)); ac0 += D.uteis(ant0, dk); ant0 = dk;
+        rotulos.push(mensal ? rotMes(dk) : rotDia(dk));
+        pts.push({ data: F.data(dk), dc: D.corridos(v.inicio, dk), du: ac0, bruto: sg[0].dados[k], liq: sg[1].dados[k] });
+      }
+    } else {
+      var meses = 0, grade = [];
+      while (D.somarMeses(v.inicio, meses + 1) <= v.fim) meses++;
+      var passo = meses <= 36 ? 1 : meses <= 120 ? 3 : meses <= 480 ? 12 : 12 * Math.ceil(meses / 240);
+      for (m = passo; m <= meses; m += passo) grade.push(D.somarMeses(v.inicio, m));
+      if (!grade.length || D.corridos(grade[grade.length - 1], v.fim) > 0) grade.push(v.fim);
+      if (grade.length < 3) {
+        mensal = false; grade = [];
+        var n = Math.min(dc, 36);
+        for (k = 1; k <= n; k++) grade.push(D.somar(v.inicio, Math.round(dc * k / n)));
+      }
+      rotulos.push(mensal ? rotMes(v.inicio) : rotDia(v.inicio));
+      var ant = v.inicio, acum = 0;
+      grade.forEach(function (d, i) {
+        acum += D.uteis(ant, d); ant = d;
+        var r = i === grade.length - 1 ? R : rodar(slugPrinc, d);
+        var p = r.erro ? { bruto: v.valor, liq: v.valor, corr: v.valor } : ler(r, d);
+        p.data = F.data(d); p.dc = D.corridos(v.inicio, d); p.du = acum;
+        rotulos.push(mensal ? rotMes(d) : rotDia(d)); pts.push(p);
+      });
+    }
+    var fim = pts[pts.length - 1];
+    var aliq = AZ.antigo('aliquota-ir-regressivo').calcular({ inicio: v.inicio, fim: v.fim, rend: Math.max(0, fim.bruto - v.valor) }, AZ);
+
+    var serie = function (nome, cor, f) { return { nome: nome, cor: cor, dados: [v.valor].concat(pts.map(f)) }; };
+    var series = isento ? [serie('Saldo da LCI ou LCA', 1, function (p) { return p.bruto; })]
+      : [serie('Valor bruto', 5, function (p) { return p.bruto; }), serie('Valor líquido', 1, function (p) { return p.liq; })];
+    /* cor 4, a mesma da "Correção pelo IPCA" no gráfico de composição */
+    if (tipo === 'ipca') series.push(serie('Valor corrigido pelo IPCA', 4, function (p) { return p.corr; }));
+    var graficos = [{ tipo: 'linha', titulo: isento ? 'Saldo ao longo do prazo' : 'Valor se resgatado em cada data', formato: 'brl', zero: false, rotuloDica: mensal ? 'Mês' : 'Dia', rotulos: rotulos, series: series }];
+
+    var evolucao = tabAntiga || (isento ? {
+      titulo: 'Evolução do saldo',
+      colunas: [{ t: 'Data', f: 'texto' }, { t: 'Dias corridos', f: 'int' }, { t: 'Dias úteis', f: 'int' }, { t: 'Rendimento acumulado', f: 'brl' }, { t: 'Saldo', f: 'brl' }],
+      linhas: pts.map(function (p) { return [p.data, p.dc, p.du, p.bruto - v.valor, p.bruto]; })
+    } : {
+      titulo: 'Evolução até o resgate',
+      colunas: [{ t: 'Data', f: 'texto' }, { t: 'Dias corridos', f: 'int' }, { t: 'Dias úteis', f: 'int' }, { t: 'Valor bruto', f: 'brl' }, { t: 'Alíquota de IR', f: 'pct1' }, { t: 'IR e IOF', f: 'brl' }, { t: 'Valor líquido', f: 'brl' }],
+      linhas: pts.map(function (p) { return [p.data, p.dc, p.du, p.bruto, AZ.fin.irRegressivo(p.dc) * 100, p.bruto - p.liq, p.liq]; })
+    });
+    /* a mesma nota curta vale também quando a tabela vem da página antiga; o aviso de liquidez dos prefixados
+       (antigo bloco de texto da página cdb-prefixado) ficou aqui */
+    evolucao.nota = isento ? 'LCI e LCA costumam ter carência e, em geral, só podem ser resgatadas no vencimento.'
+      : 'Quanto você receberia resgatando em cada data, já com o IR do prazo decorrido. Supõe resgate antecipado pela taxa contratada, que muitos títulos não permitem.';
+
+    /* tabela regressiva nas datas escolhidas (página aliquota-ir-regressivo): na nota, a próxima redução
+       (frase de leitura da própria página; o antigo cartão "Próxima redução", se a frase faltar) */
+    var regressiva = aliq.tabelas[0], prox = aliq.destaques[2], adiar = /Adiar o resgate[^<]*\./.exec(aliq.resumo || '');
+    regressiva.nota = 'A linha destacada é a faixa do seu resgate. ' +
+      (prox.valor === 'Não há' ? 'O prazo já está na menor alíquota.' : adiar ? adiar[0] : 'Próxima redução em ' + prox.valor + ': ' + prox.nota + '.');
+
+    /* sem blocos de texto soltos: o aviso de IOF vira nota da primeira tabela e o de prazo mínimo das letras fica curto */
+    var out = { alerta: '', graficos: graficos, textos: null };
+    var fimIof = /O IOF deixa de ser cobrado a partir de [\d\/]+\./.exec(aliq.alerta || '');
+    var alertaPrazo = 'LCI e LCA atreladas ao CDI ou prefixadas exigem prazo mínimo de seis meses. Use esta simulação só como referência.';
+    /* letras corrigidas por índice de preços (CMN, Res. 5.215/2025 e regras anteriores mantidas): LCA 12 meses, LCI 36 meses */
+    var mesesLca = 12, mesesLci = 36;
+    var alertaIpca = 'Corrigida pelo IPCA, a LCA exige prazo mínimo de ' + mesesLca + ' meses, e a LCI, de ' + mesesLci + ' meses. Use esta simulação só como referência.';
+    var notaEq = 'Taxas equivalentes em juros compostos, com mês de 21 e ano de 252 dias úteis.';
+    var pl = function (x, s, p) { return F.pl(x, s, p); };
+    var nova = function (d, nota) { return Object.assign({}, d, { nota: nota }); };
+    var dq = R.destaques, pctTxt = F.pct(v.pct, v.pct % 1 ? 2 : 0);
+    var prazoTxt = pl(dc, 'dia corrido', 'dias corridos') + ' (' + pl(du, 'dia útil', 'dias úteis') + ')';
+    /* prazo abaixo do mínimo das letras atreladas ao CDI ou prefixadas: o mesmo teste da página lci-lca */
+    var alertaLci = AZ.antigo('lci-lca').calcular({ valor: v.valor, inicio: v.inicio, fim: v.fim, cdi: 10, pct: 100 }, AZ).alerta || '';
+    if (!isento) {
+      /* R.alerta só existe com IOF (resgate em menos de 30 dias) */
+      if (R.alerta) R.tabelas[0].nota = 'Resgates com menos de 30 dias pagam IOF, além do imposto de renda.' + (fimIof ? ' ' + fimIof[0] : '');
+      out.tabelas = [R.tabelas[0], evolucao, regressiva];
+      if (tipo === 'pos') {
+        /* valor do IOF curto, para a tabela caber no celular: o parêntese vai para o rótulo, como no prefixado
+           ("IOF (33% do rendimento) | R$ 24,05" ou "IOF (30 dias ou mais) | Não há") */
+        R.tabelas[0].linhas = R.tabelas[0].linhas.map(function (l) {
+          var m = l[0] === 'IOF' && /^(.+?) \((.+)\)$/.exec(l[1]);
+          return m ? ['IOF (' + m[2] + ')', m[1]] : l;
+        });
+        /* com IOF, o cartão soma IR e IOF, como no prefixado e no IPCA (o mesmo "IR e IOF" da tabela Evolução) */
+        var cIr = R.alerta ? Object.assign({}, dq[2], { rotulo: 'Imposto de renda e IOF', valor: fim.bruto - fim.liq, nota: dq[2].nota.replace(/, mais (R\$\s[\d.,]+) de IOF$/, ', mais IOF de $1') }) : dq[2];
+        /* sai o cartão "Rentabilidade líquida ao ano" (o número segue na tabela "Prazo e taxas" e na nota do percentual) */
+        out.destaques = [dq[0], dq[1], cIr, nova(dq[4], 'equivale a ' + F.pct(dq[3].valor) + ' ao ano')];
+        out.resumo = '<p>Aplicando ' + F.brl(v.valor) + ' a ' + pctTxt + ' do CDI, você resgata <strong>' + F.brl(dq[0].valor) + '</strong> líquidos em ' + F.data(v.fim) + '. Depois do imposto, o rendimento cai de ' + pctTxt + ' para <strong>' + dq[4].valor + '</strong>' + (alertaLci ? '.' : ', o percentual que uma LCI ou LCA precisa pagar para empatar.') + '</p>';
+        /* tabela por faixa da página cdb-pos-fixado-liquido; na nota, a taxa bruta ao ano (lida da frase de leitura
+           dela; fazia o papel da barra "Bruto contratado") e o prazo usado na última faixa (lido do cartão dela) */
+        var LQ = AZ.antigo('cdb-pos-fixado-liquido').calcular({ pct: v.pct, cdi: v.cdi }, AZ), tq = LQ.tabelas[0];
+        var bruta = /rende ([\d.,]+%) ao ano antes do imposto/.exec(LQ.resumo || ''), diasUlt = /em ([\d.]+) dias/.exec(LQ.destaques[3].nota || '');
+        tq.colunas = tq.colunas.map(function (c) { return Object.assign({}, c, { t: c.t.replace('Regra simples', 'Conta rápida').replace('Com capitalização', 'Conta exata') }); });
+        tq.nota = (bruta ? 'Antes do imposto, este CDB rende ' + bruta[1] + ' ao ano. ' : '') + 'Cada linha usa o último dia da faixa' + (diasUlt ? ' (' + diasUlt[1] + ' dias na última)' : '') +
+          '; para o seu prazo, vale o percentual do cartão, ' + dq[4].valor + '.';
+        out.tabelas.push(tq, R.tabelas[1]);
+      } else if (tipo === 'pre') {
+        out.destaques = [nova(dq[0], 'em ' + prazoTxt), dq[1], nova(dq[2], 'contra ' + F.pct(v.taxa) + ' ao ano antes do imposto'), nova(dq[3], dq[3].nota.replace(/ para [\d.]+ dias? corridos?/, ''))];
+        out.resumo = '<p>Aplicando ' + F.brl(v.valor) + ', você resgata <strong>' + F.brl(dq[0].valor) + '</strong> líquidos em ' + F.data(v.fim) + '. Depois do imposto, a taxa cai de ' + F.pct(v.taxa) + ' para <strong>' + F.pct(dq[2].valor) + ' ao ano</strong>' +
+          (alertaLci ? '.' : '; é o que uma LCI ou LCA prefixada de mesmo prazo precisa pagar para empatar.') + '</p>';
+        R.tabelas[1].nota = notaEq;
+        out.tabelas.push(R.tabelas[1]);
+      } else {
+        /* primeiro cartão igual ao dos outros tipos; o IPCA usado passa para a nota do juro real */
+        out.destaques = [Object.assign({}, dq[0], { rotulo: 'Valor líquido no resgate', nota: 'em ' + prazoTxt }), nova(dq[1], dq[1].nota.replace('taxa bruta combinada de ', 'contra ') + ' antes do imposto'),
+          nova(dq[2], 'com IPCA de ' + F.pct(v.ipca) + ' ao ano, depois do imposto'), nova(dq[3], dq[3].nota.replace(' mais IOF', ', mais IOF'))];
+        out.resumo = '<p>Aplicando ' + F.brl(v.valor) + ', você resgata <strong>' + F.brl(dq[0].valor) + '</strong> líquidos em ' + F.data(v.fim) + '. Depois do imposto, o juro real cai de ' + F.pct(v.juro) + ' para <strong>' + F.pct(dq[2].valor) + ' ao ano</strong>.</p>';
+        R.tabelas[1].nota = R.tabelas[1].nota.replace('Mês de 21 dias úteis e ano de 252 dias úteis.', notaEq);
+        out.tabelas.push(R.tabelas[1]);
+        /* gráfico de composição da página cdb-ipca, com a leitura embaixo: a cadeia em reais (ganho real líquido: linha do "Detalhamento") */
+        var itI = R.graficos[0].itens, glI = R.tabelas[0].linhas.filter(function (l) { return l[0] === 'Ganho real líquido'; })[0];
+        var impI = itI[3].nome.replace('Imposto de renda', 'imposto'), negI = glI && /^[-−]/.test(glI[1]);
+        graficos.push(Object.assign({}, R.graficos[0], { titulo: 'Composição do valor no vencimento', leitura: '<p>A correção de ' + F.brl(itI[1].valor) + ' só repõe a inflação, mas também paga imposto. Os ' + F.brl(itI[3].valor) + ' de ' + impI +
+          (negI ? ' levam todo o juro real de ' + F.brl(itI[2].valor) + ' e mais ' + glI[1].replace(/^[-−]\s*/, '') + ' da correção.'
+            : ' saem do juro real de ' + F.brl(itI[2].valor) + (glI ? ', que cai para ' + glI[1] + '.' : '.')) + '</p>' }));
+      }
+    } else if (tipo === 'pos') {
+      var trib = /com (IR de .*)$/.exec(dq[3].nota || '');
+      out.alerta = R.alerta ? alertaPrazo : '';
+      out.destaques = [nova(dq[0], dq[0].nota.replace('isento de IR, ', '')), dq[1], dq[2], nova(dq[3], trib ? 'para empatar, com ' + trib[1] : dq[3].nota)];
+      out.resumo = '<p>Esta LCI ou LCA de ' + pctTxt + ' do CDI chega a <strong>' + F.brl(dq[0].valor) + '</strong> em ' + F.data(v.fim) + ', sem imposto. Para empatar com ela, um CDB precisaria pagar <strong>' + dq[3].valor + '</strong>; abaixo disso, rende menos.</p>';
+      R.tabelas[0].linhas = R.tabelas[0].linhas.map(function (l) { return [l[0].replace('pela regra simples (sem IOF)', '(conta rápida, sem IOF)').replace('pela regra simples', '(conta rápida)'), l[1]]; });
+      out.tabelas = [R.tabelas[0], evolucao, R.tabelas[1]];
+    } else {
+      /* isento prefixado ou IPCA: valor bruto da página do CDB, que é o valor no resgate quando não há IR nem IOF */
+      var T = R.tabelas[1].linhas, bruto = fim.bruto, rendB = bruto - v.valor, irCdb = R.destaques[3].valor;
+      var lin = R.tabelas[0].linhas.filter(function (l) { return !/IR|Imposto|IOF|líquid|Ganho real/.test(l[0]); }).map(function (l) {
+        return [l[0].replace('Valor bruto no resgate', 'Valor no vencimento').replace('Valor bruto no vencimento', 'Valor no vencimento').replace('Rendimento bruto', 'Rendimento'), l[1]];
+      });
+      var iRend = lin.findIndex(function (l) { return l[0] === 'Rendimento'; });
+      lin.splice(iRend + 1, 0, ['Imposto de renda', 'Isento']);
+      var tabRent = { titulo: 'Rentabilidade equivalente', csv: false, colunas: [{ t: 'Período', f: 'texto' }, { t: 'Rentabilidade', f: 'pct4' }],
+        linhas: T.map(function (l) { return [l[0], l[1]]; }), nota: notaEq };
+      var notaCdb = 'mesma taxa e prazo, com IR de ' + aliq.destaques[0].valor + (/IOF/.test(R.destaques[3].rotulo) ? ' e IOF' : '');
+      if (tipo === 'pre') {
+        out.alerta = alertaLci ? alertaPrazo : '';
+        out.destaques = [
+          { rotulo: 'Valor no vencimento', valor: bruto, formato: 'brl', tom: 'primario', nota: 'em ' + prazoTxt },
+          { rotulo: 'Rendimento no período', valor: rendB, formato: 'brl', tom: 'positivo', nota: F.pct(T[0][1]) + ' no período' },
+          { rotulo: 'Rentabilidade ao ano', valor: T[3][1], formato: 'pct', nota: F.pct(T[2][1], 2) + ' ao mês' },
+          { rotulo: 'Imposto que um CDB pagaria', valor: irCdb, formato: 'brl', tom: 'destaque', nota: notaCdb }
+        ];
+        out.resumo = '<p>Sem imposto de renda, a aplicação a ' + F.pct(v.taxa) + ' ao ano chega a <strong>' + F.brl(bruto) + '</strong> em ' + F.data(v.fim) + '. Um CDB prefixado com a mesma taxa entregaria <strong>' + F.brl(R.destaques[0].valor) + '</strong>, porque pagaria ' + F.brl(irCdb) + ' de imposto.</p>';
+      } else {
+        var it = R.graficos[0].itens, ganho = it[2].valor;
+        out.alerta = D.somarMeses(v.inicio, mesesLca) > v.fim ? alertaIpca : '';
+        lin.push(['Ganho acima da inflação', F.brl(ganho)]);
+        out.destaques = [
+          { rotulo: 'Valor no vencimento', valor: bruto, formato: 'brl', tom: 'primario', nota: 'em ' + F.data(v.fim) + ', com IPCA de ' + F.pct(v.ipca) + ' ao ano' },
+          { rotulo: 'Rentabilidade ao ano', valor: T[3][1], formato: 'pct', nota: F.pct(T[2][1], 2) + ' ao mês' },
+          { rotulo: 'Ganho acima da inflação', valor: ganho, formato: 'brl', tom: ganho >= 0 ? 'positivo' : 'negativo', nota: 'juro real de ' + F.pct(v.juro) + ' ao ano, sem imposto' },
+          { rotulo: 'Imposto que um CDB pagaria', valor: irCdb, formato: 'brl', tom: 'destaque', nota: notaCdb }
+        ];
+        out.resumo = '<p>Sem imposto, você resgata <strong>' + F.brl(bruto) + '</strong> em ' + F.data(v.fim) + ' e fica com todo o juro real de <strong>' + F.pct(v.juro) + ' ao ano</strong>. Um CDB com a mesma taxa teria juro real de ' + F.pct(R.destaques[2].valor) + ' ao ano depois do imposto.</p>';
+        graficos.push({ tipo: 'barras-h', titulo: 'Composição do valor no vencimento', formato: 'brl', itens: it.slice(0, 3).map(function (x) { return { nome: x.nome.replace('Juro real bruto', 'Juro real'), valor: x.valor, cor: x.cor }; }),
+          leitura: '<p>Dos ' + F.brl(rendB) + ' de rendimento, ' + F.brl(it[1].valor) + ' só repõem a inflação.</p>' });
+      }
+      out.tabelas = [{ titulo: 'Detalhamento', csv: false, colunas: [{ t: 'Item', f: 'texto' }, { t: 'Valor', f: 'texto', alinhar: 'dir' }], linhas: lin, destaque: lin.findIndex(function (l) { return l[0] === 'Valor no vencimento'; }) }, evolucao, tabRent];
+    }
+    return out;
+  },
+  casos: [
+    { nome: 'CDB 110% do CDI, 2 anos', entradas: { tipo: 'pos', imposto: 'ir', valor: 10000, inicio: '2026-10-23', fim: '2028-10-22', cdi: 13.65, pct: 110 }, espera: { 'Valor líquido no resgate': 'R$ 12.738,24' } },
+    { nome: 'LCI 92% do CDI, 1 ano', entradas: { tipo: 'pos', imposto: 'isento', valor: 10000, inicio: '2026-10-23', fim: '2027-10-23', cdi: 13.65, pct: 92 }, espera: { 'Valor no vencimento': 'R$ 11.238,78' } }
+  ],
+  explicacao: [
+    '<p>O simulador calcula quanto uma aplicação de renda fixa entrega entre a data da aplicação e a do resgate, contando os dias úteis pelo calendário bancário.</p>',
+    '<h3>Como cada tipo rende</h3>',
+    '<p>No percentual do CDI, o título rende a cada dia útil o percentual contratado da taxa diária do CDI. No prefixado, a taxa anual é capitalizada pelos dias úteis: <code>valor × (1 + taxa)^(dias úteis / 252)</code>. No IPCA mais taxa, as duas partes se multiplicam, <code>(1 + IPCA) × (1 + taxa fixa) − 1</code>, e o valor final acompanha a inflação que de fato ocorrer.</p>',
+    '<h3>Imposto de renda e IOF</h3>',
+    '<p>O imposto incide só sobre o rendimento, com alíquota pelo prazo em dias corridos: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima disso. Resgates com menos de 30 dias pagam também IOF. No IPCA mais taxa, o imposto alcança até a parte que só repõe a inflação, o que reduz o ganho real. A tabela por faixa considera resgates em 180, 360, 720 e 1.080 dias, sem IOF.</p>',
+    '<h3>Títulos isentos</h3>',
+    '<p>LCI e LCA não pagam IR nem IOF. O CDB equivalente é o percentual do CDI que um CDB precisaria pagar para entregar o mesmo valor líquido: o rendimento da letra dividido por <code>1 − alíquota</code>. Essas letras têm prazo mínimo e, em geral, só podem ser resgatadas no vencimento. A isenção decorre da lei em vigor e pode mudar.</p>',
+    '<h3>Premissas</h3>',
+    '<p>A simulação supõe CDI e IPCA constantes nos valores informados e o título mantido até o vencimento, ou resgatado pela taxa contratada nas datas intermediárias. Não considera venda antecipada com deságio nem taxas de custódia.</p>'
+  ].join('\n')
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora de dias úteis e prazos | AZ Invest</title>
+<meta name="description" content="Conte dias úteis e corridos entre duas datas ou descubra em que data cai um prazo, com os feriados nacionais do caminho.">
+<meta name="theme-color" content="#132960">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AZ Invest">
+<meta property="og:title" content="Calculadora de dias úteis e prazos | AZ Invest">
+<meta property="og:description" content="Conte dias úteis e corridos entre duas datas ou descubra em que data cai um prazo, com os feriados nacionais do caminho.">
+<meta property="og:image" content="https://investimentosdeaz.com.br/simuladores/assets/compartilhar.png">
+<meta property="og:url" content="https://investimentosdeaz.com.br/simuladores/datas-unificada.html">
+<link rel="canonical" href="https://investimentosdeaz.com.br/simuladores/datas-unificada.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="assets/az.css">
+</head>
+<body>
+<header class="az-topo"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest: todos os simuladores"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a><nav><a href="index.html">Todos os simuladores</a></nav></div></header>
+<main>
+<section class="az-hero"><div class="az-larg">
+<p class="az-trilha"><a href="index.html">Simuladores</a> / <a href="index.html#contas">Correção e contas rápidas</a></p>
+<h1>Calculadora de dias úteis e prazos</h1>
+<p class="az-intro">Conte os dias úteis entre duas datas ou descubra em que data cai um prazo, já com os feriados nacionais.</p>
+</div></section>
+<div class="az-larg">
+<section class="az-app" id="az-app"><noscript><div class="az-cartao az-vazio">Ative o JavaScript do navegador para usar o simulador.</div></noscript></section>
+<section class="az-cartao az-sobre"><details><summary><h2>Como funciona</h2></summary>
+<div class="az-sobre-corpo"><h3>Dias úteis e feriados</h3>
+<p>Dias corridos são todos os dias do calendário; dias úteis são os de segunda a sexta-feira que não são feriado nacional. O calendário é o adotado pelo sistema financeiro, com Carnaval, Paixão de Cristo e Corpus Christi calculados a partir da Páscoa de cada ano e o Dia da Consciência Negra a partir de 2024.</p>
+<h3>Como os dias são contados</h3>
+<p>Entre duas datas, a contagem padrão exclui o dia inicial e inclui o final, como em boletos e prazos legais. A renda fixa inclui o inicial e exclui o final, o que dá o mesmo resultado sempre que as duas datas são dias úteis. Num prazo, a data de partida não entra: somar 1 dia leva ao dia seguinte. Em dias úteis, a conta avança um dia de cada vez e pula fins de semana e feriados.</p>
+<h3>Limites</h3>
+<p>Feriados estaduais e municipais e pontos facultativos não estão no calendário, mas, entre duas datas, podem ser descontados no campo de feriados locais. As datas vão de 2000 a 2100. Regras de prorrogação de vencimento variam conforme o contrato, por isso confirme a data com o credor ou com o órgão responsável.</p></div>
+</details></section>
+<section class="az-cta" id="az-cta" hidden><div><h2></h2><p></p></div><a class="az-botao az-lar" href="#" target="_blank" rel="noopener"></a></section>
+<section class="az-rel"><h2>Mais em correção e contas rápidas</h2><div class="az-grade">
+<a class="az-item" href="correcao-unificada.html" data-k="Correção de valores Correção de valores pela inflação, CDI, Selic e poupança Atualize um valor do passado pelo IPCA, IGP-M, CDI, Selic, poupança ou taxa legal e veja quanto ele ganhou da inflação. correção monetária atualizar valor corrigir valor ipca igp-m igpm inpc igp-di cdi percentual do cdi selic selic acumulada fator acumulado tesouro selic lft poupança aniversário inflação acumulada poder de compra taxa legal juros legais juros de mora lei 14.905 código civil artigo 406 dívida indenização selic menos ipca quanto teria hoje na poupança valor no passado rendimento histórico caderneta correção pela poupança rentabilidade real ganho real poupança e inflação juro real da poupança tabela da poupança rendimento da poupança histórico da poupança rendimento mensal acumulado no ano 12 meses TR Correção de valores pela inflação inflação ipca igp-m igpm igp-di inpc atualização monetária poder de compra reajuste aluguel corrigir valor Correção de valores pelo CDI cdi percentual do cdi cdb lci lca di rendimento passado pós-fixado corrigir valor Correção de valores pela Selic selic atualização monetária corrigir valor taxa básica juros banco central débito restituição Correção de valores pela poupança poupança caderneta rendimento da poupança aniversário regra antiga regra nova TR corrigir valor Selic acumulada entre duas datas selic acumulada fator acumulado taxa selic tesouro selic lft fator diário selic no ano Correção de valores pela taxa legal taxa legal juros legais juros de mora lei 14.905 código civil artigo 406 dívida indenização selic menos ipca Quanto teria hoje na poupança correção pela poupança valor no passado rendimento histórico atualizar valor caderneta Rentabilidade real da poupança poupança e inflação ganho real IPCA poder de compra juro real da poupança Tabela de rendimento da poupança histórico da poupança rendimento mensal acumulado no ano 12 meses TR tabela"><b>Correção de valores</b></a>
+<a class="az-item" href="inflacao-dolar.html" data-k="Inflação do dólar Simulador de inflação do dólar Corrija um valor em dólares pela inflação dos Estados Unidos desde 1913 e compare com o câmbio e o IPCA. inflação americana CPI poder de compra do dólar corrigir dólar câmbio dólar real"><b>Inflação do dólar</b></a>
+<a class="az-item" href="calculadora-de-taxas.html" data-k="Conversor de taxas Calculadora de taxas: ao mês, ao ano, CDI e inflação Converta taxas entre dia, mês e ano, some taxas acumuladas, veja quanto rende um percentual do CDI e calcule o juro real. taxa equivalente juros equivalentes conversão de taxas juros compostos ao dia ao mês ao ano dias úteis dia útil dias corridos taxa anual taxa mensal taxa diária ao ano para ao mês ao mês para ao ano anual para mensal mensal para anual rendimento mensal custo anual fórmula planilha Excel períodos potência tabela de taxas base 360 base 365 base 252 convenção de dias somar juros somar taxas taxa acumulada inflação acumulada rentabilidade acumulada porcentagem acumulada taxa média cdi cdi hoje taxa di 100% do cdi 110% do cdi percentual do cdi % do cdi rendimento diário taxa líquida imposto de renda regra de três regra de 3 proporção pós-fixado prefixado comparar percentuais diferença entre percentuais juro real juros reais taxa real taxa nominal inflação ipca ganho real Fisher acima da inflação inflação implícita inflação de empate Simulador de taxas equivalentes taxa equivalente conversão de taxas juros compostos ao dia ao mês ao ano dias úteis taxa acumulada Conversor de taxa de juros anual para mensal taxa anual taxa mensal ao ano para ao mês taxa equivalente juros compostos rendimento mensal Conversor de taxa de juros mensal para anual taxa mensal taxa anual ao mês para ao ano taxa equivalente juros compostos custo anual Calculadora de taxa equivalente por número de períodos taxa equivalente fórmula planilha Excel períodos juros compostos potência Tabela de juros equivalentes: dia, mês e ano tabela de taxas taxa ao dia taxa ao mês taxa ao ano base 360 base 365 base 252 dias úteis Calculadora de taxas acumuladas somar juros somar taxas taxa acumulada inflação acumulada rentabilidade acumulada juros compostos porcentagem acumulada Quanto rende o CDI hoje cdi taxa di 100% do cdi rendimento diário rendimento mensal taxa líquida Regra de três para comparar taxas percentual do CDI % do CDI taxa equivalente proporção pós-fixado prefixado regra de 3 Comparador de dois percentuais do CDI comparar percentual do cdi 100% do cdi 110% do cdi diferença taxa anual taxa mensal Calculadora de taxa de juros real juro real taxa nominal inflação ganho real Fisher acima da inflação"><b>Conversor de taxas</b></a>
+<a class="az-item" href="porcentagem-unificada.html" data-k="Porcentagem e desconto Calculadora de porcentagem, desconto e regra de três Calcule porcentagem, aumento, variação, preço de venda, descontos em sequência e regra de três direta ou inversa, com a conta à vista. porcentagem percentual por cento aumento desconto variação percentual margem de lucro markup valor original preço de venda promoção liquidação preço com desconto cupom abatimento porcentagem de desconto economia desconto em sequência pix regra de três regra de 3 proporção proporcional grandezas diretamente proporcional inversamente proporcional Calculadora de porcentagem percentual por cento aumento desconto variação percentual margem de lucro markup valor original Calculadora de desconto promoção liquidação preço com desconto cupom abatimento porcentagem de desconto economia Calculadora de regra de três proporção proporcional regra de 3 grandezas diretamente proporcional inversamente proporcional"><b>Porcentagem e desconto</b></a>
+</div></section>
+</div>
+</main>
+<footer class="az-rodape"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a>
+<p>As simulações têm caráter exclusivamente educativo. Os resultados dependem das premissas informadas por você, são estimativas e não constituem recomendação de investimento, oferta de produto ou garantia de rentabilidade. Rentabilidade passada não representa garantia de rentabilidade futura.</p>
+<p>Antes de decidir, confirme taxas, prazos, tributação e condições diretamente com a instituição responsável pelo produto.</p></div></footer>
+<script src="assets/config.js"></script>
+<script src="assets/az.js"></script>
+<script>AZ._registrar = AZ.registrar; AZ.registrar = function (x) { AZ.specs.push(x); }; AZ.antigo = function (slug) { var s = AZ.specs.filter(function (x) { return x.slug === slug; })[0]; if (!s) throw new Error("página antiga não carregada: " + slug); return s; };</script>
+<script>
+AZ.registrar({
+  slug: 'dias-uteis',
+  titulo: 'Calculadora de dias úteis entre duas datas',
+  categoria: 'datas',
+  ordem: 1,
+  resumo: 'Conte dias úteis, dias corridos, fins de semana e feriados nacionais entre duas datas.',
+  palavras: ['dias úteis', 'dias corridos', 'feriados', 'feriados nacionais', 'prazo', 'calendário bancário', 'anbima', 'fim de semana', 'contar dias'],
+  intro: 'Informe as duas datas para saber quantos dias úteis e corridos há entre elas, quantos sábados, domingos e feriados nacionais caem no período e quais são esses feriados.',
+  campos: [
+    { id: 'inicio', rotulo: 'Data inicial', tipo: 'data', padrao: 'hoje', largura: 'meia' },
+    { id: 'fim', rotulo: 'Data final', tipo: 'data', padrao: 'hoje+365', largura: 'meia' },
+    { id: 'modo', rotulo: 'Contagem', tipo: 'segmento', padrao: 'mercado',
+      opcoes: [{ v: 'mercado', t: 'Não contar o dia inicial' }, { v: 'ambas', t: 'Contar os dois dias' }],
+      ajuda: 'O padrão dos prazos em geral exclui o dia inicial e inclui o dia final. Entre dois dias úteis, o resultado é igual ao da contagem da renda fixa, que inclui o dia inicial e exclui o final.' },
+    { id: 'locais', rotulo: 'Feriados locais em dias úteis', tipo: 'int', padrao: 0, min: 0, max: 5000, opcional: true, sufixo: 'dias',
+      ajuda: 'Opcional. Quantidade de feriados estaduais ou municipais em dias de semana no período, para descontar do total.' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, F = AZ.f;
+    var SEM = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+    var MIN = new Date(2000, 0, 1), MAX = new Date(2100, 11, 31);
+    if (v.inicio < MIN || v.fim > MAX || v.fim < MIN || v.inicio > MAX) return { erro: 'Use datas entre ' + F.data(MIN) + ' e ' + F.data(MAX) + ', intervalo para o qual o calendário de feriados foi conferido.' };
+    if (v.fim < v.inicio) return { erro: 'A data final não pode ser anterior à data inicial.' };
+    var de = v.modo === 'ambas' ? v.inicio : D.somar(v.inicio, 1), ate = v.fim;
+    var chave = function (d) { return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+
+    /* feriados nacionais dentro do intervalo contado */
+    var fer = [], mapa = {}, ano;
+    for (ano = de.getFullYear(); ano <= ate.getFullYear(); ano++) D.feriados(ano).forEach(function (f) { if (f.data >= de && f.data <= ate) { fer.push(f); mapa[chave(f.data)] = 1; } });
+
+    var corridos = 0, fds = 0, ferUteis = 0, uteis = 0, meses = [], at = null, d = de, w, ym;
+    while (d <= ate) {
+      w = d.getDay(); ym = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
+      if (!at || at.ym !== ym) { at = { ym: ym, corridos: 0, fds: 0, fer: 0, uteis: 0 }; meses.push(at); }
+      corridos++; at.corridos++;
+      if (w === 0 || w === 6) { fds++; at.fds++; }
+      else if (mapa[chave(d)]) { ferUteis++; at.fer++; }
+      else { uteis++; at.uteis++; }
+      d = D.somar(d, 1);
+    }
+    if (v.locais > uteis) return { erro: 'A quantidade de feriados locais (' + F.int(v.locais) + ') é maior que o número de dias úteis do período (' + F.int(uteis) + ').' };
+    /* conta por feriado, e não por diferença: em 21/04/2000 e 21/04/2079 a Paixão de Cristo coincide com Tiradentes */
+    var ehFds = function (f) { var w = f.data.getDay(); return w === 0 || w === 6; };
+    var liquido = uteis - v.locais, semFer = uteis + ferUteis, ferFds = fer.filter(ehFds).length, visto = {};
+
+    var descontos = [];
+    if (ferUteis) descontos.push(ferUteis === 1 ? 'o feriado nacional nesses dias' : 'os ' + F.int(ferUteis) + ' feriados nacionais nesses dias');
+    if (v.locais) descontos.push(v.locais === 1 ? 'o feriado local informado' : 'os ' + F.int(v.locais) + ' feriados locais informados');
+    var dest = [
+      { rotulo: 'Dias úteis', valor: liquido, formato: 'int', tom: 'primario', nota: 'sem sábados, domingos e feriados' + (v.locais ? ', incluídos ' + F.int(v.locais) + ' locais' : ' nacionais') },
+      { rotulo: 'Dias corridos', valor: corridos, formato: 'int', nota: corridos >= 14 ? 'cerca de ' + F.num(corridos / 7, 1) + ' semanas' : '' },
+      { rotulo: 'Sábados e domingos', valor: fds, formato: 'int' },
+      { rotulo: 'Feriados em dias úteis', valor: ferUteis, formato: 'int', nota: ferFds ? (ferFds === 1 ? 'outro feriado cai' : 'outros ' + ferFds + ' caem') + ' em fim de semana' : 'feriados nacionais' }
+    ];
+    return {
+      destaques: dest,
+      resumo: '<p>A contagem vai de ' + F.data(de) + ' (' + SEM[de.getDay()] + ') a ' + F.data(ate) + ' (' + SEM[ate.getDay()] + ')' + (v.modo === 'ambas' ? ', incluídos os dois dias' : ', sem contar o dia inicial informado') + '. ' +
+        (corridos === 0 ? 'Não há dias no intervalo.' : (corridos === 1 ? 'O intervalo tem 1 dia corrido, que ' + (semFer ? 'cai' : 'não cai') : 'São ' + F.int(corridos) + ' dias corridos, dos quais ' + F.int(semFer) + (semFer === 1 ? ' cai' : ' caem')) + ' de segunda a sexta-feira. ' +
+          (descontos.length ? (ferUteis + v.locais === 1 ? 'Descontado ' : 'Descontados ') + descontos.join(' e ') + ', ' : 'Não há feriado nacional nesses dias, portanto ') + (liquido === 1 ? 'resta' : 'restam') + ' <strong>' + F.int(liquido) + (liquido === 1 ? ' dia útil' : ' dias úteis') + '</strong>.') +
+        (liquido > 0 ? ' Em base de 252 dias úteis por ano, usada na renda fixa, o período equivale a ' + F.num(liquido / 252, 4) + (liquido / 252 >= 2 ? ' anos.' : ' ano.') : '') + '</p>',
+      tabelas: [{
+        titulo: 'Composição da contagem', csv: false, destaque: 4 + (v.locais ? 1 : 0),
+        colunas: [{ t: 'Item' }, { t: 'Dias', f: 'int' }],
+        linhas: [['Dias corridos', corridos], ['Sábados e domingos', -fds], ['Dias de segunda a sexta-feira', semFer], ['Feriados nacionais em dias úteis', -ferUteis]]
+          .concat(v.locais ? [['Feriados locais informados', -v.locais]] : []).concat([['Dias úteis', liquido]])
+      }].concat(fer.length ? [{
+        titulo: 'Feriados nacionais no período',
+        colunas: [{ t: 'Data' }, { t: 'Dia da semana', f: 'texto' }, { t: 'Feriado', f: 'texto' }, { t: 'Efeito na contagem', f: 'texto' }],
+        linhas: fer.map(function (f) { var k = chave(f.data), rep = visto[k]; visto[k] = 1; return [F.data(f.data), SEM[f.data.getDay()], f.nome, ehFds(f) ? 'Já era fim de semana' : rep ? 'Mesmo dia do feriado anterior' : 'Desconta um dia útil']; }),
+        mostrar: 16
+      }] : []).concat(meses.length > 1 ? [{
+        titulo: 'Dias por mês',
+        colunas: [{ t: 'Mês' }, { t: 'Dias corridos', f: 'int' }, { t: 'Sábados e domingos', f: 'int' }, { t: 'Feriados em dias úteis', f: 'int' }, { t: 'Dias úteis', f: 'int' }],
+        linhas: meses.map(function (m) { return [F.mesAno(m.ym), m.corridos, m.fds, m.fer, m.uteis]; }),
+        nota: 'O primeiro e o último mês consideram apenas os dias dentro do intervalo. Feriados locais informados não entram nesta tabela.'
+      }] : []),
+      textos: fer.length ? [] : ['<p>Não há feriado nacional no intervalo contado.</p>']
+    };
+  },
+  explicacao: [
+    '<p>Dias corridos são todos os dias do calendário. Dias úteis são os dias de segunda a sexta-feira que não são feriado. A calculadora percorre o intervalo dia a dia e separa cada data em uma de três categorias: fim de semana, feriado nacional em dia de semana ou dia útil.</p>',
+    '<p>O calendário é o de feriados nacionais adotado pelo sistema financeiro: Confraternização Universal, segunda e terça-feira de Carnaval, Paixão de Cristo, Tiradentes, Dia do Trabalho, Corpus Christi, Independência, Nossa Senhora Aparecida, Finados, Proclamação da República, Dia da Consciência Negra (a partir de 2024) e Natal. As datas móveis são calculadas a partir da Páscoa de cada ano.</p>',
+    '<p>Na contagem padrão, o dia inicial não entra e o dia final entra. É a convenção de boletos, vencimentos e da maior parte dos prazos legais. A renda fixa conta de outro modo (inclui o dia inicial e exclui o final), mas o resultado é o mesmo sempre que as duas datas são dias úteis. Quando uma delas cai em fim de semana ou feriado, as duas contagens podem diferir em um dia. A outra opção conta os dois dias, útil para medir a duração de um evento, de férias ou de uma obra.</p>',
+    '<p>Limites: feriados estaduais e municipais, pontos facultativos e dias sem expediente bancário por decisão local não estão no calendário. Use o campo de feriados locais para descontá-los. Feriados criados ou extintos por lei depois da publicação desta página não são considerados nas datas futuras. Prazos processuais têm regras próprias de suspensão e devem ser conferidos no tribunal.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'somar-dias',
+  titulo: 'Calculadora para somar ou subtrair dias de uma data',
+  categoria: 'datas',
+  ordem: 2,
+  resumo: 'Descubra em que data cai um prazo somando ou subtraindo dias corridos ou dias úteis.',
+  palavras: ['somar dias', 'subtrair dias', 'prazo', 'vencimento', 'dias úteis', 'dias corridos', 'data futura', 'data passada', 'calendário'],
+  intro: 'Informe a data de partida e a quantidade de dias para saber a data resultante. A conta pode ser em dias corridos ou em dias úteis, para frente ou para trás, e mostra os fins de semana e feriados nacionais do caminho.',
+  campos: [
+    { id: 'data', rotulo: 'Data de partida', tipo: 'data', padrao: 'hoje' },
+    { id: 'op', rotulo: 'Operação', tipo: 'segmento', padrao: 'somar', largura: 'meia', opcoes: [{ v: 'somar', t: 'Somar' }, { v: 'subtrair', t: 'Subtrair' }] },
+    { id: 'tipo', rotulo: 'Tipo de dia', tipo: 'segmento', padrao: 'corridos', largura: 'meia', opcoes: [{ v: 'corridos', t: 'Dias corridos' }, { v: 'uteis', t: 'Dias úteis' }] },
+    { id: 'dias', rotulo: 'Quantidade de dias', tipo: 'int', padrao: 30, min: 0, max: 36500, sufixo: 'dias' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, F = AZ.f;
+    var SEM = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+    var MIN = new Date(2000, 0, 1), MAX = new Date(2100, 11, 31), fora = 'Use datas entre ' + F.data(MIN) + ' e ' + F.data(MAX) + ', intervalo para o qual o calendário de feriados foi conferido.';
+    if (v.data < MIN || v.data > MAX) return { erro: fora };
+    var n = Math.round(v.dias), sinal = v.op === 'subtrair' ? -1 : 1;
+    /* folga para que a busca por dias úteis não ultrapasse o calendário conferido */
+    if (v.tipo === 'uteis' && Math.abs(D.corridos(v.data, sinal > 0 ? MAX : MIN)) < n * 1.6 + 15) return { erro: 'O resultado ultrapassa o calendário disponível. ' + fora };
+    var res = v.tipo === 'uteis' ? D.somarUteis(v.data, sinal * n) : D.somar(v.data, sinal * n);
+    if (res < MIN || res > MAX) return { erro: 'O resultado ultrapassa o calendário disponível. ' + fora };
+
+    /* composição do intervalo: exclui a data de partida e inclui a data resultante, nos dois sentidos */
+    var a = sinal > 0 ? v.data : D.somar(res, -1), b = sinal > 0 ? res : D.somar(v.data, -1);
+    if (n === 0) { a = v.data; b = v.data; }
+    var chave = function (d) { return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+    var de = D.somar(a, 1), fer = [], mapa = {}, ano;
+    for (ano = de.getFullYear(); ano <= b.getFullYear(); ano++) D.feriados(ano).forEach(function (f) { if (f.data >= de && f.data <= b) { fer.push(f); mapa[chave(f.data)] = 1; } });
+    var corridos = 0, fds = 0, ferUteis = 0, uteis = 0, d = de, w;
+    while (d <= b) { w = d.getDay(); corridos++; if (w === 0 || w === 6) fds++; else if (mapa[chave(d)]) ferUteis++; else uteis++; d = D.somar(d, 1); }
+
+    var ehUtil = D.ehUtil(res), motivo = res.getDay() === 0 || res.getDay() === 6 ? 'cai em um ' + SEM[res.getDay()] : 'é feriado nacional (' + ((D.feriados(res.getFullYear()).filter(function (f) { return chave(f.data) === chave(res); })[0] || {}).nome || '') + ')';
+    var seguinte = ehUtil ? res : D.somarUteis(res, 1), anterior = ehUtil ? res : D.somarUteis(res, -1);
+    var verbo = sinal > 0 ? 'depois de' : 'antes de', un = v.tipo === 'uteis' ? (n === 1 ? 'dia útil' : 'dias úteis') : (n === 1 ? 'dia corrido' : 'dias corridos');
+    var dest = [
+      { rotulo: 'Data resultante', valor: F.data(res), tom: 'primario', nota: SEM[res.getDay()] + (ehUtil ? '' : ', não é dia útil') },
+      { rotulo: 'Dias corridos', valor: corridos, formato: 'int', nota: 'entre as duas datas' },
+      { rotulo: 'Dias úteis', valor: uteis, formato: 'int', nota: 'entre as duas datas' },
+      { rotulo: 'Fins de semana e feriados', valor: fds + ferUteis, formato: 'int', nota: F.int(fds) + (fds === 1 ? ' dia de fim de semana, ' : ' sábados e domingos, ') + F.int(ferUteis) + (ferUteis === 1 ? ' feriado' : ' feriados') + ' em dia útil' }
+    ];
+    if (!ehUtil) dest.splice(1, 0, { rotulo: 'Dia útil seguinte', valor: F.data(seguinte), tom: 'destaque', nota: SEM[seguinte.getDay()] + '. O anterior é ' + F.data(anterior) });
+    return {
+      destaques: dest,
+      resumo: '<p><strong>' + F.int(n) + ' ' + un + '</strong> ' + verbo + ' ' + F.data(v.data) + ' (' + SEM[v.data.getDay()] + ') é <strong>' + F.data(res) + '</strong> (' + SEM[res.getDay()] + ').' +
+        (ehUtil ? '' : ' Essa data ' + motivo + '. Quando um vencimento cai em dia sem expediente bancário, o pagamento costuma ser aceito até o dia útil seguinte, ' + F.data(seguinte) + '.') +
+        (v.tipo === 'uteis' && !D.ehUtil(v.data) && n > 0 ? ' A data de partida não é dia útil. A contagem começa no primeiro dia útil ' + (sinal > 0 ? 'depois' : 'antes') + ' dela.' : '') + '</p>',
+      tabelas: fer.length ? [{
+        titulo: 'Feriados nacionais no intervalo',
+        colunas: [{ t: 'Data' }, { t: 'Dia da semana', f: 'texto' }, { t: 'Feriado', f: 'texto' }, { t: 'Situação', f: 'texto' }],
+        linhas: fer.map(function (f) { var fs = f.data.getDay() === 0 || f.data.getDay() === 6; return [F.data(f.data), SEM[f.data.getDay()], f.nome, fs ? 'Cai em fim de semana' : 'Cai em dia útil']; }),
+        mostrar: 16
+      }] : [],
+      textos: fer.length || n === 0 ? [] : ['<p>Não há feriado nacional entre as duas datas.</p>']
+    };
+  },
+  explicacao: [
+    '<p>Em dias corridos, a data resultante é simplesmente a data de partida mais (ou menos) a quantidade informada, contando todos os dias do calendário. O dia de partida não entra na contagem: somar 1 dia leva ao dia seguinte.</p>',
+    '<p>Em dias úteis, a calculadora avança ou recua um dia de cada vez e só conta os dias de segunda a sexta-feira que não são feriado nacional. O calendário é o de feriados nacionais adotado pelo sistema financeiro, com Carnaval, Paixão de Cristo e Corpus Christi calculados a partir da Páscoa de cada ano.</p>',
+    '<p>Os cartões de dias corridos, dias úteis e fins de semana descrevem o intervalo entre as duas datas, sem contar a data de partida e contando a data resultante. Quando a soma em dias corridos termina em sábado, domingo ou feriado, o resultado mostra também o dia útil seguinte e o anterior.</p>',
+    '<p>Limites: feriados estaduais e municipais e pontos facultativos não são considerados, assim como feriados criados ou extintos depois da publicação desta página. Regras de prorrogação de vencimento variam conforme o contrato e o tipo de obrigação, portanto confirme a data com o credor ou com o órgão responsável.</p>'
+  ].join('\n')
+});
+</script>
+<script>AZ.registrar = AZ._registrar;</script>
+<script>
+/* Protótipo unificado (23/10/2026): uma calculadora de datas no lugar de dias-uteis e somar-dias.
+   Toda conta vem das páginas antigas (AZ.antigo(slug).calcular), chamadas com os mesmos campos (os ids são os mesmos
+   das páginas antigas, que não se repetem entre elas). O botão "Contar" escolhe a página; aqui só se encurtam as notas,
+   se reescreve a frase de leitura com os números delas e se tira o cartão que repetia a quantidade digitada no prazo. */
+AZ.registrar({
+  slug: 'datas-unificada',
+  usa: ['dias-uteis', 'somar-dias'],
+  /* endereços antigos (?veio=): os campos têm os mesmos ids e padrões das páginas antigas; só o botão "Contar" muda */
+  atalhos: {
+    'dias-uteis': {},
+    'somar-dias': { contar: 'prazo' }
+  },
+  titulo: 'Calculadora de dias úteis e prazos',
+  categoria: 'datas',
+  ordem: 1,
+  resumo: 'Conte dias úteis e corridos entre duas datas ou descubra em que data cai um prazo, com os feriados nacionais do caminho.',
+  palavras: ['dias úteis', 'dias corridos', 'feriados', 'feriados nacionais', 'prazo', 'calendário bancário', 'anbima', 'fim de semana', 'contar dias',
+    'diferença entre datas', 'somar dias', 'subtrair dias', 'vencimento', 'data futura', 'data passada', 'calendário', 'dia útil seguinte'],
+  intro: 'Conte os dias úteis entre duas datas ou descubra em que data cai um prazo, já com os feriados nacionais.',
+  campos: [
+    /* botões no alto do resultado (não há gráfico) */
+    { id: 'contar', rotulo: 'Contar', tipo: 'segmento', padrao: 'entre', noGrafico: 0,
+      opcoes: [{ v: 'entre', t: 'Dias entre duas datas' }, { v: 'prazo', t: 'A data de um prazo' }] },
+
+    /* dias entre duas datas: os mesmos campos da página antiga */
+    { id: 'inicio', rotulo: 'Data inicial', tipo: 'data', padrao: 'hoje', largura: 'meia', mostrarSe: function (v) { return v.contar === 'entre'; } },
+    { id: 'fim', rotulo: 'Data final', tipo: 'data', padrao: 'hoje+365', largura: 'meia', mostrarSe: function (v) { return v.contar === 'entre'; } },
+    { id: 'modo', rotulo: 'Contagem', tipo: 'segmento', padrao: 'mercado',
+      opcoes: [{ v: 'mercado', t: 'Não contar o dia inicial' }, { v: 'ambas', t: 'Contar os dois dias' }],
+      ajuda: 'Prazos e vencimentos excluem o dia inicial e incluem o final. Contar os dois dias serve para medir a duração de um evento.',
+      mostrarSe: function (v) { return v.contar === 'entre'; } },
+    { id: 'locais', rotulo: 'Feriados locais em dias úteis', tipo: 'int', padrao: 0, min: 0, max: 5000, opcional: true, sufixo: 'dias',
+      ajuda: 'Opcional. Feriados estaduais ou municipais que caem de segunda a sexta-feira no período, para descontar do total.',
+      mostrarSe: function (v) { return v.contar === 'entre'; } },
+
+    /* data de um prazo: os mesmos campos da página antiga */
+    { id: 'data', rotulo: 'Data de partida', tipo: 'data', padrao: 'hoje', mostrarSe: function (v) { return v.contar === 'prazo'; } },
+    { id: 'op', rotulo: 'Operação', tipo: 'segmento', padrao: 'somar', largura: 'meia', opcoes: [{ v: 'somar', t: 'Somar' }, { v: 'subtrair', t: 'Subtrair' }],
+      mostrarSe: function (v) { return v.contar === 'prazo'; } },
+    { id: 'tipo', rotulo: 'Tipo de dia', tipo: 'segmento', padrao: 'corridos', largura: 'meia', opcoes: [{ v: 'corridos', t: 'Dias corridos' }, { v: 'uteis', t: 'Dias úteis' }],
+      mostrarSe: function (v) { return v.contar === 'prazo'; } },
+    { id: 'dias', rotulo: 'Quantidade de dias', tipo: 'int', padrao: 30, min: 0, max: 36500, sufixo: 'dias', mostrarSe: function (v) { return v.contar === 'prazo'; } }
+  ],
+  calcular: function (v, AZ) {
+    var F = AZ.f, R, d, m;
+    var nota = function (x, n) { return Object.assign({}, x, { nota: n }); };
+    var pl = function (n, s, p) { return F.int(n) + ' ' + (n === 1 ? s : p); };
+    var achar = function (r, rot) { return r.destaques.filter(function (x) { return x.rotulo === rot; })[0]; };
+
+    if (v.contar === 'prazo') {
+      R = AZ.antigo('somar-dias').calcular({ data: v.data, op: v.op, tipo: v.tipo, dias: v.dias }, AZ);
+      if (R.erro) return R;
+      var res = R.destaques[0], seg = achar(R, 'Dia útil seguinte'), fds = achar(R, 'Fins de semana e feriados');
+      /* sai o cartão da quantidade digitada (dias corridos numa soma de corridos, dias úteis numa soma de úteis): ela vai para a nota do outro */
+      var outro = achar(R, v.tipo === 'uteis' ? 'Dias corridos' : 'Dias úteis');
+      var partes = /^([\d.]+) (?:dia de fim de semana|sábados e domingos), ([\d.]+) feriados? em dia útil$/.exec(fds.nota || '');
+      d = [res];
+      if (seg) d.push(nota(seg, seg.nota.replace('. O anterior', '; o anterior')));
+      d.push(nota(outro, 'em ' + pl(v.dias, v.tipo === 'uteis' ? 'dia útil' : 'dia corrido', v.tipo === 'uteis' ? 'dias úteis' : 'dias corridos')));
+      if (partes) {
+        var fs = partes[1] === '0' ? '' : partes[1] === '1' ? '1 dia de fim de semana' : partes[1] + ' sábados e domingos';
+        var fe = partes[2] === '0' ? '' : partes[2] + (partes[2] === '1' ? ' feriado' : ' feriados');
+        fds = nota(fds, fs && fe ? fs + ' e ' + fe : fs || (fe ? fe + ' em dia de semana' : 'nenhum no intervalo'));
+      }
+      d.push(fds);
+      /* frase de leitura: a primeira frase da página antiga e, quando há, o dia útil seguinte ou o aviso da data de partida */
+      var f1 = /^<p>(.*?<\/strong> \([^)]*\)\.)/.exec(R.resumo || ''), mot = /Essa data (é feriado nacional \([^)]*\))\./.exec(R.resumo || '');
+      var part = /A data de partida não é dia útil\. A contagem começa no primeiro dia útil (depois|antes) dela\./.exec(R.resumo || '');
+      var resumo = '<p>' + (f1 ? f1[1] : '') +
+        (seg ? ' Como ' + (mot ? mot[1] : 'não é dia útil') + ', um vencimento nessa data costuma ser aceito até o dia útil seguinte, <strong>' + seg.valor + '</strong>.' : '') +
+        (part ? ' A data de partida não é dia útil, então a contagem começa no primeiro dia útil ' + part[1] + ' dela.' : '') + '</p>';
+      return { destaques: d, resumo: resumo, tabelas: R.tabelas };
+    }
+
+    R = AZ.antigo('dias-uteis').calcular({ inicio: v.inicio, fim: v.fim, modo: v.modo, locais: v.locais }, AZ);
+    if (R.erro) return R;
+    var uteis = R.destaques[0], ferU = achar(R, 'Feriados em dias úteis').valor, corr = achar(R, 'Dias corridos').valor;
+    d = R.destaques.slice();
+    if (v.locais) d[0] = nota(uteis, (v.locais === 1 ? 'descontado' : 'descontados') + ' também ' + pl(v.locais, 'feriado local', 'feriados locais'));
+    /* frase de leitura com os números da página antiga: o intervalo contado, o resultado e a base de 252 dias */
+    var faixa = /A contagem vai de (.+?) a (.+?), (incluídos os dois dias|sem contar o dia inicial informado)\./.exec(R.resumo || '');
+    var base = /o período equivale a ([\d.,]+ anos?)\./.exec(R.resumo || '');
+    var desc = [];
+    if (ferU) desc.push(pl(ferU, 'feriado nacional', 'feriados nacionais'));
+    if (v.locais) desc.push(ferU ? pl(v.locais, 'local', 'locais') : pl(v.locais, 'feriado local', 'feriados locais'));
+    var resumo2 = '<p>' + (faixa ? 'A contagem vai de ' + faixa[1] + ' a ' + faixa[2] + (v.modo === 'ambas' ? ', com os dois dias, ' : ', sem o dia inicial informado, ') : '') +
+      (corr === 0 ? 'e não há dias no intervalo.' : 'e dá <strong>' + pl(uteis.valor, 'dia útil', 'dias úteis') + '</strong>' + (desc.length ? (ferU + v.locais === 1 ? ', já descontado ' : ', já descontados ') + desc.join(' e ') : '') + '.') +
+      (base ? ' Na base de 252 dias úteis por ano, usada na renda fixa, isso equivale a ' + base[1] + '.' : '') + '</p>';
+    /* a lista de feriados abre primeiro; a composição repete os cartões e fica recolhida, como a tabela por mês */
+    var T = R.tabelas, comp = Object.assign({}, T[0], { recolhida: true }), fer = T.filter(function (t) { return /^Feriados/.test(t.titulo); })[0];
+    var tabs = (fer ? [Object.assign({}, fer, { recolhida: false })] : []).concat([comp]).concat(T.filter(function (t) { return t.titulo === 'Dias por mês'; }));
+    return { destaques: d, resumo: resumo2, tabelas: tabs };
+  },
+  casos: [
+    { nome: 'Ano de 2026 inteiro, contando os dois dias', entradas: { contar: 'entre', inicio: '2026-01-01', fim: '2026-12-31', modo: 'ambas', locais: 0 }, espera: { 'Dias úteis': '249', 'Dias corridos': '365', 'Feriados em dias úteis': '12' } },
+    { nome: 'Novembro de 2026 com 2 feriados locais', entradas: { contar: 'entre', inicio: '2026-11-01', fim: '2026-11-30', modo: 'mercado', locais: 2 }, espera: { 'Dias úteis': '17', 'Dias corridos': '29', 'Sábados e domingos': '8' } },
+    { nome: '30 dias corridos terminando num domingo', entradas: { contar: 'prazo', data: '2026-10-23', op: 'somar', tipo: 'corridos', dias: 30 }, espera: { 'Data resultante': '22/11/2026', 'Dia útil seguinte': '23/11/2026', 'Dias úteis': '18' } },
+    { nome: '30 dias corridos terminando em Finados', entradas: { contar: 'prazo', data: '2026-10-03', op: 'somar', tipo: 'corridos', dias: 30 }, espera: { 'Data resultante': '02/11/2026', 'Dia útil seguinte': '03/11/2026' } },
+    { nome: '10 dias úteis para trás', entradas: { contar: 'prazo', data: '2026-10-23', op: 'subtrair', tipo: 'uteis', dias: 10 }, espera: { 'Data resultante': '08/10/2026', 'Dias corridos': '15', 'Fins de semana e feriados': '5' } }
+  ],
+  explicacao: [
+    '<h3>Dias úteis e feriados</h3>',
+    '<p>Dias corridos são todos os dias do calendário; dias úteis são os de segunda a sexta-feira que não são feriado nacional. O calendário é o adotado pelo sistema financeiro, com Carnaval, Paixão de Cristo e Corpus Christi calculados a partir da Páscoa de cada ano e o Dia da Consciência Negra a partir de 2024.</p>',
+    '<h3>Como os dias são contados</h3>',
+    '<p>Entre duas datas, a contagem padrão exclui o dia inicial e inclui o final, como em boletos e prazos legais. A renda fixa inclui o inicial e exclui o final, o que dá o mesmo resultado sempre que as duas datas são dias úteis. Num prazo, a data de partida não entra: somar 1 dia leva ao dia seguinte. Em dias úteis, a conta avança um dia de cada vez e pula fins de semana e feriados.</p>',
+    '<h3>Limites</h3>',
+    '<p>Feriados estaduais e municipais e pontos facultativos não estão no calendário, mas, entre duas datas, podem ser descontados no campo de feriados locais. As datas vão de 2000 a 2100. Regras de prorrogação de vencimento variam conforme o contrato, por isso confirme a data com o credor ou com o órgão responsável.</p>'
+  ].join('\n')
+});
+</script>
+</body>
+</html>

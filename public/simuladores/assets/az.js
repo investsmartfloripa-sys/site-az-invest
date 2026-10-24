@@ -10,7 +10,8 @@
   }, AZ.cfg || {});
 
   /* ───────────── formatação ───────────── */
-  var nf = function (o) { return new Intl.NumberFormat('pt-BR', o); };
+  /* um formatador por combinação de opções: criar Intl.NumberFormat a cada número pesava nos simuladores que rodam muitas contas */
+  var nfCache = {}, nf = function (o) { var k = JSON.stringify(o || {}); return nfCache[k] || (nfCache[k] = new Intl.NumberFormat('pt-BR', o)); };
   var F = AZ.f = {
     brl: function (v) { if (Math.abs(v) < 0.005) v = 0; return isFinite(v) ? nf({ style: 'currency', currency: 'BRL' }).format(v) : '-'; },
     num: function (v, c) { c = c == null ? 2 : c; if (Math.abs(v) < 0.5 * Math.pow(10, -c)) v = 0; return isFinite(v) ? nf({ minimumFractionDigits: c, maximumFractionDigits: c }).format(v) : '-'; },
@@ -26,7 +27,7 @@
     prazo: function (meses) {
       if (!isFinite(meses)) return '-';
       meses = Math.round(meses); var a = Math.floor(meses / 12), m = meses % 12, p = [];
-      if (a) p.push(a.toLocaleString('pt-BR') + (a === 1 ? ' ano' : ' anos')); if (m || !a) p.push(m + (m === 1 ? ' mês' : ' meses'));
+      if (a) p.push(a.toLocaleString('pt-BR') + (a === 1 ? ' ano' : ' anos')); if (m || !a) p.push(m + (m === 1 ? ' mês' : ' meses')); /* espaço sem quebra: "5 anos" não se parte na tabela do celular */
       return p.join(' e ');
     },
     compacto: function (v, moeda) {
@@ -34,8 +35,8 @@
       var c2 = function (x) { return nf({ maximumFractionDigits: x >= 100 ? 0 : x >= 10 ? 1 : 2 }).format(x); };
       if (a >= 1e9) t = c2(a / 1e9) + ' bi';
       else if (a >= 1e6) t = c2(a / 1e6) + ' mi';
-      else if (a >= 1e4) t = F.num(a / 1e3, 0) + ' mil';
-      else if (a >= 1e3) t = F.num(a / 1e3, 1).replace(',0', '') + ' mil';
+      else if (a >= 1e4) t = nf({ maximumFractionDigits: a < 1e5 ? 1 : 0 }).format(a / 1e3) + ' mil';
+      else if (a >= 1e3) t = nf({ maximumFractionDigits: 2 }).format(a / 1e3) + ' mil';
       else t = F.num(a, a < 10 && a % 1 ? 2 : 0);
       return s + p + t;
     }
@@ -295,12 +296,19 @@
     var v = {}, erros = {}, campos = spec.campos || [], refs = {}, timer;
     campos.forEach(function (c) { if (c.tipo === 'titulo') return; v[c.id] = padraoDe(c); if (c.unidades) v[c.id + 'Un'] = c.unidadePadrao || c.unidades[0].v; });
     v._n = 1;
+    /* endereço antigo absorvido (redirecionado com ?veio=<slug>): abre no modo equivalente ao da página antiga; um link com # ainda prevalece */
+    try {
+      var veio = new URLSearchParams(location.search).get('veio'), at = veio && spec.atalhos && spec.atalhos[veio];
+      if (at) Object.keys(at).forEach(function (k) { var c = campos.filter(function (x) { return x.id === k; })[0]; v[k] = c && c.tipo === 'data' ? padraoData(at[k]) : at[k]; });
+      if (veio) { var q = new URLSearchParams(location.search); q.delete('veio'); var qs = q.toString(); history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash); }
+    } catch (e) { }
     lerHash();
 
     var form = h('form', { class: 'az-cartao az-form', novalidate: true, onsubmit: function (e) { e.preventDefault(); } });
     form.appendChild(h('h2', { text: spec.tituloFormulario || 'Dados da simulação' }));
     var grade = h('div', { class: 'az-campos' }); form.appendChild(grade);
-    campos.forEach(function (c) { var el = campo(c); refs[c.id || c.rotulo] = { c: c, el: el }; grade.appendChild(el); });
+    /* campo com noGrafico (índice do gráfico) não entra no formulário: vira botões no cabeçalho desse gráfico (botoesNoGrafico) */
+    campos.forEach(function (c) { var el = campo(c); refs[c.id || c.rotulo] = { c: c, el: el }; if (c.noGrafico == null) grade.appendChild(el); });
     var acoes = h('div', { class: 'az-acoes' });
     (spec.acoes || []).forEach(function (a) { acoes.appendChild(h('button', { type: 'button', class: 'az-botao az-peq', text: a.rotulo, onclick: function () { v._n++; v._acao = a.id; calcular(); } })); });
     var bLink = h('button', { type: 'button', class: 'az-botao az-sec az-peq', text: 'Copiar link da simulação', onclick: function () { gravarHash(); copiar(location.href, bLink, 'Copiar link da simulação'); } });
@@ -377,7 +385,13 @@
         } else if (suf) ent.appendChild(h('span', { class: 'az-afx', text: suf }));
         box.appendChild(ent);
       }
-      if (c.ajuda) box.appendChild(h('div', { class: 'az-ajuda', html: c.ajuda }));
+      /* a ajuda fica recolhida atrás de um "?" ao lado do rótulo: o formulário mostra só o essencial */
+      if (c.ajuda) {
+        var aj = h('div', { class: 'az-ajuda', html: c.ajuda, hidden: true }), lab = box.firstChild;
+        var bi = h('button', { type: 'button', class: 'az-info', 'aria-label': 'Explicação: ' + c.rotulo, 'aria-expanded': 'false', text: '?', onclick: function (ev) { ev.preventDefault(); ev.stopPropagation(); aj.hidden = !aj.hidden; bi.setAttribute('aria-expanded', aj.hidden ? 'false' : 'true'); altura(); } });
+        if (lab && c.tipo !== 'check') { var cab = h('div', { class: 'az-cab' }); box.insertBefore(cab, lab); cab.appendChild(lab); cab.appendChild(bi); } else box.appendChild(bi);
+        box.appendChild(aj);
+      }
       return box;
     }
     function visibilidade() { campos.forEach(function (c) { if (!c.mostrarSe) return; var r = refs[c.id || c.rotulo]; var on = false; try { on = !!c.mostrarSe(v); } catch (e) { } r.el.style.display = on ? '' : 'none'; r.oculto = !on; }); }
@@ -404,12 +418,33 @@
       /* mantém a altura durante o redesenho para a página não saltar enquanto o usuário digita */
       res.style.minHeight = res.offsetHeight + 'px'; setTimeout(function () { res.style.minHeight = ''; }, 0);
       res.innerHTML = '';
-      if (msg) { res.appendChild(h('div', { class: 'az-cartao az-vazio', text: msg })); altura(); return; }
+      if (msg) { res.appendChild(h('div', { class: 'az-cartao az-vazio', text: msg })); botoesNoGrafico(); altura(); return; }
       var vv = Object.assign({}, v); campos.forEach(function (c) { if (NUMERICOS[c.tipo] && !isFinite(vv[c.id])) vv[c.id] = 0; });
       try { r = spec.calcular(vv, AZ) || {}; } catch (e) { if (g.console) console.error(e); r = { erro: 'Não foi possível calcular com os valores informados. Revise os campos e tente novamente.' }; }
-      if (r.erro) { res.appendChild(h('div', { class: 'az-alerta az-atencao', text: r.erro })); altura(); return; }
-      AZ.desenhar(res, r, spec); formulas(res); ajustarKpis(res); ajustarTabelas(res); AZ.encaixarFluxo();
+      if (r.erro) { res.appendChild(h('div', { class: 'az-alerta az-atencao', text: r.erro })); botoesNoGrafico(); altura(); return; }
+      AZ.desenhar(res, r, spec); botoesNoGrafico(); formulas(res); ajustarKpis(res); ajustarTabelas(res); AZ.encaixarFluxo();
       altura();
+    }
+    /* botões no gráfico: segmento ou select vira um grupo de botões (um ativo); check vira um botão liga/desliga.
+       Ficam no cabeçalho do gráfico de índice c.noGrafico (ou no topo do resultado, se ele não existir) e mudam o mesmo valor do campo. */
+    function botoesNoGrafico() {
+      var cartoes = res.querySelectorAll('.az-graf');
+      campos.forEach(function (c) {
+        if (c.noGrafico == null || refs[c.id].oculto) return;
+        var alvo = cartoes[c.noGrafico] ? cartoes[c.noGrafico].parentNode : (res.querySelector('.az-bloco.az-texto') || res), barra = null;
+        [].forEach.call(alvo.children, function (x) { if (x.classList.contains('az-gbar')) barra = x; });
+        if (!barra) { barra = h('div', { class: 'az-gbar' }); var t = alvo.querySelector('h2'); alvo.insertBefore(barra, t && t.parentNode === alvo ? t.nextSibling : alvo.firstChild); }
+        var grupo = h('div', { class: 'az-gbtn', role: 'group', 'aria-label': c.rotulo });
+        var trocar = function (x) { v[c.id] = x; visibilidade(); calcular(); gravarHash(); };
+        if (c.tipo === 'check') {
+          grupo.appendChild(h('button', { type: 'button', class: 'az-gb az-chk' + (v[c.id] ? ' az-on' : ''), 'aria-pressed': v[c.id] ? 'true' : 'false', text: c.rotulo, onclick: function () { trocar(!v[c.id]); } }));
+        } else {
+          if (c.rotuloNoGrafico !== false) grupo.appendChild(h('span', { class: 'az-gbtn-rot', text: c.rotulo }));
+          var seg = h('span', { class: 'az-gseg' }); grupo.appendChild(seg);
+          c.opcoes.forEach(function (o) { var on = String(v[c.id]) === String(o.v); seg.appendChild(h('button', { type: 'button', class: 'az-gb' + (on ? ' az-on' : ''), 'aria-pressed': on ? 'true' : 'false', text: o.t, onclick: function () { if (!on) trocar(o.v); } })); });
+        }
+        barra.appendChild(grupo);
+      });
     }
     function gravarHash() {
       try {
@@ -453,13 +488,18 @@
       });
       res.appendChild(k);
     }
-    if (r.resumo) res.appendChild(h('div', { class: 'az-cartao az-bloco az-texto', html: r.resumo }));
-    (r.graficos || []).forEach(function (gr) {
+    /* a leitura do resultado fica embaixo do primeiro gráfico (um parágrafo por coisa); sem gráfico, logo após os destaques */
+    var grs = r.graficos || [];
+    if (r.resumo && !grs.length) res.appendChild(h('div', { class: 'az-cartao az-bloco az-texto', html: r.resumo }));
+    grs.forEach(function (gr, i) {
       var b = h('div', { class: 'az-cartao az-bloco' }); if (gr.titulo) b.appendChild(h('h2', { text: gr.titulo }));
       var c = h('div', { class: 'az-graf' }); b.appendChild(c); res.appendChild(b);
       AZ.grafico(c, gr);
+      var leitura = gr.leitura || (i === 0 ? r.resumo : null);
+      if (leitura) b.appendChild(h('div', { class: 'az-leitura', html: leitura }));
     });
-    (r.tabelas || []).forEach(function (t, i) { res.appendChild(tabela(t, (spec && spec.slug || 'simulacao') + (i ? '-' + (i + 1) : ''))); });
+    /* só a primeira tabela fica aberta; as demais viram uma linha "Ver tabela" (o spec decide com recolhida: true/false) */
+    (r.tabelas || []).forEach(function (t, i) { res.appendChild(tabela(t, (spec && spec.slug || 'simulacao') + (i ? '-' + (i + 1) : ''), t.recolhida != null ? t.recolhida : i > 0)); });
     (r.blocos || []).forEach(function (b) { var e = h('div', { class: 'az-cartao az-bloco az-texto' }); if (b.titulo) e.appendChild(h('h2', { text: b.titulo })); e.appendChild(h('div', { html: b.html })); res.appendChild(e); });
     if (r.textos && r.textos.length) res.appendChild(h('div', { class: 'az-cartao az-bloco az-texto', html: r.textos.join('') }));
   };
@@ -468,7 +508,7 @@
   function ajustarKpis(raiz) {
     /* todos os valores de um mesmo grupo de destaques ficam com o mesmo tamanho: o maior em que o mais longo ainda cabe */
     [].forEach.call((raiz || document).querySelectorAll('.az-kpis'), function (grupo) {
-      var vals = [].slice.call(grupo.querySelectorAll('.az-k-val')), min = 18, t;
+      var vals = [].slice.call(grupo.querySelectorAll('.az-k-val')), min = (g.innerWidth || 1280) < 601 ? 15 : 18, t;
       vals.forEach(function (e) { e.classList.remove('az-quebra'); e.style.fontSize = ''; });
       t = vals.length ? parseFloat(g.getComputedStyle(vals[0]).fontSize) || 30 : 30;
       function cabe() { return vals.every(function (e) { return e.scrollWidth <= e.clientWidth + 1; }); }
@@ -480,10 +520,9 @@
   function ajustarTabelas(raiz) {
     [].forEach.call((raiz || document).querySelectorAll('.az-rolo'), function (r) {
       var tb = r.querySelector('table'); if (!tb) return; tb.style.fontSize = ''; tb.classList.remove('az-aperta');
-      if ((g.innerWidth || 1280) < 861) return;
-      var t = parseFloat(g.getComputedStyle(tb).fontSize) || 18;
+      var t = parseFloat(g.getComputedStyle(tb).fontSize) || 18, piso = (g.innerWidth || 1280) < 861 ? 13 : 14;
       if (r.scrollWidth > r.clientWidth + 1) tb.classList.add('az-aperta');
-      while (r.scrollWidth > r.clientWidth + 1 && t > 14) { t -= 0.5; tb.style.fontSize = t + 'px'; }
+      while (r.scrollWidth > r.clientWidth + 1 && t > piso) { t -= 0.5; tb.style.fontSize = t + 'px'; }
     });
   }
   /* Leiaute do computador. Duas opções, medidas a cada cálculo; vale a que deixa menos área vazia:
@@ -543,14 +582,16 @@
     if (tem('poupanca')) { p.push('poupança de ' + F.pct(c.poupanca) + ' ao mês'); fonte('Banco Central'); }
     if (tem('tr')) { p.push('TR de ' + F.pct(c.tr) + ' ao mês'); fonte('Banco Central'); }
     if (!p.length) return null;
-    var txt = p.length > 1 ? p.slice(0, -1).join(', ') + ' e ' + p[p.length - 1] : p[0];
-    return h('p', { class: 'az-fonte', text: 'Valores sugeridos nos campos: ' + txt + '. Fonte: ' + f.join(' e ') + (c.referencia ? ', referência de ' + c.referencia : '') + '. Altere conforme o seu caso.' });
+    return h('p', { class: 'az-fonte', text: 'Taxas sugeridas' + (c.referencia ? ' de ' + c.referencia : '') + ' (' + f.join(' e ') + ').' });
   }
 
-  function tabela(t, nome) {
-    var b = h('div', { class: 'az-cartao az-bloco' }), lim = t.mostrar || (t.linhas.length > 15 ? 12 : t.linhas.length), aberto = t.linhas.length <= lim;
-    var cab = h('div', { class: 'az-tab-cab' }, [h('h2', { text: t.titulo || 'Tabela' })]); b.appendChild(cab);
+  function tabela(t, nome, dobrar) {
+    var b = h(dobrar ? 'details' : 'div', { class: 'az-cartao az-bloco' + (dobrar ? ' az-dobra' : '') }), lim = t.mostrar || (t.linhas.length > 15 ? 12 : t.linhas.length), aberto = t.linhas.length <= lim;
+    if (dobrar) { b.appendChild(h('summary', {}, [h('h2', { text: t.titulo || 'Tabela' })])); b.addEventListener('toggle', function () { if (b.open) ajustarTabelas(b); altura(); }); }
+    else b.appendChild(h('div', { class: 'az-tab-cab' }, [h('h2', { text: t.titulo || 'Tabela' })]));
     var rolo = h('div', { class: 'az-rolo' + (t.linhas.length > 16 ? ' az-longa' : ''), tabindex: '0' }), tb = h('table', { class: 'az-tab' }); rolo.appendChild(tb); b.appendChild(rolo);
+    /* a nota é o parágrafo de leitura da tabela: logo abaixo dela, antes dos botões */
+    if (t.nota) b.appendChild(h('div', { class: 'az-leitura', html: t.nota }));
     var esq = t.colunas.map(function (c, i) { return c.alinhar ? c.alinhar === 'esq' : (c.f === 'texto' || (i === 0 && !c.f)); });
     /* coluna só com valores em reais: o "R$" vai para o cabeçalho, uma vez, e sai das células */
     var emReais = t.colunas.map(function (c, i) { var n = 0, ok = t.linhas.every(function (l) { var tx = AZ.formatar(l[i], c.f); if (tx === '' || /^[-–—]$/.test(tx)) return true; n++; return /^[-−]?R\$\s?[\d.,]+$/.test(tx); }); return ok && n > 0; });
@@ -570,7 +611,6 @@
       var a = h('a', { href: URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })), download: nome + '.csv' }); document.body.appendChild(a); a.click(); a.remove();
     } }));
     if (rod.childNodes.length) b.appendChild(rod);
-    if (t.nota) b.appendChild(h('div', { class: 'az-ajuda az-nota', html: t.nota }));
     return b;
   }
 
@@ -583,7 +623,7 @@
     if (min === max) { max = min + 1; } var bruto = (max - min) / n, mag = Math.pow(10, Math.floor(Math.log10(bruto))), rr = bruto / mag, passo = (rr <= 1 ? 1 : rr <= 2 ? 2 : rr <= 2.5 ? 2.5 : rr <= 5 ? 5 : 10) * mag;
     var a = Math.floor(min / passo) * passo, b = Math.ceil(max / passo) * passo, t = [], x; for (x = a; x <= b + passo / 2; x += passo) t.push(Math.abs(x) < passo / 1e6 ? 0 : x); return { min: a, max: b, ticks: t, passo: passo };
   }
-  function fmtEixo(v, f, passo) { if (f === 'brl') return F.compacto(v, true); if (f && f.slice && f.slice(0, 3) === 'pct') return F.num(v, passo < 1 ? (passo < 0.1 ? 2 : 1) : 0) + '%'; if (f === 'int') return F.compacto(v); if (typeof f === 'function') return f(v); return Math.abs(v) >= 1e4 ? F.compacto(v) : F.num(v, passo < 1 ? (passo < 0.1 ? 2 : 1) : 0); }
+  function fmtEixo(v, f, passo) { if (f === 'brl') return F.compacto(v, true); if (f && f.slice && f.slice(0, 3) === 'pct') return F.num(v, passo < 1 ? (passo < 0.1 ? 2 : 1) : passo % 1 ? 1 : 0) + '%'; if (f === 'int') return F.compacto(v); if (typeof f === 'function') return f(v); return Math.abs(v) >= 1e4 ? F.compacto(v) : F.num(v, passo < 1 ? (passo < 0.1 ? 2 : 1) : 0); }
 
   AZ.grafico = function (cont, gr) {
     if (gr.tipo === 'barras-h') return barrasH(cont, gr);
@@ -695,20 +735,14 @@
 
   AZ.menu = [
     ['index.html', 'Todos os simuladores'],
-    ['calculadora-juros-compostos.html', 'Calculadora de juros compostos'],
-    ['tabela-taxas-equivalentes.html', 'Tabela de taxas equivalentes: CDB x LCI e LCA'],
-    ['lci-lca-pre-x-cdb-pre.html', 'LCI e LCA prefixadas x CDB prefixado'],
-    ['percentual-do-cdi.html', 'Qual percentual do CDI rende mais: CDB ou isento'],
-    ['tempo-de-vida.html', 'Custo em tempo de vida'],
-    ['primeiro-milhao.html', 'Simulador do primeiro milhão'],
-    ['independencia-financeira.html', 'Simulador de independência financeira'],
-    ['correcao-pelo-cdi.html', 'Quanto LCI, LCA e CDB renderam no passado'],
-    ['a-vista-ou-a-prazo.html', 'Comprar à vista ou a prazo'],
-    ['emprestimo.html', 'Simulador de empréstimo'],
-    ['custos-de-sucessao.html', 'Custos de sucessão e inventário'],
-    ['restituicao-imposto-de-renda.html', 'Restituição do imposto de renda'],
-    ['viver-de-renda.html', 'Simulador para viver de renda'],
-    ['index.html#az-outros', 'Outros simuladores']
+    ['juros-compostos-unificado.html', 'Juros compostos'],
+    ['https://investimentosdeaz.com.br/simuladores/consorcio', 'Consórcio ou financiamento'],
+    ['restituicao-imposto-de-renda.html', 'Imposto de renda e PGBL'],
+    ['aposentadoria-unificada.html', 'Aposentadoria e viver de renda'],
+    ['renda-fixa-unificada.html', 'CDB, LCI e LCA'],
+    ['financiamento-unificado.html', 'Financiamento e empréstimo'],
+    ['correcao-unificada.html', 'Correção de valores'],
+    ['index.html#temas', 'Todos por tema']
   ];
   function montarMenu() {
     var nav = document.querySelector('.az-topo nav'); if (!nav) return;
@@ -814,14 +848,24 @@
     var cta = document.getElementById('az-cta'), c = Object.assign({}, AZ.cfg.cta || {}); if (!c.url) c.url = AZ.site.whatsapp || '';
     formulas();
     if (cta && c.url && c.titulo) { cta.hidden = false; cta.querySelector('h2').textContent = c.titulo; cta.querySelector('p').textContent = c.texto; var a = cta.querySelector('a'); a.textContent = c.botao; a.href = c.url; }
+    /* no celular os temas começam recolhidos (a estrutura cabe numa tela); o cabeçalho abre e fecha */
+    if ((g.innerWidth || 1280) < 761) [].forEach.call(document.querySelectorAll('.az-tema'), function (sec) {
+      var cab = sec.querySelector('.az-tema-cab'); if (!cab) return; sec.classList.add('az-fechado');
+      cab.setAttribute('role', 'button'); cab.setAttribute('tabindex', '0'); cab.setAttribute('aria-expanded', 'false');
+      var alternar = function () { var f = sec.classList.toggle('az-fechado'); cab.setAttribute('aria-expanded', f ? 'false' : 'true'); };
+      cab.addEventListener('click', alternar); cab.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); alternar(); } });
+    });
     var busca = document.getElementById('az-busca'); if (!busca) return;
     var itens = [].slice.call(document.querySelectorAll('.az-item')), nada = document.getElementById('az-nada');
     busca.addEventListener('input', function () {
       var outros = document.getElementById('az-outros'); if (outros && busca.value.trim()) outros.open = true;
-      var t = norm(busca.value.trim()).split(/\s+/).filter(Boolean), vis = 0;
-      itens.forEach(function (it) { var txt = it._t || (it._t = norm(it.textContent + ' ' + (it.getAttribute('data-k') || ''))), ok = t.every(function (p) { return txt.indexOf(p) >= 0; }); it.hidden = !ok; if (ok) vis++; });
+      /* casa no começo das palavras ("ir" não acha "investir"); plural simples e "ações" viram a forma do cadastro */
+      var SIN = { acoes: 'acao', imoveis: 'imovel', emprestimos: 'emprestimo' };
+      var t = norm(busca.value.trim()).split(/[^a-z0-9%$]+/).filter(Boolean).map(function (p) { return SIN[p] || (p.length > 4 && /s$/.test(p) ? p.slice(0, -1) : p); }), vis = 0;
+      itens.forEach(function (it) { var txt = it._t || (it._t = ' ' + norm(it.textContent + ' ' + (it.getAttribute('data-k') || '')).replace(/[^a-z0-9%$]+/g, ' ')), ok = t.every(function (p) { return txt.indexOf(' ' + p) >= 0; }); it.hidden = !ok; if (ok) vis++; });
       [].forEach.call(document.querySelectorAll('.az-cat, .az-cat .az-sub'), function (sec) { sec.hidden = !sec.querySelector('.az-item:not([hidden])'); });
       if (nada) nada.hidden = vis > 0;
+      document.documentElement.classList.toggle('az-vazio', !vis && !!busca.value.trim());
       if (outros && !busca.value.trim()) outros.open = false;
       vista();
     });

@@ -1,0 +1,1267 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Correção de valores pela inflação, CDI, Selic e poupança | AZ Invest</title>
+<meta name="description" content="Atualize um valor do passado pelo IPCA, IGP-M, CDI, Selic, poupança ou taxa legal e veja quanto ele ganhou da inflação.">
+<meta name="theme-color" content="#132960">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AZ Invest">
+<meta property="og:title" content="Correção de valores pela inflação, CDI, Selic e poupança | AZ Invest">
+<meta property="og:description" content="Atualize um valor do passado pelo IPCA, IGP-M, CDI, Selic, poupança ou taxa legal e veja quanto ele ganhou da inflação.">
+<meta property="og:image" content="https://investimentosdeaz.com.br/simuladores/assets/compartilhar.png">
+<meta property="og:url" content="https://investimentosdeaz.com.br/simuladores/correcao-unificada.html">
+<link rel="canonical" href="https://investimentosdeaz.com.br/simuladores/correcao-unificada.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="assets/az.css">
+</head>
+<body>
+<header class="az-topo"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest: todos os simuladores"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a><nav><a href="index.html">Todos os simuladores</a></nav></div></header>
+<main>
+<section class="az-hero"><div class="az-larg">
+<p class="az-trilha"><a href="index.html">Simuladores</a> / <a href="index.html#contas">Correção e contas rápidas</a></p>
+<h1>Correção de valores pela inflação, CDI, Selic e poupança</h1>
+<p class="az-intro">Descubra quanto um valor do passado vale em outra data pela inflação, pelo CDI, pela Selic, pela poupança ou pela taxa legal.</p>
+</div></section>
+<div class="az-larg">
+<section class="az-app" id="az-app" data-ref="ipca,poupanca"><noscript><div class="az-cartao az-vazio">Ative o JavaScript do navegador para usar o simulador.</div></noscript></section>
+<section class="az-cartao az-sobre"><details><summary><h2>Como funciona</h2></summary>
+<div class="az-sobre-corpo"><p>O simulador mostra quanto vale em outra data um valor do passado, pela inflação (IPCA e IGP-M), pelos juros (CDI e Selic), pela poupança ou pela taxa legal. O IPCA é a inflação oficial, e o IGP-M aparece em aluguéis. Como cada índice conta o período do seu jeito, datas parecidas podem dar resultados um pouco diferentes.</p>
+<h3>Como cada índice conta o período</h3>
+<p><strong>IPCA e IGP-M</strong> são mensais, então entra cada mês que o período cobre em mais da metade dos dias; com as duas datas no dia 1º, entram exatamente os meses entre elas. <strong>CDI e Selic</strong> rendem a taxa de cada dia útil até a véspera da data final. A <strong>poupança</strong> só credita no aniversário mensal, e depósitos nos dias 29, 30 e 31 fazem aniversário no dia 1º.</p>
+<h3>Taxa legal</h3>
+<p>Criada pela Lei 14.905/2024, a <strong>taxa legal</strong> é a Selic menos a inflação e vale para juros de mora e condenações sem taxa combinada. Ela conta desde 30/08/2024, soma as taxas mensais em juros simples e não inclui a correção monetária, que é feita à parte, pelo IPCA.</p>
+<h3>Rentabilidade real</h3>
+<p>Com <strong>Comparar com a inflação</strong>, o valor final é dividido pelo mesmo valor corrigido pelo IPCA: <code>(1 + rendimento) ÷ (1 + IPCA) − 1</code>. Subtrair uma taxa da outra seria só uma aproximação.</p>
+<h3>Limites</h3>
+<p>Resultados passados não indicam rendimento futuro, e CDI e Selic aparecem brutos, salvo o imposto opcional do CDI. Para tributos e processos, confira na Receita Federal ou na Calculadora do Cidadão do Banco Central. Há dados do IPCA desde 1980, do IGP-M desde 1989 e do CDI, da Selic e da poupança desde 1995.</p></div>
+</details></section>
+<section class="az-cta" id="az-cta" hidden><div><h2></h2><p></p></div><a class="az-botao az-lar" href="#" target="_blank" rel="noopener"></a></section>
+<section class="az-rel"><h2>Mais em correção e contas rápidas</h2><div class="az-grade">
+<a class="az-item" href="inflacao-dolar.html" data-k="Inflação do dólar Simulador de inflação do dólar Corrija um valor em dólares pela inflação dos Estados Unidos desde 1913 e compare com o câmbio e o IPCA. inflação americana CPI poder de compra do dólar corrigir dólar câmbio dólar real"><b>Inflação do dólar</b></a>
+<a class="az-item" href="calculadora-de-taxas.html" data-k="Conversor de taxas Calculadora de taxas: ao mês, ao ano, CDI e inflação Converta taxas entre dia, mês e ano, some taxas acumuladas, veja quanto rende um percentual do CDI e calcule o juro real. taxa equivalente juros equivalentes conversão de taxas juros compostos ao dia ao mês ao ano dias úteis dia útil dias corridos taxa anual taxa mensal taxa diária ao ano para ao mês ao mês para ao ano anual para mensal mensal para anual rendimento mensal custo anual fórmula planilha Excel períodos potência tabela de taxas base 360 base 365 base 252 convenção de dias somar juros somar taxas taxa acumulada inflação acumulada rentabilidade acumulada porcentagem acumulada taxa média cdi cdi hoje taxa di 100% do cdi 110% do cdi percentual do cdi % do cdi rendimento diário taxa líquida imposto de renda regra de três regra de 3 proporção pós-fixado prefixado comparar percentuais diferença entre percentuais juro real juros reais taxa real taxa nominal inflação ipca ganho real Fisher acima da inflação inflação implícita inflação de empate Simulador de taxas equivalentes taxa equivalente conversão de taxas juros compostos ao dia ao mês ao ano dias úteis taxa acumulada Conversor de taxa de juros anual para mensal taxa anual taxa mensal ao ano para ao mês taxa equivalente juros compostos rendimento mensal Conversor de taxa de juros mensal para anual taxa mensal taxa anual ao mês para ao ano taxa equivalente juros compostos custo anual Calculadora de taxa equivalente por número de períodos taxa equivalente fórmula planilha Excel períodos juros compostos potência Tabela de juros equivalentes: dia, mês e ano tabela de taxas taxa ao dia taxa ao mês taxa ao ano base 360 base 365 base 252 dias úteis Calculadora de taxas acumuladas somar juros somar taxas taxa acumulada inflação acumulada rentabilidade acumulada juros compostos porcentagem acumulada Quanto rende o CDI hoje cdi taxa di 100% do cdi rendimento diário rendimento mensal taxa líquida Regra de três para comparar taxas percentual do CDI % do CDI taxa equivalente proporção pós-fixado prefixado regra de 3 Comparador de dois percentuais do CDI comparar percentual do cdi 100% do cdi 110% do cdi diferença taxa anual taxa mensal Calculadora de taxa de juros real juro real taxa nominal inflação ganho real Fisher acima da inflação"><b>Conversor de taxas</b></a>
+<a class="az-item" href="porcentagem-unificada.html" data-k="Porcentagem e desconto Calculadora de porcentagem, desconto e regra de três Calcule porcentagem, aumento, variação, preço de venda, descontos em sequência e regra de três direta ou inversa, com a conta à vista. porcentagem percentual por cento aumento desconto variação percentual margem de lucro markup valor original preço de venda promoção liquidação preço com desconto cupom abatimento porcentagem de desconto economia desconto em sequência pix regra de três regra de 3 proporção proporcional grandezas diretamente proporcional inversamente proporcional Calculadora de porcentagem percentual por cento aumento desconto variação percentual margem de lucro markup valor original Calculadora de desconto promoção liquidação preço com desconto cupom abatimento porcentagem de desconto economia Calculadora de regra de três proporção proporcional regra de 3 grandezas diretamente proporcional inversamente proporcional"><b>Porcentagem e desconto</b></a>
+<a class="az-item" href="datas-unificada.html" data-k="Dias úteis e prazos Calculadora de dias úteis e prazos Conte dias úteis e corridos entre duas datas ou descubra em que data cai um prazo, com os feriados nacionais do caminho. dias úteis dias corridos feriados feriados nacionais prazo calendário bancário anbima fim de semana contar dias diferença entre datas somar dias subtrair dias vencimento data futura data passada calendário dia útil seguinte Calculadora de dias úteis entre duas datas dias úteis dias corridos feriados feriados nacionais prazo calendário bancário anbima fim de semana contar dias Calculadora para somar ou subtrair dias de uma data somar dias subtrair dias prazo vencimento dias úteis dias corridos data futura data passada calendário"><b>Dias úteis e prazos</b></a>
+</div></section>
+</div>
+</main>
+<footer class="az-rodape"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a>
+<p>As simulações têm caráter exclusivamente educativo. Os resultados dependem das premissas informadas por você, são estimativas e não constituem recomendação de investimento, oferta de produto ou garantia de rentabilidade. Rentabilidade passada não representa garantia de rentabilidade futura.</p>
+<p>Antes de decidir, confirme taxas, prazos, tributação e condições diretamente com a instituição responsável pelo produto.</p></div></footer>
+<script src="assets/config.js"></script>
+<script src="assets/dados-mensais.js"></script>
+<script src="assets/dados-diarios.js"></script>
+<script src="assets/dados-poupanca.js"></script>
+<script src="assets/az.js"></script>
+<script>AZ._registrar = AZ.registrar; AZ.registrar = function (x) { AZ.specs.push(x); }; AZ.antigo = function (slug) { var s = AZ.specs.filter(function (x) { return x.slug === slug; })[0]; if (!s) throw new Error("página antiga não carregada: " + slug); return s; };</script>
+<script>
+AZ.registrar({
+  slug: 'correcao-pela-inflacao',
+  titulo: 'Correção de valores pela inflação',
+  categoria: 'correcao',
+  ordem: 4,
+  resumo: 'Atualize um valor do passado pelo IPCA, IGP-M, IGP-DI ou INPC e veja quanto ele representa hoje.',
+  palavras: ['inflação', 'ipca', 'igp-m', 'igpm', 'igp-di', 'inpc', 'atualização monetária', 'poder de compra', 'reajuste', 'aluguel', 'corrigir valor'],
+  intro: 'Escolha o índice de preços, informe o valor e os meses inicial e final. O resultado mostra o valor corrigido, a inflação acumulada e a comparação com os outros índices no mesmo período.',
+  dados: ['mensais'],
+  campos: [
+    { id: 'indice', rotulo: 'Índice de inflação', tipo: 'segmento', padrao: 'ipca',
+      opcoes: [{ v: 'ipca', t: 'IPCA' }, { v: 'igpm', t: 'IGP-M' }, { v: 'igpdi', t: 'IGP-DI' }, { v: 'inpc', t: 'INPC' }] },
+    { id: 'valor', rotulo: 'Valor a corrigir', tipo: 'moeda', padrao: 1000, min: 0.01,
+      ajuda: 'Informe o valor na moeda que circulava no mês inicial. O resultado sai na moeda do fim do período.' },
+    { id: 'mesIni', rotulo: 'Mês inicial', tipo: 'mes', largura: 'meia',
+      padrao: function (AZ) { var S = AZ.serie, f = Math.min.apply(null, ['ipca', 'igpm', 'igpdi', 'inpc'].map(function (k) { return S.ymIdx(S.mensal(k).fim); })); return S.idxYm(f - 119); } },
+    { id: 'mesFim', rotulo: 'Mês final', tipo: 'mes', largura: 'meia',
+      padrao: function (AZ) { var S = AZ.serie, f = Math.min.apply(null, ['ipca', 'igpm', 'igpdi', 'inpc'].map(function (k) { return S.ymIdx(S.mensal(k).fim); })); return S.idxYm(f); },
+      ajuda: 'Entram as variações do mês inicial ao mês final, os dois incluídos, como na Calculadora do Cidadão do Banco Central.' }
+  ],
+  calcular: function (v, AZ) {
+    var F = AZ.f, S = AZ.serie;
+    var curto = function (ym) { return F.mesAno(ym).slice(0, 4) + ym.slice(2, 4); };
+    var NOMES = { ipca: 'IPCA', igpm: 'IGP-M', igpdi: 'IGP-DI', inpc: 'INPC' };
+    /* moeda em vigor no dia 1º de cada mês e divisor aplicado na troca para a moeda seguinte */
+    var MOEDAS = [
+      { ate: '1986-02', s: 'Cr$', n: 'cruzeiro', div: 1000 }, { ate: '1989-01', s: 'Cz$', n: 'cruzado', div: 1000 },
+      { ate: '1990-03', s: 'NCz$', n: 'cruzado novo', div: 1 }, { ate: '1993-07', s: 'Cr$', n: 'cruzeiro', div: 1000 },
+      { ate: '1994-06', s: 'CR$', n: 'cruzeiro real', div: 2750 }, { ate: '9999-12', s: 'R$', n: 'real', div: 1 }];
+    function moedaIdx(ym) { for (var i = 0; i < MOEDAS.length; i++) if (ym <= MOEDAS[i].ate) return i; return MOEDAS.length - 1; }
+    function divisor(a, b) { var d = 1, i; for (i = a; i < b; i++) d *= MOEDAS[i].div; return d; }
+    function dinheiro(x, i) { return i === MOEDAS.length - 1 ? F.brl(x) : MOEDAS[i].s + ' ' + F.num(x, 2); }
+    /* percentuais da época de hiperinflação ficam ilegíveis por extenso */
+    function grande(x) { return x < 1e9 ? F.num(x / 1e6, 1) + ' milhões' : x < 1e12 ? F.num(x / 1e9, 1) + ' bilhões' : F.num(x / 1e12, 1) + ' trilhões'; }
+    function pctG(x) { return Math.abs(x) < 1e6 ? F.pct(x, 2) : grande(x) + ' %'; }
+
+    var s = S.mensal(v.indice), nome = NOMES[v.indice];
+    if (v.mesIni < s.ini) return { erro: 'A série do ' + nome + ' embarcada começa em ' + F.mesAno(s.ini) + '. Escolha um mês inicial a partir dele.' };
+    var ultimo = v.mesFim; /* o índice do mês final entra, como na Calculadora do Cidadão (jan a dez de 2024 dá o IPCA do ano, 4,83%) */
+    if (ultimo > s.fim) return { erro: 'Há dados do ' + nome + ' embarcados até ' + F.mesAno(s.fim) + '. Escolha um mês final até ' + F.mesAno(s.fim) + '.' };
+    if (v.mesFim < v.mesIni) return { erro: 'O mês final não pode ser anterior ao mês inicial.' };
+
+    var r = S.acumular(v.indice, v.mesIni, ultimo), n = r.meses.length;
+    var mIni = moedaIdx(v.mesIni), mFim = moedaIdx(v.mesFim), troca = mIni !== mFim;
+    var final = v.valor * r.fator / divisor(mIni, mFim), pct = (r.fator - 1) * 100;
+    var porAno = n >= 12, media = function (f) { return (Math.pow(f, (porAno ? 12 : 1) / n) - 1) * 100; }, rotMedia = porAno ? 'Média ao ano' : 'Média ao mês';
+
+    var outros = ['ipca', 'igpm', 'igpdi', 'inpc'].map(function (k) {
+      var o = S.mensal(k);
+      if (v.mesIni < o.ini || ultimo > o.fim) return [NOMES[k], 'sem dados em todo o período', '', ''];
+      var f = S.acumular(k, v.mesIni, ultimo).fator;
+      return [NOMES[k], pctG((f - 1) * 100), F.pct(media(f), 2), dinheiro(v.valor * f / divisor(mIni, mFim), mFim)];
+    });
+    var pos = ['ipca', 'igpm', 'igpdi', 'inpc'].indexOf(v.indice);
+
+    var colunas = [{ t: 'Mês' }, { t: nome + ' no mês', f: 'pct' }, { t: 'Acumulado', f: pctG }];
+    var linhas = r.meses.map(function (m) { return [F.mesAno(m.ym), m.taxa, (m.fator - 1) * 100]; });
+    if (!troca) { colunas.push({ t: 'Valor corrigido', f: function (x) { return dinheiro(x, mFim); } }); linhas.forEach(function (l, i) { l.push(v.valor * r.meses[i].fator); }); }
+    var anual = n > 72, rot = ['Início'], serie = [v.valor];
+    r.meses.forEach(function (m, i) { if (!anual || m.ym.slice(5) === '12' || i === n - 1) { rot.push(anual && i < n - 1 ? m.ym.slice(0, 4) : curto(m.ym)); serie.push(v.valor * m.fator); } });
+
+    var dest = [
+      { rotulo: 'Valor corrigido', valor: dinheiro(final, mFim), tom: 'primario', nota: 'pelo ' + nome + ', em ' + F.mesAno(v.mesFim) },
+      { rotulo: nome + ' acumulado', valor: pctG(pct), nota: r.fator < 1e6 ? 'fator ' + F.num(r.fator, r.fator < 1000 ? 6 : 2) : 'preços multiplicados por ' + grande(r.fator) }
+    ];
+    if (!troca) dest.push({ rotulo: 'Diferença', valor: dinheiro(final - v.valor, mFim), tom: final >= v.valor ? 'destaque' : 'negativo', nota: final >= v.valor ? 'acréscimo para manter o poder de compra' : 'o índice recuou no período' });
+    dest.push({ rotulo: rotMedia, valor: F.pct(media(r.fator), 2), nota: 'em ' + F.prazo(n) });
+
+    var perda = (1 - 1 / r.fator) * 100;
+    return {
+      destaques: dest,
+      resumo: '<p>De ' + F.mesAno(v.mesIni) + ' a ' + F.mesAno(v.mesFim) + ' (' + F.prazo(n) + ', de ' + curto(v.mesIni) + ' a ' + curto(ultimo) + ' inclusive), o ' + nome + ' acumulou <strong>' + pctG(pct) + '</strong>. ' +
+        (troca ? 'O valor informado foi tratado como ' + dinheiro(v.valor, mIni) + ' (' + MOEDAS[mIni].n + ', moeda em vigor no início de ' + F.mesAno(v.mesIni) + ') e o resultado está em ' + MOEDAS[mFim].n + ', já com as conversões das trocas de moeda do período.'
+          : dinheiro(v.valor, mIni) + ' de ' + F.mesAno(v.mesIni) + ' equivalem a <strong>' + dinheiro(final, mFim) + '</strong> em ' + F.mesAno(v.mesFim) + '.') +
+        (r.fator > 1 ? ' Quem guardou o dinheiro sem rendimento perdeu ' + (perda > 99.95 ? 'praticamente todo o' : F.pct(perda, 1) + ' do') + ' poder de compra.' : '') + '</p>' +
+        '<p>Dados embarcados do ' + nome + ': de ' + F.mesAno(s.ini) + ' a ' + F.mesAno(s.fim) + '.</p>',
+      graficos: !troca && n > 2 ? [{ tipo: 'linha', titulo: 'Valor corrigido ao longo do período', formato: 'brl', zero: false, rotulos: rot, series: [{ nome: 'Valor corrigido pelo ' + nome, cor: 1, dados: serie }] }] : [],
+      tabelas: [{
+        titulo: 'Comparação entre os índices no mesmo período', csv: false, destaque: pos,
+        colunas: [{ t: 'Índice' }, { t: 'Acumulado', f: 'texto', alinhar: 'dir' }, { t: rotMedia, f: 'texto', alinhar: 'dir' }, { t: 'Valor corrigido', f: 'texto', alinhar: 'dir' }],
+        linhas: outros
+      }, {
+        titulo: nome + ' mês a mês', colunas: colunas, linhas: linhas,
+        nota: troca ? 'O período atravessa uma troca de moeda, por isso a tabela mostra apenas os percentuais.' : ''
+      }]
+    };
+  },
+  explicacao: [
+    '<p>Corrigir um valor pela inflação é responder quanto seria preciso hoje para comprar o que aquele dinheiro comprava no passado. A conta multiplica o valor pela variação do índice em cada mês do período: <code>valor × (1 + índice do mês 1) × (1 + índice do mês 2) × ...</code>. Entram as variações do mês inicial ao mês final, os dois incluídos, que é a convenção da Calculadora do Cidadão do Banco Central: corrigir de janeiro a dezembro de 2024 usa os 12 meses de 2024 e resulta nos 4,83% do IPCA do ano. Assim os resultados coincidem com os da calculadora oficial.</p>',
+    '<h3>Qual índice usar</h3>',
+    '<ul><li><strong>IPCA</strong> (IBGE): inflação oficial do país, mede o custo de vida de famílias com renda de 1 a 40 salários mínimos. É a referência da meta de inflação e dos títulos Tesouro IPCA+.</li>' +
+    '<li><strong>INPC</strong> (IBGE): mede o custo de vida de famílias com renda de 1 a 5 salários mínimos. É usado no reajuste do salário mínimo e de benefícios previdenciários.</li>' +
+    '<li><strong>IGP-M</strong> (FGV): combina preços no atacado, ao consumidor e da construção. É comum em contratos de aluguel e tarifas, e oscila mais por ser sensível ao dólar e às commodities.</li>' +
+    '<li><strong>IGP-DI</strong> (FGV): mesma composição do IGP-M, apurada do primeiro ao último dia do mês. Aparece em contratos e dívidas mais antigos.</li></ul>',
+    '<p>Para períodos anteriores a julho de 1994, o valor deve ser informado na moeda da época (a que valia no primeiro dia do mês inicial). O simulador aplica as conversões oficiais: 1.000 cruzeiros por cruzado (1986), 1.000 cruzados por cruzado novo (1989), paridade entre cruzado novo e cruzeiro (1990), 1.000 cruzeiros por cruzeiro real (1993) e 2.750 cruzeiros reais por real (1994). O resultado é expresso na moeda em vigor no primeiro dia do mês seguinte ao mês final.</p>',
+    '<p>Limites: os índices são médias nacionais e não refletem a inflação de cada pessoa ou região. Contratos podem prever periodicidade, defasagem ou data-base diferentes, e meses com variação negativa podem ter tratamento específico em cada contrato. Os dados são os divulgados pelo IBGE e pela FGV, obtidos no Banco Central, e ficam restritos ao intervalo embarcado nesta página. Para IPCA, INPC e IGP-DI o acumulado é calculado com as variações mensais de duas casas decimais, por isso pode diferir em alguns centésimos de ponto percentual do número oficial, apurado com o número-índice completo; o IGP-M usa a série de dez casas do Banco Central.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'correcao-pelo-cdi',
+  titulo: 'Correção de valores pelo CDI',
+  categoria: 'correcao',
+  ordem: 2,
+  resumo: 'Corrija um valor por um percentual do CDI entre duas datas e veja quanto um CDB, LCI ou LCA teria rendido.',
+  palavras: ['cdi', 'percentual do cdi', 'cdb', 'lci', 'lca', 'di', 'rendimento passado', 'pós-fixado', 'corrigir valor'],
+  intro: 'Informe o valor, as datas e o percentual do CDI para ver o resultado acumulado com as taxas diárias do período. É a conta de quanto rendeu, no passado, um título pós-fixado como CDB, LCI ou LCA.',
+  dados: ['diarios'],
+  campos: [
+    { id: 'valor', rotulo: 'Valor inicial', tipo: 'moeda', padrao: 10000, min: 0.01 },
+    { id: 'pct', rotulo: 'Percentual do CDI', tipo: 'pct', padrao: 100, min: 0, max: 1000, sufixo: '% do CDI' },
+    { id: 'inicio', rotulo: 'Data inicial', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { var D = AZ.dados.diarios, f = AZ.datas.somarUteis(AZ.datas.somar(AZ.datas.deIso(D.base), D.d[D.d.length - 1]), 1); return new Date(f.getFullYear() - 2, f.getMonth(), f.getDate()); } },
+    { id: 'fim', rotulo: 'Data final', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { var D = AZ.dados.diarios; return AZ.datas.somarUteis(AZ.datas.somar(AZ.datas.deIso(D.base), D.d[D.d.length - 1]), 1); } },
+    { id: 'ir', rotulo: 'Descontar imposto de renda (CDB e outros títulos tributados)', tipo: 'check', padrao: false,
+      ajuda: 'Deixe desmarcado para LCI, LCA e outros títulos isentos, ou para obter apenas a correção bruta.' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, F = AZ.f, B = AZ.dados.diarios;
+    var curto = function (ym) { return F.mesAno(ym).slice(0, 4) + ym.slice(2, 4); };
+    var prim = D.deIso(B.base), ult = D.somar(prim, B.d[B.d.length - 1]), fimMax = D.somarUteis(ult, 1);
+    if (v.inicio < prim) return { erro: 'A série diária do CDI embarcada começa em ' + F.data(prim) + '. Escolha uma data inicial a partir desse dia.' };
+    if (v.fim > fimMax) return { erro: 'Há taxas embarcadas até ' + F.data(ult) + '. A data final pode ser, no máximo, ' + F.data(fimMax) + '.' };
+    var dc = D.corridos(v.inicio, v.fim);
+    if (dc < 1) return { erro: 'A data final deve ser posterior à data inicial.' };
+    var r = AZ.serie.diaria('cdi', v.inicio, v.fim);
+    if (!r.dias) return { erro: 'Não há dia útil entre as datas informadas, portanto não há taxa a aplicar.' };
+
+    var p = v.pct / 100, meses = [], at = null, f = 1, diarios = [];
+    r.pontos.forEach(function (x) {
+      var ym = D.iso(x.data).slice(0, 7), fd = 1 + x.taxa / 100 * p;
+      if (!at || at.ym !== ym) { at = { ym: ym, dias: 0, cdi: 1, fator: 1, acum: 1 }; meses.push(at); }
+      at.dias++; at.cdi *= 1 + x.taxa / 100; at.fator *= fd; f *= fd; at.acum = f; diarios.push(f);
+    });
+    var bruto = v.valor * f, rend = bruto - v.valor, cdiPct = (r.fator - 1) * 100, titPct = (f - 1) * 100;
+    var aa = (Math.pow(f, 252 / r.dias) - 1) * 100;
+    var iofFr = v.ir ? AZ.fin.iof(dc) : 0, iof = rend * iofFr, aliq = v.ir ? AZ.fin.irRegressivo(dc) : 0, ir = (rend - iof) * aliq, liq = bruto - iof - ir;
+
+    var diario = r.pontos.length <= 90, rot = ['Início'], serie = [v.valor], ref = [v.valor];
+    if (diario) r.pontos.forEach(function (x, i) { rot.push(F.data(x.data).slice(0, 5)); serie.push(v.valor * diarios[i]); ref.push(v.valor * x.fator); });
+    else { var fc = 1; meses.forEach(function (m) { fc *= m.cdi; rot.push(curto(m.ym)); serie.push(v.valor * m.acum); ref.push(v.valor * fc); }); }
+    var series = [{ nome: F.num(v.pct, v.pct % 1 ? 2 : 0) + '% do CDI', cor: 1, dados: serie }];
+    if (Math.abs(v.pct - 100) > 1e-9) series.push({ nome: '100% do CDI', cor: 5, dados: ref });
+
+    var dest;
+    if (v.ir) dest = [
+      { rotulo: 'Valor líquido', valor: liq, formato: 'brl', tom: 'primario', nota: 'em ' + F.data(v.fim) + ', após impostos' },
+      { rotulo: 'Valor bruto', valor: bruto, formato: 'brl', nota: 'rendimento bruto de ' + F.brl(rend) },
+      { rotulo: 'Imposto de renda', valor: ir, formato: 'brl', tom: 'negativo', nota: 'alíquota de ' + F.pct(aliq * 100, 1) + ' para ' + F.int(dc) + (dc === 1 ? ' dia corrido' : ' dias corridos') + (iof > 0 ? ', mais IOF de ' + F.brl(iof) : '') },
+      { rotulo: 'CDI acumulado', valor: F.pct(cdiPct, 4), nota: 'título rendeu ' + F.pct(titPct, 4) + ' bruto' }
+    ];
+    else dest = [
+      { rotulo: 'Valor corrigido', valor: bruto, formato: 'brl', tom: 'primario', nota: 'em ' + F.data(v.fim) },
+      { rotulo: 'Rendimento', valor: rend, formato: 'brl', tom: 'positivo', nota: F.pct(titPct, 4) + ' no período' },
+      { rotulo: 'CDI acumulado', valor: F.pct(cdiPct, 4), nota: 'fator ' + F.num(r.fator, 8) },
+      { rotulo: 'Taxa média do período', valor: F.pct(aa, 2) + ' ao ano', nota: 'do título, base de 252 dias úteis' }
+    ];
+    return {
+      destaques: dest,
+      resumo: '<p>Entre ' + F.data(v.inicio) + ' e ' + F.data(v.fim) + ' houve <strong>' + F.int(r.dias) + (r.dias === 1 ? ' dia útil' : ' dias úteis') + '</strong> com taxa (de ' + F.data(r.ini) + ' a ' + F.data(r.fim) + '). O CDI acumulou ' + F.pct(cdiPct, 2) +
+        ' e uma aplicação a ' + F.num(v.pct, v.pct % 1 ? 2 : 0) + '% do CDI acumulou <strong>' + F.pct(titPct, 2) + '</strong>, o que leva ' + F.brl(v.valor) + ' a ' + F.brl(bruto) + (v.ir ? ' antes dos impostos e a <strong>' + F.brl(liq) + '</strong> líquidos' : '') + '.</p>' +
+        '<p>Dados embarcados: taxas diárias de ' + F.data(prim) + ' a ' + F.data(ult) + '.</p>',
+      graficos: r.pontos.length > 2 ? [{ tipo: 'linha', titulo: 'Evolução do valor bruto', formato: 'brl', zero: false, rotulos: rot, series: series }] : [],
+      tabelas: [{
+        titulo: 'CDI mês a mês no período',
+        colunas: [{ t: 'Mês' }, { t: 'Dias úteis', f: 'int' }, { t: 'CDI no mês', f: 'pct4' }, { t: 'Título no mês', f: 'pct4' }, { t: 'Título acumulado', f: 'pct4' }, { t: 'Valor bruto', f: 'brl' }],
+        linhas: meses.map(function (m) { return [F.mesAno(m.ym), m.dias, (m.cdi - 1) * 100, (m.fator - 1) * 100, (m.acum - 1) * 100, v.valor * m.acum]; }),
+        nota: 'O primeiro e o último mês consideram apenas os dias úteis dentro do intervalo informado.'
+      }]
+    };
+  },
+  explicacao: [
+    '<p>O CDI é a taxa média dos empréstimos de um dia entre bancos e serve de referência para a maior parte da renda fixa pós-fixada. Um título que paga, por exemplo, 95% do CDI rende a cada dia útil 95% da taxa DI daquele dia.</p>',
+    '<p>O cálculo aplica, para cada dia útil do intervalo, o fator <code>1 + taxa DI do dia × percentual contratado</code> e multiplica todos eles. Entram as taxas a partir da data inicial até o dia útil anterior à data final. Como o percentual incide sobre a taxa diária, 120% do CDI não é o mesmo que o CDI acumulado multiplicado por 1,2: a diferença cresce com o prazo.</p>',
+    '<p>Com a opção de imposto marcada, o rendimento é tributado pela tabela regressiva da renda fixa: 22,5% até 180 dias corridos, 20% de 181 a 360, 17,5% de 361 a 720 e 15% acima de 720 dias. Em prazos inferiores a 30 dias há também IOF regressivo sobre o rendimento, descontado antes do imposto de renda. LCI e LCA são isentas para a pessoa física.</p>',
+    '<p>Limites: a conta considera uma aplicação única, mantida do início ao fim, sem taxas de custódia ou de administração. Trata-se de resultado passado, calculado com as taxas já divulgadas, e não indica rentabilidade futura. As datas ficam restritas ao intervalo de dados embarcados nesta página.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'correcao-pela-selic',
+  titulo: 'Correção de valores pela Selic',
+  categoria: 'correcao',
+  ordem: 1,
+  resumo: 'Atualize um valor pela taxa Selic acumulada entre duas datas, com as taxas diárias do Banco Central.',
+  palavras: ['selic', 'atualização monetária', 'corrigir valor', 'taxa básica', 'juros', 'banco central', 'débito', 'restituição'],
+  intro: 'Informe o valor e as duas datas para saber quanto ele vale depois de corrigido pela taxa Selic de cada dia útil do período. O cálculo usa a série diária divulgada pelo Banco Central.',
+  dados: ['diarios'],
+  campos: [
+    { id: 'valor', rotulo: 'Valor a corrigir', tipo: 'moeda', padrao: 1000, min: 0.01 },
+    { id: 'inicio', rotulo: 'Data inicial', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { var D = AZ.dados.diarios, f = AZ.datas.somarUteis(AZ.datas.somar(AZ.datas.deIso(D.base), D.d[D.d.length - 1]), 1); return new Date(f.getFullYear() - 1, f.getMonth(), f.getDate()); } },
+    { id: 'fim', rotulo: 'Data final', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { var D = AZ.dados.diarios; return AZ.datas.somarUteis(AZ.datas.somar(AZ.datas.deIso(D.base), D.d[D.d.length - 1]), 1); },
+      ajuda: 'A taxa do próprio dia final não entra na conta: o valor é corrigido até a abertura dessa data.' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, F = AZ.f, B = AZ.dados.diarios;
+    var curto = function (ym) { return F.mesAno(ym).slice(0, 4) + ym.slice(2, 4); };
+    var prim = D.deIso(B.base), ult = D.somar(prim, B.d[B.d.length - 1]), fimMax = D.somarUteis(ult, 1);
+    if (v.inicio < prim) return { erro: 'A série diária da Selic embarcada começa em ' + F.data(prim) + '. Escolha uma data inicial a partir desse dia.' };
+    if (v.fim > fimMax) return { erro: 'Há taxas embarcadas até ' + F.data(ult) + '. A data final pode ser, no máximo, ' + F.data(fimMax) + '.' };
+    if (D.corridos(v.inicio, v.fim) < 1) return { erro: 'A data final deve ser posterior à data inicial.' };
+    var r = AZ.serie.diaria('selic', v.inicio, v.fim);
+    if (!r.dias) return { erro: 'Não há dia útil entre as datas informadas, portanto não há taxa a aplicar.' };
+
+    var meses = [], at = null, f = 1;
+    r.pontos.forEach(function (p) {
+      var ym = D.iso(p.data).slice(0, 7);
+      if (!at || at.ym !== ym) { at = { ym: ym, dias: 0, fator: 1, acum: 1 }; meses.push(at); }
+      at.dias++; at.fator *= 1 + p.taxa / 100; f *= 1 + p.taxa / 100; at.acum = f;
+    });
+    var final = v.valor * r.fator, pct = (r.fator - 1) * 100, aa = (Math.pow(r.fator, 252 / r.dias) - 1) * 100;
+    var diario = r.pontos.length <= 90, rot = ['Início'], serie = [v.valor];
+    if (diario) r.pontos.forEach(function (p) { rot.push(F.data(p.data).slice(0, 5)); serie.push(v.valor * p.fator); });
+    else meses.forEach(function (m) { rot.push(curto(m.ym)); serie.push(v.valor * m.acum); });
+
+    var ajuste = [];
+    if (!D.ehUtil(v.inicio)) ajuste.push('A data inicial não é dia útil, por isso a primeira taxa aplicada é a de ' + F.data(r.ini) + '.');
+    return {
+      destaques: [
+        { rotulo: 'Valor corrigido', valor: final, formato: 'brl', tom: 'primario', nota: 'em ' + F.data(v.fim) },
+        { rotulo: 'Selic acumulada', valor: F.pct(pct, 4), nota: 'fator ' + F.num(r.fator, 8) },
+        { rotulo: 'Diferença', valor: final - v.valor, formato: 'brl', tom: 'positivo', nota: 'acréscimo sobre o valor original' },
+        { rotulo: 'Taxa média do período', valor: F.pct(aa, 2) + ' ao ano', nota: 'base de 252 dias úteis' }
+      ],
+      resumo: '<p>Entre ' + F.data(v.inicio) + ' e ' + F.data(v.fim) + ' foram aplicadas as taxas de <strong>' + F.int(r.dias) + (r.dias === 1 ? ' dia útil' : ' dias úteis') + '</strong>, de ' + F.data(r.ini) + ' a ' + F.data(r.fim) + '. ' +
+        F.brl(v.valor) + ' corrigidos pela Selic equivalem a <strong>' + F.brl(final) + '</strong>. ' + ajuste.join(' ') + '</p>' +
+        '<p>Dados embarcados: taxas diárias de ' + F.data(prim) + ' a ' + F.data(ult) + '.</p>',
+      graficos: r.pontos.length > 2 ? [{
+        tipo: 'linha', titulo: 'Evolução do valor corrigido', formato: 'brl', zero: false, rotulos: rot,
+        series: [{ nome: 'Valor corrigido', cor: 1, dados: serie }]
+      }] : [],
+      tabelas: [{
+        titulo: 'Selic mês a mês no período',
+        colunas: [{ t: 'Mês' }, { t: 'Dias úteis', f: 'int' }, { t: 'Selic no mês', f: 'pct4' }, { t: 'Acumulado', f: 'pct4' }, { t: 'Valor corrigido', f: 'brl' }],
+        linhas: meses.map(function (m) { return [F.mesAno(m.ym), m.dias, (m.fator - 1) * 100, (m.acum - 1) * 100, v.valor * m.acum]; }),
+        nota: 'O primeiro e o último mês consideram apenas os dias úteis dentro do intervalo informado.'
+      }]
+    };
+  },
+  explicacao: [
+    '<p>A Selic é a taxa básica de juros da economia. Além da meta definida pelo Copom, o Banco Central divulga todos os dias a taxa efetivamente praticada nas operações de um dia com títulos públicos. É essa taxa diária que serve de base para a atualização de tributos federais em atraso e de restituições e para o rendimento do Tesouro Selic.</p>',
+    '<p>A correção multiplica o valor pelo fator de cada dia útil do intervalo: <code>valor × (1 + taxa do dia 1) × (1 + taxa do dia 2) × ...</code>. Entram as taxas a partir da data inicial até o dia útil anterior à data final. Sábados, domingos e feriados não têm taxa, então uma data que caia nesses dias é tratada como o dia útil seguinte.</p>',
+    '<p>A taxa média ao ano é a taxa anual que, capitalizada pelos dias úteis do período em base de 252 dias, produz o mesmo fator acumulado.</p>',
+    '<p>Limites: o resultado é a correção bruta pela Selic, sem imposto de renda, multa ou juros adicionais. Algumas cobranças usam regras próprias (por exemplo, a Receita Federal soma as taxas mensais de forma simples e acrescenta 1% no mês do pagamento), e nesses casos o valor oficial será diferente. As datas ficam restritas ao intervalo de dados embarcados nesta página.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'correcao-pela-poupanca',
+  titulo: 'Correção de valores pela poupança',
+  categoria: 'correcao',
+  ordem: 3,
+  resumo: 'Veja quanto um depósito na caderneta de poupança rendeu entre duas datas, pela regra antiga ou pela atual.',
+  palavras: ['poupança', 'caderneta', 'rendimento da poupança', 'aniversário', 'regra antiga', 'regra nova', 'TR', 'corrigir valor'],
+  intro: 'Informe o valor, a data do depósito e a data final para saber quanto a caderneta de poupança creditou no período. O cálculo respeita a data de aniversário e a regra de remuneração que vale para o depósito.',
+  dados: ['poupanca'],
+  campos: [
+    { id: 'valor', rotulo: 'Valor depositado', tipo: 'moeda', padrao: 10000, min: 0.01 },
+    { id: 'inicio', rotulo: 'Data do depósito', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { var u = AZ.serie.poupancaDiaFim('nova'), p = u.ym.split('-'); return new Date(+p[0] - 5, +p[1], u.dia); } },
+    { id: 'fim', rotulo: 'Data final', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { var u = AZ.serie.poupancaDiaFim('nova'), p = u.ym.split('-'); return new Date(+p[0], +p[1], u.dia); } },
+    { id: 'regra', rotulo: 'Regra de remuneração', tipo: 'select', padrao: 'auto',
+      opcoes: [{ v: 'auto', t: 'Definir pela data do depósito' }, { v: 'nova', t: 'Regra atual (depósitos a partir de 04/05/2012)' }, { v: 'antiga', t: 'Regra antiga (depósitos até 03/05/2012)' }],
+      ajuda: 'Depósitos feitos até 03/05/2012 continuam rendendo 0,5% ao mês mais TR. Os posteriores seguem a regra atual, que depende da Selic.' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, F = AZ.f, S = AZ.serie;
+    var u = S.poupancaDiaFim('nova'), pu = u.ym.split('-'), ultIni = new Date(+pu[0], +pu[1] - 1, u.dia), limIni = new Date(1995, 0, 1), limFim = D.somarMeses(ultIni, 1);
+    if (v.inicio < limIni) return { erro: 'Os rendimentos embarcados começam em ' + F.data(limIni) + '. Escolha uma data de depósito a partir desse dia.' };
+    if (v.fim > limFim) return { erro: 'Há rendimentos embarcados até o período iniciado em ' + F.data(ultIni) + '. A data final pode ser, no máximo, ' + F.data(limFim) + '.' };
+    if (D.corridos(v.inicio, v.fim) < 1) return { erro: 'A data final deve ser posterior à data do depósito.' };
+
+    /* depósitos nos dias 29, 30 e 31 têm aniversário no dia 1º do mês seguinte */
+    var base = v.inicio, dia = v.inicio.getDate(), deslocado = dia > 28;
+    if (deslocado) { base = new Date(v.inicio.getFullYear(), v.inicio.getMonth() + 1, 1); dia = 1; }
+    var regra = v.regra === 'auto' ? (v.inicio <= new Date(2012, 4, 3) ? 'antiga' : 'nova') : v.regra;
+    var linhas = [], saldo = v.valor, n = 0, ini, fimP, ym, taxa, rend;
+    while (true) {
+      ini = D.somarMeses(base, n); fimP = D.somarMeses(base, n + 1);
+      if (fimP > v.fim) break;
+      /* rendimento oficial do período de um mês iniciado no dia de aniversário. Antes de 04/05/2012 só existia a regra antiga */
+      ym = D.iso(ini).slice(0, 7);
+      taxa = S.poupancaDia(regra, ym, dia);
+      if (!isFinite(taxa) && regra === 'nova') taxa = S.poupancaDia('antiga', ym, dia);
+      if (!isFinite(taxa)) return { erro: 'Não há rendimento embarcado para o período iniciado em ' + F.data(ini) + '. Reduza a data final.' };
+      rend = saldo * taxa / 100; saldo += rend; n++;
+      linhas.push([n, fimP, taxa, rend, saldo]);
+    }
+    var ultimo = D.somarMeses(base, n), sobra = D.corridos(ultimo, v.fim), fator = saldo / v.valor, pct = (fator - 1) * 100;
+    var nomeRegra = regra === 'antiga' ? 'regra antiga (0,5% ao mês mais TR)' : 'regra atual (depende da Selic, mais TR)';
+    var avisos = [];
+    if (n === 0) avisos.push('O depósito ainda não completou o primeiro aniversário até a data final, por isso não houve crédito de rendimento. O primeiro crédito ocorre em ' + F.data(D.somarMeses(base, 1)) + '.');
+    else if (sobra > 0) avisos.push((sobra === 1 ? 'O dia' : 'Os ' + F.int(sobra) + ' dias') + ' entre o último aniversário (' + F.data(ultimo) + ') e a data final ' + (sobra === 1 ? 'não rende' : 'não rendem') + ': a poupança só credita períodos mensais completos. O próximo crédito seria em ' + F.data(D.somarMeses(base, n + 1)) + '.');
+    if (deslocado) avisos.push('Depósitos feitos nos dias 29, 30 e 31 têm aniversário no dia 1º do mês seguinte. O aniversário considerado foi o dia 1º, a partir de ' + F.data(base) + '.');
+
+    var rot = ['Depósito'], serie = [v.valor], anual = n > 60;
+    linhas.forEach(function (l, i) { if (!anual || (i + 1) % 12 === 0 || i === linhas.length - 1) { rot.push(anual && i < linhas.length - 1 ? F.data(l[1]).slice(6) : F.data(l[1]).slice(3, 6) + F.data(l[1]).slice(8)); serie.push(l[4]); } });
+    return {
+      alerta: avisos.length ? avisos.join(' ') : null,
+      destaques: [
+        { rotulo: 'Valor corrigido', valor: saldo, formato: 'brl', tom: 'primario', nota: 'saldo em ' + F.data(v.fim) },
+        { rotulo: 'Rendimento creditado', valor: saldo - v.valor, formato: 'brl', tom: 'positivo', nota: 'isento de imposto de renda' },
+        { rotulo: 'Rentabilidade no período', valor: pct, formato: 'pct', nota: n >= 12 ? 'equivale a ' + F.pct((Math.pow(fator, 12 / n) - 1) * 100, 2) + ' ao ano' : 'fator ' + F.num(fator, 6) },
+        { rotulo: 'Créditos de rendimento', valor: n, formato: 'int', nota: n ? 'aniversário no dia ' + dia + ' de cada mês' : 'nenhum aniversário completo' }
+      ],
+      resumo: '<p>Foi aplicada a <strong>' + nomeRegra + '</strong>' + (v.regra === 'auto' ? ', definida pela data do depósito' : '') + '. ' +
+        (n ? 'Em ' + F.prazo(n) + ' de créditos mensais, ' + F.brl(v.valor) + ' passaram a <strong>' + F.brl(saldo) + '</strong>.' : '') + '</p>' +
+        '<p>Dados embarcados: rendimentos oficiais por dia de aniversário, dos períodos iniciados de ' + F.data(limIni) + ' a ' + F.data(ultIni) + '.</p>',
+      graficos: n > 2 ? [{ tipo: 'linha', titulo: 'Evolução do saldo', formato: 'brl', zero: false, rotulos: rot, series: [{ nome: 'Saldo', cor: 1, dados: serie }] }] : [],
+      tabelas: n ? [{
+        titulo: 'Créditos de rendimento',
+        colunas: [{ t: 'Nº', f: 'int' }, { t: 'Aniversário', alinhar: 'dir' }, { t: 'Taxa do período', f: 'pct4' }, { t: 'Rendimento', f: 'brl' }, { t: 'Saldo', f: 'brl' }],
+        linhas: linhas
+      }] : []
+    };
+  },
+  explicacao: [
+    '<p>A poupança não rende por dia. Cada depósito tem uma data de aniversário, que é o dia do mês em que foi feito, e o rendimento só é creditado quando se completa um mês inteiro. Um resgate antes do aniversário perde o rendimento daquele período. Depósitos feitos nos dias 29, 30 e 31 passam a ter aniversário no dia 1º do mês seguinte.</p>',
+    '<p>Existem duas regras de remuneração. Depósitos feitos até 03/05/2012 rendem 0,5% ao mês mais a Taxa Referencial (TR). Depósitos feitos a partir de 04/05/2012 rendem 0,5% ao mês mais TR quando a meta da Selic está acima de 8,5% ao ano, e 70% da Selic mais TR quando a meta está em 8,5% ao ano ou abaixo. O simulador escolhe a regra pela data do depósito, mas você pode forçar uma delas para comparar.</p>',
+    '<p>O cálculo aplica, a cada aniversário, o rendimento mensal divulgado pelo Banco Central sobre o saldo acumulado: <code>saldo × (1 + rendimento do período)</code>. Considera um único depósito, sem novos aportes nem resgates. O rendimento da poupança é isento de imposto de renda para a pessoa física.</p>',
+    '<p>O Banco Central divulga um rendimento para cada dia de aniversário, e é esse rendimento que o simulador usa: o crédito de cada mês corresponde ao período iniciado exatamente no dia de aniversário do depósito. As datas ficam restritas ao intervalo de dados embarcados nesta página. Para valores oficiais em processos ou cobranças, confira o resultado na calculadora do Banco Central.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'selic-acumulada',
+  titulo: 'Selic acumulada entre duas datas',
+  categoria: 'tesouro',
+  ordem: 6,
+  resumo: 'Consulte o fator e o percentual acumulados da taxa Selic entre duas datas, ano a ano ou mês a mês.',
+  palavras: ['selic acumulada', 'fator acumulado', 'taxa selic', 'tesouro selic', 'lft', 'fator diário', 'selic no ano'],
+  intro: 'Escolha as duas datas para obter o fator acumulado da Selic, o percentual do período e a taxa equivalente ao ano. O fator é o número pelo qual se multiplica um valor para atualizá-lo, e serve de referência para o rendimento bruto do Tesouro Selic.',
+  dados: ['diarios'],
+  campos: [
+    { id: 'inicio', rotulo: 'Data inicial', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { var D = AZ.dados.diarios, f = AZ.datas.somar(AZ.datas.deIso(D.base), D.d[D.d.length - 1]); return new Date(f.getFullYear() - 10, 0, 1); } },
+    { id: 'fim', rotulo: 'Data final', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { var D = AZ.dados.diarios; return AZ.datas.somarUteis(AZ.datas.somar(AZ.datas.deIso(D.base), D.d[D.d.length - 1]), 1); } },
+    { id: 'incluir', rotulo: 'Incluir a taxa do próprio dia final', tipo: 'check', padrao: false,
+      ajuda: 'Desmarcado, o fator vai da data inicial até o dia útil anterior à data final, como na correção de valores. Marque para somar também o dia final.' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, F = AZ.f, B = AZ.dados.diarios;
+    var prim = D.deIso(B.base), ult = D.somar(prim, B.d[B.d.length - 1]), fimMax = v.incluir ? ult : D.somarUteis(ult, 1);
+    if (v.inicio < prim) return { erro: 'A série diária da Selic embarcada começa em ' + F.data(prim) + '. Escolha uma data inicial a partir desse dia.' };
+    if (v.fim > fimMax) return { erro: 'Há taxas embarcadas até ' + F.data(ult) + '. Com a opção escolhida, a data final pode ser, no máximo, ' + F.data(fimMax) + '.' };
+    if (D.corridos(v.inicio, v.fim) < (v.incluir ? 0 : 1)) return { erro: v.incluir ? 'A data final não pode ser anterior à data inicial.' : 'A data final deve ser posterior à data inicial.' };
+    var r = AZ.serie.diaria('selic', v.inicio, v.incluir ? D.somar(v.fim, 1) : v.fim);
+    if (!r.dias) return { erro: 'Não há dia útil no intervalo informado, portanto não há taxa a acumular.' };
+
+    function agrupar(chave) {
+      var l = [], at = null, f = 1;
+      r.pontos.forEach(function (p) {
+        var k = chave(p.data);
+        if (!at || at.k !== k) { at = { k: k, dias: 0, fator: 1, acum: 1 }; l.push(at); }
+        at.dias++; at.fator *= 1 + p.taxa / 100; f *= 1 + p.taxa / 100; at.acum = f;
+      });
+      return l;
+    }
+    var anos = agrupar(function (d) { return String(d.getFullYear()); });
+    var meses = agrupar(function (d) { return D.iso(d).slice(0, 7); });
+    var porAno = anos.length > 2, grupos = porAno ? anos : meses;
+    var pct = (r.fator - 1) * 100, aa = (Math.pow(r.fator, 252 / r.dias) - 1) * 100;
+    var maior = r.pontos.reduce(function (a, b) { return b.taxa > a.taxa ? b : a; }), menor = r.pontos.reduce(function (a, b) { return b.taxa < a.taxa ? b : a; });
+    function anual(t) { return (Math.pow(1 + t / 100, 252) - 1) * 100; }
+
+    return {
+      destaques: [
+        { rotulo: 'Selic acumulada', valor: F.pct(pct, 4), tom: 'primario', nota: 'de ' + F.data(r.ini) + ' a ' + F.data(r.fim) },
+        { rotulo: 'Fator acumulado', valor: F.num(r.fator, 10), nota: 'multiplique o valor inicial por este número' },
+        { rotulo: 'Taxa equivalente', valor: F.pct(aa, 2) + ' ao ano', nota: 'base de 252 dias úteis' },
+        { rotulo: 'Dias úteis com taxa', valor: r.dias, formato: 'int', nota: D.corridos(v.inicio, v.fim) === 1 ? '1 dia corrido entre as datas' : F.int(D.corridos(v.inicio, v.fim)) + ' dias corridos entre as datas' }
+      ],
+      resumo: '<p>Cada ' + F.brl(1000) + ' atualizados pela Selic nesse intervalo equivalem a <strong>' + F.brl(1000 * r.fator) + '</strong>. A menor taxa diária do período foi a de ' + F.data(menor.data) + ' (' + F.pct(anual(menor.taxa), 2) + ' ao ano) e a maior, a de ' + F.data(maior.data) + ' (' + F.pct(anual(maior.taxa), 2) + ' ao ano).</p>' +
+        '<p>Dados embarcados: taxas diárias de ' + F.data(prim) + ' a ' + F.data(ult) + '.</p>',
+      graficos: grupos.length > 1 && grupos.length <= 40 ? [{
+        tipo: 'barras', titulo: porAno ? 'Selic acumulada em cada ano' : 'Selic acumulada em cada mês', formato: 'pct',
+        rotulos: grupos.map(function (g) { return porAno ? g.k : F.mesAno(g.k); }),
+        series: [{ nome: 'Selic', cor: 1, dados: grupos.map(function (g) { return (g.fator - 1) * 100; }) }]
+      }] : [],
+      tabelas: (porAno ? [{
+        titulo: 'Selic por ano',
+        colunas: [{ t: 'Ano' }, { t: 'Dias úteis', f: 'int' }, { t: 'Selic no ano', f: 'pct4' }, { t: 'Fator acumulado', f: function (x) { return F.num(x, 8); } }, { t: 'Acumulado', f: 'pct4' }],
+        linhas: anos.map(function (a) { return [a.k, a.dias, (a.fator - 1) * 100, a.acum, (a.acum - 1) * 100]; }),
+        mostrar: 40,
+        nota: 'O primeiro e o último ano consideram apenas os dias úteis dentro do intervalo informado.'
+      }] : []).concat([{
+        titulo: 'Selic por mês',
+        colunas: [{ t: 'Mês' }, { t: 'Dias úteis', f: 'int' }, { t: 'Selic no mês', f: 'pct4' }, { t: 'Fator acumulado', f: function (x) { return F.num(x, 8); } }, { t: 'Acumulado', f: 'pct4' }],
+        linhas: meses.map(function (m) { return [F.mesAno(m.k), m.dias, (m.fator - 1) * 100, m.acum, (m.acum - 1) * 100]; }),
+        nota: porAno ? '' : 'O primeiro e o último mês consideram apenas os dias úteis dentro do intervalo informado.'
+      }])
+    };
+  },
+  explicacao: [
+    '<p>A Selic acumulada é o resultado de capitalizar, dia útil após dia útil, a taxa Selic efetiva divulgada pelo Banco Central. O fator acumulado é o produto <code>(1 + taxa do dia 1) × (1 + taxa do dia 2) × ...</code>, e o percentual acumulado é esse fator menos 1.</p>',
+    '<p>O fator é a base de remuneração do Tesouro Selic (LFT): o valor nominal do título é atualizado todos os dias por ele. Também é usado para comparar aplicações, já que mostra quanto rendeu no período um investimento que acompanhasse exatamente a taxa básica.</p>',
+    '<p>Por padrão, entram as taxas da data inicial até o dia útil anterior à data final, que é a convenção para atualizar um valor entre duas datas. Se a fonte com a qual você compara inclui o dia final, marque a opção correspondente. Datas em fins de semana e feriados não têm taxa e são tratadas como o dia útil seguinte.</p>',
+    '<p>Limites: o percentual é bruto. No Tesouro Selic, o resultado do investidor ainda depende do ágio ou deságio do título na compra e na venda, da taxa de custódia e do imposto de renda. A taxa Selic efetiva costuma ficar ligeiramente abaixo da meta anunciada pelo Copom. As datas ficam restritas ao intervalo de dados embarcados nesta página.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'correcao-pela-taxa-legal',
+  titulo: 'Correção de valores pela taxa legal',
+  categoria: 'correcao',
+  ordem: 5,
+  resumo: 'Calcule os juros pela taxa legal da Lei 14.905/2024 (Selic menos inflação) entre duas datas.',
+  palavras: ['taxa legal', 'juros legais', 'juros de mora', 'lei 14.905', 'código civil', 'artigo 406', 'dívida', 'indenização', 'selic menos ipca'],
+  intro: 'A taxa legal é o juro que a lei manda aplicar quando um contrato ou uma decisão não fixa outra taxa. Informe o valor e as datas para calcular os juros do período com as taxas mensais divulgadas pelo Banco Central.',
+  dados: ['mensais'],
+  campos: [
+    { id: 'valor', rotulo: 'Valor de referência', tipo: 'moeda', padrao: 10000, min: 0.01,
+      ajuda: 'Valor sobre o qual os juros incidem. A atualização monetária, quando devida, é calculada à parte.' },
+    { id: 'inicio', rotulo: 'Data inicial', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { var i = AZ.serie.ymIdx(AZ.serie.mensal('taxaLegal').fim) + 1; return new Date(Math.floor(i / 12) - 1, i % 12, 1); } },
+    { id: 'fim', rotulo: 'Data final', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { var i = AZ.serie.ymIdx(AZ.serie.mensal('taxaLegal').fim) + 1; return new Date(Math.floor(i / 12), i % 12, 1); },
+      ajuda: 'O dia final não entra na contagem dos dias.' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, F = AZ.f, S = AZ.serie;
+    var s = S.mensal('taxaLegal'), iFim = S.ymIdx(s.fim), vig = new Date(2024, 7, 30), limFim = new Date(Math.floor((iFim + 1) / 12), (iFim + 1) % 12, 1);
+    if (v.inicio < vig) return { erro: 'A taxa legal passou a valer em ' + F.data(vig) + ', com a entrada em vigor da Lei 14.905/2024. Escolha uma data inicial a partir desse dia.' };
+    if (v.fim > limFim) return { erro: 'Há taxas embarcadas até ' + F.mesAno(s.fim) + '. A data final pode ser, no máximo, ' + F.data(limFim) + '.' };
+    var dc = D.corridos(v.inicio, v.fim);
+    if (dc < 1) return { erro: 'A data final deve ser posterior à data inicial.' };
+
+    var linhas = [], soma = 0, zerados = 0, cur = new Date(v.inicio.getFullYear(), v.inicio.getMonth(), 1), prox, a, b, dias, dm, taxa, prop, ym;
+    while (cur < v.fim) {
+      prox = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+      a = v.inicio > cur ? v.inicio : cur; b = v.fim < prox ? v.fim : prox;
+      dias = D.corridos(a, b); dm = D.corridos(cur, prox); ym = D.iso(cur).slice(0, 7);
+      taxa = S.valor('taxaLegal', ym);
+      if (!isFinite(taxa)) return { erro: 'Não há taxa legal embarcada para ' + F.mesAno(ym) + '.' };
+      prop = taxa * dias / dm; soma += prop; if (taxa === 0) zerados++;
+      linhas.push([F.mesAno(ym), taxa, dias + ' de ' + dm, prop, v.valor * prop / 100, soma]);
+      cur = prox;
+    }
+    var juros = v.valor * soma / 100, total = v.valor + juros, aa = soma / dc * 365;
+    return {
+      destaques: [
+        { rotulo: 'Valor com juros', valor: total, formato: 'brl', tom: 'primario', nota: 'em ' + F.data(v.fim) },
+        { rotulo: 'Juros pela taxa legal', valor: juros, formato: 'brl', tom: 'destaque', nota: 'sobre ' + F.brl(v.valor) },
+        { rotulo: 'Taxa legal acumulada', valor: F.pct(soma, 4), nota: 'soma simples das taxas mensais' },
+        { rotulo: 'Dias corridos', valor: dc, formato: 'int', nota: 'média de ' + F.pct(aa, 2) + ' ao ano, em juros simples' }
+      ],
+      resumo: '<p>De ' + F.data(v.inicio) + ' a ' + F.data(v.fim) + ', a taxa legal acumulou <strong>' + F.pct(soma, 4) + '</strong> em juros simples. Sobre ' + F.brl(v.valor) + ', isso representa ' + F.brl(juros) + ' de juros.' +
+        (zerados ? ' Em ' + zerados + (zerados === 1 ? ' mês' : ' meses') + ' do período a taxa foi zero, porque a inflação medida superou a Selic.' : '') + '</p>' +
+        '<p>Dados embarcados: taxas mensais de ' + F.mesAno(s.ini) + ' a ' + F.mesAno(s.fim) + '.</p>',
+      graficos: linhas.length > 2 ? [{
+        tipo: 'barras', titulo: 'Taxa legal de cada mês', formato: 'pct', rotulos: linhas.map(function (l) { return l[0]; }),
+        series: [{ nome: 'Taxa legal do mês', cor: 1, dados: linhas.map(function (l) { return l[1]; }) }]
+      }] : [],
+      tabelas: [{
+        titulo: 'Cálculo mês a mês',
+        colunas: [{ t: 'Mês' }, { t: 'Taxa do mês', f: 'pct6' }, { t: 'Dias', f: 'texto', alinhar: 'dir' }, { t: 'Proporcional', f: 'pct6' }, { t: 'Juros', f: 'brl' }, { t: 'Acumulada', f: 'pct6' }],
+        linhas: linhas,
+        nota: 'Dias: dias corridos do mês dentro do intervalo. Em meses incompletos, a taxa proporcional é a taxa do mês multiplicada por essa fração. Acumulada: soma simples das taxas proporcionais.'
+      }]
+    };
+  },
+  explicacao: [
+    '<h3>O que é a taxa legal</h3>',
+    '<p>A Lei 14.905, de 2024, alterou o artigo 406 do Código Civil e criou uma taxa única para os juros que não foram combinados entre as partes, ou que decorrem da lei sem percentual definido. É o caso de juros de mora em dívidas sem taxa contratada, indenizações e condenações judiciais cíveis. Essa taxa corresponde à Selic descontada da inflação, de modo que os juros não repitam a atualização monetária, que passou a ser feita pelo IPCA quando não houver outro índice previsto (artigo 389 do Código Civil).</p>',
+    '<p>A metodologia foi definida pelo Conselho Monetário Nacional (Resolução CMN 5.171/2024). O Banco Central divulga a taxa de cada mês no primeiro dia útil, a partir da Selic e do IPCA-15 do mês anterior. Se a conta der resultado negativo, a taxa do mês é zero. As regras valem desde 30/08/2024.</p>',
+    '<h3>Como o cálculo é feito</h3>',
+    '<p>A taxa legal é aplicada em juros simples: as taxas mensais são somadas, e não capitalizadas. Em meses incompletos, usa-se a fração <code>taxa do mês × dias corridos no intervalo ÷ dias do mês</code>. Os juros são <code>valor × soma das taxas</code>. Conta-se a data inicial e exclui-se a data final.</p>',
+    '<p>Limites: o resultado mostra somente os juros. Se o valor também precisar de atualização monetária, corrija-o antes pelo índice aplicável, por exemplo no <a href="correcao-pela-inflacao.html">simulador de correção pela inflação</a>, conforme o contrato ou a decisão determinar. Para fatos anteriores a 30/08/2024, o período até essa data segue a regra antiga, que não é calculada aqui. Contratos com juros pactuados seguem a taxa combinada. Este simulador é educativo e não substitui o cálculo oficial de um processo.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+(function () {
+  var S = AZ.serie, base = S.mensal('poupanca');
+  var ultimo = base.fim;                                  /* último mês com rendimento divulgado */
+  var maxResgate = S.idxYm(S.ymIdx(ultimo) + 1);          /* esse rendimento é creditado no dia 1 do mês seguinte */
+  var maxDeposito = ultimo;
+  function mais(ym, n) { return S.idxYm(S.ymIdx(ym) + n); }
+  function dia1(ym) { var p = ym.split('-'); return '1º de ' + ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'][+p[1] - 1] + ' de ' + p[0]; }
+
+  AZ.registrar({
+    slug: 'correcao-pela-poupanca-passado',
+    titulo: 'Quanto teria hoje na poupança',
+    categoria: 'poupanca',
+    ordem: 2,
+    resumo: 'Veja quanto um valor depositado no passado valeria hoje com o rendimento histórico da poupança.',
+    palavras: ['correção pela poupança', 'valor no passado', 'rendimento histórico', 'atualizar valor', 'caderneta'],
+    intro: 'Informe o valor e o mês em que ele foi (ou teria sido) depositado. O simulador aplica, mês a mês, o rendimento histórico da poupança divulgado pelo Banco Central, desde ' + AZ.f.mesAno(base.ini) + '.',
+    dados: ['mensais'],
+    campos: [
+      { id: 'valor', rotulo: 'Valor depositado', tipo: 'moeda', padrao: 1000, min: 0.01 },
+      { id: 'ini', rotulo: 'Mês do depósito', tipo: 'mes', padrao: mais(maxResgate, -120), min: base.ini, max: maxDeposito, largura: 'meia',
+        ajuda: 'Considera depósito no dia 1 do mês.' },
+      { id: 'fim', rotulo: 'Mês do resgate', tipo: 'mes', padrao: maxResgate, min: mais(base.ini, 1), max: maxResgate, largura: 'meia',
+        ajuda: 'Considera resgate no dia 1 do mês, após o crédito do rendimento.' },
+      { id: 'regra', rotulo: 'Regra de rendimento', tipo: 'segmento', padrao: 'nova',
+        opcoes: [{ v: 'nova', t: 'Regra atual' }, { v: 'antiga', t: 'Depósito até 03/05/2012' }],
+        ajuda: 'A regra antiga (0,5% ao mês mais TR, qualquer que seja a Selic) continua valendo para saldos depositados até 3 de maio de 2012 e nunca sacados.' }
+    ],
+    calcular: function (v, AZ) {
+      var a = S.ymIdx(v.ini), z = S.ymIdx(v.fim);
+      /* depósito feito até 03/05/2012 (dia 1 de maio de 2012 ou antes) segue a regra antiga enquanto não for sacado */
+      var anterior = a <= S.ymIdx('2012-05');
+      var nome = v.regra === 'antiga' || anterior ? 'poupancaAntiga' : 'poupanca';
+      if (a < S.ymIdx(base.ini)) return { erro: 'A série da poupança começa em ' + AZ.f.mesAno(base.ini) + '. Escolha um mês de depósito a partir dessa data.' };
+      if (z > S.ymIdx(maxResgate)) return { erro: 'Há rendimentos divulgados até ' + AZ.f.mesAno(ultimo) + ', o que permite resgate até ' + AZ.f.mesAno(maxResgate) + '.' };
+      if (z <= a) return { erro: 'O mês do resgate deve ser posterior ao mês do depósito: a poupança só rende ao completar um mês.' };
+      var aviso = v.regra === 'antiga' && a > S.ymIdx('2012-05') ? 'A regra antiga só vale para saldos depositados até 3 de maio de 2012. O resultado abaixo serve para acompanhar, neste período, um saldo que já estava na poupança antes dessa data. Para um depósito novo, use a regra atual.' : '';
+      if (v.regra !== 'antiga' && anterior && z > S.ymIdx('2012-06')) aviso = 'O depósito é anterior a 4 de maio de 2012. Por isso o saldo rende pela regra antiga (0,5% ao mês mais TR) durante todo o período, mesmo com a opção "Regra atual" selecionada: a regra atual só alcança depósitos feitos a partir dessa data.';
+      var ac = S.acumular(nome, v.ini, mais(v.fim, -1)), n = ac.meses.length;
+      var final = v.valor * ac.fator, rend = final - v.valor;
+      var am = (Math.pow(ac.fator, 1 / n) - 1) * 100, aa = (Math.pow(ac.fator, 12 / n) - 1) * 100;
+      /* agregação por ano-calendário do crédito (o rendimento do período iniciado em dezembro é creditado em janeiro, mas fica no ano em que o período começou) */
+      var anos = [], atual = null;
+      ac.meses.forEach(function (m) {
+        var ano = m.ym.slice(0, 4);
+        if (!atual || atual.ano !== ano) { atual = { ano: ano, f: 1, n: 0, saldo: 0 }; anos.push(atual); }
+        atual.f *= 1 + m.taxa / 100; atual.n++; atual.saldo = v.valor * m.fator;
+      });
+      var porMes = n <= 48;
+      var g = porMes
+        ? { rot: [AZ.f.mesAno(v.ini)].concat(ac.meses.map(function (m) { return AZ.f.mesAno(mais(m.ym, 1)); })), dados: [v.valor].concat(ac.meses.map(function (m) { return v.valor * m.fator; })) }
+        : { rot: anos.map(function (x) { return x.ano; }), dados: anos.map(function (x) { return x.saldo; }) };
+      return {
+        alerta: aviso,
+        destaques: [
+          { rotulo: 'Valor em ' + AZ.f.mesAno(v.fim), valor: final, formato: 'brl', tom: 'primario', nota: 'após ' + AZ.f.prazo(n) + ' de rendimento' },
+          { rotulo: 'Rendimento no período', valor: rend, formato: 'brl', tom: 'positivo' },
+          { rotulo: 'Rendimento acumulado', valor: (ac.fator - 1) * 100, formato: 'pct', nota: 'fator de correção ' + AZ.f.num(ac.fator, 6) },
+          { rotulo: 'Média do período', valor: AZ.f.pct(aa) + ' ao ano', nota: AZ.f.pct(am, 4) + ' ao mês' }
+        ],
+        resumo: '<p>' + AZ.f.brl(v.valor) + ' depositados em ' + dia1(v.ini) + ' teriam se tornado <strong>' + AZ.f.brl(final) + '</strong> em ' + dia1(v.fim) + ', sem novos depósitos nem saques. Os rendimentos da poupança estão disponíveis até o período iniciado em ' + AZ.f.mesAno(ultimo) + '.</p>',
+        graficos: [{
+          tipo: porMes ? 'linha' : 'barras', titulo: porMes ? 'Evolução do saldo' : 'Saldo ao fim de cada ano', formato: 'brl',
+          rotuloDica: porMes ? 'Mês' : 'Ano', rotulos: g.rot, series: [{ nome: 'Saldo', cor: 1, dados: g.dados }]
+        }],
+        tabelas: [{
+          titulo: 'Resultado por ano',
+          colunas: [{ t: 'Ano', f: 'texto' }, { t: 'Meses', f: 'int' }, { t: 'Rendimento no ano', f: 'pct' }, { t: 'Saldo ao fim do ano', f: 'brl' }],
+          linhas: anos.map(function (x) { return [x.ano, x.n, (x.f - 1) * 100, x.saldo]; }),
+          nota: 'Cada ano reúne os períodos mensais iniciados nele. O rendimento do período iniciado em dezembro é creditado em 1º de janeiro do ano seguinte.'
+        }, {
+          titulo: 'Rendimento mês a mês',
+          colunas: [{ t: 'Período iniciado em', f: 'texto' }, { t: 'Rendimento do mês', f: 'pct4' }, { t: 'Fator acumulado', f: function (x) { return AZ.f.num(x, 6); } }, { t: 'Saldo', f: 'brl' }],
+          linhas: ac.meses.map(function (m) { return [AZ.f.mesAno(m.ym), m.taxa, m.fator, v.valor * m.fator]; })
+        }]
+      };
+    },
+    explicacao: [
+      '<p>O valor é corrigido pela multiplicação dos rendimentos mensais da poupança: <code>valor final = valor × (1 + r1) × (1 + r2) × ... × (1 + rn)</code>, em que cada <code>r</code> é o rendimento de um período mensal completo. Os percentuais vêm das séries do Banco Central para depósitos com aniversário no dia 1.</p>',
+      '<p>O simulador considera depósito no dia 1 do mês inicial e resgate no dia 1 do mês final, logo após o crédito do último rendimento. Depósitos feitos em outros dias do mês têm rendimentos ligeiramente diferentes, porque a TR varia conforme a data de aniversário.</p>',
+      '<p>Desde 4 de maio de 2012 valem duas regras. Depósitos novos rendem 0,5% ao mês mais TR quando a meta da Selic está acima de 8,5% ao ano, e 70% da Selic mais TR quando ela está igual ou abaixo desse nível. Saldos depositados até 3 de maio de 2012 seguem rendendo 0,5% ao mês mais TR. Antes de junho de 2012 as duas séries são idênticas. Quando o mês do depósito é maio de 2012 ou anterior, o simulador aplica a regra antiga em todo o período, qualquer que seja a opção marcada, porque é ela que vale para esse saldo.</p>',
+      '<p>O resultado é nominal, isento de imposto de renda para a pessoa física, e não desconta a inflação. A simulação supõe um único depósito, sem movimentações no período.</p>'
+    ].join('\n')
+  });
+})();
+</script>
+<script>
+(function () {
+  var S = AZ.serie, P = S.mensal('poupanca'), I = S.mensal('ipca');
+  var iniComum = S.idxYm(Math.max(S.ymIdx(P.ini), S.ymIdx(I.ini)));
+  var fimComum = S.idxYm(Math.min(S.ymIdx(P.fim), S.ymIdx(I.fim)));
+  function hist(v) { return v.modo === 'hist'; }
+  function taxas(v) { return v.modo === 'taxas'; }
+
+  AZ.registrar({
+    slug: 'rentabilidade-real-poupanca',
+    titulo: 'Rentabilidade real da poupança',
+    categoria: 'poupanca',
+    ordem: 6,
+    resumo: 'Descubra quanto a poupança rendeu acima ou abaixo da inflação, com dados históricos ou taxas informadas.',
+    palavras: ['poupança e inflação', 'ganho real', 'IPCA', 'poder de compra', 'juro real da poupança'],
+    intro: 'O rendimento que importa é o que sobra depois da inflação. Consulte a rentabilidade real da poupança em qualquer período desde ' + AZ.f.mesAno(iniComum) + ', com o IPCA, ou informe suas próprias taxas para simular um cenário.',
+    dados: ['mensais'],
+    campos: [
+      { id: 'modo', rotulo: 'Como calcular', tipo: 'segmento', padrao: 'hist', opcoes: [{ v: 'hist', t: 'Período histórico' }, { v: 'taxas', t: 'Taxas informadas' }] },
+      { id: 'ini', rotulo: 'Mês inicial', tipo: 'mes', padrao: S.idxYm(S.ymIdx(fimComum) - 119), min: iniComum, max: fimComum, largura: 'meia', mostrarSe: hist },
+      { id: 'fim', rotulo: 'Mês final', tipo: 'mes', padrao: fimComum, min: iniComum, max: fimComum, largura: 'meia', mostrarSe: hist },
+      { id: 'poupAa', rotulo: 'Rendimento da poupança', tipo: 'pct', min: -99, max: 1000, sufixo: '% ao ano', largura: 'meia', mostrarSe: taxas,
+        padrao: function (AZ) { return Math.round((Math.pow(1 + AZ.cfg.poupanca / 100, 12) - 1) * 10000) / 100; } },
+      { id: 'infl', rotulo: 'Inflação', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: -99, max: 1000, sufixo: '% ao ano', largura: 'meia', mostrarSe: taxas },
+      { id: 'valor', rotulo: 'Valor aplicado', tipo: 'moeda', padrao: 1000, min: 0, opcional: true, ajuda: 'Opcional. Serve para mostrar o efeito em reais.' }
+    ],
+    calcular: function (v, AZ) {
+      var f = AZ.f, val = v.valor > 0 ? v.valor : 0;
+      function tom(x) { return x >= 0 ? 'positivo' : 'negativo'; }
+      if (v.modo === 'taxas') {
+        var real = ((1 + v.poupAa / 100) / (1 + v.infl / 100) - 1) * 100;
+        var d = [
+          { rotulo: 'Rentabilidade real', valor: f.pct(real) + ' ao ano', tom: 'primario', nota: real >= 0 ? 'ganho de poder de compra' : 'perda de poder de compra' },
+          { rotulo: 'Poupança', valor: v.poupAa, formato: 'pct', nota: 'ao ano, nominal' },
+          { rotulo: 'Inflação', valor: v.infl, formato: 'pct', nota: 'ao ano' }
+        ];
+        if (val) d.push({ rotulo: 'Ganho real em um ano', valor: val * real / 100, formato: 'brl', tom: tom(real), nota: 'em poder de compra de hoje, sobre ' + f.brl(val) });
+        return {
+          destaques: d,
+          resumo: '<p>A conta correta divide os fatores em vez de subtrair as taxas: (1 + ' + f.pct(v.poupAa) + ') ÷ (1 + ' + f.pct(v.infl) + ') − 1 = <strong>' + f.pct(real) + '</strong>. A subtração simples daria ' + f.pct(v.poupAa - v.infl) + '.</p>' +
+            (val ? '<p>' + f.brl(val) + ' viram ' + f.brl(val * (1 + v.poupAa / 100)) + ' em um ano. Como os preços sobem ' + f.pct(v.infl) + ', esse saldo compra o equivalente a ' + f.brl(val * (1 + real / 100)) + ' de hoje.</p>' : '')
+        };
+      }
+      var a = S.ymIdx(v.ini), z = S.ymIdx(v.fim);
+      if (z < a) return { erro: 'O mês final deve ser igual ou posterior ao mês inicial.' };
+      if (a < S.ymIdx(iniComum) || z > S.ymIdx(fimComum)) return { erro: 'Há dados de poupança e IPCA de ' + f.mesAno(iniComum) + ' a ' + f.mesAno(fimComum) + '. Ajuste o período.' };
+      var p = S.acumular('poupanca', v.ini, v.fim), c = S.acumular('ipca', v.ini, v.fim), n = p.meses.length;
+      var fr = p.fator / c.fator, realAc = (fr - 1) * 100, realAa = (Math.pow(fr, 12 / n) - 1) * 100;
+      var anos = [], at = null;
+      p.meses.forEach(function (m, i) {
+        var ano = m.ym.slice(0, 4);
+        if (!at || at.ano !== ano) { at = { ano: ano, p: 1, c: 1, n: 0 }; anos.push(at); }
+        at.p *= 1 + m.taxa / 100; at.c *= 1 + c.meses[i].taxa / 100; at.n++; at.fp = m.fator; at.fc = c.meses[i].fator;
+      });
+      var porMes = n <= 60, b = val || 100;
+      var g = porMes
+        ? { rot: p.meses.map(function (m) { return f.mesAno(m.ym); }), sp: p.meses.map(function (m) { return b * m.fator; }), sc: c.meses.map(function (m) { return b * m.fator; }) }
+        : { rot: anos.map(function (x) { return x.ano; }), sp: anos.map(function (x) { return b * x.fp; }), sc: anos.map(function (x) { return b * x.fc; }) };
+      var dest = [
+        { rotulo: 'Rentabilidade real no período', valor: realAc, formato: 'pct', tom: 'primario', nota: 'de ' + f.mesAno(v.ini) + ' a ' + f.mesAno(v.fim) + ' (' + f.prazo(n) + ')' },
+        { rotulo: 'Poupança no período', valor: (p.fator - 1) * 100, formato: 'pct', nota: 'rendimento nominal acumulado' },
+        { rotulo: 'IPCA no período', valor: (c.fator - 1) * 100, formato: 'pct', nota: 'inflação acumulada' }
+      ];
+      if (n >= 12) dest.splice(1, 0, { rotulo: 'Rentabilidade real ao ano', valor: realAa, formato: 'pct', tom: tom(realAa), nota: 'média anualizada' });
+      return {
+        destaques: dest,
+        resumo: '<p>' + (val ? f.brl(val) + ' aplicados no início de ' + f.mesAno(v.ini) + ' chegaram a <strong>' + f.brl(val * p.fator) + '</strong>. Para comprar as mesmas coisas de antes seriam necessários ' + f.brl(val * c.fator) + '. ' : '') +
+          (realAc >= 0 ? 'A poupança superou a inflação: o poder de compra aumentou ' + f.pct(realAc) + ' no período.' : 'A poupança perdeu da inflação: o poder de compra caiu ' + f.pct(-realAc) + ' no período.') + '</p>',
+        graficos: [{
+          tipo: 'linha', titulo: (val ? 'Saldo na poupança' : 'Poupança') + ' e valor necessário para manter o poder de compra' + (val ? '' : ' (base 100)'), formato: val ? 'brl' : 'num', rotuloDica: porMes ? 'Mês' : 'Ano',
+          rotulos: g.rot,
+          series: [{ nome: 'Poupança', cor: 1, dados: g.sp }, { nome: 'Valor inicial corrigido pelo IPCA', cor: 3, dados: g.sc }]
+        }],
+        tabelas: [{
+          titulo: 'Poupança, inflação e ganho real por ano',
+          colunas: [{ t: 'Ano', f: 'texto' }, { t: 'Meses', f: 'int' }, { t: 'Poupança', f: 'pct' }, { t: 'IPCA', f: 'pct' }, { t: 'Rentabilidade real', f: 'pct' }],
+          linhas: anos.map(function (x) { return [x.ano, x.n, (x.p - 1) * 100, (x.c - 1) * 100, (x.p / x.c - 1) * 100]; }),
+          nota: 'Anos incompletos mostram apenas os meses dentro do período escolhido. Dados disponíveis até ' + f.mesAno(fimComum) + '.'
+        }]
+      };
+    },
+    explicacao: [
+      '<p>Rentabilidade real é o rendimento descontado da inflação. Ela mostra se o dinheiro passou a comprar mais ou menos do que comprava. A fórmula divide o fator de rendimento pelo fator de inflação: <code>taxa real = (1 + rendimento) ÷ (1 + inflação) − 1</code>. Subtrair uma taxa da outra é apenas uma aproximação, que piora conforme as taxas aumentam.</p>',
+      '<p>No modo histórico, o simulador acumula mês a mês o rendimento da poupança (regra vigente para depósitos novos, aniversário no dia 1) e o IPCA, índice oficial de inflação calculado pelo IBGE. Os dois acumulados cobrem os mesmos meses, do mês inicial ao mês final, ambos incluídos. A taxa ao ano é a média anualizada e aparece para períodos de 12 meses ou mais.</p>',
+      '<p>No modo de taxas informadas, você define o rendimento anual da poupança e a inflação esperada. Os campos já vêm preenchidos com o rendimento mensal mais recente da poupança convertido para o ano e com o IPCA acumulado em 12 meses.</p>',
+      '<p>A poupança é isenta de imposto de renda para a pessoa física, portanto não há imposto a descontar. O IPCA mede uma cesta média de consumo: a inflação sentida por cada família pode ser diferente. Resultados passados não indicam o que acontecerá daqui para a frente.</p>'
+    ].join('\n')
+  });
+})();
+</script>
+<script>
+(function () {
+  var S = AZ.serie, base = S.mensal('poupanca');
+  var anoIni = +base.ini.slice(0, 4), anoFim = +base.fim.slice(0, 4), anos = [], a;
+  for (a = anoFim; a >= anoIni; a--) anos.push({ v: String(a), t: String(a) });
+
+  AZ.registrar({
+    slug: 'tabela-rendimento-poupanca',
+    titulo: 'Tabela de rendimento da poupança',
+    categoria: 'poupanca',
+    ordem: 4,
+    resumo: 'Consulte o rendimento mensal da poupança desde 1995, com o acumulado no ano e em 12 meses.',
+    palavras: ['histórico da poupança', 'rendimento mensal', 'acumulado no ano', '12 meses', 'TR', 'tabela'],
+    intro: 'Escolha um ano ou um período para ver, mês a mês, quanto a poupança rendeu, a TR do mês e os acumulados no ano e em 12 meses. Os dados são do Banco Central e vão de ' + AZ.f.mesAno(base.ini) + ' a ' + AZ.f.mesAno(base.fim) + '.',
+    dados: ['mensais'],
+    campos: [
+      { id: 'modo', rotulo: 'Consulta', tipo: 'segmento', padrao: 'ano', opcoes: [{ v: 'ano', t: 'Por ano' }, { v: 'periodo', t: 'Por período' }] },
+      { id: 'ano', rotulo: 'Ano', tipo: 'select', padrao: String(anoFim), opcoes: anos, mostrarSe: function (v) { return v.modo === 'ano'; } },
+      { id: 'ini', rotulo: 'Mês inicial', tipo: 'mes', padrao: S.idxYm(S.ymIdx(base.fim) - 23), min: base.ini, max: base.fim, largura: 'meia', mostrarSe: function (v) { return v.modo === 'periodo'; } },
+      { id: 'fim', rotulo: 'Mês final', tipo: 'mes', padrao: base.fim, min: base.ini, max: base.fim, largura: 'meia', mostrarSe: function (v) { return v.modo === 'periodo'; } },
+      { id: 'regra', rotulo: 'Regra de rendimento', tipo: 'segmento', padrao: 'nova',
+        opcoes: [{ v: 'nova', t: 'Regra atual' }, { v: 'antiga', t: 'Depósitos até 03/05/2012' }],
+        ajuda: 'As duas regras só diferem a partir de junho de 2012, nos meses em que a Selic esteve igual ou abaixo de 8,5% ao ano.' }
+    ],
+    calcular: function (v, AZ) {
+      var nome = v.regra === 'antiga' ? 'poupancaAntiga' : 'poupanca', s = S.mensal(nome), tr = S.mensal('tr');
+      var b = S.ymIdx(s.ini), ult = b + s.v.length - 1, i0, i1;
+      if (v.modo === 'ano') { i0 = Math.max(S.ymIdx(v.ano + '-01'), b); i1 = Math.min(S.ymIdx(v.ano + '-12'), ult); }
+      else {
+        i0 = S.ymIdx(v.ini); i1 = S.ymIdx(v.fim);
+        if (i1 < i0) return { erro: 'O mês final deve ser igual ou posterior ao mês inicial.' };
+        if (i0 < b || i1 > ult) return { erro: 'Há dados de ' + AZ.f.mesAno(s.ini) + ' a ' + AZ.f.mesAno(s.fim) + '. Ajuste o período.' };
+      }
+      function taxa(i) { return s.v[i - b]; }
+      function acum(x, y) { var f = 1, i; for (i = x; i <= y; i++) f *= 1 + taxa(i) / 100; return (f - 1) * 100; }
+      var linhas = [], fator = 1, i, ym, jan, t, d12, maior = null, menor = null;
+      for (i = i0; i <= i1; i++) {
+        ym = S.idxYm(i); jan = Math.max(S.ymIdx(ym.slice(0, 4) + '-01'), b);
+        t = S.valor('tr', ym); fator *= 1 + taxa(i) / 100;
+        d12 = i - 11 >= b ? acum(i - 11, i) : null;
+        if (!maior || taxa(i) > maior.t) maior = { t: taxa(i), ym: ym };
+        if (!menor || taxa(i) < menor.t) menor = { t: taxa(i), ym: ym };
+        linhas.push({ ym: ym, taxa: taxa(i), tr: isFinite(t) ? t : null, ano: acum(jan, i), d12: d12 });
+      }
+      var n = linhas.length, ultima = linhas[n - 1], total = (fator - 1) * 100;
+      var rotPeriodo = v.modo === 'ano' ? 'Acumulado em ' + v.ano : 'Acumulado no período';
+      var notaPeriodo = n === 1 ? AZ.f.mesAno(linhas[0].ym) : 'de ' + AZ.f.mesAno(linhas[0].ym) + ' a ' + AZ.f.mesAno(ultima.ym) + ' (' + n + ' meses)';
+      return {
+        destaques: [
+          { rotulo: rotPeriodo, valor: total, formato: 'pct', tom: 'primario', nota: notaPeriodo },
+          { rotulo: 'Rendimento de ' + AZ.f.mesAno(ultima.ym), valor: ultima.taxa, formato: 'pct4', nota: 'último mês do período' },
+          { rotulo: 'Acumulado em 12 meses', valor: ultima.d12 == null ? '-' : AZ.f.pct(ultima.d12), nota: ultima.d12 == null ? 'sem 12 meses de histórico' : 'até ' + AZ.f.mesAno(ultima.ym) },
+          { rotulo: 'Média mensal', valor: (Math.pow(fator, 1 / n) - 1) * 100, formato: 'pct4',
+            nota: n > 1 ? 'maior: ' + AZ.f.pct(maior.t, 4) + ' (' + AZ.f.mesAno(maior.ym) + '), menor: ' + AZ.f.pct(menor.t, 4) + ' (' + AZ.f.mesAno(menor.ym) + ')' : '' }
+        ],
+        resumo: '<p>A poupança rendeu <strong>' + AZ.f.pct(total) + '</strong> ' + (n === 1 ? 'em ' + AZ.f.mesAno(linhas[0].ym) : 'de ' + AZ.f.mesAno(linhas[0].ym) + ' a ' + AZ.f.mesAno(ultima.ym)) + (n > 1 ? ', o que corresponde a ' + AZ.f.pct((Math.pow(fator, 1 / n) - 1) * 100, 4) + ' ao mês em média' : '') + '.</p>',
+        graficos: n < 2 ? [] : [{
+          tipo: n <= 36 ? 'barras' : 'linha', titulo: 'Rendimento mensal da poupança (% ao mês)', formato: 'pct4', rotuloDica: 'Mês',
+          rotulos: linhas.map(function (l) { return AZ.f.mesAno(l.ym); }),
+          series: [{ nome: 'Rendimento do mês', cor: 1, dados: linhas.map(function (l) { return l.taxa; }) }]
+        }],
+        tabelas: [{
+          titulo: 'Rendimento mês a mês', mostrar: n <= 24 ? n : 12,
+          colunas: [{ t: 'Mês', f: 'texto' }, { t: 'Rendimento', f: 'pct4' }, { t: 'TR', f: function (x) { return x == null ? '-' : AZ.f.pct(x, 4); } },
+            { t: 'No ano', f: 'pct' }, { t: 'Em 12 meses', f: function (x) { return x == null ? '-' : AZ.f.pct(x, 2); } }],
+          linhas: linhas.map(function (l) { return [AZ.f.mesAno(l.ym), l.taxa, l.tr, l.ano, l.d12]; }),
+          nota: 'Rendimento e TR em % ao mês. Cada linha mostra o rendimento do período iniciado no dia 1 daquele mês e creditado no dia 1 do mês seguinte. A coluna "No ano" acumula desde janeiro do mesmo ano, e a de 12 meses inclui o mês da linha e os 11 anteriores. Dados disponíveis até ' + AZ.f.mesAno(s.fim) + '.'
+        }]
+      };
+    },
+    explicacao: [
+      '<p>A tabela usa as séries do Banco Central para depósitos de poupança com aniversário no dia 1. O rendimento de cada mês é a soma composta da TR (remuneração básica) com os juros: 0,5% ao mês quando a meta da Selic está acima de 8,5% ao ano, ou 70% da Selic quando está igual ou abaixo disso. Para saldos depositados até 3 de maio de 2012, os juros são sempre de 0,5% ao mês.</p>',
+      '<p>Os acumulados são calculados por juros compostos, multiplicando os fatores mensais: <code>(1 + r1) × (1 + r2) × ... × (1 + rn) − 1</code>. Somar os percentuais mês a mês dá um resultado menor que o correto.</p>',
+      '<p>Contas com aniversário em outros dias do mês têm rendimentos ligeiramente diferentes, porque a TR é calculada para cada data. Depósitos feitos nos dias 29, 30 e 31 passam a ter aniversário no dia 1 do mês seguinte.</p>',
+      '<p>Os percentuais são nominais. A poupança é isenta de imposto de renda para a pessoa física, mas o rendimento não desconta a inflação do período.</p>'
+    ].join('\n')
+  });
+})();
+</script>
+<script>AZ.registrar = AZ._registrar;</script>
+<script>
+// Protótipo unificado (23/10/2026): substitui correcao-pela-inflacao, correcao-pelo-cdi, correcao-pela-selic,
+// correcao-pela-poupanca e selic-acumulada; na segunda etapa, correcao-pela-taxa-legal (opção "Taxa legal"),
+// correcao-pela-poupanca-passado e tabela-rendimento-poupanca (tabelas da poupança) e rentabilidade-real-poupanca
+// (botão "Comparar com a inflação"). Toda conta vem das páginas antigas já auditadas (AZ.antigo); este arquivo só traduz o período e monta o resultado.
+AZ.registrar({
+  slug: 'correcao-unificada',
+  usa: ['correcao-pela-inflacao', 'correcao-pelo-cdi', 'correcao-pela-selic', 'correcao-pela-poupanca', 'selic-acumulada',
+    'correcao-pela-taxa-legal', 'correcao-pela-poupanca-passado', 'rentabilidade-real-poupanca', 'tabela-rendimento-poupanca'],
+  /* endereços antigos (?veio=): o modo e os padrões de cada página antiga, com as datas que ela abria em 24/10/2026 (conferidos com comparar.js --atalho) */
+  atalhos: {
+    'correcao-pela-inflacao': { comparar: true },
+    'correcao-pelo-cdi': { indice: 'cdi', valor: 10000, inicio: '2024-09-30', fim: '2026-09-30' },
+    'correcao-pela-selic': { indice: 'selic', inicio: '2025-09-30', fim: '2026-09-30' },
+    'correcao-pela-poupanca': { indice: 'poupanca', valor: 10000, inicio: '2021-10-28', fim: '2026-10-28' },
+    'selic-acumulada': { indice: 'selic', inicio: '2016-01-01', fim: '2026-09-30' },
+    'correcao-pela-taxa-legal': { indice: 'legal', valor: 10000, inicio: '2025-10-01', fim: '2026-10-01' },
+    'correcao-pela-poupanca-passado': { indice: 'poupanca', inicio: '2016-10-01', fim: '2026-10-01' },
+    'rentabilidade-real-poupanca': { indice: 'poupanca', inflacao: true },
+    'tabela-rendimento-poupanca': { indice: 'poupanca', inicio: '2026-01-01', fim: '2026-10-01' }
+  },
+  titulo: 'Correção de valores pela inflação, CDI, Selic e poupança',
+  categoria: 'correcao',
+  ordem: 1,
+  resumo: 'Atualize um valor do passado pelo IPCA, IGP-M, CDI, Selic, poupança ou taxa legal e veja quanto ele ganhou da inflação.',
+  palavras: ['correção monetária', 'atualizar valor', 'corrigir valor', 'ipca', 'igp-m', 'igpm', 'inpc', 'igp-di', 'cdi', 'percentual do cdi', 'selic', 'selic acumulada', 'fator acumulado', 'tesouro selic', 'lft', 'poupança', 'aniversário', 'inflação acumulada', 'poder de compra',
+    'taxa legal', 'juros legais', 'juros de mora', 'lei 14.905', 'código civil', 'artigo 406', 'dívida', 'indenização', 'selic menos ipca',
+    'quanto teria hoje na poupança', 'valor no passado', 'rendimento histórico', 'caderneta', 'correção pela poupança',
+    'rentabilidade real', 'ganho real', 'poupança e inflação', 'juro real da poupança',
+    'tabela da poupança', 'rendimento da poupança', 'histórico da poupança', 'rendimento mensal', 'acumulado no ano', '12 meses', 'TR'],
+  intro: 'Descubra quanto um valor do passado vale em outra data pela inflação, pelo CDI, pela Selic, pela poupança ou pela taxa legal.',
+  dados: ['mensais', 'diarios', 'poupanca'],
+  campos: [
+    { id: 'valor', rotulo: 'Valor a corrigir', tipo: 'moeda', padrao: 1000, min: 0.01,
+      ajuda: 'Para períodos que começam antes de julho de 1994, informe o valor na moeda da época.' },
+    { id: 'inicio', rotulo: 'Data inicial', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { var S = AZ.serie, i = Math.min(S.ymIdx(S.mensal('ipca').fim), S.ymIdx(S.mensal('igpm').fim)) + 1; return new Date(Math.floor(i / 12) - 10, i % 12, 1); } },
+    { id: 'fim', rotulo: 'Data final', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { var S = AZ.serie, i = Math.min(S.ymIdx(S.mensal('ipca').fim), S.ymIdx(S.mensal('igpm').fim)) + 1; return new Date(Math.floor(i / 12), i % 12, 1); },
+      ajuda: 'CDI e Selic contam até a véspera; a poupança, até o último aniversário. IPCA e IGP-M contam os meses com mais da metade dos dias.' },
+    /* cinco opções: tipo select (o padrão pede select acima de 4); no gráfico vira a mesma fileira de botões */
+    { id: 'indice', rotulo: 'Índice', tipo: 'select', padrao: 'ipca', noGrafico: 0, rotuloNoGrafico: false,
+      opcoes: [{ v: 'ipca', t: 'IPCA' }, { v: 'igpm', t: 'IGP-M' }, { v: 'cdi', t: 'CDI' }, { v: 'selic', t: 'Selic' }, { v: 'poupanca', t: 'Poupança' }, { v: 'legal', t: 'Taxa legal' }] },
+    { id: 'comparar', rotulo: 'Comparar índices', tipo: 'check', padrao: false, noGrafico: 0 },
+    /* só para quem rende (CDI, Selic, poupança): o mesmo valor corrigido pelo IPCA e a rentabilidade real */
+    { id: 'inflacao', rotulo: 'Comparar com a inflação', tipo: 'check', padrao: false, noGrafico: 0,
+      mostrarSe: function (v) { return v.indice === 'cdi' || v.indice === 'selic' || v.indice === 'poupanca'; } },
+    { id: 'pct', rotulo: 'Percentual do CDI', tipo: 'pct', padrao: 100, min: 0, max: 1000, sufixo: '% do CDI',
+      mostrarSe: function (v) { return v.indice === 'cdi'; } },
+    { id: 'ir', rotulo: 'Descontar imposto de renda (CDB e outros títulos tributados)', tipo: 'check', padrao: false,
+      ajuda: 'Deixe desmarcado para LCI, LCA e outros títulos isentos, ou para ver só a correção bruta.',
+      mostrarSe: function (v) { return v.indice === 'cdi'; } },
+    { id: 'regra', rotulo: 'Regra da poupança', tipo: 'select', padrao: 'auto',
+      opcoes: [{ v: 'auto', t: 'Definir pela data inicial' }, { v: 'nova', t: 'Regra atual (depósitos a partir de 04/05/2012)' }, { v: 'antiga', t: 'Regra antiga (depósitos até 03/05/2012)' }],
+      ajuda: 'Depósitos feitos até 03/05/2012 continuam rendendo 0,5% ao mês mais TR. Os posteriores seguem a regra atual, que depende da Selic.',
+      mostrarSe: function (v) { return v.indice === 'poupanca'; } }
+  ],
+  calcular: function (v, AZ) {
+    var F = AZ.f, D = AZ.datas, S = AZ.serie;
+    var dc = D.corridos(v.inicio, v.fim);
+    if (dc < 1) return { erro: 'A data final deve ser posterior à data inicial.' };
+    var ORDEM = ['ipca', 'igpm', 'cdi', 'selic', 'poupanca'], PRECOS = ['ipca', 'igpm', 'igpdi', 'inpc'];
+    var principal = v.indice;
+    /* opções que só aparecem com o índice escolhido; fora dele valem os padrões das páginas antigas */
+    var pctCdi = principal === 'cdi' ? v.pct : 100, irCdi = principal === 'cdi' && !!v.ir, regra = principal === 'poupanca' ? v.regra : 'auto';
+    var infl = !!v.inflacao && (principal === 'cdi' || principal === 'selic' || principal === 'poupanca');
+    var VIG = new Date(2024, 7, 30); /* a taxa legal (Lei 14.905/2024) vale desde 30/08/2024 */
+    var rotCdi = pctCdi === 100 ? 'CDI' : F.num(pctCdi, pctCdi % 1 ? 2 : 0) + '% do CDI';
+    var NOME = { ipca: 'IPCA', igpm: 'IGP-M', igpdi: 'IGP-DI', inpc: 'INPC', cdi: rotCdi, selic: 'Selic', poupanca: 'Poupança', legal: 'Taxa legal' };
+    var PELO = { ipca: 'pelo IPCA', igpm: 'pelo IGP-M', igpdi: 'pelo IGP-DI', inpc: 'pelo INPC', cdi: pctCdi === 100 ? 'pelo CDI' : 'a ' + rotCdi, selic: 'pela Selic', poupanca: 'pela poupança', legal: 'pela taxa legal', juros: 'pelo CDI e pela Selic' };
+    /* hiperinflação: "1,5 trilhão", no singular abaixo de 2, como em "1,5 milhão" */
+    var sing = function (s) { return String(s).replace(/(^|\s)(1,\d) (milh|bilh|trilh)ões/g, '$1$2 $3ão'); };
+    var vezes = function (x) { return x >= 1e6 ? sing(x < 1e9 ? F.num(x / 1e6, 1) + ' milhões' : x < 1e12 ? F.num(x / 1e9, 1) + ' bilhões' : F.num(x / 1e12, 1) + ' trilhões') : F.num(x / 1e3, 1) + ' mil'; };
+    var curto = function (ym) { return F.mesAno(ym).slice(0, 4) + ym.slice(2, 4); };
+    var ymDe = function (d) { return D.iso(d).slice(0, 7); };
+    var dia1 = function (i) { return new Date(Math.floor(i / 12), i % 12, 1); };
+    var diasMes = function (i) { return new Date(Math.floor(i / 12), i % 12 + 1, 0).getDate(); };
+    var pega = function (r, rot) { return (r.destaques || []).filter(function (d) { return d.rotulo === rot; })[0]; };
+    var antigo = function (slug, x) {
+      try { return AZ.antigo(slug).calcular(Object.assign({ _n: 1 }, x), AZ) || {}; }
+      catch (e) { return { erro: 'Não foi possível calcular este índice com as datas informadas.' }; }
+    };
+
+    /* índices de preços são mensais: entra cada mês que o período (da data inicial até a véspera da final) cobre em mais da metade dos dias.
+       Com as duas datas no dia 1º, entram exatamente os meses entre elas, e a conta é a da página antiga com mês inicial e final. */
+    var ult = D.somar(v.fim, -1), i0 = S.ymIdx(ymDe(v.inicio)), iL = S.ymIdx(ymDe(ult)), iIni, iFim;
+    if (i0 === iL) { iIni = i0; iFim = dc > diasMes(i0) / 2 ? i0 : i0 - 1; }
+    else { iIni = diasMes(i0) - v.inicio.getDate() + 1 > diasMes(i0) / 2 ? i0 : i0 + 1; iFim = ult.getDate() > diasMes(iL) / 2 ? iL : iL - 1; }
+    var mesIni = S.idxYm(iIni), mesFim = S.idxYm(iFim), nMeses = iFim - iIni + 1, exato = v.inicio.getDate() === 1 && v.fim.getDate() === 1;
+    var perPrecos = nMeses === 1 ? F.mesAno(mesIni) + ', 1 mês' : F.mesAno(mesIni) + ' a ' + F.mesAno(mesFim) + ', ' + F.int(nMeses) + ' meses';
+
+    function precos(k) {
+      var s = S.mensal(k), nome = NOME[k];
+      if (nMeses < 1) return { k: k, falta: 'O ' + nome + ' é mensal, e nenhum mês tem mais da metade dos dias dentro do período. Use datas que cubram ao menos a maior parte de um mês.' };
+      if (mesIni < s.ini) return { k: k, falta: 'O ' + nome + ' tem dados a partir de ' + F.mesAno(s.ini) + '. Para usá-lo, escolha uma data inicial a partir de ' + F.data(dia1(S.ymIdx(s.ini))) + '.' };
+      if (mesFim > s.fim) { var ul = S.ymIdx(s.fim) + 1; return { k: k, falta: 'Há dados do ' + nome + ' até ' + F.mesAno(s.fim) + '. Para usá-lo, a data final pode ser, no máximo, ' + F.data(new Date(Math.floor(ul / 12), ul % 12, Math.floor(diasMes(ul) / 2) + 1)) + '.' }; }
+      var r = antigo('correcao-pela-inflacao', { indice: k, valor: v.valor, mesIni: mesIni, mesFim: mesFim });
+      if (r.erro) return { k: k, falta: r.erro };
+      var tab = r.tabelas[1], l = tab.linhas, comValor = tab.colunas.length > 3;
+      return {
+        k: k, r: r, outros: r.tabelas[0].linhas, detalhe: [tab],
+        num: comValor ? l[l.length - 1][3] : NaN, /* com troca de moeda não há série em reais */
+        fator: 1 + l[l.length - 1][2] / 100,
+        /* valor na abertura do dia b: meses já encerrados até b; o último mês contado entra no fim do período */
+        em: function (b) { var im = S.ymIdx(ymDe(b)) - 1; return im < iIni ? v.valor : l[Math.min(im, iFim) - iIni][3]; }
+      };
+    }
+    function diario(k, pc, ir) {
+      pc = pc == null ? pctCdi : pc; ir = ir == null ? irCdi : ir;
+      var r = k === 'cdi' ? antigo('correcao-pelo-cdi', { valor: v.valor, pct: pc, inicio: v.inicio, fim: v.fim, ir: ir })
+        : antigo('correcao-pela-selic', { valor: v.valor, inicio: v.inicio, fim: v.fim });
+      if (r.erro) return { k: k, falta: r.erro };
+      var tab = r.tabelas[0], ca = k === 'cdi' ? 4 : 3, p = pc / 100;
+      /* fator dia a dia, com a mesma multiplicação da página antiga, para os pontos do gráfico */
+      var sd = S.diaria(k, v.inicio, v.fim), fat = [], f = 1;
+      sd.pontos.forEach(function (x) { if (k === 'cdi') f *= 1 + x.taxa / 100 * p; else f = x.fator; fat.push(f); });
+      /* com as duas datas no dia 1º os meses são inteiros, e a nota sobre o primeiro e o último mês não informa nada (o mesmo vale para o ano com as datas em 1º de janeiro) */
+      var semNota = function (t) { return (exato && / mês a mês/.test(t.titulo)) || (exato && !v.inicio.getMonth() && !v.fim.getMonth() && / por ano$/.test(t.titulo)) ? Object.assign({}, t, { nota: null }) : t; };
+      var o = {
+        k: k, r: r, detalhe: [semNota(tab)], dias: sd.dias, ate: sd.fim,
+        num: pega(r, ir && k === 'cdi' ? 'Valor bruto' : 'Valor corrigido').valor,
+        acum: tab.linhas[tab.linhas.length - 1][ca],
+        periodo: F.int(sd.dias) + (sd.dias === 1 ? ' dia útil' : ' dias úteis') + ', até ' + F.data(sd.fim),
+        /* valor na abertura do dia b: taxas dos dias úteis anteriores a b */
+        em: function (b) { var x = v.valor, i; for (i = 0; i < fat.length && sd.pontos[i].data < b; i++) x = v.valor * fat[i]; return x; }
+      };
+      if (k === 'selic') {
+        /* a página da Selic acumulada dá o fator com 10 casas, os dias úteis e a tabela por ano, com o mesmo intervalo */
+        var a = antigo('selic-acumulada', { inicio: v.inicio, fim: v.fim, incluir: false });
+        if (!a.erro) { o.acumulada = a; o.detalhe = (a.tabelas || []).filter(function (t) { return t.titulo === 'Selic por ano'; }).concat([tab]).map(semNota); }
+      }
+      return o;
+    }
+    function poupanca() {
+      var r = antigo('correcao-pela-poupanca', { valor: v.valor, inicio: v.inicio, fim: v.fim, regra: regra });
+      if (r.erro) return { k: 'poupanca', falta: r.erro.replace('data de depósito', 'data inicial').replace('data do depósito', 'data inicial') };
+      var l = r.tabelas.length ? r.tabelas[0].linhas : [], cred = pega(r, 'Créditos de rendimento');
+      var o = {
+        k: 'poupanca', r: r, detalhe: r.tabelas, num: pega(r, 'Valor corrigido').valor, acum: pega(r, 'Rentabilidade no período').valor,
+        periodo: cred.valor ? F.int(cred.valor) + (cred.valor === 1 ? ' aniversário, no dia ' : ' aniversários, no dia ') + cred.nota.replace(/\D+/g, '') : 'nenhum aniversário completo',
+        em: function (b) { var x = v.valor; l.forEach(function (c) { if (c[1] <= b) x = c[4]; }); return x; }
+      };
+      /* aniversário no dia 1º: as páginas mensais da poupança usam a série do Banco Central desse aniversário, com os mesmos rendimentos dos créditos.
+         Delas vêm o resultado por ano, a tabela com a TR e os acumulados no ano e em 12 meses e, com a inflação, a rentabilidade real por ano */
+      if (principal === 'poupanca' && l.length && l[0][1].getDate() === 1) {
+        var antiga = /regra antiga/.test(r.resumo), regraP = antiga ? 'antiga' : 'nova';
+        var mIni = ymDe(D.somarMeses(l[0][1], -1)), mCred = ymDe(l[l.length - 1][1]), mUlt = S.idxYm(S.ymIdx(mCred) - 1);
+        /* "quanto teria hoje na poupança" aplica a regra antiga a todo depósito até maio de 2012: entra só quando a regra coincide */
+        if (antiga || mIni > '2012-05') {
+          var rp = antigo('correcao-pela-poupanca-passado', { valor: v.valor, ini: mIni, fim: mCred, regra: regraP });
+          if (!rp.erro) o.porAno = Object.assign({}, rp.tabelas[0], { titulo: 'Rendimento da poupança por ano' });
+        }
+        var rt = antigo('tabela-rendimento-poupanca', { modo: 'periodo', ini: mIni, fim: mUlt, regra: regraP });
+        if (!rt.erro) o.trMes = Object.assign({}, rt.tabelas[0], { titulo: 'Rendimento e TR mês a mês',
+          nota: 'Taxas ao mês, para aniversário no dia 1º. A coluna "No ano" acumula desde janeiro, e "Em 12 meses" inclui o mês da linha e os 11 anteriores.' });
+        /* a página da rentabilidade real usa sempre a regra atual, que até o período iniciado em maio de 2012 rende igual à antiga */
+        if (infl && (!antiga || mUlt <= '2012-05')) {
+          var rr = antigo('rentabilidade-real-poupanca', { modo: 'hist', ini: mIni, fim: mUlt, valor: v.valor }), tr0;
+          if (!rr.erro) {
+            tr0 = rr.tabelas[0];
+            o.real = Object.assign({}, tr0, { titulo: 'Poupança, inflação e rentabilidade real por ano', destaque: tr0.linhas.length,
+              linhas: tr0.linhas.concat([['No período', l.length, pega(rr, 'Poupança no período').valor, pega(rr, 'IPCA no período').valor, pega(rr, 'Rentabilidade real no período').valor]]),
+              nota: 'Anos incompletos mostram só os meses dentro do período, e a última linha reúne o período inteiro.' });
+          }
+        }
+        o.detalhe = r.tabelas.concat(o.porAno ? [o.porAno] : [], o.trMes ? [o.trMes] : []);
+      }
+      return o;
+    }
+    /* taxa legal: juros simples, só a partir de 30/08/2024. Com data inicial anterior, a conta começa nessa data (o período antes dela segue a regra antiga) */
+    function legal() {
+      var ini = v.inicio < VIG ? VIG : v.inicio, cortou = v.inicio < VIG;
+      if (D.corridos(ini, v.fim) < 1) return { k: 'legal', falta: 'A taxa legal vale desde ' + F.data(VIG) + ', com a Lei 14.905/2024. Para usá-la, escolha uma data final posterior a esse dia.' };
+      var r = antigo('correcao-pela-taxa-legal', { valor: v.valor, inicio: ini, fim: v.fim });
+      if (r.erro) return { k: 'legal', falta: r.erro };
+      var tab = r.tabelas[0], l = tab.linhas, dl = D.corridos(ini, v.fim), m0 = new Date(ini.getFullYear(), ini.getMonth(), 1);
+      return {
+        k: 'legal', r: r, ini: ini, cortou: cortou, detalhe: [tab], num: pega(r, 'Valor com juros').valor, acum: l[l.length - 1][5],
+        periodo: F.int(dl) + (dl === 1 ? ' dia corrido' : ' dias corridos') + (cortou ? ', desde ' + F.data(VIG) : ''),
+        /* valor na abertura do dia b: a mesma proporção da página antiga (taxa do mês × dias corridos ÷ dias do mês), até a véspera de b */
+        em: function (b) {
+          var s = 0;
+          l.forEach(function (x, i) {
+            var a = new Date(m0.getFullYear(), m0.getMonth() + i, 1), z = new Date(m0.getFullYear(), m0.getMonth() + i + 1, 1), de = a < ini ? ini : a, ate = b < z ? b : z;
+            if (ate > v.fim) ate = v.fim;
+            if (ate > de) s += x[1] * D.corridos(de, ate) / D.corridos(a, z);
+          });
+          return v.valor * (1 + s / 100);
+        }
+      };
+    }
+    function rodar(k) { return PRECOS.indexOf(k) >= 0 ? precos(k) : k === 'poupanca' ? poupanca() : k === 'legal' ? legal() : diario(k); }
+
+    var run = {}, M;
+    run[principal] = M = rodar(principal);
+    if (v.comparar) ORDEM.forEach(function (k) { if (!run[k]) run[k] = rodar(k); });
+    var ok = function (R) { return R && !R.falta && isFinite(R.num); };
+    /* comparar com a inflação: o mesmo valor corrigido pelo IPCA, com os meses da regra dos índices de preços */
+    var I = infl ? (run.ipca || (run.ipca = precos('ipca'))) : null, inflOk = infl && ok(M) && ok(I);
+
+    /* ───── pontos do gráfico: dia a dia em períodos de até 93 dias na comparação; senão no fim de cada mês (de cada ano, acima de 180 meses).
+       Cada ponto é o valor na abertura daquele dia, pela regra de cada índice; o último é o resultado final. ───── */
+    var pts = [null], rot = [], m, b;
+    if ((v.comparar || inflOk) && dc <= 93) {
+      rot.push(F.data(v.inicio).slice(0, 5));
+      for (m = 1; m <= dc; m++) { b = D.somar(v.inicio, m); pts.push(m === dc ? 'fim' : b); rot.push(F.data(b).slice(0, 5)); }
+    } else {
+      var iA = S.ymIdx(ymDe(v.inicio)), iZ = S.ymIdx(ymDe(ult)), anual = iZ - iA + 1 > 180;
+      rot.push('Início');
+      for (m = iA; m <= iZ; m++) {
+        b = dia1(m + 1); if (b > v.fim) break;
+        var ehFim = +b === +v.fim;
+        if (anual && m % 12 !== 11 && !ehFim) continue;
+        pts.push(ehFim ? 'fim' : b); rot.push(anual && !ehFim ? String(Math.floor(m / 12)) : curto(S.idxYm(m)));
+      }
+      if (v.fim.getDate() !== 1) { pts.push('fim'); rot.push(curto(ymDe(v.fim))); }
+    }
+    var trilha = function (R) { return pts.map(function (p) { return p === null ? v.valor : p === 'fim' ? R.num : R.em(p); }); };
+
+    /* CDI e Selic têm taxas diárias iguais desde 01/10/2018: na comparação entram numa linha só (a do CDI quando ele é o escolhido; senão, a da Selic) */
+    var J = principal === 'cdi' ? 'cdi' : 'selic', igual = false;
+    if (v.comparar && ok(run.cdi) && ok(run.selic) && pctCdi === 100) {
+      var tc = trilha(run.cdi), ts = trilha(run.selic);
+      igual = tc.every(function (x, i) { return Math.abs(x - ts[i]) < 0.005; });
+    }
+    var nomeJ = J === 'selic' ? 'Selic' + (igual ? ' e CDI' : '') : rotCdi + (igual ? ' e Selic' : '') + (irCdi ? ' (bruto)' : '');
+    /* com a taxa legal escolhida, ela entra no lugar do IGP-M, que fica na tabela (o gráfico tem no máximo quatro linhas) */
+    var LINHAS = principal === 'legal' ? ['ipca', J, 'poupanca', 'legal'] : ['ipca', 'igpm', J, 'poupanca'];
+    /* cores: o escolhido em verde; a inflação de referência (IPCA, ou IGP-M quando o IPCA é o escolhido) em cinza; os outros em marinho e azul */
+    var cores = {}, refK = principal === 'ipca' ? 'igpm' : 'ipca';
+    cores[principal] = 1; cores[refK] = 5;
+    LINHAS.filter(function (k) { return !cores[k]; }).forEach(function (k, i) { cores[k] = [3, 4][i]; });
+
+    /* antes do real, sem troca de moeda no período, os índices de preços ficam na moeda da época: o eixo e a dica do gráfico usam a mesma */
+    var comPreco = PRECOS.map(function (k) { return run[k]; }).filter(ok)[0];
+    var moeda = comPreco ? String(pega(comPreco.r, 'Valor corrigido').valor).split(/\s/)[0] : 'R$';
+    var fmtG = moeda === 'R$' ? 'brl' : function (x) { return moeda + ' ' + F.num(x, x % 1 ? 2 : 0); };
+    var graficos = [], velho = M.r && M.r.graficos && M.r.graficos[0];
+    var velhoDiario = !!velho && (principal === 'cdi' || principal === 'selic') && /^\d\d\/\d\d$/.test(String(velho.rotulos[1]));
+    var tituloUm = function (k) { return k === 'legal' ? 'Evolução do valor com juros pela taxa legal' : 'Evolução do valor corrigido ' + PELO[k] + (k === 'cdi' && irCdi ? ', antes do imposto' : ''); };
+    if (v.comparar) {
+      if (pts.length >= 3) {
+        /* o escolhido vai por último, para a linha dele ficar por cima quando os valores coincidem (períodos curtos) */
+        var series = [];
+        LINHAS.filter(function (k) { return k !== principal; }).concat([principal]).forEach(function (k) {
+          if (LINHAS.indexOf(k) >= 0 && ok(run[k])) series.push({ nome: k === J ? nomeJ : NOME[k], cor: cores[k], dados: trilha(run[k]), k: k });
+        });
+        if (series.length) graficos.push({ tipo: 'linha', titulo: series.length > 1 ? 'Valor corrigido por cada índice' : tituloUm(series[0].k), formato: fmtG, zero: false, rotulos: rot,
+          series: series.map(function (s) { return { nome: s.nome, cor: series.length > 1 ? s.cor : 1, dados: s.dados }; }) });
+      }
+    } else if (inflOk && pts.length >= 3) {
+      /* o escolhido em verde e o IPCA em cinza, como referência; o escolhido vai por último, para ficar por cima */
+      graficos.push({ tipo: 'linha', titulo: 'Valor corrigido ' + PELO[principal] + ' e pelo IPCA' + (irCdi ? ', antes do imposto' : ''), formato: 'brl', zero: false, rotulos: rot,
+        series: [{ nome: 'IPCA', cor: 5, dados: trilha(I) }, { nome: NOME[principal] + (irCdi ? ' (bruto)' : ''), cor: 1, dados: trilha(M) }] });
+    } else if (principal === 'legal' && velho && !M.falta) {
+      /* taxa legal: o gráfico da página antiga, com a taxa de cada mês */
+      graficos.push(Object.assign({}, velho, { series: velho.series.map(function (s) { return Object.assign({}, s, { cor: 1 }); }) }));
+    } else if (velhoDiario && !M.falta) {
+      /* CDI e Selic em até 90 dias úteis: o gráfico diário da página antiga */
+      graficos.push({ tipo: 'linha', titulo: tituloUm(principal), formato: 'brl', zero: false, rotulos: velho.rotulos,
+        series: velho.series.map(function (s, i) { return { nome: i ? s.nome : NOME[principal], cor: i ? 5 : 1, dados: s.dados }; }) });
+    } else if (pts.length >= 4 && ok(M)) {
+      /* sem comparação, como nas páginas antigas: gráfico só com pelo menos três meses (ou três pontos) depois do início */
+      var serie1 = [{ nome: NOME[principal], cor: 1, dados: trilha(M) }];
+      /* percentual diferente de 100%: a referência de 100% do CDI em cinza, como na página antiga */
+      if (principal === 'cdi' && pctCdi !== 100) { var ref = diario('cdi', 100, false); if (ok(ref)) serie1.push({ nome: '100% do CDI', cor: 5, dados: trilha(ref) }); }
+      graficos.push({ tipo: 'linha', titulo: tituloUm(principal), formato: fmtG, zero: false, rotulos: rot, series: serie1 });
+    }
+
+    /* ───── tabela de comparação: os sete índices com o período que cada um considerou ───── */
+    function tabelaComparacao() {
+      var linhas = [], dest = null, m2;
+      /* motivo curto para a linha de um índice sem resultado, tirado da mensagem de erro */
+      var motivo = function (t) {
+        if (/metade dos dias/.test(t)) return 'nenhum mês coberto em mais da metade';
+        if (/dia útil/.test(t)) return 'nenhum dia útil no período';
+        if ((m2 = /(?:começa|começam|a partir de) (?:em )?([a-z]{3}\/\d{4}|\d\d\/\d\d\/\d{4})/.exec(t))) return 'sem dados antes de ' + m2[1];
+        if ((m2 = /até (?:o período iniciado em )?([a-z]{3}\/\d{4}|\d\d\/\d\d\/\d{4})/.exec(t))) return 'sem dados depois de ' + m2[1];
+        return 'sem dados para o período';
+      };
+      /* índices de preços: cada linha vem da página antiga rodada com o próprio índice (a tabela de comparação dela) */
+      PRECOS.forEach(function (k, i) {
+        var R = run[k] || (run[k] = precos(k));
+        if (k === principal) dest = linhas.length;
+        if (R.falta) linhas.push([NOME[k], motivo(R.falta), '', '']);
+        else { var o = R.outros[i]; linhas.push([o[0], perPrecos, sing(o[1]), o[3]]); }
+      });
+      /* a taxa legal só entra quando é a escolhida, com o período dela (a partir de 30/08/2024) */
+      ['cdi', 'selic', 'poupanca'].concat(principal === 'legal' ? ['legal'] : []).forEach(function (k) {
+        var R = run[k];
+        if (k === principal) dest = linhas.length;
+        linhas.push(R.falta ? [NOME[k], motivo(R.falta), '', ''] : [NOME[k] + (k === 'cdi' && irCdi ? ' (bruto)' : ''), R.periodo, F.pct(R.acum, 2), F.brl(R.num)]);
+      });
+      /* o que só aparece aqui: IGP-DI, INPC (e o IGP-M, com a taxa legal no gráfico) e, sem a linha única de CDI e Selic, o juro que ficou fora do gráfico.
+         Sem gráfico (troca de moeda, período curto), todos os índices estão só aqui e a nota não se aplica */
+      var nota = graficos.length ? (principal === 'legal' ? 'IGP-M, IGP-DI e INPC' : 'IGP-DI e INPC') + ' aparecem só nesta tabela.' : null;
+      if (nota && ok(run.cdi) && ok(run.selic)) {
+        if (igual) nota += ' No gráfico, CDI e Selic formam uma linha só, porque desde 01/10/2018 as duas taxas diárias são iguais.';
+        else if (pctCdi !== 100) nota = 'IGP-DI, INPC e a Selic aparecem só nesta tabela.';
+        else nota += J === 'selic' ? ' O CDI fica fora do gráfico por ser quase igual à Selic: até 28/09/2018 ficava um pouco abaixo dela, e desde 01/10/2018 as taxas são iguais.'
+          : ' A Selic fica fora do gráfico por ser quase igual ao CDI: até 28/09/2018 ficava um pouco acima dele, e desde 01/10/2018 as taxas são iguais.';
+      }
+      return {
+        titulo: 'Comparação entre os índices no mesmo período', csv: false, destaque: dest, linhas: linhas,
+        colunas: [{ t: 'Índice' }, { t: 'Período considerado', f: 'texto' }, { t: 'Acumulado', f: 'texto', alinhar: 'dir' }, { t: 'Valor final', f: 'texto', alinhar: 'dir' }],
+        nota: nota
+      };
+    }
+    var tabelas = v.comparar ? [tabelaComparacao()] : [];
+
+    /* "taxas embarcadas" e "rendimentos embarcados", das mensagens das páginas antigas, viram só "taxas" e "rendimentos" */
+    var semJargao = function (t) { return String(t).replace(/ embarcad[oa]s?/g, ''); };
+    if (M.falta) return { alerta: semJargao(M.falta) + ' Os outros índices continuam disponíveis.', alertaTom: 'atencao', graficos: graficos, tabelas: tabelas };
+
+    /* ───── destaques: os da página antiga, na mesma ordem para todos os índices, com notas curtas.
+       Leitura: um parágrafo de até duas frases. A primeira diz o que o valor virou no índice escolhido (frase + cauda);
+       a segunda traz o menor e o maior resultado na comparação ou, sem ela, um complemento do índice (outra) ───── */
+    var r = M.r, d, frase, cauda = '', outra = '';
+    var dias = function (n) { return F.int(n) + (n === 1 ? ' dia útil' : ' dias úteis'); };
+    /* sem imposto, os cartões têm os mesmos nomes ao trocar de índice: valor corrigido, acumulado, diferença e média ao ano ("ao ano" sai do valor).
+       A poupança mantém "Créditos de rendimento" no quarto cartão, que o caso de teste confere */
+    var mediaAno = function (x) { x.rotulo = 'Média ao ano'; x.valor = String(x.valor).replace(/ ao ano$/, ''); };
+    var taxas = F.data(v.inicio) === F.data(M.ate || v.fim) ? 'em ' + F.data(v.inicio) : 'de ' + F.data(v.inicio) + ' a ' + F.data(M.ate || v.fim);
+    if (principal === 'cdi') {
+      d = irCdi ? r.destaques.slice() : [pega(r, 'Valor corrigido'), pega(r, 'CDI acumulado'), pega(r, 'Rendimento'), pega(r, 'Taxa média do período')];
+      d = d.map(function (x) { return Object.assign({}, x); });
+      d[0].nota = PELO.cdi + ', em ' + F.data(v.fim);
+      if (irCdi) {
+        d[2].nota = d[2].nota.replace(' para ', ' em ').replace(/ em [\d.]+ dias? corridos?, mais IOF de/, ' e IOF de');
+        /* a 100% a aplicação rende o próprio CDI do cartão: a nota diz o período das taxas */
+        d[3].nota = pctCdi === 100 ? taxas : 'a aplicação rendeu ' + F.pct(M.acum, 2) + ' antes do imposto';
+        if (d[3].nota.length > 45) d[3].nota = 'rendeu ' + F.pct(M.acum, 2) + ' antes do imposto';
+      } else {
+        d[1].nota = taxas;
+        d[2].rotulo = 'Diferença';
+        d[2].nota = pctCdi === 100 ? 'ganho sobre o valor aplicado' : 'a aplicação rendeu ' + F.pct(M.acum, 2);
+        mediaAno(d[3]);
+        d[3].nota = (pctCdi === 100 ? '' : PELO.cdi + ', ') + 'em ' + dias(M.dias);
+      }
+      /* o líquido desconta o imposto de renda e, em resgates com menos de 30 dias, o IOF, que pode ser a maior parte */
+      var comIof = irCdi && /IOF/.test(pega(r, 'Imposto de renda').nota);
+      frase = F.brl(v.valor) + ' aplicados a ' + F.num(pctCdi, pctCdi % 1 ? 2 : 0) + '% do CDI em ' + F.data(v.inicio) + ' viraram <strong>' + F.brl(M.num) + '</strong> em ' + F.data(v.fim) +
+        (irCdi ? ', ou <strong>' + F.brl(pega(r, 'Valor líquido').valor) + '</strong> ' + (comIof ? 'depois do IOF e do imposto de renda' : 'depois do imposto') : '');
+      cauda = ', com as taxas de ' + dias(M.dias);
+    } else if (principal === 'selic') {
+      d = r.destaques.map(function (x) { return Object.assign({}, x); });
+      d[0].nota = 'pela Selic, em ' + F.data(v.fim);
+      d[1].nota = taxas;
+      mediaAno(d[3]);
+      d[3].nota = 'em ' + dias(M.dias);
+      frase = F.brl(v.valor) + ' corrigidos pela Selic desde ' + F.data(v.inicio) + ' viraram <strong>' + F.brl(M.num) + '</strong> em ' + F.data(v.fim);
+      cauda = ', com as taxas de ' + dias(M.dias);
+    } else if (principal === 'poupanca') {
+      d = [pega(r, 'Valor corrigido'), pega(r, 'Rentabilidade no período'), pega(r, 'Rendimento creditado'), pega(r, 'Créditos de rendimento')].map(function (x) { return Object.assign({}, x); });
+      /* o aviso da página antiga (dias depois do último aniversário, primeiro crédito) vira a segunda frase da leitura */
+      var nc = pega(r, 'Créditos de rendimento').valor, aviso = r.alerta || '', mp;
+      d[0].nota = 'pela poupança, saldo em ' + F.data(v.fim);
+      /* a média ao ano segue como nota do acumulado; abaixo de 12 créditos, a nota diz em quantos meses (no lugar do fator) */
+      d[1].rotulo = 'Poupança acumulada';
+      if (/^fator /.test(d[1].nota)) d[1].nota = nc ? 'em ' + F.prazo(nc) : 'sem rendimento no período';
+      d[2].rotulo = 'Diferença'; d[2].nota = 'rendimento isento de imposto de renda';
+      if (nc) {
+        frase = F.brl(v.valor) + ' depositados na poupança em ' + F.data(v.inicio) + ' viraram <strong>' + F.brl(M.num) + '</strong> em ' + F.data(v.fim);
+        cauda = ', com ' + F.int(nc) + (nc === 1 ? ' crédito mensal' : ' créditos mensais') + (/regra antiga/.test(r.resumo) ? ' pela regra antiga' : ' pela regra atual');
+        if ((mp = /^(O dia|Os [\d.]+ dias) entre o último aniversário \(([\d\/]+)\)/.exec(aviso))) outra = mp[1] + ' depois do último aniversário, ' + mp[2] + ', ' + (mp[1] === 'O dia' ? 'não rende' : 'não rendem') + ', porque a poupança só credita meses completos.';
+      } else {
+        frase = 'O depósito ainda não completou o primeiro aniversário, por isso não houve rendimento';
+        if ((mp = /primeiro crédito ocorre em ([\d\/]+)/.exec(aviso))) outra = 'O primeiro crédito seria em ' + mp[1] + '.';
+      }
+    } else if (principal === 'legal') {
+      /* taxa legal: os cartões da página antiga (juros simples, sem correção monetária) */
+      d = r.destaques.map(function (x) { return Object.assign({}, x); });
+      d[0].nota = M.cortou ? 'juros desde ' + F.data(M.ini) + ', em ' + F.data(v.fim) : 'pela taxa legal, em ' + F.data(v.fim);
+      var zerados = M.detalhe[0].linhas.filter(function (x) { return x[1] === 0; }).length;
+      frase = 'Sobre ' + F.brl(v.valor) + ', a taxa legal somou <strong>' + F.pct(M.acum, 4) + '</strong> de ' + F.data(M.ini) + ' a ' + F.data(v.fim) + ', ou <strong>' + F.brl(pega(r, 'Juros pela taxa legal').valor) + '</strong> de juros simples';
+      /* os meses de taxa zero aparecem como falhas no gráfico: a frase que os explica fica também quando a data inicial é anterior à lei */
+      var zero = zerados ? 'Em ' + F.int(zerados) + (zerados === 1 ? ' mês' : ' meses') + ' a taxa foi zero, porque a inflação superou a Selic.' : '';
+      if (M.cortou) outra = zero ? 'Antes de ' + F.data(VIG) + ' valia a regra antiga, que fica fora desta conta. ' + zero : 'Ela só vale desde ' + F.data(VIG) + ', e o período anterior segue a regra antiga, que fica fora desta conta.';
+      else outra = zero;
+    } else {
+      /* índices de preços: a frase cita as datas digitadas e os meses que entraram */
+      var nome = NOME[principal], meses = nMeses === 1 ? 'em ' + F.mesAno(mesIni) : 'de ' + F.mesAno(mesIni) + ' a ' + F.mesAno(mesFim);
+      d = r.destaques.map(function (x) { return Object.assign({}, x); });
+      d[0].nota = PELO[principal] + ', em ' + F.data(v.fim);
+      /* acumulado: a nota diz os meses que entraram; na hiperinflação o cartão se inverte e mostra por quanto os preços se multiplicaram */
+      var ac = sing(pega(r, nome + ' acumulado').valor);
+      if (/ (milh|bilh|trilh)/.test(ac)) { d[1].rotulo = 'Preços multiplicados por'; d[1].valor = vezes(M.fator); d[1].nota = nome + ' acumulado de ' + ac.replace(/ %$/, ' por cento'); }
+      else d[1].nota = meses;
+      /* em 1 mês ou 12 meses a média repete o acumulado */
+      if (nMeses === 1 || nMeses === 12) d = d.filter(function (x) { return !/^Média ao /.test(x.rotulo); });
+      var vc = pega(r, 'Valor corrigido').valor, perda = (1 - 1 / M.fator) * 100;
+      var troca = /tratado como (.+?) \((.+?), moeda em vigor[^)]*\) e o resultado está em (.+?), já/.exec(r.resumo);
+      var plural = function (s) { return s.split(' ').map(function (w) { return w === 'real' ? 'reais' : w + 's'; }).join(' '); };
+      if (troca) frase = troca[1] + ' de ' + F.data(v.inicio) + ' (' + plural(troca[2]) + ', a moeda da época) equivalem a <strong>' + vc + '</strong> em ' + F.data(v.fim) + ' ' + PELO[principal] + ', já convertidos para o ' + troca[3];
+      else {
+        frase = (moeda === 'R$' ? F.brl(v.valor) : moeda + ' ' + F.num(v.valor, 2)) + ' de ' + F.data(v.inicio) + ' equivalem a <strong>' + vc + '</strong> em ' + F.data(v.fim);
+        cauda = ', porque o ' + nome + (M.fator < 1 ? ' caiu ' + ac.replace(/^[-−]/, '') : ' acumulou ' + ac) + ' ' + meses;
+      }
+      if (M.fator > 1) outra = 'Quem guardou o dinheiro sem rendimento perdeu ' + (perda > 99.95 ? 'praticamente todo o' : F.pct(perda, 1) + ' do') + ' poder de compra.';
+    }
+
+    /* antes do real, a comparação só tem índices de preços, todos na moeda do resultado */
+    var comp = '', din = function (x) { return moeda && moeda !== 'R$' ? moeda + ' ' + F.num(x, 2) : F.brl(x); };
+    if (v.comparar) {
+      /* os mesmos índices da tabela de comparação (IGP-DI e INPC já rodaram nela) */
+      var com = ORDEM.concat(['igpdi', 'inpc']).filter(function (k) { return ok(run[k]); });
+      /* a taxa legal entra na faixa quando conta o mesmo período dos outros (data inicial a partir de 30/08/2024) */
+      if (principal === 'legal' && !M.cortou) com.push('legal');
+      /* CDI e Selic a 100%: com o mesmo resultado entram juntos na frase; senão, fica só o juro da linha do gráfico, já que o outro é quase igual */
+      if (com.indexOf('cdi') >= 0 && com.indexOf('selic') >= 0 && pctCdi === 100) {
+        if (F.brl(run.cdi.num) === F.brl(run.selic.num)) { run.juros = run.selic; com = com.filter(function (k) { return k !== 'cdi' && k !== 'selic'; }).concat(['juros']); }
+        else com = com.filter(function (k) { return k !== (J === 'cdi' ? 'selic' : 'cdi'); });
+      }
+      com.sort(function (a, c) { return run[a].num - run[c].num; });
+      if (com.length > 1) comp = 'Entre os índices, o resultado vai de <strong>' + din(run[com[0]].num) + '</strong> ' + PELO[com[0]] + ' a <strong>' + din(run[com[com.length - 1]].num) + '</strong> ' + PELO[com[com.length - 1]] + '.';
+    }
+    /* ───── comparar com a inflação: o valor final dividido pelo mesmo valor corrigido pelo IPCA dá a rentabilidade real (a conta da página
+       da rentabilidade real da poupança). Com o imposto do CDI, vale o valor líquido. O cartão principal fica; os outros dão lugar ao IPCA e ao ganho real ───── */
+    var segundaInfl = '', extra = {};
+    if (inflOk) {
+      var liq = irCdi ? pega(r, 'Valor líquido').valor : M.num, fr = liq / v.valor / I.fator, real = (fr - 1) * 100, tomR = real >= 0 ? 'positivo' : 'negativo';
+      d = [d[0],
+        { rotulo: 'Corrigido pelo IPCA', valor: I.num, formato: 'brl', nota: 'o que mantém o poder de compra' },
+        { rotulo: 'Rentabilidade real', valor: real, formato: 'pct', tom: tomR, nota: (irCdi ? 'líquida, ' : '') + 'descontado o IPCA de ' + F.pct((I.fator - 1) * 100) }];
+      if (nMeses >= 12) d.push({ rotulo: 'Rentabilidade real ao ano', valor: (Math.pow(fr, 12 / nMeses) - 1) * 100, formato: 'pct', tom: tomR, nota: 'média anualizada' });
+      segundaInfl = 'Para manter o poder de compra seriam necessários ' + F.brl(I.num) + ', então ' + (real >= 0 ? 'o ganho real foi de <strong>' + F.pct(real) + '</strong>.' : 'a perda real foi de <strong>' + F.pct(-real) + '</strong>.');
+    } else if (infl) {
+      /* sem IPCA para o período (data final depois do último dado, por exemplo): o resultado do índice continua, com o aviso */
+      extra = { alerta: 'A comparação com a inflação ficou de fora. ' + (I && I.falta ? semJargao(I.falta) : 'Não há IPCA para este período.'), alertaTom: 'atencao' };
+    }
+
+    /* até 45 palavras: se passar, a primeira frase perde a cauda */
+    var palavras = function (x) { return x.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length; };
+    var segunda = segundaInfl || comp || outra, primeira = frase + cauda + '.';
+    if (cauda && palavras(primeira + ' ' + segunda) > 45) primeira = frase + '.';
+    /* com a inflação, a tabela da rentabilidade real por ano (poupança) vem antes do detalhe do índice e substitui o resultado por ano, que sairia repetido */
+    var detalhe = inflOk && M.real ? [M.real].concat(M.detalhe.filter(function (t) { return t !== M.porAno; })) : (M.detalhe || []);
+    return Object.assign(extra, { destaques: d, resumo: '<p>' + primeira + (segunda ? ' ' + segunda : '') + '</p>', graficos: graficos, tabelas: tabelas.concat(detalhe) });
+  },
+  /* conferidos contra as páginas antigas (tools/rodar.js) em 23/10/2026; datas como Date e R$ com espaço não separável, como o formatador escreve */
+  casos: [
+    { nome: 'IPCA no ano de 2024', entradas: { inicio: new Date(2024, 0, 1), fim: new Date(2024, 11, 31) }, espera: { 'IPCA acumulado': '4,83%', 'Valor corrigido': 'R$ 1.048,31' } },
+    { nome: 'IGP-M com datas no meio do mês', entradas: { indice: 'igpm', inicio: new Date(2020, 2, 20), fim: new Date(2025, 2, 10) }, espera: { 'Valor corrigido': 'R$ 1.572,10' } },
+    { nome: 'IPCA de 16/03 a 14/04: entra março, com 16 dos 31 dias', entradas: { inicio: new Date(2025, 2, 16), fim: new Date(2025, 3, 14) }, espera: { 'IPCA acumulado': '0,56%' } },
+    { nome: 'CDI em 10 anos', entradas: { indice: 'cdi', inicio: new Date(2016, 8, 1), fim: new Date(2026, 8, 1) }, espera: { 'Valor corrigido': 'R$ 2.444,38', 'CDI acumulado': '144,4375%' } },
+    { nome: 'CDI 95% com imposto em 14 dias', entradas: { indice: 'cdi', pct: 95, ir: true, valor: 50000, inicio: new Date(2026, 8, 1), fim: new Date(2026, 8, 15) }, espera: { 'Valor líquido': 'R$ 50.080,60', 'Imposto de renda': 'R$ 23,40' } },
+    { nome: 'Selic em 10 anos', entradas: { indice: 'selic', inicio: new Date(2016, 8, 1), fim: new Date(2026, 8, 1) }, espera: { 'Selic acumulada': '144,4994%', 'Valor corrigido': 'R$ 2.444,99' } },
+    { nome: 'Poupança em 10 anos', entradas: { indice: 'poupanca', inicio: new Date(2016, 8, 1), fim: new Date(2026, 8, 1) }, espera: { 'Valor corrigido': 'R$ 1.788,52' } },
+    { nome: 'Poupança regra antiga, depósito no dia 31', entradas: { indice: 'poupanca', regra: 'antiga', valor: 2500, inicio: new Date(2010, 4, 31), fim: new Date(2026, 8, 15) }, espera: { 'Valor corrigido': 'R$ 7.678,14', 'Créditos de rendimento': '195' } },
+    /* segunda etapa, conferidos com comparar.js contra as páginas antigas em 23/10/2026 */
+    { nome: 'Taxa legal em 12 meses (padrão da página antiga)', entradas: { indice: 'legal', valor: 10000, inicio: new Date(2025, 9, 1), fim: new Date(2026, 9, 1) }, espera: { 'Valor com juros': 'R$ 10.954,45', 'Taxa legal acumulada': '9,5445%', 'Dias corridos': '365' } },
+    { nome: 'Taxa legal com data inicial antes da lei: conta desde 30/08/2024', entradas: { indice: 'legal', inicio: new Date(2016, 8, 1), fim: new Date(2026, 8, 1) }, espera: { 'Valor com juros': 'R$ 1.163,19', 'Taxa legal acumulada': '16,3189%' } },
+    { nome: 'Poupança e inflação em 10 anos (rentabilidade real da poupança)', entradas: { indice: 'poupanca', inflacao: true, inicio: new Date(2016, 8, 1), fim: new Date(2026, 8, 1) }, espera: { 'Corrigido pelo IPCA': 'R$ 1.611,48', 'Rentabilidade real': '10,99%', 'Rentabilidade real ao ano': '1,05%' } },
+    /* revisão de 23/10/2026: depósito anterior a maio de 2012 com período até maio de 2012, em que as duas regras rendem igual (comparar.js com a página da rentabilidade real: IGUAL) */
+    { nome: 'Poupança e inflação de 2000 a 2005, regra antiga', entradas: { indice: 'poupanca', inflacao: true, valor: 100, inicio: new Date(2000, 0, 1), fim: new Date(2006, 0, 1) }, espera: { 'Corrigido pelo IPCA': 'R$ 159,60', 'Rentabilidade real': '5,54%', 'Rentabilidade real ao ano': '0,90%' } }
+  ],
+  explicacao: [
+    '<p>O simulador mostra quanto vale em outra data um valor do passado, pela inflação (IPCA e IGP-M), pelos juros (CDI e Selic), pela poupança ou pela taxa legal. O IPCA é a inflação oficial, e o IGP-M aparece em aluguéis. Como cada índice conta o período do seu jeito, datas parecidas podem dar resultados um pouco diferentes.</p>',
+    '<h3>Como cada índice conta o período</h3>',
+    '<p><strong>IPCA e IGP-M</strong> são mensais, então entra cada mês que o período cobre em mais da metade dos dias; com as duas datas no dia 1º, entram exatamente os meses entre elas. <strong>CDI e Selic</strong> rendem a taxa de cada dia útil até a véspera da data final. A <strong>poupança</strong> só credita no aniversário mensal, e depósitos nos dias 29, 30 e 31 fazem aniversário no dia 1º.</p>',
+    '<h3>Taxa legal</h3>',
+    '<p>Criada pela Lei 14.905/2024, a <strong>taxa legal</strong> é a Selic menos a inflação e vale para juros de mora e condenações sem taxa combinada. Ela conta desde 30/08/2024, soma as taxas mensais em juros simples e não inclui a correção monetária, que é feita à parte, pelo IPCA.</p>',
+    '<h3>Rentabilidade real</h3>',
+    '<p>Com <strong>Comparar com a inflação</strong>, o valor final é dividido pelo mesmo valor corrigido pelo IPCA: <code>(1 + rendimento) ÷ (1 + IPCA) − 1</code>. Subtrair uma taxa da outra seria só uma aproximação.</p>',
+    '<h3>Limites</h3>',
+    '<p>Resultados passados não indicam rendimento futuro, e CDI e Selic aparecem brutos, salvo o imposto opcional do CDI. Para tributos e processos, confira na Receita Federal ou na Calculadora do Cidadão do Banco Central. Há dados do IPCA desde 1980, do IGP-M desde 1989 e do CDI, da Selic e da poupança desde 1995.</p>'
+  ].join('\n')
+});
+</script>
+</body>
+</html>

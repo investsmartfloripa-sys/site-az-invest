@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador de aposentadoria e viver de renda | AZ Invest</title>
+<meta name="description" content="Calcule o patrimônio para viver de renda, o aporte mensal até parar e a renda que o dinheiro sustenta, com imposto e inflação.">
+<meta name="theme-color" content="#132960">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AZ Invest">
+<meta property="og:title" content="Simulador de aposentadoria e viver de renda | AZ Invest">
+<meta property="og:description" content="Calcule o patrimônio para viver de renda, o aporte mensal até parar e a renda que o dinheiro sustenta, com imposto e inflação.">
+<meta property="og:image" content="https://investimentosdeaz.com.br/simuladores/assets/compartilhar.png">
+<meta property="og:url" content="https://investimentosdeaz.com.br/simuladores/aposentadoria-unificada.html">
+<link rel="canonical" href="https://investimentosdeaz.com.br/simuladores/aposentadoria-unificada.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="assets/az.css">
+</head>
+<body>
+<header class="az-topo"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest: todos os simuladores"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a><nav><a href="index.html">Todos os simuladores</a></nav></div></header>
+<main>
+<section class="az-hero"><div class="az-larg">
+<p class="az-trilha"><a href="index.html">Simuladores</a> / <a href="index.html#planejar">Aposentadoria, IR e herança</a></p>
+<h1>Simulador de aposentadoria e viver de renda</h1>
+<p class="az-intro">Descubra quanto juntar para viver de renda, quanto guardar por mês até lá e quanto retirar sem que o dinheiro acabe.</p>
+</div></section>
+<div class="az-larg">
+<section class="az-app" id="az-app" data-ref="cdi,ipca"><noscript><div class="az-cartao az-vazio">Ative o JavaScript do navegador para usar o simulador.</div></noscript></section>
+<section class="az-cartao az-sobre"><details><summary><h2>Como funciona</h2></summary>
+<div class="az-sobre-corpo"><h3>As duas fases</h3>
+<p>Até a idade de parar, o patrimônio de hoje e os aportes rendem a taxa real líquida, <code>(1 + bruta × (1 − alíquota)) ÷ (1 + inflação) − 1</code>, e o aporte é corrigido pela inflação todo mês. Depois, a renda sai do patrimônio no fim de cada mês, e o saldo continua rendendo.</p>
+<h3>Depois de parar</h3>
+<p>Para manter o poder de compra, retira-se só o rendimento real: <code>patrimônio necessário = renda ÷ taxa real mensal</code>. Para manter o valor em reais, retira-se todo o rendimento, e a renda, fixa, perde poder de compra. Para gastar em um prazo, a renda acompanha a inflação e o saldo zera no fim. O aporte necessário é o que leva o patrimônio de hoje ao necessário até a idade de parar.</p>
+<h3>Regra dos 4%</h3>
+<p>Retirar 4% ao ano exige juntar 25 vezes a renda anual, ou 300 vezes a mensal. A regra vem de estudos com ações e títulos dos Estados Unidos, para cerca de 30 anos de retiradas, e não foi calibrada para o Brasil.</p>
+<h3>Limites</h3>
+<p>Rentabilidade, inflação e alíquota ficam constantes, e o imposto é descontado da rentabilidade todo ano, o que é conservador. Quedas logo depois de parar reduzem a renda possível. "Do extrato" mostra os valores sem descontar a inflação acumulada até cada data.</p></div>
+</details></section>
+<section class="az-cta" id="az-cta" hidden><div><h2></h2><p></p></div><a class="az-botao az-lar" href="#" target="_blank" rel="noopener"></a></section>
+<section class="az-rel"><h2>Mais em aposentadoria, ir e herança</h2><div class="az-grade">
+<a class="az-item" href="restituicao-imposto-de-renda.html" data-k="Imposto de renda e PGBL Calculadora de restituição do imposto de renda Estime o imposto devido no ano, a restituição ou o saldo a pagar e compare a declaração completa com a simplificada. IRPF imposto de renda pessoa física declaração de ajuste anual restituição imposto a pagar declaração completa declaração simplificada desconto simplificado deduções PGBL dependentes tabela progressiva isenção 5 mil leão"><b>Imposto de renda e PGBL</b></a>
+<a class="az-item" href="custos-de-sucessao.html" data-k="Sucessão e inventário Simulador de custos de sucessão e inventário Estime o ITCMD, os honorários e as custas do inventário por estado e veja quanto dessa conta a família teria em dinheiro disponível. herança inventário ITCMD ITCD imposto sobre herança sucessão planejamento sucessório espólio meação cartório seguro de vida previdência VGBL PGBL liquidez partilha"><b>Sucessão e inventário</b></a>
+</div></section>
+</div>
+</main>
+<footer class="az-rodape"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a>
+<p>As simulações têm caráter exclusivamente educativo. Os resultados dependem das premissas informadas por você, são estimativas e não constituem recomendação de investimento, oferta de produto ou garantia de rentabilidade. Rentabilidade passada não representa garantia de rentabilidade futura.</p>
+<p>Antes de decidir, confirme taxas, prazos, tributação e condições diretamente com a instituição responsável pelo produto.</p></div></footer>
+<script src="assets/config.js"></script>
+<script src="assets/az.js"></script>
+<script>AZ._registrar = AZ.registrar; AZ.registrar = function (x) { AZ.specs.push(x); }; AZ.antigo = function (slug) { var s = AZ.specs.filter(function (x) { return x.slug === slug; })[0]; if (!s) throw new Error("página antiga não carregada: " + slug); return s; };</script>
+<script>
+AZ.registrar({
+  slug: 'independencia-financeira',
+  titulo: 'Simulador de independência financeira',
+  categoria: 'independencia',
+  ordem: 4,
+  resumo: 'Calcule o patrimônio acumulado até a independência financeira e a renda mensal que ele sustenta depois.',
+  palavras: ['aposentadoria', 'viver de renda', 'renda passiva', 'patrimônio', 'saque mensal', 'renda vitalícia', 'acumulação'],
+  intro: 'A simulação tem duas fases. Na primeira, você investe todos os meses e forma um patrimônio. Na segunda, passa a sacar uma renda mensal. Informe os dados de cada fase para ver quanto acumula e quanto pode retirar.',
+  campos: [
+    { tipo: 'titulo', rotulo: 'Fase de acumulação' },
+    { id: 'inicial', rotulo: 'Valor já investido', tipo: 'moeda', padrao: 20000, min: 0 },
+    { id: 'aporte', rotulo: 'Aporte mensal', tipo: 'moeda', padrao: 1500, min: 0 },
+    { id: 'anosAcum', rotulo: 'Tempo de acumulação', tipo: 'int', padrao: 25, min: 1, max: 80, sufixo: 'anos', largura: 'meia' },
+    { id: 'taxaAcum', rotulo: 'Rentabilidade real na acumulação', tipo: 'pct', padrao: 5, min: 0, max: 100, sufixo: '% ao ano', largura: 'meia',
+      ajuda: 'Acima da inflação.' },
+    { tipo: 'titulo', rotulo: 'Fase de renda' },
+    { id: 'anosRenda', rotulo: 'Tempo vivendo de renda', tipo: 'int', padrao: 30, min: 1, max: 80, sufixo: 'anos', largura: 'meia' },
+    { id: 'taxaRenda', rotulo: 'Rentabilidade real na fase de renda', tipo: 'pct', padrao: 4, min: 0, max: 100, largura: 'meia',
+      unidades: [{ v: 'ano', t: 'ao ano' }, { v: 'mes', t: 'ao mês' }],
+      ajuda: 'Acima da inflação. Costuma ser menor, pois a carteira tende a ficar mais conservadora.' }
+  ],
+  calcular: function (v, AZ) {
+    var F = AZ.f, fin = AZ.fin;
+    var aA = Math.round(v.anosAcum), aR = Math.round(v.anosRenda), nA = aA * 12, nR = aR * 12;
+    var iA = fin.aaParaAm(v.taxaAcum / 100);
+    var iR = v.taxaRendaUn === 'ano' ? fin.aaParaAm(v.taxaRenda / 100) : v.taxaRenda / 100;
+    var p = fin.projetar({ inicial: v.inicial, aporte: v.aporte, taxaMes: iA, meses: nA });
+    var pat = p[nA].saldo, investido = p[nA].investido;
+    if (pat <= 0) return { erro: 'Informe um valor já investido ou um aporte mensal maior que zero.' };
+    var saque = fin.pmtVp(pat, iR, nR);            /* consome patrimônio e rendimentos até zerar */
+    var perpetuo = pat * iR;                         /* retira apenas o rendimento real */
+    /* evolução anual: acumulação e depois os dois cenários de renda */
+    var rot = [], consumo = [], preserva = [], linhas = [], a, m, s, ja, mov, rend;
+    for (a = 0; a <= aA; a++) { rot.push(String(a)); consumo.push(p[a * 12].saldo); preserva.push(p[a * 12].saldo); }
+    for (a = 1; a <= aA; a++) {
+      linhas.push([a, 'Acumulação', p[a * 12].investido - p[(a - 1) * 12].investido, p[a * 12].jurosAcum - p[(a - 1) * 12].jurosAcum, p[a * 12].saldo]);
+    }
+    s = pat;
+    for (a = 1; a <= aR; a++) {
+      rend = 0;
+      for (m = 0; m < 12; m++) { ja = s * iR; rend += ja; s = s + ja - saque; }
+      if (a === aR || s < 0) s = Math.max(0, Math.abs(s) < 0.01 ? 0 : s);
+      rot.push(String(aA + a)); consumo.push(s); preserva.push(pat);
+      linhas.push([aA + a, 'Renda', -saque * 12, rend, s]);
+    }
+    mov = saque * nR;
+    var textos = [];
+    textos.push('<p>Todos os valores estão em dinheiro de hoje, porque as rentabilidades informadas são reais (acima da inflação). Na prática, isso supõe que os aportes e os saques sejam corrigidos pela inflação ao longo dos anos.</p>');
+    if (iR <= 0) textos.push('<p>Com rentabilidade real igual a zero na fase de renda, não há rendimento para sacar sem reduzir o patrimônio. A renda pelo prazo escolhido equivale a dividir o patrimônio pelo número de meses.</p>');
+    return {
+      destaques: [
+        { rotulo: 'Patrimônio acumulado', valor: pat, formato: 'brl', tom: 'primario', nota: 'após ' + F.prazo(nA) + ' de aportes' },
+        { rotulo: 'Renda mensal por ' + F.int(aR) + (aR === 1 ? ' ano' : ' anos'), valor: saque, formato: 'brl', tom: 'destaque', nota: 'consome rendimentos e patrimônio até zerar' },
+        { rotulo: 'Renda mensal sem prazo para acabar', valor: perpetuo, formato: 'brl', tom: 'positivo', nota: 'retira só os rendimentos e preserva o patrimônio' },
+        { rotulo: 'Total investido', valor: investido, formato: 'brl', nota: F.brl(pat - investido) + ' vieram dos rendimentos' }
+      ],
+      resumo: '<p>Investindo por ' + F.prazo(nA) + ' a ' + F.pct(v.taxaAcum) + ' ao ano acima da inflação (' + F.pct(iA * 100, 4) + ' ao mês), o patrimônio chega a <strong>' + F.brl(pat) + '</strong>. Rendendo ' + F.pct(iR * 100, 4) + ' ao mês na fase de renda, ele sustenta saques de <strong>' + F.brl(saque) + '</strong> por mês durante ' + F.int(aR) + (aR === 1 ? ' ano' : ' anos') + ' (total de ' + F.brl(mov) + '), ou de <strong>' + F.brl(perpetuo) + '</strong> por mês por tempo indeterminado.</p>',
+      graficos: [{
+        tipo: 'linha', titulo: 'Patrimônio nas duas fases', formato: 'brl', rotuloDica: 'Ano', rotulos: rot,
+        series: [
+          { nome: 'Sacando só os rendimentos', cor: 3, dados: preserva },
+          { nome: 'Consumindo o patrimônio no prazo', cor: 1, dados: consumo }
+        ]
+      }],
+      tabelas: [{
+        titulo: 'Evolução ano a ano (cenário que consome o patrimônio)',
+        colunas: [{ t: 'Ano', f: 'int' }, { t: 'Fase', f: 'texto' }, { t: 'Aportes ou saques', f: 'brl' }, { t: 'Rendimento', f: 'brl' }, { t: 'Patrimônio', f: 'brl' }],
+        linhas: linhas, destaque: aA - 1, mostrar: Math.min(linhas.length, Math.max(12, aA + 3)),
+        nota: 'Valores de cada ano e patrimônio no fim do ano. Saques aparecem com sinal negativo. A linha em destaque marca o fim da acumulação.'
+      }],
+      textos: textos
+    };
+  },
+  explicacao: [
+    '<p>Independência financeira é o ponto em que o patrimônio investido gera renda suficiente para cobrir o custo de vida. O simulador divide o caminho em duas etapas: a acumulação, em que os aportes e os juros compostos formam o patrimônio, e a fase de renda, em que os saques mensais substituem o salário.</p>',
+    '<p>Na acumulação, a taxa anual é convertida para a taxa mensal equivalente e aplicada sobre o saldo, com aporte no fim de cada mês. Na fase de renda, são calculados dois valores de saque:</p>',
+    '<ul><li><strong>Renda por prazo determinado:</strong> parcela fixa que esgota o patrimônio exatamente no fim do prazo, pela fórmula <code>patrimônio × i ÷ (1 − (1 + i)^−n)</code>.</li><li><strong>Renda sem prazo para acabar:</strong> apenas o rendimento real do mês, <code>patrimônio × i</code>. O patrimônio se mantém em poder de compra e pode ser deixado como herança.</li></ul>',
+    '<p>Use rentabilidades reais, isto é, o quanto você espera ganhar acima da inflação, já líquido de impostos e taxas. Assim, todos os valores ficam em poder de compra de hoje. A simulação supõe taxas constantes, o que não acontece na vida real: retornos variam de ano para ano, e quedas no início da fase de renda reduzem o valor que pode ser sacado com segurança. Trate o resultado como referência de planejamento.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'viver-de-renda',
+  titulo: 'Simulador para viver de renda',
+  categoria: 'independencia',
+  ordem: 16,
+  resumo: 'Veja a renda mensal que um patrimônio sustenta depois do imposto e da inflação, quanto falta e por quanto tempo ele dura.',
+  palavras: ['renda passiva', 'aposentadoria', 'viver de juros', 'renda perpétua', 'taxa de retirada', 'patrimônio necessário', 'inflação', 'imposto de renda', 'quanto preciso para viver de renda', 'renda vitalícia'],
+  intro: 'Informe o patrimônio investido hoje, a renda mensal desejada e as premissas de rentabilidade, imposto e inflação. O simulador mostra a renda que o patrimônio sustenta, o patrimônio necessário para a renda desejada e por quanto tempo o valor atual dura.',
+  campos: [
+    { id: 'patrimonio', rotulo: 'Patrimônio investido hoje', tipo: 'moeda', padrao: 1000000, min: 0 },
+    { id: 'renda', rotulo: 'Renda mensal líquida desejada', tipo: 'moeda', padrao: 8000, min: 0.01,
+      ajuda: 'Em valores de hoje, já depois do imposto.' },
+    { tipo: 'titulo', rotulo: 'Premissas' },
+    { id: 'taxa', rotulo: 'Rentabilidade bruta esperada', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.cdi; }, min: 0, max: 100, sufixo: '% ao ano', largura: 'meia',
+      ajuda: 'Antes do imposto. O valor sugerido é o CDI atual, alto para padrões históricos. Teste também taxas menores.' },
+    { id: 'inflacao', rotulo: 'Inflação esperada', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: 0, max: 100, sufixo: '% ao ano', largura: 'meia',
+      ajuda: 'O valor sugerido é o IPCA dos últimos 12 meses.' },
+    { id: 'imposto', rotulo: 'Imposto sobre o rendimento', tipo: 'select', padrao: '15',
+      opcoes: [{ v: '15', t: '15% (renda fixa acima de 2 anos)' }, { v: '0', t: 'Isento (LCI, LCA e outros isentos)' }, { v: 'outro', t: 'Outra alíquota' }] },
+    { id: 'aliquota', rotulo: 'Alíquota sobre o rendimento', tipo: 'pct', padrao: 17.5, min: 0, max: 100,
+      mostrarSe: function (v) { return v.imposto === 'outro'; } },
+    { tipo: 'titulo', rotulo: 'Objetivo' },
+    { id: 'objetivo', rotulo: 'O que deve acontecer com o patrimônio', tipo: 'segmento', padrao: 'real',
+      opcoes: [{ v: 'real', t: 'Preservar o poder de compra' }, { v: 'nominal', t: 'Preservar o valor em reais' }, { v: 'prazo', t: 'Consumir em um prazo' }],
+      ajuda: 'Poder de compra: a renda acompanha a inflação e nunca acaba. Valor em reais: a renda fica fixa e perde poder de compra. Prazo: a renda acompanha a inflação e o patrimônio chega a zero no fim.' },
+    { id: 'anos', rotulo: 'Prazo para consumir o patrimônio', tipo: 'int', padrao: 30, min: 1, max: 100, sufixo: 'anos',
+      mostrarSe: function (v) { return v.objetivo === 'prazo'; } },
+    { tipo: 'titulo', rotulo: 'Se ainda falta patrimônio' },
+    { id: 'aporte', rotulo: 'Aporte mensal até começar a viver de renda', tipo: 'moeda', padrao: 0, min: 0, opcional: true,
+      ajuda: 'Opcional, em valores de hoje. Serve para estimar em quanto tempo o patrimônio necessário é atingido.' }
+  ],
+  calcular: function (v, AZ) {
+    var F = AZ.f, fin = AZ.fin, EPS = 1e-12;
+    function reais(x) { return typeof x === 'number' ? 'R$ ' + F.int(x) : x; }   /* sem centavos, para cartões e tabelas largas */
+    var P = v.patrimonio, R = v.renda, obj = v.objetivo, aporte = v.aporte || 0;
+    var aliqPp = v.imposto === 'outro' ? v.aliquota : +v.imposto, aliq = aliqPp / 100;
+    var anos = v.anos >= 1 ? Math.min(100, Math.round(v.anos)) : 30, n = anos * 12, txAnos = F.int(anos) + (anos === 1 ? ' ano' : ' anos');
+    var brutaAa = v.taxa / 100, infAa = v.inflacao / 100, pm = fin.aaParaAm(infAa);
+
+    /* taxas mensais para uma rentabilidade bruta anual: líquida (i) e real líquida (r) */
+    function taxas(bruta) {
+      var liqAa = bruta * (1 - aliq), i = fin.aaParaAm(liqAa);
+      return { liqAa: liqAa, i: i, r: (1 + i) / (1 + pm) - 1, realAa: fin.real(liqAa, infAa) };
+    }
+    /* renda mensal inicial que o patrimônio sustenta em cada objetivo (null quando não existe) */
+    function sustenta(o, t) {
+      if (o === 'real') return t.r > EPS ? P * t.r : null;
+      if (o === 'nominal') return t.i > EPS ? P * t.i : null;
+      return P > 0 ? fin.pmtVp(P, t.r, n) : 0;
+    }
+    /* patrimônio que sustenta a renda desejada em cada objetivo (null quando não existe) */
+    function necessario(o, t) {
+      if (o === 'real') return t.r > EPS ? R / t.r : null;
+      if (o === 'nominal') return t.i > EPS ? R / t.i : null;
+      return fin.vp(0, t.r, n, R);
+    }
+    /* meses (fracionários) em que o patrimônio atual paga a renda desejada: taxa real se a renda acompanha a inflação, nominal se é fixa */
+    function duracao(o, t) {
+      var j = o === 'nominal' ? t.i : t.r;
+      if (P <= 0) return 0;
+      if (j > EPS && R <= P * j + 0.005) return Infinity;      /* meio centavo de folga para valores digitados com arredondamento */
+      var x = fin.nperVp(P, j, R), k = Math.floor(fin.nperVp(P + 0.005, j, R) + 1e-9);   /* a mesma folga vale para o patrimônio digitado: não perde um mês por fração de centavo */
+      return k > x ? k : x;
+    }
+    var T = taxas(brutaAa), i = T.i, r = T.r;
+    var nomes = { real: 'Preservar o poder de compra', nominal: 'Preservar o valor em reais', prazo: 'Consumir em ' + txAnos };
+    var corrigida = obj !== 'nominal';
+    var sust = sustenta(obj, T), nec = necessario(obj, T), dur = duracao(obj, T);
+    var falta = nec == null ? null : nec - P;
+
+    function mesAno(k) { var h = AZ.datas.hoje(), d = new Date(h.getFullYear(), h.getMonth() + k, 1); return F.mesAno(AZ.datas.iso(d).slice(0, 7)); }
+    function txDur(d) {
+      if (!isFinite(d)) return 'Sem prazo para acabar';
+      if (d > 1200) return 'Mais de 100 anos';
+      var k = Math.floor(d + 1e-9); return k < 1 ? 'Menos de 1 mês' : F.prazo(k);
+    }
+    /* tempo, em meses inteiros, para o patrimônio atual chegar ao necessário com aportes corrigidos pela inflação (conta em valores de hoje, taxa real) */
+    function tempo(alvo, t) {
+      if (alvo == null) return null;
+      if (alvo <= P) return 0;
+      var x = fin.nper(P, alvo, t.r, aporte);
+      return isFinite(x) && x <= 1200 ? Math.ceil(x - 1e-9) : Infinity;
+    }
+
+    /* ── simulação mês a mês: rende a taxa líquida, retira no fim do mês a renda desejada ── */
+    var limite = obj === 'prazo' ? n : (isFinite(dur) ? 1200 : 600);
+    var S = P, nivel = 1, m, rend, W, pago, pts = [{ mes: 0, nom: P, real: P }], linhas = [], fimMes = null;
+    var aIni = P, aRend = 0, aRet = 0, aRetReal = 0, aMeses = 0;
+    for (m = 1; m <= limite && P > 0; m++) {
+      nivel *= 1 + pm;                              /* nível de preços acumulado até o fim do mês m */
+      W = corrigida ? R * nivel : R;
+      if (S <= 0) { rend = 0; pago = 0; }
+      else {
+        rend = S * i;
+        if (S + rend - W < 0.005) { pago = S + rend; S = 0; fimMes = m; }
+        else { pago = W; S = S + rend - W; }
+      }
+      aRend += rend; aRet += pago; aRetReal += pago / nivel; aMeses += pago / W;
+      pts.push({ mes: m, nom: S, real: S / nivel });
+      if (m % 12 === 0 || m === limite) {
+        linhas.push([Math.ceil(m / 12), aIni, aRend, aRet, S, S / nivel, aMeses > 0 ? (corrigida ? aRet : aRetReal) / aMeses : 0]);
+        aIni = S; aRend = 0; aRet = 0; aRetReal = 0; aMeses = 0;
+        if (S <= 0) break;
+      }
+    }
+    var mesesSim = pts.length - 1, saldoFim = pts[mesesSim];
+
+    var tAlvo = tempo(nec, T);
+
+    /* ── destaques ── */
+    var rot1 = obj === 'real' ? 'Renda que preserva o poder de compra' : obj === 'nominal' ? 'Renda que preserva o valor em reais' : 'Renda mensal por ' + txAnos;
+    var nota1 = obj === 'real' ? 'por mês, em valores de hoje, corrigida pela inflação, sem prazo para acabar'
+      : obj === 'nominal' ? 'por mês, fixa em reais: perde poder de compra com a inflação'
+        : 'em valores de hoje, corrigida pela inflação; o patrimônio chega a zero no fim';
+    var destaques = [
+      { rotulo: rot1, valor: sust == null ? 'Não existe' : F.brl(sust), tom: 'primario', nota: P <= 0 ? 'informe o patrimônio investido para calcular a renda' : sust == null ? (obj === 'real' ? 'a rentabilidade líquida não supera a inflação' : 'a rentabilidade líquida é zero') : nota1 },
+      { rotulo: 'Patrimônio necessário', valor: nec == null ? 'Não existe' : reais(nec), tom: 'destaque', nota: 'para ' + F.brl(R) + ' por mês neste objetivo' }
+    ];
+    if (falta != null) destaques.push(falta > 0.005
+      ? { rotulo: 'Falta acumular', valor: reais(falta), tom: 'negativo', nota: 'o patrimônio atual cobre ' + F.pct(P / nec * 100, 1) + ' do necessário' + (isFinite(tAlvo) ? '; ' + (aporte > 0 ? 'com o aporte' : 'sem aportes') + ' e sem retiradas, cerca de ' + F.prazo(tAlvo) : '') }
+      : { rotulo: 'Sobra', valor: reais(-falta), tom: 'positivo', nota: 'o patrimônio atual supera o necessário' });
+    var notaDur;
+    if (P <= 0) notaDur = 'não há patrimônio investido';
+    else if (!isFinite(dur)) notaDur = obj === 'nominal' ? 'a renda desejada, fixa em reais, não passa do rendimento líquido' : 'a renda desejada não passa do rendimento real líquido';
+    else if (dur > 1200) notaDur = 'ainda há saldo depois de 100 anos';
+    else if (obj === 'prazo' && dur > n + 1e-6) notaDur = 'passa do prazo de ' + txAnos + ': sobra saldo no fim';
+    else notaDur = 'o saldo acaba em ' + mesAno(Math.ceil(dur - 1e-9)) + ', com a renda ' + (corrigida ? 'corrigida pela inflação' : 'fixa em reais');
+    destaques.push({ rotulo: 'Duração do patrimônio atual', valor: P <= 0 ? '-' : txDur(dur), tom: isFinite(dur) && !(obj === 'prazo' && dur >= n - 1e-6) ? undefined : 'positivo', nota: notaDur });
+    destaques.push({ rotulo: 'Rentabilidade real líquida', valor: F.pct(T.realAa * 100) + ' ao ano', tom: T.realAa < 0 ? 'negativo' : undefined,
+      nota: F.pct(T.liqAa * 100) + ' líquida de imposto, com inflação de ' + F.pct(v.inflacao) });
+
+    /* ── alertas ── */
+    var alerta;
+    if (T.realAa <= EPS) {
+      alerta = (T.realAa < -EPS ? 'A rentabilidade líquida de imposto (' + F.pct(T.liqAa * 100) + ' ao ano) é menor que a inflação (' + F.pct(v.inflacao) + ' ao ano).' : 'A rentabilidade líquida de imposto é igual à inflação.') +
+        ' Com essas premissas não existe renda que preserve o poder de compra do patrimônio para sempre: qualquer retirada reduz o valor real investido.' +
+        (obj === 'real' ? ' Para ver por quanto tempo o patrimônio atual paga a renda desejada, consulte a duração abaixo ou escolha o objetivo de consumir em um prazo.' : '');
+    }
+    if (obj === 'nominal' && sust == null) alerta = 'Com rentabilidade líquida igual a zero não há rendimento para retirar sem reduzir o valor em reais do patrimônio.' + (alerta ? ' ' + alerta : '');
+
+    /* ── leitura do resultado ── */
+    var txRenda = corrigida ? 'corrigida pela inflação' : 'fixa em reais', resumo = '<p>';
+    if (P <= 0) {
+      resumo += 'Sem patrimônio investido não há renda a retirar. O cálculo abaixo mostra o patrimônio que a renda desejada exige com as premissas informadas.';
+    } else if (sust != null) {
+      resumo += 'Com rentabilidade de ' + F.pct(v.taxa) + ' ao ano, imposto de ' + F.pct(aliqPp, aliqPp % 1 ? (aliqPp * 10 % 1 ? 2 : 1) : 0) + ' sobre o rendimento e inflação de ' + F.pct(v.inflacao) + ' ao ano, um patrimônio de ' + F.brl(P) + ' sustenta <strong>' + F.brl(sust) + '</strong> por mês ';
+      resumo += obj === 'real' ? 'em valores de hoje, com correção pela inflação e sem prazo para acabar.' : obj === 'nominal' ? 'em valor fixo, mantendo o saldo em reais. Como a renda não acompanha a inflação, ela perde poder de compra a cada ano.' : 'em valores de hoje, com correção pela inflação, durante ' + txAnos + '.';
+    } else {
+      resumo += obj === 'real' ? 'Com as premissas informadas, a rentabilidade real líquida é de ' + F.pct(T.realAa * 100) + ' ao ano, e por isso não há renda perpétua que mantenha o poder de compra.' : 'Com as premissas informadas, não há rendimento líquido a retirar.';
+    }
+    if (nec != null) {
+      resumo += ' Para ' + F.brl(R) + ' por mês, o patrimônio necessário é de <strong>' + F.brl(nec) + '</strong>' + (falta > 0.005 ? ', ou seja, faltam ' + F.brl(falta) + '.' : falta < -0.005 ? ', ou seja, sobram ' + F.brl(-falta) + '.' : '.');
+    }
+    resumo += '</p>';
+    if (P > 0) {
+      resumo += '<p>Retirando ' + F.brl(R) + ' por mês, com renda ' + txRenda + ', ';
+      if (!isFinite(dur)) resumo += 'o patrimônio atual não se esgota' + (corrigida ? ' e não perde poder de compra.' : '. A renda, porém, compra menos a cada ano' + (saldoFim.real < P ? ', e o patrimônio também perde poder de compra.' : '.'));
+      else if (dur > 1200) resumo += 'o patrimônio atual dura mais de 100 anos.';
+      else if (obj === 'prazo' && dur > n + 1e-6) resumo += 'o patrimônio atual atravessa ' + (n === 12 ? 'o ' : 'os ') + txAnos + ' e ainda restam ' + F.brl(saldoFim.nom) + ' no fim (' + F.brl(saldoFim.real) + ' em valores de hoje).';
+      else if (dur < 1 - 1e-9) resumo += 'o patrimônio atual <strong>não cobre nem a primeira retirada integral</strong> e se esgota em ' + mesAno(1) + '.';
+      else resumo += 'o patrimônio atual paga a renda integral por <strong>' + txDur(dur).toLowerCase() + '</strong> e se esgota em ' + mesAno(Math.ceil(dur - 1e-9)) + '.';
+      resumo += ' Essa retirada equivale a ' + F.pct(R * 12 / P * 100) + ' do patrimônio ao ano.</p>';
+    }
+    if (nec != null && falta > 0.005) {
+      resumo += '<p>' + (aporte > 0 ? 'Com aportes de ' + F.brl(aporte) + ' por mês (em valores de hoje) e sem retiradas' : 'Sem aportes e sem retiradas, apenas com o rendimento real') + ', o patrimônio necessário ' +
+        (isFinite(tAlvo) ? 'é atingido em cerca de <strong>' + F.prazo(tAlvo) + '</strong> (' + mesAno(tAlvo) + '). Nessa data, os valores em reais serão maiores, pois o patrimônio necessário e a renda sobem com a inflação.' : 'não é atingido em 100 anos.') + '</p>';
+    }
+
+    /* ── tabelas ── */
+    var tabObj = {
+      titulo: 'Os três objetivos lado a lado', csv: false,
+      colunas: [{ t: 'Objetivo' }, { t: 'Renda inicial', f: reais }, { t: 'Patrimônio necessário', f: reais }, { t: 'Duração', f: 'texto', alinhar: 'dir' }],
+      linhas: ['real', 'nominal', 'prazo'].map(function (o) {
+        var s2 = sustenta(o, T), n2 = necessario(o, T), d2 = duracao(o, T);
+        return [nomes[o], s2 == null ? 'Não existe' : s2, n2 == null ? 'Não existe' : n2, P > 0 ? txDur(d2) : '-'];
+      }),
+      destaque: ['real', 'nominal', 'prazo'].indexOf(obj),
+      nota: 'Renda inicial: valor mensal que o patrimônio atual sustenta em cada objetivo. Patrimônio necessário: para a renda desejada de ' + F.brl(R) + '. Duração: tempo em que o patrimônio atual paga a renda desejada integral. No objetivo de preservar o valor em reais, a renda é fixa e perde poder de compra; nos outros dois, ela é corrigida pela inflação.'
+    };
+    var tabTaxas = {
+      titulo: 'Taxas usadas na simulação', csv: false,
+      colunas: [{ t: 'Taxa' }, { t: 'Ao ano', f: 'pct' }, { t: 'Ao mês', f: 'pct4' }],
+      linhas: [
+        ['Rentabilidade bruta', v.taxa, fin.aaParaAm(brutaAa) * 100],
+        ['Rentabilidade líquida de imposto', T.liqAa * 100, i * 100],
+        ['Inflação', v.inflacao, pm * 100],
+        ['Rentabilidade real líquida', T.realAa * 100, r * 100]
+      ].concat(P > 0 ? [['Taxa de retirada da renda desejada', R * 12 / P * 100, R / P * 100]] : []),
+      nota: 'A última linha é a taxa de retirada: renda desejada dividida pelo patrimônio atual (ao ano, a renda de 12 meses). A renda só é perpétua e mantém o poder de compra quando a retirada mensal não passa da rentabilidade real líquida mensal.'
+    };
+    var cortes = [0, 1, 2, 3, 4].filter(function (k) { return v.taxa - k >= 0; });
+    var tabSens = {
+      titulo: 'E se a rentabilidade for menor', csv: false,
+      colunas: [{ t: 'Bruta ao ano', f: 'pct' }, { t: 'Real líquida ao ano', f: 'pct' }, { t: 'Renda sustentável', f: reais }, { t: 'Patrimônio necessário', f: reais }],
+      linhas: cortes.map(function (k) {
+        var t2 = taxas((v.taxa - k) / 100), s2 = sustenta(obj, t2), n2 = necessario(obj, t2);
+        return [v.taxa - k, t2.realAa * 100, s2 == null ? 'Não existe' : s2, n2 == null ? 'Não existe' : n2];
+      }),
+      destaque: 0,
+      nota: 'Renda que o patrimônio atual sustenta e patrimônio necessário para a renda desejada, com o mesmo objetivo, imposto e inflação, com a rentabilidade bruta reduzida de 1 em 1 ponto percentual. Pequenas diferenças de taxa mudam bastante o resultado, por isso convém planejar com premissas conservadoras.'
+    };
+    var tabelas = [tabObj];
+    var graficos = [];
+    if (P > 0 && mesesSim > 0) {
+      var porMes = mesesSim <= 36, pg = porMes ? pts : pts.filter(function (x) { return x.mes % 12 === 0 || x.mes === mesesSim; });
+      var seriesG = [{ nome: 'Patrimônio em reais (nominal)', cor: 1, dados: pg.map(function (x) { return x.nom; }) }];
+      if (infAa > EPS) seriesG.push({ nome: 'Patrimônio em valores de hoje', cor: 3, dados: pg.map(function (x) { return x.real; }) });
+      graficos.push({
+        tipo: 'linha', titulo: 'Patrimônio retirando ' + F.brl(R) + ' por mês, com renda ' + txRenda, formato: 'brl', rotuloDica: porMes ? 'Mês' : 'Ano',
+        rotulos: pg.map(function (x) { return porMes ? String(x.mes) : String(Math.ceil(x.mes / 12)); }), series: seriesG
+      });
+      tabelas.push({
+        titulo: 'Evolução ano a ano com a renda desejada',
+        colunas: [{ t: 'Ano', f: 'int' }, { t: 'Saldo inicial', f: reais }, { t: 'Rendimento', f: reais }, { t: 'Retiradas', f: reais }, { t: 'Saldo final', f: reais }, { t: 'Saldo real', f: reais }, { t: corrigida ? 'Renda' : 'Renda real', f: reais }],
+        linhas: linhas,
+        nota: 'Ano 1 são os próximos 12 meses. Rendimento já líquido de imposto. Valores nominais, arredondados para reais, salvo nas colunas com "real", que estão em valores de hoje (descontam a inflação acumulada). ' + (corrigida ? 'Renda: valor mensal médio do ano (retiradas divididas pelos meses pagos); sobe com a inflação e mantém o poder de compra de ' + F.brl(R) + '.' : 'Renda real: a renda mensal fixa de ' + F.brl(R) + ' em valores de hoje, na média do ano; encolhe com a inflação.') +
+          (fimMes ? ' No último mês, a retirada é apenas o saldo restante.' : (obj !== 'prazo' && mesesSim >= limite ? ' A projeção é exibida até ' + F.int(limite / 12) + ' anos.' : ''))
+      });
+    }
+    tabelas.push(tabSens, tabTaxas);
+
+    var textos = [];
+    if (obj === 'nominal' && infAa > EPS) {
+      textos.push('<p>Neste objetivo a renda não é corrigida. Com inflação de ' + F.pct(v.inflacao) + ' ao ano, cada ' + F.brl(1000) + ' de renda fixa compram o equivalente a ' + F.brl(1000 / Math.pow(1 + infAa, 10)) + ' de hoje em 10 anos, ' + F.brl(1000 / Math.pow(1 + infAa, 20)) + ' em 20 anos e ' + F.brl(1000 / Math.pow(1 + infAa, 30)) + ' em 30 anos. Quando se retira todo o rendimento líquido, o patrimônio se mantém em reais, mas também vale menos em poder de compra.</p>');
+    }
+    textos.push('<p>Os resultados dependem de premissas constantes por décadas, o que não acontece na prática. A rentabilidade sugerida no formulário acompanha o CDI atual, que pode cair. Vale repetir a simulação com rentabilidade menor e inflação maior antes de tirar conclusões.</p>');
+
+    /* juro real líquido alto: avisa junto do resultado que o cenário é otimista para horizontes de décadas */
+    if (!alerta && T.realAa > 0.05) alerta = 'Este cenário usa rentabilidade de ' + F.pct(T.realAa * 100) + ' ao ano acima da inflação, depois do imposto, mantida por todo o período. Juros reais nesse nível são altos e não costumam durar décadas. Para planejar com mais segurança, reduza a rentabilidade esperada e veja a tabela de sensibilidade abaixo.';
+    return { alertaTom: 'atencao', alerta: alerta, destaques: destaques, resumo: resumo, graficos: graficos, tabelas: tabelas, textos: textos };
+  },
+  explicacao: [
+    '<p>Viver de renda significa pagar as despesas com as retiradas de um patrimônio investido. Três fatores reduzem a renda que esse patrimônio sustenta: o <strong>imposto</strong> sobre o rendimento, a <strong>inflação</strong>, que obriga a renda a subir todo ano para comprar as mesmas coisas, e o <strong>prazo</strong> pelo qual a renda precisa durar. O simulador trata os três de forma explícita.</p>',
+    '<h3>Taxas</h3>',
+    '<ul><li><strong>Rentabilidade líquida:</strong> <code>bruta × (1 − alíquota)</code>, ao ano. A taxa mensal é a equivalente em juros compostos.</li><li><strong>Rentabilidade real líquida:</strong> <code>(1 + líquida) ÷ (1 + inflação) − 1</code>. É o que sobra depois do imposto e da inflação. Como o imposto incide sobre o rendimento nominal, inclusive sobre a parte que apenas repõe a inflação, a taxa real líquida cai mais do que a alíquota sugere.</li></ul>',
+    '<h3>Objetivos</h3>',
+    '<ul><li><strong>Preservar o poder de compra:</strong> retira-se só o rendimento real. <code>renda = patrimônio × taxa real líquida mensal</code> e <code>patrimônio necessário = renda ÷ taxa real líquida mensal</code>. A renda sobe com a inflação e o patrimônio também. Se a taxa real líquida for zero ou negativa, essa renda não existe.</li><li><strong>Preservar o valor em reais:</strong> retira-se todo o rendimento líquido. <code>renda = patrimônio × taxa líquida mensal</code>. O saldo fica constante em reais, a renda começa maior, mas não é corrigida e perde poder de compra a cada ano.</li><li><strong>Consumir em um prazo:</strong> a renda é corrigida pela inflação e o patrimônio chega a zero no fim. <code>renda = patrimônio × r ÷ (1 − (1 + r)^−n)</code>, em que <code>r</code> é a taxa real líquida mensal e <code>n</code> é o número de meses.</li></ul>',
+    '<h3>Convenções</h3>',
+    '<p>O saldo rende durante o mês e a retirada ocorre no fim de cada mês, a primeira daqui a um mês. Nos objetivos com correção, a renda é reajustada todo mês pela inflação mensal equivalente, de modo que cada retirada tem o mesmo poder de compra da renda informada. Na prática, o reajuste costuma ser anual, e a diferença é pequena. A duração é o número de meses em que o patrimônio atual paga a renda desejada integral, e no mês seguinte a retirada é apenas o saldo restante. O aporte opcional é feito no fim de cada mês, corrigido pela inflação, sem retiradas até o patrimônio necessário ser atingido.</p>',
+    '<h3>Simplificações e limites</h3>',
+    '<ul><li>Rentabilidade, inflação e alíquota constantes por todo o período. Não há volatilidade nem risco de sequência de retornos: perdas logo no início das retiradas reduzem a renda sustentável mais do que a média sugere.</li><li>O imposto é aproximado por um desconto sobre a rentabilidade anual, como se fosse pago todo ano sobre o rendimento. Essa aproximação é conservadora: como na prática o imposto só é pago no resgate, a renda real tende a ser um pouco maior que a calculada. Na renda fixa, o imposto de renda é cobrado no resgate, sobre o ganho de cada parcela resgatada, com alíquota de 22,5% a 15% conforme o prazo. Fundos com come-cotas, dividendos, aluguéis e previdência seguem outras regras, que não são simuladas.</li><li>A referência é uma aplicação de renda fixa com rentabilidade estável. Custos, taxas de administração, despesas extraordinárias e mudanças na lei tributária não entram na conta.</li></ul>',
+    '<p>Como pequenas mudanças nas premissas alteram muito o resultado, convém planejar com rentabilidade abaixo da atual, inflação acima da atual e alguma folga no patrimônio. Os valores são estimativas para fins educativos e não constituem garantia de resultado nem recomendação de investimento.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'regra-dos-4-por-cento',
+  titulo: 'Calculadora da regra dos 4%',
+  categoria: 'independencia',
+  ordem: 5,
+  resumo: 'Descubra o patrimônio necessário para sustentar uma renda mensal com determinada taxa de retirada anual.',
+  palavras: ['taxa de retirada', 'viver de renda', 'aposentadoria', 'patrimônio necessário', 'renda passiva', 'regra dos 300', '25 vezes'],
+  intro: 'Informe a renda mensal que deseja ter e a taxa de retirada anual. A calculadora devolve o patrimônio necessário e mostra como ele muda com taxas mais ou menos conservadoras.',
+  campos: [
+    { id: 'renda', rotulo: 'Renda mensal desejada', tipo: 'moeda', padrao: 8000, min: 0.01,
+      ajuda: 'Em valores de hoje.' },
+    { id: 'taxa', rotulo: 'Taxa de retirada', tipo: 'pct', padrao: 4, min: 0.01, max: 100, sufixo: '% ao ano',
+      ajuda: 'Parcela do patrimônio retirada por ano. Para preservar o patrimônio, não deve superar a rentabilidade acima da inflação.' },
+    { id: 'atual', rotulo: 'Patrimônio atual', tipo: 'moeda', padrao: 0, min: 0, opcional: true,
+      ajuda: 'Opcional. Mostra a renda que o patrimônio de hoje já sustenta.' }
+  ],
+  calcular: function (v, AZ) {
+    var F = AZ.f, t = v.taxa / 100, anual = v.renda * 12;
+    var necessario = anual / t, multAnual = 1 / t, multMensal = 12 / t;
+    var destaques = [
+      { rotulo: 'Patrimônio necessário', valor: 'R$ ' + F.int(necessario), tom: 'primario', nota: 'para retirar ' + F.brl(v.renda) + ' por mês' },
+      { rotulo: 'Retirada anual', valor: anual, formato: 'brl', nota: F.pct(v.taxa) + ' do patrimônio por ano' },
+      { rotulo: 'Múltiplo da despesa', valor: F.num(multAnual, 1) + ' vezes', tom: 'destaque', nota: 'a despesa anual, ou ' + F.num(multMensal, 0) + ' vezes a despesa mensal' }
+    ];
+    var textos = [];
+    if (v.atual > 0) {
+      var rendaHoje = v.atual * t / 12, falta = Math.max(0, necessario - v.atual);
+      destaques.push({ rotulo: 'Renda que o patrimônio atual sustenta', valor: rendaHoje, formato: 'brl', tom: rendaHoje >= v.renda ? 'positivo' : undefined,
+        nota: F.pct(Math.min(v.atual / necessario, 9.99) * 100, 1) + ' do objetivo' + (falta > 0 ? ', faltam ' + F.brl(falta) : '') });
+      if (falta <= 0) textos.push('<p>Pela taxa de retirada informada, o patrimônio atual já cobre a renda desejada.</p>');
+    }
+    var taxas = [2.5, 3, 3.5, 4, 4.5, 5, 6, 8];
+    if (taxas.indexOf(v.taxa) < 0) { taxas.push(v.taxa); taxas.sort(function (a, b) { return a - b; }); }
+    return {
+      destaques: destaques,
+      resumo: '<p>Para retirar <strong>' + F.brl(v.renda) + '</strong> por mês (' + F.brl(anual) + ' por ano) a uma taxa de ' + F.pct(v.taxa) + ' ao ano, é preciso acumular <strong>' + F.brl(necessario) + '</strong>. Se o patrimônio render pelo menos ' + F.pct((Math.pow(1 + t / 12, 12) - 1) * 100) + ' ao ano acima da inflação (o equivalente a ' + F.pct(v.taxa / 12, 4) + ' ao mês, que é a retirada mensal), essa retirada pode ser corrigida pela inflação sem reduzir o patrimônio em termos reais.</p>',
+      tabelas: [{
+        titulo: 'Patrimônio necessário para cada taxa de retirada', csv: false,
+        colunas: [{ t: 'Taxa ao ano', f: 'pct' }, { t: 'Patrimônio necessário', f: 'brl' }, { t: 'Múltiplo anual', f: function (x) { return F.num(x, 1) + ' vezes'; } }, { t: 'Renda por R$ 1 milhão', f: 'brl' }],
+        linhas: taxas.map(function (x) { return [x, anual / (x / 100), 100 / x, 1e6 * x / 100 / 12]; }),
+        destaque: taxas.indexOf(v.taxa),
+        nota: 'Múltiplo anual: quantas vezes a despesa de um ano é preciso acumular. Renda por R$ 1 milhão: retirada mensal que cada milhão investido sustenta. Quanto menor a taxa de retirada, maior o patrimônio exigido e maior a margem de segurança.'
+      }],
+      textos: textos
+    };
+  },
+  explicacao: [
+    '<p>A regra dos 4% é uma referência de planejamento para quem pretende viver do próprio patrimônio. Ela diz que, retirando no primeiro ano 4% do valor investido e corrigindo essa retirada pela inflação nos anos seguintes, uma carteira diversificada teria alta probabilidade de durar pelo menos 30 anos.</p>',
+    '<p>A conta é direta: <code>patrimônio necessário = renda mensal × 12 ÷ taxa de retirada</code>. Com 4% ao ano, isso equivale a acumular 25 vezes a despesa anual, ou 300 vezes a despesa mensal. Cada ponto percentual a menos na taxa aumenta bastante o patrimônio exigido.</p>',
+    '<p>O percentual de 4% vem de estudos feitos com dados históricos de ações e títulos dos Estados Unidos, para aposentadorias de cerca de 30 anos. Não é uma garantia e não foi calibrado para o mercado brasileiro. Períodos de renda mais longos, carteiras muito conservadoras ou quedas fortes logo no início das retiradas pedem taxas menores, como 3% ou 3,5%.</p>',
+    '<p>Informe a renda em valores de hoje e considere a taxa como rentabilidade real, acima da inflação e já líquida de impostos e taxas. A calculadora não projeta o tempo necessário para chegar ao patrimônio: para isso, use o simulador de independência financeira.</p>'
+  ].join('\n')
+});
+</script>
+<script>AZ.registrar = AZ._registrar;</script>
+<script>
+/* Protótipo unificado (23/10/2026): aposentadoria e viver de renda numa página só.
+   Absorve independencia-financeira, viver-de-renda e regra-dos-4-por-cento. Toda conta vem delas, por AZ.antigo:
+   a acumulação até parar é a da independência financeira (com a taxa real líquida do viver de renda);
+   a fase de renda, o patrimônio necessário, a duração e a sensibilidade são as do viver de renda;
+   a tabela por taxa de retirada é a da regra dos 4%.
+   O aporte necessário é AZ.fin.pmtVf, a mesma fórmula da rota antiga /simuladores/aposentadoria (conferida contra ela).
+   "Do extrato" só converte: valores do dia em que se para × inflação acumulada até lá. */
+AZ.registrar({
+  slug: 'aposentadoria-unificada',
+  usa: ['independencia-financeira', 'viver-de-renda', 'regra-dos-4-por-cento'],
+  cobre: ['aposentadoria'],
+  /* endereços antigos (?veio=<slug>): abrem com os padrões da página antiga; taxas do cfg de outubro de 2026 (CDI 13,65%) */
+  atalhos: {
+    /* 25 anos de acumulação (35 a 60) e 30 de renda, a 5% real nas duas fases: sem imposto e sem inflação */
+    'independencia-financeira': { patrimonio: 20000, aporte: 1500, taxa: 5, inflacao: 0, imposto: '0', objetivo: 'prazo' },
+    /* quem já parou, com R$ 1 milhão e o CDI; valores do extrato, como a tabela e o gráfico nominais da antiga */
+    'viver-de-renda': { idadeAtual: 60, patrimonio: 1000000, aporte: 0, taxa: 13.65, valores: 'extrato' },
+    'regra-dos-4-por-cento': {},
+    /* rota antiga /simuladores/aposentadoria: abre em branco; dela vêm a inflação de 4% e a conta sem imposto */
+    'aposentadoria': { inflacao: 4, imposto: '0' }
+  },
+  titulo:'Simulador de aposentadoria e viver de renda',
+  categoria: 'independencia',
+  ordem: 2,
+  resumo: 'Calcule o patrimônio para viver de renda, o aporte mensal até parar e a renda que o dinheiro sustenta, com imposto e inflação.',
+  palavras: ['aposentadoria', 'aposentar', 'previdência', 'renda futura', 'viver de renda', 'viver de juros', 'independência financeira', 'renda passiva', 'renda perpétua', 'renda vitalícia',
+    'patrimônio necessário', 'quanto preciso para viver de renda', 'quanto guardar por mês', 'aporte necessário', 'saque mensal', 'acumulação',
+    'taxa de retirada', 'regra dos 4%', 'regra dos 4 por cento', 'regra dos 300', '25 vezes', 'inflação', 'imposto de renda'],
+  intro: 'Descubra quanto juntar para viver de renda, quanto guardar por mês até lá e quanto retirar sem que o dinheiro acabe.',
+  campos: [
+    { id: 'idadeAtual', rotulo: 'Idade atual', tipo: 'int', padrao: 35, min: 0, max: 100, sufixo: 'anos', largura: 'meia' },
+    { id: 'idadeParar', rotulo: 'Idade para parar de trabalhar', tipo: 'int', padrao: 60, min: 0, max: 100, sufixo: 'anos', largura: 'meia',
+      ajuda: 'Se já parou, repita a idade atual: a simulação começa direto na fase de renda.' },
+    { id: 'patrimonio', rotulo: 'Patrimônio investido hoje', tipo: 'moeda', padrao: 50000, min: 0 },
+    { id: 'aporte', rotulo: 'Aporte mensal até parar', tipo: 'moeda', padrao: 2000, min: 0, opcional: true,
+      ajuda: 'Em dinheiro de hoje. O aporte é corrigido pela inflação todo mês.',
+      mostrarSe: function (v) { return v.idadeParar > v.idadeAtual; } },
+    { id: 'renda', rotulo: 'Renda mensal desejada', tipo: 'moeda', padrao: 8000, min: 0.01,
+      ajuda: 'Em dinheiro de hoje, já descontado o imposto.' },
+    { id: 'taxa', rotulo: 'Rentabilidade bruta esperada', tipo: 'pct', padrao: 10, min: 0, max: 100, sufixo: '% ao ano', largura: 'meia',
+      ajuda: 'Antes do imposto e da inflação, na média de todo o período. Para décadas, prefira uma taxa abaixo do CDI atual.' },
+    { id: 'inflacao', rotulo: 'Inflação esperada', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: 0, max: 100, sufixo: '% ao ano', largura: 'meia',
+      ajuda: 'O valor sugerido é o IPCA dos últimos 12 meses.' },
+    { id: 'imposto', rotulo: 'Imposto sobre o rendimento', tipo: 'select', padrao: '15',
+      opcoes: [{ v: '15', t: '15% (renda fixa acima de 2 anos)' }, { v: '0', t: 'Isento (LCI, LCA e outros isentos)' }, { v: 'outro', t: 'Outra alíquota' }] },
+    { id: 'aliquota', rotulo: 'Alíquota sobre o rendimento', tipo: 'pct', padrao: 17.5, min: 0, max: 100,
+      mostrarSe: function (v) { return v.imposto === 'outro'; } },
+    { id: 'anos', rotulo: 'Anos para gastar o patrimônio', tipo: 'int', padrao: 30, min: 1, max: 100, sufixo: 'anos',
+      mostrarSe: function (v) { return v.objetivo === 'prazo'; } },
+    /* botões no cabeçalho do gráfico (o texto de "Gastar em N anos" acompanha o campo acima, em calcular) */
+    { id: 'objetivo', rotulo: 'Depois de parar', tipo: 'segmento', padrao: 'real', noGrafico: 0,
+      opcoes: [{ v: 'real', t: 'Manter o poder de compra' }, { v: 'nominal', t: 'Manter o valor em reais' }, { v: 'prazo', t: 'Gastar em 30 anos' }] },
+    { id: 'valores', rotulo: 'Valores', tipo: 'segmento', padrao: 'hoje', noGrafico: 0,
+      opcoes: [{ v: 'extrato', t: 'Do extrato' }, { v: 'hoje', t: 'Em dinheiro de hoje' }] }
+  ],
+  calcular: function (v, AZ) {
+    var F = AZ.f, fin = AZ.fin, B = F.brl;
+    var VR = AZ.antigo('viver-de-renda'), IF = AZ.antigo('independencia-financeira'), R4 = AZ.antigo('regra-dos-4-por-cento');
+    var obj = v.objetivo, hoje = v.valores !== 'extrato', corrigida = obj !== 'nominal', OBJS = ['real', 'nominal', 'prazo'];
+    var N = v.anos >= 1 ? Math.min(100, Math.round(v.anos)) : 30, txN = F.pl(N, 'ano', 'anos');   /* o mesmo limite do viver de renda */
+    /* o botão "Gastar em N anos" mostra o prazo do campo "Anos para gastar o patrimônio" */
+    if (this && this.campos) this.campos.forEach(function (c) { if (c.id === 'objetivo') c.opcoes[2].t = 'Gastar em ' + txN; });
+    var nomes = { real: 'Manter o poder de compra', nominal: 'Manter o valor em reais', prazo: 'Gastar em ' + txN };
+    var ida = Math.round(v.idadeAtual), idp = Math.round(v.idadeParar);
+    if (idp < ida) return { erro: 'A idade para parar de trabalhar deve ser igual ou maior que a idade atual.' };
+    var anos = idp - ida, nA = anos * 12, P0 = v.patrimonio || 0, A = anos > 0 ? (v.aporte || 0) : 0, R = v.renda;
+
+    /* ── fase de renda: a página viver-de-renda, com o patrimônio do dia em que se para, em dinheiro de hoje ── */
+    function tab(r, t) { return (r.tabelas || []).filter(function (x) { return x.titulo === t; })[0] || null; }
+    function numero(x) { return typeof x === 'number' ? x : null; }
+    function renda(P, extra) {
+      var r = VR.calcular(Object.assign({ patrimonio: P, renda: R, taxa: v.taxa, inflacao: v.inflacao, imposto: v.imposto, aliquota: v.aliquota,
+        objetivo: obj, anos: N, aporte: 0 }, extra || {}), AZ);
+      var o = tab(r, 'Os três objetivos lado a lado'), e = tab(r, 'Evolução ano a ano com a renda desejada'), t = tab(r, 'Taxas usadas na simulação');
+      var lo = o.linhas[OBJS.indexOf(obj)];
+      return { r: r, obj: o, evo: e ? e.linhas : [], sens: tab(r, 'E se a rentabilidade for menor').linhas,
+        sust: numero(lo[1]), nec: numero(lo[2]), dur: lo[3], realAa: t.linhas[3][1] / 100, rm: t.linhas[3][2] / 100, pm: t.linhas[2][2] / 100 };
+    }
+    /* ── acumulação: a página independencia-financeira com a taxa real líquida nas duas fases (só a acumulação é lida) ── */
+    function acumular(ap, realAa) {
+      if (!nA) return { pat: P0, inv: P0, saldos: [P0], linhas: [] };
+      var r = IF.calcular({ inicial: P0, aporte: ap, anosAcum: anos, taxaAcum: realAa * 100, anosRenda: 1, taxaRenda: realAa * 100, taxaRendaUn: 'ano' }, AZ);
+      var L = r.erro ? [] : r.tabelas[0].linhas.slice(0, anos), a;
+      if (r.erro) for (a = 1; a <= anos; a++) L.push([a, 'Acumulação', 0, 0, 0]);   /* sem patrimônio e sem aporte */
+      return { pat: r.erro ? 0 : r.destaques[0].valor, inv: r.erro ? 0 : r.destaques[3].valor, saldos: [P0].concat(L.map(function (l) { return l[4]; })), linhas: L };
+    }
+
+    var V0 = renda(P0, { aporte: A });   /* com o patrimônio de hoje: taxas, falta e tempo até o necessário mantendo o aporte */
+    var pm = V0.pm, rm = V0.rm, I = Math.pow(1 + pm, nA);
+    var X = function (x) { return hoje ? x : x * I; };   /* valor do dia em que se para: em dinheiro de hoje ou no extrato */
+    var C1 = acumular(A, V0.realAa), V1 = anos ? renda(C1.pat) : V0;
+    var nec = V1.nec, sust = V1.sust, Pp = C1.pat;
+    /* aporte que leva o patrimônio de hoje ao necessário até parar (rota antiga: calcAporte, a mesma fórmula) */
+    var Anec = anos && nec != null ? Math.max(0, fin.pmtVf(nec, rm, nA, P0)) : null;
+    var C2 = null, V2 = null;
+    if (anos && Anec != null && Math.abs(Anec - A) > 0.005) { C2 = acumular(Anec, V0.realAa); V2 = renda(C2.pat); }
+    else if (!anos && nec != null && Math.abs(nec - P0) > 0.005) { C2 = { pat: nec, saldos: [nec], linhas: [] }; V2 = renda(nec); }
+
+    /* ───── gráfico: as duas fases numa linha só, ano a ano ───── */
+    var H = obj === 'prazo' ? N : Math.max(10, Math.min(50, 100 - idp)), rot = [], k;
+    for (k = 0; k <= anos + H; k++) rot.push(String(ida + k));
+    function serie(C, V) {
+      var d = C.saldos.map(function (s, a) { return hoje ? s : s * Math.pow(1 + pm, 12 * a); });
+      for (var j = 1; j <= H; j++) { var l = V.evo[j - 1]; d.push(l ? (hoje ? l[5] : l[4] * I) : 0); }
+      return d;
+    }
+    var series = [{ nome: anos ? (A > 0 ? 'Com o aporte de ' + B(A) : 'Sem aportes') : 'Com o seu patrimônio', cor: 1, area: true, dados: serie(C1, V1) }];
+    if (C2) series.push({ nome: anos ? (Anec > 0 ? 'Com o aporte necessário' : 'Sem aportes') : 'Com o patrimônio necessário', cor: 3, dados: serie(C2, V2) });
+    var graficos = [{ tipo: 'linha', titulo: anos ? 'Patrimônio antes e depois de parar' : 'Patrimônio retirando a renda desejada', formato: 'brl', rotuloDica: 'Idade', rotulos: rot, series: series }];
+
+    /* ───── destaques: no máximo 4, notas de até 45 caracteres ───── */
+    function curta(longa, breve) { return longa.length <= 45 ? longa : breve; }
+    var semRenda = obj === 'real' ? 'a rentabilidade não supera a inflação' : 'a rentabilidade líquida é zero';
+    var porMes = 'para ' + B(R) + ' por mês';
+    var notaNec = nec == null ? semRenda : !hoje && anos ? 'no extrato, aos ' + idp + ' anos'
+      : curta(porMes + (obj === 'real' ? ', sem prazo para acabar' : obj === 'nominal' ? ', fixos em reais' : ' durante ' + txN), porMes);
+    var destaques = [{ rotulo: 'Patrimônio necessário', valor: nec == null ? 'Não existe' : X(nec), formato: 'brl', tom: 'primario', nota: notaNec }];
+    if (anos) destaques.push({ rotulo: 'Aporte mensal necessário', valor: Anec == null ? 'Não existe' : Anec, formato: 'brl',
+      nota: Anec == null ? 'não há patrimônio que baste' : Anec < 0.005 ? 'o patrimônio de hoje já basta' : hoje ? 'até os ' + idp + ' anos, corrigido pela inflação' : 'sobe com a inflação até ' + B(Anec * I) });
+    else if (nec != null) destaques.push(nec - P0 > 0.005
+      ? { rotulo: 'Falta acumular', valor: nec - P0, formato: 'brl', tom: 'negativo', nota: 'o seu patrimônio cobre ' + F.pct(P0 / nec * 100, 1) + ' do necessário' }
+      : { rotulo: 'Sobra', valor: P0 - nec, formato: 'brl', tom: 'positivo', nota: 'o seu patrimônio supera o necessário' });
+    destaques.push({ rotulo: anos ? 'Renda que o seu plano sustenta' : 'Renda que o seu patrimônio sustenta', valor: sust == null ? 'Não existe' : X(sust), formato: 'brl',
+      nota: sust == null ? semRenda : anos ? 'com ' + B(X(Pp)) + ' aos ' + idp + ' anos' : 'com ' + B(P0) + ' investidos hoje' });
+
+    /* tabela da regra dos 4%, com a taxa de retirada do objetivo escolhido no lugar da taxa digitada */
+    var eq = nec != null && nec > 0 ? R * 12 / nec * 100 : null, LISTA = [2.5, 3, 3.5, 4, 4.5, 5, 6, 8];
+    var perto = eq == null ? null : LISTA.filter(function (x) { return Math.abs(x - eq) < 0.005; })[0];
+    var tx = eq == null || !(eq >= 0.01 && eq <= 100) ? 4 : perto != null ? perto : eq;
+    var T1 = R4.calcular({ renda: R, taxa: tx, atual: 0 }, AZ).tabelas[0];
+    var l4 = T1.linhas.filter(function (l) { return l[0] === 4; })[0];
+    destaques.push({ rotulo: 'Pela regra dos 4%', valor: X(l4[1]), formato: 'brl', nota: 'patrimônio para retirar 4% ao ano' });
+
+    /* ───── parágrafo embaixo do gráfico: até 45 palavras ───── */
+    function nPal(s) { return s.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length; }
+    var comoViver = obj === 'real' ? 'sem perder poder de compra' : obj === 'nominal' ? 'com a renda fixa em reais' : 'por ' + txN;
+    var durTx = String(V1.dur).toLowerCase(), S1, S2 = '';
+    var tAlvo = /é atingido em cerca de <strong>([^<]+)<\/strong>/.exec(V0.r.resumo || ''), idAlvo = null;
+    if (tAlvo) { var ma = /(\d+) anos?/.exec(tAlvo[1]), mm = /(\d+) m[eê]s/.exec(tAlvo[1]); idAlvo = Math.floor(ida + ((ma ? +ma[1] * 12 : 0) + (mm ? +mm[1] : 0)) / 12); }
+    var quemAporta = A > 0 ? 'Com o aporte de ' + B(A) : 'Sem aportes';
+    if (nec == null) {
+      S1 = obj === 'real' ? 'Com rentabilidade real líquida de ' + F.pct(V0.realAa * 100) + ' ao ano, nenhum patrimônio sustenta para sempre uma renda que acompanhe a inflação.'
+        : 'Com rentabilidade líquida zero, não há rendimento para retirar sem reduzir o patrimônio.';
+      if (Pp >= 0.005) S2 = anos ? quemAporta + ', você terá ' + B(X(Pp)) + ' aos ' + idp + ' anos, e a renda desejada dura <strong>' + durTx + '</strong>.'
+        : 'O seu patrimônio de ' + B(P0) + ' paga a renda desejada por <strong>' + durTx + '</strong>.';
+    } else if (anos && Pp < 0.005) {
+      S1 = 'Para viver com ' + B(R) + ' por mês a partir dos ' + idp + ' anos, ' + comoViver + ', você precisa juntar <strong>' + B(X(nec)) + '</strong>' + (hoje ? '' : ' no extrato') + '.';
+      S2 = 'Sem patrimônio e sem aportes, não haverá renda a retirar.';
+    } else if (anos) {
+      S1 = hoje ? 'Para viver com ' + B(R) + ' por mês a partir dos ' + idp + ' anos, ' + comoViver + ', você precisa juntar <strong>' + B(nec) + '</strong>.'
+        : 'Para viver com o equivalente a ' + B(R) + ' de hoje a partir dos ' + idp + ' anos, ' + comoViver + ', o extrato precisa mostrar <strong>' + B(X(nec)) + '</strong> nessa data.';
+      var terah = quemAporta + ', você terá ' + B(X(Pp)) + ' aos ' + idp + ' anos';
+      if (!hoje) S2 = quemAporta + ', ele mostrará ' + B(X(Pp)) + (Pp >= nec - 0.005 ? ', mais do que o necessário.' : '.');
+      else if (Pp >= nec - 0.005) S2 = terah + ', mais do que o necessário.';
+      else if (idAlvo != null && idAlvo > idp) S2 = terah + '; mantido o aporte, chega ao necessário aos ' + idAlvo + '.';
+      else S2 = terah + ', e a renda desejada dura ' + durTx + '.';
+    } else {
+      S1 = 'Para viver com ' + B(R) + ' por mês, ' + comoViver + ', você precisa de <strong>' + B(nec) + '</strong>.';
+      S2 = P0 >= nec - 0.005 ? 'O seu patrimônio de ' + B(P0) + ' já basta.'
+        : P0 > 0 ? 'O seu patrimônio de ' + B(P0) + ' paga essa renda por <strong>' + durTx + '</strong>.' : '';
+    }
+    var resumo = '<p>' + (S2 && nPal(S1 + ' ' + S2) <= 45 ? S1 + ' ' + S2 : S1) + '</p>';
+
+    /* ───── tabelas: só a primeira fica aberta ───── */
+    var notaT1 = (eq != null ? 'A linha destacada é a taxa de retirada do seu objetivo, ' + F.pct(T1.linhas[T1.destaque][0]) + ' ao ano. ' : 'Quanto menor a taxa, maior o patrimônio exigido. ') +
+      'A regra dos 4% vem de dados dos Estados Unidos e não é garantia.' + (!hoje && anos ? ' Valores do extrato aos ' + idp + ' anos.' : '');
+    var tab1 = Object.assign({}, T1, { linhas: T1.linhas.map(function (l) { return [l[0], X(l[1]), l[2], l[3]]; }),
+      destaque: eq == null ? T1.linhas.indexOf(l4) : T1.destaque, nota: notaT1 });
+
+    /* evolução ano a ano do plano com o aporte de hoje: acumulação (independência financeira) e renda (viver de renda) */
+    var lin2 = [], antR = Pp, invN = P0;
+    C1.linhas.forEach(function (l, j) {
+      var a = j + 1;
+      if (hoje) { lin2.push([ida + a, l[2], '', l[3], l[4]]); return; }
+      /* no extrato: o aporte de cada mês é o de hoje corrigido pela inflação até o mês; o saldo, o real vezes a inflação acumulada */
+      var apN = 0, m; for (m = 12 * (a - 1) + 1; m <= 12 * a; m++) apN += A * Math.pow(1 + pm, m);
+      var patN = l[4] * Math.pow(1 + pm, 12 * a), antN = (j ? C1.linhas[j - 1][4] : P0) * Math.pow(1 + pm, 12 * (a - 1));
+      invN += apN; lin2.push([ida + a, apN, '', patN - antN - apN, patN]);
+    });
+    V1.evo.slice(0, H).forEach(function (l, j) {   /* [ano, saldo inicial, rendimento, retiradas, saldo final, saldo real, renda] */
+      if (!hoje) { lin2.push([idp + j + 1, '', l[3] * I, l[2] * I, l[4] * I]); return; }
+      /* em dinheiro de hoje: retiradas pela renda média do ano (corrigida: nominal; fixa: real), rendimento pela variação do saldo real */
+      var ret = l[6] > 0 ? (corrigida ? R * l[3] / l[6] : l[6] * l[3] / R) : 0;
+      lin2.push([idp + j + 1, '', ret, l[5] - antR + ret, l[5]]); antR = l[5];
+    });
+    var vistos = V1.evo.slice(0, H), acaba = vistos.length && vistos[vistos.length - 1][4] <= 0;
+    /* renda fixa em reais, vista em dinheiro de hoje: sem o valor do extrato, que confundiria a tabela */
+    var depois = corrigida ? 'você retira ' + (hoje ? B(R) : 'a partir de ' + B(R * I * (1 + pm))) + ' por mês, corrigidos pela inflação'
+      : hoje ? 'a retirada fica fixa em reais e perde poder de compra' : 'você retira ' + B(R * I) + ' por mês, fixos em reais';
+    var inv = hoje ? C1.inv : invN, ganho = X(Pp) - inv;   /* em dinheiro de hoje, com juro real negativo, o ganho vira perda */
+    var notaT2 = (hoje ? 'Em dinheiro de hoje.' : 'Valores do extrato.') +
+      (anos ? ' Até os ' + idp + ' anos, você investe ' + B(inv) + (ganho >= 0 ? ' e os rendimentos somam ' + B(ganho) : ' e perde ' + B(-ganho) + ' para a inflação') + '; depois, ' + depois.replace(/^você /, '') + '.'
+        : ' ' + depois.charAt(0).toUpperCase() + depois.slice(1) + '.');
+    if (acaba && nPal(notaT2) <= 29) notaT2 += ' Na última linha, o dinheiro acaba.';
+    var tabelas = [tab1];
+    /* quem já parou não tem aportes: sem a coluna, que ficaria vazia */
+    if (lin2.length && Pp >= 0.005) tabelas.push({ titulo: 'Evolução ano a ano', destaque: anos ? anos - 1 : undefined, mostrar: Math.min(lin2.length, Math.max(12, anos + 3)),
+      colunas: [{ t: 'Idade', f: 'int' }].concat(anos ? [{ t: 'Aportes', f: 'brl' }] : [], [{ t: 'Retiradas', f: 'brl' }, { t: 'Rendimento', f: 'brl' }, { t: 'Patrimônio', f: 'brl' }]),
+      linhas: anos ? lin2 : lin2.map(function (l) { return [l[0]].concat(l.slice(2)); }), nota: notaT2 });
+
+    /* os três objetivos com o patrimônio do dia em que se para (tabela do viver de renda) */
+    tabelas.push({ titulo: 'As três formas de viver de renda', csv: false, destaque: OBJS.indexOf(obj),
+      colunas: [{ t: 'Depois de parar' }, { t: 'Renda que sustenta', f: 'brl' }, { t: 'Patrimônio necessário', f: 'brl' }, { t: 'Duração da renda desejada', f: 'texto', alinhar: 'dir' }],
+      linhas: V1.obj.linhas.map(function (l, j) { return [nomes[OBJS[j]], numero(l[1]) == null ? l[1] : X(l[1]), numero(l[2]) == null ? l[2] : X(l[2]), l[3]]; }),
+      nota: (Pp >= 0.005 ? 'O que ' + B(X(Pp)) + (anos ? ' aos ' + idp + ' anos' : '') + ' sustentam em cada caso e por quanto tempo pagam a renda desejada.'
+        : 'Sem patrimônio ao parar, a tabela mostra só o que cada caso exige.') + ' Só no valor em reais a renda perde poder de compra.' });
+
+    /* sensibilidade (viver de renda): cada linha refaz o plano inteiro com a rentabilidade mais baixa */
+    var lin4 = V0.sens.map(function (l, j) {   /* [bruta, real líquida, renda sustentável, patrimônio necessário] com o patrimônio de hoje */
+      var n2 = numero(l[3]), s2 = numero(l[2]), ak = null;
+      if (anos) {
+        var Ck = j ? acumular(A, l[1] / 100) : C1, Vk = j ? renda(Ck.pat, { taxa: l[0] }) : V1;
+        s2 = Vk.sust; n2 = Vk.nec;
+        ak = n2 == null ? null : j ? Math.max(0, fin.pmtVf(n2, Vk.rm, nA, P0)) : Anec;
+      }
+      var lin = [l[0], l[1], n2 == null ? 'Não existe' : X(n2)];
+      if (anos) lin.push(ak == null ? 'Não existe' : ak);
+      lin.push(s2 == null ? 'Não existe' : X(s2));
+      return lin;
+    });
+    var ult = lin4[lin4.length - 1][0];
+    tabelas.push({ titulo: 'E se a rentabilidade for menor', csv: false, destaque: 0,
+      colunas: [{ t: 'Bruta ao ano', f: 'pct' }, { t: 'Real líquida ao ano', f: 'pct' }, { t: 'Patrimônio necessário', f: 'brl' }]
+        .concat(anos ? [{ t: 'Aporte necessário', f: 'brl' }] : [], [{ t: 'Renda sustentável', f: 'brl' }]),
+      linhas: lin4,
+      nota: lin4.length > 1 ? 'Cada linha refaz o plano com a rentabilidade bruta menor, de ' + F.pct(v.taxa) + ' para até ' + F.pct(ult) + '. Pequenas diferenças de taxa mudam muito o resultado.'
+        : 'Com rentabilidade bruta tão baixa, não há taxa menor para testar.' });
+
+    return { destaques: destaques, resumo: resumo, graficos: graficos, tabelas: tabelas };
+  },
+  casos: [
+    /* viver-de-renda nos padrões dela (1 milhão, 8 mil, CDI 13,65%, IPCA 4,58%, 15%): quem já parou */
+    { nome: 'Já parou, padrões do viver de renda', entradas: { idadeAtual: 60, idadeParar: 60, patrimonio: 1000000, renda: 8000, taxa: 13.65, inflacao: 4.58, imposto: '15', objetivo: 'real' },
+      espera: { 'Patrimônio necessário': 'R$ 1.473.12', 'Renda que o seu patrimônio sustenta': 'R$ 5.430,62', 'Falta acumular': 'R$ 473.12' } },
+    { nome: 'Já parou, gastar em 30 anos', entradas: { idadeAtual: 60, idadeParar: 60, patrimonio: 1000000, renda: 8000, taxa: 13.65, inflacao: 4.58, imposto: '15', objetivo: 'prazo', anos: 30 },
+      espera: { 'Patrimônio necessário': 'R$ 1.263.48', 'Renda que o seu patrimônio sustenta': 'R$ 6.33' } },
+    /* independencia-financeira nos padrões dela, com 5% real nas duas fases (sem imposto e sem inflação) */
+    { nome: 'Padrões da independência financeira, 5% real', entradas: { idadeAtual: 35, idadeParar: 60, patrimonio: 20000, aporte: 1500, taxa: 5, inflacao: 0, imposto: '0', objetivo: 'prazo', anos: 30 },
+      espera: { 'Renda que o seu plano sustenta': 'R$ 5.016,07' } },
+    /* rota antiga /simuladores/aposentadoria: 30 a 60 anos, R$ 50 mil, meta de R$ 10 mil por mês, 10% ao ano, inflação 4% */
+    { nome: 'Rota aposentadoria: aporte para a renda', entradas: { idadeAtual: 30, idadeParar: 60, patrimonio: 50000, renda: 10000, taxa: 10, inflacao: 4, imposto: '0', objetivo: 'real' },
+      espera: { 'Aporte mensal necessário': 'R$ 1.995,38', 'Patrimônio necessário': 'R$ 2.134.443,03' } },
+    /* regra-dos-4-por-cento nos padrões dela */
+    { nome: 'Regra dos 4%, R$ 8 mil por mês', entradas: { renda: 8000 }, espera: { 'Pela regra dos 4%': 'R$ 2.400.000,00' } }
+  ],
+  explicacao: [
+    '<h3>As duas fases</h3>',
+    '<p>Até a idade de parar, o patrimônio de hoje e os aportes rendem a taxa real líquida, <code>(1 + bruta × (1 − alíquota)) ÷ (1 + inflação) − 1</code>, e o aporte é corrigido pela inflação todo mês. Depois, a renda sai do patrimônio no fim de cada mês, e o saldo continua rendendo.</p>',
+    '<h3>Depois de parar</h3>',
+    '<p>Para manter o poder de compra, retira-se só o rendimento real: <code>patrimônio necessário = renda ÷ taxa real mensal</code>. Para manter o valor em reais, retira-se todo o rendimento, e a renda, fixa, perde poder de compra. Para gastar em um prazo, a renda acompanha a inflação e o saldo zera no fim. O aporte necessário é o que leva o patrimônio de hoje ao necessário até a idade de parar.</p>',
+    '<h3>Regra dos 4%</h3>',
+    '<p>Retirar 4% ao ano exige juntar 25 vezes a renda anual, ou 300 vezes a mensal. A regra vem de estudos com ações e títulos dos Estados Unidos, para cerca de 30 anos de retiradas, e não foi calibrada para o Brasil.</p>',
+    '<h3>Limites</h3>',
+    '<p>Rentabilidade, inflação e alíquota ficam constantes, e o imposto é descontado da rentabilidade todo ano, o que é conservador. Quedas logo depois de parar reduzem a renda possível. "Do extrato" mostra os valores sem descontar a inflação acumulada até cada data.</p>'
+  ].join('\n')
+});
+</script>
+</body>
+</html>

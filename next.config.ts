@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import redirecionamentosSimuladores from "./src/data/simuladores-redirecionamentos.json";
 
 /** Mesma ordem que `painelBlobBase()` em `src/lib/painel-blob.ts` (Vercel Build pode nao enxertar NEXT_PUBLIC). */
 const blobBase =
@@ -18,16 +19,18 @@ const nextConfig: NextConfig = {
   /**
    * Simuladores: o índice e as páginas novas são HTML estático em public/simuladores (gerador próprio).
    * As páginas usam links relativos, então o índice precisa abrir em /simuladores/index.html.
-   * Rotas Next que continuam: consorcio, aposentadoria, compromissadas.
+   * Rotas Next que continuam: consorcio, compromissadas.
    * pgbl e sucessao-seguro saíram em 19/10/2026 (contas erradas); começam em 307 e viram 308 se ficarem 30 dias sem reversão.
+   * Em 24/10/2026 os 97 simuladores viraram 24: cada página absorvida por um simulador unificado (e a rota aposentadoria)
+   * redireciona para ele com ?veio=<antigo>, que abre no modo da página antiga. A lista é gerada pelo gerador
+   * (node tools/site.js <pasta do site>) em src/data/simuladores-redirecionamentos.json; também começa em 307.
    */
   async redirects() {
     return [
       { source: "/simuladores", destination: "/simuladores/index.html", permanent: false },
       { source: "/simuladores/pgbl", destination: "/simuladores/restituicao-imposto-de-renda.html", permanent: false },
       { source: "/simuladores/sucessao-seguro", destination: "/simuladores/custos-de-sucessao.html", permanent: false },
-      { source: "/simuladores/juros-compostos", destination: "/simuladores/juros-compostos.html", permanent: true },
-      { source: "/simuladores/financiamento", destination: "/simuladores/financiamento-imovel-tr-price.html", permanent: true },
+      ...redirecionamentosSimuladores.map((r) => ({ ...r, permanent: false })),
     ];
   },
   images: {

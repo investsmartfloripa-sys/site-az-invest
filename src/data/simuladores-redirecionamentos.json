@@ -1,0 +1,358 @@
+[
+  {
+    "source": "/simuladores/a-vista-ou-a-prazo.html",
+    "destination": "/simuladores/a-vista-ou-parcelado.html?veio=a-vista-ou-a-prazo"
+  },
+  {
+    "source": "/simuladores/ipva-iptu-a-vista-ou-parcelado.html",
+    "destination": "/simuladores/a-vista-ou-parcelado.html?veio=ipva-iptu-a-vista-ou-parcelado"
+  },
+  {
+    "source": "/simuladores/independencia-financeira.html",
+    "destination": "/simuladores/aposentadoria-unificada.html?veio=independencia-financeira"
+  },
+  {
+    "source": "/simuladores/viver-de-renda.html",
+    "destination": "/simuladores/aposentadoria-unificada.html?veio=viver-de-renda"
+  },
+  {
+    "source": "/simuladores/regra-dos-4-por-cento.html",
+    "destination": "/simuladores/aposentadoria-unificada.html?veio=regra-dos-4-por-cento"
+  },
+  {
+    "source": "/simuladores/aposentadoria",
+    "destination": "/simuladores/aposentadoria-unificada.html?veio=aposentadoria"
+  },
+  {
+    "source": "/simuladores/juros-equivalentes.html",
+    "destination": "/simuladores/calculadora-de-taxas.html?veio=juros-equivalentes"
+  },
+  {
+    "source": "/simuladores/juro-anual-para-mensal.html",
+    "destination": "/simuladores/calculadora-de-taxas.html?veio=juro-anual-para-mensal"
+  },
+  {
+    "source": "/simuladores/juro-mensal-para-anual.html",
+    "destination": "/simuladores/calculadora-de-taxas.html?veio=juro-mensal-para-anual"
+  },
+  {
+    "source": "/simuladores/juros-equivalentes-periodos.html",
+    "destination": "/simuladores/calculadora-de-taxas.html?veio=juros-equivalentes-periodos"
+  },
+  {
+    "source": "/simuladores/tabela-juros-equivalentes.html",
+    "destination": "/simuladores/calculadora-de-taxas.html?veio=tabela-juros-equivalentes"
+  },
+  {
+    "source": "/simuladores/somar-juros-acumulados.html",
+    "destination": "/simuladores/calculadora-de-taxas.html?veio=somar-juros-acumulados"
+  },
+  {
+    "source": "/simuladores/cdi-hoje.html",
+    "destination": "/simuladores/calculadora-de-taxas.html?veio=cdi-hoje"
+  },
+  {
+    "source": "/simuladores/regra-de-tres-taxas.html",
+    "destination": "/simuladores/calculadora-de-taxas.html?veio=regra-de-tres-taxas"
+  },
+  {
+    "source": "/simuladores/comparador-percentuais-cdi.html",
+    "destination": "/simuladores/calculadora-de-taxas.html?veio=comparador-percentuais-cdi"
+  },
+  {
+    "source": "/simuladores/rentabilidade-real.html",
+    "destination": "/simuladores/calculadora-de-taxas.html?veio=rentabilidade-real"
+  },
+  {
+    "source": "/simuladores/renda-fixa-pos-fixada.html",
+    "destination": "/simuladores/comparador-renda-fixa.html?veio=renda-fixa-pos-fixada"
+  },
+  {
+    "source": "/simuladores/tesouro-selic-x-cdb.html",
+    "destination": "/simuladores/comparador-renda-fixa.html?veio=tesouro-selic-x-cdb"
+  },
+  {
+    "source": "/simuladores/tesouro-selic-x-lci-lca.html",
+    "destination": "/simuladores/comparador-renda-fixa.html?veio=tesouro-selic-x-lci-lca"
+  },
+  {
+    "source": "/simuladores/tesouro-selic-x-poupanca.html",
+    "destination": "/simuladores/comparador-renda-fixa.html?veio=tesouro-selic-x-poupanca"
+  },
+  {
+    "source": "/simuladores/poupanca-x-fundo.html",
+    "destination": "/simuladores/comparador-renda-fixa.html?veio=poupanca-x-fundo"
+  },
+  {
+    "source": "/simuladores/percentual-do-cdi.html",
+    "destination": "/simuladores/comparador-renda-fixa.html?veio=percentual-do-cdi"
+  },
+  {
+    "source": "/simuladores/tabela-taxas-equivalentes.html",
+    "destination": "/simuladores/comparador-renda-fixa.html?veio=tabela-taxas-equivalentes"
+  },
+  {
+    "source": "/simuladores/lci-lca-pre-x-cdb-pre.html",
+    "destination": "/simuladores/comparador-renda-fixa.html?veio=lci-lca-pre-x-cdb-pre"
+  },
+  {
+    "source": "/simuladores/poupanca-percentual-cdi.html",
+    "destination": "/simuladores/comparador-renda-fixa.html?veio=poupanca-percentual-cdi"
+  },
+  {
+    "source": "/simuladores/correcao-pela-inflacao.html",
+    "destination": "/simuladores/correcao-unificada.html?veio=correcao-pela-inflacao"
+  },
+  {
+    "source": "/simuladores/correcao-pelo-cdi.html",
+    "destination": "/simuladores/correcao-unificada.html?veio=correcao-pelo-cdi"
+  },
+  {
+    "source": "/simuladores/correcao-pela-selic.html",
+    "destination": "/simuladores/correcao-unificada.html?veio=correcao-pela-selic"
+  },
+  {
+    "source": "/simuladores/correcao-pela-poupanca.html",
+    "destination": "/simuladores/correcao-unificada.html?veio=correcao-pela-poupanca"
+  },
+  {
+    "source": "/simuladores/selic-acumulada.html",
+    "destination": "/simuladores/correcao-unificada.html?veio=selic-acumulada"
+  },
+  {
+    "source": "/simuladores/correcao-pela-taxa-legal.html",
+    "destination": "/simuladores/correcao-unificada.html?veio=correcao-pela-taxa-legal"
+  },
+  {
+    "source": "/simuladores/correcao-pela-poupanca-passado.html",
+    "destination": "/simuladores/correcao-unificada.html?veio=correcao-pela-poupanca-passado"
+  },
+  {
+    "source": "/simuladores/rentabilidade-real-poupanca.html",
+    "destination": "/simuladores/correcao-unificada.html?veio=rentabilidade-real-poupanca"
+  },
+  {
+    "source": "/simuladores/tabela-rendimento-poupanca.html",
+    "destination": "/simuladores/correcao-unificada.html?veio=tabela-rendimento-poupanca"
+  },
+  {
+    "source": "/simuladores/custo-de-oportunidade.html",
+    "destination": "/simuladores/custo-de-verdade.html?veio=custo-de-oportunidade"
+  },
+  {
+    "source": "/simuladores/tempo-de-vida.html",
+    "destination": "/simuladores/custo-de-verdade.html?veio=tempo-de-vida"
+  },
+  {
+    "source": "/simuladores/custo-de-um-cachorro.html",
+    "destination": "/simuladores/custo-de-verdade.html?veio=custo-de-um-cachorro"
+  },
+  {
+    "source": "/simuladores/dias-uteis.html",
+    "destination": "/simuladores/datas-unificada.html?veio=dias-uteis"
+  },
+  {
+    "source": "/simuladores/somar-dias.html",
+    "destination": "/simuladores/datas-unificada.html?veio=somar-dias"
+  },
+  {
+    "source": "/simuladores/financiamento-sac.html",
+    "destination": "/simuladores/financiamento-unificado.html?veio=financiamento-sac"
+  },
+  {
+    "source": "/simuladores/financiamento-imovel-tr-sac.html",
+    "destination": "/simuladores/financiamento-unificado.html?veio=financiamento-imovel-tr-sac"
+  },
+  {
+    "source": "/simuladores/financiamento-imovel-tr-price.html",
+    "destination": "/simuladores/financiamento-unificado.html?veio=financiamento-imovel-tr-price"
+  },
+  {
+    "source": "/simuladores/financiamento-imovel-ipca-sac.html",
+    "destination": "/simuladores/financiamento-unificado.html?veio=financiamento-imovel-ipca-sac"
+  },
+  {
+    "source": "/simuladores/financiamento-imovel-ipca-price.html",
+    "destination": "/simuladores/financiamento-unificado.html?veio=financiamento-imovel-ipca-price"
+  },
+  {
+    "source": "/simuladores/financiamento.html",
+    "destination": "/simuladores/financiamento-unificado.html?veio=financiamento"
+  },
+  {
+    "source": "/simuladores/emprestimo.html",
+    "destination": "/simuladores/financiamento-unificado.html?veio=emprestimo"
+  },
+  {
+    "source": "/simuladores/financiamento-carro.html",
+    "destination": "/simuladores/financiamento-unificado.html?veio=financiamento-carro"
+  },
+  {
+    "source": "/simuladores/parcelas-valor-presente.html",
+    "destination": "/simuladores/financiamento-unificado.html?veio=parcelas-valor-presente"
+  },
+  {
+    "source": "/simuladores/vp-serie-pagamentos.html",
+    "destination": "/simuladores/financiamento-unificado.html?veio=vp-serie-pagamentos"
+  },
+  {
+    "source": "/simuladores/taxa-serie-valor-presente.html",
+    "destination": "/simuladores/financiamento-unificado.html?veio=taxa-serie-valor-presente"
+  },
+  {
+    "source": "/simuladores/numero-pagamentos-valor-presente.html",
+    "destination": "/simuladores/financiamento-unificado.html?veio=numero-pagamentos-valor-presente"
+  },
+  {
+    "source": "/simuladores/bancos-melhores-juros.html",
+    "destination": "/simuladores/financiamento-unificado.html?veio=bancos-melhores-juros"
+  },
+  {
+    "source": "/simuladores/calculadora-juros-compostos.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=calculadora-juros-compostos"
+  },
+  {
+    "source": "/simuladores/juros-compostos.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=juros-compostos"
+  },
+  {
+    "source": "/simuladores/juros-compostos-reais.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=juros-compostos-reais"
+  },
+  {
+    "source": "/simuladores/juros-reais.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=juros-reais"
+  },
+  {
+    "source": "/simuladores/aportes-crescentes.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=aportes-crescentes"
+  },
+  {
+    "source": "/simuladores/taxas-diferentes-longo-prazo.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=taxas-diferentes-longo-prazo"
+  },
+  {
+    "source": "/simuladores/primeiro-milhao.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=primeiro-milhao"
+  },
+  {
+    "source": "/simuladores/vf-serie-pagamentos.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=vf-serie-pagamentos"
+  },
+  {
+    "source": "/simuladores/parcelas-valor-futuro.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=parcelas-valor-futuro"
+  },
+  {
+    "source": "/simuladores/numero-pagamentos-valor-futuro.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=numero-pagamentos-valor-futuro"
+  },
+  {
+    "source": "/simuladores/taxa-serie-valor-futuro.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=taxa-serie-valor-futuro"
+  },
+  {
+    "source": "/simuladores/valor-futuro.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=valor-futuro"
+  },
+  {
+    "source": "/simuladores/valor-presente.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=valor-presente"
+  },
+  {
+    "source": "/simuladores/numero-de-periodos.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=numero-de-periodos"
+  },
+  {
+    "source": "/simuladores/taxa-de-juros.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=taxa-de-juros"
+  },
+  {
+    "source": "/simuladores/de-100-mil-a-1-milhao.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=de-100-mil-a-1-milhao"
+  },
+  {
+    "source": "/simuladores/tempo-para-dobrar-patrimonio.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=tempo-para-dobrar-patrimonio"
+  },
+  {
+    "source": "/simuladores/taxa-para-dobrar-patrimonio.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=taxa-para-dobrar-patrimonio"
+  },
+  {
+    "source": "/simuladores/poder-do-tempo.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=poder-do-tempo"
+  },
+  {
+    "source": "/simuladores/poupanca.html",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=poupanca"
+  },
+  {
+    "source": "/simuladores/simulador-volatilidade.html",
+    "destination": "/simuladores/oscilacao-de-carteiras.html?veio=simulador-volatilidade"
+  },
+  {
+    "source": "/simuladores/cara-ou-coroa.html",
+    "destination": "/simuladores/oscilacao-de-carteiras.html?veio=cara-ou-coroa"
+  },
+  {
+    "source": "/simuladores/porcentagem.html",
+    "destination": "/simuladores/porcentagem-unificada.html?veio=porcentagem"
+  },
+  {
+    "source": "/simuladores/desconto.html",
+    "destination": "/simuladores/porcentagem-unificada.html?veio=desconto"
+  },
+  {
+    "source": "/simuladores/regra-de-tres.html",
+    "destination": "/simuladores/porcentagem-unificada.html?veio=regra-de-tres"
+  },
+  {
+    "source": "/simuladores/cdb-pos-fixado.html",
+    "destination": "/simuladores/renda-fixa-unificada.html?veio=cdb-pos-fixado"
+  },
+  {
+    "source": "/simuladores/lci-lca.html",
+    "destination": "/simuladores/renda-fixa-unificada.html?veio=lci-lca"
+  },
+  {
+    "source": "/simuladores/cdb-prefixado.html",
+    "destination": "/simuladores/renda-fixa-unificada.html?veio=cdb-prefixado"
+  },
+  {
+    "source": "/simuladores/cdb-ipca.html",
+    "destination": "/simuladores/renda-fixa-unificada.html?veio=cdb-ipca"
+  },
+  {
+    "source": "/simuladores/cdb-pos-fixado-liquido.html",
+    "destination": "/simuladores/renda-fixa-unificada.html?veio=cdb-pos-fixado-liquido"
+  },
+  {
+    "source": "/simuladores/aliquota-ir-regressivo.html",
+    "destination": "/simuladores/renda-fixa-unificada.html?veio=aliquota-ir-regressivo"
+  },
+  {
+    "source": "/simuladores/consultar-volatilidade.html",
+    "destination": "/simuladores/risco-de-um-ativo.html?veio=consultar-volatilidade"
+  },
+  {
+    "source": "/simuladores/correlacao.html",
+    "destination": "/simuladores/risco-de-um-ativo.html?veio=correlacao"
+  },
+  {
+    "source": "/simuladores/tesouro-prefixado.html",
+    "destination": "/simuladores/tesouro-prefixado-unificado.html?veio=tesouro-prefixado"
+  },
+  {
+    "source": "/simuladores/tesouro-prefixado-preco-taxa.html",
+    "destination": "/simuladores/tesouro-prefixado-unificado.html?veio=tesouro-prefixado-preco-taxa"
+  },
+  {
+    "source": "/simuladores/juros-compostos",
+    "destination": "/simuladores/juros-compostos-unificado.html?veio=juros-compostos"
+  },
+  {
+    "source": "/simuladores/financiamento",
+    "destination": "/simuladores/financiamento-unificado.html?veio=financiamento-imovel-tr-price"
+  }
+]

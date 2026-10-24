@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora de porcentagem, desconto e regra de três | AZ Invest</title>
+<meta name="description" content="Calcule porcentagem, aumento, variação, preço de venda, descontos em sequência e regra de três direta ou inversa, com a conta à vista.">
+<meta name="theme-color" content="#132960">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AZ Invest">
+<meta property="og:title" content="Calculadora de porcentagem, desconto e regra de três | AZ Invest">
+<meta property="og:description" content="Calcule porcentagem, aumento, variação, preço de venda, descontos em sequência e regra de três direta ou inversa, com a conta à vista.">
+<meta property="og:image" content="https://investimentosdeaz.com.br/simuladores/assets/compartilhar.png">
+<meta property="og:url" content="https://investimentosdeaz.com.br/simuladores/porcentagem-unificada.html">
+<link rel="canonical" href="https://investimentosdeaz.com.br/simuladores/porcentagem-unificada.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="assets/az.css">
+</head>
+<body>
+<header class="az-topo"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest: todos os simuladores"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a><nav><a href="index.html">Todos os simuladores</a></nav></div></header>
+<main>
+<section class="az-hero"><div class="az-larg">
+<p class="az-trilha"><a href="index.html">Simuladores</a> / <a href="index.html#contas">Correção e contas rápidas</a></p>
+<h1>Calculadora de porcentagem, desconto e regra de três</h1>
+<p class="az-intro">Resolva contas de porcentagem, descontos e regra de três, com a conta mostrada para você conferir.</p>
+</div></section>
+<div class="az-larg">
+<section class="az-app" id="az-app"><noscript><div class="az-cartao az-vazio">Ative o JavaScript do navegador para usar o simulador.</div></noscript></section>
+<section class="az-cartao az-sobre"><details><summary><h2>Como funciona</h2></summary>
+<div class="az-sobre-corpo"><h3>Porcentagem</h3>
+<p>Porcentagem é uma fração de 100: 12% é o mesmo que 12 ÷ 100. A parte de um valor é <code>valor × percentual ÷ 100</code>, e aumento e desconto multiplicam o valor por <code>1 + percentual ÷ 100</code> ou <code>1 − percentual ÷ 100</code>. Para achar o valor original, divide-se pelo mesmo fator. O cuidado está na base: 25% de aumento seguido de 25% de desconto não devolvem o valor inicial, e 30% de lucro sobre o custo equivalem a cerca de 23% do preço de venda.</p>
+<h3>Desconto</h3>
+<p>O desconto é arredondado ao centavo, como no caixa. Dois descontos em sequência não se somam, porque o segundo incide sobre o preço já reduzido: o desconto efetivo é <code>1 − (1 − d1) × (1 − d2)</code>. Frete, juros de parcelamento e taxas ficam fora da conta.</p>
+<h3>Regra de três</h3>
+<p>Na proporção direta, as grandezas crescem juntas e <code>X = B × C ÷ A</code>. Na inversa, uma cresce enquanto a outra diminui, o produto entre elas se mantém e <code>X = A × B ÷ C</code>. A regra só vale quando a relação é de fato proporcional: dobrar o prazo de uma aplicação, por exemplo, não dobra o rendimento.</p>
+<p>Os resultados aparecem com duas casas decimais, ou quatro quando o número não fecha nos centavos. O preço de venda não inclui impostos, comissões nem despesas fixas, que devem entrar no custo.</p></div>
+</details></section>
+<section class="az-cta" id="az-cta" hidden><div><h2></h2><p></p></div><a class="az-botao az-lar" href="#" target="_blank" rel="noopener"></a></section>
+<section class="az-rel"><h2>Mais em correção e contas rápidas</h2><div class="az-grade">
+<a class="az-item" href="correcao-unificada.html" data-k="Correção de valores Correção de valores pela inflação, CDI, Selic e poupança Atualize um valor do passado pelo IPCA, IGP-M, CDI, Selic, poupança ou taxa legal e veja quanto ele ganhou da inflação. correção monetária atualizar valor corrigir valor ipca igp-m igpm inpc igp-di cdi percentual do cdi selic selic acumulada fator acumulado tesouro selic lft poupança aniversário inflação acumulada poder de compra taxa legal juros legais juros de mora lei 14.905 código civil artigo 406 dívida indenização selic menos ipca quanto teria hoje na poupança valor no passado rendimento histórico caderneta correção pela poupança rentabilidade real ganho real poupança e inflação juro real da poupança tabela da poupança rendimento da poupança histórico da poupança rendimento mensal acumulado no ano 12 meses TR Correção de valores pela inflação inflação ipca igp-m igpm igp-di inpc atualização monetária poder de compra reajuste aluguel corrigir valor Correção de valores pelo CDI cdi percentual do cdi cdb lci lca di rendimento passado pós-fixado corrigir valor Correção de valores pela Selic selic atualização monetária corrigir valor taxa básica juros banco central débito restituição Correção de valores pela poupança poupança caderneta rendimento da poupança aniversário regra antiga regra nova TR corrigir valor Selic acumulada entre duas datas selic acumulada fator acumulado taxa selic tesouro selic lft fator diário selic no ano Correção de valores pela taxa legal taxa legal juros legais juros de mora lei 14.905 código civil artigo 406 dívida indenização selic menos ipca Quanto teria hoje na poupança correção pela poupança valor no passado rendimento histórico atualizar valor caderneta Rentabilidade real da poupança poupança e inflação ganho real IPCA poder de compra juro real da poupança Tabela de rendimento da poupança histórico da poupança rendimento mensal acumulado no ano 12 meses TR tabela"><b>Correção de valores</b></a>
+<a class="az-item" href="inflacao-dolar.html" data-k="Inflação do dólar Simulador de inflação do dólar Corrija um valor em dólares pela inflação dos Estados Unidos desde 1913 e compare com o câmbio e o IPCA. inflação americana CPI poder de compra do dólar corrigir dólar câmbio dólar real"><b>Inflação do dólar</b></a>
+<a class="az-item" href="calculadora-de-taxas.html" data-k="Conversor de taxas Calculadora de taxas: ao mês, ao ano, CDI e inflação Converta taxas entre dia, mês e ano, some taxas acumuladas, veja quanto rende um percentual do CDI e calcule o juro real. taxa equivalente juros equivalentes conversão de taxas juros compostos ao dia ao mês ao ano dias úteis dia útil dias corridos taxa anual taxa mensal taxa diária ao ano para ao mês ao mês para ao ano anual para mensal mensal para anual rendimento mensal custo anual fórmula planilha Excel períodos potência tabela de taxas base 360 base 365 base 252 convenção de dias somar juros somar taxas taxa acumulada inflação acumulada rentabilidade acumulada porcentagem acumulada taxa média cdi cdi hoje taxa di 100% do cdi 110% do cdi percentual do cdi % do cdi rendimento diário taxa líquida imposto de renda regra de três regra de 3 proporção pós-fixado prefixado comparar percentuais diferença entre percentuais juro real juros reais taxa real taxa nominal inflação ipca ganho real Fisher acima da inflação inflação implícita inflação de empate Simulador de taxas equivalentes taxa equivalente conversão de taxas juros compostos ao dia ao mês ao ano dias úteis taxa acumulada Conversor de taxa de juros anual para mensal taxa anual taxa mensal ao ano para ao mês taxa equivalente juros compostos rendimento mensal Conversor de taxa de juros mensal para anual taxa mensal taxa anual ao mês para ao ano taxa equivalente juros compostos custo anual Calculadora de taxa equivalente por número de períodos taxa equivalente fórmula planilha Excel períodos juros compostos potência Tabela de juros equivalentes: dia, mês e ano tabela de taxas taxa ao dia taxa ao mês taxa ao ano base 360 base 365 base 252 dias úteis Calculadora de taxas acumuladas somar juros somar taxas taxa acumulada inflação acumulada rentabilidade acumulada juros compostos porcentagem acumulada Quanto rende o CDI hoje cdi taxa di 100% do cdi rendimento diário rendimento mensal taxa líquida Regra de três para comparar taxas percentual do CDI % do CDI taxa equivalente proporção pós-fixado prefixado regra de 3 Comparador de dois percentuais do CDI comparar percentual do cdi 100% do cdi 110% do cdi diferença taxa anual taxa mensal Calculadora de taxa de juros real juro real taxa nominal inflação ganho real Fisher acima da inflação"><b>Conversor de taxas</b></a>
+<a class="az-item" href="datas-unificada.html" data-k="Dias úteis e prazos Calculadora de dias úteis e prazos Conte dias úteis e corridos entre duas datas ou descubra em que data cai um prazo, com os feriados nacionais do caminho. dias úteis dias corridos feriados feriados nacionais prazo calendário bancário anbima fim de semana contar dias diferença entre datas somar dias subtrair dias vencimento data futura data passada calendário dia útil seguinte Calculadora de dias úteis entre duas datas dias úteis dias corridos feriados feriados nacionais prazo calendário bancário anbima fim de semana contar dias Calculadora para somar ou subtrair dias de uma data somar dias subtrair dias prazo vencimento dias úteis dias corridos data futura data passada calendário"><b>Dias úteis e prazos</b></a>
+</div></section>
+</div>
+</main>
+<footer class="az-rodape"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a>
+<p>As simulações têm caráter exclusivamente educativo. Os resultados dependem das premissas informadas por você, são estimativas e não constituem recomendação de investimento, oferta de produto ou garantia de rentabilidade. Rentabilidade passada não representa garantia de rentabilidade futura.</p>
+<p>Antes de decidir, confirme taxas, prazos, tributação e condições diretamente com a instituição responsável pelo produto.</p></div></footer>
+<script src="assets/config.js"></script>
+<script src="assets/az.js"></script>
+<script>AZ._registrar = AZ.registrar; AZ.registrar = function (x) { AZ.specs.push(x); }; AZ.antigo = function (slug) { var s = AZ.specs.filter(function (x) { return x.slug === slug; })[0]; if (!s) throw new Error("página antiga não carregada: " + slug); return s; };</script>
+<script>
+AZ.registrar({
+  slug: 'porcentagem',
+  titulo: 'Calculadora de porcentagem',
+  categoria: 'gerais',
+  ordem: 2,
+  resumo: 'Resolva as contas de porcentagem mais comuns: parte de um valor, aumento, desconto, variação e preço de venda.',
+  palavras: ['percentual', 'por cento', 'aumento', 'desconto', 'variação percentual', 'margem de lucro', 'markup', 'valor original'],
+  intro: 'Escolha o tipo de conta e preencha os dois valores. O resultado aparece com a fórmula usada, para que seja possível conferir e repetir o raciocínio. Os valores podem ser reais ou qualquer outra quantidade.',
+  campos: [
+    { id: 'modo', rotulo: 'Qual conta fazer', tipo: 'select', padrao: 'parte', opcoes: [
+      { v: 'parte', t: 'Quanto é X% de um valor' },
+      { v: 'razao', t: 'Um valor é quantos por cento de outro' },
+      { v: 'aumento', t: 'Valor com aumento de X%' },
+      { v: 'desconto', t: 'Valor com desconto de X%' },
+      { v: 'variacao', t: 'Variação percentual entre dois valores' },
+      { v: 'origDesc', t: 'Valor original antes de um desconto' },
+      { v: 'origAum', t: 'Valor original antes de um aumento' },
+      { v: 'venda', t: 'Preço de venda para uma margem de lucro' }
+    ] },
+    /* parte */
+    { id: 'pPct', rotulo: 'Percentual', tipo: 'pct', padrao: 12, largura: 'meia', mostrarSe: function (v) { return v.modo === 'parte'; } },
+    { id: 'pVal', rotulo: 'Valor total', tipo: 'num', padrao: 2500, largura: 'meia', mostrarSe: function (v) { return v.modo === 'parte'; } },
+    /* razao */
+    { id: 'rParte', rotulo: 'Valor da parte', tipo: 'num', padrao: 450, largura: 'meia', mostrarSe: function (v) { return v.modo === 'razao'; } },
+    { id: 'rTotal', rotulo: 'Valor total', tipo: 'num', padrao: 3600, largura: 'meia', mostrarSe: function (v) { return v.modo === 'razao'; } },
+    /* aumento */
+    { id: 'aVal', rotulo: 'Valor atual', tipo: 'num', padrao: 1800, largura: 'meia', mostrarSe: function (v) { return v.modo === 'aumento'; } },
+    { id: 'aPct', rotulo: 'Aumento', tipo: 'pct', padrao: 8, largura: 'meia', mostrarSe: function (v) { return v.modo === 'aumento'; } },
+    /* desconto */
+    { id: 'dVal', rotulo: 'Valor cheio', tipo: 'num', padrao: 320, largura: 'meia', mostrarSe: function (v) { return v.modo === 'desconto'; } },
+    { id: 'dPct', rotulo: 'Desconto', tipo: 'pct', padrao: 15, min: 0, max: 100, largura: 'meia', mostrarSe: function (v) { return v.modo === 'desconto'; } },
+    /* variacao */
+    { id: 'vIni', rotulo: 'Valor inicial', tipo: 'num', padrao: 80, largura: 'meia', mostrarSe: function (v) { return v.modo === 'variacao'; } },
+    { id: 'vFim', rotulo: 'Valor final', tipo: 'num', padrao: 92, largura: 'meia', mostrarSe: function (v) { return v.modo === 'variacao'; } },
+    /* original antes do desconto */
+    { id: 'odVal', rotulo: 'Valor pago, já com desconto', tipo: 'num', padrao: 680, largura: 'meia', mostrarSe: function (v) { return v.modo === 'origDesc'; } },
+    { id: 'odPct', rotulo: 'Desconto aplicado', tipo: 'pct', padrao: 15, min: 0, max: 99.99, largura: 'meia', mostrarSe: function (v) { return v.modo === 'origDesc'; } },
+    /* original antes do aumento */
+    { id: 'oaVal', rotulo: 'Valor atual, já com aumento', tipo: 'num', padrao: 1296, largura: 'meia', mostrarSe: function (v) { return v.modo === 'origAum'; } },
+    { id: 'oaPct', rotulo: 'Aumento aplicado', tipo: 'pct', padrao: 8, min: -99.99, largura: 'meia', mostrarSe: function (v) { return v.modo === 'origAum'; } },
+    /* venda */
+    { id: 'mCusto', rotulo: 'Custo', tipo: 'num', padrao: 40, min: 0, largura: 'meia', mostrarSe: function (v) { return v.modo === 'venda'; } },
+    { id: 'mPct', rotulo: 'Lucro desejado', tipo: 'pct', padrao: 30, min: 0, largura: 'meia', mostrarSe: function (v) { return v.modo === 'venda'; } },
+    { id: 'mBase', rotulo: 'O lucro é calculado sobre', tipo: 'segmento', padrao: 'custo', opcoes: [{ v: 'custo', t: 'O custo' }, { v: 'preco', t: 'O preço de venda' }],
+      ajuda: 'Sobre o custo: o lucro é um percentual do que foi pago (markup). Sobre o preço de venda: o lucro é um percentual do preço final (margem).',
+      mostrarSe: function (v) { return v.modo === 'venda'; } }
+  ],
+  calcular: function (v, AZ) {
+    var exato = function (x) { return Math.abs(x * 100 - Math.round(x * 100)) < 1e-6 * Math.max(1, Math.abs(x)); };
+    /* duas casas; quatro quando o número é pequeno e não fecha nos centavos */
+    var n = function (x) { return AZ.f.num(x, exato(x) || Math.abs(x) >= 100 ? 2 : 4); };
+    var p = function (x) { return AZ.f.pct(x, exato(x) ? 2 : 4); };
+    var q = function (x) { return AZ.f.num(x, exato(x) ? 2 : 4).replace(/,00$/, '') + '%'; };
+    /* termo da fórmula com o sinal resolvido: (1 + -8 ÷ 100) vira (1 − 8 ÷ 100) */
+    var sinal = function (x, op) { var neg = (x < 0) !== (op === '−'); return (neg ? '− ' : '+ ') + q(Math.abs(x)).replace('%', ''); };
+    var conta = function (s) { return '<p>Conta: <code>' + s + '</code></p>'; };
+    var res, x, y;
+    switch (v.modo) {
+      case 'parte':
+        res = v.pPct / 100 * v.pVal;
+        return {
+          destaques: [
+            { rotulo: q(v.pPct) + ' de ' + n(v.pVal), valor: n(res), tom: 'primario' },
+            { rotulo: 'Restante', valor: n(v.pVal - res), nota: 'o valor total menos a parte calculada' }
+          ],
+          resumo: '<p>' + q(v.pPct) + ' de ' + n(v.pVal) + ' é igual a <strong>' + n(res) + '</strong>.</p>' + conta(n(v.pVal) + ' × ' + q(v.pPct).replace('%', '') + ' ÷ 100 = ' + n(res))
+        };
+      case 'razao':
+        if (v.rTotal === 0) return { erro: 'O valor total não pode ser zero, pois não existe percentual de zero.' };
+        res = v.rParte / v.rTotal * 100;
+        return {
+          destaques: [
+            { rotulo: n(v.rParte) + ' em relação a ' + n(v.rTotal), valor: p(res), tom: 'primario' },
+            { rotulo: 'Complemento', valor: p(100 - res), nota: 'quanto falta para 100% do total' }
+          ],
+          resumo: '<p>' + n(v.rParte) + ' corresponde a <strong>' + p(res) + '</strong> de ' + n(v.rTotal) + '.</p>' + conta(n(v.rParte) + ' ÷ ' + n(v.rTotal) + ' × 100 = ' + p(res))
+        };
+      case 'aumento':
+        x = v.aVal * v.aPct / 100; res = v.aVal + x;
+        return {
+          destaques: [
+            { rotulo: 'Valor com aumento de ' + q(v.aPct), valor: n(res), tom: 'primario' },
+            { rotulo: 'Valor do aumento', valor: n(x), tom: 'destaque' }
+          ],
+          resumo: '<p>' + n(v.aVal) + ' com aumento de ' + q(v.aPct) + ' passa a <strong>' + n(res) + '</strong>, uma diferença de ' + n(x) + '.</p>' + conta(n(v.aVal) + ' × (1 ' + sinal(v.aPct, '+') + ' ÷ 100) = ' + n(res)),
+          textos: v.aPct > 0 ? ['<p>Para voltar ao valor anterior depois desse aumento, o desconto necessário é de ' + p(v.aPct / (100 + v.aPct) * 100) + ', e não de ' + q(v.aPct) + ', porque a base do cálculo muda.</p>'] : []
+        };
+      case 'desconto':
+        x = v.dVal * v.dPct / 100; res = v.dVal - x;
+        return {
+          destaques: [
+            { rotulo: 'Valor com desconto de ' + q(v.dPct), valor: n(res), tom: 'primario' },
+            { rotulo: 'Valor do desconto', valor: n(x), tom: 'positivo' }
+          ],
+          resumo: '<p>' + n(v.dVal) + ' com desconto de ' + q(v.dPct) + ' fica em <strong>' + n(res) + '</strong>, uma redução de ' + n(x) + '.</p>' + conta(n(v.dVal) + ' × (1 ' + sinal(v.dPct, '−') + ' ÷ 100) = ' + n(res))
+        };
+      case 'variacao':
+        if (v.vIni === 0) return { erro: 'O valor inicial não pode ser zero, pois a variação percentual é medida em relação a ele.' };
+        x = v.vFim - v.vIni; res = x / Math.abs(v.vIni) * 100;
+        y = res > 0 ? 'Aumento' : res < 0 ? 'Redução' : 'Sem variação';
+        return {
+          destaques: [
+            { rotulo: y, valor: p(Math.abs(res)), tom: 'primario', nota: 'de ' + n(v.vIni) + ' para ' + n(v.vFim) },
+            { rotulo: 'Diferença', valor: n(x), tom: x > 0 ? 'positivo' : x < 0 ? 'negativo' : undefined },
+            { rotulo: 'Valor final em relação ao inicial', valor: p(v.vFim / Math.abs(v.vIni) * 100), nota: 'o valor final dividido pelo inicial (em módulo)' }
+          ],
+          resumo: '<p>De ' + n(v.vIni) + ' para ' + n(v.vFim) + ' houve ' + (res === 0 ? 'variação nula' : (res > 0 ? 'aumento' : 'redução') + ' de <strong>' + p(Math.abs(res)) + '</strong>') + '.</p>' + conta('(' + n(v.vFim) + ' − ' + n(v.vIni) + ') ÷ ' + n(Math.abs(v.vIni)) + ' × 100 = ' + p(res)),
+          textos: v.vFim !== 0 && res !== 0 ? ['<p>No sentido contrário, de ' + n(v.vFim) + ' para ' + n(v.vIni) + ', a variação seria de ' + p(-x / Math.abs(v.vFim) * 100) + '. Os dois percentuais são diferentes porque cada um usa uma base distinta.</p>'] : []
+        };
+      case 'origDesc':
+        res = v.odVal / (1 - v.odPct / 100); x = res - v.odVal;
+        return {
+          destaques: [
+            { rotulo: 'Valor antes do desconto', valor: n(res), tom: 'primario' },
+            { rotulo: 'Desconto em valor', valor: n(x), tom: 'positivo' }
+          ],
+          resumo: '<p>Um valor de ' + n(v.odVal) + ' depois de ' + q(v.odPct) + ' de desconto corresponde a um valor original de <strong>' + n(res) + '</strong>.</p>' + conta(n(v.odVal) + ' ÷ (1 ' + sinal(v.odPct, '−') + ' ÷ 100) = ' + n(res)),
+          textos: v.odPct === 0 ? [] : ['<p>Somar ' + q(v.odPct) + ' ao valor pago daria ' + n(v.odVal * (1 + v.odPct / 100)) + ', que não é o valor original. O desconto foi calculado sobre o valor cheio, por isso a conta correta é a divisão.</p>']
+        };
+      case 'origAum':
+        res = v.oaVal / (1 + v.oaPct / 100); x = v.oaVal - res;
+        return {
+          destaques: [
+            { rotulo: 'Valor antes do aumento', valor: n(res), tom: 'primario' },
+            { rotulo: 'Aumento em valor', valor: n(x), tom: 'destaque' }
+          ],
+          resumo: '<p>Um valor de ' + n(v.oaVal) + ' depois de ' + q(v.oaPct) + ' de aumento corresponde a um valor original de <strong>' + n(res) + '</strong>.</p>' + conta(n(v.oaVal) + ' ÷ (1 ' + sinal(v.oaPct, '+') + ' ÷ 100) = ' + n(res)),
+          textos: v.oaPct <= 0 ? [] : ['<p>Descontar ' + q(v.oaPct) + ' do valor atual daria ' + n(v.oaVal * (1 - v.oaPct / 100)) + ', que não é o valor original. O aumento foi calculado sobre o valor antigo, por isso a conta correta é a divisão.</p>']
+        };
+      default:
+        if (v.mBase === 'preco' && v.mPct >= 100) return { erro: 'Quando o lucro é calculado sobre o preço de venda, o percentual precisa ser menor que 100%.' };
+        res = v.mBase === 'custo' ? v.mCusto * (1 + v.mPct / 100) : v.mCusto / (1 - v.mPct / 100);
+        x = res - v.mCusto;
+        return {
+          destaques: [
+            { rotulo: 'Preço de venda', valor: n(res), tom: 'primario' },
+            { rotulo: 'Lucro por unidade', valor: n(x), tom: 'positivo' },
+            { rotulo: 'Lucro sobre o custo', valor: v.mCusto > 0 ? p(x / v.mCusto * 100) : '-', nota: 'markup' },
+            { rotulo: 'Lucro sobre o preço', valor: res > 0 ? p(x / res * 100) : '-', nota: 'margem' }
+          ],
+          resumo: '<p>Com custo de ' + n(v.mCusto) + ' e lucro de ' + q(v.mPct) + ' sobre ' + (v.mBase === 'custo' ? 'o custo' : 'o preço de venda') + ', o preço de venda é <strong>' + n(res) + '</strong>.</p>' +
+            conta(v.mBase === 'custo' ? n(v.mCusto) + ' × (1 ' + sinal(v.mPct, '+') + ' ÷ 100) = ' + n(res) : n(v.mCusto) + ' ÷ (1 ' + sinal(v.mPct, '−') + ' ÷ 100) = ' + n(res)),
+          textos: ['<p>O mesmo lucro em valor gera dois percentuais: um sobre o custo e outro sobre o preço de venda, que é o menor dos dois sempre que há lucro. A conta não inclui impostos, comissões nem despesas fixas, que devem entrar no custo antes do cálculo.</p>']
+        };
+    }
+  },
+  explicacao: [
+    '<p>Porcentagem é uma fração com denominador 100. Dizer 12% é o mesmo que dizer 12 ÷ 100, ou 0,12. Todas as contas desta página partem dessa ideia:</p>',
+    '<ul>',
+    '<li><strong>Parte de um valor:</strong> <code>valor × percentual ÷ 100</code>.</li>',
+    '<li><strong>Quantos por cento um valor é de outro:</strong> <code>parte ÷ total × 100</code>.</li>',
+    '<li><strong>Aumento e desconto:</strong> <code>valor × (1 + percentual ÷ 100)</code> e <code>valor × (1 − percentual ÷ 100)</code>.</li>',
+    '<li><strong>Variação percentual:</strong> <code>(final − inicial) ÷ inicial × 100</code>. Resultado positivo indica aumento; negativo, redução.</li>',
+    '<li><strong>Valor original:</strong> divide-se o valor conhecido pelo fator do desconto ou do aumento, em vez de aplicar o percentual no sentido contrário.</li>',
+    '<li><strong>Preço de venda:</strong> <code>custo × (1 + lucro)</code> quando o lucro é medido sobre o custo, ou <code>custo ÷ (1 − lucro)</code> quando é medido sobre o preço.</li>',
+    '</ul>',
+    '<p>O ponto que mais gera erro é a base do cálculo. Um aumento de 25% seguido de um desconto de 25% não devolve o valor inicial, porque o desconto incide sobre um valor maior. Da mesma forma, 30% de lucro sobre o custo equivale a cerca de 23% do preço de venda.</p>',
+    '<p>Os resultados são arredondados para duas casas decimais na exibição (quatro quando o número não é exato nos centavos; valores a partir de 100 aparecem sempre com duas). Para acumular vários percentuais em sequência, use a calculadora de taxas acumuladas.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'desconto',
+  titulo: 'Calculadora de desconto',
+  categoria: 'compras',
+  ordem: 1,
+  resumo: 'Calcule o preço final com desconto, o valor economizado e o efeito de dois descontos aplicados em sequência.',
+  palavras: ['promoção', 'liquidação', 'preço com desconto', 'cupom', 'abatimento', 'porcentagem de desconto', 'economia'],
+  intro: 'Informe o preço original e o desconto, em percentual ou em reais, para ver quanto será pago e quanto será economizado. Se houver um segundo desconto sobre o preço já reduzido (um cupom ou o pagamento via Pix, por exemplo), informe também.',
+  campos: [
+    { id: 'preco', rotulo: 'Preço original', tipo: 'moeda', padrao: 249.9, min: 0.01 },
+    { id: 'forma', rotulo: 'Como o desconto é informado', tipo: 'segmento', padrao: 'pct', opcoes: [{ v: 'pct', t: 'Em percentual' }, { v: 'valor', t: 'Em reais' }] },
+    { id: 'pct', rotulo: 'Desconto', tipo: 'pct', padrao: 15, min: 0, max: 100, largura: 'meia', mostrarSe: function (v) { return v.forma === 'pct'; } },
+    { id: 'valor', rotulo: 'Desconto em reais', tipo: 'moeda', padrao: 40, min: 0, largura: 'meia', mostrarSe: function (v) { return v.forma === 'valor'; } },
+    { id: 'extra', rotulo: 'Desconto adicional', tipo: 'pct', padrao: 0, min: 0, max: 100, largura: 'meia', opcional: true,
+      ajuda: 'Opcional. Aplicado sobre o preço já com o primeiro desconto.' },
+    { id: 'qtd', rotulo: 'Quantidade', tipo: 'int', padrao: 1, min: 1, max: 100000, largura: 'meia' }
+  ],
+  calcular: function (v, AZ) {
+    var cent = function (x) { return Math.round(x * 100 + 1e-7) / 100; };   /* descontos arredondados ao centavo, como no caixa */
+    var d1 = v.forma === 'pct' ? cent(v.preco * v.pct / 100) : v.valor;
+    if (d1 > v.preco + 1e-9) return { erro: 'O desconto não pode ser maior que o preço original.' };
+    var pct1 = d1 / v.preco * 100, apos1 = v.preco - d1;
+    var d2 = cent(apos1 * v.extra / 100), fim = apos1 - d2, total = d1 + d2, pctTotal = total / v.preco * 100;
+    var temExtra = v.extra > 0, q = v.qtd;
+    var destaques = [
+      { rotulo: q > 1 ? 'Preço final por unidade' : 'Preço final', valor: fim, formato: 'brl', tom: 'primario', nota: 'em vez de ' + AZ.f.brl(v.preco) },
+      { rotulo: q > 1 ? 'Economia por unidade' : 'Economia', valor: total, formato: 'brl', tom: 'positivo' },
+      { rotulo: temExtra ? 'Desconto total efetivo' : 'Desconto', valor: pctTotal, formato: 'pct', tom: 'destaque',
+        nota: temExtra && d1 > 0 ? 'e não ' + AZ.f.pct(pct1 + v.extra) + ', que seria a soma dos dois' : 'sobre o preço original' }
+    ];
+    if (q > 1) destaques.push({ rotulo: 'Total a pagar', valor: fim * q, formato: 'brl', nota: AZ.f.int(q) + ' unidades, economia de ' + AZ.f.brl(total * q) });
+    var linhas = [['Preço original', v.preco], ['Primeiro desconto (' + AZ.f.pct(pct1) + ')', -d1]];
+    if (temExtra) { linhas.push(['Preço após o primeiro desconto', apos1]); linhas.push(['Desconto adicional (' + AZ.f.pct(v.extra) + ')', -d2]); }
+    linhas.push(['Preço final', fim]);
+    if (q > 1) linhas.push(['Total para ' + AZ.f.int(q) + ' unidades', fim * q]);
+    var textos = [];
+    if (temExtra && d1 > 0) textos.push('<p>Descontos em sequência não se somam. O segundo incide sobre um preço que já foi reduzido, por isso ' + AZ.f.pct(pct1) + ' mais ' + AZ.f.pct(v.extra) + ' resultam em ' + AZ.f.pct(pctTotal) + ' de desconto efetivo.</p>');
+    if (fim > 0) textos.push('<p>Para voltar do preço final ao preço original seria necessário um aumento de ' + AZ.f.pct((v.preco / fim - 1) * 100) + '. Esse número ajuda a avaliar promoções do tipo "de, por" quando o preço de referência subiu antes da oferta.</p>');
+    return {
+      destaques: destaques,
+      resumo: '<p>Com o desconto, o preço ' + (q > 1 ? 'por unidade ' : '') + 'cai de ' + AZ.f.brl(v.preco) + ' para <strong>' + AZ.f.brl(fim) + '</strong>, uma economia de ' + AZ.f.brl(total) + ' (' + AZ.f.pct(pctTotal) + ').</p>',
+      tabelas: [{ titulo: 'Passo a passo', csv: false, colunas: [{ t: 'Etapa', f: 'texto' }, { t: 'Valor', f: 'brl' }], linhas: linhas, destaque: temExtra ? 4 : 2 }],
+      textos: textos
+    };
+  },
+  explicacao: [
+    '<p>O valor do desconto é o preço original multiplicado pelo percentual e dividido por 100, arredondado ao centavo, como no caixa. Por isso, em preços como R$ 1,99 o percentual efetivo exibido pode diferir em centésimos do informado. O preço final é o preço original menos esse valor:</p>',
+    '<p><code>desconto = preço × percentual ÷ 100</code><br><code>preço final = preço − desconto</code></p>',
+    '<p>Quando o desconto é informado em reais, a calculadora faz o caminho inverso e mostra a que percentual ele corresponde: <code>desconto ÷ preço × 100</code>.</p>',
+    '<p>Com dois descontos sucessivos, o segundo é aplicado sobre o preço já reduzido. O desconto efetivo é <code>1 − (1 − d1) × (1 − d2)</code>, menor que a soma dos dois percentuais sempre que ambos são maiores que zero.</p>',
+    '<p>O cálculo considera apenas o preço. Frete, juros de parcelamento e taxas podem alterar o custo final da compra. Um desconto só representa economia quando a compra já era necessária: gastar menos em algo que não seria comprado continua sendo um gasto.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'regra-de-tres',
+  titulo: 'Calculadora de regra de três',
+  categoria: 'gerais',
+  ordem: 3,
+  resumo: 'Encontre o valor desconhecido de uma proporção direta ou inversa a partir de três valores conhecidos.',
+  palavras: ['proporção', 'proporcional', 'regra de 3', 'grandezas', 'diretamente proporcional', 'inversamente proporcional'],
+  intro: 'Preencha os três valores conhecidos na relação "A está para B assim como C está para X" e escolha se as grandezas são direta ou inversamente proporcionais. A calculadora encontra X e mostra a conta.',
+  campos: [
+    { id: 'tipo', rotulo: 'Tipo de proporção', tipo: 'segmento', padrao: 'direta', opcoes: [{ v: 'direta', t: 'Direta' }, { v: 'inversa', t: 'Inversa' }],
+      ajuda: 'Direta: quando uma grandeza aumenta, a outra aumenta na mesma proporção (quantidade e preço). Inversa: quando uma aumenta, a outra diminui (velocidade e tempo de viagem).' },
+    { tipo: 'titulo', rotulo: 'Relação conhecida' },
+    { id: 'a', rotulo: 'A', tipo: 'num', padrao: 12, largura: 'meia', ajuda: 'Primeira grandeza.' },
+    { id: 'b', rotulo: 'B', tipo: 'num', padrao: 54, largura: 'meia', ajuda: 'Segunda grandeza, correspondente a A.' },
+    { tipo: 'titulo', rotulo: 'Relação a descobrir' },
+    { id: 'c', rotulo: 'C', tipo: 'num', padrao: 20, largura: 'meia', ajuda: 'Novo valor da primeira grandeza. O resultado X é o valor correspondente da segunda.' }
+  ],
+  calcular: function (v, AZ) {
+    var inversa = v.tipo === 'inversa';
+    if (!inversa && v.a === 0) return { erro: 'Na proporção direta, o valor A não pode ser zero.' };
+    if (inversa && v.c === 0) return { erro: 'Na proporção inversa, o valor C não pode ser zero.' };
+    var x = inversa ? v.a * v.b / v.c : v.b * v.c / v.a;
+    var n = function (y) {
+      var casas = Math.abs(y * 100 - Math.round(y * 100)) < 1e-6 * Math.max(1, Math.abs(y)) ? 2 : 4;
+      var t = AZ.f.num(y, casas).replace(/,00$/, ''); return y < 0 ? '(' + t + ')' : t;
+    };
+    var quadro = '<table class="az-prop" aria-label="Proporção montada">' +
+      '<tr><td>' + n(v.a) + '</td><td class="az-suave">está para</td><td>' + n(v.b) + '</td></tr>' +
+      '<tr><td>' + n(v.c) + '</td><td class="az-suave">está para</td><td><strong>' + n(x) + '</strong></td></tr></table>';
+    var passos = inversa
+      ? '<p>Na proporção inversa, o produto das duas grandezas se mantém constante:</p><p><code>' + n(v.a) + ' × ' + n(v.b) + ' = ' + n(v.c) + ' × X</code></p><p><code>X = ' + n(v.a) + ' × ' + n(v.b) + ' ÷ ' + n(v.c) + ' = ' + n(x) + '</code></p>'
+      : '<p>Na proporção direta, multiplica-se em cruz:</p><p><code>' + n(v.a) + ' × X = ' + n(v.b) + ' × ' + n(v.c) + '</code></p><p><code>X = ' + n(v.b) + ' × ' + n(v.c) + ' ÷ ' + n(v.a) + ' = ' + n(x) + '</code></p>';
+    var destaques = [{ rotulo: 'Valor de X', valor: n(x), tom: 'primario', nota: 'proporção ' + (inversa ? 'inversa' : 'direta') }];
+    if (inversa) destaques.push({ rotulo: 'Produto constante', valor: n(v.a * v.b), nota: 'A × B = C × X' });
+    else if (v.a !== 0) destaques.push({ rotulo: 'Razão entre B e A', valor: AZ.f.num(v.b / v.a, 4), nota: 'cada unidade de A corresponde a esse valor de B' });
+    if (v.a !== 0) destaques.push({ rotulo: 'Variação de A para C', valor: AZ.f.pct((v.c / v.a - 1) * 100, 2), nota: v.b !== 0 ? 'de B para X: ' + AZ.f.pct((x / v.b - 1) * 100, 2) : '' });
+    return {
+      destaques: destaques,
+      resumo: '<p>Se ' + n(v.a) + ' está para ' + n(v.b) + ', então ' + n(v.c) + ' está para <strong>' + n(x) + '</strong>, em proporção ' + (inversa ? 'inversa' : 'direta') + '.</p>',
+      blocos: [{ titulo: 'Como a conta foi montada', html: quadro + passos }],
+      textos: [inversa
+        ? '<p>Como as grandezas são inversamente proporcionais, X varia no sentido contrário ao de C: se C é maior que A, X é menor que B.</p>'
+        : '<p>Como as grandezas são diretamente proporcionais, X varia no mesmo sentido e na mesma proporção que C em relação a A.</p>']
+    };
+  },
+  explicacao: [
+    '<p>A regra de três resolve problemas em que duas grandezas variam de forma proporcional e três dos quatro valores são conhecidos. O primeiro passo é organizar os valores em duas linhas, mantendo cada grandeza na mesma coluna: A e C são da mesma grandeza, B e X da outra.</p>',
+    '<h3>Proporção direta</h3>',
+    '<p>As duas grandezas crescem ou diminuem juntas. A razão entre elas é constante, portanto <code>A ÷ B = C ÷ X</code>, o que leva a <code>X = B × C ÷ A</code>. Exemplo de uso: se 12 unidades custam 54, quanto custam 20 unidades.</p>',
+    '<h3>Proporção inversa</h3>',
+    '<p>Uma grandeza cresce enquanto a outra diminui. O produto entre elas é constante, portanto <code>A × B = C × X</code>, o que leva a <code>X = A × B ÷ C</code>. Exemplo de uso: se 4 pessoas concluem um trabalho em 6 dias, em quantos dias 8 pessoas concluiriam, no mesmo ritmo.</p>',
+    '<p>A regra de três só vale quando a relação entre as grandezas é de fato proporcional. Ela não se aplica, por exemplo, a juros compostos ao longo do tempo: dobrar o prazo de uma aplicação não dobra o rendimento. Para comparar taxas, use a calculadora de regra de três para taxas, que mostra a diferença entre a proporção simples e a equivalência composta.</p>'
+  ].join('\n')
+});
+</script>
+<script>AZ.registrar = AZ._registrar;</script>
+<script>
+/* Protótipo unificado (23/10/2026): uma calculadora para porcentagem, desconto e regra de três.
+   Substitui porcentagem, desconto e regra-de-tres. Toda conta vem das páginas antigas (AZ.antigo(slug).calcular),
+   chamadas com os mesmos campos (os ids são os mesmos das páginas antigas, que não se repetem entre elas).
+   Aqui só se escolhe a página pelo botão "Conta", se encurtam as notas e se junta a conta e o recado de cada
+   modo numa frase de leitura, no lugar dos blocos e textos soltos. */
+AZ.registrar({
+  slug: 'porcentagem-unificada',
+  usa: ['porcentagem', 'desconto', 'regra-de-tres'],
+  /* endereços antigos (?veio=<slug>): os campos têm os mesmos ids e padrões das páginas antigas, só a conta muda */
+  atalhos: {
+    'porcentagem': {},
+    'desconto': { conta: 'desconto' },
+    'regra-de-tres': { conta: 'regra' }
+  },
+  titulo: 'Calculadora de porcentagem, desconto e regra de três',
+  categoria: 'gerais',
+  ordem: 2,
+  resumo: 'Calcule porcentagem, aumento, variação, preço de venda, descontos em sequência e regra de três direta ou inversa, com a conta à vista.',
+  palavras: ['porcentagem', 'percentual', 'por cento', 'aumento', 'desconto', 'variação percentual', 'margem de lucro', 'markup', 'valor original', 'preço de venda',
+    'promoção', 'liquidação', 'preço com desconto', 'cupom', 'abatimento', 'porcentagem de desconto', 'economia', 'desconto em sequência', 'pix',
+    'regra de três', 'regra de 3', 'proporção', 'proporcional', 'grandezas', 'diretamente proporcional', 'inversamente proporcional'],
+  intro: 'Resolva contas de porcentagem, descontos e regra de três, com a conta mostrada para você conferir.',
+  campos: [
+    /* sem gráfico, os botões iriam para o bloco da frase, abaixo dos cartões e longe dos campos que eles trocam:
+       a escolha da conta fica no alto do formulário */
+    { id: 'conta', rotulo: 'Conta', tipo: 'segmento', padrao: 'porcentagem',
+      opcoes: [{ v: 'porcentagem', t: 'Porcentagem' }, { v: 'desconto', t: 'Desconto' }, { v: 'regra', t: 'Regra de três' }] },
+
+    /* porcentagem: os mesmos campos da página antiga */
+    { id: 'modo', rotulo: 'O que calcular', tipo: 'select', padrao: 'parte', opcoes: [
+      { v: 'parte', t: 'Quanto é X% de um valor' },
+      { v: 'razao', t: 'Quantos % um valor é de outro' },
+      { v: 'aumento', t: 'Valor com aumento de X%' },
+      { v: 'desconto', t: 'Valor com desconto de X%' },
+      { v: 'variacao', t: 'Variação entre dois valores' },
+      { v: 'origDesc', t: 'Valor antes de um desconto' },
+      { v: 'origAum', t: 'Valor antes de um aumento' },
+      { v: 'venda', t: 'Preço de venda com lucro' }
+    ], mostrarSe: function (v) { return v.conta === 'porcentagem'; } },
+    { id: 'pPct', rotulo: 'Percentual', tipo: 'pct', padrao: 12, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'parte'; } },
+    { id: 'pVal', rotulo: 'Valor total', tipo: 'num', padrao: 2500, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'parte'; } },
+    { id: 'rParte', rotulo: 'Valor da parte', tipo: 'num', padrao: 450, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'razao'; } },
+    { id: 'rTotal', rotulo: 'Valor total', tipo: 'num', padrao: 3600, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'razao'; } },
+    { id: 'aVal', rotulo: 'Valor atual', tipo: 'num', padrao: 1800, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'aumento'; } },
+    { id: 'aPct', rotulo: 'Aumento', tipo: 'pct', padrao: 8, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'aumento'; } },
+    { id: 'dVal', rotulo: 'Valor cheio', tipo: 'num', padrao: 320, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'desconto'; } },
+    { id: 'dPct', rotulo: 'Desconto', tipo: 'pct', padrao: 15, min: 0, max: 100, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'desconto'; } },
+    { id: 'vIni', rotulo: 'Valor inicial', tipo: 'num', padrao: 80, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'variacao'; } },
+    { id: 'vFim', rotulo: 'Valor final', tipo: 'num', padrao: 92, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'variacao'; } },
+    { id: 'odVal', rotulo: 'Valor pago, já com desconto', tipo: 'num', padrao: 680, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'origDesc'; } },
+    { id: 'odPct', rotulo: 'Desconto aplicado', tipo: 'pct', padrao: 15, min: 0, max: 99.99, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'origDesc'; } },
+    { id: 'oaVal', rotulo: 'Valor atual, já com aumento', tipo: 'num', padrao: 1296, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'origAum'; } },
+    { id: 'oaPct', rotulo: 'Aumento aplicado', tipo: 'pct', padrao: 8, min: -99.99, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'origAum'; } },
+    { id: 'mCusto', rotulo: 'Custo', tipo: 'num', padrao: 40, min: 0, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'venda'; } },
+    { id: 'mPct', rotulo: 'Lucro desejado', tipo: 'pct', padrao: 30, min: 0, largura: 'meia', mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'venda'; } },
+    { id: 'mBase', rotulo: 'O lucro é calculado sobre', tipo: 'segmento', padrao: 'custo', opcoes: [{ v: 'custo', t: 'O custo' }, { v: 'preco', t: 'O preço de venda' }],
+      ajuda: 'Sobre o custo, o lucro é um percentual do que foi pago (markup); sobre o preço, um percentual do preço final (margem).',
+      mostrarSe: function (v) { return v.conta === 'porcentagem' && v.modo === 'venda'; } },
+
+    /* desconto: os mesmos campos da página antiga */
+    { id: 'preco', rotulo: 'Preço original', tipo: 'moeda', padrao: 249.9, min: 0.01, mostrarSe: function (v) { return v.conta === 'desconto'; } },
+    { id: 'forma', rotulo: 'Como o desconto é informado', tipo: 'segmento', padrao: 'pct', opcoes: [{ v: 'pct', t: 'Em percentual' }, { v: 'valor', t: 'Em reais' }],
+      mostrarSe: function (v) { return v.conta === 'desconto'; } },
+    { id: 'pct', rotulo: 'Desconto', tipo: 'pct', padrao: 15, min: 0, max: 100, largura: 'meia', mostrarSe: function (v) { return v.conta === 'desconto' && v.forma === 'pct'; } },
+    { id: 'valor', rotulo: 'Desconto em reais', tipo: 'moeda', padrao: 40, min: 0, largura: 'meia', mostrarSe: function (v) { return v.conta === 'desconto' && v.forma === 'valor'; } },
+    { id: 'extra', rotulo: 'Desconto adicional', tipo: 'pct', padrao: 0, min: 0, max: 100, largura: 'meia', opcional: true,
+      ajuda: 'Opcional. Um cupom ou o desconto do Pix, aplicado sobre o preço já reduzido.', mostrarSe: function (v) { return v.conta === 'desconto'; } },
+    { id: 'qtd', rotulo: 'Quantidade', tipo: 'int', padrao: 1, min: 1, max: 100000, largura: 'meia', mostrarSe: function (v) { return v.conta === 'desconto'; } },
+
+    /* regra de três: os mesmos campos da página antiga */
+    { id: 'tipo', rotulo: 'Tipo de proporção', tipo: 'segmento', padrao: 'direta', opcoes: [{ v: 'direta', t: 'Direta' }, { v: 'inversa', t: 'Inversa' }],
+      ajuda: 'Direta: as duas grandezas crescem juntas, como quantidade e preço. Inversa: uma cresce e a outra cai, como velocidade e tempo.',
+      mostrarSe: function (v) { return v.conta === 'regra'; } },
+    { tipo: 'titulo', rotulo: 'Relação conhecida', mostrarSe: function (v) { return v.conta === 'regra'; } },
+    { id: 'a', rotulo: 'A', tipo: 'num', padrao: 12, largura: 'meia', ajuda: 'Primeira grandeza.', mostrarSe: function (v) { return v.conta === 'regra'; } },
+    { id: 'b', rotulo: 'B', tipo: 'num', padrao: 54, largura: 'meia', ajuda: 'Segunda grandeza, correspondente a A.', mostrarSe: function (v) { return v.conta === 'regra'; } },
+    { tipo: 'titulo', rotulo: 'Relação a descobrir', mostrarSe: function (v) { return v.conta === 'regra'; } },
+    { id: 'c', rotulo: 'C', tipo: 'num', padrao: 20, largura: 'meia', ajuda: 'Novo valor da primeira grandeza. X é o valor correspondente da segunda.', mostrarSe: function (v) { return v.conta === 'regra'; } }
+  ],
+  calcular: function (v, AZ) {
+    var F = AZ.f;
+    /* primeiro parágrafo e conta (<code>) de um resumo antigo */
+    var par = function (html) { var m = /^<p>(.*?)<\/p>/.exec(html || ''); return m ? m[1] : ''; };
+    var cod = function (html) { var m = /<code>([^<]*)<\/code>(?![\s\S]*<code>)/.exec(html || ''); return m ? m[1] : ''; };
+    /* primeira frase de um texto antigo (números como 1.192,32 têm ponto no meio, por isso a frase termina em ". " seguido de maiúscula ou no fim) */
+    var frase = function (html) { var m = /^<p>(.+?\.)(?= [A-ZÁÉÍÓÚ]|<\/p>)/.exec(html || ''); return m ? m[1] : ''; };
+    var nota = function (d, n) { return Object.assign({}, d, { nota: n }); };
+    var R, out;
+
+    if (v.conta === 'desconto') {
+      R = AZ.antigo('desconto').calcular({ preco: v.preco, forma: v.forma, pct: v.pct, valor: v.valor, extra: v.extra, qtd: v.qtd }, AZ);
+      if (R.erro) return R;
+      /* o aviso de descontos que não se somam já está na nota do cartão; a economia, no segundo cartão.
+         Na frase de leitura fica o aumento que desfaz o desconto (antigo texto final), que nenhum cartão mostra. */
+      var volta = /aumento de ([\d.,]+%)/.exec((R.textos || []).join(' '));
+      var r1 = par(R.resumo).replace(/, uma economia de [^<]*\)\.$/, '.');
+      return { destaques: R.destaques, tabelas: R.tabelas,
+        resumo: '<p>' + r1 + (volta && volta[1] !== '0,00%' ? ' Para voltar ao preço original, ele teria de subir ' + volta[1] + ', conta útil para conferir promoções do tipo "de, por".' : '') + '</p>' };
+    }
+
+    if (v.conta === 'regra') {
+      R = AZ.antigo('regra-de-tres').calcular({ tipo: v.tipo, a: v.a, b: v.b, c: v.c }, AZ);
+      if (R.erro) return R;
+      /* o quadro "Como a conta foi montada" vira a conta na frase de leitura */
+      var contaX = cod(R.blocos && R.blocos[0] && R.blocos[0].html).replace(/^X = /, '');
+      out = R.destaques.map(function (d) { return d.rotulo === 'Razão entre B e A' ? nota(d, 'B por unidade de A') : d; });
+      return { destaques: out, resumo: '<p>' + par(R.resumo) + (contaX ? ' A conta é <code>' + contaX + '</code>.' : '') + '</p>' };
+    }
+
+    R = AZ.antigo('porcentagem').calcular(v, AZ);
+    if (R.erro) return R;
+    /* o recado do texto final de cada modo entra, curto, na frase de leitura */
+    var t0 = (R.textos || [])[0], extra = '', m;
+    if (v.modo === 'aumento' && t0 && (m = /de ([-−]?[\d.,]+%), e não de ([-−]?[\d.,]+%)/.exec(t0))) extra = ' Para desfazer o aumento, o desconto precisa ser de ' + m[1] + ', e não de ' + m[2] + '.';
+    else if (v.modo === 'variacao' && t0 && (m = /de ([-−]?[\d.,]+) para ([-−]?[\d.,]+), a variação seria de ([-−]?)([\d.,]+%)/.exec(t0)))
+      extra = ' No sentido contrário, de ' + m[1] + ' para ' + m[2] + ', ' + (m[3] ? 'a redução' : 'o aumento') + ' seria de ' + m[4] + ', porque a base muda.';
+    else if ((v.modo === 'origDesc' || v.modo === 'origAum') && t0) extra = ' ' + frase(t0);
+    out = R.destaques.map(function (d) { return d.rotulo === 'Valor final em relação ao inicial' ? nota(d, 'valor final dividido pelo inicial') : d; });
+    /* a diferença em valor ("uma diferença de 144,00") já está no segundo cartão */
+    var p1 = par(R.resumo).replace(/, uma (diferença|redução) de [^<]*\.$/, '.');
+    return { destaques: out, resumo: '<p>' + p1 + ' A conta é <code>' + cod(R.resumo) + '</code>.' + extra + '</p>' };
+  },
+  casos: [
+    { nome: '12% de 2.500', entradas: { conta: 'porcentagem', modo: 'parte', pPct: 12, pVal: 2500 }, espera: { '12% de 2.500,00': '300,00' } },
+    { nome: 'Preço com lucro de 30% sobre o preço de venda', entradas: { conta: 'porcentagem', modo: 'venda', mCusto: 40, mPct: 30, mBase: 'preco' }, espera: { 'Preço de venda': '57,1429', 'Lucro sobre o custo': '42,8571%' } },
+    { nome: 'Dois descontos em sequência, 3 unidades', entradas: { conta: 'desconto', preco: 249.9, forma: 'pct', pct: 15, extra: 10, qtd: 3 }, espera: { 'Preço final por unidade': 'R$ 191,17', 'Desconto total efetivo': '23,50%', 'Total a pagar': 'R$ 573,51' } },
+    { nome: 'Desconto em reais', entradas: { conta: 'desconto', preco: 249.9, forma: 'valor', valor: 40 }, espera: { 'Preço final': 'R$ 209,90', 'Desconto': '16,01%' } },
+    { nome: 'Regra de três inversa', entradas: { conta: 'regra', tipo: 'inversa', a: 4, b: 6, c: 8 }, espera: { 'Valor de X': '3', 'Produto constante': '24' } }
+  ],
+  explicacao: [
+    '<h3>Porcentagem</h3>',
+    '<p>Porcentagem é uma fração de 100: 12% é o mesmo que 12 ÷ 100. A parte de um valor é <code>valor × percentual ÷ 100</code>, e aumento e desconto multiplicam o valor por <code>1 + percentual ÷ 100</code> ou <code>1 − percentual ÷ 100</code>. Para achar o valor original, divide-se pelo mesmo fator. O cuidado está na base: 25% de aumento seguido de 25% de desconto não devolvem o valor inicial, e 30% de lucro sobre o custo equivalem a cerca de 23% do preço de venda.</p>',
+    '<h3>Desconto</h3>',
+    '<p>O desconto é arredondado ao centavo, como no caixa. Dois descontos em sequência não se somam, porque o segundo incide sobre o preço já reduzido: o desconto efetivo é <code>1 − (1 − d1) × (1 − d2)</code>. Frete, juros de parcelamento e taxas ficam fora da conta.</p>',
+    '<h3>Regra de três</h3>',
+    '<p>Na proporção direta, as grandezas crescem juntas e <code>X = B × C ÷ A</code>. Na inversa, uma cresce enquanto a outra diminui, o produto entre elas se mantém e <code>X = A × B ÷ C</code>. A regra só vale quando a relação é de fato proporcional: dobrar o prazo de uma aplicação, por exemplo, não dobra o rendimento.</p>',
+    '<p>Os resultados aparecem com duas casas decimais, ou quatro quando o número não fecha nos centavos. O preço de venda não inclui impostos, comissões nem despesas fixas, que devem entrar no custo.</p>'
+  ].join('\n')
+});
+</script>
+</body>
+</html>

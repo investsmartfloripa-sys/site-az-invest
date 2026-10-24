@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tesouro Prefixado: no vencimento ou vendendo antes | AZ Invest</title>
+<meta name="description" content="Rentabilidade líquida do Tesouro Prefixado no vencimento ou na venda antecipada, e o preço do título para cada taxa de juros.">
+<meta name="theme-color" content="#132960">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AZ Invest">
+<meta property="og:title" content="Tesouro Prefixado: no vencimento ou vendendo antes | AZ Invest">
+<meta property="og:description" content="Rentabilidade líquida do Tesouro Prefixado no vencimento ou na venda antecipada, e o preço do título para cada taxa de juros.">
+<meta property="og:image" content="https://investimentosdeaz.com.br/simuladores/assets/compartilhar.png">
+<meta property="og:url" content="https://investimentosdeaz.com.br/simuladores/tesouro-prefixado-unificado.html">
+<link rel="canonical" href="https://investimentosdeaz.com.br/simuladores/tesouro-prefixado-unificado.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="assets/az.css">
+</head>
+<body>
+<header class="az-topo"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest: todos os simuladores"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a><nav><a href="index.html">Todos os simuladores</a></nav></div></header>
+<main>
+<section class="az-hero"><div class="az-larg">
+<p class="az-trilha"><a href="index.html">Simuladores</a> / <a href="index.html#renda-fixa">Renda fixa</a></p>
+<h1>Tesouro Prefixado: no vencimento ou vendendo antes</h1>
+<p class="az-intro">Veja quanto o Tesouro Prefixado entrega no vencimento ou numa venda antecipada, e como o preço do título reage à taxa de juros.</p>
+</div></section>
+<div class="az-larg">
+<section class="az-app" id="az-app" data-ref="selic"><noscript><div class="az-cartao az-vazio">Ative o JavaScript do navegador para usar o simulador.</div></noscript></section>
+<section class="az-cartao az-sobre"><details><summary><h2>Como funciona</h2></summary>
+<div class="az-sobre-corpo"><p>O Tesouro Prefixado sem juros semestrais paga R$ 1.000,00 por título no vencimento. O preço de hoje é esse valor descontado pela taxa, pelos dias úteis até o vencimento: <code>preço = 1.000 ÷ (1 + taxa)^(dias úteis / 252)</code>, truncado nos centavos, como faz o Tesouro Direto.</p>
+<h3>No vencimento ou vendendo antes</h3>
+<p>Quem fica até o fim recebe a taxa contratada. Quem vende antes recebe o preço do dia, calculado com a taxa de mercado daquele momento: se ela caiu desde a compra, o título vale mais; se subiu, vale menos e pode haver perda. Como essa taxa não é conhecida de antemão, vale testar cenários. A pequena diferença entre as taxas de compra e de venda do mesmo dia não entra na conta.</p>
+<h3>Preço para cada taxa</h3>
+<p>Como a taxa está no denominador, preço e taxa andam em sentidos opostos, e o efeito cresce com o prazo. Uma aproximação é a duração modificada, <code>variação do preço ≈ − anos até o vencimento ÷ (1 + taxa) × variação da taxa</code>. A tabela usa a conta exata, sempre na mesma data.</p>
+<h3>Custos e datas</h3>
+<p>O imposto de renda segue a tabela regressiva (22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% depois), com IOF nos primeiros 30 dias. A custódia da B3, de 0,20% ao ano, é estimada sobre o valor do título ao longo do período. A data da compra é a de liquidação, o dia útil seguinte ao pedido.</p></div>
+</details></section>
+<section class="az-cta" id="az-cta" hidden><div><h2></h2><p></p></div><a class="az-botao az-lar" href="#" target="_blank" rel="noopener"></a></section>
+<section class="az-rel"><h2>Mais em renda fixa</h2><div class="az-grade">
+<a class="az-item" href="renda-fixa-unificada.html" data-k="CDB, LCI e LCA Simulador de renda fixa: CDB, LCI e LCA Simule CDB, LCI e LCA pós, pré ou IPCA entre duas datas: valor bruto, imposto de renda, valor líquido e tabela regressiva. cdb lci lca cdi prefixado ipca imposto de renda tabela regressiva iof isento rendimento líquido percentual do cdi Simulador de CDB pós-fixado cdb cdi rentabilidade líquida imposto de renda resgate dias úteis rdb lc Simulador de LCI e LCA pós-fixadas lci lca isento letra de crédito cdi cdb equivalente cri cra Simulador de CDB prefixado cdb pré taxa prefixada rendimento líquido imposto de renda dias úteis lc letra de câmbio Simulador de CDB IPCA + juro real ipca+ inflação juro real híbrido cdb inflação rendimento líquido ganho real CDB pós-fixado: percentual líquido do CDI cdb líquido percentual do cdi imposto de renda tabela regressiva taxa líquida Calculadora da alíquota de IR na renda fixa tabela regressiva imposto de renda dias corridos cdb tesouro direto 22,5% 15% iof"><b>CDB, LCI e LCA</b></a>
+<a class="az-item" href="comparador-renda-fixa.html" data-k="Comparar aplicações de renda fixa Comparador de renda fixa: CDB, LCI, Tesouro, poupança e fundo Compare CDB, LCI ou LCA, Tesouro Selic, poupança e fundo DI no mesmo prazo e veja a taxa que empata uma oferta com a outra. comparador comparar cdb lci lca tesouro selic tesouro direto lft poupança caderneta fundo DI fundo de investimento taxa de administração taxa de equilíbrio selic cdi taxa DI percentual do cdi % do CDI cdb pós cdb x lci poupança ou CDB comparar poupança isento imposto de renda rendimento líquido taxa de custódia b3 equivalência taxa equivalente tabela faixa de ir gross up prefixado prêmio de risco reserva de emergência Comparador de renda fixa pós-fixada cdb lci lca tesouro selic poupança comparar selic cdi taxa de custódia b3 Tesouro Selic x CDB pós-fixado lft cdb pós percentual do cdi cdi selic comparador taxa de custódia prêmio de risco Tesouro Selic x LCI e LCA lft lci lca isento percentual do cdi comparador selic imposto de renda Tesouro Selic x poupança lft tesouro direto caderneta comparador selic reserva de emergência rendimento líquido Poupança x fundo de renda fixa fundo DI taxa de administração imposto de renda fundo de investimento taxa de equilíbrio CDI CDB ou LCI e LCA: qual percentual do CDI rende mais equivalência cdb x lci lca percentual do cdi isento gross up taxa equivalente Tabela de taxas equivalentes entre CDB e LCI ou LCA tabela equivalência cdb lci lca percentual do cdi faixa de ir gross up LCI e LCA prefixadas x CDB prefixado isento imposto de renda taxa equivalente prefixado gross up Rendimento da poupança em percentual do CDI % do CDI poupança ou CDB comparar poupança taxa DI equivalência"><b>Comparar aplicações de renda fixa</b></a>
+<a class="az-item" href="https://investimentosdeaz.com.br/simuladores/compromissadas" data-k="Operações compromissadas Simulador de operações compromissadas Compare operações compromissadas com CDB e outras opções de renda fixa para o caixa de curto prazo. compromissada caixa empresa curto prazo cdb"><b>Operações compromissadas</b></a>
+</div></section>
+</div>
+</main>
+<footer class="az-rodape"><div class="az-larg"><a class="az-logo" href="index.html" aria-label="AZ Invest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="58 378 966 326" role="img" aria-label="AZ Invest"><path fill="currentColor" d="M 345.5 638.2 L 345.5 507.9 C 345.5 506.2 346.7 505 348.4 505 L 354.8 505 C 356.5 505 357.7 506.2 357.7 507.9 L 357.7 638.2 C 357.7 640 356.5 641.1 354.8 641.1 L 348.4 641.1 C 346.7 641.1 345.5 640 345.5 638.2 "/><path fill="currentColor" d="M 372.3 638.2 L 372.3 507.9 C 372.3 506.2 373.5 505 375.2 505 L 383.1 505 C 384.5 505 385.6 505.6 386.6 506.7 L 485.5 624.5 L 485.5 507.9 C 485.5 506.2 486.6 505 488.4 505 L 494.9 505 C 496.7 505 497.8 506.2 497.8 507.9 L 497.8 638.2 C 497.8 640 496.7 641.1 494.9 641.1 L 486.5 641.1 C 485.1 641.1 483.9 640.5 483 639.4 L 384.5 522.3 L 384.5 638.2 C 384.5 640 383.3 641.1 381.6 641.1 L 375.2 641.1 C 373.5 641.1 372.3 640 372.3 638.2 "/><path fill="currentColor" d="M 568.2 639 L 502.1 508.5 C 501.1 506.3 502.1 505 504.2 505 L 511.7 505 C 513.3 505 514.4 505.6 515.2 507.1 L 575.9 627 L 636.5 507.1 C 637.2 505.8 638.2 505 639.7 505 L 647.3 505 C 649.4 505 650.3 506.3 649.4 508.5 L 583.4 639 C 582.7 640.3 581.7 641.1 580.2 641.1 L 571.7 641.1 C 570.1 641.1 569 640.5 568.2 639 "/><path fill="currentColor" d="M 653.6 638.2 L 653.6 507.9 C 653.6 506.2 654.8 505 656.5 505 L 765.8 505 C 767.6 505 768.7 506.2 768.7 507.9 L 768.7 514.1 C 768.7 515.8 767.6 516.9 765.8 516.9 L 665.8 516.9 L 665.8 565.3 L 736.3 565.3 C 738.1 565.3 739.2 566.5 739.2 568.2 L 739.2 574.2 C 739.2 575.9 738.1 577.1 736.3 577.1 L 665.8 577.1 L 665.8 629.2 L 765.8 629.2 C 767.6 629.2 768.7 630.3 768.7 632.1 L 768.7 638.2 C 768.7 640 767.6 641.1 765.8 641.1 L 656.5 641.1 C 654.8 641.1 653.6 640 653.6 638.2 "/><path fill="currentColor" d="M 768.9 598.1 C 768.9 596.2 770.1 595.2 771.8 595.2 L 778.2 595.2 C 779.9 595.2 781.1 596.2 781.1 598.1 C 781.7 622 789.6 629.2 814.6 629.2 L 850.5 629.2 C 877.1 629.2 885.6 623.2 885.6 603.7 C 885.6 585.6 876.7 581.9 854 580.2 L 812.3 576.7 C 782.6 574.2 769.9 567.3 769.9 542.2 C 769.9 516.6 781.3 505 817.1 505 L 850.1 505 C 883.5 505 895 517.5 895.8 548 C 895.8 549.9 894.6 550.9 892.9 550.9 L 886.6 550.9 C 884.8 550.9 883.7 549.9 883.7 548 C 883.1 524.1 875.2 516.9 850.1 516.9 L 817.3 516.9 C 790.3 516.9 782 522.7 782 542.2 C 782 560.3 790.5 563.4 813.5 565.3 L 855.1 568.8 C 884.6 571.1 897.7 578.8 897.7 603.7 C 897.7 629.4 886.4 641.1 850.5 641.1 L 814.6 641.1 C 781.3 641.1 769.7 628.6 768.9 598.1 "/><path fill="currentColor" d="M 948.3 638.2 L 948.3 516.9 L 897.4 516.9 C 895.6 516.9 894.5 515.8 894.5 514.1 L 894.5 507.9 C 894.5 506.2 895.6 505 897.4 505 L 1011.3 505 C 1013 505 1014.2 506.2 1014.2 507.9 L 1014.2 514.1 C 1014.2 515.8 1013 516.9 1011.3 516.9 L 960.6 516.9 L 960.6 638.2 C 960.6 640 959.4 641.1 957.7 641.1 L 951.1 641.1 C 949.4 641.1 948.3 640 948.3 638.2 "/><path fill="#027DFC" d="M 216.9 627.8 L 210.8 637.5 L 199.4 655.5 L 191 668.7 L 216.8 627.8 Z M 216.9 627.8 "/><path fill="currentColor" d="M 1012.2 674.7 L 211.1 674.1 L 212.8 671.4 L 317.1 506.9 L 318.3 505 C 319.9 502.6 319.8 500.5 318.6 498.2 L 312.2 487 C 312.2 487 312.1 487 312.1 486.9 C 310.9 484.7 309.1 483.6 306.2 483.7 L 189.3 483.7 C 187.9 483.7 186.6 484.5 185.9 485.8 L 178.3 499.6 C 177.3 501.4 178.6 503.6 180.6 503.6 L 294.9 504.2 L 293.2 506.9 L 188.9 671.4 L 187.7 673.3 C 186.1 675.7 186.2 677.8 187.4 680.1 L 193.8 691.3 C 193.8 691.3 193.8 691.3 193.8 691.4 C 195.1 693.6 196.9 694.7 199.8 694.6 L 1003.5 694.6 C 1004.9 694.6 1006.3 693.8 1007 692.5 L 1014.6 678.6 C 1015.5 676.9 1014.3 674.7 1012.2 674.7 "/><path fill="#027DFC" d="M 195.1 408.9 L 223.7 462.7 L 246.5 462.7 L 207.3 389 C 206 386.4 204.1 385.4 201.5 385.4 L 188.6 385.4 C 186 385.4 184.1 386.4 182.8 389 L 117.4 510.9 L 106.7 530.9 L 65.8 607.2 C 64.2 610.4 65.5 613 69 613 L 81.9 613 C 84.5 613 86.4 612 87.7 609.5 L 110.6 566.6 L 120.6 547.9 L 121.8 545.7 L 206.2 545.7 C 209.1 545.7 211 543.7 211 540.8 L 211 530.5 C 211 527.6 209.1 525.7 206.2 525.7 L 132.5 525.7 L 140.4 510.9 Z M 195.1 408.9 "/></svg></a>
+<p>As simulações têm caráter exclusivamente educativo. Os resultados dependem das premissas informadas por você, são estimativas e não constituem recomendação de investimento, oferta de produto ou garantia de rentabilidade. Rentabilidade passada não representa garantia de rentabilidade futura.</p>
+<p>Antes de decidir, confirme taxas, prazos, tributação e condições diretamente com a instituição responsável pelo produto.</p></div></footer>
+<script src="assets/config.js"></script>
+<script src="assets/az.js"></script>
+<script>AZ._registrar = AZ.registrar; AZ.registrar = function (x) { AZ.specs.push(x); }; AZ.antigo = function (slug) { var s = AZ.specs.filter(function (x) { return x.slug === slug; })[0]; if (!s) throw new Error("página antiga não carregada: " + slug); return s; };</script>
+<script>
+AZ.registrar({
+  slug: 'tesouro-prefixado',
+  titulo: 'Calculadora do Tesouro Prefixado',
+  categoria: 'tesouro',
+  ordem: 1,
+  resumo: 'Rentabilidade líquida do Tesouro Prefixado no vencimento ou em venda antecipada, com IR e taxa de custódia.',
+  palavras: ['ltn', 'tesouro direto', 'preço unitário', 'venda antecipada', 'marcação a mercado', 'taxa de custódia', 'b3', 'rentabilidade líquida'],
+  intro: 'Informe a data da compra, o vencimento e a taxa (ou o preço) do título. A calculadora mostra o preço unitário, o imposto de renda, a taxa de custódia e a rentabilidade líquida. Se quiser, simule também a venda antes do vencimento por outra taxa de mercado.',
+  campos: [
+    { id: 'valor', rotulo: 'Valor investido', tipo: 'moeda', padrao: 10000, min: 0.01 },
+    { id: 'compra', rotulo: 'Data da compra', tipo: 'data', padrao: 'hoje', largura: 'meia' },
+    { id: 'venc', rotulo: 'Data do vencimento do título', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { return (AZ.datas.hoje().getFullYear() + 3) + '-01-01'; },
+      ajuda: 'Consta no nome do título. Os prefixados sem juros semestrais vencem em 1º de janeiro.' },
+    { id: 'informar', rotulo: 'Informar na compra', tipo: 'segmento', opcoes: [{ v: 'taxa', t: 'Taxa do título' }, { v: 'preco', t: 'Preço unitário' }] },
+    { id: 'taxa', rotulo: 'Taxa de compra', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.selic; }, min: 0, max: 200, sufixo: '% ao ano',
+      mostrarSe: function (v) { return v.informar !== 'preco'; } },
+    { id: 'preco', rotulo: 'Preço de um título na compra', tipo: 'moeda', padrao: 750, min: 0.01, max: 1000,
+      mostrarSe: function (v) { return v.informar === 'preco'; }, ajuda: 'Preço unitário de compra, entre R$ 0,01 e R$ 1.000,00. A taxa é calculada a partir dele.' },
+    { id: 'taxaB3', rotulo: 'Taxa de custódia da B3', tipo: 'pct', padrao: 0.2, min: 0, max: 5, sufixo: '% ao ano', largura: 'meia' },
+    { id: 'taxaCor', rotulo: 'Taxa da corretora', tipo: 'pct', padrao: 0, min: 0, max: 5, sufixo: '% ao ano', largura: 'meia', opcional: true },
+    { id: 'antecipada', rotulo: 'Simular venda antes do vencimento', tipo: 'check', padrao: false },
+    { id: 'venda', rotulo: 'Data da venda', tipo: 'data', padrao: 'hoje+365', largura: 'meia', mostrarSe: function (v) { return v.antecipada; } },
+    { id: 'taxaVenda', rotulo: 'Taxa do título no dia da venda', tipo: 'pct', padrao: function (AZ) { return Math.max(0, AZ.cfg.selic - 1.5); }, min: 0, max: 200, sufixo: '% ao ano', largura: 'meia',
+      mostrarSe: function (v) { return v.antecipada; }, ajuda: 'Taxa de resgate praticada pelo Tesouro na data da venda. Não é conhecida de antemão: teste cenários.' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, F = AZ.f, FACE = 1000;
+    /* dias úteis de a (inclusive) até b (exclusive), convenção dos títulos públicos */
+    function duEntre(a, b) { return D.uteis(a, b); }
+    function trunc2(x) { return Math.floor(x * 100 + 1e-7) / 100; }
+    function pu(taxa, du) { return trunc2(FACE / Math.pow(1 + taxa, du / 252)); }
+    var dcV = D.corridos(v.compra, v.venc);
+    if (dcV < 1) return { erro: 'O vencimento deve ser posterior à data da compra.' };
+    if (dcV > 18300) return { erro: 'O prazo máximo da simulação é de 50 anos.' };
+    var duV = duEntre(v.compra, v.venc);
+    if (duV < 1) return { erro: 'O prazo até o vencimento precisa ter pelo menos um dia útil.' };
+    var puC, taxaC;
+    if (v.informar === 'preco') { puC = v.preco; taxaC = Math.pow(FACE / puC, 252 / duV) - 1; }
+    else { taxaC = v.taxa / 100; puC = pu(taxaC, duV); }
+    if (!(puC > 0)) return { erro: 'Com esta taxa e este prazo, o preço do título fica abaixo de um centavo. Revise os valores.' };
+    if (!isFinite(taxaC)) return { erro: 'Com este preço e este prazo, a taxa implícita é alta demais para ser calculada.' };
+    var qtd = v.valor / puC;
+    function cenario(data, puSaida) {
+      var dc = D.corridos(v.compra, data), du = duEntre(v.compra, data), bruto = qtd * puSaida, rend = bruto - v.valor;
+      /* custódia e taxa da corretora: proporcionais ao tempo, sobre o valor do título ao longo do período */
+      var base = 0, k, n = Math.max(du, 1), razao = bruto / v.valor;
+      for (k = 1; k <= n; k++) base += v.valor * Math.pow(razao, k / n);
+      base = base / n * (du / 252);
+      var b3 = base * v.taxaB3 / 100, cor = base * v.taxaCor / 100;
+      var fIof = AZ.fin.iof(dc), iof = Math.max(0, rend) * fIof, aliq = AZ.fin.irRegressivo(dc), ir = Math.max(0, rend - iof) * aliq;
+      var liq = bruto - iof - ir - b3 - cor, n2 = Math.max(du, 1);
+      return { data: data, pu: puSaida, dc: dc, du: du, bruto: bruto, rend: rend, b3: b3, cor: cor, fIof: fIof, iof: iof, aliq: aliq, ir: ir, liq: liq, lucro: liq - v.valor,
+        brutaAa: (Math.pow(bruto / v.valor, 252 / n2) - 1) * 100, liqTotal: (liq / v.valor - 1) * 100, liqAa: (Math.pow(Math.max(liq, 0) / v.valor, 252 / n2) - 1) * 100 };
+    }
+    var venc = cenario(v.venc, FACE), ant = null, duRest = 0, taxaV = v.taxaVenda / 100;
+    if (v.antecipada) {
+      if (D.corridos(v.compra, v.venda) < 1) return { erro: 'A data da venda deve ser posterior à data da compra.' };
+      if (D.corridos(v.venda, v.venc) < 1) return { erro: 'A data da venda deve ser anterior ao vencimento. Para simular o resgate no vencimento, desmarque a venda antecipada.' };
+      if (duEntre(v.compra, v.venda) < 1) return { erro: 'É preciso haver pelo menos um dia útil entre a compra e a venda.' };
+      duRest = duEntre(v.venda, v.venc);
+      ant = cenario(v.venda, pu(taxaV, duRest));
+    }
+    var p = ant || venc;
+    /* curva de preço: pela taxa da compra e, na venda antecipada, pela taxa da venda */
+    var n = Math.min(dcV, 36), rot = [], sC = [], sV = [], k, d, du, curto = dcV <= 366;
+    for (k = 0; k <= n; k++) {
+      d = D.somar(v.compra, Math.round(dcV * k / n)); du = duEntre(d, v.venc);
+      rot.push(curto ? F.data(d).slice(0, 5) : F.data(d).slice(3));
+      sC.push(FACE / Math.pow(1 + taxaC, du / 252));
+      if (ant) sV.push(FACE / Math.pow(1 + taxaV, du / 252));
+    }
+    var series = [{ nome: 'Preço pela taxa da compra (' + F.pct(taxaC * 100) + ')', cor: 1, dados: sC }];
+    if (ant) series.push({ nome: 'Preço pela taxa da venda (' + F.pct(v.taxaVenda) + ')', cor: 3, dados: sV });
+    function col(c) {
+      return [F.data(c.data), F.int(c.dc), F.int(c.du), F.brl(c.pu), F.brl(c.bruto), F.brl(c.rend), F.pct(c.brutaAa),
+        F.pct(c.aliq * 100, 1), F.brl(c.ir), F.brl(c.iof), F.brl(c.b3), F.brl(c.cor), F.brl(c.liq), F.brl(c.lucro), F.pct(c.liqTotal), F.pct(c.liqAa)];
+    }
+    var nomes = ['Data de saída', 'Dias corridos desde a compra', 'Dias úteis desde a compra', 'Preço unitário na saída', 'Valor bruto', 'Rendimento bruto', 'Rentabilidade bruta ao ano',
+      'Alíquota de IR', 'Imposto de renda', 'IOF', 'Taxa de custódia da B3', 'Taxa da corretora', 'Valor líquido', 'Lucro líquido', 'Rentabilidade líquida no período', 'Rentabilidade líquida ao ano'];
+    var cV = col(venc), cA = ant ? col(ant) : null;
+    var linhas = nomes.map(function (nm, i) { return ant ? [nm, cA[i], cV[i]] : [nm, cV[i]]; });
+    var colunas = ant ? [{ t: 'Item', f: 'texto' }, { t: 'Venda antecipada', f: 'texto', alinhar: 'dir' }, { t: 'No vencimento', f: 'texto', alinhar: 'dir' }]
+      : [{ t: 'Item', f: 'texto' }, { t: 'No vencimento', f: 'texto', alinhar: 'dir' }];
+    var destaques = [
+      { rotulo: ant ? 'Rentabilidade líquida na venda antecipada' : 'Rentabilidade líquida ao ano', valor: F.pct(p.liqAa) + ' ao ano', tom: 'primario',
+        nota: ant ? 'mantendo até o vencimento seria ' + F.pct(venc.liqAa) + ' ao ano' : 'taxa bruta de ' + F.pct(taxaC * 100) + ' ao ano na compra' },
+      { rotulo: ant ? 'Valor líquido na venda' : 'Valor líquido no vencimento', valor: p.liq, formato: 'brl', nota: 'em ' + F.data(p.data) },
+      { rotulo: 'Lucro líquido', valor: p.lucro, formato: 'brl', tom: p.lucro >= 0 ? 'positivo' : 'negativo', nota: F.pct(p.liqTotal) + ' no período' },
+      { rotulo: 'Preço unitário na compra', valor: puC, formato: 'brl', nota: F.num(qtd, 2) + (qtd === 1 ? ' título' : ' títulos') + ' de R$ 1.000,00 no vencimento' }
+    ];
+    if (ant) destaques.push({ rotulo: 'Preço unitário na venda', valor: ant.pu, formato: 'brl', tom: 'destaque', nota: 'faltando ' + F.int(duRest) + ' dias úteis para o vencimento' });
+    var resumo;
+    if (ant) {
+      var efeito = taxaV < taxaC ? 'A taxa de mercado caiu em relação à da compra, o que valoriza o título: a venda antecipada entrega rentabilidade bruta de ' + F.pct(ant.brutaAa) + ' ao ano, acima dos ' + F.pct(taxaC * 100) + ' contratados.'
+        : taxaV > taxaC ? 'A taxa de mercado subiu em relação à da compra, o que desvaloriza o título: a venda antecipada entrega rentabilidade bruta de ' + F.pct(ant.brutaAa) + ' ao ano, abaixo dos ' + F.pct(taxaC * 100) + ' contratados.'
+          : 'A taxa de venda é igual à de compra, então a rentabilidade bruta até a venda é a própria taxa contratada.';
+      resumo = '<p>' + efeito + ' Depois de imposto e taxas, o resultado é de <strong>' + F.brl(ant.lucro) + '</strong> em ' + F.int(ant.du) + ' dias úteis.</p>';
+    } else {
+      resumo = '<p>Cada título comprado por ' + F.brl(puC) + ' paga R$ 1.000,00 em ' + F.data(v.venc) + '. Mantido até o vencimento, o investimento rende ' + F.pct(taxaC * 100) + ' ao ano antes dos custos e <strong>' + F.pct(venc.liqAa) + ' ao ano</strong> depois do imposto de renda e da taxa de custódia, qualquer que seja a oscilação dos preços no caminho.</p>';
+    }
+    return {
+      alertaTom: 'atencao', alerta: ant && ant.rend < 0 ? 'Neste cenário a venda antecipada ocorre por um valor menor que o investido. Não há imposto de renda sobre prejuízo, mas a taxa de custódia continua sendo cobrada.' : (p.fIof > 0 ? 'Saídas em menos de 30 dias pagam IOF sobre o rendimento, além do imposto de renda.' : ''),
+      destaques: destaques,
+      resumo: resumo,
+      graficos: [{ tipo: 'linha', titulo: 'Preço unitário do título até o vencimento', formato: 'brl', zero: false, rotuloDica: curto ? 'Dia' : 'Mês', rotulos: rot, series: series }],
+      tabelas: [{
+        titulo: ant ? 'Resultado bruto: venda antecipada e vencimento' : 'Resultado bruto', csv: false, colunas: colunas,
+        linhas: linhas.slice(0, 7),
+        nota: v.informar === 'preco' ? 'Taxa de compra implícita no preço informado: ' + F.pct(taxaC * 100, 4) + ' ao ano.' : 'Preço unitário calculado pela taxa informada e truncado na segunda casa decimal, como faz o Tesouro Direto.'
+      }, {
+        titulo: 'Custos e resultado líquido', csv: false, colunas: colunas,
+        linhas: linhas.slice(7), destaque: [5, 8]
+      }],
+      textos: ant ? ['<p>A taxa que o mercado vai praticar na data da venda não é conhecida hoje. Use o campo da taxa de venda para testar cenários de alta e de queda dos juros. O Tesouro também pratica uma pequena diferença entre a taxa de compra e a de resgate no mesmo dia, o que reduz um pouco o preço de venda.</p>'] : []
+    };
+  },
+  explicacao: [
+    '<p>O Tesouro Prefixado sem juros semestrais paga R$ 1.000,00 por título no vencimento. O preço de compra é esse valor de face descontado pela taxa contratada, pelos dias úteis que faltam até o vencimento, em base de 252 dias úteis por ano: <code>preço = 1.000 ÷ (1 + taxa)^(dias úteis / 252)</code>. Informando o preço, a calculadora faz o caminho inverso e encontra a taxa.</p>',
+    '<p>Quem mantém o título até o vencimento recebe exatamente a taxa contratada. Na venda antecipada, o título é recomprado pelo Tesouro ao preço do dia, calculado pela mesma fórmula com a taxa de mercado daquele momento (marcação a mercado). Se a taxa caiu desde a compra, o preço sobe além da curva contratada. Se a taxa subiu, o preço fica abaixo da curva e pode haver perda.</p>',
+    '<h3>Custos considerados</h3>',
+    '<ul><li><strong>Imposto de renda</strong>: tabela regressiva sobre o rendimento bruto (22,5% até 180 dias corridos, 20% de 181 a 360, 17,5% de 361 a 720 e 15% acima de 720 dias). Em menos de 30 dias há também IOF.</li>',
+    '<li><strong>Taxa de custódia da B3</strong>: 0,20% ao ano sobre o valor dos títulos, regra em vigor desde 2022. A isenção para os primeiros R$ 10.000,00 do Tesouro Selic não vale para o Prefixado. A taxa é provisionada diariamente e descontada na venda antecipada, no vencimento ou no pagamento de juros; a cobrança semestral deixou de existir no fim de 2024. Aqui ela é estimada aplicando a taxa, por dia útil sobre 252, ao valor do título ao longo do período, supondo que o preço evolua de forma contínua entre a compra e a saída.</li>',
+    '<li><strong>Taxa da corretora</strong>: a maioria das instituições não cobra. Se a sua cobrar, informe o percentual anual, calculado da mesma forma que a custódia.</li></ul>',
+    '<p>A contagem de dias úteis vai da data da compra (inclusive) até a data de saída (exclusive), com os feriados nacionais do calendário bancário. A simulação admite frações de título e trata a data informada como a data de liquidação. No Tesouro Direto, a compra é liquidada no dia útil seguinte ao pedido: para reproduzir o preço de compra exibido no dia do pedido, informe como data da compra o dia útil seguinte. Pequenas diferenças de centavos em relação ao extrato são esperadas. As taxas futuras e as regras de tributação podem mudar.</p>'
+  ].join('\n')
+});
+</script>
+<script>
+AZ.registrar({
+  slug: 'tesouro-prefixado-preco-taxa',
+  titulo: 'Simulador de preço e taxa do Tesouro Prefixado',
+  categoria: 'tesouro',
+  ordem: 2,
+  resumo: 'Veja como o preço do Tesouro Prefixado reage a cada variação da taxa de juros: a marcação a mercado na prática.',
+  palavras: ['marcação a mercado', 'ltn', 'preço unitário', 'pu', 'taxa de juros', 'duration', 'sensibilidade', 'tesouro direto'],
+  intro: 'Informe a data, o vencimento do título e a taxa de juros atual. O simulador calcula o preço unitário e monta uma tabela com o preço para taxas um pouco maiores e menores, mostrando quanto o título ganha ou perde valor a cada mudança.',
+  campos: [
+    { id: 'data', rotulo: 'Data de referência', tipo: 'data', padrao: 'hoje', largura: 'meia' },
+    { id: 'venc', rotulo: 'Data do vencimento do título', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { return (AZ.datas.hoje().getFullYear() + 3) + '-01-01'; } },
+    { id: 'taxa', rotulo: 'Taxa de juros do título', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.selic; }, min: 0, max: 200, sufixo: '% ao ano', largura: 'meia' },
+    { id: 'passo', rotulo: 'Variação da taxa entre as linhas', tipo: 'num', padrao: 0.25, min: 0.01, max: 10, sufixo: 'ponto percentual', largura: 'meia',
+      ajuda: 'Use 0,01 para ver o efeito das oscilações do dia a dia, ou valores maiores para cenários de alta e queda dos juros.' }
+  ],
+  calcular: function (v, AZ) {
+    var D = AZ.datas, F = AZ.f, FACE = 1000;
+    var dc = D.corridos(v.data, v.venc);
+    if (dc < 1) return { erro: 'O vencimento deve ser posterior à data de referência.' };
+    if (dc > 18300) return { erro: 'O prazo máximo da simulação é de 50 anos.' };
+    /* dias úteis da data de referência (inclusive) até o vencimento (exclusive) */
+    var du = D.uteis(v.data, v.venc);
+    if (du < 1) return { erro: 'O prazo até o vencimento precisa ter pelo menos um dia útil.' };
+    function preco(taxaPp) { return Math.floor(FACE / Math.pow(1 + taxaPp / 100, du / 252) * 100 + 1e-7) / 100; }
+    var p0 = preco(v.taxa), linhas = [], rot = [], serie = [], k, t, p, centro = -1;
+    for (k = -5; k <= 5; k++) {
+      t = Math.round((v.taxa + k * v.passo) * 1e6) / 1e6;
+      if (t < 0) continue;
+      p = preco(t);
+      if (k === 0) centro = linhas.length;
+      linhas.push([t, k * v.passo, p, p - p0, (p / p0 - 1) * 100]);
+      rot.push(F.pct(t)); serie.push(p);
+    }
+    var mais = preco(v.taxa + 1), menos = preco(Math.max(0, v.taxa - 1)), anos = du / 252;
+    var durMod = anos / (1 + v.taxa / 100);
+    var destaques = [
+      { rotulo: 'Preço unitário do título', valor: p0, formato: 'brl', tom: 'primario', nota: 'para a taxa de ' + F.pct(v.taxa) + ' ao ano' },
+      { rotulo: 'Dias úteis até o vencimento', valor: du, formato: 'int', nota: F.int(dc) + ' dias corridos, ' + F.num(anos, 2) + ' anos em base 252' },
+      { rotulo: 'Se a taxa subir 1 ponto', valor: Math.round((mais / p0 - 1) * 1e6) / 1e4 || 0, formato: 'pct', tom: 'negativo', nota: 'preço de ' + F.brl(mais) + ', ' + F.brl(p0 - mais) + ' a menos' }
+    ];
+    if (v.taxa >= 1) destaques.push({ rotulo: 'Se a taxa cair 1 ponto', valor: Math.round((menos / p0 - 1) * 1e6) / 1e4 || 0, formato: 'pct', tom: 'positivo', nota: 'preço de ' + F.brl(menos) + ', ' + F.brl(menos - p0) + ' a mais' });
+    return {
+      destaques: destaques,
+      resumo: '<p>Com ' + F.pl(du, 'dia útil', 'dias úteis') + ' até o vencimento, cada 0,01 ponto percentual de variação na taxa altera o preço em cerca de <strong>' + F.pct(durMod * 0.01, 4) + '</strong>, no sentido contrário: taxa para cima, preço para baixo. Quanto mais distante o vencimento, maior essa sensibilidade.</p>',
+      graficos: [{ tipo: 'linha', titulo: 'Preço do título para cada taxa de juros', formato: 'brl', zero: false, rotuloDica: 'Taxa', rotulos: rot, series: [{ nome: 'Preço unitário', cor: 1, dados: serie }] }],
+      tabelas: [{
+        titulo: 'Preço para diferentes taxas',
+        colunas: [{ t: 'Taxa ao ano', f: 'pct' }, { t: 'Variação (pontos percentuais)', f: function (x) { return (x > 0 ? '+' : '') + F.num(x, 2); } }, { t: 'Preço unitário', f: 'brl' },
+          { t: 'Diferença de preço', f: function (x) { return (x > 0 ? '+' : '') + F.brl(x); } }, { t: 'Diferença em %', f: function (x) { return (x > 0 ? '+' : '') + F.pct(x); } }],
+        linhas: linhas, destaque: centro, csv: false,
+        nota: 'A linha destacada é a taxa informada. As diferenças comparam cada linha com o preço dessa taxa, na mesma data. Valores por título, antes de imposto e taxas.'
+      }],
+      textos: ['<p>A tabela isola o efeito da taxa: todas as linhas usam a mesma data. Com o passar dos dias, o preço também sobe por se aproximar do vencimento, quando vale R$ 1.000,00 qualquer que seja a taxa de mercado.</p>']
+    };
+  },
+  explicacao: [
+    '<p>O Tesouro Prefixado sem juros semestrais vale R$ 1.000,00 no vencimento. Antes disso, o preço é esse valor descontado pela taxa de juros do dia: <code>preço = 1.000 ÷ (1 + taxa)^(dias úteis / 252)</code>. Os dias úteis são contados da data de referência (inclusive) até o vencimento (exclusive), pelo calendário bancário. A data de referência é a data de liquidação: no Tesouro Direto, a compra é liquidada no dia útil seguinte ao pedido, e a venda solicitada até as 13h, no mesmo dia. Para reproduzir o preço de compra exibido pelo Tesouro Direto, informe o dia útil seguinte.</p>',
+    '<p>Como a taxa está no denominador, preço e taxa andam em sentidos opostos. Quando os juros de mercado sobem, os títulos já emitidos ficam menos atraentes e seu preço cai. Quando os juros caem, os títulos antigos, contratados a taxas maiores, se valorizam. Essa atualização diária do preço é a marcação a mercado.</p>',
+    '<p>A sensibilidade cresce com o prazo. Uma aproximação usual é a duração modificada: <code>variação do preço ≈ − prazo em anos ÷ (1 + taxa) × variação da taxa</code>. Para um título com quatro anos de prazo e taxa de 12%, a aproximação indica perda de cerca de 3,6% se a taxa subir um ponto percentual. O cálculo exato, usado na tabela, resulta em 3,5%.</p>',
+    '<p>A oscilação só se transforma em ganho ou perda efetiva para quem vende antes do vencimento. Quem mantém o título até o fim recebe a taxa contratada na compra. O preço é truncado na segunda casa decimal, como faz o Tesouro Direto. O simulador não considera a diferença entre as taxas de compra e de resgate praticadas no mesmo dia, nem imposto de renda e taxa de custódia.</p>'
+  ].join('\n')
+});
+</script>
+<script>AZ.registrar = AZ._registrar;</script>
+<script>
+/* Protótipo unificado (23/10/2026): uma página para o Tesouro Prefixado, no vencimento, na venda antecipada e no preço por taxa.
+   Substitui tesouro-prefixado e tesouro-prefixado-preco-taxa. Toda conta vem das páginas antigas (AZ.antigo(slug).calcular);
+   aqui só se traduzem os campos e se monta o resultado.
+   "Ver: Preço para cada taxa" é a página de preço e taxa, na data da compra ou, com a venda antecipada, na data da venda;
+   nesse caso cada linha da tabela também roda a página do Tesouro Prefixado com a taxa da linha (valor e rentabilidade da venda). */
+AZ.registrar({
+  slug: 'tesouro-prefixado-unificado',
+  usa: ['tesouro-prefixado', 'tesouro-prefixado-preco-taxa'],
+  atalhos: {
+    'tesouro-prefixado': {},
+    'tesouro-prefixado-preco-taxa': { ver: 'taxas' }
+  },
+  titulo: 'Tesouro Prefixado: no vencimento ou vendendo antes',
+  categoria: 'tesouro',
+  ordem: 1,
+  resumo: 'Rentabilidade líquida do Tesouro Prefixado no vencimento ou na venda antecipada, e o preço do título para cada taxa de juros.',
+  palavras: ['tesouro prefixado', 'ltn', 'tesouro direto', 'preço unitário', 'pu', 'venda antecipada', 'marcação a mercado', 'taxa de custódia', 'b3',
+    'rentabilidade líquida', 'taxa de juros', 'preço e taxa', 'duration', 'duração modificada', 'sensibilidade'],
+  intro: 'Veja quanto o Tesouro Prefixado entrega no vencimento ou numa venda antecipada, e como o preço do título reage à taxa de juros.',
+  campos: [
+    { id: 'valor', rotulo: 'Valor investido', tipo: 'moeda', padrao: 10000, min: 0.01,
+      mostrarSe: function (v) { return v.ver !== 'taxas' || v.antecipada; } },
+    { id: 'compra', rotulo: 'Data da compra', tipo: 'data', padrao: 'hoje', largura: 'meia' },
+    { id: 'venc', rotulo: 'Data do vencimento do título', tipo: 'data', largura: 'meia',
+      padrao: function (AZ) { return (AZ.datas.hoje().getFullYear() + 3) + '-01-01'; },
+      ajuda: 'Consta no nome do título. Os prefixados sem juros semestrais vencem em 1º de janeiro.' },
+    { id: 'informar', rotulo: 'Informar na compra', tipo: 'segmento', padrao: 'taxa', opcoes: [{ v: 'taxa', t: 'Taxa do título' }, { v: 'preco', t: 'Preço unitário' }] },
+    { id: 'taxa', rotulo: 'Taxa de compra', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.selic; }, min: 0, max: 200, sufixo: '% ao ano',
+      mostrarSe: function (v) { return v.informar !== 'preco'; } },
+    { id: 'preco', rotulo: 'Preço de um título na compra', tipo: 'moeda', padrao: 750, min: 0.01, max: 1000,
+      mostrarSe: function (v) { return v.informar === 'preco'; }, ajuda: 'Preço unitário de compra, entre R$ 0,01 e R$ 1.000,00. A taxa é calculada a partir dele.' },
+    { id: 'taxaB3', rotulo: 'Taxa de custódia da B3', tipo: 'pct', padrao: 0.2, min: 0, max: 5, sufixo: '% ao ano', largura: 'meia',
+      mostrarSe: function (v) { return v.ver !== 'taxas' || v.antecipada; } },
+    { id: 'taxaCor', rotulo: 'Taxa da corretora', tipo: 'pct', padrao: 0, min: 0, max: 5, sufixo: '% ao ano', largura: 'meia', opcional: true,
+      mostrarSe: function (v) { return v.ver !== 'taxas' || v.antecipada; } },
+    /* botões no cabeçalho do gráfico */
+    { id: 'antecipada', rotulo: 'Vender antes do vencimento', tipo: 'check', padrao: false, noGrafico: 0 },
+    { id: 'ver', rotulo: 'Ver o preço', tipo: 'segmento', padrao: 'curva', noGrafico: 0,
+      opcoes: [{ v: 'curva', t: 'Até o vencimento' }, { v: 'taxas', t: 'Para cada taxa' }] },
+    { id: 'venda', rotulo: 'Data da venda', tipo: 'data', padrao: 'hoje+365', largura: 'meia', mostrarSe: function (v) { return v.antecipada; } },
+    { id: 'taxaVenda', rotulo: 'Taxa do título no dia da venda', tipo: 'pct', padrao: function (AZ) { return Math.max(0, AZ.cfg.selic - 1.5); }, min: 0, max: 200, sufixo: '% ao ano', largura: 'meia',
+      mostrarSe: function (v) { return v.antecipada; }, ajuda: 'Taxa de resgate praticada pelo Tesouro na data da venda. Não é conhecida de antemão: teste cenários.' },
+    { id: 'passo', rotulo: 'Intervalo entre as taxas da tabela', tipo: 'pct', padrao: 0.25, min: 0.01, max: 10,
+      ajuda: 'A tabela mostra o preço para cinco taxas acima e cinco abaixo da informada, separadas por esse intervalo.',
+      mostrarSe: function (v) { return v.ver === 'taxas'; } }
+  ],
+  calcular: function (v, AZ) {
+    var F = AZ.f, D = AZ.datas, ant = !!v.antecipada;
+    /* a página do Tesouro Prefixado valida as datas e a taxa em todos os modos */
+    var R = AZ.antigo('tesouro-prefixado').calcular(v, AZ);
+    if (R.erro) return { erro: R.erro.replace('desmarque a venda antecipada', 'desligue "Vender antes do vencimento"') };
+    /* taxa de compra em % ao ano: a informada ou, com o preço, a implícita nele (a mesma da página antiga) */
+    var taxaC = v.informar === 'preco' ? (Math.pow(1000 / v.preco, 252 / D.uteis(v.compra, v.venc)) - 1) * 100 : v.taxa;
+
+    if (v.ver === 'taxas') {
+      /* página de preço e taxa: na data da compra, pela taxa de compra; com a venda antecipada, na data da venda, pela taxa da venda */
+      var ref = ant ? v.venda : v.compra, tRef = ant ? v.taxaVenda : taxaC;
+      var P = AZ.antigo('tesouro-prefixado-preco-taxa').calcular({ data: ref, venc: v.venc, taxa: tRef, passo: v.passo }, AZ);
+      if (P.erro) return P;
+      var d = P.destaques, quando = ant ? 'na venda' : 'na compra';
+      var sens = /cerca de <strong>([^<]+)<\/strong>/.exec(P.resumo || '');
+      var destaques = [Object.assign({}, d[0], { rotulo: 'Preço unitário ' + quando, nota: 'para a taxa de ' + F.pct(tRef) + ' ao ano em ' + F.data(ref) }),
+        Object.assign({}, d[2], { rotulo: 'Se a taxa subir para ' + F.pct(tRef + 1) })];
+      if (d[3]) destaques.push(Object.assign({}, d[3], { rotulo: 'Se a taxa cair para ' + F.pct(tRef - 1) }));
+      destaques.push(d[1]);
+      /* tabela da página antiga sem a coluna da variação em pontos (a coluna da taxa já diz qual é cada taxa) */
+      var tp = P.tabelas[0], cols = tp.colunas.filter(function (c, j) { return j !== 1; });
+      var linhas = tp.linhas.map(function (l) { return l.filter(function (c, j) { return j !== 1; }); });
+      if (ant) {
+        /* resultado da venda para cada taxa: a página do Tesouro Prefixado com a taxa da linha */
+        cols = cols.concat([{ t: 'Valor líquido da venda', f: 'brl' }, { t: 'Rentabilidade líquida ao ano', f: 'texto', alinhar: 'dir' }]);
+        linhas = linhas.map(function (l, i) {
+          var r = AZ.antigo('tesouro-prefixado').calcular(Object.assign({}, v, { taxaVenda: tp.linhas[i][0] }), AZ);
+          return r.erro ? l.concat([null, '']) : l.concat([r.destaques[1].valor, r.tabelas[1].linhas[8][1]]);
+        });
+      }
+      return {
+        destaques: destaques,
+        resumo: '<p>Com ' + F.pl(d[1].valor, 'dia útil', 'dias úteis') + ' até o vencimento, se a taxa passar de ' + F.pct(tRef) + ' para ' + F.pct(tRef + 0.01) + ' ao ano, o preço cai cerca de <strong>' +
+          (sens ? sens[1] : '') + '</strong>. Taxa e preço andam em sentidos opostos, e quanto mais longe o vencimento, maior o efeito.</p>',
+        graficos: [Object.assign({}, P.graficos[0], { titulo: ant ? 'Preço na venda para cada taxa de juros' : 'Preço do título para cada taxa de juros' })],
+        tabelas: [{ titulo: ant ? 'Preço e resultado da venda para outras taxas' : 'Preço para diferentes taxas', csv: false, colunas: cols, linhas: linhas, destaque: tp.destaque,
+          nota: 'A linha destacada é a taxa informada. Todas as linhas usam a mesma data e comparam o preço de um título' + (ant ? '; o valor líquido já desconta imposto e custódia.' : ', antes de imposto e taxas.') }]
+      };
+    }
+
+    /* preço até o vencimento: a página do Tesouro Prefixado, com as duas tabelas reorganizadas (valor bruto ao líquido; prazo) */
+    var T = R.tabelas[0].linhas.concat(R.tabelas[1].linhas), dq = R.destaques, cols2 = R.tabelas[0].colunas;
+    var puC = dq[3].valor, qtd = (/^([\d.,]+ títulos?)/.exec(dq[3].nota || '') || [])[1] || '';
+    var dupla = function (nome, x) { return ant ? [nome, x, x] : [nome, x]; };
+    var tTaxa = F.pct(taxaC), out = { graficos: [Object.assign({}, R.graficos[0], { titulo: 'Preço do título até o vencimento' })] };
+    /* os dois avisos da página antiga (IOF e venda com prejuízo) viram o parágrafo da primeira tabela */
+    var nota1 = /prejuízo/.test(R.alerta || '') ? 'A venda sai por menos que o investido: não há imposto de renda sobre prejuízo, mas a custódia continua sendo cobrada.'
+      : /IOF/.test(R.alerta || '') ? 'Saídas em menos de 30 dias pagam IOF sobre o rendimento, além do imposto de renda.'
+        : 'O valor líquido já desconta o imposto de renda, pela tabela regressiva, e a custódia da B3, cobrada sobre o valor do título ao longo do tempo.';
+    out.tabelas = [
+      { titulo: ant ? 'Do valor bruto ao líquido: venda e vencimento' : 'Do valor bruto ao líquido', csv: false, colunas: cols2, destaque: 7, nota: nota1,
+        linhas: [dupla('Preço unitário na compra', F.brl(puC)), T[3], T[4], T[8], T[9], T[10], T[11], T[12], T[13], T[15]] },
+      { titulo: 'Prazo e rentabilidade', csv: false, colunas: cols2, nota: R.tabelas[0].nota,
+        linhas: [T[0], T[1], T[2], dupla('Títulos comprados', qtd), T[5], T[6], T[7], T[14]] }
+    ];
+    if (!ant) {
+      out.destaques = [dq[0], dq[1], dq[2], Object.assign({}, dq[3], { nota: 'compra de ' + qtd })];
+      out.resumo = '<p>Cada título comprado por ' + F.brl(puC) + ' paga R$ 1.000,00 em ' + F.data(v.venc) + '. Mantido até o vencimento, rende ' + tTaxa + ' ao ano antes dos custos e <strong>' +
+        dq[0].valor + '</strong> depois do imposto e da custódia, qualquer que seja a oscilação do preço no caminho.</p>';
+    } else {
+      var seria = /seria (.+)$/.exec(dq[0].nota || ''), bruta = T[6][1], lucro = dq[2].valor;
+      out.destaques = [Object.assign({}, dq[0], { nota: seria ? 'no vencimento seria ' + seria[1] : dq[0].nota }), dq[1], dq[2], dq[4]];
+      var efeito = v.taxaVenda < taxaC ? 'abaixo da compra, o título se valoriza e a rentabilidade bruta sobe de ' + tTaxa + ' para ' + bruta + ' ao ano'
+        : v.taxaVenda > taxaC ? 'acima da compra, o título se desvaloriza e a rentabilidade bruta cai de ' + tTaxa + ' para ' + bruta + ' ao ano'
+          : 'igual à da compra, a rentabilidade bruta fica nos ' + tTaxa + ' ao ano contratados';
+      out.resumo = '<p>Vendendo em ' + F.data(v.venda) + ' com a taxa em ' + F.pct(v.taxaVenda) + ' ao ano, ' + efeito + '. Depois de imposto e taxas, ' +
+        (lucro >= 0 ? 'o lucro é de <strong>' + F.brl(lucro) + '</strong>.' : 'há prejuízo de <strong>' + F.brl(-lucro) + '</strong>.') + '</p>';
+    }
+    return out;
+  },
+  casos: [
+    { nome: 'Vencimento, 13,75% ao ano', entradas: { compra: '2026-10-23', venc: '2029-01-01', taxa: 13.75 },
+      espera: { 'Rentabilidade líquida ao ano': '11,61% ao ano', 'Valor líquido no vencimento': 'R$ 12.687,00', 'Preço unitário na compra': 'R$ 756,43' } },
+    { nome: 'Venda antecipada com a taxa em queda', entradas: { compra: '2026-10-23', venc: '2029-01-01', taxa: 13.75, antecipada: true, venda: '2027-10-23', taxaVenda: 12.25 },
+      espera: { 'Rentabilidade líquida na venda antecipada': '12,61% ao ano', 'Valor líquido na venda': 'R$ 11.250,79', 'Preço unitário na venda': 'R$ 873,07' } },
+    { nome: 'Preço informado', entradas: { compra: '2026-10-23', venc: '2029-01-01', informar: 'preco', preco: 750 },
+      espera: { 'Rentabilidade líquida ao ano': '12,00% ao ano', 'Valor líquido no vencimento': 'R$ 12.783,11' } },
+    { nome: 'Preço para cada taxa', entradas: { compra: '2026-10-23', venc: '2029-01-01', taxa: 13.75, ver: 'taxas' },
+      espera: { 'Preço unitário na compra': 'R$ 756,43', 'Se a taxa subir para 14,75%': '-1,88%', 'Se a taxa cair para 12,75%': '1,93%', 'Dias úteis até o vencimento': '546' } }
+  ],
+  explicacao: [
+    '<p>O Tesouro Prefixado sem juros semestrais paga R$ 1.000,00 por título no vencimento. O preço de hoje é esse valor descontado pela taxa, pelos dias úteis até o vencimento: <code>preço = 1.000 ÷ (1 + taxa)^(dias úteis / 252)</code>, truncado nos centavos, como faz o Tesouro Direto.</p>',
+    '<h3>No vencimento ou vendendo antes</h3>',
+    '<p>Quem fica até o fim recebe a taxa contratada. Quem vende antes recebe o preço do dia, calculado com a taxa de mercado daquele momento: se ela caiu desde a compra, o título vale mais; se subiu, vale menos e pode haver perda. Como essa taxa não é conhecida de antemão, vale testar cenários. A pequena diferença entre as taxas de compra e de venda do mesmo dia não entra na conta.</p>',
+    '<h3>Preço para cada taxa</h3>',
+    '<p>Como a taxa está no denominador, preço e taxa andam em sentidos opostos, e o efeito cresce com o prazo. Uma aproximação é a duração modificada, <code>variação do preço ≈ − anos até o vencimento ÷ (1 + taxa) × variação da taxa</code>. A tabela usa a conta exata, sempre na mesma data.</p>',
+    '<h3>Custos e datas</h3>',
+    '<p>O imposto de renda segue a tabela regressiva (22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% depois), com IOF nos primeiros 30 dias. A custódia da B3, de 0,20% ao ano, é estimada sobre o valor do título ao longo do período. A data da compra é a de liquidação, o dia útil seguinte ao pedido.</p>'
+  ].join('\n')
+});
+</script>
+</body>
+</html>
