@@ -438,15 +438,15 @@ def projetar(rj, rc, xh: pd.Series, mes_hoje: pd.Period, data_hoje: str, focS: D
     g = s_d.groupby(s_d.index.to_period("M"))
     S, cobre = g.mean(), g.size()
     meses = [p for p in S.index if p == mes_hoje or cobre[p] >= 20]
-    anos = sorted(a for a in (focS[max(focS)] if focS else {}) if pd.Timestamp(year=a, month=12, day=31) > fim)
 
     def selic_mes(p: pd.Period) -> float:
         if p in S.index and (p == mes_hoje or cobre[p] >= 20):
             return float(S[p])
-        # além do fim da curva (só a direção esperada de 12 meses usa): Focus anual, como no histórico
-        xs = [fim.value] + [pd.Timestamp(year=a, month=12, day=31).value for a in anos]
-        ys = [float(s_d.iloc[-1])] + [focS[max(focS)][a] for a in anos]
-        return float(np.interp((p.to_timestamp(how="start") + pd.Timedelta(days=14)).value, xs, ys))
+        # Além do fim da curva (só a direção esperada de 12 meses usa): a Selic fica no último degrau.
+        # Até 26/10/2026 emendava no Focus anual; depois da eleição a curva precificou alta até 15% com o
+        # Focus ainda em corte para ~12%, e a emenda virava uma "queda esperada" de vários pontos que
+        # levava o P/L projetado de 10x para 16,8x. Parar no último degrau segue só o mercado.
+        return float(s_d.iloc[-1])
 
     if fed:
         f_d = diaria(fed["degraus"], max(fim, max(d for d, _ in fed["degraus"])))
@@ -477,7 +477,8 @@ def projetar(rj, rc, xh: pd.Series, mes_hoje: pd.Period, data_hoje: str, focS: D
         "fed": {k: fed[k] for k in ("origem", "ref")} if fed else None,
         "premissas": "Selic e Fed Funds seguem as implícitas do dia (média de cada mês); Selic real e Fed Funds "
                      "real descontam a inflação esperada de hoje; a mudança esperada da Selic vem da própria "
-                     "trajetória (Focus depois do fim da curva); juros longos, juro americano de 10 anos e sua "
+                     "trajetória (depois do fim da curva, a Selic fica no último degrau); juros longos, juro "
+                     "americano de 10 anos e sua "
                      "tendência e cupom cambial ficam no nível de hoje.",
     }
 
