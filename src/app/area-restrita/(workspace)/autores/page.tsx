@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
+import { invalidarConteudoPublico } from "@/lib/cache-conteudo";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -50,6 +51,7 @@ async function createAuthorAction(formData: FormData) {
     },
   });
 
+  invalidarConteudoPublico();
   revalidatePath("/area-restrita/autores");
   revalidatePath("/nosso-time");
 }
@@ -64,6 +66,7 @@ async function deleteAuthorAction(formData: FormData) {
   await prisma.post.updateMany({ where: { authorId: id }, data: { authorId: null } });
   await prisma.author.delete({ where: { id } });
 
+  invalidarConteudoPublico();
   revalidatePath("/area-restrita/autores");
   revalidatePath("/nosso-time");
 }

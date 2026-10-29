@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { invalidarConteudoPublico } from "@/lib/cache-conteudo";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -96,6 +97,7 @@ export async function updateOwnProfileAction(formData: FormData) {
     entityId: updated.id,
   });
 
+  invalidarConteudoPublico();
   revalidatePath("/area-restrita/perfil");
   revalidatePath("/nosso-time");
   revalidatePath(`/nosso-time/${updated.slug}`);

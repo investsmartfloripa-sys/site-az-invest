@@ -5,8 +5,8 @@ import { CommunityCallout } from "@/components/home/CommunityCallout";
 import { VideosSection } from "@/components/home/VideosSection";
 import { PeriodicosBlock } from "@/components/conteudo/PeriodicosBlock";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { findPosts, mapPost } from "@/lib/posts";
-import { artigosWhere } from "@/lib/workspace/posts";
+import type { PostCardData } from "@/components/common/PostCard";
+import { artigosRecentes } from "@/lib/cache-conteudo";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -15,8 +15,8 @@ import { getSiteUrl } from "@/lib/site-url";
 // QUALQUER das duas com hiccup assava a home degradada (Artigos vazio / vídeos
 // de exemplo) no cache estático e a servia a TODOS por minutos. Renderizando por
 // request, uma falha transitória afeta só aquele acesso e o próximo já se corrige
-// — como as páginas do admin, que batem no banco a cada request e nunca quebram.
-// Os dados pesados (blobs do painel) seguem cacheados na própria camada de fetch.
+// Os artigos não vão ao banco a cada request: vêm de lib/cache-conteudo, que guarda
+// a última lista boa e só consulta o Neon quando ela vence ou alguém publica.
 export const dynamic = "force-dynamic";
 
 export const metadata = {
@@ -34,26 +34,17 @@ export const metadata = {
 };
 
 export default async function Home() {
-  // Guard para o prerender de build: se o banco estiver indisponível a home
-  // degrada para listas vazias em vez de derrubar o build (ISR refaz depois).
-  let mapped: ReturnType<typeof mapPost>[] = [];
-  // Duas tentativas: no build/ISR o Neon às vezes recusa a 1ª conexão (cold start
-  // ou pool saturado), e o catch silencioso assava a home VAZIA ("Nenhuma postagem
-  // publicada ainda") com posts no ar, até o próximo ISR. O retry curto cobre isso.
+  // Só artigos editoriais, pela data de PUBLICAÇÃO (publicar um rascunho antigo o
+  // traz ao topo); boletins têm seção própria (Periódicos). Lista vazia só se o
+  // banco falhar sem nenhuma versão em cache — afeta aquele acesso, nada é assado.
+  let mapped: PostCardData[] = [];
+  // Duas tentativas: o Neon às vezes recusa a 1ª conexão (cold start ou pool saturado).
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
     try {
-      const posts = await findPosts({
-        // Só artigos editoriais: os boletins do Publisher têm seção própria (Periódicos).
-        where: artigosWhere,
-        // Ordena pela data de PUBLICAÇÃO (posts antigos sem publishedAt caem para o fim
-        // do critério e o desempate é a criação) — publicar um rascunho antigo o traz ao topo.
-        orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
-        take: 4,
-      });
-      mapped = posts.map(mapPost);
+      mapped = await artigosRecentes(4);
       break;
     } catch (err) {
-      console.error(`[Home] findPosts falhou (tentativa ${tentativa}/2)`, err);
+      console.error(`[Home] artigosRecentes falhou (tentativa ${tentativa}/2)`, err);
     }
   }
 

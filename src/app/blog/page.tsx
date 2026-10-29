@@ -3,10 +3,9 @@ import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { PostCard } from "@/components/common/PostCard";
 import { CommunityCallout } from "@/components/home/CommunityCallout";
+import type { PostCardData } from "@/components/common/PostCard";
 import { formatPostCategoryLabel, getPostCategoryFilterChipClasses } from "@/data/blog-categories";
-import { prisma } from "@/lib/prisma";
-import { findPosts, mapPost } from "@/lib/posts";
-import { artigosWhere } from "@/lib/workspace/posts";
+import { artigosRecentes } from "@/lib/cache-conteudo";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 export const dynamic = "force-dynamic";
@@ -35,34 +34,18 @@ export default async function BlogIndexPage({
   const { categoria } = await searchParams;
   const filter = categoria?.trim();
 
-  // Banco indisponível (ou .env sem DATABASE_URL) degrada para lista vazia.
-  // Seguro porque a rota é dinâmica: nada é assado no cache (ver /nosso-time).
-  // Sem o catch, o loading.tsx já teria mandado HTTP 200 e o visitante veria
-  // a tela de erro no lugar da lista.
-  let mapped: ReturnType<typeof mapPost>[] = [];
-  let categories: string[] = [];
+  // A lista inteira de artigos (sem boletins) vem do cache e o filtro é aplicado
+  // aqui: um ?categoria= qualquer não vira consulta nova ao banco. Lista vazia só
+  // se o banco falhar sem versão em cache — afeta aquele acesso. Sem o catch, o
+  // loading.tsx já teria mandado HTTP 200 e o visitante veria a tela de erro.
+  let todos: PostCardData[] = [];
   try {
-    // Só artigos: `artigosWhere` exclui os boletins do Publisher. O filtro entra
-    // por AND para que ?categoria= nunca reabra a porta para a categoria deles.
-    const [posts, categoriesRaw] = await Promise.all([
-      findPosts({
-        where: {
-          AND: [artigosWhere, ...(filter ? [{ category: { equals: filter } }] : [])],
-        },
-        orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
-      }),
-      prisma.post.findMany({
-        where: artigosWhere,
-        select: { category: true },
-        distinct: ["category"],
-        orderBy: { category: "asc" },
-      }),
-    ]);
-    mapped = posts.map(mapPost);
-    categories = categoriesRaw.map((c) => c.category);
+    todos = await artigosRecentes();
   } catch (err) {
     console.error("[Blog] consulta de artigos falhou; seguindo sem artigos", err);
   }
+  const categories = [...new Set(todos.map((p) => p.category))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const mapped = filter ? todos.filter((p) => p.category === filter) : todos;
 
   return (
     <div className="min-h-screen text-[#132960]">

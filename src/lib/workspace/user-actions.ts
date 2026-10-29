@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { invalidarConteudoPublico } from "@/lib/cache-conteudo";
 import { redirect } from "next/navigation";
 import type { UserRole } from "@prisma/client";
 import { requireSession, isAdmin } from "@/lib/auth";
@@ -88,6 +89,7 @@ export async function createUserAction(formData: FormData) {
     meta: { email, role: finalRole },
   });
 
+  invalidarConteudoPublico();
   revalidatePath("/area-restrita/usuarios");
 }
 

@@ -55,6 +55,11 @@ export async function POST(request: Request) {
     if (typeof path !== "string" || !path.startsWith("/") || path.length > MAX_PATH_LENGTH) {
       return NextResponse.json({ ok: false }, { status: 400 });
     }
+    // Páginas internas de render dos gráficos (pipeline headless) não são visitas.
+    // O beacon já as ignora; isto cobre abas com a versão antiga do JS em cache.
+    if (path.startsWith("/render/")) {
+      return new NextResponse(null, { status: 204 });
+    }
 
     let postId = Number.isInteger(body.postId) ? (body.postId as number) : undefined;
     let authorId = Number.isInteger(body.authorId) ? (body.authorId as number) : undefined;

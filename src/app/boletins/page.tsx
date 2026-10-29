@@ -3,15 +3,15 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { PostCard } from "@/components/common/PostCard";
+import type { PostCardData } from "@/components/common/PostCard";
 import { BOLETIM_BASE_PATH, BOLETIM_SECTION_LABEL } from "@/data/blog-categories";
-import { findPosts, mapPost } from "@/lib/posts";
+import { boletinsRecentes } from "@/lib/cache-conteudo";
 import { INDICADOR_LABEL, type ChartIndicador } from "@/lib/publisher/chart-catalog";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
-import { boletinsWhere } from "@/lib/workspace/posts";
 
-// Lista de boletins: lê o banco a cada request (como /blog), sem ISR. Por ser
-// dinâmica, degradar para lista vazia quando o banco falha afeta só aquele
-// acesso — nada é assado no cache (ver /nosso-time).
+// Lista de boletins: renderiza a cada request (como /blog), sem ISR, com os dados
+// do cache de lib/cache-conteudo. Degradar para lista vazia quando o banco falha
+// sem versão em cache afeta só aquele acesso — nada é assado (ver /nosso-time).
 export const dynamic = "force-dynamic";
 
 const DESCRIPTION =
@@ -50,20 +50,15 @@ export default async function BoletinsIndexPage({
   const { ind } = await searchParams;
   const filtro = parseIndicador(ind?.trim());
 
-  // Banco indisponível (ou .env sem DATABASE_URL) degrada para lista vazia.
-  let mapped: ReturnType<typeof mapPost>[] = [];
+  // Banco indisponível sem versão em cache (ou .env sem DATABASE_URL) degrada para
+  // lista vazia. O filtro por indicador é pelo prefixo do slug, aplicado aqui.
+  let todos: PostCardData[] = [];
   try {
-    const posts = await findPosts({
-      where: {
-        ...boletinsWhere,
-        ...(filtro ? { slug: { startsWith: `${filtro}-` } } : {}),
-      },
-      orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
-    });
-    mapped = posts.map(mapPost);
+    todos = await boletinsRecentes();
   } catch (err) {
-    console.error("[Boletins] findPosts falhou; seguindo sem boletins", err);
+    console.error("[Boletins] boletinsRecentes falhou; seguindo sem boletins", err);
   }
+  const mapped = filtro ? todos.filter((p) => p.slug.startsWith(`${filtro}-`)) : todos;
 
   return (
     <div className="min-h-screen text-[#132960]">

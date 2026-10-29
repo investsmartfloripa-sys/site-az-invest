@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { invalidarConteudoPublico } from "@/lib/cache-conteudo";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -158,6 +159,7 @@ export async function savePostDraftAction(formData: FormData) {
     redirect(`/area-restrita/conteudo/${created.id}`);
   }
 
+  invalidarConteudoPublico();
   revalidatePath("/area-restrita/conteudo");
   revalidatePath("/blog");
   revalidatePath(BOLETIM_BASE_PATH);
@@ -254,6 +256,7 @@ export async function submitPostForReviewAction(formData: FormData) {
     authorName: post.authorName,
   });
 
+  invalidarConteudoPublico();
   revalidatePath("/area-restrita/revisao");
   revalidatePath("/area-restrita/conteudo");
   redirect("/area-restrita/conteudo?submitted=1");
@@ -286,6 +289,7 @@ export async function publishPostDirectAction(formData: FormData) {
     entityId: id,
   });
 
+  invalidarConteudoPublico();
   revalidatePath("/");
   revalidatePath("/blog");
   revalidatePath(BOLETIM_BASE_PATH);
@@ -309,6 +313,7 @@ export async function deletePostAction(formData: FormData) {
     entityId: id,
   });
 
+  invalidarConteudoPublico();
   revalidatePath("/");
   revalidatePath("/blog");
   revalidatePath(BOLETIM_BASE_PATH);

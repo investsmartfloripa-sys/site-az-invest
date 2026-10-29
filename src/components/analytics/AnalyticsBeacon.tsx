@@ -11,6 +11,8 @@ import { usePathname } from "next/navigation";
  * apenas do mount. Regras:
  *
  * - Ignora a área logada (/area-restrita, /admin) — não polui as métricas.
+ * - Ignora /render/*: páginas internas que o pipeline abre em navegador headless
+ *   para gerar as imagens dos gráficos. Eram metade dos "page_view" gravados.
  * - Dedupe: nunca dispara duas vezes para o MESMO pathname consecutivo
  *   (cobre StrictMode em dev e re-renders com a mesma rota).
  * - `document.referrer` só é enviado no PRIMEIRO hit da sessão de navegação:
@@ -29,7 +31,11 @@ export function AnalyticsBeacon() {
     const isFirstHit = lastPathRef.current === null;
     lastPathRef.current = pathname;
 
-    if (pathname.startsWith("/area-restrita") || pathname.startsWith("/admin")) {
+    if (
+      pathname.startsWith("/area-restrita") ||
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/render/")
+    ) {
       return;
     }
 

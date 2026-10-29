@@ -5,8 +5,7 @@ import { Header } from "@/components/common/Header";
 import { PostCard } from "@/components/common/PostCard";
 import { PeriodicosBlock } from "@/components/conteudo/PeriodicosBlock";
 import { YoutubeVideoCard } from "@/components/videos/YoutubeVideoCard";
-import { findPosts, mapPost } from "@/lib/posts";
-import { artigosWhere } from "@/lib/workspace/posts";
+import { artigosPorCriacao } from "@/lib/cache-conteudo";
 import {
   fetchChannelVideos,
   fetchPlaylistVideos,
@@ -47,23 +46,17 @@ export default async function ConteudoHub({ searchParams }: ConteudoProps) {
   const activePlaylist = findPlaylistBySlug(vp);
   const activeType = vt === "shorts" || vt === "long" ? vt : undefined;
 
-  const [posts, videoResult] = await Promise.all([
-    findPosts({
-      // Só artigos editoriais: os boletins do Publisher ficam no bloco Periódicos.
-      where: artigosWhere,
-      orderBy: { createdAt: "desc" },
-      take: 3,
-    }).catch((err) => {
-      // Banco indisponível degrada só a seção de artigos; vídeos e periódicos
-      // seguem. Seguro porque a rota é dinâmica (nada é assado no cache).
-      console.error("[Conteudo] findPosts falhou; seguindo sem artigos", err);
+  const [mappedPosts, videoResult] = await Promise.all([
+    // Só artigos editoriais (os boletins ficam no bloco Periódicos), do cache de
+    // lib/cache-conteudo. Banco fora e sem versão em cache degrada só esta seção.
+    artigosPorCriacao(3).catch((err) => {
+      console.error("[Conteudo] artigosPorCriacao falhou; seguindo sem artigos", err);
       return [];
     }),
     activePlaylist
       ? fetchPlaylistVideos(activePlaylist.playlistId, 50)
       : fetchChannelVideos(30),
   ]);
-  const mappedPosts = posts.map(mapPost);
 
   let vids: YoutubeVideo[] = videoResult.videos;
   if (activeType === "shorts") vids = vids.filter(isShort);

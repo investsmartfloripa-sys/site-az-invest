@@ -8,16 +8,16 @@ import {
   LinkedinIcon,
   WhatsappIcon,
 } from "@/components/common/SocialIcons";
-import { prisma } from "@/lib/prisma";
+import { autoresDoTime, type AutorDoTime } from "@/lib/cache-conteudo";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 import { normalizeProfileUrl, whatsappLink } from "@/lib/social-links";
 
-// DINÂMICA (não ISR): a lista de autores vem do banco e o render tem um
-// estado degradado ("Nenhum autor cadastrado") quando a query falha/volta
-// vazia. Sob ISR, uma regeneração que pegasse o banco com hiccup assava essa
-// lista vazia no cache estático e a servia a todos por até 1h — mesmo com os
-// autores no banco. Renderizando por request (query barata), uma falha
-// transitória afeta só aquele acesso e o próximo já se corrige.
+// DINÂMICA (não ISR): o render tem um estado degradado ("Nenhum autor
+// cadastrado") quando a lista volta vazia. Sob ISR, uma regeneração que pegasse
+// o banco com hiccup assava essa lista vazia no cache estático e a servia a
+// todos por até 1h. Renderizando por request, uma falha afeta só aquele acesso.
+// A lista vem do cache de lib/cache-conteudo, que guarda a última versão boa —
+// o banco não é consultado a cada visita.
 export const dynamic = "force-dynamic";
 
 export const metadata = {
@@ -35,24 +35,15 @@ function initials(name: string) {
     .join("");
 }
 
-type AuthorWithCount = Awaited<ReturnType<typeof findAuthors>>[number];
-
-function findAuthors() {
-  return prisma.author.findMany({
-    orderBy: { createdAt: "asc" },
-    include: { _count: { select: { posts: { where: { status: "APPROVED", published: true } } } } },
-  });
-}
-
 // Ordem alfabética resolvida aqui, não no banco: a collation do Postgres pode
 // jogar acento e caixa para fora da ordem que um leitor em pt-BR espera.
 const porNome = new Intl.Collator("pt-BR", { sensitivity: "base" });
 
 export default async function NossoTimePage() {
-  // Guard para o prerender de build: banco indisponível degrada para lista vazia.
-  let authors: AuthorWithCount[] = [];
+  // Banco indisponível sem versão em cache degrada para lista vazia.
+  let authors: AutorDoTime[] = [];
   try {
-    authors = (await findAuthors()).sort((a, b) => porNome.compare(a.name, b.name));
+    authors = (await autoresDoTime()).sort((a, b) => porNome.compare(a.name, b.name));
   } catch (err) {
     console.error("[NossoTime] findMany falhou; seguindo sem autores", err);
   }
@@ -140,8 +131,8 @@ export default async function NossoTimePage() {
                         </p>
                       ) : null}
                       <p className="mt-2 text-[11px] text-zinc-500">
-                        {author._count.posts}{" "}
-                        {author._count.posts === 1 ? "post publicado" : "posts publicados"}
+                        {author.postsPublicados}{" "}
+                        {author.postsPublicados === 1 ? "post publicado" : "posts publicados"}
                       </p>
                     </Link>
 

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { invalidarConteudoPublico } from "@/lib/cache-conteudo";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -49,6 +50,7 @@ export async function approvePostAction(formData: FormData) {
     });
   }
 
+  invalidarConteudoPublico();
   revalidatePath("/");
   revalidatePath("/blog");
   revalidatePath("/area-restrita/revisao");
@@ -97,6 +99,7 @@ export async function rejectPostAction(formData: FormData) {
     });
   }
 
+  invalidarConteudoPublico();
   revalidatePath("/area-restrita/revisao");
   revalidatePath("/area-restrita/conteudo");
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
+import { invalidarConteudoPublico } from "@/lib/cache-conteudo";
 import { notFound, redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -100,6 +101,7 @@ async function updateAuthorAction(formData: FormData) {
     },
   });
 
+  invalidarConteudoPublico();
   revalidatePath("/area-restrita/autores");
   revalidatePath(`/area-restrita/autores/${updated.id}`);
   revalidatePath("/nosso-time");

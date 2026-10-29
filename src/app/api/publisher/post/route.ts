@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 
 import { revalidatePath } from "next/cache";
+import { invalidarConteudoPublico } from "@/lib/cache-conteudo";
 import { NextResponse } from "next/server";
 
 import { BOLETIM_BASE_PATH, BOLETIM_CATEGORY } from "@/data/blog-categories";
@@ -134,6 +135,7 @@ export async function POST(req: Request) {
       entityId: updated.id,
       meta: { source: "publisher", authorSlug, category, ...(body.meta ?? {}) },
     });
+    invalidarConteudoPublico();
     revalidatePath("/");
     revalidatePath(BOLETIM_BASE_PATH);
     revalidatePath(postPath(updated));
@@ -175,6 +177,7 @@ export async function POST(req: Request) {
     meta: { source: "publisher", authorSlug, category, ...(body.meta ?? {}) },
   });
 
+  invalidarConteudoPublico();
   revalidatePath("/");
   revalidatePath(BOLETIM_BASE_PATH);
   revalidatePath(postPath(created));

@@ -15,6 +15,16 @@ Coisas que já quebraram o site ou fizeram alguém perder horas, e que **não ap
 - Migration nova: SQL escrito à mão em `prisma/migrations/`, aplicado com `npx prisma migrate deploy`, **antes** do push do código que depende dela.
 - Validar área logada localmente: prefira ações de leitura. Se precisar escrever, marque como `TESTE-AUTOMATIZADO — pode apagar` e apague depois.
 
+### O banco tem cota de uso: não o acorde à toa
+
+O Neon cobra (e limita) por **horas com o banco ligado**, e ele só desliga depois de 5 minutos sem nenhuma consulta. Em 27/10/2026 a cota do plano gratuito estourou e o site ficou dois dias sem artigos, sem time e sem login. Desde 29/10 o plano é o Build (250 horas/mês). Os alertas do Neon chegam no Gmail do escritório. O que mantinha o banco acordado, e como ficou:
+
+- **Páginas públicas que renderizam a cada visita** (home, `/blog`, `/conteudo`, `/boletins`, `/nosso-time`, bloco Periódicos) leem artigos, boletins e autores de `src/lib/cache-conteudo.ts`, nunca do Prisma direto. O cache guarda a última lista boa por até 6 horas, sobrevive a deploys e, se o banco falhar quando vence, continua servindo a versão anterior. Testado: com o banco inalcançável, as cinco páginas saem completas.
+- **Toda gravação em `Post` ou `Author`** (criar, editar, publicar, despublicar, apagar) chama `invalidarConteudoPublico()` junto dos `revalidatePath`. Sem isso, a mudança só aparece quando o cache vence, em até 6 horas. Hoje são 11 chamadas: ações de post, revisão, autores, perfil, criação de usuário e a rota do Publisher. **Ação nova que grava `Post` ou `Author` precisa chamar também.**
+- **Lista pública nova:** acrescente a consulta em `cache-conteudo.ts` com as mesmas `OPCOES`, em vez de consultar o banco na página. Só valores serializáveis em JSON (datas já como string).
+- **Rotina de saúde dos dados** (`/api/cron/data-health`, `vercel.json`): roda a cada 6 horas. A cada 30 minutos, ela sozinha mantinha o banco ligado ~123 horas por mês. Para ver a situação na hora, use "Atualizar agora" em `/area-restrita/dados`.
+- **Métricas de visita**: o beacon ignora `/render/*`, as páginas internas que o pipeline abre em navegador headless para gerar imagens de gráfico. Elas eram 48% dos `page_view` gravados.
+
 ## 2. Deploy
 
 O básico está no `AGENTS.md` §2 (publicar é `git push`, nunca `vercel --prod`). O que mais morde:

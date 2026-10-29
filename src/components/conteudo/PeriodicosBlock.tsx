@@ -6,9 +6,8 @@ import { BOLETIM_BASE_PATH, BOLETIM_KICKER, BOLETIM_SECTION_LABEL } from "@/data
 import { listBriefings, type Briefing } from "@/lib/cafe-com-mercado";
 import { listDossies, type Dossie } from "@/lib/dossies";
 import { periodoLegivel } from "@/lib/periodicos-releases";
-import { findPosts, mapPost } from "@/lib/posts";
+import { boletinsComData } from "@/lib/cache-conteudo";
 import { INDICADOR_LABEL, PAINEL_PATH, type ChartIndicador } from "@/lib/publisher/chart-catalog";
-import { boletinsWhere } from "@/lib/workspace/posts";
 
 /**
  * Bloco "Periódicos" — os formatos recorrentes da casa, um grupo por formato,
@@ -298,26 +297,17 @@ function Grupo({
 
 export async function PeriodicosBlock({ variant }: { variant: "home" | "hub" }) {
   const home = variant === "home";
-  const [cafes, mensais, semanais, posts] = await Promise.all([
+  // Boletins vêm do cache de lib/cache-conteudo (não vão ao banco a cada visita).
+  // O card usa a data formatada; a ISO fica só para ordenar na home.
+  const [cafes, mensais, semanais, boletins] = await Promise.all([
     seguro("listBriefings", () => listBriefings(home ? 1 : 3)),
     seguro("listDossies(mensal)", () => listDossies("mensal", home ? 1 : 2)),
     seguro("listDossies(semanal)", () => listDossies("semanal", home ? 1 : 2)),
-    seguro("findPosts(boletins)", () =>
-      findPosts({
-        where: boletinsWhere,
-        orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
-        take: home ? 2 : 4,
-      }),
-    ),
+    seguro("boletinsComData", () => boletinsComData(home ? 2 : 4)),
   ]);
 
   // Dossiês juntos: mensal em cima, semanal embaixo.
   const dossies: Dossie[] = [...mensais, ...semanais];
-  // O card usa a data formatada; a ISO fica só para ordenar na home.
-  const boletins = posts.map((p) => ({
-    card: mapPost(p),
-    publishedAt: (p.publishedAt ?? p.createdAt).toISOString(),
-  }));
 
   if (cafes.length === 0 && dossies.length === 0 && boletins.length === 0) {
     return null;

@@ -4,7 +4,7 @@
   "crons": [
     {
       "path": "/api/cron/data-health",
-      "schedule": "*/30 * * * *"
+      "schedule": "17 */6 * * *"
     },
     {
       "path": "/api/cron/dispatch-pipelines",
