@@ -761,6 +761,27 @@
     });
     if (AZ.site.login) { var lg = el('a', 'az-login', AZ.site.login[0]); lg.href = urlSite(AZ.site.login[1]); nav.appendChild(lg); }
     var logo = document.querySelector('.az-topo .az-logo'); if (logo) { logo.href = urlSite('/'); logo.setAttribute('aria-label', 'AZ Invest: página inicial'); }
+    montarPainel(nav);
+  }
+  /* celular e tablet (< 1024 px): como no site (MobileMenu de NavLinks.tsx), só Login + botão de menu; o painel abre
+     por cima do conteúdo, com os mesmos itens do site e "Simuladores" marcado */
+  var HAMB = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>',
+    FECHAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>';
+  function montarPainel(nav) {
+    var topo = nav.closest('.az-topo'); if (!topo || topo.querySelector('.az-painel')) return;
+    var bt = el('button', 'az-hamb'), painel = el('div', 'az-painel'), ul = el('ul');
+    bt.type = 'button'; bt.setAttribute('aria-controls', 'menu-principal');
+    painel.id = 'menu-principal'; painel.setAttribute('role', 'navigation'); painel.setAttribute('aria-label', 'Navegação principal');
+    function abrir(v) { painel.hidden = !v; bt.setAttribute('aria-expanded', String(v)); bt.setAttribute('aria-label', v ? 'Fechar menu' : 'Abrir menu'); bt.innerHTML = v ? FECHAR : HAMB; }
+    AZ.site.nav.forEach(function (it) {
+      var sim = it[0] === '__simuladores__', li = el('li'), a = el('a', null, sim ? 'Simuladores' : it[0]);
+      a.href = sim ? 'index.html' : urlSite(it[1]); if (sim) a.setAttribute('aria-current', 'page');
+      a.addEventListener('click', function () { abrir(false); }); li.appendChild(a); ul.appendChild(li);
+    });
+    painel.appendChild(ul);
+    bt.addEventListener('click', function () { abrir(painel.hidden); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !painel.hidden) { abrir(false); bt.focus(); } });
+    nav.appendChild(bt); topo.appendChild(painel); abrir(false);
   }
   /* trilha: "← Todos os simuladores" + pílula da categoria */
   function montarTrilha() {

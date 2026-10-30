@@ -64,15 +64,22 @@ h1,h2,h3{font-family:var(--texto);font-weight:700;line-height:1.25;margin:0;text
 .az-outros{scroll-margin-top:100px}
 .az-topo nav .az-menu li a:hover{background:var(--sup2);color:var(--azul)}
 .az-topo nav .az-menu li a[aria-current]{background:#EEF5FF;border-bottom-color:transparent}
-.az-topo .az-hamb{display:none}
+/* celular e tablet (< 1024 px): Login + botão de menu e painel por cima do conteúdo, iguais ao MobileMenu do site
+   (NavLinks.tsx); o menu suspenso "Simuladores" fica só no computador */
+.az-hamb,.az-painel{display:none}
 @media (max-width:1023px){
-  .az-topo nav a:not(.az-login){display:none}
-  .az-topo nav .az-menu{display:block}
-  .az-topo nav .az-menu>summary{display:flex}
-  .az-menu ul{left:auto;right:0;transform:none}
-  .az-menu ul::before{left:auto;right:28px;transform:rotate(45deg)}
+  .az-topo nav a:not(.az-login),.az-topo nav .az-menu{display:none}
+  .az-topo nav{gap:12px}
+  .az-topo nav .az-login{margin-left:0}
+  .az-topo .az-hamb{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;margin-right:-8px;padding:0;border:0;border-radius:6px;background:none;cursor:pointer;color:#ffffffd9;color:color-mix(in oklab,#fff 85%,transparent);transition:color .15s}
+  .az-topo .az-hamb:hover{color:#fff}
+  .az-hamb svg{width:24px;height:24px;display:block}
+  .az-painel:not([hidden]){display:block;position:absolute;left:0;right:0;top:100%;max-height:calc(100vh - 80px);max-height:calc(100dvh - 80px);overflow-y:auto;border-top:1px solid #ffffff1a;border-top-color:color-mix(in oklab,#fff 10%,transparent);background:var(--marinho);box-shadow:0 12px 24px rgba(19,41,96,.35)}
+  .az-painel ul{max-width:1280px;margin:0 auto;padding:12px 32px;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:14px;line-height:20px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+  .az-painel a{display:block;border-radius:6px;padding:10px 12px;text-decoration:none;color:#fffc;color:color-mix(in oklab,#fff 80%,transparent);transition:color .15s,background-color .15s}
+  .az-painel a:hover{color:#fff;background:#ffffff0d;background:color-mix(in oklab,#fff 5%,transparent)}
+  .az-painel a[aria-current]{color:#fff;background:#ffffff1a;background:color-mix(in oklab,#fff 10%,transparent);box-shadow:inset 2px 0 0 var(--azul)}
 }
-@media (max-width:520px){.az-menu ul{position:fixed;left:12px;right:12px;top:84px;max-width:none;min-width:0;max-height:calc(100vh - 100px);overflow:auto}.az-menu ul::before{display:none}}
 
 /* ───── cabeçalho da página ───── */
 .az-hero{background:transparent;color:var(--tinta);padding:26px 0 14px;position:relative}
@@ -405,31 +412,21 @@ table.az-tab{border-collapse:collapse;width:100%;font-size:18px;font-variant-num
 }
 @media (max-width:767px){
   .az-larg{padding:0 16px}
-  .az-topo .az-larg{padding:16px}
+  .az-topo .az-larg{padding:16px;gap:12px}
   .az-topo .az-logo img{height:48px}
+  .az-topo nav{gap:8px}
   .az-topo nav .az-login{padding:10px 20px;font-size:14px;line-height:20px}
+  .az-painel ul{padding:12px 16px}
 }
 @media (max-width:520px){
   .az-campo{flex-basis:100%}
   .az-lista-linha .az-x{position:absolute;top:2px;right:2px}
   .az-lista-linha{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
   .az-lista-linha>div:first-child{grid-column:1/-1}
-  .az-topo .az-larg{gap:12px}
-  .az-topo nav{gap:14px}
-  .az-topo nav .az-login{padding:10px 16px;margin-left:0}
   .az-graf svg{font-size:12px}
 }
-@media (max-width:389px){
-  .az-topo .az-logo img{height:40px}
-}
-@media (max-width:345px){
-  .az-topo .az-logo img{height:32px}
-  .az-topo nav{gap:10px}
-  .az-topo nav .az-menu>summary{letter-spacing:0}
-  .az-topo nav .az-login{padding:8px 12px}
-}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-@media print{.az-rolo.az-longa{max-height:none}.az-topo nav,.az-acoes,.az-rel,.az-cta,.az-tab-rod{display:none}.az-topo{position:static}.az-app{margin-top:0}.az-rolo{max-height:none}}
+@media print{.az-rolo.az-longa{max-height:none}.az-topo nav,.az-painel,.az-acoes,.az-rel,.az-cta,.az-tab-rod{display:none}.az-topo{position:static}.az-app{margin-top:0}.az-rolo{max-height:none}}
 [hidden]{display:none!important}
 
 /* índice: ao abrir "Outros simuladores", os principais saem de cena (voltam ao fechar ou ao buscar) */
