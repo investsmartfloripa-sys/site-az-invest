@@ -35,6 +35,8 @@ import type { AcoesValuationData, IbovPlModeloData, IbovPlModeloRow } from "@/li
 
 /** Duas visões no mesmo card, alternadas por botão (dono, 08/10/2026): valor em pontos ou P/L. */
 type Vista = "valor" | "pl";
+/** Média e ±1 desvio do histórico do P/L (visão P/L): cinza, para não confundir com a faixa azul do modelo. */
+const COR_HIST = "#64748B";
 
 const pts = (v: number | null | undefined) => (v != null && Number.isFinite(v) ? fmtNum(v, 0) : "—");
 const vezes = (v: number | null | undefined) => (v != null && Number.isFinite(v) ? `${fmtNum(v, 1)}x` : "—");
@@ -305,6 +307,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
   const [win, setWin] = useState<AzPeriodValue>({ id: "max" }); // abre sempre no histórico inteiro
   const [vista, setVista] = useState<Vista>("valor");
   const h = m.hoje;
+  const st = m.pl_stats;
   const pj = m.projecao;
   const pFim = pj?.pontos[pj.pontos.length - 1];
   const p0 = pj?.pontos[0];
@@ -396,13 +399,14 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
       const pl = vis
         .flatMap((r) => [r.pl, r.fit_completo, r.fit_juros, r.proj_pl ?? null, r.proj_pl_juros ?? null])
         .filter(finito);
+      if (st) pl.push(st.minus1, st.plus1);
       return escala(pl, PASSOS_PL);
     }
     const ind = vis
       .flatMap((r) => [r.ibov, r.pts_completo, r.proj_pts ?? null, r.faixa?.[0] ?? null, r.faixa?.[1] ?? null])
       .filter(finito);
     return escala(ind, PASSOS_PONTOS);
-  }, [vis, vista]);
+  }, [vis, vista, st]);
 
   // No fim da projeção (a do simulador), escrito à direita do gráfico na altura em que a linha termina:
   // quanto o Ibovespa varia (visão valor) ou onde fica o P/L (visão P/L).
@@ -449,7 +453,8 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
               a sua tendência, a Fed Funds real e o cupom cambial (R² {fmtNum(m.modelos.completo.r2, 2)},{" "}
               {fmtMesCurto(m.amostra.inicio)}–{fmtMesCurto(m.amostra.fim)}, {m.amostra.n} meses). &quot;Só
               juros&quot; (na visão P/L) usa apenas as três taxas brasileiras. A faixa é ±1 desvio do modelo. O botão acima do
-              gráfico alterna entre o índice em pontos e o P/L.
+              gráfico alterna entre o índice em pontos e o P/L; na visão P/L, a faixa cinza horizontal vai de 1 desvio
+              abaixo a 1 desvio acima da média do P/L desde {fmtMesCurto(m.pl_stats.inicio)}.
               <br />
               <br />
               <strong>Projeção.</strong> A Selic implícita e a Fed implícita do dia, as mesmas do Panorama, fazem o
@@ -537,6 +542,18 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
               <span aria-hidden className="inline-block h-2.5 w-3 rounded-sm" style={{ backgroundColor: "rgba(2,125,252,0.14)" }} />
               ±1 desvio do modelo
             </span>
+            {vista === "pl" && st ? (
+              <>
+                <span className="inline-flex items-center gap-1.5 text-zinc-500">
+                  <Amostra cor={COR_HIST} tracejado />
+                  média do P/L <strong className="tabular-nums text-[#132960]">{vezes(st.mean)}</strong>
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-zinc-500">
+                  <span aria-hidden className="inline-block h-2.5 w-3 rounded-sm" style={{ backgroundColor: "rgba(100,116,139,0.16)" }} />
+                  ±1 desvio do histórico ({vezes(st.minus1)} a {vezes(st.plus1)})
+                </span>
+              </>
+            ) : null}
           </div>
 
           <div className="flex">
@@ -578,6 +595,19 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
                       />
                     ) : null}
                     <Tooltip content={<TooltipIbov cenario={mexeu} vista={vista} />} cursor={{ stroke: AZ_BRAND.navy, strokeOpacity: 0.25 }} />
+                    {vista === "pl" && st ? (
+                      <ReferenceArea y1={st.minus1} y2={st.plus1} fill={COR_HIST} fillOpacity={0.12} ifOverflow="hidden" />
+                    ) : null}
+                    {vista === "pl" && st ? (
+                      <ReferenceLine
+                        y={st.mean}
+                        stroke={COR_HIST}
+                        strokeDasharray="5 4"
+                        strokeWidth={1.3}
+                        ifOverflow="hidden"
+                        label={{ value: `média ${fmtNum(st.mean, 1)}x`, position: "insideTopLeft", fontSize: 10, fill: COR_HIST }}
+                      />
+                    ) : null}
                     <Area
                       type="linear"
                       dataKey={vista === "pl" ? "faixa_pl" : "faixa"}
