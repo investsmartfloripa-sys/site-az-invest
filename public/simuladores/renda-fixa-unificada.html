@@ -588,9 +588,9 @@ AZ.registrar({
     { id: 'valor', rotulo: 'Valor aplicado', tipo: 'moeda', padrao: 10000, min: 0.01 },
     { id: 'inicio', rotulo: 'Data da aplicação', tipo: 'data', padrao: 'hoje', largura: 'meia' },
     { id: 'fim', rotulo: 'Data do resgate ou vencimento', tipo: 'data', padrao: 'hoje+730', largura: 'meia' },
-    { id: 'tipo', rotulo: 'Rentabilidade', tipo: 'segmento', padrao: 'pos', noGrafico: 0, rotuloNoGrafico: false,
+    { id: 'tipo', rotulo: 'Rentabilidade', tipo: 'segmento', padrao: 'pos',
       opcoes: [{ v: 'pos', t: 'Percentual do CDI' }, { v: 'pre', t: 'Prefixado' }, { v: 'ipca', t: 'IPCA mais taxa' }] },
-    { id: 'imposto', rotulo: 'Imposto', tipo: 'segmento', padrao: 'ir', noGrafico: 0, rotuloNoGrafico: false,
+    { id: 'imposto', rotulo: 'Imposto de renda', tipo: 'segmento', padrao: 'ir',
       opcoes: [{ v: 'ir', t: 'Com IR (CDB)' }, { v: 'isento', t: 'Isento (LCI, LCA)' }] },
     { id: 'cdi', rotulo: 'Taxa do CDI', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.cdi; }, min: 0.01, max: 100, sufixo: '% ao ano', largura: 'meia',
       ajuda: 'Média anual que você espera para o CDI até o resgate.', mostrarSe: function (v) { return v.tipo === 'pos'; } },
@@ -624,8 +624,7 @@ AZ.registrar({
     var slugPrinc = isento && tipo === 'pos' ? 'lci-lca' : slugIr;
     var R = rodar(slugPrinc, v.fim);
     /* erro da página antiga (datas, prazo): a mesma mensagem, como nota de atenção (mesma aparência do erro).
-       Assim o sistema ainda desenha os botões, no topo do resultado, e o visitante vê o modo e pode trocá-lo.
-       Quando o az.js chamar botoesNoGrafico() também nos ramos de erro, isto pode voltar a ser "return R". */
+       Rentabilidade e imposto ficam no formulário, abaixo das datas (pedido de 30/10/2026), então continuam à mão no erro. */
     if (R.erro) return { alerta: AZ.esc(R.erro.replace('data do investimento', 'data da aplicação').replace(/data do (resgate|vencimento)/, 'data do resgate ou vencimento')), alertaTom: 'atencao' };
     var dc = D.corridos(v.inicio, v.fim), du = D.uteis(v.inicio, v.fim), k, m;
     var rotMes = function (d) { return F.mesAno(D.iso(d).slice(0, 7)).replace('/20', '/'); };
