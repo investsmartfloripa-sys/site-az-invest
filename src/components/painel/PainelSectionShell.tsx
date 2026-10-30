@@ -120,7 +120,10 @@ export function PainelSectionShell({ children }: Props) {
             return (
               <div
                 key={trail.slug}
-                className="relative"
+                // Só ancora o painel no botão a partir de lg. Abaixo disso ele se posiciona
+                // pela barra inteira: ancorado no botão, passaria da borda da tela, e mesmo
+                // fechado (invisible) alargaria a página no celular.
+                className="lg:relative"
                 onMouseEnter={() => openNow(trail.slug)}
                 onMouseLeave={closeSoon}
               >
@@ -147,7 +150,7 @@ export function PainelSectionShell({ children }: Props) {
                 </button>
 
                 <div
-                  className={`absolute left-0 top-full z-50 w-[560px] max-w-[88vw] origin-top rounded-b-xl border border-[#132960]/10 bg-white p-4 shadow-xl transition-all duration-150 ease-out ${
+                  className={`absolute left-4 right-4 top-full z-50 max-w-[560px] origin-top rounded-b-xl lg:left-0 lg:right-auto lg:w-[560px] lg:max-w-[88vw] border border-[#132960]/10 bg-white p-4 shadow-xl transition-all duration-150 ease-out ${
                     isOpen
                       ? "visible translate-y-0 opacity-100"
                       : "invisible -translate-y-1.5 opacity-0"
