@@ -4,6 +4,9 @@ import { HeaderMeasure } from "@/components/common/HeaderMeasure";
 import { DesktopNav, MobileMenu } from "@/components/common/NavLinks";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
+// As páginas estáticas de /simuladores têm uma cópia deste cabeçalho no gerador
+// (src/az.css, bloco "topo"). Mudou medida, cor ou logo aqui, mude lá também:
+// docs/ARMADILHAS.md §14.
 export function Header() {
   return (
     <header className="sticky top-0 z-50 bg-[#132960] text-[#E8E7E5] shadow-[0_2px_12px_rgba(19,41,96,0.25)]">

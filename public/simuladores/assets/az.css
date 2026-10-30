@@ -31,21 +31,24 @@ h1,h2,h3{font-family:var(--texto);font-weight:700;line-height:1.25;margin:0;text
 .az-olho,.az-bloco h2,.az-form .az-subt,.az-rel>h2,.az-cat>h2,.az-cat h3,.az-principais>h2,.az-rodape h2{font-family:var(--texto);font-size:16px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--tinta3)}
 .az-olho{margin:0 0 10px;color:var(--azul)}
 
-/* ───── topo (igual ao site) ───── */
-.az-topo{background:var(--marinho);color:var(--cinza);position:sticky;top:0;z-index:30;border-bottom:3px solid var(--azul)}
-.az-topo .az-larg{display:flex;align-items:center;justify-content:space-between;gap:24px;height:76px}
+/* ───── topo: medidas copiadas de site-az-invest/src/components/common/Header.tsx e NavLinks.tsx.
+   Quem navega pelo menu do site passa por aqui; qualquer diferença aparece como "pulo". ───── */
+.az-topo{background:var(--marinho);color:var(--cinza);position:sticky;top:0;z-index:30;box-shadow:0 2px 12px rgba(19,41,96,.25)}
+.az-topo .az-larg{display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1280px;padding:16px 32px}
 .az-logo{display:inline-flex;color:#fff;text-decoration:none}
-.az-logo svg{height:40px;width:auto;display:block}
-.az-topo nav{display:flex;align-items:center;gap:28px}
-.az-topo nav a{font-weight:600;font-size:16px;letter-spacing:.4px;text-transform:uppercase;text-decoration:none;color:rgba(255,255,255,.8);white-space:nowrap;padding:6px 0;border-bottom:2px solid transparent}
-.az-topo nav a:hover{color:#fff}
+.az-logo svg,.az-logo img{height:56px;width:auto;display:block}
+.az-topo nav{display:flex;align-items:center;gap:24px}
+.az-topo nav a{font-weight:600;font-size:12px;line-height:16px;letter-spacing:.6px;text-transform:uppercase;text-decoration:none;color:rgba(255,255,255,.8);white-space:nowrap;padding:0 0 2px;border-bottom:2px solid transparent}
+.az-topo nav a:hover{color:var(--azul)}
 .az-topo nav a[aria-current]{color:#fff;border-bottom-color:var(--azul)}
-.az-topo nav .az-login{background:var(--laranja);color:#fff;border-radius:999px;padding:10px 22px;font-size:17px;letter-spacing:0;text-transform:none;border:0;margin-left:8px}
-.az-topo nav .az-login:hover{background:var(--laranja-esc)}
+.az-topo nav .az-login{background:var(--laranja);color:#fff;border-radius:999px;padding:12px 32px;font-size:16px;line-height:24px;letter-spacing:0;text-transform:none;border:0;margin-left:8px}
+.az-topo nav .az-login:hover{background:#d94a10;color:#fff}
 /* menu suspenso "Simuladores" */
 .az-menu{position:relative}
-.az-menu>summary{list-style:none;cursor:pointer;font-weight:600;font-size:16px;letter-spacing:.4px;text-transform:uppercase;color:#fff;padding:6px 0;border-bottom:2px solid var(--azul);display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.az-menu>summary{list-style:none;cursor:pointer;font-weight:600;font-size:12px;line-height:16px;letter-spacing:.6px;text-transform:uppercase;color:#fff;padding:0 0 2px;border-bottom:2px solid var(--azul);display:flex;align-items:center;gap:8px;white-space:nowrap}
 .az-menu>summary::-webkit-details-marker{display:none}
+/* em computador o site mostra "Simuladores" como item comum do menu: sem a seta, os itens ficam no mesmo lugar */
+@media (min-width:1024px){.az-menu>summary::after{display:none}}
 .az-menu>summary::after{content:"";width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg)}
 .az-menu ul{position:absolute;left:50%;transform:translateX(-50%);top:calc(100% + 14px);z-index:40;min-width:340px;max-width:min(92vw,420px);margin:0;padding:6px 0;list-style:none;background:#fff;border:1px solid var(--linha);border-radius:10px;box-shadow:0 20px 50px -12px rgba(19,41,96,.35)}
 .az-menu ul::before{content:"";position:absolute;top:-7px;left:50%;width:12px;height:12px;background:#fff;border-left:1px solid var(--linha);border-top:1px solid var(--linha);transform:translateX(-50%) rotate(45deg)}
@@ -57,10 +60,10 @@ h1,h2,h3{font-family:var(--texto);font-weight:700;line-height:1.25;margin:0;text
 .az-topo nav .az-menu li a:hover{background:var(--sup2);color:var(--azul)}
 .az-topo nav .az-menu li a[aria-current]{background:#EEF5FF;border-bottom-color:transparent}
 .az-topo .az-hamb{display:none}
-@media (max-width:900px){
+@media (max-width:1023px){
   .az-topo nav a:not(.az-login){display:none}
   .az-topo nav .az-menu{display:block}
-  .az-topo nav .az-menu>summary{display:inline-flex}
+  .az-topo nav .az-menu>summary{display:flex}
   .az-menu ul{left:auto;right:0;transform:none}
   .az-menu ul::before{left:auto;right:28px;transform:rotate(45deg)}
 }
@@ -362,13 +365,16 @@ table.az-tab{border-collapse:collapse;width:100%;font-size:18px;font-variant-num
 @media (max-width:860px){
   body{font-size:17px}
   .az-larg{padding:0 20px}
-  .az-topo .az-larg{height:68px}
-  .az-logo svg{height:34px}
   .az-hero{padding:22px 0 14px}
   .az-sobre{padding:22px 20px}
   .az-form,.az-bloco{padding:18px}
   .az-rodape .az-rod-grade{grid-template-columns:1fr;gap:26px}
   .az-kpis{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}
+}
+@media (max-width:767px){
+  .az-topo .az-larg{padding:16px}
+  .az-topo .az-logo img{height:48px}
+  .az-topo nav .az-login{padding:10px 20px;font-size:14px;line-height:20px}
 }
 @media (max-width:520px){
   .az-campo{flex-basis:100%}
@@ -377,15 +383,17 @@ table.az-tab{border-collapse:collapse;width:100%;font-size:18px;font-variant-num
   .az-lista-linha>div:first-child{grid-column:1/-1}
   .az-topo .az-larg{gap:12px}
   .az-topo nav{gap:14px}
-  .az-topo nav .az-menu>summary{font-size:14px}
-  .az-topo nav .az-login{padding:8px 16px;font-size:15px;margin-left:0}
+  .az-topo nav .az-login{padding:10px 16px;margin-left:0}
   .az-graf svg{font-size:12px}
 }
-@media (max-width:380px){
-  .az-logo svg{height:28px}
+@media (max-width:389px){
+  .az-topo .az-logo img{height:40px}
+}
+@media (max-width:345px){
+  .az-topo .az-logo img{height:32px}
   .az-topo nav{gap:10px}
   .az-topo nav .az-menu>summary{letter-spacing:0}
-  .az-topo nav .az-login{padding:7px 12px}
+  .az-topo nav .az-login{padding:8px 12px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{.az-rolo.az-longa{max-height:none}.az-topo nav,.az-acoes,.az-rel,.az-cta,.az-tab-rod{display:none}.az-topo{position:static}.az-app{margin-top:0}.az-rolo{max-height:none}}
