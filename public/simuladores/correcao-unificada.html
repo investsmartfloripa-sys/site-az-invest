@@ -836,7 +836,7 @@ AZ.registrar({
       padrao: function (AZ) { var S = AZ.serie, i = Math.min(S.ymIdx(S.mensal('ipca').fim), S.ymIdx(S.mensal('igpm').fim)) + 1; return new Date(Math.floor(i / 12), i % 12, 1); },
       ajuda: 'CDI e Selic contam até a véspera; a poupança, até o último aniversário. IPCA e IGP-M contam os meses com mais da metade dos dias.' },
     /* cinco opções: tipo select (o padrão pede select acima de 4); no gráfico vira a mesma fileira de botões */
-    { id: 'indice', rotulo: 'Índice', tipo: 'select', padrao: 'ipca', noGrafico: 0, rotuloNoGrafico: false,
+    { id: 'indice', rotulo: 'Índice', tipo: 'select', padrao: 'ipca',
       opcoes: [{ v: 'ipca', t: 'IPCA' }, { v: 'igpm', t: 'IGP-M' }, { v: 'cdi', t: 'CDI' }, { v: 'selic', t: 'Selic' }, { v: 'poupanca', t: 'Poupança' }, { v: 'legal', t: 'Taxa legal' }] },
     { id: 'comparar', rotulo: 'Comparar índices', tipo: 'check', padrao: false, noGrafico: 0 },
     /* só para quem rende (CDI, Selic, poupança): o mesmo valor corrigido pelo IPCA e a rentabilidade real */

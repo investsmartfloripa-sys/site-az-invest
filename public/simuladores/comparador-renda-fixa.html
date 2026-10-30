@@ -943,6 +943,8 @@ AZ.registrar({
     { id: 'valor', rotulo: 'Valor aplicado', tipo: 'moeda', padrao: 10000, min: 0.01 },
     { id: 'inicio', rotulo: 'Data da aplicação', tipo: 'data', padrao: 'hoje', largura: 'meia' },
     { id: 'fim', rotulo: 'Data do resgate', tipo: 'data', padrao: 'hoje+730', largura: 'meia' },
+    { id: 'taxas', rotulo: 'Tipo de taxa', tipo: 'segmento', padrao: 'pos',
+      opcoes: [{ v: 'pos', t: 'Percentual do CDI' }, { v: 'pre', t: 'Prefixadas' }] },
     { id: 'cdi', rotulo: 'Taxa do CDI', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.cdi; }, min: 0.01, max: 100, sufixo: '% ao ano', largura: 'meia',
       ajuda: 'Média anual que você espera para o CDI até o resgate.', mostrarSe: function (v) { return v.taxas !== 'pre'; } },
     { id: 'pctCdb', rotulo: 'CDB', tipo: 'pct', padrao: 110, min: 0, max: 500, sufixo: '% do CDI', largura: 'meia',
@@ -965,9 +967,7 @@ AZ.registrar({
       ajuda: 'Rendimento mensal atual, já com a TR. A poupança só rende no aniversário de cada mês.', mostrarSe: function (v) { return v.taxas !== 'pre' && (v.poupanca || v.fundo); } },
     { id: 'adm', rotulo: 'Taxa de administração do fundo', tipo: 'pct', padrao: 1, min: 0, max: 20, sufixo: '% ao ano', largura: 'meia',
       ajuda: 'O fundo DI rende o CDI menos essa taxa e paga imposto de renda no resgate.', mostrarSe: function (v) { return v.taxas !== 'pre' && v.fundo; } },
-    /* botões no cabeçalho do gráfico: o tipo de taxa e uma chave liga-desliga por aplicação */
-    { id: 'taxas', rotulo: 'Taxas', tipo: 'segmento', padrao: 'pos', noGrafico: 0, rotuloNoGrafico: false,
-      opcoes: [{ v: 'pos', t: 'Percentual do CDI' }, { v: 'pre', t: 'Prefixadas' }] },
+    /* no gráfico, uma chave liga-desliga por aplicação; o tipo de taxa fica no formulário, abaixo das datas */
     { id: 'cdb', rotulo: 'CDB', tipo: 'check', padrao: true, noGrafico: 0 },
     { id: 'lci', rotulo: 'LCI ou LCA', tipo: 'check', padrao: true, noGrafico: 0 },
     { id: 'tesouro', rotulo: 'Tesouro Selic', tipo: 'check', padrao: true, noGrafico: 0, mostrarSe: function (v) { return v.taxas !== 'pre'; } },

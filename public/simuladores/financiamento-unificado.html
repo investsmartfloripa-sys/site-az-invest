@@ -1424,13 +1424,7 @@ AZ.registrar({
     { id: 'calc', rotulo: 'O que calcular', tipo: 'select', padrao: 'parcela',
       opcoes: [{ v: 'parcela', t: 'Valor da parcela' }, { v: 'valor', t: 'Valor financiado' }, { v: 'taxa', t: 'Taxa de juros' }, { v: 'prazo', t: 'Número de parcelas' }],
       ajuda: 'Valor financiado, taxa e número de parcelas são calculados a partir de uma parcela fixa (tabela Price), sem correção do saldo.' },
-    /* botões no cabeçalho do gráfico da parcela */
-    { id: 'sistema', rotulo: 'Sistema', tipo: 'segmento', padrao: 'sac', noGrafico: 0,
-      opcoes: [{ v: 'sac', t: 'SAC' }, { v: 'price', t: 'Price' }, { v: 'ambos', t: 'Os dois' }],
-      mostrarSe: function (v) { return v.calc === 'parcela'; } },
-    { id: 'correcao', rotulo: 'Correção', tipo: 'segmento', padrao: 'tr', noGrafico: 0,
-      opcoes: [{ v: 'nenhuma', t: 'Nenhuma' }, { v: 'tr', t: 'TR' }, { v: 'ipca', t: 'IPCA' }],
-      mostrarSe: function (v) { return v.calc === 'parcela'; } },
+    /* no gráfico da parcela, só a taxa dos bancos; sistema e correção ficam no formulário, abaixo do prazo */
     /* liga a parcela na taxa mediana e na menor taxa dos bancos (página antiga do ranking do Banco Central) */
     { id: 'bancos', rotulo: 'Taxa dos bancos', tipo: 'check', padrao: false, noGrafico: 0,
       mostrarSe: function (v) { return v.calc === 'parcela' && v.sistema !== 'ambos'; } },
@@ -1454,6 +1448,12 @@ AZ.registrar({
       unidades: [{ v: 'ano', t: 'anos' }, { v: 'mes', t: 'meses' }],
       mostrarSe: function (v) { return v.calc !== 'prazo'; } },
     /* só a parcela fixa tem conta com a primeira parcela no ato: nos outros sistemas o campo some */
+    { id: 'sistema', rotulo: 'Sistema de amortização', tipo: 'segmento', padrao: 'sac',
+      opcoes: [{ v: 'sac', t: 'SAC' }, { v: 'price', t: 'Price' }, { v: 'ambos', t: 'Os dois' }],
+      mostrarSe: function (v) { return v.calc === 'parcela'; } },
+    { id: 'correcao', rotulo: 'Correção do saldo', tipo: 'segmento', padrao: 'tr',
+      opcoes: [{ v: 'nenhuma', t: 'Nenhuma' }, { v: 'tr', t: 'TR' }, { v: 'ipca', t: 'IPCA' }],
+      mostrarSe: function (v) { return v.calc === 'parcela'; } },
     { id: 'momento', rotulo: 'Primeira parcela', tipo: 'segmento', padrao: 'fim',
       opcoes: [{ v: 'fim', t: 'Em 30 dias' }, { v: 'inicio', t: 'No ato' }],
       ajuda: 'No ato, a primeira parcela é paga na contratação e não tem juros, como uma entrada.',

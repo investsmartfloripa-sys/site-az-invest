@@ -475,6 +475,10 @@ AZ.registrar({
       mostrarSe: function (v) { return v.idadeParar > v.idadeAtual; } },
     { id: 'renda', rotulo: 'Renda mensal desejada', tipo: 'moeda', padrao: 8000, min: 0.01,
       ajuda: 'Em dinheiro de hoje, já descontado o imposto.' },
+    { id: 'objetivo', rotulo: 'Depois de parar', tipo: 'segmento', padrao: 'real',
+      opcoes: [{ v: 'real', t: 'Manter o poder de compra' }, { v: 'nominal', t: 'Manter o valor em reais' }, { v: 'prazo', t: 'Gastar em um prazo' }] },
+    { id: 'anos', rotulo: 'Anos para gastar o patrimônio', tipo: 'int', padrao: 30, min: 1, max: 100, sufixo: 'anos',
+      mostrarSe: function (v) { return v.objetivo === 'prazo'; } },
     { id: 'taxa', rotulo: 'Rentabilidade bruta esperada', tipo: 'pct', padrao: 10, min: 0, max: 100, sufixo: '% ao ano', largura: 'meia',
       ajuda: 'Antes do imposto e da inflação, na média de todo o período. Para décadas, prefira uma taxa abaixo do CDI atual.' },
     { id: 'inflacao', rotulo: 'Inflação esperada', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: 0, max: 100, sufixo: '% ao ano', largura: 'meia',
@@ -483,11 +487,7 @@ AZ.registrar({
       opcoes: [{ v: '15', t: '15% (renda fixa acima de 2 anos)' }, { v: '0', t: 'Isento (LCI, LCA e outros isentos)' }, { v: 'outro', t: 'Outra alíquota' }] },
     { id: 'aliquota', rotulo: 'Alíquota sobre o rendimento', tipo: 'pct', padrao: 17.5, min: 0, max: 100,
       mostrarSe: function (v) { return v.imposto === 'outro'; } },
-    { id: 'anos', rotulo: 'Anos para gastar o patrimônio', tipo: 'int', padrao: 30, min: 1, max: 100, sufixo: 'anos',
-      mostrarSe: function (v) { return v.objetivo === 'prazo'; } },
-    /* botões no cabeçalho do gráfico (o texto de "Gastar em N anos" acompanha o campo acima, em calcular) */
-    { id: 'objetivo', rotulo: 'Depois de parar', tipo: 'segmento', padrao: 'real', noGrafico: 0,
-      opcoes: [{ v: 'real', t: 'Manter o poder de compra' }, { v: 'nominal', t: 'Manter o valor em reais' }, { v: 'prazo', t: 'Gastar em 30 anos' }] },
+    /* no gráfico, só a forma de ver os valores; o objetivo depois de parar fica no formulário */
     { id: 'valores', rotulo: 'Valores', tipo: 'segmento', padrao: 'hoje', noGrafico: 0,
       opcoes: [{ v: 'extrato', t: 'Do extrato' }, { v: 'hoje', t: 'Em dinheiro de hoje' }] }
   ],
@@ -496,8 +496,6 @@ AZ.registrar({
     var VR = AZ.antigo('viver-de-renda'), IF = AZ.antigo('independencia-financeira'), R4 = AZ.antigo('regra-dos-4-por-cento');
     var obj = v.objetivo, hoje = v.valores !== 'extrato', corrigida = obj !== 'nominal', OBJS = ['real', 'nominal', 'prazo'];
     var N = v.anos >= 1 ? Math.min(100, Math.round(v.anos)) : 30, txN = F.pl(N, 'ano', 'anos');   /* o mesmo limite do viver de renda */
-    /* o botão "Gastar em N anos" mostra o prazo do campo "Anos para gastar o patrimônio" */
-    if (this && this.campos) this.campos.forEach(function (c) { if (c.id === 'objetivo') c.opcoes[2].t = 'Gastar em ' + txN; });
     var nomes = { real: 'Manter o poder de compra', nominal: 'Manter o valor em reais', prazo: 'Gastar em ' + txN };
     var ida = Math.round(v.idadeAtual), idp = Math.round(v.idadeParar);
     if (idp < ida) return { erro: 'A idade para parar de trabalhar deve ser igual ou maior que a idade atual.' };

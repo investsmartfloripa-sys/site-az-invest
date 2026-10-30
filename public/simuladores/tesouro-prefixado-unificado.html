@@ -282,8 +282,8 @@ AZ.registrar({
       mostrarSe: function (v) { return v.ver !== 'taxas' || v.antecipada; } },
     { id: 'taxaCor', rotulo: 'Taxa da corretora', tipo: 'pct', padrao: 0, min: 0, max: 5, sufixo: '% ao ano', largura: 'meia', opcional: true,
       mostrarSe: function (v) { return v.ver !== 'taxas' || v.antecipada; } },
-    /* botões no cabeçalho do gráfico */
-    { id: 'antecipada', rotulo: 'Vender antes do vencimento', tipo: 'check', padrao: false, noGrafico: 0 },
+    /* vender antes do vencimento fica no formulário; no gráfico, só a curva de preço a ver */
+    { id: 'antecipada', rotulo: 'Vender antes do vencimento', tipo: 'check', padrao: false },
     { id: 'ver', rotulo: 'Ver o preço', tipo: 'segmento', padrao: 'curva', noGrafico: 0,
       opcoes: [{ v: 'curva', t: 'Até o vencimento' }, { v: 'taxas', t: 'Para cada taxa' }] },
     { id: 'venda', rotulo: 'Data da venda', tipo: 'data', padrao: 'hoje+365', largura: 'meia', mostrarSe: function (v) { return v.antecipada; } },

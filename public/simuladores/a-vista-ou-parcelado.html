@@ -261,14 +261,13 @@ AZ.registrar({
     { id: 'desc', rotulo: 'Desconto à vista', tipo: 'pct', padrao: 5, min: 0, max: 99, largura: 'meia',
       mostrarSe: function (v) { return v.forma === 'desconto'; } },
     { id: 'n', rotulo: 'Número de parcelas', tipo: 'int', padrao: 10, min: 1, max: 120, sufixo: 'parcelas' },
+    { id: 'primeira', rotulo: 'Primeira parcela', tipo: 'segmento', padrao: 'depois',
+      opcoes: [{ v: 'ato', t: 'No ato' }, { v: 'depois', t: 'Em 30 dias' }] },
     { id: 'rend', rotulo: 'Rendimento da aplicação', tipo: 'pct', min: 0, max: 200, casas: 4,
       padrao: function (AZ) { return AZ.cfg.cdi; },
       unidades: [{ v: 'ano', t: 'ao ano' }, { v: 'mes', t: 'ao mês' }],
       ajuda: 'Taxa da aplicação onde o dinheiro fica até cada vencimento. Com IR, o imposto sai do rendimento; isento vale para poupança, LCI e LCA.' },
-    /* botões no cabeçalho do gráfico */
-    { id: 'primeira', rotulo: 'Primeira parcela', tipo: 'segmento', padrao: 'depois', noGrafico: 0,
-      opcoes: [{ v: 'ato', t: 'No ato' }, { v: 'depois', t: 'Em 30 dias' }] },
-    { id: 'imposto', rotulo: 'Imposto sobre o rendimento', tipo: 'segmento', padrao: 'ir', noGrafico: 0,
+    { id: 'imposto', rotulo: 'Imposto sobre o rendimento', tipo: 'segmento', padrao: 'ir',
       opcoes: [{ v: 'isento', t: 'Isento' }, { v: 'ir', t: 'Com IR' }] }
   ],
   calcular: function (v, AZ) {

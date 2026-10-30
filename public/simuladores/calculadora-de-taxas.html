@@ -829,11 +829,7 @@ AZ.registrar({
       { v: 'cdi', t: 'Quanto rende o CDI' },
       { v: 'real', t: 'Juro real e inflação' }
     ] },
-    /* botões no cabeçalho do gráfico (sem gráfico, no alto do parágrafo), só nas contas em que fazem sentido */
-    { id: 'ir', rotulo: 'Descontar o imposto de renda', tipo: 'check', padrao: false, noGrafico: 0,
-      mostrarSe: function (v) { return v.modo === 'cdi' || v.modo === 'real'; } },
-    { id: 'inflacao', rotulo: 'Descontar a inflação', tipo: 'check', padrao: false, noGrafico: 0,
-      mostrarSe: function (v) { return v.modo === 'converter' || v.modo === 'cdi'; } },
+    /* no gráfico (sem gráfico, no alto do parágrafo), só a comparação; descontar imposto e inflação ficam no formulário */
     { id: 'comparar', rotulo: 'Comparar com outro percentual', tipo: 'check', padrao: false, noGrafico: 0,
       mostrarSe: function (v) { return v.modo === 'cdi'; } },
 
@@ -897,6 +893,8 @@ AZ.registrar({
       opcoes: [{ v: 'ano', t: 'Ao ano' }, { v: 'mes', t: 'Ao mês' }],
       ajuda: 'Todas as taxas precisam se referir ao mesmo período.',
       mostrarSe: function (v) { return v.modo === 'real'; } },
+    { id: 'ir', rotulo: 'Descontar o imposto de renda', tipo: 'check', padrao: false,
+      mostrarSe: function (v) { return v.modo === 'cdi' || v.modo === 'real'; } },
     { id: 'trib', rotulo: 'Quem paga imposto', tipo: 'select', padrao: 'pre',
       opcoes: [{ v: 'pre', t: 'Só o prefixado' }, { v: 'ipca', t: 'Só o título atrelado à inflação' }, { v: 'iguais', t: 'Os dois, com a mesma alíquota' }],
       ajuda: 'LCI, LCA, CRI, CRA e debêntures incentivadas são isentas; CDB e Tesouro Direto pagam imposto.',
@@ -907,6 +905,8 @@ AZ.registrar({
       unidades: [{ v: 'mes', t: 'meses' }, { v: 'ano', t: 'anos' }],
       ajuda: 'Define a alíquota do imposto: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima.',
       mostrarSe: function (v) { return v.modo === 'cdi' || (v.modo === 'real' && !!v.ir && !(v.calcReal === 'inflacao' && v.trib === 'iguais')); } },
+    { id: 'inflacao', rotulo: 'Descontar a inflação', tipo: 'check', padrao: false,
+      mostrarSe: function (v) { return v.modo === 'converter' || v.modo === 'cdi'; } },
     { id: 'ipca', rotulo: 'Inflação esperada', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.ipca; }, min: -50, max: 1000, sufixo: '% ao ano',
       ajuda: 'O padrão é o IPCA acumulado em 12 meses.',
       mostrarSe: function (v) { return (v.modo === 'converter' || v.modo === 'cdi') && !!v.inflacao; } }

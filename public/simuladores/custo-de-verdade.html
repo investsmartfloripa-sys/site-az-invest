@@ -297,6 +297,8 @@ AZ.registrar({
     'cachorro', 'quanto custa ter um cachorro', 'cão', 'pet', 'animal de estimação', 'ração', 'veterinário', 'custo de vida', 'planejamento', 'orçamento', 'gasto mensal', 'assinatura'],
   intro: 'Veja o preço completo de uma compra ou de um gasto de todo mês, em horas de trabalho ou no rendimento de que você abre mão.',
   campos: [
+    { id: 'gasto', rotulo: 'O gasto acontece', tipo: 'segmento', padrao: 'uma',
+      opcoes: [{ v: 'uma', t: 'Uma vez' }, { v: 'mes', t: 'Todo mês' }] },
     /* a lista de despesas vem antes no código, mas as duas ocupam o mesmo lugar: só uma aparece de cada vez */
     { id: 'despesas', rotulo: 'Despesas', tipo: 'lista', rotuloAdicionar: 'Adicionar despesa', minLinhas: 1, maxLinhas: 20,
       colunas: [
@@ -335,11 +337,9 @@ AZ.registrar({
     { id: 'reaj', rotulo: 'Reajuste anual das despesas', tipo: 'pct', sufixo: '% ao ano', min: 0, max: 100, largura: 'meia',
       padrao: function (AZ) { return AZ.cfg.ipca; }, ajuda: 'O padrão é a inflação (IPCA) dos últimos 12 meses.',
       mostrarSe: function (v) { return v.gasto === 'mes' && v.medida !== 'horas'; } },
-    /* botões no cabeçalho do gráfico */
+    /* no gráfico, a medida (reais ou horas); se o gasto é único ou mensal fica no alto do formulário */
     { id: 'medida', rotulo: 'Medir em', tipo: 'segmento', padrao: 'reais', noGrafico: 0,
       opcoes: [{ v: 'reais', t: 'Reais' }, { v: 'horas', t: 'Horas de trabalho' }] },
-    { id: 'gasto', rotulo: 'Gasto', tipo: 'segmento', padrao: 'uma', noGrafico: 0,
-      opcoes: [{ v: 'uma', t: 'Uma vez' }, { v: 'mes', t: 'Todo mês' }] }
   ],
   calcular: function (v, AZ) {
     var F = AZ.f, horas = v.medida === 'horas', mes = v.gasto === 'mes', anos = Math.round(v.anos);

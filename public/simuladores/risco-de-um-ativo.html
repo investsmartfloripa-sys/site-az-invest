@@ -304,8 +304,8 @@ AZ.registrar({
     'correlação', 'coeficiente de correlação', 'pearson', 'diversificação', 'carteira', 'dólar'],
   intro: 'Cole os preços de um ativo para medir quanto ele oscila e quanto já caiu, ou de dois ativos para ver se andam juntos.',
   campos: [
-    /* botões no cabeçalho do gráfico */
-    { id: 'ativos', rotulo: 'Ativos', tipo: 'segmento', padrao: 'um', noGrafico: 0, opcoes: [{ v: 'um', t: 'Um' }, { v: 'dois', t: 'Dois' }] },
+    /* quantos ativos fica no alto do formulário; no gráfico, só preço ou queda desde o pico */
+    { id: 'ativos', rotulo: 'Quantos ativos', tipo: 'segmento', padrao: 'um', opcoes: [{ v: 'um', t: 'Um' }, { v: 'dois', t: 'Dois' }] },
     { id: 'ver', rotulo: 'Ver', tipo: 'segmento', padrao: 'preco', noGrafico: 0, opcoes: [{ v: 'preco', t: 'Preço' }, { v: 'queda', t: 'Queda desde o pico' }],
       mostrarSe: function (v) { return v.ativos !== 'dois'; } },
     /* um ativo: campos da página consultar-volatilidade */
