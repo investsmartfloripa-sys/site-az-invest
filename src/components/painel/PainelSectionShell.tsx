@@ -93,7 +93,10 @@ export function PainelSectionShell({ children }: Props) {
   const panoramaActive = pathname === "/painel-economico" || pathname.startsWith("/painel-economico/panorama");
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb]">
+    // overflow-x-clip: a faixa de cotações do Panorama (MarketTape) sangra com w-screen,
+    // e no Windows 100vw inclui a barra de rolagem — sem o clip a página fica 8 px mais
+    // larga que a tela. `clip` (não `hidden`) para o submenu sticky continuar grudando.
+    <div className="min-h-screen overflow-x-clip bg-[#f5f7fb]">
       {/* Gruda logo abaixo do header global (altura publicada em --az-header-h pelo HeaderMeasure) */}
       <div
         ref={navRef}
