@@ -2,14 +2,19 @@
    Marca: Michroma em azul-marinho nos títulos grandes (h1, "Como funciona", "Principais simuladores", cartões dos principais), Raleway no restante;
    azul-marinho #132960, azul #027DFC, laranja #FF5713. Regras de cor: azul = ação, barra sob os títulos e resultado principal;
    verde e vermelho = ganho e perda; laranja = só o botão de convite. Escala de texto: ver PADRAO.md, seção 3. */
-@font-face{font-family:"Michroma";src:url("fonts/michroma.woff2") format("woff2");font-weight:400;font-display:swap}
-@font-face{font-family:"Raleway";src:url("fonts/raleway.woff2") format("woff2");font-weight:100 900;font-display:swap}
+/* Os mesmos arquivos e faixas que o site carrega (Google Fonts via next/font, sem hinting).
+   Com o raleway.woff2 completo (com hinting) o Windows desenhava as letras diferente do site.
+   raleway.woff2 e michroma.woff2 seguem em assets/fonts só para o tools/og.js. */
+@font-face{font-family:"Michroma";src:url("fonts/michroma-latin-ext.woff2") format("woff2");font-weight:400;font-display:swap;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Michroma";src:url("fonts/michroma-latin.woff2") format("woff2");font-weight:400;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Raleway";src:url("fonts/raleway-latin-ext.woff2") format("woff2");font-weight:100 900;font-display:swap;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Raleway";src:url("fonts/raleway-latin.woff2") format("woff2");font-weight:100 900;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 
 :root{
   color-scheme:light;
   --azul:#027DFC; --azul-esc:#0065C1; --marinho:#132960; --marinho-esc:#0D1D3D;
   --laranja:#FF5713; --laranja-esc:#C94111; --terra:#A85B2F; --cinza:#E8E7E5; --grafite:#333333;
-  --fundo:#F4F5F7; --sup:#FFFFFF; --sup2:#F8FAFC; --linha:rgba(19,41,96,.09); --linha2:#E9ECF1; --borda:#CBD3E1;
+  --fundo:#F4F4F4; --sup:#FFFFFF; --sup2:#F8FAFC; --linha:rgba(19,41,96,.09); --linha2:#E9ECF1; --borda:#CBD3E1;
   --tinta:#0F172A; --tinta2:#3F4B5E; --tinta3:#64748B;
   --ok:#15803D; --ok-f:#E6F4EC; --ruim:#B91C1C; --ruim-f:#FBEAE8;
   --nota-f:#F1F5FA; --atencao:#B45309; --atencao-f:#FFF8EB;
@@ -25,10 +30,10 @@ body{margin:0;background:var(--fundo);color:var(--tinta);font-family:var(--texto
   font-feature-settings:"lnum" 1;font-variant-numeric:lining-nums}
 a{color:var(--azul)}
 h1,h2,h3{font-family:var(--texto);font-weight:700;line-height:1.25;margin:0;text-wrap:balance}
-.az-larg{max-width:1320px;margin:0 auto;padding:0 32px}
+.az-larg{max-width:1280px;margin:0 auto;padding:0 32px}
 .az-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* título de seção: o único texto em maiúsculas */
-.az-olho,.az-bloco h2,.az-form .az-subt,.az-rel>h2,.az-cat>h2,.az-cat h3,.az-principais>h2,.az-rodape h2{font-family:var(--texto);font-size:16px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--tinta3)}
+.az-olho,.az-bloco h2,.az-form .az-subt,.az-rel>h2,.az-cat>h2,.az-cat h3,.az-principais>h2{font-family:var(--texto);font-size:16px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--tinta3)}
 .az-olho{margin:0 0 10px;color:var(--azul)}
 
 /* ───── topo: medidas copiadas de site-az-invest/src/components/common/Header.tsx e NavLinks.tsx.
@@ -36,7 +41,7 @@ h1,h2,h3{font-family:var(--texto);font-weight:700;line-height:1.25;margin:0;text
 .az-topo{background:var(--marinho);color:var(--cinza);position:sticky;top:0;z-index:30;box-shadow:0 2px 12px rgba(19,41,96,.25)}
 .az-topo .az-larg{display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1280px;padding:16px 32px}
 .az-logo{display:inline-flex;color:#fff;text-decoration:none}
-.az-logo svg,.az-logo img{height:56px;width:auto;display:block}
+.az-topo .az-logo img{height:56px;width:auto;display:block}
 .az-topo nav{display:flex;align-items:center;gap:24px}
 .az-topo nav a{font-weight:600;font-size:12px;line-height:16px;letter-spacing:.6px;text-transform:uppercase;text-decoration:none;color:rgba(255,255,255,.8);white-space:nowrap;padding:0 0 2px;border-bottom:2px solid transparent}
 .az-topo nav a:hover{color:var(--azul)}
@@ -295,24 +300,53 @@ table.az-tab{border-collapse:collapse;width:100%;font-size:18px;font-variant-num
 .az-cta h2{font-size:23px;color:#fff}.az-cta p{margin:6px 0 0;color:#D5DEF3;max-width:none;font-size:18px}
 .az-cta .az-botao{flex:none}
 
-/* rodapé (igual ao site) */
-.az-rodape{margin-top:40px;background:var(--marinho);color:var(--cinza);font-size:18px;padding:40px 0 0}
-.az-rodape .az-rod-grade{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;padding-bottom:32px}
-.az-rodape .az-logo{color:#fff;margin-bottom:14px}.az-rodape .az-logo svg{height:52px}
-.az-rodape .az-rod-tag{max-width:32ch;color:#C6D2F2;margin:0 0 18px}
-.az-rodape h2{color:#9FB0DC;margin:6px 0 14px}
-.az-rodape ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.az-rodape ul a{color:#DCE4F7;text-decoration:none}
-.az-rodape ul a:hover{color:#fff;text-decoration:underline}
-.az-rodape .az-rod-contato b{color:#fff;font-weight:600}
-.az-rodape .az-rod-sociais{display:flex;gap:10px}
-.az-rodape .az-rod-sociais a{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.1);color:#fff}
-.az-rodape .az-rod-sociais a:hover{background:rgba(255,255,255,.2)}
-.az-rodape .az-rod-sociais svg{width:18px;height:18px}
-.az-rodape .az-rod-legal{border-top:1px solid rgba(255,255,255,.14);padding:20px 0 0;font-size:16px;color:#B9C6EA}
-.az-rodape .az-rod-legal p{margin:0 0 8px;max-width:110ch}
-.az-rodape .az-rod-copy{border-top:1px solid rgba(255,255,255,.14);margin-top:14px;padding:16px 0;font-size:16px;color:#B9C6EA}
-.az-rodape a{color:#fff}
+/* ───── rodapé: medidas copiadas de site-az-invest/src/components/common/Footer.tsx; cores escritas como o site
+   (lab / color-mix do Tailwind), porque o Chrome desenha o texto com tom diferente quando a cor vem em rgba ───── */
+/* avisos legais dos simuladores: faixa própria acima do rodapé, para o rodapé ficar igual ao do site */
+.az-legal{margin-top:40px}
+.az-legal p{margin:0;max-width:none;font-size:13px;line-height:1.6;color:var(--tinta3)}
+.az-legal p+p{margin-top:6px}
+.az-legal+.az-rodape{margin-top:24px}
+.az-rodape{margin-top:40px;background:var(--marinho);color:var(--cinza);font-size:16px;line-height:24px}
+.az-rod-grade{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:32px;padding:40px 16px}
+.az-rod-marca{text-align:center}
+.az-rod-marca-in{max-width:16rem;margin:0 auto}
+.az-rod-marca img{display:block;width:100%;height:auto}
+.az-rod-tag{margin:16px 0 0;font-size:14px;line-height:1.625;color:#e8e7e5b3;color:lab(91.6807% .084579 1.10058/.7)}
+.az-rod-sociais{margin-top:16px;display:flex;justify-content:center;gap:12px}
+.az-rodape .az-rod-sociais a{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:999px;border:1px solid #ffffff40;border-color:color-mix(in oklab,#fff 25%,transparent);color:#fff;transition:color .15s,border-color .15s}
+.az-rodape .az-rod-sociais a:hover{border-color:var(--azul);color:var(--azul)}
+.az-rod-sociais svg{width:18px;height:18px}
+.az-rod-col{border-top:1px solid #ffffff1a;border-top-color:color-mix(in oklab,#fff 10%,transparent);padding-top:20px}
+.az-rodape h2{font-family:var(--titulo);font-weight:400;letter-spacing:-.02em;font-synthesis-weight:none;font-size:20px;line-height:28px;color:#fff;margin:0;text-transform:none}
+.az-rod-col ul{list-style:none;margin:16px 0 0;padding:0;font-size:14px;line-height:20px;color:#e8e7e5b3;color:lab(91.6807% .084579 1.10058/.7)}
+.az-rod-col li+li{margin-top:8px}
+.az-rod-col p{margin:0;font-size:14px;line-height:20px;color:#e8e7e5b3;color:lab(91.6807% .084579 1.10058/.7);overflow-wrap:break-word}
+.az-rod-col h2+p{margin-top:16px}
+.az-rod-col strong{font-weight:600;color:#fff}
+.az-rodape a{color:inherit;text-decoration:none;transition:color .15s}
+.az-rod-col ul a:hover{color:var(--azul)}
+.az-rod-col p a:hover{text-decoration:underline}
+.az-rodape .az-rod-wpp{display:inline-block;margin-top:12px;font-size:14px;line-height:20px;font-weight:500;color:#fff}
+.az-rodape .az-rod-wpp:hover{color:var(--azul);text-decoration:underline}
+.az-rod-sobre{border-top:1px solid #ffffff1a;border-top-color:color-mix(in oklab,#fff 10%,transparent)}
+.az-rod-sobre>div{max-width:1440px;margin:0 auto;padding:20px 16px}
+.az-rod-sobre p{margin:0;font-size:12px;line-height:1.625;color:#e8e7e599;color:lab(91.6807% .084579 1.10058/.6)}
+.az-rod-sobre p+p{margin-top:8px}
+.az-rod-copy{margin:0;border-top:1px solid #ffffff1a;border-top-color:color-mix(in oklab,#fff 10%,transparent);padding:8px 12px;text-align:center;font-size:12px;line-height:1.625;color:#e8e7e5b3;color:lab(91.6807% .084579 1.10058/.7)}
+@media (min-width:640px){
+  .az-rod-grade{grid-template-columns:repeat(2,minmax(0,1fr));padding:40px 24px}
+  .az-rod-marca{grid-column:span 2;text-align:left}
+  .az-rod-marca-in{margin:0}
+  .az-rod-sociais{justify-content:flex-start}
+  .az-rod-col{border-top:0;padding-top:0}
+  .az-rod-sobre>div{padding:20px 24px}
+}
+@media (min-width:1024px){
+  .az-rod-grade{grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;padding:56px 32px}
+  .az-rod-marca{grid-column:span 1}
+  .az-rod-sobre>div{padding:20px 32px}
+}
 
 /* ───── índice ───── */
 .az-busca{margin-top:20px;max-width:520px}
@@ -358,20 +392,19 @@ table.az-tab{border-collapse:collapse;width:100%;font-size:18px;font-variant-num
 .az-outros>.az-cat:first-of-type{margin-top:14px}
 
 /* incorporado em iframe: ?embed=1 */
-.az-embed .az-topo,.az-embed .az-rodape,.az-embed .az-rel,.az-embed .az-cta,.az-embed .az-trilha{display:none}
+.az-embed .az-topo,.az-embed .az-legal,.az-embed .az-rodape,.az-embed .az-rel,.az-embed .az-cta,.az-embed .az-trilha{display:none}
 .az-embed .az-hero{padding:16px 0 10px}
 .az-embed body{background:transparent}
 
 @media (max-width:860px){
   body{font-size:17px}
-  .az-larg{padding:0 20px}
   .az-hero{padding:22px 0 14px}
   .az-sobre{padding:22px 20px}
   .az-form,.az-bloco{padding:18px}
-  .az-rodape .az-rod-grade{grid-template-columns:1fr;gap:26px}
   .az-kpis{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}
 }
 @media (max-width:767px){
+  .az-larg{padding:0 16px}
   .az-topo .az-larg{padding:16px}
   .az-topo .az-logo img{height:48px}
   .az-topo nav .az-login{padding:10px 20px;font-size:14px;line-height:20px}

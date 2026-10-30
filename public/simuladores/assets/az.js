@@ -725,7 +725,8 @@
     email: 'azinvest.equipe@gmail.com',
     telefone: '(48) 99938-6708',
     whatsapp: 'https://wa.me/5548999386708',
-    youtube: 'https://www.youtube.com/@investimentosdeaz',
+    youtube: 'https://www.youtube.com/channel/UCuMfW1AOhcbSP1zRG5hyBZQ',
+    sobre: 'A AZ Invest é uma plataforma de conteúdo sobre economia, mercado e educação financeira — análises, simuladores e um painel econômico atualizado para você investir com mais clareza.',
     empresa: 'INVESTIMENTOS DE A A Z',
     razaoSocial: '', cnpj: '', regulatorio: '',
     aviso: 'Simulação de caráter educativo. Os resultados dependem das premissas informadas e não constituem recomendação de investimento.'
@@ -759,6 +760,7 @@
       } else { var a = el('a', null, it[0]); a.href = urlSite(it[1]); nav.appendChild(a); }
     });
     if (AZ.site.login) { var lg = el('a', 'az-login', AZ.site.login[0]); lg.href = urlSite(AZ.site.login[1]); nav.appendChild(lg); }
+    var logo = document.querySelector('.az-topo .az-logo'); if (logo) { logo.href = urlSite('/'); logo.setAttribute('aria-label', 'AZ Invest: página inicial'); }
   }
   /* trilha: "← Todos os simuladores" + pílula da categoria */
   function montarTrilha() {
@@ -774,28 +776,40 @@
     var app = document.getElementById('az-app'); if (!app || !AZ.site.aviso) return;
     app.insertAdjacentElement('afterend', el('p', 'az-aviso-rod', AZ.site.aviso));
   }
-  /* rodapé com colunas, contato e redes, mantendo os avisos legais existentes */
+  /* rodapé igual ao do site (site-az-invest/src/components/common/Footer.tsx); os avisos legais dos
+     simuladores ficam na faixa .az-legal, logo acima */
+  var ICONES = {
+    YouTube: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
+    WhatsApp: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.520.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.711.306 1.265.489 1.697.626.713.226 1.362.194 1.875.118.572-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/></svg>'
+  };
   function montarRodape() {
-    var rod = document.querySelector('.az-rodape .az-larg'); if (!rod || rod.querySelector('.az-rod-grade')) return;
-    var logo = rod.querySelector('.az-logo'), legais = [].slice.call(rod.querySelectorAll(':scope > p'));
+    var rod = document.querySelector('.az-rodape'); if (!rod || rod.querySelector('.az-rod-grade')) return;
     var S = AZ.site, g = el('div', 'az-rod-grade');
-    var c1 = el('div'); if (logo) c1.appendChild(logo); c1.appendChild(el('p', 'az-rod-tag', S.slogan));
+    var c1 = el('div', 'az-rod-marca'), c1i = el('div', 'az-rod-marca-in');
+    var home = el('a'); home.href = urlSite('/'); home.setAttribute('aria-label', 'AZ Invest: página inicial');
+    var img = el('img'); img.src = 'assets/logo-topo.webp'; img.alt = 'AZ Invest - Investimentos de A a Z'; img.width = 951; img.height = 310; img.loading = 'lazy';
+    home.appendChild(img); c1i.appendChild(home); c1i.appendChild(el('p', 'az-rod-tag', S.slogan));
     var soc = el('div', 'az-rod-sociais');
-    if (S.youtube) { var y = el('a'); y.href = S.youtube; y.target = '_blank'; y.rel = 'noopener'; y.setAttribute('aria-label', 'YouTube'); y.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.2 3.6-6.2 3.6z"/></svg>'; soc.appendChild(y); }
-    if (S.whatsapp) { var w = el('a'); w.href = S.whatsapp; w.target = '_blank'; w.rel = 'noopener'; w.setAttribute('aria-label', 'WhatsApp'); w.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3a.5.5 0 0 0 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 12 12 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3z"/></svg>'; soc.appendChild(w); }
-    c1.appendChild(soc); g.appendChild(c1);
-    var c2 = el('div'); c2.appendChild(el('h2', null, 'Atalhos')); var ul = el('ul');
+    [['YouTube', S.youtube], ['WhatsApp', S.whatsapp]].forEach(function (r) {
+      if (!r[1]) return;
+      var a = el('a'); a.href = r[1]; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.setAttribute('aria-label', r[0]); a.innerHTML = ICONES[r[0]]; soc.appendChild(a);
+    });
+    c1i.appendChild(soc); c1.appendChild(c1i); g.appendChild(c1);
+    var c2 = el('div', 'az-rod-col'); c2.appendChild(el('h2', null, 'Atalhos')); var ul = el('ul');
     S.atalhos.forEach(function (it) { var li = el('li'), a = el('a', null, it[0]); a.href = urlSite(it[1]); li.appendChild(a); ul.appendChild(li); });
     c2.appendChild(ul); g.appendChild(c2);
-    var c3 = el('div', 'az-rod-contato'); c3.appendChild(el('h2', null, 'Entre em contato')); var ul3 = el('ul');
-    function linha(rot, txt, href) { var li = el('li'); li.appendChild(el('b', null, rot + ' ')); var a = el('a', null, txt); a.href = href; li.appendChild(a); ul3.appendChild(li); }
-    if (S.email) linha('E-mail:', S.email, 'mailto:' + S.email);
+    var c3 = el('div', 'az-rod-col'); c3.appendChild(el('h2', null, 'Entre em contato'));
+    function linha(rot, txt, href) { var p = el('p'); p.appendChild(el('strong', null, rot)); p.appendChild(document.createTextNode(' ')); var a = el('a', null, txt); a.href = href; p.appendChild(a); c3.appendChild(p); }
+    if (S.email) linha('Email:', S.email, 'mailto:' + S.email);
     if (S.telefone) linha('Telefone:', S.telefone, 'tel:+' + S.telefone.replace(/\D/g, '').replace(/^(?!55)/, '55'));
-    if (S.whatsapp) linha('WhatsApp:', 'Falar pelo WhatsApp', S.whatsapp);
-    c3.appendChild(ul3); g.appendChild(c3);
-    rod.innerHTML = ''; rod.appendChild(g);
-    var lg = el('div', 'az-rod-legal'); if (S.regulatorio) lg.appendChild(el('p', null, S.regulatorio)); legais.forEach(function (p) { lg.appendChild(p); }); if (lg.firstChild) rod.appendChild(lg);
-    rod.appendChild(el('p', 'az-rod-copy', '© ' + new Date().getFullYear() + ' ' + (S.razaoSocial || S.empresa) + (S.cnpj ? ' · CNPJ ' + S.cnpj : '') + '. Todos os direitos reservados.'));
+    if (S.whatsapp) { var w = el('a', 'az-rod-wpp', 'WhatsApp'); w.href = S.whatsapp; w.target = '_blank'; w.rel = 'noopener noreferrer'; c3.appendChild(w); }
+    g.appendChild(c3);
+    var sobre = el('div', 'az-rod-sobre'), si = el('div');
+    si.appendChild(el('p', null, S.sobre));
+    if (S.regulatorio) si.appendChild(el('p', null, S.regulatorio));
+    sobre.appendChild(si);
+    rod.innerHTML = ''; rod.appendChild(g); rod.appendChild(sobre);
+    rod.appendChild(el('p', 'az-rod-copy', new Date().getFullYear() + ' Todos os direitos reservados para ' + (S.razaoSocial || S.empresa) + (S.cnpj ? ' · CNPJ ' + S.cnpj : '')));
   }
   /* fórmulas do "Como funciona": expoentes sobrescritos e, quando longas, em linha própria */
   function formulas(raiz) {
