@@ -135,6 +135,8 @@ Desde 21/09/2026 as divulgações de IPCA/IGP-M não são artigos: categoria `Bo
 - `Percentual_Dividend_Yield_Mes` da CVM é **sobre o VP**, não sobre o preço: rendimento por cota = DY × VP/cota.
 - O "Adj Close" do Yahoo para FII **não incorpora os rendimentos direito** (fica ~0,25 p.p./mês abaixo do retorno total): não serve de régua de retorno total de FII.
 - O COTAHIST anual do ano corrente é atualizado pela B3 todo dia (traz até D-1); os anos fechados (~550 MB) ficam no cache do Actions do `fii-tijolo-pipeline.yml`.
+- **Salto do VP/cota no informe da CVM nem sempre é desdobramento.** O informe pode vir errado (RZTR11 em set/2026: PL dobrado com as mesmas cotas) ou zerado (RBED11 em fev/2025). Sem conferir o preço, isso vira retorno falso e DY falso; VP zero vira fator infinito e apaga a história do fundo. O `preparar` só aceita o evento se o preço acompanhar em até um mês.
+- **Trava de qualidade não pode tirar dado do site em silêncio.** Run verde com `[WARN]` no log é invisível: a linha do tijolo ficou fora do gráfico por quase três semanas. Falha pequena publica e deixa a run vermelha; falha grande não publica e mantém o último arquivo bom.
 - pandas com dtype `str`: atribuir NaN de um `Index.map` numa coluna de texto levanta `Invalid value for dtype 'str'` — crie a coluna como `object` antes.
 
 

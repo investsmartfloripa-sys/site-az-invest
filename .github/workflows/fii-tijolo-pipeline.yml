@@ -83,3 +83,12 @@ jobs:
             echo "::error::purga de cache falhou (HTTP ${code:-sem-resposta}) - o painel pode servir dado velho ate o TTL vencer"
             exit 1
           fi
+
+      # Divergência pequena entre o índice diário e o mensal: o dado já foi publicado (a linha do tijolo não some
+      # do gráfico principal), mas a run fica vermelha para alguém olhar.
+      - name: Alerta da serie diaria
+        run: |
+          if [ -f data-pipeline/out/alerta_tijolo.txt ]; then
+            echo "::error::$(cat data-pipeline/out/alerta_tijolo.txt)"
+            exit 1
+          fi

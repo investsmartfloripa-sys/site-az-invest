@@ -138,6 +138,13 @@ def cotahist(cache: Path, ano_hoje: int) -> pd.DataFrame:
     return q
 
 
+SALTO_VP = 1.6          # salto do VP/cota a partir do qual se suspeita de desdobramento/grupamento
+PRECO_PARADO = 1.35     # preço variando menos que isso em 3 meses não confirma o evento
+VP_RUIM_MESES = 6       # meses até aceitar um nível novo de VP que não veio com o preço
+DIF_DIARIO_ALERTA = 1e-6   # diário x mensal no fim do mês: acima disso a run fica vermelha
+DIF_DIARIO_MAX = 0.03      # acima disso há algo errado no índice: nada é publicado
+
+
 # ---------------------------------------------------------------------------
 # ISIN (B3) -> CNPJ (CVM)
 # ---------------------------------------------------------------------------
@@ -257,12 +264,47 @@ def painel(q: pd.DataFrame, mp: pd.Series, cvm: Dict[str, pd.DataFrame]) -> pd.D
     return P
 
 
+def _corrigir_vp_errado(P: pd.DataFrame) -> pd.DataFrame:
+    """P/VP com o último VP bom enquanto o informe traz o VP errado (ver preparar). Se o nível novo persistir por
+    VP_RUIM_MESES, é aceito (reavaliação de verdade). O rendimento continua no VP do informe: o DY do mês é sobre ele."""
+    for cnpj in P.index[P["vp_falso"]].get_level_values(0).unique():
+        bom, ruins = None, None        # ruins = meses com o VP errado; None = fora de um trecho errado
+        for m, r in P.loc[cnpj].iterrows():
+            vp = r["vp_cota"]
+            if pd.isna(vp) or vp <= 0:
+                continue
+            if ruins is None and r["vp_falso"] and bom is not None:
+                ruins = 0
+            if ruins is not None and (1 / SALTO_VP <= vp / bom <= SALTO_VP or ruins >= VP_RUIM_MESES):
+                ruins = None
+            if ruins is None:
+                bom = vp
+                continue
+            ruins += 1
+            pvp = r["fech"] / bom
+            P.at[(cnpj, m), "pvp"] = pvp
+            P.at[(cnpj, m), "pvp_ok"] = bool(0.25 <= pvp <= 3.0)
+            P.at[(cnpj, m), "pl"] = r["pl"] * bom / vp     # o PL veio errado junto: o peso (P/VP × PL) não pode mudar
+    return P
+
+
 def preparar(P: pd.DataFrame) -> pd.DataFrame:
     P = P.copy()
     g = P.groupby(level=0)
     P["f_tij_m"] = g["f_tijolo"].transform(lambda s: s.clip(0, 1).rolling(JANELA_CLASS, min_periods=1).mean())
     s = g["vp_cota"].shift(1) / P["vp_cota"]
-    P["fat_ev"] = np.where((s > 1.6) | (s < 1 / 1.6), s, 1.0)          # desdobramento/grupamento
+    salto = (s > SALTO_VP) | (s < 1 / SALTO_VP)
+    # Desdobramento/grupamento muda VP e preço pelo mesmo fator, no mesmo mês ou num vizinho (o informe pode atrasar).
+    # VP que salta com o preço parado nos três meses é erro do informe: RZTR11 em set/2026 (PL de R$ 1,88 bi para
+    # R$ 3,69 bi, mesmas cotas, rentabilidade de 2,08%) virava "grupamento" e −49% no índice.
+    f = g["fech"]
+    r0 = f.shift(1) / P["fech"]
+    moves = pd.concat([f.shift(2) / f.shift(1), r0, P["fech"] / f.shift(-1)], axis=1)
+    moves = moves.where(moves > 0)
+    parado = np.log(moves).abs().max(axis=1) < np.log(PRECO_PARADO)
+    P["vp_falso"] = salto & r0.notna() & parado
+    P["fat_ev"] = np.where(salto & ~P["vp_falso"], s, 1.0)
+    P = _corrigir_vp_errado(P)
     P["F"] = P.groupby(level=0)["fat_ev"].transform(lambda x: x[::-1].cumprod()[::-1].shift(-1).fillna(1.0))
     P["vp_adj"] = P["vp_cota"] / P["F"]
     P["p_adj"] = P["fech"] / P["F"]
@@ -496,17 +538,26 @@ def build(cache: Path) -> Dict:
     S["just_hi"] = S["nivel_preco"] * S["dy"] / (S["dy_just"] - sd)
     hoje_row = S.loc[mes_hoje]
 
-    # série diária (retorno total) — tem que fechar com o mensal no último pregão de cada mês
+    # série diária (retorno total) — tem que fechar com o mensal no último pregão de cada mês. O gráfico principal
+    # depende dela: uma diferença pequena publica e deixa a run vermelha (out/2026: a trava antiga tirava a série
+    # em silêncio e a linha do tijolo sumiu do site por semanas); uma diferença grande aborta e o site fica com o
+    # último arquivo bom.
     diario = diario_retorno_total(q, mp, P, pesos)
     fim_mes = diario.groupby(diario.index.to_period("M")).last()
     dif = (fim_mes / S["nivel"].reindex(fim_mes.index) - 1).abs()
-    if not len(diario) or dif.max() > 1e-6:
-        print(f"[tijolo] [WARN] série diária não fecha com a mensal (dif. máx. {dif.max():.2e}) — fora do JSON",
-              file=sys.stderr)
-        diario = pd.Series(dtype=float)
-    else:
-        print(f"[tijolo] diário: {len(diario)} pregões, {diario.index.min().date()} a {diario.index.max().date()}, "
-              f"fecha com o mensal (dif. máx. {dif.max():.1e})")
+    if not len(diario) or not dif.max() <= DIF_DIARIO_MAX:
+        raise RuntimeError(f"série diária vazia ou longe da mensal (dif. máx. {dif.max():.2e})")
+    alerta_diario = None
+    if dif.max() > DIF_DIARIO_ALERTA:
+        alerta_diario = (f"série diária não fecha com a mensal: dif. máx. {dif.max():.2e} em {dif.idxmax()} "
+                         f"({int((dif > DIF_DIARIO_ALERTA).sum())} mês/meses)")
+        print(f"::error::{alerta_diario}")
+    print(f"[tijolo] diário: {len(diario)} pregões, {diario.index.min().date()} a {diario.index.max().date()}, "
+          f"dif. máx. com o mensal {dif.max():.1e}")
+    falsos = P[P["vp_falso"]].reset_index()
+    falsos = falsos[falsos["cnpj"].isin(comp.index)] if comp is not None else falsos.iloc[0:0]
+    for r in falsos.itertuples():
+        print(f"::notice::VP do informe ignorado (preço não acompanhou): {r.ticker} em {r.mes}, VP/cota {r.vp_cota:.2f}")
     dy_hoje, p_hoje, dyj_hoje = float(hoje_row["dy"]), float(hoje_row["nivel_preco"]), float(hoje_row["dy_just"])
 
     # trava
@@ -599,6 +650,7 @@ def build(cache: Path) -> Dict:
                               "presenca": PRESENCA, "corte_negociabilidade": CORTE_IN,
                               "teto": TETO, "janela_liquidez_meses": JANELA_LIQ}},
         "avisos": avisos,
+        "_alerta_diario": alerta_diario,
         "fontes": {"cotacoes": "B3 — COTAHIST (histórico oficial de cotações)", "fundos": "CVM — informe mensal de FII",
                    "juros": "Curvas PRE e IPCA do site (treasury_history.json)", "ifix": "B3 — IFIX diário",
                    "projecao": "Selic implícita do Panorama (charts/tables/selic_implicita.json)"},
@@ -618,6 +670,10 @@ def main() -> int:
     except Exception as e:  # noqa: BLE001
         print(f"::error::índice de tijolo não publicado (site segue com o último bom): {e}")
         return 1
+    alerta = payload.pop("_alerta_diario", None)
+    (out_dir / "alerta_tijolo.txt").unlink(missing_ok=True)
+    if alerta:
+        (out_dir / "alerta_tijolo.txt").write_text(alerta, encoding="utf-8")
     out = out_dir / "fii_tijolo_modelo.json"
     out.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     h, m = payload["hoje"], payload["modelo"]
