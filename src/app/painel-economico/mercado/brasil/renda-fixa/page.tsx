@@ -3,6 +3,7 @@ import Link from "next/link";
 import { TreasuryTimeSeries } from "@/components/painel/market/TreasuryTimeSeries";
 import { CreditSpreadsHistory } from "@/components/painel/market/CreditSpreadsHistory";
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
+import { ComunidadeMercado } from "@/components/painel/market/ComunidadeMercado";
 import { getRendaFixaData } from "@/lib/painel-renda-fixa-data";
 
 export const metadata = {
@@ -47,19 +48,21 @@ export default async function RendaFixaPage() {
         <p className="font-semibold uppercase tracking-wide text-zinc-500">Notas metodológicas</p>
         <ul className="mt-2 space-y-1 list-disc pl-4">
           <li>
-            <strong>Títulos públicos (Pré e IPCA+)</strong>: taxa indicativa publicada pela ANBIMA no
-            arquivo <code>ms{`{YYMMDD}`}.txt</code>. Categoria Prefixado consolida LTN e NTN-F; IPCA+ usa NTN-B.
+            <strong>Títulos públicos (Pré e IPCA+)</strong>: taxa indicativa que a ANBIMA publica todo
+            dia útil para o mercado secundário. O Prefixado reúne LTN e NTN-F; o IPCA+ usa NTN-B.
           </li>
           <li>
-            <strong>Crédito privado</strong>: mediana, P25 e P75 da taxa indicativa publicada pela
-            ANBIMA no arquivo <code>db{`{YYMMDD}`}.txt</code>, agregada por indexador.
+            <strong>Crédito privado</strong>: mediana e quartis (25% e 75%) da taxa indicativa das
+            debêntures publicada pela ANBIMA, separados por indexador.
           </li>
           <li>
-            O histórico online da ANBIMA é tipicamente de ~3 meses. A partir do deploy, o pipeline
-            diário vai acumulando dias até atingir séries mais longas.
+            <strong>Histórico</strong>: a ANBIMA deixa consultar só os últimos meses; guardamos cada
+            dia publicado, então as séries ficam mais longas com o tempo.
           </li>
         </ul>
       </section>
+
+      <ComunidadeMercado assunto="renda fixa" origem="PAINEL_RENDA_FIXA" />
     </div>
   );
 }

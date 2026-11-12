@@ -2,7 +2,7 @@ import { formatDadoLabel, formatGiroDia } from "@/lib/data-stamp";
 
 /**
  * Carimbo discreto de datas exibido no rodapé dos cards de gráfico:
- *   "Giro 04/06/26 · Dado mai/26"
+ *   "Giro 04/06/2026 · Dado mai/26"
  *
  * - giro: quando o pipeline gravou o JSON no Blob (precisão de dia).
  * - dado: data da observação mais recente da série plotada (precisão máxima
@@ -24,8 +24,8 @@ export default function DataStamp({
   return (
     <span
       suppressHydrationWarning
-      // 12 px (era 10): carimbo é texto de leitura, não marca de eixo (revisão 12/11/2026, letras pequenas).
-      className={`inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium leading-none text-zinc-500 ${className}`}
+      // 12 px e cinza mais escuro (era 10 px zinc-400): carimbo é texto de leitura, não marca de eixo (revisão 12/11/2026).
+      className={`inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium leading-none text-zinc-600 ${className}`}
     >
       {giroFmt ? <span suppressHydrationWarning>Giro {giroFmt}</span> : null}
       {giroFmt && dadoFmt ? <span aria-hidden>·</span> : null}

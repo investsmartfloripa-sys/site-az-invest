@@ -8,11 +8,12 @@
  *  - data/market_catalog.json           - lista de ativos com metadados
  *  - data/market_history_latest.json    - retornos pre-calculados por ticker
  *  - data/market_history_full.json      - serie diaria completa (pesado, so /historico)
- *  - data/market_fundamentals.json      - multiplos via yfinance .info
+ *  - data/market_fundamentals.json      - multiplos (Yahoo Finance)
  *
  * Toda funcao retorna null em caso de falha (mesmo padrao do painel-data.ts).
  */
 
+import { fmtNum } from "@/lib/format-br";
 import { fetchPainelBlob } from "@/lib/painel-blob";
 
 /** Cache ISR de 1 hora para market data (atualiza 1x/dia, nao precisa ser tao agressivo). */
@@ -243,30 +244,59 @@ export async function getMarketOverview() {
 // Helpers de formatacao / classificacao usados por componentes da UI
 // ---------------------------------------------------------------------------
 
+// Todos em pt-BR (vírgula decimal, ponto de milhar) — o "toFixed" antigo punha
+// "39.60" e "US$ 5.17 T" ao lado da vírgula do resto do site (revisão 12/11/2026).
+
 export function formatPct(value: number | null | undefined, fractionDigits = 2): string {
   if (value == null || Number.isNaN(value)) return "—";
-  return `${value.toFixed(fractionDigits)}%`;
+  return `${fmtNum(value, fractionDigits)}%`;
 }
 
 export function formatRatio(value: number | null | undefined, fractionDigits = 2): string {
   if (value == null || Number.isNaN(value)) return "—";
-  return value.toFixed(fractionDigits);
+  return fmtNum(value, fractionDigits);
 }
 
+/** Valor grande abreviado: "R$ 6,04 bi", "US$ 5,17 tri", "R$ 38,59 mi", "12,3 mil". */
 export function formatBigNumber(value: number | null | undefined, currency: "BRL" | "USD" | "" = ""): string {
   if (value == null || Number.isNaN(value)) return "—";
   const abs = Math.abs(value);
   const prefix = currency ? (currency === "BRL" ? "R$ " : "US$ ") : "";
-  if (abs >= 1e12) return `${prefix}${(value / 1e12).toFixed(2)} T`;
-  if (abs >= 1e9) return `${prefix}${(value / 1e9).toFixed(2)} B`;
-  if (abs >= 1e6) return `${prefix}${(value / 1e6).toFixed(2)} M`;
-  if (abs >= 1e3) return `${prefix}${(value / 1e3).toFixed(2)} K`;
-  return `${prefix}${value.toFixed(2)}`;
+  if (abs >= 1e12) return `${prefix}${fmtNum(value / 1e12, 2)} tri`;
+  if (abs >= 1e9) return `${prefix}${fmtNum(value / 1e9, 2)} bi`;
+  if (abs >= 1e6) return `${prefix}${fmtNum(value / 1e6, 2)} mi`;
+  if (abs >= 1e3) return `${prefix}${fmtNum(value / 1e3, 2)} mil`;
+  return `${prefix}${fmtNum(value, 2)}`;
 }
 
 export function formatPctFromRatio(value: number | null | undefined, fractionDigits = 2): string {
   if (value == null || Number.isNaN(value)) return "—";
-  return `${(value * 100).toFixed(fractionDigits)}%`;
+  return `${fmtNum(value * 100, fractionDigits)}%`;
+}
+
+/**
+ * Cotação formatada pela CLASSE do ativo (revisão 12/11/2026, item 136):
+ *  - índice: em pontos, sem moeda ("26.662,77 pts") — DAX não é "US$";
+ *  - câmbio: na moeda COTADA do par (USD/BRL → "R$ 5,3412"; USD/MXN → "18,2450 MXN"),
+ *    4 casas (2 acima de 1.000: "1.544,00 ARS"); DXY é índice → pontos;
+ *  - ações, ETFs, FIIs, commodities: moeda nativa com 2 casas;
+ *  - cripto: 2 casas (4 abaixo de 1, ex.: ADA).
+ */
+export function formatQuote(
+  value: number | null | undefined,
+  asset: { klass: AssetClass | string; currency?: string; name?: string; ticker?: string },
+): string {
+  if (value == null || !Number.isFinite(value)) return "—";
+  const moeda = (code: string | undefined, corpo: string) =>
+    code === "BRL" ? `R$ ${corpo}` : code === "USD" ? `US$ ${corpo}` : code ? `${corpo} ${code}` : corpo;
+  if (asset.klass === "indice") return `${fmtNum(value, 2)} pts`;
+  if (asset.klass === "fx") {
+    const par = /^([A-Z]{3})\/([A-Z]{3})$/.exec((asset.name ?? "").trim());
+    if (!par) return `${fmtNum(value, 2)} pts`; // DXY e afins: índice de moedas
+    return moeda(par[2], fmtNum(value, Math.abs(value) >= 1000 ? 2 : 4));
+  }
+  if (asset.klass === "cripto") return moeda(asset.currency, fmtNum(value, Math.abs(value) < 1 ? 4 : 2));
+  return moeda(asset.currency, fmtNum(value, 2));
 }
 
 export function classLabel(klass: AssetClass | string, fallback?: string): string {

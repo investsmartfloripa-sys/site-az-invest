@@ -8,7 +8,7 @@ import {
   type AzPeriodValue,
   type AzTimeSeries,
 } from "@/components/painel/charts";
-import { MethodInfo } from "@/components/painel/core/MethodInfo";
+import { MarketCard } from "@/components/painel/market/MarketCard";
 import { seriesColor } from "@/lib/az-chart-theme";
 import {
   COMPARATOR_TENORS,
@@ -208,25 +208,26 @@ export function GlobalRatesComparator() {
   const availableCountries = GLOBAL_COUNTRIES.filter((c) => byCountry.has(c.id));
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-[#132960]/15 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#132960] px-4 py-3 md:px-5">
-        <h2 className="flex items-center gap-2 text-base font-semibold text-white md:text-lg">
-          Juros soberanos — comparativo por prazo
-          <MethodInfo align="left" className="align-middle">
-            Yields nominais soberanos por prazo constante, fechamento diário (amostragem semanal no
-            histórico p/ leveza). Fontes: Brasil — ANBIMA (ETTJ pré 1/2/5/10a; histórico antigo via
-            Tesouro Direto LTN/NTN-F); EUA — FRED (Treasury constant maturity); Japão — Ministério
-            das Finanças (JGB); Alemanha — Deutsche Bundesbank (curva Svensson); Reino Unido — Bank
-            of England (par yields de gilts, só 5/10/20a); Colômbia — Banco de la República (TES
-            zero cupom 1/5/10a, dias de defasagem de carga); China — ChinaBond/CCDC (CGB, via
-            pipeline diário). A leitura intraday do Brasil (curva DI/IPCA+ da B3) vive no Panorama.
-            França não tem curva diária gratuita.
-          </MethodInfo>
-        </h2>
-        <p className="text-[11px] text-[#9db8e8]">
-          {resp ? `Atualizado ${resp.generatedAt.slice(0, 10).split("-").reverse().join("/")}` : "Carregando…"}
-        </p>
-      </div>
+    // Cartão padrão das abas de Mercado, com o carimbo Giro · Dado no rodapé (antes: faixa
+    // marinho e "Atualizado dd/mm/aaaa" próprios desta aba).
+    <MarketCard
+      title="Juros soberanos — comparativo por prazo"
+      bodyClassName="p-0"
+      stampGiro={resp?.generatedAt ?? null}
+      stampDado={series.length > 0 ? range.max : null}
+      footer={
+        <>
+          Juros nominais dos títulos públicos de cada país por prazo constante, fechamento diário
+          (uma leitura por semana no histórico, para o gráfico ficar leve). Fontes: Brasil — ANBIMA
+          (curva pré de 1, 2, 5 e 10 anos; histórico antigo pelo Tesouro Direto, LTN e NTN-F); EUA —
+          FRED (Treasury de prazo constante); Japão — Ministério das Finanças (JGB); Alemanha —
+          Deutsche Bundesbank (curva Svensson); Reino Unido — Bank of England (gilts, só 5, 10 e 20
+          anos); Colômbia — Banco de la República (TES cupom zero de 1, 5 e 10 anos, com alguns dias
+          de defasagem); China — ChinaBond/CCDC (CGB). A leitura ao vivo da curva brasileira (DI e
+          IPCA+ da B3) fica no Panorama. A França não tem curva diária gratuita.
+        </>
+      }
+    >
 
       {loading && !resp ? (
         <div className="flex h-[360px] items-center justify-center text-sm text-zinc-500">
@@ -241,7 +242,8 @@ export function GlobalRatesComparator() {
           {/* Seleção de países (chips com bandeira) */}
           <div className="space-y-1.5">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Países</span>
-            <div className="flex flex-wrap items-center gap-2">
+            {/* Fila rolável no celular (os chips quebravam em várias linhas). */}
+            <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 md:flex-wrap">
               {availableCountries.map((c) => {
                 const active = selected.includes(c.id);
                 return (
@@ -250,7 +252,7 @@ export function GlobalRatesComparator() {
                     type="button"
                     aria-pressed={active}
                     onClick={() => toggleCountry(c.id)}
-                    className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${
+                    className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${
                       active
                         ? "border-transparent text-white shadow-sm"
                         : "border-[#132960]/15 bg-white text-[#132960] hover:border-[#027DFC]"
@@ -305,9 +307,8 @@ export function GlobalRatesComparator() {
           </div>
 
           {/* Janela temporal */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-zinc-500">Janela:</span>
-            <AzPeriodSelector value={period} onChange={setPeriod} min={range.min} max={range.max} />
+          <div className="min-w-0 max-w-full overflow-x-auto">
+            <AzPeriodSelector className="w-max" value={period} onChange={setPeriod} min={range.min} max={range.max} />
           </div>
 
           {/* Gráfico */}
@@ -337,6 +338,6 @@ export function GlobalRatesComparator() {
 
         </div>
       )}
-    </section>
+    </MarketCard>
   );
 }

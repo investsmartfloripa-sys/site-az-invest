@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import type { AssetClass, CatalogAsset, MarketHistoryLatest, ReturnPeriods } from "@/lib/painel-market-data";
-import { classLabel } from "@/lib/painel-market-data";
+import { classLabel, formatQuote } from "@/lib/painel-market-data";
 import { MarketCard } from "@/components/painel/market/MarketCard";
 import { variationText } from "@/lib/az-chart-theme";
 import { fmtSignedPct } from "@/lib/format-br";
@@ -26,12 +26,22 @@ const PERIOD_COLS: Array<{ key: keyof ReturnPeriods; label: string }> = [
   { key: "5y",  label: "5A" },
 ];
 
+/** Linhas por página: 239 ativos de uma vez perdiam o leitor (revisão 12/11/2026). */
+const PAGE_SIZE = 50;
+
+/**
+ * Coluna de horizonte só aparece se pelo menos 1/3 das linhas filtradas tem valor —
+ * o 5A ficava em "—" para quase tudo e parecia dado quebrado.
+ */
+const MIN_COBERTURA = 1 / 3;
+
 
 export function MarketOverviewTable({ catalog, latest }: Props) {
   const [klassFilter, setKlassFilter] = useState<AssetClass | "all">("all");
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortKey>("1m");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [page, setPage] = useState(0);
 
   const rows = useMemo(() => {
     const tickers = latest?.tickers ?? {};
@@ -86,6 +96,29 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
     return arr;
   }, [filtered, sortBy, sortDir]);
 
+  const cols = useMemo(
+    () =>
+      PERIOD_COLS.filter((p) => {
+        if (filtered.length === 0) return true;
+        const comValor = filtered.filter((r) => r.latest?.returns[p.key] != null).length;
+        return comValor / filtered.length >= MIN_COBERTURA;
+      }),
+    [filtered],
+  );
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const pageSafe = Math.min(page, totalPages - 1);
+  const pageRows = sorted.slice(pageSafe * PAGE_SIZE, (pageSafe + 1) * PAGE_SIZE);
+
+  // Data do dado = último fechamento entre os ativos (não a hora em que a carga rodou).
+  const ultimoDado = useMemo(() => {
+    let max: string | null = null;
+    for (const t of Object.values(latest?.tickers ?? {})) {
+      if (t?.last_date && (max == null || t.last_date > max)) max = t.last_date;
+    }
+    return max;
+  }, [latest]);
+
   function toggleSort(key: SortKey) {
     if (sortBy === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -93,6 +126,7 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
       setSortBy(key);
       setSortDir("desc");
     }
+    setPage(0);
   }
 
   const klassOptions: Array<{ id: AssetClass | "all"; label: string }> = [
@@ -116,7 +150,7 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
       bodyClassName="px-4 pb-4 pt-2"
       footer="Fonte: Yahoo Finance"
       stampGiro={latest?.generated_at ?? null}
-      stampDado={latest?.generated_at ?? null}
+      stampDado={ultimoDado ?? latest?.generated_at ?? null}
     >
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -124,7 +158,10 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
             type="search"
             placeholder="Buscar..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(0);
+            }}
             className="w-full max-w-xs rounded-lg border border-[#132960]/20 bg-white px-3 py-1.5 text-sm focus:border-[#027DFC] focus:outline-none focus:ring-2 focus:ring-[#027DFC]/30"
           />
           <div className="flex flex-wrap gap-1">
@@ -132,7 +169,10 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
               <button
                 key={o.id}
                 type="button"
-                onClick={() => setKlassFilter(o.id)}
+                onClick={() => {
+                  setKlassFilter(o.id);
+                  setPage(0);
+                }}
                 className={`rounded-lg px-2 py-1 text-[11px] font-semibold transition ${
                   klassFilter === o.id
                     ? "bg-[#132960] text-white"
@@ -145,9 +185,10 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
           </div>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-[#132960]/10">
+        {/* Rolagem interna com cabeçalho fixo: na lista longa o leitor não perde qual coluna é 1D, 1M, 1A. */}
+        <div className="max-h-[70vh] overflow-auto rounded-xl border border-[#132960]/10">
           <table className="w-full text-xs">
-            <thead className="bg-zinc-50">
+            <thead className="sticky top-0 z-10 bg-zinc-50 shadow-[0_1px_0_rgba(19,41,96,0.10)]">
               <tr>
                 <th
                   onClick={() => toggleSort("name")}
@@ -167,7 +208,7 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
                 >
                   Cotação {sortBy === "last" ? <span className="text-[#027DFC]">{sortDir === "asc" ? "↑" : "↓"}</span> : null}
                 </th>
-                {PERIOD_COLS.map((p) => (
+                {cols.map((p) => (
                   <th
                     key={p.key}
                     onClick={() => toggleSort(p.key as SortKey)}
@@ -180,7 +221,7 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              {sorted.map(({ asset, latest: row }, idx) => (
+              {pageRows.map(({ asset, latest: row }, idx) => (
                 <tr
                   key={asset.ticker}
                   className={`tabular-nums ${idx % 2 === 0 ? "bg-white" : "bg-zinc-50/40"} hover:bg-[#ebf4ff]`}
@@ -198,16 +239,9 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
                   </td>
                   <td className="px-2 py-1.5 text-zinc-700">{asset.sector}</td>
                   <td className="px-2 py-1.5 text-right text-[#132960]">
-                    {row?.last_close != null ? (
-                      <span>
-                        {asset.currency === "BRL" ? "R$ " : "US$ "}
-                        {row.last_close.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-                      </span>
-                    ) : (
-                      "—"
-                    )}
+                    <span className="whitespace-nowrap">{formatQuote(row?.last_close, asset)}</span>
                   </td>
-                  {PERIOD_COLS.map((p) => {
+                  {cols.map((p) => {
                     const v = row?.returns[p.key];
                     return (
                       <td
@@ -223,7 +257,7 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
               ))}
               {sorted.length === 0 ? (
                 <tr>
-                  <td colSpan={3 + PERIOD_COLS.length} className="px-2 py-8 text-center text-zinc-500">
+                  <td colSpan={3 + cols.length} className="px-2 py-8 text-center text-zinc-500">
                     Nenhum ativo bate os filtros.
                   </td>
                 </tr>
@@ -231,6 +265,34 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
             </tbody>
           </table>
         </div>
+        {totalPages > 1 ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-600">
+            <span className="tabular-nums">
+              {pageSafe * PAGE_SIZE + 1}–{Math.min((pageSafe + 1) * PAGE_SIZE, sorted.length)} de {sorted.length} ativos
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setPage(Math.max(0, pageSafe - 1))}
+                disabled={pageSafe === 0}
+                className="rounded-lg border border-[#132960]/20 bg-white px-3 py-1.5 font-semibold text-[#132960] transition hover:border-[#027DFC] hover:text-[#027DFC] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                ← Anterior
+              </button>
+              <span className="px-2 tabular-nums">
+                {pageSafe + 1} / {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPage(Math.min(totalPages - 1, pageSafe + 1))}
+                disabled={pageSafe >= totalPages - 1}
+                className="rounded-lg border border-[#132960]/20 bg-white px-3 py-1.5 font-semibold text-[#132960] transition hover:border-[#027DFC] hover:text-[#027DFC] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Próxima →
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </MarketCard>
   );

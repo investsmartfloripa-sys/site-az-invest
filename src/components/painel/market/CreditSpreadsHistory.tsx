@@ -19,9 +19,18 @@ import {
   resolvePeriodRange,
   type AzPeriodValue,
 } from "@/components/painel/charts";
-import { AzTooltip, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
+import { AzTooltip, azGridProps, azXAxisProps, azYAxisProps, ticksRedondos } from "@/components/painel/core";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
-import { diffDaysUTC, fmtDataBR, fmtNum, fmtPct, formatAxisDate } from "@/lib/format-br";
+import {
+  buildTimeTicks,
+  diffDaysUTC,
+  fmtDataBR,
+  fmtNum,
+  fmtPct,
+  formatTimeTickLabel,
+  isoFromUTC,
+  parseIsoUTC,
+} from "@/lib/format-br";
 
 type ClassKey = "DI" | "IPCA";
 
@@ -35,6 +44,9 @@ function buildChartData(c: CreditClass, from: string, to: string) {
   const dates = Object.keys(byDate).sort();
   return dates.map((d) => ({
     date: d,
+    // Eixo de tempo numérico: mesmas marcas (viradas de mês) do gráfico de cima, no lugar
+    // de "14/08 20/08 …" num cartão e "set/26 out/26" no outro.
+    t: parseIsoUTC(d),
     median: byDate[d].median,
     p25: byDate[d].p25,
     p75: byDate[d].p75,
@@ -65,7 +77,7 @@ export function CreditSpreadsHistory({ data }: Props) {
     return (
       <MarketCard title="Spreads de crédito privado (debêntures)">
         <div className="py-10 text-center text-sm text-zinc-500">
-          Dados ANBIMA ainda não publicados pelo pipeline diário.
+          As taxas da ANBIMA ainda não foram carregadas. Volte em alguns minutos.
         </div>
       </MarketCard>
     );
@@ -101,11 +113,23 @@ export function CreditSpreadsHistory({ data }: Props) {
 
   const yLabel = klass === "DI" ? "Spread sobre CDI" : "Spread sobre NTN-B";
 
+  const xTicks = buildTimeTicks(
+    chartData.map((r) => r.date),
+    spanDays,
+  ).map((d) => parseIsoUTC(d));
+  // Eixo Y em marcas redondas que cobrem mediana e quartis.
+  const todosY = chartData
+    .flatMap((r) => [r.median, r.p25, r.p75])
+    .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+  const yEixo = todosY.length ? ticksRedondos(Math.min(...todosY), Math.max(...todosY)) : null;
+  const yPasso = yEixo && yEixo.ticks.length > 1 ? yEixo.ticks[1] - yEixo.ticks[0] : 1;
+  const yDec = yPasso >= 1 ? 0 : yPasso >= 0.1 ? 1 : 2;
+
   return (
     <MarketCard
       title="Spreads de crédito privado"
       subtitle="Mediana e quartis da taxa indicativa de debêntures, por indexador."
-      badge={`ANBIMA · ${data.last_data_date}`}
+      badge={`ANBIMA · ${fmtDataBR(data.last_data_date)}`}
       bodyClassName="px-4 pb-4 pt-2"
       footer={`Fonte: ${data.source}`}
       stampGiro={data.generated_at}
@@ -138,9 +162,9 @@ export function CreditSpreadsHistory({ data }: Props) {
       }
     >
       <div className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-zinc-500">Janela:</span>
+        <div className="min-w-0 max-w-full overflow-x-auto">
           <AzPeriodSelector
+            className="w-max"
             value={period}
             onChange={setPeriod}
             min={seriesMin}
@@ -156,20 +180,25 @@ export function CreditSpreadsHistory({ data }: Props) {
                 <CartesianGrid {...azGridProps()} />
                 <XAxis
                   {...azXAxisProps()}
-                  dataKey="date"
-                  tickFormatter={(d: string) => formatAxisDate(d, spanDays)}
+                  dataKey="t"
+                  type="number"
+                  scale="time"
+                  domain={["dataMin", "dataMax"]}
+                  ticks={xTicks}
+                  tickFormatter={(t: number) => formatTimeTickLabel(isoFromUTC(Number(t)), spanDays)}
                   minTickGap={28}
                 />
                 <YAxis
                   {...azYAxisProps()}
-                  domain={["auto", "auto"]}
-                  tickFormatter={(v: number) => `${fmtNum(v, 1)}%`}
+                  domain={yEixo ? yEixo.domain : ["auto", "auto"]}
+                  ticks={yEixo?.ticks}
+                  tickFormatter={(v: number) => `${fmtNum(v, yDec)}%`}
                   width={56}
                 />
                 <Tooltip
                   content={
                     <AzTooltip
-                      labelFmt={(l) => fmtDataBR(String(l ?? ""))}
+                      labelFmt={(l) => fmtDataBR(isoFromUTC(Number(l)))}
                       valueFmt={(v) => fmtPct(v, 2)}
                     />
                   }
@@ -318,12 +347,10 @@ export function CreditSpreadsHistory({ data }: Props) {
         ) : null}
 
         <p className="text-xs italic text-zinc-500">
-          Para <strong>DI/CDI</strong>, o spread é a Taxa Indicativa ANBIMA (que por convenção já
-          mede o cupom sobre o CDI). Para <strong>IPCA+</strong>, o spread é calculado papel-a-papel
-          como{" "}
-          <code className="rounded bg-zinc-100 px-1">Taxa Indicativa do papel − Taxa NTN-B benchmark</code>
-          {" "}(a NTN-B de referência é definida pelo próprio ANBIMA na publicação diária). Mediana e
-          quartis agregam todos os papéis ativos em cada dia.
+          Para <strong>DI/CDI</strong>, o spread é a taxa indicativa da ANBIMA, que por convenção já
+          mede o cupom sobre o CDI. Para <strong>IPCA+</strong>, o spread de cada papel é a taxa
+          indicativa dele menos a taxa da NTN-B de referência, que a própria ANBIMA define na
+          publicação diária. Mediana e quartis reúnem todos os papéis ativos em cada dia.
         </p>
       </div>
     </MarketCard>

@@ -55,15 +55,25 @@ function bandsOf(stats: GlobalValuationStats | null | undefined) {
 
 function BlocoIndisponivel({ nome }: { nome: string }) {
   return (
-    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
-      <p className="font-semibold">{nome}: dado ainda não disponível</p>
+    <div className="rounded-2xl border border-[#132960]/10 bg-zinc-50/60 p-4 text-xs text-zinc-600">
+      <p className="font-semibold text-[#132960]">{nome}: dado indisponível no momento</p>
       <p className="mt-1">
-        O builder não conseguiu montar este bloco no último giro (fonte fora do ar) e ainda não há
-        dado anterior preservado. A série monta sozinha no próximo run do{" "}
-        <code className="rounded bg-amber-100 px-1 py-0.5">market-data.yml</code>.
+        A fonte estava fora do ar na última atualização e ainda não há dado anterior guardado. O
+        gráfico volta sozinho quando a fonte responder.
       </p>
     </div>
   );
+}
+
+/** "2026-04-01" (início do trimestre, como o FRED publica) → "2026-T2", lido no carimbo como "2T26". */
+function trimestreDe(iso: string | null | undefined): string | null {
+  const m = iso ? /^(\d{4})-(\d{2})/.exec(iso) : null;
+  return m ? `${m[1]}-T${Math.floor((Number(m[2]) - 1) / 3) + 1}` : null;
+}
+
+/** "2026-10-01" → "2026-10", lido no carimbo como "out/26" (dado mensal). */
+function mesDe(iso: string | null | undefined): string | null {
+  return iso && /^\d{4}-\d{2}/.test(iso) ? iso.slice(0, 7) : null;
 }
 
 export function ValuationEuaSection({ data }: Props) {
@@ -136,7 +146,7 @@ export function ValuationEuaSection({ data }: Props) {
       {buffettSeries.length > 0 ? (
         <ChartCard
           title="Indicador Buffett — valor de mercado ÷ PIB dos EUA"
-          subtitle="Quanto a bolsa americana vale em relação ao tamanho da economia; banda = média histórica ± 1 desvio-padrão"
+          subtitle="Quanto a bolsa americana vale em relação ao tamanho da economia; banda = média histórica ± 1 desvio-padrão. Dado trimestral."
           toolbar={
             <AzPeriodSelector
               value={buffettPeriod}
@@ -158,7 +168,7 @@ export function ValuationEuaSection({ data }: Props) {
             </>
           }
           stampGiro={data.generated_at ?? null}
-          stampDado={buffett?.current?.date ?? null}
+          stampDado={trimestreDe(buffett?.current?.date)}
         >
           <AzTimeSeriesChart
             series={buffettSeries}
@@ -177,7 +187,7 @@ export function ValuationEuaSection({ data }: Props) {
       {capeSeries.length > 0 ? (
         <ChartCard
           title="CAPE — P/L de Shiller do S&P 500"
-          subtitle="Preço ÷ média de 10 anos dos lucros reais: o múltiplo que atravessa ciclos; banda = média histórica ± 1 desvio-padrão"
+          subtitle="Preço ÷ média de 10 anos dos lucros reais: o múltiplo que atravessa ciclos; banda = média histórica ± 1 desvio-padrão. Dado mensal."
           toolbar={
             <AzPeriodSelector
               value={capePeriod}
@@ -196,7 +206,7 @@ export function ValuationEuaSection({ data }: Props) {
             </>
           }
           stampGiro={data.generated_at ?? null}
-          stampDado={cape?.current?.date ?? null}
+          stampDado={mesDe(cape?.current?.date)}
         >
           <AzTimeSeriesChart
             series={capeSeries}
@@ -216,10 +226,10 @@ export function ValuationEuaSection({ data }: Props) {
         CAPE e Buffett medem régua longa; o P/L trailing mede o preço de hoje contra o lucro dos
         últimos 12 meses.
         <MethodInfo className="ml-1.5 align-middle">
-          P/L e dividend yield do S&amp;P 500 medidos pelo ETF SPY (yfinance, giro diário útil
-          {spyCur?.date ? ` — último dado ${fmtDataBR(spyCur.date)}` : ""}); a série diária desses
-          múltiplos é acumulada pelo pipeline a cada giro
-          {spy?.series?.length ? ` (${spy.series.length} snapshot${spy.series.length > 1 ? "s" : ""} até aqui)` : ""}.
+          P/L e dividend yield do S&amp;P 500 medidos pelo ETF SPY, segundo o Yahoo Finance, a cada
+          dia útil{spyCur?.date ? ` — último dado ${fmtDataBR(spyCur.date)}` : ""}. Guardamos uma
+          leitura por dia para formar a série
+          {spy?.series?.length ? ` (${spy.series.length} ${spy.series.length > 1 ? "dias" : "dia"} até aqui)` : ""}.
         </MethodInfo>
       </p>
     </div>

@@ -48,11 +48,16 @@ export function CorridaDoAno({ history }: Props) {
   const [preset, setPreset] = useState<string>("desenvolvidos");
   const [periodo, setPeriodo] = useState<AzPeriodValue>({ id: "ytd" });
 
-  // Título da corrida: calculado sobre TODO o catálogo carregado (não só o
-  // pelotão visível) — o líder do ano é o líder do ano.
-  const titulo = useMemo(() => buildTituloCorrida(history), [history]);
-
   const ativo = PRESETS.find((p) => p.id === preset) ?? PRESETS[0];
+
+  // Título da corrida: calculado sobre o GRUPO EXIBIDO. Antes vinha do catálogo inteiro e
+  // citava o Ibovespa com o gráfico dos desenvolvidos na tela, sem a linha do Ibovespa
+  // (revisão de 12/11/2026): o texto precisa bater com o que o leitor vê.
+  const titulo = useMemo(
+    () => buildTituloCorrida({ ...history, series: history.series.filter((s) => ativo.tickers.includes(s.ticker)) }),
+    [history, ativo],
+  );
+
   const series = useMemo<AzTimeSeries[]>(
     () =>
       ativo.tickers
@@ -68,7 +73,7 @@ export function CorridaDoAno({ history }: Props) {
   return (
     <ChartCard
       title={titulo}
-      subtitle="Rebase 100 no primeiro pregão da janela — acima de 100 = acumulou alta; o título usa o acumulado do ano (YTD) do catálogo diário"
+      subtitle="Base 100 no primeiro pregão da janela — acima de 100 = acumulou alta; o título usa o acumulado do ano das bolsas do grupo exibido"
       toolbar={
         <AzSegmented
           ariaLabel="Grupo de índices"
@@ -88,7 +93,9 @@ export function CorridaDoAno({ history }: Props) {
       stampDado={history.lastDataDate}
     >
       <div className="space-y-3">
-        <AzPeriodSelector value={periodo} onChange={setPeriodo} min={min} max={max} />
+        <div className="min-w-0 max-w-full overflow-x-auto">
+          <AzPeriodSelector className="w-max" value={periodo} onChange={setPeriodo} min={min} max={max} />
+        </div>
         <AzTimeSeriesChart series={series} mode="rebase100" period={periodo} height={340} forwardFill />
       </div>
     </ChartCard>

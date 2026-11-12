@@ -10,7 +10,7 @@ import {
   type AzTimeSeries,
 } from "@/components/painel/charts";
 import { CockpitChip } from "@/components/painel/core/CockpitChip";
-import { MethodInfo } from "@/components/painel/core/MethodInfo";
+import { MarketCard } from "@/components/painel/market/MarketCard";
 import { AZ_CHART } from "@/lib/az-chart-theme";
 import {
   addDaysUTC,
@@ -101,8 +101,9 @@ function fmtPP(v: number): string {
   return `${fmtSignedNum(v, 2)} p.p.`;
 }
 
+/** Data na tabela: dd/mm/aaaa, como no resto do site (era dd/mm/aa ao lado de dd/mm/aaaa). */
 function fmtDataCurta(iso: string): string {
-  return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(2, 4)}`;
+  return fmtDataBR(iso);
 }
 
 const STATUS_LABEL: Record<PolicyStats["status"], string> = {
@@ -132,8 +133,11 @@ const CHART_H = 420;
 
 /** Largura da coluna de rótulos à direita do gráfico. */
 const END_LABEL_W = 56;
-/** Distância mínima (px) entre dois rótulos empilhados. */
-const END_LABEL_GAP = 13;
+/**
+ * Distância mínima (px) entre dois rótulos empilhados. Era 13 (2 px de folga para a letra de
+ * 11 px) e "6,25%" e "5,75%" pareciam encavalados (revisão de 12/11/2026).
+ */
+const END_LABEL_GAP = 16;
 
 type EndLabel = { id: string; y: number; color: string; text: string };
 
@@ -313,11 +317,15 @@ export function PolicyRatesChart() {
   const titleMonth = refAsOf ? fmtMesLongo(refAsOf) : null;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-[#132960]/15 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#132960] px-4 py-3 md:px-5">
-        <h2 className="flex items-center gap-2 text-base font-semibold text-white md:text-lg">
-          Taxas básicas de juros pelo mundo{titleMonth ? ` — ${titleMonth}` : ""}
-          <MethodInfo align="left" className="align-middle">
+    // Cartão padrão das abas de Mercado (título navy + ? + carimbo Giro · Dado no rodapé), no
+    // lugar da faixa de cabeçalho marinho que só existia nesta aba.
+    <MarketCard
+      title={`Taxas básicas de juros pelo mundo${titleMonth ? ` — ${titleMonth}` : ""}`}
+      bodyClassName="p-0"
+      stampGiro={resp?.generatedAt ?? null}
+      stampDado={refAsOf ?? null}
+      footer={
+        <>
             Taxa básica de cada banco central (a taxa-meta que ele controla), desenhada em degraus: a linha só muda
             no dia em que a nova taxa passa a valer. Fonte: BIS — Central bank policy rates (WS_CBPOL), compilada a
             partir dos próprios bancos centrais, com cerca de uma semana de defasagem (a coluna &quot;Dados
@@ -331,12 +339,9 @@ export function PolicyRatesChart() {
             atualização). &quot;Situação&quot;: direção da última decisão se ela ocorreu nos últimos{" "}
             {PAUSE_AFTER_DAYS} dias; senão, pausa. &quot;vs. pico&quot;: distância da taxa atual até a máxima desde
             jan/2021.
-          </MethodInfo>
-        </h2>
-        <p className="text-[11px] text-[#9db8e8]">
-          {refAsOf ? `Dados até ${fmtDataBR(refAsOf)} · BIS` : loading ? "Carregando…" : ""}
-        </p>
-      </div>
+        </>
+      }
+    >
 
       {loading && !resp ? (
         <div className="flex h-[420px] items-center justify-center text-sm text-zinc-500">
@@ -361,7 +366,8 @@ export function PolicyRatesChart() {
                 </button>
               ) : null}
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            {/* Fila rolável no celular: os chips ocupavam sete linhas. */}
+            <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 md:flex-wrap">
               {POLICY_RATE_COUNTRIES.filter((c) => byId.has(c.id)).map((c) => {
                 const on = selected.includes(c.id);
                 return (
@@ -370,7 +376,7 @@ export function PolicyRatesChart() {
                     type="button"
                     aria-pressed={on}
                     onClick={() => toggle(c.id)}
-                    className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${
+                    className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${
                       on
                         ? "border-transparent text-white shadow-sm"
                         : "border-[#132960]/15 bg-white text-[#132960] hover:border-[#027DFC]"
@@ -385,9 +391,8 @@ export function PolicyRatesChart() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-zinc-500">Janela:</span>
-            <AzPeriodSelector value={period} onChange={setPeriod} min={range.min} max={range.max} />
+          <div className="min-w-0 max-w-full overflow-x-auto">
+            <AzPeriodSelector className="w-max" value={period} onChange={setPeriod} min={range.min} max={range.max} />
           </div>
 
           {series.length === 0 ? (
@@ -438,16 +443,17 @@ export function PolicyRatesChart() {
           ) : null}
 
           <div className="-mx-4 overflow-x-auto md:mx-0">
-            <table className="w-full min-w-[760px] border-collapse whitespace-nowrap text-sm">
+            {/* No celular: País, Taxa e Situação (as demais colunas aparecem a partir do tablet). */}
+            <table className="w-full border-collapse whitespace-nowrap text-sm sm:min-w-[760px]">
               <thead>
                 <tr className="border-b border-[#132960]/15 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
                   <th className="py-2 pl-4 pr-3 md:pl-0">País</th>
                   <th className="px-3 py-2 text-right">Taxa atual</th>
-                  <th className="px-3 py-2 text-right">Último movimento</th>
-                  <th className="px-3 py-2 text-right">12 meses</th>
-                  <th className="px-3 py-2 text-right">vs. pico desde 2021</th>
-                  <th className="px-3 py-2">Situação</th>
-                  <th className="py-2 pl-3 pr-4 text-right md:pr-0">Dados até</th>
+                  <th className="hidden px-3 py-2 text-right sm:table-cell">Último movimento</th>
+                  <th className="hidden px-3 py-2 text-right sm:table-cell">12 meses</th>
+                  <th className="hidden px-3 py-2 text-right sm:table-cell">vs. pico desde 2021</th>
+                  <th className="px-3 py-2 pr-4 sm:pr-3">Situação</th>
+                  <th className="hidden py-2 pl-3 pr-4 text-right sm:table-cell md:pr-0">Dados até</th>
                 </tr>
               </thead>
               <tbody>
@@ -461,7 +467,7 @@ export function PolicyRatesChart() {
                           <Flag code={c.flag} name={c.name} />
                           <div className="min-w-0 leading-tight">
                             <div className="font-semibold text-[#132960]">{c.name}</div>
-                            <div className="max-w-[230px] truncate text-[11px] text-zinc-500" title={`${c.bank} · ${c.rate}`}>
+                            <div className="max-w-[120px] truncate text-[11px] text-zinc-500 sm:max-w-[230px]" title={`${c.bank} · ${c.rate}`}>
                               {c.bank} · {c.rate}
                             </div>
                           </div>
@@ -470,7 +476,7 @@ export function PolicyRatesChart() {
                       <td className="px-3 py-2 text-right font-bold tabular-nums text-[#132960]">
                         {fmtRateBand(st.current, c.band)}
                       </td>
-                      <td className="px-3 py-2 text-right tabular-nums">
+                      <td className="hidden px-3 py-2 text-right tabular-nums sm:table-cell">
                         {st.lastMove ? (
                           <div className="leading-tight">
                             <div className="font-semibold text-[#132960]">{fmtPP(st.lastMove.delta)}</div>
@@ -480,10 +486,10 @@ export function PolicyRatesChart() {
                           "—"
                         )}
                       </td>
-                      <td className="px-3 py-2 text-right tabular-nums text-[#132960]">
+                      <td className="hidden px-3 py-2 text-right tabular-nums text-[#132960] sm:table-cell">
                         {st.chg12m == null ? "—" : st.chg12m === 0 ? "estável" : fmtPP(st.chg12m)}
                       </td>
-                      <td className="px-3 py-2 text-right tabular-nums">
+                      <td className="hidden px-3 py-2 text-right tabular-nums sm:table-cell">
                         {st.peak == null || st.fromPeak == null ? (
                           "—"
                         ) : st.fromPeak === 0 ? (
@@ -498,7 +504,7 @@ export function PolicyRatesChart() {
                           </div>
                         )}
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2 pr-4 sm:pr-3">
                         <CockpitChip
                           cor={STATUS_COLOR[st.status]}
                           title={
@@ -512,7 +518,7 @@ export function PolicyRatesChart() {
                         </CockpitChip>
                       </td>
                       <td
-                        className={`py-2 pl-3 pr-4 text-right text-[12px] tabular-nums md:pr-0 ${
+                        className={`hidden py-2 pl-3 pr-4 text-right text-[12px] tabular-nums sm:table-cell md:pr-0 ${
                           lagging ? "font-semibold text-amber-700" : "text-zinc-500"
                         }`}
                       >
@@ -526,6 +532,6 @@ export function PolicyRatesChart() {
           </div>
         </div>
       )}
-    </section>
+    </MarketCard>
   );
 }

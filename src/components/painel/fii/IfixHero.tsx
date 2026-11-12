@@ -53,6 +53,18 @@ const BENCH_META: Record<FiiBenchmarkKey, { label: string; color: string }> = {
 const IFIX_COLOR = AZ_BRAND.azure; // série principal do hero — azul AZ
 const TIJOLO_COLOR = AZ_BRAND.navy; // índice próprio de tijolo — navy, como na aba Analítico
 
+/** Variação % entre o 1º e o último ponto da série dentro de [from, to]; null sem 2 pontos. */
+function retornoNaJanela(data: ReadonlyArray<AzSeriesPoint>, from: string, to: string): number | null {
+  let base: number | null = null;
+  let end: number | null = null;
+  for (const [d, v] of data) {
+    if (d < from || d > to || !Number.isFinite(v)) continue;
+    if (base == null) base = v;
+    end = v;
+  }
+  return base != null && end != null && base > 0 ? 100 * (end / base - 1) : null;
+}
+
 export function IfixHero({
   data,
   overlays = [],
@@ -83,25 +95,20 @@ export function IfixHero({
   // variação % acumulada desde o início da janela (base 0, leitura direta).
   const comparing = activeBenches.length > 0 || overlays.length > 0 || mostraTijolo;
 
-  // Retorno na janela por FII selecionado — vai no chip, na cor da série.
-  const overlayPcts = useMemo<Record<string, number | null>>(() => {
+  // Retorno na janela de cada série — FIIs no chip; IFIX, tijolo e benchmarks na legenda
+  // abaixo do gráfico (no lugar das pílulas no fim das linhas, que cobriam as linhas).
+  const janela = useMemo(() => {
     const first = data.series_daily[0]?.date;
     const last = data.series_daily[data.series_daily.length - 1]?.date;
-    if (!first || !last) return {};
-    const { from, to } = resolvePeriodRange(period, first, last);
+    return first && last ? resolvePeriodRange(period, first, last) : null;
+  }, [data, period]);
+
+  const overlayPcts = useMemo<Record<string, number | null>>(() => {
+    if (!janela) return {};
     const out: Record<string, number | null> = {};
-    for (const o of overlays) {
-      let base: number | null = null;
-      let end: number | null = null;
-      for (const [d, v] of o.data) {
-        if (d < from || d > to || !Number.isFinite(v)) continue;
-        if (base == null) base = v;
-        end = v;
-      }
-      out[o.ticker] = base != null && end != null && base > 0 ? 100 * (end / base - 1) : null;
-    }
+    for (const o of overlays) out[o.ticker] = retornoNaJanela(o.data, janela.from, janela.to);
     return out;
-  }, [data, overlays, period]);
+  }, [overlays, janela]);
 
   const ifixSeries = useMemo<AzTimeSeries[]>(
     () => [
@@ -137,6 +144,26 @@ export function IfixHero({
       })),
     [data, activeBenches],
   );
+
+  // Legenda do comparativo: série, cor e retorno na janela.
+  const legenda = useMemo(() => {
+    if (!comparing || !janela) return [];
+    const itens: { id: string; label: string; color: string; pct: number | null; tracejada?: boolean }[] = [
+      {
+        id: "ifix",
+        label: "IFIX",
+        color: IFIX_COLOR,
+        pct: retornoNaJanela(ifixSeries[0]?.data ?? [], janela.from, janela.to),
+      },
+    ];
+    if (mostraTijolo) {
+      itens.push({ id: "tijolo", label: "Tijolo (AZ)", color: TIJOLO_COLOR, pct: retornoNaJanela(tijoloJanela, janela.from, janela.to) });
+    }
+    for (const b of benchSeries) {
+      itens.push({ id: b.id, label: b.label, color: b.color ?? AZ_BRAND.navy, pct: retornoNaJanela(b.data, janela.from, janela.to), tracejada: true });
+    }
+    return itens;
+  }, [comparing, janela, ifixSeries, mostraTijolo, tijoloJanela, benchSeries]);
 
   // Range disponível da série — limita os inputs do "Personalizado".
   const seriesMin = data.series_daily[0]?.date;
@@ -180,7 +207,10 @@ export function IfixHero({
               (SGS 12); IBOV (Yahoo). Não é recomendação.
             </MethodInfo>
           </p>
-          <AzPeriodSelector value={period} onChange={setPeriod} min={seriesMin} max={seriesMax} />
+          {/* Fila rolável no celular: as pílulas quebravam e o "Personalizado" ficava sozinho na 2ª linha. */}
+          <div className="min-w-0 max-w-full overflow-x-auto">
+            <AzPeriodSelector className="w-max" value={period} onChange={setPeriod} min={seriesMin} max={seriesMax} />
+          </div>
         </div>
 
         {/* Chips dos FIIs selecionados (legenda + retorno na janela + remover) */}
@@ -227,8 +257,11 @@ export function IfixHero({
           </div>
         ) : null}
 
+        {/* No comparativo, gráfico de linhas simples: os rótulos de máximo/mínimo e as pílulas no fim
+            das linhas caíam em cima das outras séries (e a pílula vazava a borda). O retorno de cada
+            série na janela vai na legenda logo abaixo. */}
         <AzTimeSeriesChart
-          variant="hero"
+          variant={comparing ? "default" : "hero"}
           series={ifixSeries}
           benchmarks={benchSeries}
           mode={comparing ? "pct_acum" : "raw"}
@@ -236,9 +269,26 @@ export function IfixHero({
           period={period}
           height={260}
           forwardFill={comparing}
-          seriesEndLabels={comparing}
           showLegend={false}
         />
+
+        {legenda.length > 0 ? (
+          <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-semibold text-[#132960]" aria-label="Retorno na janela">
+            {legenda.map((it) => (
+              <li key={it.id} className="inline-flex items-center gap-1.5">
+                <span
+                  aria-hidden
+                  className="inline-block h-0 w-4 border-t-2"
+                  style={{ borderColor: it.color, borderTopStyle: it.tracejada ? "dashed" : "solid" }}
+                />
+                {it.label}
+                <span className="tabular-nums" style={it.pct != null ? { color: variationText(it.pct) } : undefined}>
+                  {fmtSignedPct(it.pct, 1)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
         {/* Comparar com */}
         <div className="flex flex-wrap items-center gap-2">

@@ -132,7 +132,10 @@ type Props = {
   dataDado?: string | null;
 };
 
-/** Faixa horizontal das 6 praças — rola no mobile (snap), respira no desktop. */
+/**
+ * As 6 praças: grade 2×3 no celular (antes era uma faixa rolável e só Tóquio e Hong Kong
+ * apareciam, sem sinal de que havia mais), faixa com setas a partir do tablet.
+ */
 export function RelogioMercados({ retornos1d, geradoEm, dataDado }: Props) {
   const [agora, setAgora] = useState<Date | null>(null);
 
@@ -166,12 +169,12 @@ export function RelogioMercados({ retornos1d, geradoEm, dataDado }: Props) {
       stampGiro={geradoEm}
       stampDado={dataDado}
     >
-      <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 md:snap-none">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:flex md:gap-2">
         {cards.map(({ praca, retorno, hhmm, status }, i) => {
           const rotulo = status ? rotuloStatus(status) : null;
           return (
-            <div key={praca.id} className="flex shrink-0 items-center gap-2 md:flex-1">
-              <div className="w-[148px] shrink-0 snap-start rounded-xl border border-[#132960]/10 bg-zinc-50/60 p-3 md:w-auto md:flex-1">
+            <div key={praca.id} className="flex min-w-0 items-center gap-2 md:flex-1">
+              <div className="w-full min-w-0 rounded-xl border border-[#132960]/10 bg-zinc-50/60 p-3 md:w-auto md:flex-1">
                 <div className="flex items-center gap-1.5">
                   {/* Bandeira via flagcdn — mesmo padrão do FlagYTick do MarketsPanel
                       (emoji de bandeira não renderiza no Chrome/Windows). */}
@@ -208,7 +211,7 @@ export function RelogioMercados({ retornos1d, geradoEm, dataDado }: Props) {
                 </div>
               </div>
               {i < cards.length - 1 ? (
-                <span aria-hidden className="shrink-0 text-zinc-300">
+                <span aria-hidden className="hidden shrink-0 text-zinc-300 md:inline">
                   →
                 </span>
               ) : null}

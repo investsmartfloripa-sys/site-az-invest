@@ -2,11 +2,24 @@
 
 import { useState } from "react";
 
-import { saveFiiLead } from "./fii-lead-action";
+import { saveFiiLead } from "@/components/painel/fii/fii-lead-action";
 
 const COMMUNITY_LABEL = "Entrar na comunidade AZ Invest no WhatsApp";
 
-export function FiiComunidadeCta() {
+type Props = {
+  /** Assunto da aba, no meio da frase: "FIIs", "ações e Ibovespa", "renda fixa"... */
+  assunto: string;
+  /** Origem gravada no lead (PAINEL_FII, PAINEL_ACOES...) — o CRM separa por ela. */
+  origem: string;
+};
+
+/**
+ * Bloco ÚNICO da comunidade AZ Invest nas abas de Mercado (revisão de 12/11/2026, item 166):
+ * antes, FIIs tinham cartão com formulário, Renda variável um bloco de uma linha e as demais
+ * abas nada. Mesmo desenho em todas; só o assunto do texto muda. O lado do WhatsApp some se
+ * NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL não estiver definido (nada de "link em breve" no ar).
+ */
+export function ComunidadeMercado({ assunto, origem }: Props) {
   const whatsappUrl = process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL?.trim() || "";
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -16,6 +29,7 @@ export function FiiComunidadeCta() {
     setSubmitting(true);
     setError(null);
     try {
+      formData.set("origem", origem);
       const res = await saveFiiLead(formData);
       if (res.ok) {
         setDone(true);
@@ -31,24 +45,19 @@ export function FiiComunidadeCta() {
 
   return (
     <section
-      aria-label="Comunidade FII e inscrição"
+      aria-label="Comunidade AZ Invest e inscrição"
       className="rounded-2xl border border-[#132960]/15 bg-gradient-to-br from-[#0e1f49] to-[#132960] p-4 text-white shadow-sm md:p-6"
     >
       <div className={whatsappUrl ? "grid gap-6 md:grid-cols-2" : "grid gap-6"}>
-        {/* CTA Comunidade — esquerda: só renderiza se URL existir, evita "Link em breve" em prod */}
         {whatsappUrl ? (
           <div className="flex flex-col justify-center">
             <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">
               Comunidade AZ Invest
             </p>
-            <h3 className="mt-2 text-xl font-bold leading-tight md:text-2xl">
-              Quer saber tudo sobre FIIs?
-            </h3>
+            <h3 className="mt-2 text-xl font-bold leading-tight md:text-2xl">Acompanhe o mercado com a gente</h3>
             <p className="mt-2 text-sm leading-relaxed text-white/85">
               Entre na nossa comunidade no WhatsApp e receba{" "}
-              <strong className="font-semibold text-white">
-                alertas, análises e materiais selecionados sobre FIIs
-              </strong>{" "}
+              <strong className="font-semibold text-white">análises e leituras de mercado sobre {assunto}</strong>{" "}
               direto no seu celular.
             </p>
             <a
@@ -56,21 +65,16 @@ export function FiiComunidadeCta() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={COMMUNITY_LABEL}
-              className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-[#FF5713] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#d94a10] active:bg-[#b03a0a] md:w-auto"
+              className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-[#FF5713] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#d94a10] active:bg-[#b03a0a] md:w-auto md:self-start"
             >
               Entrar na comunidade →
             </a>
           </div>
         ) : null}
 
-        {/* Form inscrição — direita */}
         <div className="rounded-xl bg-white p-4 text-[#132960] md:p-5">
-          <h4 className="text-sm font-semibold uppercase tracking-wide text-[#027DFC]">
-            Inscreva-se
-          </h4>
-          <p className="mt-1 text-xs text-zinc-500">
-            Receba conteúdo exclusivo sobre FIIs no seu e-mail.
-          </p>
+          <h4 className="text-sm font-semibold uppercase tracking-wide text-[#027DFC]">Inscreva-se</h4>
+          <p className="mt-1 text-xs text-zinc-600">Receba conteúdo exclusivo sobre {assunto} no seu e-mail.</p>
           {done ? (
             <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-700">
               ✓ Inscrição registrada. Em breve você recebe nosso conteúdo.
@@ -111,9 +115,7 @@ export function FiiComunidadeCta() {
                   className="rounded-md border border-zinc-200 px-3 py-2 text-xs text-[#132960] placeholder:text-zinc-400 focus:border-[#027DFC] focus:outline-none"
                 />
               </div>
-              {error ? (
-                <p className="text-[11px] font-semibold text-red-600">{error}</p>
-              ) : null}
+              {error ? <p className="text-[11px] font-semibold text-red-600">{error}</p> : null}
               <button
                 type="submit"
                 disabled={submitting}
@@ -122,8 +124,7 @@ export function FiiComunidadeCta() {
                 {submitting ? "Enviando…" : "Quero receber"}
               </button>
               <p className="text-[10px] text-zinc-500">
-                Ao inscrever-se, você concorda em receber comunicações da AZ Invest. Pode cancelar
-                quando quiser.
+                Ao inscrever-se, você concorda em receber comunicações da AZ Invest. Pode cancelar quando quiser.
               </p>
             </form>
           )}

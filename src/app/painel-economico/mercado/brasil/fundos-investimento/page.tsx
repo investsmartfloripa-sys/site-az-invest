@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
+import { ComunidadeMercado } from "@/components/painel/market/ComunidadeMercado";
 import { FundosRankingDashboard } from "@/components/painel/fundos-investimento/FundosRankingDashboard";
 import { getFundosRanking } from "@/lib/painel-fundos-investimento-data";
 
@@ -65,8 +66,8 @@ export default async function FundosInvestimentoPage() {
         <section className="rounded-2xl border border-dashed border-[#132960]/20 bg-zinc-50/60 p-8 text-center">
           <p className="text-sm font-semibold text-[#132960]">Dados em preparação</p>
           <p className="mx-auto mt-1 max-w-md text-xs text-zinc-500">
-            O ranking de fundos está sendo gerado pela primeira carga do pipeline Mais Retorno. Assim
-            que o arquivo estiver no ar, esta página exibe as tabelas por categoria automaticamente.
+            O ranking de fundos ainda está sendo montado. Assim que os dados chegarem, esta página
+            mostra as tabelas por categoria automaticamente.
           </p>
         </section>
       )}
@@ -79,21 +80,23 @@ export default async function FundosInvestimentoPage() {
             screener completo da base CVM. A lista é expandida ao longo do tempo.
           </li>
           <li>
-            <strong>Métricas</strong>: retorno acumulado por janela (3M, 6M, no ano, 12M),
-            volatilidade anualizada, índice de Sharpe e máximo drawdown — todos via{" "}
-            <strong>Mais Retorno Data API</strong>, com dados de fechamento (D-1).
+            <strong>Métricas</strong>: retorno acumulado por janela (3M, 6M, YTD e 1A),
+            volatilidade anualizada, índice de Sharpe e máximo drawdown — todos da{" "}
+            <strong>Mais Retorno</strong>, com dados de fechamento (D-1).
           </li>
           <li>
             <strong>Sharpe</strong>: usa o CDI como ativo livre de risco. Sharpe negativo significa
             retorno abaixo do CDI naquela janela, mesmo que o retorno absoluto seja positivo.
           </li>
           <li>
-            <strong>Histórico</strong>: no plano atual, as janelas vão até 12 meses. Track records
-            mais longos (Sharpe/volatilidade de 3–5 anos) são liberados em plano superior.
+            <strong>Histórico</strong>: as janelas vão até 1 ano; Sharpe e volatilidade de 3 a 5 anos
+            ainda não estão disponíveis.
           </li>
         </ul>
         <p className="mt-2 text-[10px] text-zinc-500">Conteúdo informativo. Não é recomendação de investimento.</p>
       </section>
+
+      <ComunidadeMercado assunto="fundos de investimento" origem="PAINEL_FUNDOS" />
     </div>
   );
 }

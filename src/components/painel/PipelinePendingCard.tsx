@@ -2,6 +2,9 @@
  * Aviso honesto de dado ausente: o pipeline ainda não publicou (ou o fetch ao
  * Blob falhou). Server-safe — use no lugar do card/da página quando o JSON
  * vier null, em vez de renderizar gráfico vazio.
+ *
+ * O texto é para o LEITOR (revisão de 12/11/2026: nada de "pipeline", "Blob" ou nome de
+ * workflow na tela). Os caminhos e o workflow vão só em atributos data-* para diagnóstico.
  */
 export function PipelinePendingCard({
   blobPaths,
@@ -15,19 +18,15 @@ export function PipelinePendingCard({
   className?: string;
 }) {
   return (
-    <div className={`rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 ${className}`}>
-      <p className="font-semibold">Dados ainda não publicados</p>
+    <div
+      className={`rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 ${className}`}
+      data-fonte={blobPaths.join(" ")}
+      data-workflow={workflow}
+    >
+      <p className="font-semibold">Dados indisponíveis no momento</p>
       <p className="mt-1">
-        O pipeline ainda não publicou{" "}
-        {blobPaths.map((p, i) => (
-          <span key={p}>
-            {i > 0 ? (i === blobPaths.length - 1 ? " e " : ", ") : ""}
-            <code className="rounded bg-amber-100 px-1 py-0.5 text-[12px]">{p}</code>
-          </span>
-        ))}{" "}
-        no Vercel Blob — ou o fetch falhou agora. Rode o workflow{" "}
-        <code className="rounded bg-amber-100 px-1 py-0.5 text-[12px]">{workflow}</code> no GitHub
-        Actions ou aguarde o próximo giro; a seção monta sozinha quando o dado aparecer.
+        Não conseguimos carregar os dados desta seção agora. Ela volta sozinha assim que a próxima
+        atualização chegar.
       </p>
     </div>
   );

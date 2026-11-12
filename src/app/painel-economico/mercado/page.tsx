@@ -3,8 +3,10 @@ import Link from "next/link";
 import { MarketCard } from "@/components/painel/market/MarketCard";
 import { MarketOverviewTable } from "@/components/painel/market/MarketOverviewTable";
 import { TickerSparkline } from "@/components/painel/market/TickerSparkline";
+import { AZ_NEUTRAL_BAND, variationText } from "@/lib/az-chart-theme";
+import { fmtSignedPct } from "@/lib/format-br";
 import {
-  formatPct,
+  formatQuote,
   getMarketCatalog,
   getMarketHistoryFull,
   getMarketHistoryLatest,
@@ -29,34 +31,34 @@ function HeroCard({
   ticker,
   latest,
   series,
-  currencyHint,
 }: {
   label: string;
   ticker: string;
   latest: TickerLatest | null;
   series: Array<[string, number]> | null;
-  currencyHint: "BRL" | "USD" | "";
 }) {
   const dayChange = latest?.returns["1d"] ?? null;
+  // Mesma régua da tabela: dentro da banda neutra (±0,03%) é "no zero" — azul, sem seta.
+  const neutro = dayChange != null && Math.abs(dayChange) < AZ_NEUTRAL_BAND;
   const positive = (dayChange ?? 0) >= 0;
-  const cur = currencyHint || latest?.currency || "";
-  const symbol = cur === "BRL" ? "R$ " : cur === "USD" ? "US$ " : "";
+  const seta = dayChange == null || neutro ? "" : positive ? "▲ " : "▼ ";
   return (
-    <article className="rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-[#132960]">
-        {latest?.last_close != null
-          ? `${symbol}${latest.last_close.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`
-          : "—"}
+    <article className="rounded-2xl border border-[#132960]/15 bg-white p-3 shadow-sm sm:p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 sm:text-xs">{label}</p>
+      <p className="mt-1 text-base font-semibold tabular-nums text-[#132960] sm:text-2xl">
+        {latest ? formatQuote(latest.last_close, latest) : "—"}
       </p>
-      <p className={`text-xs font-semibold ${positive ? "text-[#16A34A]" : "text-[#DC2626]"}`}>
-        {dayChange != null ? `${positive ? "▲" : "▼"} ${formatPct(dayChange)} hoje` : "—"}
+      <p
+        className="text-xs font-semibold tabular-nums"
+        style={dayChange != null ? { color: variationText(dayChange) } : undefined}
+      >
+        {dayChange != null ? `${seta}${fmtSignedPct(dayChange, 2)} hoje` : "—"}
       </p>
       <div className="mt-2">
         {series && series.length > 1 ? (
-          <TickerSparkline series={series.slice(Math.max(0, series.length - 252))} positive={positive} height={50} />
+          <TickerSparkline series={series.slice(Math.max(0, series.length - 252))} positive={positive} height={40} />
         ) : (
-          <div className="h-[50px]" />
+          <div className="h-[40px]" />
         )}
       </div>
       <Link
@@ -106,8 +108,8 @@ export default async function MercadoOverviewPage() {
         </p>
       </header>
 
-      {/* Hero */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Hero — 2×2 no celular (empilhados, ocupavam quase duas telas) */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {heroData.map((h) => (
           <HeroCard
             key={h.ticker}
@@ -115,7 +117,6 @@ export default async function MercadoOverviewPage() {
             ticker={h.ticker}
             latest={h.latest}
             series={h.series}
-            currencyHint={h.ticker.endsWith(".SA") || h.ticker === "^BVSP" || h.ticker === "BRL=X" ? "BRL" : "USD"}
           />
         ))}
       </div>
@@ -147,9 +148,7 @@ export default async function MercadoOverviewPage() {
       {!latest ? (
         <MarketCard title="Aguardando dados">
           <p className="text-sm text-zinc-600">
-            O pipeline diário ainda não publicou os JSONs em <code>data/market_*.json</code>. Rode o workflow
-            <code className="mx-1 rounded bg-zinc-100 px-1">market-data</code> via GitHub Actions e refaça
-            deploy. Em ambientes de preview sem variáveis de Blob, a página fica vazia.
+            As cotações ainda não foram carregadas. Volte em alguns minutos.
           </p>
         </MarketCard>
       ) : (
