@@ -52,13 +52,21 @@ function numFmt(minDec: number, maxDec: number): Intl.NumberFormat {
  */
 export function fmtNum(v: number | null | undefined, dec?: number): string {
   if (v == null || !Number.isFinite(v)) return "—";
+  // Valor que arredonda para zero sai como zero, sem sinal ("−0,00" parecia queda).
+  if (arredondaZero(v, dec)) v = 0;
   return dec == null ? numFmt(0, 2).format(v) : numFmt(dec, dec).format(v);
+}
+
+/** O valor some no arredondamento das casas pedidas (|v| < meia unidade da última casa)? */
+export function arredondaZero(v: number, dec?: number): boolean {
+  return Math.abs(v) < 0.5 * 10 ** -(dec ?? 2);
 }
 
 /** Número com sinal explícito: "+1.234,5" / "−2,0" (zero sem sinal). P/ deltas absolutos e células de heatmap. */
 export function fmtSignedNum(v: number | null | undefined, dec?: number): string {
   if (v == null || !Number.isFinite(v)) return "—";
   const body = fmtNum(Math.abs(v), dec);
+  if (arredondaZero(v, dec)) return body;
   if (v > 0) return `+${body}`;
   if (v < 0) return `${MINUS}${body}`;
   return body;
@@ -80,7 +88,7 @@ export function fmtSignedPct(v: number | null | undefined, dec = 1): string {
 export function fmtBRL(v: number | null | undefined, dec = 2): string {
   if (v == null || !Number.isFinite(v)) return "—";
   const body = fmtNum(Math.abs(v), dec);
-  const sign = v < 0 ? MINUS : "";
+  const sign = v < 0 && !arredondaZero(v, dec) ? MINUS : "";
   return `${sign}R$ ${body}`;
 }
 

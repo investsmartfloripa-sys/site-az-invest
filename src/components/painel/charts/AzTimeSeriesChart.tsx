@@ -180,9 +180,10 @@ export type AzTimeSeriesChartProps = {
    */
   seriesEndLabels?: boolean;
   /**
-   * ADITIVO (default false). Marcas do eixo Y em múltiplos "redondos" (1·2·2,5·5
-   * × 10^k) dentro do domínio, com casas decimais pelo passo — evita rótulos
-   * tipo "25,04 · 45,04" quando o domínio com folga não é redondo.
+   * Default true (desde a revisão de 12/11/2026). Marcas do eixo Y em múltiplos "redondos"
+   * (1·2·2,5·5 × 10^k) dentro do domínio, com casas decimais pelo passo — evita rótulos
+   * tipo "25,04 · 45,04" quando o domínio com folga não é redondo. Passe false só se o
+   * gráfico precisar das marcas automáticas do Recharts.
    */
   niceYTicks?: boolean;
   className?: string;
@@ -194,7 +195,8 @@ function buildNiceY(yDomain: [number, number], unit: AzUnit, mode: AzSeriesMode)
   const ticks: number[] = [];
   for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) ticks.push(+v.toFixed(6));
   const dec = step >= 1 ? 0 : step >= 0.1 ? 1 : 2;
-  const fmt = (v: number) => (unit === "%" && mode === "raw" ? `${fmtNum(v, dec)}%` : fmtNum(v, dec));
+  const comPct = mode === "pct_acum" || (unit === "%" && mode === "raw");
+  const fmt = (v: number) => (comPct ? `${fmtNum(v, dec)}%` : fmtNum(v, dec));
   return { ticks, fmt };
 }
 
@@ -474,7 +476,7 @@ export function AzTimeSeriesChart({
   variant = "default",
   showLegend,
   seriesEndLabels = false,
-  niceYTicks = false,
+  niceYTicks = true,
   className = "",
 }: AzTimeSeriesChartProps) {
   const all = useMemo(
@@ -667,7 +669,9 @@ export function AzTimeSeriesChart({
               strokeWidth={1.2}
               label={
                 r.label
-                  ? { value: r.label, position: "right", fontSize: 9, fill: r.color ?? AZ_BRAND.rust }
+                  ? // Dentro da área, acima da linha e alinhado à direita: com position "right" o rótulo
+                    // saía pela borda do gráfico e aparecia cortado ("mé", "ca", "FM" — revisão 12/11/2026).
+                    { value: r.label, position: "insideTopRight", fontSize: 10, fill: r.color ?? AZ_BRAND.rust }
                   : undefined
               }
             />

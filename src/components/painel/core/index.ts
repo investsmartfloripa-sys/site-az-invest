@@ -6,7 +6,7 @@
  * formatadores pt-BR em `@/lib/format-br`.
  */
 export { AzTooltip, azTooltipProps, type AzTooltipProps, type AzTooltipPayloadEntry } from "./AzTooltip";
-export { azGridProps, azXAxisProps, azYAxisProps, azZeroLineProps } from "./azChartDefaults";
+export { azGridProps, azXAxisProps, azYAxisProps, azZeroLineProps, ticksRedondos } from "./azChartDefaults";
 export { KpiCard, type KpiCardProps } from "./KpiCard";
 export { ChartCard, type ChartCardProps } from "./ChartCard";
 export { AzSegmented, type AzSegmentedOption } from "./AzSegmented";
