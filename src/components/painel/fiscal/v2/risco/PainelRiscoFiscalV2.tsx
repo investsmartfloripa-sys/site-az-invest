@@ -86,9 +86,9 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-2xl font-bold text-[#132960]">
-              Indicadores de Risco Fiscal
+              Indicadores de risco fiscal
               <MethodInfo className="ml-2 align-middle">
-                Framework de &quot;How Countries Go Broke&quot; (Ray Dalio, 2025) aplicado ao Brasil. Os 4 indicadores
+                Metodologia do livro &quot;How Countries Go Broke&quot; (Ray Dalio, 2025) aplicada ao Brasil. Os 4 indicadores
                 prioritários do livro abrem o painel; os demais indicadores de estado semaforizados vêm abaixo, todos
                 como séries históricas com as zonas de risco ao fundo (a barra de distribuição conta todos os do
                 payload). Faixas calibradas pela AZ a partir dos casos históricos do livro — não são números do livro.
@@ -387,7 +387,7 @@ export function PainelRiscoFiscalV2({ data }: { data: FiscalTermometroData }) {
         </summary>
         <div className="mt-3 space-y-2 text-xs leading-relaxed text-zinc-600">
           <p>
-            <strong>Framework.</strong> {dalio4._nota}
+            <strong>Metodologia.</strong> {dalio4._nota}
           </p>
           {data.calibracao_nota ? (
             <p>

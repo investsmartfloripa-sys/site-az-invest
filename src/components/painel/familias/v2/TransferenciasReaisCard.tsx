@@ -5,6 +5,7 @@ import {
   Area,
   CartesianGrid,
   ComposedChart,
+  Label,
   Legend,
   ReferenceArea,
   ReferenceLine,
@@ -19,7 +20,7 @@ import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@
 import { AzPeriodSelector, resolvePeriodRange, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum } from "@/lib/format-br";
-import { chaveMaisProxima, clipFaixas, isoData, Chip } from "./shared";
+import { NotaAnotacoes, chaveMaisProxima, clipFaixas, isoData, Chip } from "./shared";
 
 /**
  * "Estrutura social" D3 — transferências sociais em R$ CONSTANTES (deflator
@@ -41,7 +42,8 @@ export function TransferenciasReaisCard({
 }) {
   const [period, setPeriod] = useState<AzPeriodValue>({ id: "max" });
 
-  const serie = estruturaSocial.bloco_transferencias_sociais.serie ?? [];
+  const serieBruta = estruturaSocial.bloco_transferencias_sociais.serie;
+  const serie = useMemo(() => serieBruta ?? [], [serieBruta]);
 
   const todos = useMemo<Row[]>(() => {
     const out: Row[] = [];
@@ -70,6 +72,13 @@ export function TransferenciasReaisCard({
   const keysVisiveis = useMemo(() => rows.map((r) => r.mes), [rows]);
   const faixaAuxilio = useMemo(() => clipFaixas([FAIXA_AUXILIO], keysVisiveis), [keysVisiveis]);
   const marcoPbf600 = useMemo(() => chaveMaisProxima(keysVisiveis, "2023-03-01"), [keysVisiveis]);
+  // No celular as anotações viram números (os dois rótulos ficavam um sobre o outro) com a nota embaixo.
+  const nAuxilio = faixaAuxilio.length > 0 ? 1 : null;
+  const nPbf = marcoPbf600 != null ? (nAuxilio ?? 0) + 1 : null;
+  const notas = [
+    ...(nAuxilio != null ? [{ n: nAuxilio, texto: "Auxílio Emergencial (abr/20–out/21)" }] : []),
+    ...(nPbf != null ? [{ n: nPbf, texto: "novo Bolsa Família, piso de R$ 600 (mar/23)" }] : []),
+  ];
 
   const bpcPessoasUlt = useMemo(() => {
     for (let i = serie.length - 1; i >= 0; i--) {
@@ -137,8 +146,10 @@ export function TransferenciasReaisCard({
                 fill={f.color}
                 fillOpacity={f.opacity}
                 stroke="none"
-                label={{ value: f.label, position: "insideTop", fontSize: 9, fill: "#C2410C" }}
-              />
+              >
+                <Label value={f.label} position="insideTop" fontSize={10} fill="#C2410C" className="max-sm:hidden" />
+                <Label value={String(nAuxilio)} position="insideTop" fontSize={11} fontWeight={700} fill="#C2410C" className="sm:hidden" />
+              </ReferenceArea>
             ))}
             {marcoPbf600 != null ? (
               <ReferenceLine
@@ -147,8 +158,11 @@ export function TransferenciasReaisCard({
                 strokeOpacity={0.45}
                 strokeDasharray="3 3"
                 strokeWidth={1}
-                label={{ value: "novo PBF (R$ 600)", position: "insideTopRight", fontSize: 9, fill: "#334155" }}
-              />
+              >
+                {/* À direita da linha: à esquerda, o rótulo avançava sobre o do Auxílio. */}
+                <Label value="novo PBF (R$ 600)" position="insideTopLeft" fontSize={10} fill="#334155" className="max-sm:hidden" />
+                <Label value={String(nPbf)} position="insideTopLeft" fontSize={11} fontWeight={700} fill="#132960" className="sm:hidden" />
+              </ReferenceLine>
             ) : null}
             <Tooltip
               content={
@@ -182,7 +196,8 @@ export function TransferenciasReaisCard({
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <p className="mt-1 text-[10px] text-zinc-500">Eixo Y em R$ bilhões/mês constantes.</p>
+      <NotaAnotacoes itens={notas} />
+      <p className="mt-1 text-xs text-zinc-500">Eixo Y em R$ bilhões/mês constantes.</p>
     </ChartCard>
   );
 }

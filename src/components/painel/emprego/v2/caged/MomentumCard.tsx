@@ -6,7 +6,6 @@ import {
   CartesianGrid,
   Cell,
   ComposedChart,
-  Legend,
   Line,
   ReferenceArea,
   ReferenceLine,
@@ -22,7 +21,11 @@ import { AzSegmented, AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisPr
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS, variationFill } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum, fmtSignedNum } from "@/lib/format-br";
 import { mesIso } from "@/components/painel/atividade/v2/shared";
+import { LegendaHtml } from "@/components/painel/familias/v2/shared";
 import { codaceFaixasCat, fmtMil, tendenciaMm3 } from "./shared";
+
+// Cinza escuro (slate-600): o slate-500 tracejado fino da mm12 sumia atrás das barras (revisão 12/11/2026).
+const COR_MM12 = "#475569";
 
 /**
  * ÂNCORA do CAGED v2 — "o mercado formal está acelerando ou perdendo fôlego?"
@@ -118,8 +121,6 @@ export function MomentumCard({
               }
               cursor={AZ_TOOLTIP_PROPS.cursor}
             />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
-
             <Bar dataKey="saldo" name="Saldo do mês (cru)" isAnimationActive={false} maxBarSize={18} radius={[2, 2, 0, 0]}>
               {rows.map((r) => (
                 <Cell key={r.mes} fill={variationFill(r.saldo ?? 0)} />
@@ -138,8 +139,8 @@ export function MomentumCard({
               type="monotone"
               dataKey="mm12"
               name="mm12 (tendência longa)"
-              stroke={AZ_CHART.ticks}
-              strokeWidth={1.2}
+              stroke={COR_MM12}
+              strokeWidth={1.6}
               strokeDasharray="4 4"
               dot={false}
               isAnimationActive={false}
@@ -147,6 +148,17 @@ export function MomentumCard({
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+      {/* Legenda em HTML: a do Recharts mostrava o saldo com um quadrado preto, mas as barras são
+          verdes (criou vagas) e vermelhas (fechou). */}
+      <LegendaHtml
+        itens={[
+          { label: "Saldo do mês (cru): criou vagas", cor: AZ_CHART.pos, tipo: "quadrado" },
+          { label: "fechou vagas", cor: AZ_CHART.neg, tipo: "quadrado" },
+          { label: "mm3 do saldo dessazonalizado", cor: AZ_BRAND.navy },
+          { label: "mm12 (tendência longa)", cor: COR_MM12, tipo: "tracejada" },
+          ...(faixas.length > 0 ? [{ label: "Recessão (CODACE)", cor: AZ_CHART.ticks, tipo: "faixa" as const }] : []),
+        ]}
+      />
     </ChartCard>
   );
 }

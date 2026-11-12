@@ -15,8 +15,10 @@ import {
 import type { CodaceFaixa, HiatoData, IbcBrData } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
 import DataStamp from "@/components/painel/DataStamp";
+import { fmtNum } from "@/lib/format-br";
 
 import { rotuloFaixaCodace } from "./codace-rotulos";
+import { rotuloAno, ticksAnuais, useTelaEstreita } from "./uteis-grafico";
 
 /**
  * Nível dessazonalizado do IBC-Br com cronologia oficial CODACE e tendência
@@ -49,6 +51,7 @@ export function CardIbcBrCodace({
         return { mes: p.mes, indice_sa: p.indice_sa, tendencia };
       });
   }, [ibcbr, hiato]);
+  const estreito = useTelaEstreita();
 
   if (dados.length === 0) {
     return (
@@ -63,6 +66,8 @@ export function CardIbcBrCodace({
   const ultimoMes = dados[dados.length - 1].mes;
   const faixasVisiveis = codace.filter((f) => f.vale >= primeiroMes);
   const temTendencia = dados.some((d) => d.tendencia !== null);
+  // Eixo anual ("2003"): a cada 4–5 anos no celular, ~10 marcas no computador (revisão 12/11/2026).
+  const ticksX = ticksAnuais(dados.map((d) => d.mes), estreito ? 5 : 10);
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
@@ -76,10 +81,16 @@ export function CardIbcBrCodace({
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart data={dados} margin={{ top: 14, right: 20, bottom: 10, left: 0 }}>
           <CartesianGrid stroke="#eee" strokeDasharray="3 3" />
-          <XAxis dataKey="mes" tick={{ fontSize: 10 }} interval={Math.max(1, Math.floor(dados.length / 12))} />
-          <YAxis tick={{ fontSize: 10 }} domain={["auto", "auto"]} />
+          <XAxis
+            dataKey="mes"
+            tick={{ fontSize: 10 }}
+            ticks={ticksX}
+            interval={ticksX ? 0 : Math.max(1, Math.floor(dados.length / 12))}
+            tickFormatter={(v) => (ticksX ? rotuloAno(v) : formatMes(String(v)))}
+          />
+          <YAxis tick={{ fontSize: 10 }} domain={["auto", "auto"]} tickFormatter={(v: number) => fmtNum(v, 0)} />
           <Tooltip
-            formatter={(v: unknown) => (typeof v === "number" ? v.toFixed(1) : String(v ?? ""))}
+            formatter={(v: unknown) => (typeof v === "number" ? fmtNum(v, 1) : String(v ?? ""))}
             labelFormatter={(l: unknown) => formatMes(String(l ?? ""))}
           />
           {faixasVisiveis.map((faixa, i) => (
@@ -90,7 +101,11 @@ export function CardIbcBrCodace({
               fill="#9CA3AF"
               fillOpacity={0.15}
               ifOverflow="visible"
-              label={{ value: rotuloFaixaCodace(faixa.pico), position: "insideTop", fontSize: 9, fill: "#6B7280" }}
+              label={
+                estreito
+                  ? undefined
+                  : { value: rotuloFaixaCodace(faixa.pico), position: "insideTop", fontSize: 11, fill: "#132960" }
+              }
             />
           ))}
           {/* Faixa hachurada pós jun/2020: período sem datação oficial CODACE */}
@@ -123,7 +138,7 @@ export function CardIbcBrCodace({
           <Line type="monotone" dataKey="indice_sa" stroke="#132960" dot={false} strokeWidth={2} name="IBC-Br SA" />
         </ComposedChart>
       </ResponsiveContainer>
-      <p className="mt-1 text-[10px] text-zinc-500">
+      <p className="mt-1 text-xs text-zinc-500">
         Hachura pós-jun/2020 = sem datação oficial CODACE; ausência de faixas após essa data não significa ausência de ciclo.
       </p>
       <p className="mt-2"><DataStamp giro={ibcbr?.gerado_em} dado={ultimoMes} /></p>

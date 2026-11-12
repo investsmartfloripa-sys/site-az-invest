@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import {
   CartesianGrid,
   ComposedChart,
-  Legend,
   Line,
   ReferenceLine,
   ResponsiveContainer,
@@ -18,6 +17,7 @@ import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps, azZeroLi
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtNum } from "@/lib/format-br";
 import { mesIso } from "@/components/painel/atividade/v2/shared";
+import { LegendaHtml } from "@/components/painel/familias/v2/shared";
 import { MESES_CURTO_PT, fmtMil, somaYtd } from "./shared";
 
 /**
@@ -28,7 +28,8 @@ import { MESES_CURTO_PT, fmtMil, somaYtd } from "./shared";
  */
 
 const COR_ANO_ANTERIOR = AZ_CHART.ticks; // slate — destaque secundário
-const COR_ANOS_ANTIGOS = "#CBD5E1"; // cinza claro — contexto
+// Cinza médio: o #CBD5E1 de antes deixava linhas e legenda de 2020–2024 quase brancas (revisão 12/11/2026).
+const COR_ANOS_ANTIGOS = "#9AA3B5"; // contexto
 
 type RowYtd = { m: number } & Record<string, number | undefined>;
 
@@ -76,6 +77,8 @@ export function YtdCard({ total, geradoEm }: { total: CagedTotalData; geradoEm: 
     return `${base} — ${fmtNum(Math.abs(diff) / 1000, 1)} mil ${diff > 0 ? "acima" : "abaixo"} de ${anoCorrente - 1} no mesmo corte`;
   })();
 
+  const anosAntigos = anos.filter((y) => y < anoCorrente - 1);
+
   const corDoAno = (y: number): string => {
     if (y === anoCorrente) return AZ_BRAND.azure;
     if (y === anoCorrente - 1) return COR_ANO_ANTERIOR;
@@ -94,10 +97,12 @@ export function YtdCard({ total, geradoEm }: { total: CagedTotalData; geradoEm: 
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={rows} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
             <CartesianGrid {...azGridProps()} />
+            {/* Sem interval={0}: no celular os 12 meses colavam ("janfevmar…"); o Recharts pula
+                marcas que não cabem e no computador continuam as 12. */}
             <XAxis
               {...azXAxisProps()}
               dataKey="m"
-              interval={0}
+              minTickGap={6}
               tickFormatter={(m: number) => MESES_CURTO_PT[m - 1] ?? String(m)}
             />
             <YAxis {...azYAxisProps()} width={48} tickFormatter={(v: number) => fmtNum(v, 0)} />
@@ -111,7 +116,6 @@ export function YtdCard({ total, geradoEm }: { total: CagedTotalData; geradoEm: 
               }
               cursor={AZ_TOOLTIP_PROPS.cursor}
             />
-            <Legend wrapperStyle={{ fontSize: 10 }} />
             {anos.map((y) => (
               <Line
                 key={y}
@@ -119,7 +123,7 @@ export function YtdCard({ total, geradoEm }: { total: CagedTotalData; geradoEm: 
                 dataKey={String(y)}
                 name={String(y)}
                 stroke={corDoAno(y)}
-                strokeWidth={y === anoCorrente ? 2.5 : y === anoCorrente - 1 ? 1.6 : 1.1}
+                strokeWidth={y === anoCorrente ? 2.5 : y === anoCorrente - 1 ? 2 : 1.1}
                 dot={false}
                 isAnimationActive={false}
               />
@@ -127,6 +131,25 @@ export function YtdCard({ total, geradoEm }: { total: CagedTotalData; geradoEm: 
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+      {/* Legenda resumida (ano corrente, anterior e os demais juntos): a de um item por ano ocupava
+          várias linhas no celular e os anos antigos ficavam ilegíveis. */}
+      <LegendaHtml
+        itens={[
+          { label: String(anoCorrente), cor: corDoAno(anoCorrente) },
+          ...(anos.includes(anoCorrente - 1) ? [{ label: String(anoCorrente - 1), cor: COR_ANO_ANTERIOR }] : []),
+          ...(anosAntigos.length > 0
+            ? [
+                {
+                  label:
+                    anosAntigos.length === 1
+                      ? String(anosAntigos[0])
+                      : `${anosAntigos[0]}–${anosAntigos[anosAntigos.length - 1]}`,
+                  cor: COR_ANOS_ANTIGOS,
+                },
+              ]
+            : []),
+        ]}
+      />
     </ChartCard>
   );
 }

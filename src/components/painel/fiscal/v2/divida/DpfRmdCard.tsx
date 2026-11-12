@@ -7,7 +7,7 @@ import { AzTimeSeriesChart, type AzTimeSeries } from "@/components/painel/charts
 import { ChartCard } from "@/components/painel/core";
 import type { FiscalDpfRmdData } from "@/lib/painel-fiscal";
 import { AZ_BRAND } from "@/lib/az-chart-theme";
-import { fmtNum } from "@/lib/format-br";
+import { fmtMesCurto, fmtNum, fmtPct } from "@/lib/format-br";
 import { CockpitChip, toPoints, ultimoPonto } from "./shared";
 
 /**
@@ -15,6 +15,10 @@ import { CockpitChip, toPoints, ultimoPonto } from "./shared";
  * padrão do PoupancaCard da aba de risco: à esquerda o prazo médio do estoque
  * (anos), à direita o % vincendo em 12 meses (a pressão de rolagem). O custo
  * médio 12m vira chip ao lado do título; leitura no footer (?).
+ *
+ * Sem o variant "hero" (revisão 12/11/2026): as anotações de máximo/mínimo colidiam com as
+ * marcas do eixo ("38,7%33,4%") e os selos finais saíam com casas diferentes ("4,1" × "16,39%").
+ * O último valor de cada painel fica no subtítulo, com uma casa; extremos ficam no tooltip.
  */
 
 export function DpfRmdCard({ dpf, geradoEm }: { dpf: FiscalDpfRmdData; geradoEm: string }) {
@@ -32,6 +36,8 @@ export function DpfRmdCard({ dpf, geradoEm }: { dpf: FiscalDpfRmdData; geradoEm:
   }, [dpf.prazo_medio_dpf_anos, dpf.vincendo_12m_pct]);
 
   const custo = useMemo(() => ultimoPonto(dpf.custo_medio_12m_aa_pct), [dpf.custo_medio_12m_aa_pct]);
+  const ultPrazo = prazo[0].data[prazo[0].data.length - 1];
+  const ultVincendo = vincendo[0].data[vincendo[0].data.length - 1];
 
   if (prazo[0].data.length === 0 && vincendo[0].data.length === 0) {
     return (
@@ -74,6 +80,11 @@ export function DpfRmdCard({ dpf, geradoEm }: { dpf: FiscalDpfRmdData; geradoEm:
         <div className="min-w-0">
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
             Prazo médio do estoque (anos)
+            {ultPrazo ? (
+              <span className="ml-1.5 normal-case tracking-normal text-[#132960]">
+                {fmtNum(ultPrazo[1], 1)} anos em {fmtMesCurto(ultPrazo[0])}
+              </span>
+            ) : null}
           </p>
           <AzTimeSeriesChart
             series={prazo}
@@ -82,12 +93,16 @@ export function DpfRmdCard({ dpf, geradoEm }: { dpf: FiscalDpfRmdData; geradoEm:
             height={200}
             showLegend={false}
             yAxisLabel="anos"
-            variant="hero"
           />
         </div>
         <div className="min-w-0">
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
             Vincendo em 12 meses (% da DPF)
+            {ultVincendo ? (
+              <span className="ml-1.5 normal-case tracking-normal text-[#132960]">
+                {fmtPct(ultVincendo[1], 1)} em {fmtMesCurto(ultVincendo[0])}
+              </span>
+            ) : null}
           </p>
           <AzTimeSeriesChart
             series={vincendo}
@@ -96,7 +111,6 @@ export function DpfRmdCard({ dpf, geradoEm }: { dpf: FiscalDpfRmdData; geradoEm:
             height={200}
             showLegend={false}
             yAxisLabel="%"
-            variant="hero"
           />
         </div>
       </div>

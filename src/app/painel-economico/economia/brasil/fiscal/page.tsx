@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Fiscal",
   description:
-    "Painéis fiscais brasileiros: divida publica (DBGG, DLSP), receita e gastos do governo central, e Indicadores de Risco Fiscal aplicando as formulas de Ray Dalio (How Countries Go Broke) ao Brasil.",
+    "Painéis fiscais brasileiros: divida publica (DBGG, DLSP), receita e gastos do governo central, e indicadores de risco fiscal aplicando as formulas de Ray Dalio (How Countries Go Broke) ao Brasil.",
 };
 
 const PAINEIS = [
@@ -24,10 +24,10 @@ const PAINEIS = [
   },
   {
     slug: "indicadores-de-risco-fiscal",
-    titulo: "Indicadores de Risco Fiscal",
-    subtitulo: "Framework Ray Dalio",
+    titulo: "Indicadores de risco fiscal",
+    subtitulo: "Metodologia Ray Dalio",
     descricao:
-      "Os 4 indicadores prioritários de How Countries Go Broke no tempo, com zonas de risco: dívida vs renda, serviço da dívida, juro vs inflação e crescimento, e dívida vs poupança — mais 20 indicadores semaforizados, matrizes e simulador.",
+      "Os quatro indicadores prioritários do livro How Countries Go Broke, ao longo do tempo e com zonas de risco: dívida contra renda, serviço da dívida, juro contra inflação e crescimento, e dívida contra poupança. Mais 20 indicadores com semáforo, matrizes e simulador.",
   },
 ];
 
@@ -58,7 +58,7 @@ export default function PainelFiscalHub() {
                 </p>
               </div>
               <span
-                className="text-xl text-zinc-300 transition group-hover:translate-x-1 group-hover:text-[#027DFC]"
+                className="text-xl text-[#027DFC] transition group-hover:translate-x-1"
                 aria-hidden="true"
               >
                 →

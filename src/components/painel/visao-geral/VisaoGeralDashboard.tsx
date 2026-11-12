@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import type { VisaoGeralPayload } from "@/lib/painel-visao-geral";
 import { formatMes } from "@/lib/painel-visao-geral";
+import DataStamp from "@/components/painel/DataStamp";
 
 import { BlocoBAntecedentes } from "./BlocoB_Antecedentes";
 import { BlocoDHardData } from "./BlocoD_HardData";
@@ -17,9 +18,9 @@ import { RelogioCicloCard } from "./RelogioCicloCard";
 type Vista = "geral" | "antecedentes" | "coincidentes";
 
 const TABS: { value: Vista; label: string; descr: string }[] = [
-  { value: "geral", label: "1. Geral", descr: "Ensemble de 4 modelos causais de probabilidade de recessão (Difusão, Gap HP, Probit Financeiro, Probit AZ Misto), IBC-Br com cronologia CODACE, hiato e relógio do ciclo" },
-  { value: "antecedentes", label: "2. Antecedentes", descr: "Séries que lideram o PIB em 3-12 meses: OCDE CLI, sondagens FGV/CNI, PIM duráveis/capital, slope DI, Ibov real, EMBI+, Selic real, concessões reais, FENABRAVE" },
-  { value: "coincidentes", label: "3. Coincidentes", descr: "Séries que movem com o PIB: quartet TCB (PIM-PF produção, PMC vendas, PNAD emprego), IBC-Br, EPE, ANP, papelão, aço, ANFAVEA, PMS serviços" },
+  { value: "geral", label: "Geral", descr: "Ensemble de 4 modelos causais de probabilidade de recessão (Difusão, Gap HP, Probit Financeiro, Probit AZ Misto), IBC-Br com cronologia CODACE, hiato e relógio do ciclo" },
+  { value: "antecedentes", label: "Antecedentes", descr: "Séries que lideram o PIB em 3-12 meses: OCDE CLI, sondagens FGV/CNI, PIM duráveis/capital, slope DI, Ibov real, EMBI+, Selic real, concessões reais, FENABRAVE" },
+  { value: "coincidentes", label: "Coincidentes", descr: "Séries que movem com o PIB: quartet TCB (PIM-PF produção, PMC vendas, PNAD emprego), IBC-Br, EPE, ANP, papelão, aço, ANFAVEA, PMS serviços" },
 ];
 
 function FichaTecnica({ payload }: { payload: VisaoGeralPayload }) {
@@ -82,14 +83,9 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
               payload.atividadePim?.gerado_em,
             ].filter(Boolean) as string[];
             if (stamps.length === 0) return null;
+            // Mesmo carimbo dos cartões (DataStamp), em vez de um quarto formato de data.
             const maisRecente = stamps.sort().reverse()[0];
-            const data = new Date(maisRecente);
-            const fmt = data.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
-            return (
-              <span className="text-[10px] text-zinc-500" title="Última geração dos JSONs do pipeline">
-                Atualizado: {fmt} UTC · pipeline diário 22:00 UTC
-              </span>
-            );
+            return <DataStamp giro={maisRecente} />;
           })()}
         </div>
         <p className="text-sm text-zinc-600">Síntese prospectiva da atividade econômica brasileira. Combina indicadores antecedentes, hard data físico e condições financeiras com quatro modelos de probabilidade de recessão.</p>
@@ -98,16 +94,16 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
       <FraseManchete payload={payload} />
       <HeroKpis payload={payload} />
 
-      {/* Tabs (espelha padrão CAGED/PNAD) */}
+      {/* Tabs (espelha padrão CAGED/PNAD). No celular a fila rola para o lado em vez de quebrar. */}
       <div className="space-y-1">
-        <div className="flex flex-wrap gap-1 border-b border-zinc-200">
+        <div className="flex gap-1 overflow-x-auto border-b border-zinc-200 sm:overflow-visible">
           {TABS.map((t) => {
             const ativa = t.value === vista;
             return (
               <button
                 key={t.value}
                 onClick={() => setVista(t.value)}
-                className={`relative -mb-px px-4 py-2 text-sm font-semibold transition ${
+                className={`relative shrink-0 whitespace-nowrap px-4 py-2 sm:-mb-px text-sm font-semibold transition ${
                   ativa
                     ? "border-b-2 border-[#132960] text-[#132960]"
                     : "border-b-2 border-transparent text-zinc-500 hover:text-zinc-800"
@@ -128,7 +124,7 @@ export function VisaoGeralDashboard({ payload }: { payload: VisaoGeralPayload })
           <div className="space-y-6">
             <CardProbitAz data={payload.probitAz} codace={codaceMensal} />
             <CardIbcBrCodace ibcbr={payload.ibcbr} hiato={payload.hiato} codace={codaceMensal} />
-            <CardHiatoLeque serie={payload.hiato?.serie ?? []} codace={codaceMensal} />
+            <CardHiatoLeque serie={payload.hiato?.serie ?? []} codace={codaceMensal} giro={payload.hiato?.gerado_em} />
             <RelogioCicloCard hiato={payload.hiato} />
           </div>
         )}

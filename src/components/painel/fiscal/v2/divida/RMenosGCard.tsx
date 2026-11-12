@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Bar,
   CartesianGrid,
@@ -22,7 +21,7 @@ import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@
 import { AzPeriodSelector, resolvePeriodRange, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AZ_CHART, AZ_NEUTRAL_BAND, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum, fmtPct, fmtSignedNum, fmtSignedPct } from "@/lib/format-br";
-import { CockpitChip, clipFaixasCategoria, codaceAreas, dataIso } from "./shared";
+import { CockpitChip, LinkSecundario, clipFaixasCategoria, codaceAreas, dataIso } from "./shared";
 
 /**
  * r − g: o coração da aritmética de sustentabilidade da dívida. r = taxa
@@ -49,13 +48,13 @@ function corGap(v: number): string {
 
 function Chip({ label, valor, hint, cor }: { label: string; valor: string; hint?: string; cor?: string }) {
   return (
-    <div className="rounded-lg bg-zinc-50 px-3 py-1.5">
-      <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+    <div className="min-w-[8.5rem] flex-1 rounded-lg bg-zinc-50 px-3 py-1.5">
+      <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
         {cor ? <span className="inline-block h-2 w-2 rounded-full" style={{ background: cor }} aria-hidden /> : null}
         {label}
       </p>
       <p className="text-sm font-bold tabular-nums text-[#132960]">{valor}</p>
-      {hint ? <p className="text-[10px] text-zinc-500">{hint}</p> : null}
+      {hint ? <p className="text-[11px] text-zinc-500">{hint}</p> : null}
     </div>
   );
 }
@@ -64,10 +63,13 @@ export function RMenosGCard({
   serie,
   codaceMensal,
   geradoEm,
+  className,
 }: {
   serie: SustentabilidadePonto[];
   codaceMensal?: CodaceFaixaAtividade[];
   geradoEm: string;
+  /** Ex.: "xl:col-span-2" quando o card fica sozinho na linha da grade. */
+  className?: string;
 }) {
   const [period, setPeriod] = useState<AzPeriodValue>({ id: "max" });
 
@@ -96,7 +98,7 @@ export function RMenosGCard({
 
   if (serie.length === 0) {
     return (
-      <ChartCard title="r − g e primário estabilizador (SP)" stampGiro={geradoEm}>
+      <ChartCard title="r − g e primário estabilizador (SP)" stampGiro={geradoEm} className={className}>
         <p className="flex h-64 items-center justify-center text-sm text-zinc-500">
           O pipeline ainda não publicou a série de sustentabilidade (schema v2). Rode o workflow fiscal-pipeline.yml.
         </p>
@@ -118,6 +120,7 @@ export function RMenosGCard({
   return (
     <ChartCard
       title="r − g e primário estabilizador (SP)"
+      className={className}
       subtitle="r = taxa implícita nominal da DLSP; g = crescimento nominal do PIB em 12 meses. As barras finas são o gap r − g: vermelho quando r > g (a dívida cresce sozinha), verde quando r < g (o crescimento corrói a dívida)."
       toolbar={
         <>
@@ -146,6 +149,7 @@ export function RMenosGCard({
       stampGiro={geradoEm}
       stampDado={dataIso(ult.data)}
     >
+      {/* Cinco mini-KPIs que dividem a linha por igual (antes: 4 + 1 órfão). */}
       <div className="mb-3 flex flex-wrap gap-2">
         <Chip
           label={`r (${fmtMesCurto(dataIso(ult.data))})`}
@@ -206,13 +210,10 @@ export function RMenosGCard({
         </ResponsiveContainer>
       </div>
 
-      <p className="mt-2 text-[11px]">
-        <Link
-          href="/painel-economico/economia/brasil/fiscal/indicadores-de-risco-fiscal#juro-inflacao-crescimento"
-          className="font-semibold text-[#027DFC] hover:underline"
-        >
-          avaliação de risco com faixas →
-        </Link>
+      <p className="mt-3">
+        <LinkSecundario href="/painel-economico/economia/brasil/fiscal/indicadores-de-risco-fiscal#juro-inflacao-crescimento">
+          Avaliação de risco com faixas →
+        </LinkSecundario>
       </p>
     </ChartCard>
   );

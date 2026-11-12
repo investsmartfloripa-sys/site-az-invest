@@ -251,7 +251,13 @@ export function ContribuicoesPibCard({
                 }
                 cursor={AZ_TOOLTIP_PROPS.cursor}
               />
-              <Legend wrapperStyle={{ fontSize: 10 }} />
+              {/* Legenda numa linha no computador: ícone menor e "Consumo" abreviado só aqui (o tooltip
+                  mantém o nome inteiro) — antes o "PIB YoY" sobrava sozinho na segunda linha. */}
+              <Legend
+                iconSize={8}
+                wrapperStyle={{ fontSize: 10, lineHeight: "16px" }}
+                formatter={(v: string) => v.replace(/^Consumo /, "Cons. ")}
+              />
 
               {keys.map((k, i) => (
                 <Bar

@@ -86,7 +86,7 @@ export default async function PainelAtividadeHub() {
                 <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-zinc-500">{c.subtitulo}</p>
               </div>
               <span
-                className="text-xl text-zinc-300 transition group-hover:translate-x-1 group-hover:text-[#027DFC]"
+                className="text-xl text-[#027DFC] transition group-hover:translate-x-1"
                 aria-hidden="true"
               >
                 →

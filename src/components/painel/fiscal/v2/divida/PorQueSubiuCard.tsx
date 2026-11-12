@@ -18,7 +18,7 @@ import type { DecomposicaoDlspAno } from "@/lib/painel-fiscal";
 import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtNum, fmtSignedNum } from "@/lib/format-br";
-import { CockpitChip } from "./shared";
+import { COR_FATOR_DIVIDA, CockpitChip } from "./shared";
 
 /**
  * "Por que a dívida subiu?" — decomposição ANUAL da variação da DLSP/PIB em
@@ -36,10 +36,11 @@ import { CockpitChip } from "./shared";
 
 const JANELA_ANOS = 10;
 
-const COR_JUROS = AZ_BRAND.rust; // #FF5713
-const COR_PRIMARIO = AZ_BRAND.azure; // #027DFC
-const COR_CRESCIMENTO = "#1E8A5C"; // verde AZ_SERIES
-const COR_RESIDUO = "#94A3B8"; // cinza — resíduo, fora da paleta narrativa
+// Cores por fator compartilhadas com o FatoresDbggCard ao lado (mesmo conceito, mesma cor).
+const COR_JUROS = COR_FATOR_DIVIDA.juros;
+const COR_PRIMARIO = COR_FATOR_DIVIDA.financiamento;
+const COR_CRESCIMENTO = COR_FATOR_DIVIDA.crescimento;
+const COR_RESIDUO = COR_FATOR_DIVIDA.ajustes; // cinza — resíduo (ajustes patrimoniais/cambiais)
 
 const FATORES = [
   { key: "juros", label: "Juros nominais", cor: COR_JUROS },
@@ -113,7 +114,7 @@ export function PorQueSubiuCard({ anos, geradoEm }: { anos: DecomposicaoDlspAno[
   return (
     <ChartCard
       title="Decomposição anual da variação da DLSP (p.p. do PIB)"
-      subtitle={`Variação anual da DLSP/PIB decomposta em pontos percentuais: barra acima de zero empurra a dívida p/ cima, abaixo puxa p/ baixo. O losango é o Δ total do ano (em ${ult.ano}: ${fmtSignedNum(ult.delta, 1)} p.p.).`}
+      subtitle={`Variação anual da DLSP/PIB decomposta em pontos percentuais: barra acima de zero empurra a dívida p/ cima, abaixo puxa p/ baixo. O losango é a variação total do ano (em ${ult.ano}: ${fmtSignedNum(ult.delta, 1)} p.p.).`}
       toolbar={
         fatorDominante ? (
           <CockpitChip cor={fatorDominante.cor}>

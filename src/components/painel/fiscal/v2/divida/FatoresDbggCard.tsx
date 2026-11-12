@@ -18,7 +18,7 @@ import type { FiscalDbggFatoresData } from "@/lib/painel-fiscal";
 import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtNum, fmtSignedNum } from "@/lib/format-br";
-import { CockpitChip } from "./shared";
+import { COR_FATOR_DIVIDA, CockpitChip } from "./shared";
 
 /**
  * Decomposição OFICIAL da variação da DBGG (fatores condicionantes da Nota de
@@ -33,11 +33,12 @@ import { CockpitChip } from "./shared";
  */
 
 const FATORES = [
-  { key: "juros", label: "Juros nominais", cor: "#132960" },
-  { key: "emissoes", label: "Emissões líquidas", cor: "#027DFC" },
-  { key: "cambio", label: "Ajuste cambial", cor: "#D97706" },
-  { key: "outros", label: "Outros ajustes", cor: "#94A3B8" },
-  { key: "efeito_pib", label: "Efeito PIB (denominador)", cor: "#1E8A5C" },
+  // Mesmas cores por fator do PorQueSubiuCard ao lado: juros laranja nos dois, ajustes na família cinza.
+  { key: "juros", label: "Juros nominais", cor: COR_FATOR_DIVIDA.juros },
+  { key: "emissoes", label: "Emissões líquidas", cor: COR_FATOR_DIVIDA.financiamento },
+  { key: "cambio", label: "Ajuste cambial", cor: COR_FATOR_DIVIDA.ajusteCambial },
+  { key: "outros", label: "Outros ajustes", cor: COR_FATOR_DIVIDA.ajustes },
+  { key: "efeito_pib", label: "Efeito PIB (denominador)", cor: COR_FATOR_DIVIDA.crescimento },
 ] as const;
 
 /** Losango navy do Δ total — injetado como dot da Line (Recharts clona com cx/cy). */
@@ -77,10 +78,10 @@ export function FatoresDbggCard({ fatores, geradoEm }: { fatores: FiscalDbggFato
   return (
     <ChartCard
       title="Decomposição oficial da variação da DBGG (p.p. do PIB)"
-      subtitle="Fatores condicionantes da variação da dívida bruta (BCB): barra acima de zero empurra a dívida p/ cima, abaixo puxa p/ baixo. O losango é o Δ total do ano."
+      subtitle="Fatores condicionantes da variação da dívida bruta (BCB): barra acima de zero empurra a dívida p/ cima, abaixo puxa p/ baixo. O losango é a variação total do ano."
       toolbar={
         <CockpitChip cor={AZ_BRAND.navy}>
-          Δ {ult.ano}: {fmtSignedNum(ult.delta, 1)} p.p.
+          variação em {ult.ano}: {fmtSignedNum(ult.delta, 1)} p.p.
         </CockpitChip>
       }
       footer={`${fatores._fonte} ${fatores._nota} Identidade: juros nominais + emissões líquidas + ajuste cambial + outros + efeito PIB ≈ Δ(DBGG/PIB) do ano. Diferença metodológica vs o card da ΔDLSP ao lado: aqui o perímetro é a dívida BRUTA do governo geral e os fatores são os OFICIAIS do BCB (emissões líquidas no lugar do primário; câmbio destacado dos demais ajustes) — lá, a decomposição é calculada pelo pipeline no perímetro consolidado (DLSP), com primário e resíduo. Os dois contam a mesma história por lentes distintas, e não são comparáveis fator a fator.`}

@@ -89,11 +89,19 @@ export function SinteseSetorialCard({
     return atuais;
   }, [setores]);
 
+  // Concordância: "serviços lideram", "indústria lidera" (o rótulo plural termina em "s").
+  const plural = (label: string) => /s$/i.test(label);
   const titulo = leitura
-    ? `Pós-pandemia: ${leitura[0].label.toLowerCase()} lidera (${fmtSignedPct(leitura[0].v, 1)} vs fev/2020)${
+    ? `Pós-pandemia: ${leitura[0].label.toLowerCase()} ${plural(leitura[0].label) ? "lideram" : "lidera"} (${fmtSignedPct(leitura[0].v, 1)} vs fev/2020)${
         leitura.length > 1
           ? `; ${leitura[leitura.length - 1].label.toLowerCase()} ${
-              leitura[leitura.length - 1].v < 0 ? "segue abaixo" : "fecha a fila"
+              leitura[leitura.length - 1].v < 0
+                ? plural(leitura[leitura.length - 1].label)
+                  ? "seguem abaixo"
+                  : "segue abaixo"
+                : plural(leitura[leitura.length - 1].label)
+                  ? "fecham a fila"
+                  : "fecha a fila"
             } (${fmtSignedPct(leitura[leitura.length - 1].v, 1)})`
           : ""
       }`

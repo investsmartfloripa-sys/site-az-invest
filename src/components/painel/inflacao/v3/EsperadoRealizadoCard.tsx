@@ -15,7 +15,15 @@ import {
 } from "recharts";
 
 import type { FocusMensalBlock } from "@/lib/painel-ipca";
-import { AzTooltip, ChartCard, azGridProps, azTooltipProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
+import {
+  AzTooltip,
+  ChartCard,
+  azGridProps,
+  azTooltipProps,
+  azXAxisProps,
+  azYAxisProps,
+  ticksRedondos,
+} from "@/components/painel/core";
 import { AZ_BRAND, AZ_CHART } from "@/lib/az-chart-theme";
 import { fmtDataBR, fmtMesCurto, fmtMesLongo, fmtNum, fmtSignedNum, fmtSignedPct } from "@/lib/format-br";
 
@@ -66,16 +74,26 @@ export function EsperadoRealizadoCard({
 
   /**
    * Domínio APERTADO no maior desvio observado (+10% de folga), simétrico em
-   * torno do zero. O "auto" do Recharts arredondava a escala para ±1,4 p.p.
-   * enquanto a maior surpresa da série é ~0,3 — as barras viravam traços
-   * (relatório do editor, ago/2026). Piso de ±0,15 p.p. p/ uma série morna não
-   * virar ruído ampliado.
+   * torno do zero, com marcas redondas (ex.: −0,2 · −0,1 · 0 · +0,1 · +0,2).
+   * Piso de ±0,15 p.p. p/ uma série morna não virar ruído ampliado.
+   * O eixo fica TRAVADO nesse domínio (allowDataOverflow): as linhas invisíveis
+   * de realizado/esperado (só para o tooltip) vão até +1,3% e esticavam o eixo
+   * para −0,32 a +1,34, deixando 80% do gráfico vazio (revisão 12/11/2026).
    */
-  const dominio = useMemo<[number, number]>(() => {
+  const eixo = useMemo(() => {
     const pico = rows.reduce((mx, r) => Math.max(mx, Math.abs(r.surpresa ?? 0)), 0);
     const lim = Math.max(0.15, Math.ceil(pico * 1.1 * 100) / 100);
-    return [-lim, lim];
+    const { ticks, domain } = ticksRedondos(-lim, lim);
+    const passo = ticks.length > 1 ? ticks[1] - ticks[0] : lim;
+    const casas = passo >= 1 ? 0 : passo >= 0.1 - 1e-9 ? 1 : 2;
+    return { ticks, domain, casas };
   }, [rows]);
+
+  /** Marcas trimestrais contadas a partir do último mês (o mês mais recente sempre tem rótulo). */
+  const ticksX = useMemo(
+    () => rows.filter((_, i) => (rows.length - 1 - i) % 3 === 0).map((r) => r.mes),
+    [rows],
+  );
 
   const veredito =
     surpresa == null
@@ -146,11 +164,15 @@ export function EsperadoRealizadoCard({
             <ResponsiveContainer>
               <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
                 <CartesianGrid {...azGridProps()} />
-                <XAxis {...azXAxisProps()} dataKey="mes" interval={2} />
+                {/* Marcas trimestrais; no celular o Recharts ainda descarta as que não cabem
+                    (antes os rótulos se sobrepunham: "nov/24fev/25mai/25…"). */}
+                <XAxis {...azXAxisProps()} dataKey="mes" ticks={ticksX} interval="preserveEnd" minTickGap={10} />
                 <YAxis
                   {...azYAxisProps()}
-                  domain={dominio}
-                  tickFormatter={(v: number) => fmtSignedNum(v, 2)}
+                  domain={eixo.domain}
+                  ticks={eixo.ticks}
+                  allowDataOverflow
+                  tickFormatter={(v: number) => fmtSignedNum(v, eixo.casas)}
                   width={50}
                 />
                 <Tooltip

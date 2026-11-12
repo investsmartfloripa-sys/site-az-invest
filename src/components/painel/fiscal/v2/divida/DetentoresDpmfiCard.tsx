@@ -16,7 +16,7 @@ import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@
 import { AzPeriodSelector, resolvePeriodRange, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtPct } from "@/lib/format-br";
-import { CockpitChip, dataIso } from "./shared";
+import { CockpitChip, ValoresPorCategoria, dataIso } from "./shared";
 
 /**
  * Detentores da DPMFi em mercado — stacked area normalizada a 100%: o share de
@@ -95,6 +95,9 @@ export function DetentoresDpmfiCard({
   }
 
   const atual = todasRows[todasRows.length - 1];
+  // Categorias sem estoque na janela visível ficam fora da pilha e das pílulas.
+  const detentoresNaPilha = DETENTORES.filter((d) => rows.some((r) => r[d.key] >= 0.05));
+  const valoresAtuais = DETENTORES.map((d) => ({ key: d.key, label: d.label, cor: d.cor, valor: atual[d.key] }));
 
   return (
     <ChartCard
@@ -124,15 +127,7 @@ export function DetentoresDpmfiCard({
       stampGiro={geradoEm}
       stampDado={maxIso || null}
     >
-      <div className="mb-3 flex flex-wrap gap-2">
-        {DETENTORES.map((d) => (
-          <div key={d.key} className="flex items-center gap-1.5 rounded-lg bg-zinc-50 px-2.5 py-1.5">
-            <span className="inline-block h-2 w-2 rounded-full" style={{ background: d.cor }} aria-hidden />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{d.label}</span>
-            <span className="text-sm font-bold tabular-nums text-[#132960]">{fmtPct(atual[d.key], 1)}</span>
-          </div>
-        ))}
-      </div>
+      <ValoresPorCategoria itens={valoresAtuais} posicao="acima" />
 
       <div className="h-[340px] w-full">
         <ResponsiveContainer width="100%" height="100%">
@@ -152,7 +147,7 @@ export function DetentoresDpmfiCard({
               cursor={AZ_TOOLTIP_PROPS.cursor}
             />
 
-            {DETENTORES.map((d) => (
+            {detentoresNaPilha.map((d) => (
               <Area
                 key={d.key}
                 type="monotone"
@@ -169,6 +164,8 @@ export function DetentoresDpmfiCard({
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+
+      <ValoresPorCategoria itens={valoresAtuais} posicao="abaixo" />
     </ChartCard>
   );
 }

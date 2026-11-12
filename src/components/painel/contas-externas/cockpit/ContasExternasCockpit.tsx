@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo } from "react";
 
 import type { AtividadeCodaceData } from "@/lib/painel-atividade";
@@ -9,7 +8,6 @@ import { Divisor, KpiCard } from "@/components/painel/core";
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { ContasExternasTabs } from "@/components/painel/contas-externas/ContasExternasTabs";
 import { fmtDataBR, fmtMesCurto, fmtNum, fmtPct, fmtSignedPct } from "@/lib/format-br";
-import { formatGiroDia } from "@/lib/data-stamp";
 import { CambioRealCard, FundamentosCambioCard, PpcCard } from "./CambioCards";
 import { ComposicaoComercioCard } from "./ComposicaoComercioCard";
 import { BensCard, ServicosRendaCard } from "./ContaCorrenteAbertaCards";
@@ -32,7 +30,9 @@ import { fmtTrimPii, fmtUsBi, fmtUsBiSigned, isoMes, pctPib, ultimoDe, val } fro
 
 function KpiLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a href={href} className="block min-w-0 rounded-xl transition hover:ring-1 hover:ring-[#027DFC]/40">
+    // [&>div]:h-full: o cartão ocupa a célula toda, para a fila ter altura igual mesmo quando um
+    // rótulo quebra em duas linhas (revisão 12/11/2026).
+    <a href={href} className="block h-full min-w-0 rounded-xl transition hover:ring-1 hover:ring-[#027DFC]/40 [&>div]:h-full">
       {children}
     </a>
   );
@@ -93,17 +93,13 @@ export function ContasExternasCockpit({
             ficha técnica.
           </MethodInfo>
         </h1>
-        <p className="mt-1 text-xs text-zinc-500">
-          Referência BP: {mesRef ? fmtMesCurto(isoMes(mesRef)) : "—"} · reservas {data.ultima_referencia_diaria ? fmtDataBR(data.ultima_referencia_diaria) : "—"} ·
-          fluxo cambial {d.fluxo ? fmtDataBR(d.fluxo.ultimo_dia) : "—"} · PII {d.pii ? fmtTrimPii(d.pii.trim) : "—"} · giro do pipeline{" "}
-          {formatGiroDia(geradoEm) ?? "—"} · BCB SGS 22701–23060 · 24010–24068 · 13961–13970 · 13982 · 4192 · Olinda Focus · SECEX
+        {/* Só as referências: os códigos das séries e o registro de revisões ficam na ficha técnica,
+            e o giro do pipeline no carimbo de cada card (revisão 12/11/2026). */}
+        <p className="mt-1 text-sm text-zinc-600">
+          Referência: {mesRef ? fmtMesCurto(isoMes(mesRef)) : "—"} · reservas em{" "}
+          {data.ultima_referencia_diaria ? fmtDataBR(data.ultima_referencia_diaria) : "—"} · fluxo cambial até{" "}
+          {d.fluxo ? fmtDataBR(d.fluxo.ultimo_dia) : "—"} · PII {d.pii ? fmtTrimPii(d.pii.trim) : "—"}
         </p>
-        {data.revisoes?.revised_at ? (
-          <p className="mt-1 text-[11px] text-zinc-500">
-            Revisão detectada em {fmtDataBR(data.revisoes.revised_at.slice(0, 10))}: {data.revisoes.n_meses} meses da TC 12m mudaram
-            (máx. {fmtNum(data.revisoes.max_abs_diff_usd_bi ?? 0, 2)} bi).
-          </p>
-        ) : null}
       </header>
 
       {/* ── KPIs principais ── */}
@@ -116,7 +112,7 @@ export function ContasExternasCockpit({
           deltaUnit="p.p."
           deltaDec={2}
           deltaHint="vs 12m antes"
-          hint={`${fmtUsBiSigned(val(u, "tc"), 1)} · risco: déficit > 4% PIB · SGS 22701`}
+          hint={`${fmtUsBiSigned(val(u, "tc"), 1)} · risco: déficit > 4% PIB`}
           size="lg"
         />
         <KpiCard
@@ -127,7 +123,7 @@ export function ContasExternasCockpit({
           deltaUnit="p.p."
           deltaDec={2}
           deltaHint="vs 12m antes"
-          hint={`${fmtUsBi(val(u, "idp"), 1)} · cobre ${d.cobertura != null ? fmtPct(d.cobertura, 0) : "—"} do déficit · SGS 22885`}
+          hint={`${fmtUsBi(val(u, "idp"), 1)} · cobre ${d.cobertura != null ? fmtPct(d.cobertura, 0) : "—"} do déficit`}
         />
         <KpiCard
           label="Reservas internacionais"
@@ -150,10 +146,10 @@ export function ContasExternasCockpit({
       {/* ── KPIs secundários ── */}
       <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">
         <KpiLink href="#servicos-renda">
-          <KpiCard size="sm" label="Serviços 12m" value={fmtUsBiSigned(val(u, "servicos"), 1)} hint={`${fmtSignedPct(pctPib(u, "servicos"), 2)} PIB · SGS 22719`} />
+          <KpiCard size="sm" label="Serviços 12m" value={fmtUsBiSigned(val(u, "servicos"), 1)} hint={`${fmtSignedPct(pctPib(u, "servicos"), 2)} PIB`} />
         </KpiLink>
         <KpiLink href="#servicos-renda">
-          <KpiCard size="sm" label="Renda primária 12m" value={fmtUsBiSigned(val(u, "renda_primaria"), 1)} hint={`${fmtSignedPct(pctPib(u, "renda_primaria"), 2)} PIB · SGS 22800`} />
+          <KpiCard size="sm" label="Renda primária 12m" value={fmtUsBiSigned(val(u, "renda_primaria"), 1)} hint={`${fmtSignedPct(pctPib(u, "renda_primaria"), 2)} PIB`} />
         </KpiLink>
         <KpiLink href="#nao-residentes">
           <KpiCard
@@ -194,7 +190,7 @@ export function ContasExternasCockpit({
         label="Saldo — transações correntes"
         info="O saldo em transações correntes acumulado em 12 meses é a grandeza-mestra do setor externo: quanto o país absorve de poupança externa. Em % do PIB com a referência assimétrica de risco (déficit acima de 4%); a decomposição mostra qual conta move o saldo."
       />
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <TcSaldoCard bp={bp} codace={codace} geradoEm={geradoEm} />
         <DecomposicaoTcCard bp={bp} geradoEm={geradoEm} />
       </div>
@@ -211,7 +207,7 @@ export function ContasExternasCockpit({
         label="Conta corrente aberta — bens, serviços e rendas"
         info="O superávit de bens paga (ou não) o déficit estrutural de serviços e de renda primária. Bens em exportações × importações; serviços por conta; renda primária por componente (lucros, reinvestimento, juros)."
       />
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <BensCard bp={bp} geradoEm={geradoEm} />
         {data.bloco_servicos?.serie_12m?.length && data.bloco_renda?.serie_12m?.length ? (
           <ServicosRendaCard servicos={data.bloco_servicos.serie_12m} renda={data.bloco_renda.serie_12m} geradoEm={geradoEm} />
@@ -223,7 +219,7 @@ export function ContasExternasCockpit({
         label="Financiamento — conta financeira"
         info="Como o saldo em transações correntes é financiado: a conta financeira por função (investimento direto, carteira, derivativos, outros investimentos, reservas), a cobertura do déficit pelo IDP e a necessidade de financiamento externo, e o lado do passivo — o que os não residentes aplicaram, por instrumento."
       />
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ContaFinanceiraFuncaoCard bp={bp} geradoEm={geradoEm} />
         <CoberturaIdpCard bp={bp} geradoEm={geradoEm} />
       </div>
@@ -241,7 +237,7 @@ export function ContasExternasCockpit({
         label="Liquidez e posição externa"
         info="O colchão (reservas no conceito liquidez, em meses de importação e contra a dívida de curto prazo) e o balanço patrimonial externo (posição de investimento internacional, trimestral)."
       />
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <LiquidezExternaCard data={data} />
         {data.pii?.serie?.length ? <PiiCard pii={data.pii.serie} geradoEm={geradoEm} /> : null}
       </div>
@@ -251,7 +247,7 @@ export function ContasExternasCockpit({
         label="Fluxo cambial e expectativas"
         info="O dado externo mais frequente (câmbio contratado, diário, defasagem de ~3 dias úteis) e o consenso Focus para conta corrente, balança, IDP e câmbio do ano, ancorado no realizado."
       />
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {data.fluxo_cambial ? <FluxoCambialCard fluxo={data.fluxo_cambial} geradoEm={geradoEm} /> : null}
         {data.focus ? <FocusExternoCard focus={data.focus} bp={bp} ptax={d.ptax} geradoEm={geradoEm} /> : null}
       </div>
@@ -261,14 +257,9 @@ export function ContasExternasCockpit({
         <>
           <Divisor
             label="Câmbio — real, paridade e fundamentos"
-            info="Os preços que ajustam o setor externo: câmbio efetivo real (IPCA e IPA), efetivo nominal, real bilateral e PTAX; a paridade do poder de compra e o nível de preços relativo; e os fundamentos (termos de troca, commodities em dólar e diferencial de juro real). Análise de valor justo e UIP na aba Câmbio."
-            right={
-              <Link href="/painel-economico/economia/brasil/contas-externas/cambio" className="font-semibold text-[#027DFC] hover:underline">
-                aba Câmbio →
-              </Link>
-            }
+            info="Os preços que ajustam o setor externo: câmbio efetivo real (IPCA e IPA), efetivo nominal, real bilateral e PTAX; a paridade do poder de compra e o nível de preços relativo; e os fundamentos (termos de troca, commodities em dólar e diferencial de juro real). Análise de valor justo e UIP na aba Câmbio, no alto da página."
           />
-          <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <CambioRealCard cambio={cambio} />
             <FundamentosCambioCard cambio={cambio} />
           </div>
@@ -318,11 +309,18 @@ export function ContasExternasCockpit({
           <p>
             <b>Calendário e revisões.</b> O BP mensal sai por volta do dia 25 do mês seguinte; a PII trimestral, cerca de 2
             meses após o trimestre; o câmbio contratado, com ~3 dias úteis. O BCB reescreve a série em julho (CBE) e novembro
-            (Censo de capitais): o builder compara o acumulado 12m da TC com o giro anterior e registra a revisão (aviso no
-            cabeçalho quando houver). Pipeline: data-pipeline/python/build_contas_externas.py (schema v{data.schema_version}) +
+            (Censo de capitais): o builder compara o acumulado 12m da TC com o giro anterior e registra a revisão (nota no
+            fim desta ficha quando houver). Pipeline: data-pipeline/python/build_contas_externas.py (schema v{data.schema_version}) +
             contas_externas_v3.py e build_cambio_macro.py · workflow contas-externas-pipeline.yml (diário 23h30 UTC), cache
             purgado por tag ao publicar.
           </p>
+          {data.revisoes?.revised_at ? (
+            <p>
+              <b>Última revisão detectada.</b> Em {fmtDataBR(data.revisoes.revised_at.slice(0, 10))},{" "}
+              {data.revisoes.n_meses} meses do saldo em transações correntes acumulado em 12 meses mudaram (no máximo{" "}
+              {fmtNum(data.revisoes.max_abs_diff_usd_bi ?? 0, 2)} US$ bi).
+            </p>
+          ) : null}
         </div>
       </details>
     </div>

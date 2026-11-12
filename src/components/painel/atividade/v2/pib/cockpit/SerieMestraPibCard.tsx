@@ -147,7 +147,7 @@ export function SerieMestraPibCard({
         saiu do site e só volta quando vier calculada do builder (não é derivada aqui no cliente).
       </p>
       <p>
-        <b>CSV.</b> &ldquo;CSV série&rdquo; exporta, por trimestre, as 4 variações e o índice SA. &ldquo;CSV
+        <b>CSV.</b> &ldquo;Baixar CSV — série&rdquo; exporta, por trimestre, as 4 variações e o índice SA. &ldquo;Baixar CSV —
         contribuições&rdquo; exporta as contribuições ao YoY em p.p. por ótica da oferta (agro, indústria, serviços,
         impostos, resíduo) e da demanda (consumo das famílias, governo, FBCF, exportações, importações já com sinal
         trocado, resíduo). Padrão Excel pt-BR.
@@ -175,14 +175,6 @@ export function SerieMestraPibCard({
             max={maxIso || undefined}
             periods={["5y", "10y", "max"]}
           />
-          <button type="button" onClick={csvSerie} className={BTN_CSV_CLASS}>
-            CSV série
-          </button>
-          {temContribuicoes ? (
-            <button type="button" onClick={csvContribuicoes} className={BTN_CSV_CLASS}>
-              CSV contribuições
-            </button>
-          ) : null}
         </>
       }
       footer={footer}
@@ -245,6 +237,18 @@ export function SerieMestraPibCard({
           </table>
         </div>
       </details>
+
+      {/* Downloads no pé do card: na barra de controles somavam a terceira linha no celular (revisão 12/11/2026). */}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" onClick={csvSerie} className={BTN_CSV_CLASS}>
+          Baixar CSV — série
+        </button>
+        {temContribuicoes ? (
+          <button type="button" onClick={csvContribuicoes} className={BTN_CSV_CLASS}>
+            Baixar CSV — contribuições
+          </button>
+        ) : null}
+      </div>
     </ChartCard>
   );
 }

@@ -93,6 +93,15 @@ export function ultimoDe<T>(rows: ReadonlyArray<T> | undefined | null): T | unde
   return rows && rows.length ? rows[rows.length - 1] : undefined;
 }
 
+/**
+ * Só os fins de trimestre (mar, jun, set, dez) de uma série acumulada em 12 meses, mais o último mês
+ * divulgado. Barras mensais de 10 anos de acumulado 12m viravam um borrão (revisão 12/11/2026); no
+ * fim de cada trimestre o acumulado 12m é exatamente a soma dos 4 trimestres anteriores.
+ */
+export function finsDeTrimestre<T extends { mes: string }>(rows: ReadonlyArray<T>): T[] {
+  return rows.filter((r, i) => i === rows.length - 1 || parseInt(r.mes.slice(5, 7), 10) % 3 === 0);
+}
+
 /** "2026-T1" → "1T26". */
 export function fmtTrimPii(t: string): string {
   const [a, q] = t.split("-T");

@@ -111,7 +111,7 @@ export function AnaliseCompletaPnad({ data, geradoEm }: { data: PnadData; gerado
           onClick={csvTaxasCarteira}
           className="rounded-lg border border-[#132960]/15 px-3 py-1.5 text-xs font-semibold text-[#132960] transition hover:bg-[#132960]/5"
         >
-          Baixar taxas + carteira (CSV)
+          Baixar CSV — taxas e carteira
         </button>
         {data.massa_rendimento?.serie?.length ? (
           <button
@@ -119,7 +119,7 @@ export function AnaliseCompletaPnad({ data, geradoEm }: { data: PnadData; gerado
             onClick={csvMassa}
             className="rounded-lg border border-[#132960]/15 px-3 py-1.5 text-xs font-semibold text-[#132960] transition hover:bg-[#132960]/5"
           >
-            Baixar massa de rendimento (CSV)
+            Baixar CSV — massa de rendimento
           </button>
         ) : null}
       </div>

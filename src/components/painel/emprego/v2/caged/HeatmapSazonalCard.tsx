@@ -63,27 +63,46 @@ export function HeatmapSazonalCard({ total, geradoEm }: { total: CagedTotalData;
     const nomeMes = MESES_CURTO_PT[parseInt(ult.mes.slice(5, 7), 10) - 1];
     if (Math.abs(zUltimo) < 0.5) return `${fmtMesCurto(ult.mes)} veio em linha com o típico de ${nomeMes}`;
     return `${fmtMesCurto(ult.mes)} veio ${fmtNum(Math.abs(zUltimo), 1)} desvio${Math.abs(zUltimo) >= 1.95 ? "s" : ""} ${
-      zUltimo > 0 ? "ACIMA" : "ABAIXO"
+      zUltimo > 0 ? "acima" : "abaixo"
     } do típico para ${nomeMes}`;
   })();
 
   return (
     <ChartCard
       title={titulo}
-      subtitle="Célula = (saldo do mês − mediana histórica DESSE mês) ÷ desvio robusto da coluna. Verde: melhor que o normal do próprio mês; vermelho: pior — a sazonalidade já está descontada."
-      footer="z-score robusto por coluna (mediana + MAD × 1,4826). Um heatmap de saldo CRU só repetiria o calendário (dezembro sempre vermelho) e deixaria 2020 esmagar a escala — este responde 'foi melhor que o normal DESTE mês?'."
+      subtitle="Célula = (saldo do mês − mediana histórica desse mês) ÷ desvio robusto da coluna. Verde: melhor que o normal do próprio mês; vermelho: pior — a sazonalidade já está descontada."
+      footer="z-score robusto por coluna (mediana + MAD × 1,4826). Um heatmap de saldo CRU só repetiria o calendário (dezembro sempre vermelho) e deixaria 2020 esmagar a escala — este responde 'foi melhor que o normal deste mês?'."
       stampGiro={geradoEm}
       stampDado={ult ? mesIso(ult.mes) : null}
     >
-      <Heatmap
-        rows={rows}
-        cols={[...MESES_CURTO_PT]}
-        data={data}
-        colorScale={colorScale}
-        valueFmt={(v) => fmtSignedNum(v, 1)}
-        caption="Leitura: 0 = mês típico; +1 = um desvio robusto acima do normal daquele mês do ano; −2 = muito pior que o normal. Dezembro é SEMPRE negativo no cru (dispensas de fim de ano) — aqui só fica vermelho se for mais negativo que o dezembro típico."
-        cellWidth={44}
-      />
+      {/* Largura total do cartão no computador (antes a grade parava na metade); no celular a grade
+          mantém células de 44 px e rola para o lado dentro do próprio quadro. */}
+      <div className="hidden md:block">
+        <Heatmap
+          rows={rows}
+          cols={[...MESES_CURTO_PT]}
+          data={data}
+          colorScale={colorScale}
+          valueFmt={(v) => fmtSignedNum(v, 1)}
+          stretch
+          labelWidth={52}
+        />
+      </div>
+      <div className="md:hidden">
+        <Heatmap
+          rows={rows}
+          cols={[...MESES_CURTO_PT]}
+          data={data}
+          colorScale={colorScale}
+          valueFmt={(v) => fmtSignedNum(v, 1)}
+          cellWidth={44}
+        />
+      </div>
+      <p className="mt-2 text-xs leading-relaxed text-zinc-600">
+        <strong>Como ler:</strong> 0 = mês típico; +1 = um desvio robusto acima do normal daquele mês do ano; −2 = muito
+        pior que o normal. Dezembro é <strong>sempre</strong> negativo no saldo cru (dispensas de fim de ano) — aqui só fica
+        vermelho se for mais negativo que o dezembro típico.
+      </p>
     </ChartCard>
   );
 }

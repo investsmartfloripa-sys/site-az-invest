@@ -18,7 +18,7 @@ import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@
 import { AzPeriodSelector, resolvePeriodRange, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtBRL, fmtMesCurto, fmtNum, fmtPct } from "@/lib/format-br";
-import { Chip, mediaPontos, minMaxPontos, pontosData } from "./shared";
+import { Chip, LegendaHtml, mediaPontos, minMaxPontos, pontosData } from "./shared";
 
 /**
  * "Poder de compra" C1 — quantas HORAS de salário mínimo compram uma cesta
@@ -93,18 +93,10 @@ export function CestaCard({ poderCompra, geradoEm }: { poderCompra: FamiliasPode
                 fill={AZ_CHART.ticks}
                 fillOpacity={0.06}
                 stroke="none"
-                label={{ value: "faixa histórica", position: "insideTopRight", fontSize: 9, fill: AZ_CHART.ticks }}
               />
             ) : null}
-            {media != null ? (
-              <ReferenceLine
-                y={media}
-                stroke={AZ_BRAND.navy}
-                strokeDasharray="4 4"
-                strokeWidth={1.2}
-                label={{ value: `média ${fmtNum(media, 0)}h`, position: "insideBottomRight", fontSize: 9, fill: AZ_BRAND.navy }}
-              />
-            ) : null}
+            {/* Rótulos da faixa e da média na legenda abaixo: dentro do gráfico ficavam sobre a linha. */}
+            {media != null ? <ReferenceLine y={media} stroke={AZ_BRAND.navy} strokeDasharray="4 4" strokeWidth={1.2} /> : null}
             <Tooltip
               content={<AzTooltip labelFmt={(l) => fmtMesCurto(String(l))} valueFmt={(v) => `${fmtNum(v, 1)} h de SM`} />}
               cursor={AZ_TOOLTIP_PROPS.cursor}
@@ -121,6 +113,21 @@ export function CestaCard({ poderCompra, geradoEm }: { poderCompra: FamiliasPode
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+      <LegendaHtml
+        itens={[
+          { label: "Horas de SM por cesta", cor: AZ_BRAND.azure },
+          ...(media != null ? [{ label: `Média histórica: ${fmtNum(media, 0)} h`, cor: AZ_BRAND.navy, tipo: "tracejada" as const }] : []),
+          ...(extremos
+            ? [
+                {
+                  label: `Faixa histórica (${fmtNum(extremos.min, 0)} a ${fmtNum(extremos.max, 0)} h)`,
+                  cor: AZ_CHART.ticks,
+                  tipo: "faixa" as const,
+                },
+              ]
+            : []),
+        ]}
+      />
     </ChartCard>
   );
 }

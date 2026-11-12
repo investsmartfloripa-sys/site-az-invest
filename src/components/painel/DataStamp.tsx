@@ -24,7 +24,8 @@ export default function DataStamp({
   return (
     <span
       suppressHydrationWarning
-      className={`inline-flex items-center gap-1 whitespace-nowrap text-[10px] font-medium leading-none text-zinc-500 ${className}`}
+      // 12 px (era 10): carimbo é texto de leitura, não marca de eixo (revisão 12/11/2026, letras pequenas).
+      className={`inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium leading-none text-zinc-500 ${className}`}
     >
       {giroFmt ? <span suppressHydrationWarning>Giro {giroFmt}</span> : null}
       {giroFmt && dadoFmt ? <span aria-hidden>·</span> : null}

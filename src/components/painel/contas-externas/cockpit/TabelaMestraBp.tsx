@@ -48,12 +48,14 @@ export function TabelaMestraBp({ bp, geradoEm }: { bp: BpMestre; geradoEm: strin
       subtitle="BCB/SGS 22701–23060 · mês e 12 meses vs um ano antes · US$ bi · % do PIB 12m (4192)"
       toolbar={
         <>
-          <label className="flex items-center gap-1.5 text-xs text-zinc-500">
-            Mês
+          {/* Seletor de mês com a mesma casca dos dois botões ao lado (antes era um select nativo
+              com rótulo solto — três estilos na mesma linha, revisão 12/11/2026). */}
+          <label className={`${BTN_CSV_CLASS} inline-flex cursor-pointer items-center gap-1`}>
+            <span className="font-normal text-zinc-500">Mês</span>
             <select
               value={mes}
               onChange={(e) => setMes(e.target.value)}
-              className="rounded-lg border border-[#132960]/20 bg-white px-2 py-1 text-xs font-semibold text-[#132960]"
+              className="cursor-pointer appearance-none bg-transparent font-semibold text-[#132960]"
             >
               {meses.map((x) => (
                 <option key={x} value={x}>
@@ -61,12 +63,15 @@ export function TabelaMestraBp({ bp, geradoEm }: { bp: BpMestre; geradoEm: strin
                 </option>
               ))}
             </select>
+            <span aria-hidden className="text-[10px] text-[#027DFC]">
+              ▾
+            </span>
           </label>
           <button type="button" onClick={() => setDetalhe((d) => !d)} className={BTN_CSV_CLASS}>
             {detalhe ? "Ocultar instrumentos" : "Mostrar instrumentos"}
           </button>
           <button type="button" onClick={csv} className={BTN_CSV_CLASS}>
-            CSV
+            Baixar CSV
           </button>
         </>
       }

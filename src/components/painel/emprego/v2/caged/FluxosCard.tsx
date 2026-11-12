@@ -47,7 +47,7 @@ export function FluxosCard({
   const minIso = admPts.length > 0 ? admPts[0][0] : "";
   const maxIso = admPts.length > 0 ? admPts[admPts.length - 1][0] : "";
 
-  // Chip do quits-rate proxy: último mês com pct_desligamentos_a_pedido não-nulo.
+  // Chip da taxa de pedidos de demissão: último mês com pct_desligamentos_a_pedido não-nulo.
   const aPedido = useMemo(
     () => (quebras ? ultimoCom(quebras.serie, (r) => r.pct_desligamentos_a_pedido) : null),
     [quebras],
@@ -73,8 +73,8 @@ export function FluxosCard({
         <div className="mb-3 inline-flex flex-wrap items-baseline gap-x-2 rounded-lg bg-zinc-50 px-3 py-1.5">
           <span className="text-sm font-bold tabular-nums text-[#132960]">{fmtPct(aPedido.valor, 1)}</span>
           <span className="text-xs text-zinc-600">
-            dos desligamentos de {fmtMesCurto(aPedido.mes)} foram <strong>a pedido</strong> — proxy do quits rate: mercado
-            aquecido é gente pedindo demissão
+            dos desligamentos de {fmtMesCurto(aPedido.mes)} foram <strong>a pedido do trabalhador</strong> (taxa de pedidos
+            de demissão): quanto mais gente pede para sair, mais confiança há em achar outro emprego
           </span>
         </div>
       ) : null}
@@ -87,8 +87,9 @@ export function FluxosCard({
         period={period}
         height={300}
         xRefAreas={faixas}
-        yAxisLabel="mil por mês"
       />
+      {/* Unidade fora do eixo: o rótulo girado "mil por mês" caía sobre as marcas do eixo Y. */}
+      <p className="mt-1 text-xs text-zinc-500">Eixo Y em mil pessoas por mês (média móvel de 3 meses).</p>
     </ChartCard>
   );
 }

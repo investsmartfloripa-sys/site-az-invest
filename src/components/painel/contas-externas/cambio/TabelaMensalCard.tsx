@@ -68,6 +68,14 @@ export function TabelaMensalCard({ data }: { data: CambioMacroData }) {
 
   const visiveis = expandida ? linhas : linhas.slice(0, LINHAS_INICIAIS);
 
+  // Câmbio real e REER dependem dos índices de preços (IPCA, CPI) e saem com defasagem: os meses depois
+  // do último publicado aparecem como "a divulgar", não como "—" sem explicação (revisão 12/11/2026).
+  const ultimoCom = (campo: "bilateral" | "reer") => linhas.find((l) => l[campo] != null)?.mes ?? null;
+  const ultBilateral = ultimoCom("bilateral");
+  const ultReer = ultimoCom("reer");
+  const celulaReal = (v: number | null, mes: string, ult: string | null) =>
+    v == null && ult != null && mes > ult ? <span className="text-zinc-400">a divulgar</span> : fmtNum(v, 1);
+
   const baixar = () => {
     baixarCsv(
       `cambio-macro-${data.ultima_referencia_mensal}.csv`,
@@ -125,8 +133,8 @@ export function TabelaMensalCard({ data }: { data: CambioMacroData }) {
                 <td className="py-1.5 pr-3 font-medium text-[#132960]">{fmtMesCurto(l.mes)}</td>
                 <td className="py-1.5 pr-3 text-right">{fmtNum(l.ptax_media, 4)}</td>
                 <td className="py-1.5 pr-3 text-right">{fmtNum(l.ptax_fim, 4)}</td>
-                <td className="py-1.5 pr-3 text-right">{fmtNum(l.bilateral, 1)}</td>
-                <td className="py-1.5 pr-3 text-right">{fmtNum(l.reer, 1)}</td>
+                <td className="py-1.5 pr-3 text-right">{celulaReal(l.bilateral, l.mes, ultBilateral)}</td>
+                <td className="py-1.5 pr-3 text-right">{celulaReal(l.reer, l.mes, ultReer)}</td>
                 <td className="py-1.5 pr-3 text-right">{fmtNum(l.selic, 2)}</td>
                 <td className="py-1.5 pr-3 text-right">{fmtNum(l.fed, 2)}</td>
                 <td className="py-1.5 text-right font-semibold">{fmtNum(l.diferencial, 2)}</td>
@@ -135,6 +143,13 @@ export function TabelaMensalCard({ data }: { data: CambioMacroData }) {
           </tbody>
         </table>
       </div>
+      {ultBilateral || ultReer ? (
+        <p className="mt-2 text-xs text-zinc-500">
+          O câmbio real bilateral{ultBilateral ? ` (até ${fmtMesCurto(ultBilateral)})` : ""} e o REER do BCB
+          {ultReer ? ` (até ${fmtMesCurto(ultReer)})` : ""} dependem da inflação dos dois países e saem com cerca de dois
+          meses de atraso; os meses seguintes ficam &quot;a divulgar&quot;. &quot;—&quot; indica mês sem dado na fonte.
+        </p>
+      ) : null}
 
       <div className="mt-3 flex flex-wrap items-end justify-between gap-2">
         <button

@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react";
 
 import type { CambioMacroData } from "@/lib/painel-contas-externas";
-import { AzSegmented, ChartCard } from "@/components/painel/core";
+import { ChartCard } from "@/components/painel/core";
+import { SegmentedRolavel } from "@/components/painel/contas-externas/SegmentedRolavel";
+import { LegendaRef } from "@/components/painel/contas-externas/LegendaRef";
 import { AzTimeSeriesChart } from "@/components/painel/charts/AzTimeSeriesChart";
 import { AZ_BRAND, AZ_CHART } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum, fmtPct, fmtSignedPct } from "@/lib/format-br";
@@ -56,7 +58,7 @@ export function CambioRealCard({ data }: { data: CambioMacroData }) {
       title={titulo}
       subtitle={subtitulo}
       toolbar={
-        <AzSegmented
+        <SegmentedRolavel
           ariaLabel="Série de câmbio real"
           options={[
             { id: "bilateral", label: "Bilateral (EUA)" },
@@ -95,17 +97,18 @@ export function CambioRealCard({ data }: { data: CambioMacroData }) {
             y2: bloco.media_hist + bloco.dp_hist,
             color: AZ_CHART.ticks,
             opacity: 0.08,
-            label: "média ± 1 dp",
           },
         ]}
-        refLines={[
-          {
-            y: bloco.media_hist,
-            label: `média ${bloco.janela_regua}: ${fmtNum(bloco.media_hist, 0)}`,
-            color: AZ_BRAND.navy,
-          },
-        ]}
+        // Rótulos na legenda embaixo: dentro do gráfico eles caíam sobre a linha e eram cortados na
+        // borda direita ("mé") — revisão 12/11/2026.
+        refLines={[{ y: bloco.media_hist, color: AZ_BRAND.navy }]}
         showLegend={false}
+      />
+      <LegendaRef
+        itens={[
+          { tipo: "tracejada", cor: AZ_BRAND.navy, texto: `média ${bloco.janela_regua}: ${fmtNum(bloco.media_hist, 0)}` },
+          { tipo: "faixa", cor: AZ_CHART.ticks, texto: "faixa de ±1 desvio-padrão" },
+        ]}
       />
     </ChartCard>
   );

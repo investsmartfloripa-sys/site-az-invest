@@ -15,9 +15,11 @@ import {
 } from "recharts";
 
 import type { HiatoData } from "@/lib/painel-visao-geral";
-import { formatMes, formatPct } from "@/lib/painel-visao-geral";
+import { formatMes } from "@/lib/painel-visao-geral";
 import DataStamp from "@/components/painel/DataStamp";
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
+import { ticksRedondos } from "@/components/painel/core";
+import { fmtNum, fmtSignedNum, fmtSignedPct } from "@/lib/format-br";
 
 type PontoRelogio = {
   mes: string;
@@ -43,8 +45,8 @@ function TooltipRelogio({ active, payload }: TooltipRelogioProps) {
   return (
     <div className="rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-[11px] shadow-sm">
       <div className="font-semibold text-zinc-800">{formatMes(p.mes)}</div>
-      <div className="text-zinc-600">Hiato HP: {formatPct(p.x, 2)}</div>
-      <div className="text-zinc-600">Direção 3m: {`${p.y >= 0 ? "+" : ""}${p.y.toFixed(2)} pp`}</div>
+      <div className="text-zinc-600">Hiato HP: {fmtSignedPct(p.x, 2)}</div>
+      <div className="text-zinc-600">Variação em 3 meses: {fmtSignedNum(p.y, 2)} ponto</div>
     </div>
   );
 }
@@ -92,8 +94,17 @@ export function RelogioCicloCard({ hiato }: { hiato: HiatoData | null }) {
     );
   }
 
-  const mx = Math.max(0.1, ...dados.map((p) => Math.abs(p.x))) * 1.15;
-  const my = Math.max(0.1, ...dados.map((p) => Math.abs(p.y))) * 1.15;
+  // Eixos simétricos com marcas redondas que passam pelo zero (antes: "-2.6% / -0.6% / 1.4%",
+  // com ponto decimal e sem o zero — revisão 12/11/2026). As divisórias ficam no zero.
+  const ax = Math.max(0.1, ...dados.map((p) => Math.abs(p.x))) * 1.1;
+  const ay = Math.max(0.1, ...dados.map((p) => Math.abs(p.y))) * 1.1;
+  const eixoX = ticksRedondos(-ax, ax, 4);
+  const eixoY = ticksRedondos(-ay, ay, 4);
+  const mx = eixoX.domain[1];
+  const my = eixoY.domain[1];
+  const decimais = (t: number[]) => (t.length > 1 && t[1] - t[0] < 1 ? 1 : 0);
+  const decX = decimais(eixoX.ticks);
+  const decY = decimais(eixoY.ticks);
   const atual = dados[dados.length - 1];
   const quadranteAtual =
     atual.x >= 0 && atual.y >= 0
@@ -125,8 +136,8 @@ export function RelogioCicloCard({ hiato }: { hiato: HiatoData | null }) {
           <h3 className="text-base font-semibold text-zinc-900">
             Relógio do ciclo — nível × direção do hiato
             <MethodInfo className="ml-1.5 align-middle">
-              Δ3m usa a mesma decomposição do hiato (gap HP em t menos t−3), não a variação 3m do
-              IBC-Br.
+              A variação em 3 meses usa a mesma decomposição do hiato (hiato HP no mês menos o de três
+              meses antes), não a variação do IBC-Br em 3 meses.
             </MethodInfo>
           </h3>
           <p className="text-xs text-zinc-500">
@@ -134,33 +145,37 @@ export function RelogioCicloCard({ hiato }: { hiato: HiatoData | null }) {
             hiato abrindo. O ciclo típico gira em sentido horário: recuperação → expansão → desaceleração → recessão.
           </p>
         </div>
-        <span className="rounded bg-[#132960]/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#132960]">
-          Agora: {quadranteAtual}
+        {/* O selo diz de qual medida vem a leitura: é o quadrante do hiato HP, não a probabilidade
+            de recessão dos modelos (o selo "Agora: recessão" contradizia o termômetro acima). */}
+        <span className="rounded bg-[#132960]/10 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-[#132960]">
+          Hiato HP em {formatMes(atual.mes)}: {quadranteAtual}
         </span>
       </div>
       <ResponsiveContainer width="100%" height={320}>
         <ComposedChart data={dados} margin={{ top: 10, right: 16, bottom: 14, left: 0 }}>
           <CartesianGrid stroke="#f1f1f1" strokeDasharray="3 3" />
           {/* Quadrantes com cores suaves */}
-          <ReferenceArea x1={0} x2={mx} y1={0} y2={my} fill="#10B981" fillOpacity={0.06} label={{ value: "EXPANSÃO", position: "insideTopRight", fontSize: 9, fill: "#059669", fontWeight: 700 }} />
-          <ReferenceArea x1={0} x2={mx} y1={-my} y2={0} fill="#F59E0B" fillOpacity={0.06} label={{ value: "DESACELERAÇÃO", position: "insideBottomRight", fontSize: 9, fill: "#B45309", fontWeight: 700 }} />
-          <ReferenceArea x1={-mx} x2={0} y1={-my} y2={0} fill="#DC2626" fillOpacity={0.06} label={{ value: "RECESSÃO", position: "insideBottomLeft", fontSize: 9, fill: "#B91C1C", fontWeight: 700 }} />
-          <ReferenceArea x1={-mx} x2={0} y1={0} y2={my} fill="#3B82F6" fillOpacity={0.06} label={{ value: "RECUPERAÇÃO", position: "insideTopLeft", fontSize: 9, fill: "#1D4ED8", fontWeight: 700 }} />
+          <ReferenceArea x1={0} x2={mx} y1={0} y2={my} fill="#10B981" fillOpacity={0.06} label={{ value: "EXPANSÃO", position: "insideTopRight", fontSize: 10, fill: "#059669", fontWeight: 700 }} />
+          <ReferenceArea x1={0} x2={mx} y1={-my} y2={0} fill="#F59E0B" fillOpacity={0.06} label={{ value: "DESACELERAÇÃO", position: "insideBottomRight", fontSize: 10, fill: "#B45309", fontWeight: 700 }} />
+          <ReferenceArea x1={-mx} x2={0} y1={-my} y2={0} fill="#DC2626" fillOpacity={0.06} label={{ value: "RECESSÃO", position: "insideBottomLeft", fontSize: 10, fill: "#B91C1C", fontWeight: 700 }} />
+          <ReferenceArea x1={-mx} x2={0} y1={0} y2={my} fill="#3B82F6" fillOpacity={0.06} label={{ value: "RECUPERAÇÃO", position: "insideTopLeft", fontSize: 10, fill: "#1D4ED8", fontWeight: 700 }} />
           <XAxis
             type="number"
             dataKey="x"
-            domain={[-mx, mx]}
-            tick={{ fontSize: 9 }}
-            tickFormatter={(v: number) => `${v.toFixed(1)}%`}
+            domain={eixoX.domain}
+            ticks={eixoX.ticks}
+            tick={{ fontSize: 10 }}
+            tickFormatter={(v: number) => `${fmtNum(v, decX)}%`}
             label={{ value: "Hiato HP (% da tendência)", position: "insideBottom", offset: -8, fontSize: 10, fill: "#71717a" }}
           />
           <YAxis
             type="number"
             dataKey="y"
-            domain={[-my, my]}
-            tick={{ fontSize: 9 }}
-            tickFormatter={(v: number) => `${v.toFixed(1)}`}
-            label={{ value: "Δ 3m do hiato (pp)", angle: -90, position: "insideLeft", fontSize: 10, fill: "#71717a" }}
+            domain={eixoY.domain}
+            ticks={eixoY.ticks}
+            tick={{ fontSize: 10 }}
+            tickFormatter={(v: number) => fmtNum(v, decY)}
+            label={{ value: "Variação em 3 meses", angle: -90, position: "insideLeft", fontSize: 10, fill: "#71717a" }}
           />
           <Tooltip content={<TooltipRelogio />} />
           <ReferenceLine x={0} stroke="#a1a1aa" strokeWidth={1} />
@@ -171,8 +186,9 @@ export function RelogioCicloCard({ hiato }: { hiato: HiatoData | null }) {
           <Scatter dataKey="y" shape={renderPonto} isAnimationActive={false} />
         </ComposedChart>
       </ResponsiveContainer>
-      <p className="mt-1 text-[10px] text-zinc-500">
-        Ponto cheio com seta = {formatMes(atual.mes)}.
+      <p className="mt-1 text-xs text-zinc-500">
+        Ponto cheio com seta = {formatMes(atual.mes)}. O quadrante mede só a posição do IBC-Br em relação à
+        tendência; não é a probabilidade de recessão do termômetro acima.
       </p>
       <p className="mt-2"><DataStamp giro={hiato?.gerado_em} dado={atual.mes} /></p>
     </div>

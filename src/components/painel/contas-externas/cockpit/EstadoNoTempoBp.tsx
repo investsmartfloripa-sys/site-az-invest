@@ -73,20 +73,24 @@ export function EstadoNoTempoBp({ bp, geradoEm }: { bp: BpMestre; geradoEm: stri
           <p className="mt-0.5 text-xs text-zinc-500">US$ bi 12m · % PIB · Δ vs 12m antes · percentil desde 2005 · sparkline 60 meses</p>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-4">
+      {/* Uma coluna no celular (em duas o nome truncava e o valor quebrava); valor e % do PIB em linhas
+          separadas; percentil por extenso (o "p49" solto não dizia nada) — revisão 12/11/2026. */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
         {tiles.map((t) => (
           <div key={t.key} className="rounded-xl border border-[#132960]/10 p-3">
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="truncate text-[11px] font-bold uppercase tracking-wide text-zinc-500" title={`SGS ${t.sgs}`}>
-                {t.label}
-              </span>
-              {t.pct != null ? <span className="shrink-0 text-[10px] tabular-nums text-zinc-500">p{t.pct}</span> : null}
+            <div className="text-xs font-bold uppercase tracking-wide text-zinc-500" title={`SGS ${t.sgs}`}>
+              {t.label}
             </div>
-            <div className="mt-1 flex items-baseline gap-2 tabular-nums">
-              <span className="text-lg font-bold text-[#132960]">{fmtUsBiSigned(t.v, 1)}</span>
-              <span className="text-[11px] text-zinc-500">{fmtSignedPct(t.pib, 1)} PIB</span>
+            <div className="mt-1 text-lg font-bold tabular-nums text-[#132960]">{fmtUsBiSigned(t.v, 1)}</div>
+            <div className="flex flex-wrap items-baseline justify-between gap-x-2 text-xs tabular-nums text-zinc-500">
+              <span>{fmtSignedPct(t.pib, 1)} do PIB</span>
+              {t.pct != null ? (
+                <span title="Posição do % do PIB na história desde jan/2005 (0 = o menor, 100 = o maior)">
+                  percentil {t.pct}
+                </span>
+              ) : null}
             </div>
-            <div className="text-[11px] font-semibold tabular-nums" style={{ color: t.delta != null ? variationText(t.delta) : AZ_CHART.ticks }}>
+            <div className="text-xs font-semibold tabular-nums" style={{ color: t.delta != null ? variationText(t.delta) : AZ_CHART.ticks }}>
               {fmtSinal(t.delta, 1)} bi a/a
             </div>
             <MiniSpark data={t.spark} zeroLine color={AZ_BRAND.azure} height={36} />

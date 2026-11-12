@@ -109,17 +109,17 @@ function TileButton({
         selecionado ? "border-[#027DFC] ring-1 ring-[#027DFC]/40" : "border-[#132960]/10 hover:border-[#027DFC]/60"
       }`}
     >
-      <span className="text-[11px] font-semibold leading-tight text-[#132960]">{tile.rotulo}</span>
+      <span className="text-xs font-semibold leading-tight text-[#132960]">{tile.rotulo}</span>
       <div className="mt-1 text-lg font-bold tabular-nums leading-tight" style={{ color: corValor }}>
         {v == null ? "—" : fmtSignedPct(v)}
       </div>
-      <div className="text-[10px] tabular-nums text-zinc-500">
+      <div className="text-[11px] tabular-nums text-zinc-500">
         {tile.peso ? `peso ${fmtPct(tile.peso.valor)} do PIB` : "peso —"}
       </div>
       <div className="mt-1.5">
         <MiniSpark data={tile.spark} height={44} zeroLine lastDotColor={corPonto} />
-        <div className="mt-1 text-[9px] uppercase tracking-wide text-zinc-500 transition-colors group-hover:text-[#027DFC]">
-          {selecionado ? "fechar" : "ver série ↗"}
+        <div className="mt-1 text-[11px] font-semibold text-[#027DFC]">
+          {selecionado ? "Fechar" : "Ver série ↗"}
         </div>
       </div>
     </button>
@@ -137,8 +137,10 @@ export function EstadoNoTempoPib({
 }) {
   const [metrica, setMetrica] = useState<MetricaId>("qoq_sa");
   const [aberto, setAberto] = useState<string | null>(null);
-  // Mobile (<md): o grupo Oferta começa colapsado; em ≥md a grade aparece sempre.
+  // Mobile (<md): os dois grupos começam colapsados, cada um com o seu botão (antes só a oferta
+  // colapsava e a demanda vinha aberta — revisão 12/11/2026); em ≥md as grades aparecem sempre.
   const [ofertaExpandida, setOfertaExpandida] = useState(false);
+  const [demandaExpandida, setDemandaExpandida] = useState(false);
 
   const metricaLabel = METRICAS.find((m) => m.id === metrica)?.label ?? metrica;
 
@@ -168,8 +170,16 @@ export function EstadoNoTempoPib({
     if (ofertaExpandida && abertoOferta) setAberto(null);
     setOfertaExpandida(!ofertaExpandida);
   };
+  const alternarDemanda = () => {
+    if (demandaExpandida && abertoDemanda) setAberto(null);
+    setDemandaExpandida(!demandaExpandida);
+  };
 
-  const gridClass = "grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6";
+  // Oferta: 12 tiles em 6 colunas; demanda: 5 tiles em 5 colunas (em 6 sobrava um buraco à direita).
+  const gridOferta = "grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6";
+  const gridDemanda = "grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5";
+  const btnGrupo =
+    "rounded-lg border border-[#132960]/20 bg-white px-2.5 py-1 text-xs font-semibold text-[#132960] transition-colors hover:bg-zinc-50 md:hidden";
 
   return (
     <ChartCard
@@ -212,17 +222,21 @@ export function EstadoNoTempoPib({
       }
     >
       <div className="mb-2 flex flex-wrap gap-1.5">
+        {/* Chips curtos: com trimestre e métrica repetidos em cada um, o texto era cortado no celular. */}
+        <CockpitChip tom="navy" title="Trimestre de referência e métrica ativa">
+          {fmtTrimCurto(trimRef)} · {metricaLabel}
+        </CockpitChip>
         <CockpitChip
           tom="navy"
           title={`Difusão nas ${tilesOferta.length} atividades da oferta (cálculo próprio, banda ±0,05 p.p.)`}
         >
-          {fmtTrimCurto(trimRef)} · {metricaLabel} · oferta · {textoDifusao(difOferta)}
+          oferta: {textoDifusao(difOferta)}
         </CockpitChip>
         <CockpitChip
           tom="navy"
           title={`Difusão nos ${tilesDemanda.length} componentes da demanda (cálculo próprio, banda ±0,05 p.p.)`}
         >
-          {fmtTrimCurto(trimRef)} · {metricaLabel} · demanda · {textoDifusao(difDemanda)}
+          demanda: {textoDifusao(difDemanda)}
         </CockpitChip>
       </div>
 
@@ -230,19 +244,14 @@ export function EstadoNoTempoPib({
         {/* OFERTA */}
         <div>
           <div className="mb-2 flex items-center justify-between gap-2">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#132960]">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#132960]">
               Oferta — {tilesOferta.length} atividades
             </h3>
-            <button
-              type="button"
-              onClick={alternarOferta}
-              aria-expanded={ofertaExpandida}
-              className="rounded-lg border border-[#132960]/20 bg-white px-2.5 py-1 text-[11px] font-semibold text-[#132960] transition-colors hover:bg-zinc-50 md:hidden"
-            >
-              {ofertaExpandida ? "ocultar atividades" : `ver ${tilesOferta.length} atividades`}
+            <button type="button" onClick={alternarOferta} aria-expanded={ofertaExpandida} className={btnGrupo}>
+              {ofertaExpandida ? "Ocultar atividades" : `Ver ${tilesOferta.length} atividades`}
             </button>
           </div>
-          <div className={`${ofertaExpandida ? "grid" : "hidden md:grid"} ${gridClass}`}>
+          <div className={`${ofertaExpandida ? "grid" : "hidden md:grid"} ${gridOferta}`}>
             {tilesOferta.map((t) => (
               <TileButton
                 key={t.key}
@@ -269,10 +278,15 @@ export function EstadoNoTempoPib({
 
         {/* DEMANDA */}
         <div>
-          <h3 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#132960]">
-            Demanda — {tilesDemanda.length} componentes
-          </h3>
-          <div className={`grid ${gridClass}`}>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#132960]">
+              Demanda — {tilesDemanda.length} componentes
+            </h3>
+            <button type="button" onClick={alternarDemanda} aria-expanded={demandaExpandida} className={btnGrupo}>
+              {demandaExpandida ? "Ocultar componentes" : `Ver ${tilesDemanda.length} componentes`}
+            </button>
+          </div>
+          <div className={`${demandaExpandida ? "grid" : "hidden md:grid"} ${gridDemanda}`}>
             {tilesDemanda.map((t) => (
               <TileButton
                 key={t.key}

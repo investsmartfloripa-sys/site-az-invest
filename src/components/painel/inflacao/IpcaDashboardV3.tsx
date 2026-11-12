@@ -87,12 +87,11 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
         </p>
       </header>
 
-      {/* Flex com cards do tamanho do CONTEÚDO, não grid de 4 colunas iguais:
-          esticados até 1/4 da largura, cada quadrado ficava com metade vazia à
-          direita (relatório do editor, ago/2026). */}
-      <div className="flex flex-wrap gap-2">
+      {/* Grade de 4 colunas na largura toda, como em PIB e CAGED (revisão 12/11/2026): com
+          cartões do tamanho do conteúdo a fila terminava em 60% da largura no computador e
+          virava degraus de larguras diferentes no celular. Uma coluna no celular. */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          size="sm"
           label="IPCA do mês"
           value={fmtSignedPct(ipcaM, 2)}
           delta={surpresa ?? (ipcaM != null && medianaSaz != null ? ipcaM - medianaSaz : null)}
@@ -111,7 +110,6 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
           }
         />
         <KpiCard
-          size="sm"
           label="IPCA 12 meses"
           value={fmtPct(ipca12m, 2)}
           delta={ipca12m != null ? ipca12m - 3.0 : null}
@@ -121,7 +119,6 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
           hint="banda: 1,5% a 4,5%"
         />
         <KpiCard
-          size="sm"
           label="Núcleos 12m (média)"
           value={fmtPct(mediaNucleos, 2)}
           delta={mediaNucleos != null ? mediaNucleos - 3.0 : null}
@@ -131,7 +128,6 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
           hint="EX0 · EX3 · MS · DP · P"
         />
         <KpiCard
-          size="sm"
           label="Difusão do mês"
           value={fmtPct(difusaoM, 1)}
           delta={difusaoM != null && difMedia != null ? difusaoM - difMedia : null}
@@ -183,9 +179,9 @@ export function IpcaDashboardV3({ data }: { data: IpcaData }) {
               <TabelaSinteseCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />
             ) : null}
 
-            {/* `items-start` em TODA linha: sem ele o grid estica o card mais
-                baixo até a altura do vizinho e sobra vazio. */}
-            <div className="grid items-start gap-6 xl:grid-cols-2">
+            {/* Lado a lado com a mesma altura (revisão 12/11/2026: 100 px de diferença). As alturas
+                dos gráficos dos dois cards foram acertadas para o vizinho não sobrar vazio. */}
+            <div className="grid items-start gap-6 xl:grid-cols-2 xl:items-stretch">
               <SazonalidadeCard data={data} />
               {data.tabela_sintese ? (
                 <SinteseCategoriasCard sintese={data.tabela_sintese} geradoEm={data.gerado_em} />

@@ -52,7 +52,7 @@ export default function PainelInflacaoHub() {
                 </p>
               </div>
               <span
-                className="text-xl text-zinc-300 transition group-hover:translate-x-1 group-hover:text-[#027DFC]"
+                className="text-xl text-[#027DFC] transition group-hover:translate-x-1"
                 aria-hidden="true"
               >
                 →

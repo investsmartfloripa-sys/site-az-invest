@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 
 import type { AtividadeCodaceData } from "@/lib/painel-atividade";
 import type { BpMestre } from "@/lib/painel-contas-externas";
-import { AzSegmented, ChartCard, CockpitChip, tomPorSinal } from "@/components/painel/core";
+import { ChartCard, CockpitChip, tomPorSinal } from "@/components/painel/core";
+import { SegmentedRolavel } from "@/components/painel/contas-externas/SegmentedRolavel";
 import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AzTimeSeriesChart } from "@/components/painel/charts/AzTimeSeriesChart";
 import { AZ_BRAND, AZ_CHART, AZ_SERIES } from "@/lib/az-chart-theme";
@@ -61,7 +62,7 @@ export function TcSaldoCard({
       subtitle="BCB/SGS 22701 ÷ PIB 12m em US$ (4192) · desde dez/1996 · réguas: 0 e −4% do PIB · recessões CODACE"
       toolbar={
         <>
-          <AzSegmented ariaLabel="Unidade" options={OPCOES_LENTE} value={lente} onChange={(id) => setLente(id as Lente)} />
+          <SegmentedRolavel ariaLabel="Unidade" options={OPCOES_LENTE} value={lente} onChange={(id) => setLente(id as Lente)} />
           <AzPeriodSelector
             value={period}
             onChange={setPeriod}
@@ -89,10 +90,10 @@ export function TcSaldoCard({
       stampDado={ult?.mes.slice(0, 7)}
     >
       <div className="mb-2 flex flex-wrap gap-1.5">
-        <CockpitChip tom={tomPorSinal(dPib)}>
-          {ult ? fmtMesCurto(isoMes(ult.mes)) : "—"} · {fmtSignedPct(tcPib, 2)} do PIB · {fmtUsBiSigned(val(ult, "tc"), 1)} ·{" "}
-          {fmtSinal(dPib, 2)} p.p. em 12m
+        <CockpitChip tom="navy">
+          {ult ? fmtMesCurto(isoMes(ult.mes)) : "—"} · {fmtSignedPct(tcPib, 2)} do PIB · {fmtUsBiSigned(val(ult, "tc"), 1)}
         </CockpitChip>
+        <CockpitChip tom={tomPorSinal(dPib)}>{fmtSinal(dPib, 2)} p.p. em 12m</CockpitChip>
         {pct != null ? <CockpitChip tom="navy">percentil {pct} desde 2005</CockpitChip> : null}
       </div>
       <AzTimeSeriesChart        niceYTicks        series={[{ id: "tc", label: "Transações correntes 12m", color: AZ_BRAND.azure, data: pontos }]}
@@ -152,7 +153,7 @@ export function DecomposicaoTcCard({ bp, geradoEm }: { bp: BpMestre; geradoEm: s
       subtitle="Bens 22707 · serviços 22719 · renda primária 22800 · renda secundária 22838 · linha navy = saldo (22701)"
       toolbar={
         <>
-          <AzSegmented ariaLabel="Unidade" options={OPCOES_LENTE} value={lente} onChange={(id) => setLente(id as Lente)} />
+          <SegmentedRolavel ariaLabel="Unidade" options={OPCOES_LENTE} value={lente} onChange={(id) => setLente(id as Lente)} />
           <AzPeriodSelector
             value={period}
             onChange={setPeriod}
@@ -161,7 +162,7 @@ export function DecomposicaoTcCard({ bp, geradoEm }: { bp: BpMestre; geradoEm: s
             periods={["5y", "10y", "max"]}
           />
           <button type="button" onClick={csv} className={BTN_CSV_CLASS}>
-            CSV
+            Baixar CSV
           </button>
         </>
       }
