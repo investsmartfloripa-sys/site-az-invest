@@ -74,7 +74,8 @@ export const CHART_CATALOG: ChartDef[] = [
     titulo: "Grupos no mês (variação × contribuição)",
     descricao:
       "O que puxou o índice no mês: variação e contribuição em p.p. dos 9 grupos da POF.",
-    waitFor: "chart",
+    // Desde a revisão de 12/11/2026 é tabela com barras (sem SVG do Recharts): espera o DOM.
+    waitFor: "dom",
   },
   {
     id: "IPCA-03",
