@@ -1,4 +1,5 @@
 import { fetchPainelBlob } from "@/lib/painel-blob";
+import { fmtNum, fmtSignedPct } from "@/lib/format-br";
 
 export const VISAO_GERAL_REVALIDATE_SECONDS = 3600;
 
@@ -578,8 +579,8 @@ export function focusPibAnoCorrente(focus: FocusData | null): { ano: number; med
 
 export function formatPct(v: NumOrNull, casas = 1): string {
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
-  const sinal = v >= 0 ? "+" : "";
-  return sinal + v.toFixed(casas) + "%";
+  // Vírgula decimal e sinal de menos tipográfico (antes saía "-0.6%" com ponto) — revisão 12/11/2026.
+  return fmtSignedPct(v, casas);
 }
 
 export function formatNumber(v: NumOrNull, casas = 0): string {
@@ -651,16 +652,16 @@ export function fraseManchete(payload: VisaoGeralPayload): string {
   }
   if (probPct !== null) {
     if (prob.usaFallback) {
-      detalhes.push("Probabilidade de recessão em " + probPct.toFixed(0) + "% pelo Probit AZ — " + prob.nModelos + " de 4 modelos disponíveis; mediana indisponível. Backtest formal em construção.");
+      detalhes.push("Probabilidade de recessão em " + fmtNum(probPct, 0) + "% pelo Probit AZ — " + prob.nModelos + " de 4 modelos disponíveis; mediana indisponível. Backtest formal em construção.");
     } else {
-      detalhes.push("Mediana de " + prob.nModelos + " de 4 modelos: " + probPct.toFixed(0) + "% de probabilidade de recessão (" + prob.nAcima50 + "/" + prob.nModelos + " acima de 50%). Backtest formal em construção.");
+      detalhes.push("Mediana de " + prob.nModelos + " de 4 modelos: " + fmtNum(probPct, 0) + "% de probabilidade de recessão (" + prob.nAcima50 + "/" + prob.nModelos + " acima de 50%). Backtest formal em construção.");
     }
   }
   if (icf?.selic_real_ex_ante_pct !== null && icf?.selic_real_ex_ante_pct !== undefined) {
-    detalhes.push("Juro real ex-ante em " + icf.selic_real_ex_ante_pct.toFixed(1) + "% — " + (icf.selic_real_ex_ante_pct > 6 ? "fortemente restritivo" : icf.selic_real_ex_ante_pct > 3 ? "restritivo" : "neutro") + ".");
+    detalhes.push("Juro real ex-ante em " + fmtNum(icf.selic_real_ex_ante_pct, 1) + "% — " + (icf.selic_real_ex_ante_pct > 6 ? "fortemente restritivo" : icf.selic_real_ex_ante_pct > 3 ? "restritivo" : "neutro") + ".");
   }
   if (ice?.valor !== null && ice?.valor !== undefined) {
-    detalhes.push("Confiança empresarial ICE FGV em " + ice.valor.toFixed(1) + " (" + (ice.valor > 100 ? "otimismo" : ice.valor < 90 ? "pessimismo" : "neutra") + ").");
+    detalhes.push("Confiança empresarial ICE FGV em " + fmtNum(ice.valor, 1) + " (" + (ice.valor > 100 ? "otimismo" : ice.valor < 90 ? "pessimismo" : "neutra") + ").");
   }
   if (pim?.var_yoy !== null && pim?.var_yoy !== undefined) {
     detalhes.push("Produção industrial (PIM-PF) " + (pim.var_yoy >= 0 ? "expande" : "contrai") + " " + formatPct(pim.var_yoy) + " a/a.");

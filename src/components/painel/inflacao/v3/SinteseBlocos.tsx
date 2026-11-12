@@ -20,6 +20,7 @@ import { AzSegmented, AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisPr
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum, fmtPct, fmtSignedPct } from "@/lib/format-br";
 import { META } from "../v2/shared";
+import { useTelaEstreita } from "./useTelaEstreita";
 
 /**
  * Categorias econômicas — o corte da mesma cesta pelo MOTIVO que faz o preço
@@ -30,6 +31,10 @@ import { META } from "../v2/shared";
  * três deles saíram — "índice cheio" e "difusão" foram removidos e "grupos"
  * foi absorvido pelo card único dos 9 grupos (GruposMesCard). Sobrou este, e
  * na horizontal→vertical pedida no mesmo relatório.
+ *
+ * Revisão 12/11/2026: no celular as colunas viram barras horizontais (os nomes "Preços livres"
+ * e "Comercializáveis" se sobrepunham no eixo); o rótulo "meta 3,0%" saiu de cima da barra e
+ * virou legenda embaixo do gráfico; no computador a altura acompanha o card vizinho.
  */
 
 type Horizonte = "mes" | "acum_12m";
@@ -48,6 +53,7 @@ const CATEGORIA_GLOSSA: Record<string, string> = {
 
 export function SinteseCategoriasCard({ sintese, geradoEm }: { sintese: TabelaSinteseBlock; geradoEm: string }) {
   const [horizonte, setHorizonte] = useState<Horizonte>("acum_12m");
+  const estreita = useTelaEstreita();
   const linhas = sintese.secoes.find((s) => s.id === "categorias")?.linhas ?? [];
   const m0 = sintese.mes_recente;
 
@@ -122,32 +128,66 @@ export function SinteseCategoriasCard({ sintese, geradoEm }: { sintese: TabelaSi
       stampGiro={geradoEm}
       stampDado={m0}
     >
-      <div className="h-[300px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={rows} margin={{ top: 22, right: 12, bottom: 4, left: 0 }}>
-            <CartesianGrid {...azGridProps()} />
-            <XAxis {...azXAxisProps()} dataKey="nome" interval={0} tick={{ fontSize: 11, fill: AZ_CHART.labels }} />
-            <YAxis {...azYAxisProps()} width={46} tickFormatter={(v: number) => `${fmtNum(v, 1)}%`} />
-            <ReferenceLine y={0} stroke={AZ_CHART.zero} strokeOpacity={AZ_CHART.zeroOpacity} strokeWidth={1.5} />
-            {horizonte === "acum_12m" ? (
-              <ReferenceLine
-                y={META}
-                stroke={AZ_BRAND.navy}
-                strokeDasharray="4 4"
-                strokeWidth={1.2}
-                label={{ value: `meta ${fmtPct(META, 1)}`, position: "insideTopRight", fontSize: 9, fill: AZ_BRAND.navy }}
+      {estreita ? (
+        <div className="h-[220px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={rows} layout="vertical" margin={{ top: 4, right: 56, bottom: 4, left: 0 }}>
+              <CartesianGrid {...azGridProps("vertical-only")} />
+              <XAxis {...azXAxisProps()} type="number" tickFormatter={(v: number) => `${fmtNum(v, 1)}%`} />
+              <YAxis
+                {...azYAxisProps()}
+                type="category"
+                dataKey="nome"
+                width={112}
+                tick={{ fontSize: 11, fill: AZ_CHART.labels }}
               />
-            ) : null}
-            <Tooltip content={<AzTooltip valueFmt={fmtValor} />} cursor={AZ_TOOLTIP_PROPS.cursor} />
-            <Bar dataKey="valor" name="Variação" maxBarSize={64} radius={[3, 3, 0, 0]} isAnimationActive={false}>
-              {rows.map((r) => (
-                <Cell key={r.nome} fill={r.valor > 0 ? AZ_CHART.neg : AZ_CHART.neutral} />
-              ))}
-              <LabelList dataKey="valor" content={renderRotulo} />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+              <ReferenceLine x={0} stroke={AZ_CHART.zero} strokeOpacity={AZ_CHART.zeroOpacity} strokeWidth={1.5} />
+              {horizonte === "acum_12m" ? (
+                <ReferenceLine x={META} stroke={AZ_BRAND.navy} strokeDasharray="4 4" strokeWidth={1.2} />
+              ) : null}
+              <Tooltip content={<AzTooltip valueFmt={fmtValor} />} cursor={AZ_TOOLTIP_PROPS.cursor} />
+              <Bar dataKey="valor" name="Variação" maxBarSize={22} radius={[0, 3, 3, 0]} isAnimationActive={false}>
+                {rows.map((r) => (
+                  <Cell key={r.nome} fill={r.valor > 0 ? AZ_CHART.neg : AZ_CHART.neutral} />
+                ))}
+                <LabelList
+                  dataKey="valor"
+                  position="right"
+                  formatter={(v: unknown) => fmtValor(Number(v))}
+                  style={{ fontSize: 11, fontWeight: 600, fill: "#475569", fontVariantNumeric: "tabular-nums" }}
+                />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      ) : (
+        <div className="h-[300px] w-full xl:h-[370px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={rows} margin={{ top: 22, right: 12, bottom: 4, left: 0 }}>
+              <CartesianGrid {...azGridProps()} />
+              <XAxis {...azXAxisProps()} dataKey="nome" interval={0} tick={{ fontSize: 11, fill: AZ_CHART.labels }} />
+              <YAxis {...azYAxisProps()} width={46} tickFormatter={(v: number) => `${fmtNum(v, 1)}%`} />
+              <ReferenceLine y={0} stroke={AZ_CHART.zero} strokeOpacity={AZ_CHART.zeroOpacity} strokeWidth={1.5} />
+              {horizonte === "acum_12m" ? (
+                <ReferenceLine y={META} stroke={AZ_BRAND.navy} strokeDasharray="4 4" strokeWidth={1.2} />
+              ) : null}
+              <Tooltip content={<AzTooltip valueFmt={fmtValor} />} cursor={AZ_TOOLTIP_PROPS.cursor} />
+              <Bar dataKey="valor" name="Variação" maxBarSize={64} radius={[3, 3, 0, 0]} isAnimationActive={false}>
+                {rows.map((r) => (
+                  <Cell key={r.nome} fill={r.valor > 0 ? AZ_CHART.neg : AZ_CHART.neutral} />
+                ))}
+                <LabelList dataKey="valor" content={renderRotulo} />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+      {horizonte === "acum_12m" ? (
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-zinc-500">
+          <span className="inline-block w-5 border-t-2 border-dashed border-[#132960]" aria-hidden />
+          meta de {fmtPct(META, 1)} em 12 meses
+        </p>
+      ) : null}
     </ChartCard>
   );
 }

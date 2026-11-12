@@ -3,28 +3,38 @@
 import { useMemo, useState } from "react";
 
 import type { BpMestre } from "@/lib/painel-contas-externas";
-import { AzSegmented, ChartCard, CockpitChip, tomPorSinal } from "@/components/painel/core";
+import { ChartCard, CockpitChip, tomPorSinal } from "@/components/painel/core";
+import { SegmentedRolavel } from "@/components/painel/contas-externas/SegmentedRolavel";
 import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AzTimeSeriesChart } from "@/components/painel/charts/AzTimeSeriesChart";
-import { AZ_BRAND, AZ_CHART, AZ_SERIES, AZ_SERIES_EXTRA } from "@/lib/az-chart-theme";
+import { AZ_BRAND, AZ_CHART, AZ_SERIES } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum, fmtPct, fmtSignedPct } from "@/lib/format-br";
 import { StackedBpChart } from "./StackedBpChart";
-import { fmtUsBiSigned, isoMes, pctPib, recorta, ultimoDe, val } from "./cockpit-shared";
+import { finsDeTrimestre, fmtUsBiSigned, isoMes, pctPib, recorta, ultimoDe, val } from "./cockpit-shared";
 
 const PERIODOS = ["5y", "10y", "max"] as const;
 
+// Quatro grupos (derivativos, pequenos, somados a outros investimentos) e barras no fim de cada
+// trimestre: com cinco cores em barras mensais de 10 anos nenhuma série era legível (revisão 12/11/2026).
 const STACKS_CF = [
   { key: "inv_direto", label: "Investimento direto", color: AZ_SERIES[3] },
   { key: "carteira", label: "Carteira", color: AZ_SERIES[0] },
-  { key: "derivativos", label: "Derivativos", color: AZ_SERIES[7] },
-  { key: "outros_inv", label: "Outros investimentos", color: AZ_SERIES[5] },
+  { key: "outros_deriv", label: "Outros investimentos e derivativos", color: AZ_SERIES[5] },
   { key: "reservas", label: "Ativos de reserva", color: AZ_SERIES[2] },
 ];
 
 /** Card — conta financeira 12m por função (convenção BPM6: ativos − passivos). */
 export function ContaFinanceiraFuncaoCard({ bp, geradoEm }: { bp: BpMestre; geradoEm: string }) {
   const [period, setPeriod] = useState<AzPeriodValue>({ id: "10y" });
-  const rows = useMemo(() => recorta(bp.acum_12m, period), [bp.acum_12m, period]);
+  const rows = useMemo(
+    () =>
+      finsDeTrimestre(recorta(bp.acum_12m, period)).map((r) => {
+        const o = val(r, "outros_inv");
+        const dv = val(r, "derivativos");
+        return { ...r, outros_deriv: o != null || dv != null ? (o ?? 0) + (dv ?? 0) : null };
+      }),
+    [bp.acum_12m, period],
+  );
   const ult = ultimoDe(bp.acum_12m);
   return (
     <ChartCard
@@ -50,7 +60,8 @@ export function ContaFinanceiraFuncaoCard({ bp, geradoEm }: { bp: BpMestre; gera
           </p>
           <p>
             <b>Fecho.</b> Conta financeira ≈ TC + conta capital + erros e omissões (identidade auditada). A linha navy é a
-            conta financeira total.
+            conta financeira total. Derivativos, pequenos, aparecem somados a outros investimentos; uma barra por fim de
+            trimestre (mais o último mês divulgado).
           </p>
         </div>
       }
@@ -118,7 +129,7 @@ export function CoberturaIdpCard({ bp, geradoEm }: { bp: BpMestre; geradoEm: str
       }
       toolbar={
         <>
-          <AzSegmented ariaLabel="Lente" options={OPCOES_COB} value={lente} onChange={(id) => setLente(id as LenteCob)} />
+          <SegmentedRolavel ariaLabel="Lente" options={OPCOES_COB} value={lente} onChange={(id) => setLente(id as LenteCob)} />
           <AzPeriodSelector value={period} onChange={setPeriod} min={pts[0]?.[0]} max={pts[pts.length - 1]?.[0]} periods={[...PERIODOS]} />
         </>
       }
@@ -172,15 +183,19 @@ const OPCOES_PASS = [
   { id: "12m", label: "12 meses" },
   { id: "mensal", label: "Mensal" },
 ];
+// Instrumentos do passivo (BPM6) somados em quatro grupos para o gráfico: com oito cores empilhadas em
+// barras mensais nenhuma série era legível (revisão 12/11/2026).
+const INSTRUMENTOS_PASS: ReadonlyArray<{ grupo: string; keys: readonly string[] }> = [
+  { grupo: "idp", keys: ["idp_participacao", "idp_reinvestimento", "idp_intercompanhia"] },
+  { grupo: "carteira", keys: ["acoes_passivos", "fundos_passivos", "titulos_domesticos", "titulos_externos"] },
+  { grupo: "emprestimos", keys: ["emprestimos_passivos"] },
+  { grupo: "creditos", keys: ["credito_comercial_passivos"] },
+];
 const STACKS_PASS = [
-  { key: "idp_participacao", label: "IDP participação", color: AZ_SERIES[3] },
-  { key: "idp_reinvestimento", label: "IDP reinvestimento", color: AZ_SERIES[6] },
-  { key: "idp_intercompanhia", label: "IDP intercompanhia", color: AZ_SERIES[7] },
-  { key: "acoes_fundos", label: "Ações e fundos", color: AZ_SERIES[0] },
-  { key: "titulos_domesticos", label: "Títulos (doméstico)", color: AZ_SERIES[4] },
-  { key: "titulos_externos", label: "Títulos (externo)", color: AZ_SERIES_EXTRA },
-  { key: "emprestimos_passivos", label: "Empréstimos", color: AZ_SERIES[5] },
-  { key: "credito_comercial_passivos", label: "Créditos comerciais", color: AZ_SERIES[2] },
+  { key: "idp", label: "IDP", color: AZ_SERIES[3] },
+  { key: "carteira", label: "Carteira (ações, fundos e títulos)", color: AZ_SERIES[0] },
+  { key: "emprestimos", label: "Empréstimos", color: AZ_SERIES[5] },
+  { key: "creditos", label: "Créditos comerciais", color: AZ_SERIES[2] },
 ];
 
 /** Card — ingressos de não residentes (passivos) por instrumento. */
@@ -194,15 +209,9 @@ export function NaoResidentesCard({ bp, geradoEm }: { bp: BpMestre; geradoEm: st
     () =>
       base.map((r) => {
         const o: Record<string, number | string | null> = { mes: r.mes };
-        for (const s of STACKS_PASS) {
-          if (s.key === "acoes_fundos") {
-            const a = val(r, "acoes_passivos");
-            const f = val(r, "fundos_passivos");
-            o.acoes_fundos = a != null && f != null ? (a + f) / div : null;
-          } else {
-            const v = val(r, s.key);
-            o[s.key] = v != null ? v / div : null;
-          }
+        for (const g of INSTRUMENTOS_PASS) {
+          const vs = g.keys.map((k) => val(r, k));
+          o[g.grupo] = vs.every((v) => v == null) ? null : vs.reduce<number>((acc, v) => acc + (v ?? 0), 0) / div;
         }
         const soma = STACKS_PASS.reduce((acc, s) => acc + ((o[s.key] as number | null) ?? 0), 0);
         o.total = +soma.toFixed(3);
@@ -210,9 +219,9 @@ export function NaoResidentesCard({ bp, geradoEm }: { bp: BpMestre; geradoEm: st
       }),
     [base, div],
   );
-  const rows = useMemo(() => (ehMensal ? all : recorta(all, period)), [all, period, ehMensal]);
+  const rows = useMemo(() => (ehMensal ? all : finsDeTrimestre(recorta(all, period))), [all, period, ehMensal]);
   const ult = ultimoDe(all);
-  const carteira = ult ? (ult.acoes_fundos ?? 0) + (ult.titulos_domesticos ?? 0) + (ult.titulos_externos ?? 0) : null;
+  const carteira = ult ? (ult.carteira ?? null) : null;
 
   return (
     <ChartCard
@@ -221,7 +230,7 @@ export function NaoResidentesCard({ bp, geradoEm }: { bp: BpMestre; geradoEm: st
       subtitle="IDP 22891 · 22892 · 22893 · carteira 22927 + 22936 · 22942 · 22945 · empréstimos 22994 · créditos comerciais 23026 · US$ bi"
       toolbar={
         <>
-          <AzSegmented ariaLabel="Janela" options={OPCOES_PASS} value={lente} onChange={(id) => setLente(id as LentePass)} />
+          <SegmentedRolavel ariaLabel="Janela" options={OPCOES_PASS} value={lente} onChange={(id) => setLente(id as LentePass)} />
           {!ehMensal ? (
             <AzPeriodSelector
               value={period}
@@ -238,7 +247,9 @@ export function NaoResidentesCard({ bp, geradoEm }: { bp: BpMestre; geradoEm: st
           Lado do passivo da conta financeira: quanto os não residentes aplicaram líquido no país, por instrumento. Separa
           o capital de longo prazo (IDP) do &ldquo;hot money&rdquo; de carteira (ações, fundos e títulos de renda fixa no
           mercado doméstico, sensíveis a juro e câmbio) e do financiamento via empréstimos e créditos comerciais. Positivo =
-          entrada. Mensal: últimos 60 meses, sem acumular — ruidoso por construção.
+          entrada. IDP soma participação no capital, reinvestimento de lucros e operações intercompanhia; carteira soma
+          ações, fundos e títulos no país e no exterior. Em 12 meses, uma barra por fim de trimestre (mais o último mês);
+          mensal: últimos 60 meses, sem acumular — ruidoso por construção.
         </p>
       }
       stampGiro={geradoEm}

@@ -9,21 +9,93 @@
  */
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 import type { AzSeriesPoint, AzXRefArea } from "@/components/painel/charts/AzTimeSeriesChart";
 import type { PontoMensal } from "@/lib/painel-fiscal";
-import { addMonthsUTC } from "@/lib/format-br";
+import { AZ_BRAND } from "@/lib/az-chart-theme";
+import { addMonthsUTC, fmtPct } from "@/lib/format-br";
 
 /**
  * Chip de título do padrão cockpit (ver RiskSeriesCard): título FIXO técnico
  * no card, valor dinâmico aqui ao lado. `cor` pinta o ponto (default navy).
+ * Sem borda (revisão 12/11/2026): com borda ele parecia um botão ao lado dos
+ * filtros e do seletor de período; é informação, não controle.
  */
 export function CockpitChip({ cor = "#132960", children }: { cor?: string; children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#132960]/15 bg-[#132960]/5 px-2.5 py-1 text-[11px] font-bold text-[#132960]">
-      <span className="h-2 w-2 rounded-full" style={{ background: cor }} aria-hidden />
+    <span className="inline-flex items-center gap-1.5 rounded-md bg-[#132960]/5 px-2 py-1 text-xs font-bold tabular-nums text-[#132960]">
+      <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: cor }} aria-hidden />
       {children}
     </span>
+  );
+}
+
+/**
+ * Cores por fator das duas decomposições da dívida (DLSP calculada × DBGG oficial), que ficam
+ * lado a lado: o mesmo conceito tem a mesma cor nos dois gráficos (revisão 12/11/2026 — juros
+ * era laranja num e marinho no outro). Ajustes (patrimoniais, cambiais, outros) ficam na família cinza.
+ */
+export const COR_FATOR_DIVIDA = {
+  juros: AZ_BRAND.rust,
+  /** Primário (DLSP) e emissões líquidas (DBGG): o financiamento do governo. */
+  financiamento: AZ_BRAND.azure,
+  crescimento: "#1E8A5C",
+  ajustes: "#94A3B8",
+  ajusteCambial: "#64748B",
+} as const;
+
+/** Link para outra aba no estilo de botão secundário (o mesmo em todos os cards da Dívida). */
+export function LinkSecundario({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-1 rounded-lg border border-[#132960]/20 bg-white px-3 py-1.5 text-xs font-semibold text-[#027DFC] transition-colors hover:border-[#027DFC] hover:bg-[#027DFC]/5"
+    >
+      {children}
+    </Link>
+  );
+}
+
+/**
+ * Valores atuais por categoria de um gráfico empilhado. No computador: pílulas acima do gráfico.
+ * No celular: legenda compacta em duas colunas, abaixo do gráfico (as pílulas ocupavam 5 linhas
+ * antes do gráfico). Categorias que arredondam para 0,0% não aparecem.
+ */
+export type ValorCategoria = { key: string; label: string; cor: string; valor: number };
+
+export function ValoresPorCategoria({
+  itens,
+  posicao,
+}: {
+  itens: ReadonlyArray<ValorCategoria>;
+  /** "acima" = pílulas (só a partir de sm); "abaixo" = legenda compacta (só no celular). */
+  posicao: "acima" | "abaixo";
+}) {
+  const visiveis = itens.filter((i) => Number.isFinite(i.valor) && i.valor >= 0.05);
+  if (posicao === "acima") {
+    return (
+      <div className="mb-3 hidden flex-wrap gap-2 sm:flex">
+        {visiveis.map((i) => (
+          <div key={i.key} className="flex items-center gap-1.5 rounded-lg bg-zinc-50 px-2.5 py-1.5">
+            <span className="inline-block h-2 w-2 rounded-full" style={{ background: i.cor }} aria-hidden />
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">{i.label}</span>
+            <span className="text-sm font-bold tabular-nums text-[#132960]">{fmtPct(i.valor, 1)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 sm:hidden">
+      {visiveis.map((i) => (
+        <li key={i.key} className="flex min-w-0 items-center gap-1.5 text-xs text-zinc-600">
+          <span className="inline-block h-2 w-2 shrink-0 rounded-full" style={{ background: i.cor }} aria-hidden />
+          <span className="min-w-0 truncate">{i.label}</span>
+          <span className="ml-auto font-bold tabular-nums text-[#132960]">{fmtPct(i.valor, 1)}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

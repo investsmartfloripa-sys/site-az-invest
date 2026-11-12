@@ -45,7 +45,8 @@ const ANO_INICIAL = 2007;
 /** Janela da régua: últimos N anos fechados com dado (mediana, não média). */
 const JANELA_MEDIANA_ANOS = 20;
 const CAMPO_ACUM_ANO = "acum_ano_pib";
-const ALTURA_GRAFICO = 180;
+// 260 px: com 180 os rótulos das barras encostavam na linha da mediana (revisão 12/11/2026).
+const ALTURA_GRAFICO = 260;
 const LARGURA_EIXO_Y = 44;
 const MARGEM_DIREITA = 16;
 /** Rótulo de valor só quando cada barra tem ao menos esta largura (senão colidem). */
@@ -110,7 +111,11 @@ function renderRotuloBarra(props: unknown): ReactElement {
       y={acima ? topo - 3 : base + 3}
       textAnchor="middle"
       dominantBaseline={acima ? "auto" : "hanging"}
-      style={{ fontSize: 9, fill: AZ_CHART.labels, fontVariantNumeric: "tabular-nums" }}
+      // Contorno branco: quando o rótulo cruza a linha tracejada da mediana, o número continua legível.
+      stroke="#fff"
+      strokeWidth={3}
+      paintOrder="stroke"
+      style={{ fontSize: 10, fill: AZ_CHART.labels, fontVariantNumeric: "tabular-nums" }}
     >
       {fmtSignedPct(n, 1)}
     </text>
@@ -301,12 +306,6 @@ export function AnualPibCard({ pib, geradoEm }: { pib: AtividadePibData; geradoE
                   strokeDasharray="4 4"
                   strokeWidth={1.2}
                   ifOverflow="extendDomain"
-                  label={{
-                    value: `mediana ${JANELA_MEDIANA_ANOS}a ${fmtSignedPct(mediana.valor, 1)}`,
-                    position: "insideTopLeft",
-                    fontSize: 9,
-                    fill: AZ_BRAND.navy,
-                  }}
                 />
               ) : null}
 
@@ -330,6 +329,25 @@ export function AnualPibCard({ pib, geradoEm }: { pib: AtividadePibData; geradoE
               </Bar>
             </ComposedChart>
           </ResponsiveContainer>
+          {/* Mediana na legenda: o rótulo dentro do gráfico era cortado pelos rótulos das barras. */}
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-600">
+            {mediana ? (
+              <span className="inline-flex items-center gap-1.5">
+                <svg width="18" height="6" aria-hidden>
+                  <line x1="0" y1="3" x2="18" y2="3" stroke={AZ_BRAND.navy} strokeWidth="1.5" strokeDasharray="4 3" />
+                </svg>
+                mediana de {JANELA_MEDIANA_ANOS} anos {fmtSignedPct(mediana.valor, 1)}
+              </span>
+            ) : null}
+            <span className="inline-flex items-center gap-1.5">
+              <span
+                className="h-2.5 w-3.5 rounded-sm border border-dashed"
+                style={{ borderColor: AZ_BRAND.azure, background: "rgba(2,125,252,0.35)" }}
+                aria-hidden
+              />
+              mediana Focus (anos abertos)
+            </span>
+          </div>
         </div>
       )}
 

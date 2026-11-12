@@ -1,7 +1,8 @@
 "use client";
 
 import type { VisaoGeralPayload } from "@/lib/painel-visao-geral";
-import { formatPct, formatMes, ultimaObs, resumoProbabilidade } from "@/lib/painel-visao-geral";
+import { formatMes, ultimaObs, resumoProbabilidade } from "@/lib/painel-visao-geral";
+import { fmtNum, fmtPct, fmtSignedPct } from "@/lib/format-br";
 
 function KpiCard({
   titulo,
@@ -13,6 +14,7 @@ function KpiCard({
   mes,
   selo,
   hint,
+  className = "",
 }: {
   titulo: string;
   tecnico: string;
@@ -23,6 +25,7 @@ function KpiCard({
   mes?: string | null;
   selo?: { texto: string; classe: string };
   hint?: string;
+  className?: string;
 }) {
   // Reducao saturacao (loop 13): fundo branco em todos, cor apenas na borda esquerda
   const corClass = {
@@ -38,27 +41,31 @@ function KpiCard({
     neutro: "bg-zinc-300",
   }[cor];
   return (
-    <div className={`rounded-2xl ${corClass} p-3 shadow-sm`} title={hint}>
+    <div className={`rounded-2xl ${corClass} p-3 shadow-sm ${className}`} title={hint}>
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="text-xs font-semibold text-zinc-900">{titulo}</div>
-          <div className="text-[10px] uppercase tracking-wide text-zinc-500">{tecnico}</div>
+          <div className="text-[11px] uppercase tracking-wide text-zinc-500">{tecnico}</div>
         </div>
         <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${dot}`} />
       </div>
       <div className="mt-1.5 flex items-baseline gap-2 flex-wrap">
         <div className="text-2xl font-bold leading-none text-zinc-900">{valor}</div>
         {selo && (
-          <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${selo.classe}`}>
+          <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${selo.classe}`}>
             {selo.texto}
           </span>
         )}
       </div>
-      {subtitulo && <div className="mt-1 text-[10px] leading-tight text-zinc-600">{subtitulo}</div>}
-      <div className="mt-1 flex items-center justify-between text-[10px] text-zinc-500">
-        <span>{mes ? `Ref. ${formatMes(mes)}` : ""}</span>
-        {variacao && <span className="font-medium">{variacao}</span>}
-      </div>
+      {subtitulo && <div className="mt-1 text-xs leading-snug text-zinc-600">{subtitulo}</div>}
+      {/* Rodapé em bloco (uma informação por linha): em linha, "Ref." e as variações se
+          cruzavam no celular (revisão 12/11/2026). */}
+      {mes || variacao ? (
+        <div className="mt-1.5 space-y-0.5 text-xs leading-snug text-zinc-500">
+          {mes ? <div>Ref. {formatMes(mes)}</div> : null}
+          {variacao ? <div className="font-medium tabular-nums">{variacao}</div> : null}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -101,8 +108,8 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
         ? "vermelho"
         : "amarelo";
   const secundarios: string[] = [];
-  if (ibc?.var_mom !== null && ibc?.var_mom !== undefined) secundarios.push(`m/m ${formatPct(ibc.var_mom)}`);
-  if (ibc?.var_yoy_mm3 !== null && ibc?.var_yoy_mm3 !== undefined) secundarios.push(`a/a mm3 ${formatPct(ibc.var_yoy_mm3)}`);
+  if (ibc?.var_mom !== null && ibc?.var_mom !== undefined) secundarios.push(`no mês ${fmtSignedPct(ibc.var_mom)}`);
+  if (ibc?.var_yoy_mm3 !== null && ibc?.var_yoy_mm3 !== undefined) secundarios.push(`contra um ano antes (média 3m) ${fmtSignedPct(ibc.var_yoy_mm3)}`);
 
   // KPI 3 - Hiato: faixa mín–máx + mediana (nunca número único)
   const hiatoUltimo = ultimaObs(payload.hiato?.serie);
@@ -110,9 +117,9 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
   const gapMin = hiatoUltimo?.gap_min_pct ?? null;
   const gapMax = hiatoUltimo?.gap_max_pct ?? null;
   const temFaixa = gapMin !== null && gapMin !== undefined && gapMax !== null && gapMax !== undefined;
-  const hiatoValor = gapMediana !== null && gapMediana !== undefined ? formatPct(gapMediana, 1) : "—";
+  const hiatoValor = gapMediana !== null && gapMediana !== undefined ? fmtSignedPct(gapMediana, 1) : "—";
   const hiatoSubtitulo = temFaixa
-    ? `entre ${formatPct(gapMin, 1)} e ${formatPct(gapMax, 1)} — métodos divergem; mostramos a faixa.`
+    ? `entre ${fmtSignedPct(gapMin, 1)} e ${fmtSignedPct(gapMax, 1)} — métodos divergem; mostramos a faixa.`
     : "Acima de 0 = aquecimento; abaixo = ociosidade.";
 
   // KPI 4 - Confiança Empresarial FGV (ICE)
@@ -137,27 +144,28 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
           : { texto: "neutro", classe: "bg-amber-100 text-amber-700" };
   const icfHint =
     icf?.icf_zscore !== null && icf?.icf_zscore !== undefined
-      ? `ICF z-score: ${icf.icf_zscore.toFixed(2)} (Selic real invertida + Ibov 6m + REER)`
+      ? `ICF z-score: ${fmtNum(icf.icf_zscore, 2)} (Selic real invertida + Ibov 6m + REER)`
       : undefined;
 
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+    // Uma coluna no celular; 2 colunas até o xl com o 5º cartão em largura inteira (não fica órfão).
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
       <KpiCard
         titulo="Risco de recessão"
         tecnico={kpiProbTecnico}
-        valor={probPct === null ? "n/d" : `${probPct.toFixed(0)}%`}
+        valor={probPct === null ? "n/d" : fmtPct(probPct, 0)}
         subtitulo={kpiProbSubtitulo}
         cor={kpiProbCor}
         mes={prob.mes}
       />
       <KpiCard
         titulo="Atividade"
-        tecnico={temRitmo ? "ritmo trimestral (3m/3m dessaz)" : "IBC-Br m/m dessaz"}
-        valor={formatPct(atividadeValor)}
+        tecnico={temRitmo ? "IBC-Br · ritmo trimestral (3m/3m dessaz.)" : "IBC-Br · mês contra mês dessaz."}
+        valor={fmtSignedPct(atividadeValor)}
         subtitulo={
           temRitmo
-            ? "Banda neutra: 0% a +1% t/t (potencial +0,5% ±0,5pp)."
-            : "Proxy mensal do PIB calculada pelo BCB."
+            ? "Faixa neutra: de 0% a +1% no trimestre (potencial de +0,5%)."
+            : "Prévia mensal do PIB calculada pelo BCB."
         }
         variacao={secundarios.length > 0 ? secundarios.join(" · ") : undefined}
         cor={atividadeCor}
@@ -175,7 +183,7 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
       <KpiCard
         titulo="Confiança Empresarial FGV"
         tecnico="ICE (FGV-IBRE via SGS)"
-        valor={kpiIce === null ? "—" : kpiIce.toFixed(1)}
+        valor={kpiIce === null ? "—" : fmtNum(kpiIce, 1)}
         subtitulo="100 = neutro. Acima = otimismo, abaixo = pessimismo."
         cor={kpiIceCor}
         mes={ice?.mes}
@@ -183,12 +191,13 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
       <KpiCard
         titulo="Condições financeiras"
         tecnico="Juro real ex-ante"
-        valor={selicReal === null || selicReal === undefined ? "—" : `${selicReal.toFixed(1)}%`}
+        valor={selicReal === null || selicReal === undefined ? "—" : fmtPct(selicReal, 1)}
         subtitulo="Selic meta menos IPCA esperado 12m (Focus, suavizada)."
         cor={icfCor}
         mes={icf?.mes}
         selo={seloRegime}
         hint={icfHint}
+        className="sm:col-span-2 xl:col-span-1"
       />
     </div>
   );

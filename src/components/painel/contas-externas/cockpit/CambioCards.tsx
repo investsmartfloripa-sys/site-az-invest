@@ -3,11 +3,13 @@
 import { useMemo, useState } from "react";
 
 import type { CambioMacroData, CambioRealPonto } from "@/lib/painel-contas-externas";
-import { AzSegmented, ChartCard, CockpitChip, tomPorSinal } from "@/components/painel/core";
+import { ChartCard, CockpitChip, tomPorSinal } from "@/components/painel/core";
+import { SegmentedRolavel } from "@/components/painel/contas-externas/SegmentedRolavel";
 import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AzTimeSeriesChart, type AzRefArea, type AzRefLine } from "@/components/painel/charts/AzTimeSeriesChart";
 import { AZ_BRAND, AZ_CHART, AZ_SERIES } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum, fmtPct, fmtSignedPct } from "@/lib/format-br";
+import { LegendaRef } from "@/components/painel/contas-externas/LegendaRef";
 import { fmtSinal, isoMes } from "./cockpit-shared";
 
 const INICIO_REGUA = "2000-01";
@@ -68,8 +70,10 @@ export function CambioRealCard({ cambio }: { cambio: CambioMacroData }) {
   const u = cfg.serie[cfg.serie.length - 1];
   const v12 = var12(cfg.serie);
   const desvio = regua && u ? (u.indice / regua.media - 1) * 100 : null;
-  const refLines: AzRefLine[] = regua ? [{ y: +regua.media.toFixed(1), color: AZ_CHART.zero, label: `média ${INICIO_REGUA.slice(0, 4)}+` }] : [];
-  const refAreas: AzRefArea[] = regua ? [{ y1: regua.media - regua.dp, y2: regua.media + regua.dp, color: AZ_BRAND.azure, opacity: 0.06, label: "±1 dp" }] : [];
+  // Sem rótulo dentro do gráfico: "média" e "±1 dp" iam para a borda direita, por cima da linha e cortados
+  // ("mé"); a explicação mora na legenda embaixo (revisão 12/11/2026).
+  const refLines: AzRefLine[] = regua ? [{ y: +regua.media.toFixed(1), color: AZ_CHART.zero }] : [];
+  const refAreas: AzRefArea[] = regua ? [{ y1: regua.media - regua.dp, y2: regua.media + regua.dp, color: AZ_BRAND.azure, opacity: 0.06 }] : [];
 
   return (
     <ChartCard
@@ -78,7 +82,7 @@ export function CambioRealCard({ cambio }: { cambio: CambioMacroData }) {
       subtitle={`${cfg.sgs} · ${cfg.indice ? "alta = DEPRECIAÇÃO do real · régua média 2000+ ± 1 dp (calculada)" : "média mensal do dólar de venda"}`}
       toolbar={
         <>
-          <AzSegmented ariaLabel="Medida de câmbio" options={opcoes} value={lente} onChange={(id) => setLente(id as LenteReal)} />
+          <SegmentedRolavel ariaLabel="Medida de câmbio" options={opcoes} value={lente} onChange={(id) => setLente(id as LenteReal)} />
           <AzPeriodSelector value={period} onChange={setPeriod} min={pts[0]?.[0]} max={pts[pts.length - 1]?.[0]} periods={["5y", "10y", "max"]} />
         </>
       }
@@ -113,6 +117,14 @@ export function CambioRealCard({ cambio }: { cambio: CambioMacroData }) {
         refLines={refLines}
         refAreas={refAreas}
       />
+      {regua ? (
+        <LegendaRef
+          itens={[
+            { tipo: "tracejada", cor: AZ_CHART.zero, texto: `média desde ${INICIO_REGUA.slice(0, 4)}: ${fmtNum(regua.media, 0)}` },
+            { tipo: "faixa", cor: AZ_BRAND.azure, texto: "faixa de ±1 desvio-padrão" },
+          ]}
+        />
+      ) : null}
     </ChartCard>
   );
 }
@@ -145,7 +157,7 @@ export function PpcCard({ cambio }: { cambio: CambioMacroData }) {
           ? `${ppc.fonte} · PTAX média anual (SGS 1) · R$/US$`
           : "PPC ÷ PTAX média anual × 100 · 100 = mesma cesta custa o mesmo em dólar · linha = média do período"
       }
-      toolbar={<AzSegmented ariaLabel="Lente" options={OPCOES_PPC} value={lente} onChange={(id) => setLente(id as LentePpc)} />}
+      toolbar={<SegmentedRolavel ariaLabel="Lente" options={OPCOES_PPC} value={lente} onChange={(id) => setLente(id as LentePpc)} />}
       footer={
         <div className="space-y-1.5">
           <p>
@@ -194,9 +206,12 @@ export function PpcCard({ cambio }: { cambio: CambioMacroData }) {
           height={250}
           dots={2}
           showLegend={false}
-          refLines={media != null ? [{ y: +media.toFixed(1), color: AZ_CHART.zero, label: "média" }] : undefined}
+          refLines={media != null ? [{ y: +media.toFixed(1), color: AZ_CHART.zero }] : undefined}
         />
       )}
+      {lente === "nivel" && media != null ? (
+        <LegendaRef itens={[{ tipo: "tracejada", cor: AZ_CHART.zero, texto: `média do período: ${fmtNum(media, 0)}` }]} />
+      ) : null}
     </ChartCard>
   );
 }
@@ -247,7 +262,7 @@ export function FundamentosCambioCard({ cambio }: { cambio: CambioMacroData }) {
       subtitle={sub}
       toolbar={
         <>
-          <AzSegmented ariaLabel="Fundamento" options={opcoes} value={lente} onChange={(id) => setLente(id as LenteFund)} />
+          <SegmentedRolavel ariaLabel="Fundamento" options={opcoes} value={lente} onChange={(id) => setLente(id as LenteFund)} />
           <AzPeriodSelector value={period} onChange={setPeriod} min={pts[0]?.[0]} max={pts[pts.length - 1]?.[0]} periods={["5y", "10y", "max"]} />
         </>
       }

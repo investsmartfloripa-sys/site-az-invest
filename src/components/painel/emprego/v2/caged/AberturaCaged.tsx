@@ -1,12 +1,32 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactElement } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  LabelList,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import type { CagedQuebrasData } from "@/lib/painel-emprego";
 import { FAIXAS_5_ORDEM, SETORES_IBGE_ORDEM, agrupa5 } from "@/lib/painel-emprego";
-import { AzSegmented, ChartCard } from "@/components/painel/core";
-import { DivergingReturnBars, type DivergingBarRow } from "@/components/painel/charts/DivergingReturnBars";
-import { variationText } from "@/lib/az-chart-theme";
+import {
+  AzSegmented,
+  AzTooltip,
+  ChartCard,
+  azGridProps,
+  azXAxisProps,
+  azZeroLineProps,
+  ticksRedondos,
+} from "@/components/painel/core";
+import type { DivergingBarRow } from "@/components/painel/charts/DivergingReturnBars";
+import { AZ_CHART, AZ_TOOLTIP_PROPS, variationFill, variationText } from "@/lib/az-chart-theme";
 import { fmtPct, fmtSignedNum } from "@/lib/format-br";
 import { mesIso } from "@/components/painel/atividade/v2/shared";
 import { fmtSignedMil, somaJanela } from "./shared";
@@ -84,7 +104,7 @@ export function AberturaCaged({ quebras, geradoEm }: { quebras: CagedQuebrasData
         vista === "setores"
           ? "Saldo acumulado dos últimos 12 meses por setor IBGE (mil postos, microdado). Barras divergentes: criação líquida à direita, fechamento à esquerda."
           : `Saldo acumulado dos últimos 12 meses por faixa salarial em salários mínimos (mil postos, microdado).${
-              mesesComShare > 0 ? ` Share % = participação nas ADMISSÕES (fluxo bruto, ${mesesComShare} ${mesesComShare === 1 ? "mês" : "meses"} com dado).` : ""
+              mesesComShare > 0 ? ` Share % = participação nas admissões (fluxo bruto, ${mesesComShare} ${mesesComShare === 1 ? "mês" : "meses"} com dado).` : ""
             }`
       }
       toolbar={
@@ -113,12 +133,104 @@ export function AberturaCaged({ quebras, geradoEm }: { quebras: CagedQuebrasData
           ))}
         </div>
       ) : null}
-      <DivergingReturnBars
-        rows={rows}
-        yAxisWidth={132}
-        valueFmt={(v) => `${fmtSignedNum(v, 0)} mil`}
-        axisFmt={(v) => fmtSignedNum(v, 0)}
-      />
+      <BarrasSaldo rows={rows} />
     </ChartCard>
+  );
+}
+
+/**
+ * Barras horizontais divergentes no padrão do DivergingReturnBars (grade vertical, zero navy,
+ * barras de 16 px, valor com sinal na ponta), mas com o eixo calculado aqui: com o domínio
+ * automático, uma única barra de −15 mil abria o eixo em −250 e deixava a metade esquerda
+ * vazia; no celular ainda sumia o "+250" (revisão 12/11/2026). Agora: marcas redondas a partir
+ * do zero e só a folga necessária do lado negativo.
+ */
+function BarrasSaldo({ rows }: { rows: Linha[] }) {
+  const data = useMemo(
+    () => rows.map((r) => ({ name: r.label.length > 20 ? `${r.label.slice(0, 19)}…` : r.label, value: r.value })),
+    [rows],
+  );
+
+  const eixo = useMemo(() => {
+    let lo = 0;
+    let hi = 0;
+    for (const r of rows) {
+      if (r.value < lo) lo = r.value;
+      if (r.value > hi) hi = r.value;
+    }
+    const { ticks } = ticksRedondos(lo, hi, 4);
+    const folga = (hi - lo) * 0.05;
+    const min = lo < 0 ? lo - folga : 0;
+    const max = hi > 0 ? Math.max(ticks[ticks.length - 1] ?? hi, hi) : folga;
+    return { domain: [min, max] as [number, number], ticks: ticks.filter((t) => t >= min && t <= max) };
+  }, [rows]);
+
+  if (data.length === 0) {
+    return <p className="py-6 text-center text-sm text-zinc-500">Sem dados para este período.</p>;
+  }
+
+  const renderLabel = (props: unknown): ReactElement => {
+    const { x, y, width, height: h, value } = props as {
+      x?: number | string;
+      y?: number | string;
+      width?: number | string;
+      height?: number | string;
+      value?: number | string;
+    };
+    const xx = Number(x);
+    const yy = Number(y);
+    const w = Number(width);
+    const hh = Number(h);
+    const n = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(xx) || !Number.isFinite(yy) || !Number.isFinite(n)) return <g />;
+    return (
+      <text
+        x={Math.max(xx, xx + (Number.isFinite(w) ? w : 0)) + 6}
+        y={yy + (Number.isFinite(hh) ? hh : 0) / 2}
+        textAnchor="start"
+        dominantBaseline="central"
+        style={{ fontSize: 10.5, fill: "#475569", fontVariantNumeric: "tabular-nums" }}
+      >
+        {`${fmtSignedNum(n, 0)} mil`}
+      </text>
+    );
+  };
+
+  return (
+    <div className="w-full" style={{ height: 28 * data.length + 56 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} layout="vertical" barCategoryGap="35%" margin={{ left: 4, right: 56, top: 4, bottom: 4 }}>
+          <CartesianGrid {...azGridProps("vertical-only")} />
+          <XAxis
+            {...azXAxisProps()}
+            type="number"
+            domain={eixo.domain}
+            ticks={eixo.ticks}
+            interval={0}
+            tickFormatter={(v) => fmtSignedNum(Number(v), 0)}
+          />
+          <YAxis
+            type="category"
+            dataKey="name"
+            width={132}
+            interval={0}
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 11, fill: AZ_CHART.labels }}
+          />
+          <ReferenceLine {...azZeroLineProps("x")} />
+          <Tooltip
+            content={<AzTooltip hideDot valueFmt={(v) => `${fmtSignedNum(v, 1)} mil`} />}
+            cursor={AZ_TOOLTIP_PROPS.cursor}
+          />
+          <Bar dataKey="value" radius={[0, 3, 3, 0]} maxBarSize={16} isAnimationActive={false}>
+            {data.map((e, i) => (
+              <Cell key={`${e.name}-${i}`} fill={variationFill(e.value)} />
+            ))}
+            <LabelList dataKey="value" content={renderLabel} />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }

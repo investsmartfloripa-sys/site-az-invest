@@ -104,6 +104,9 @@ export function PainelDividaV2({
     return `${partes.join("; ")}.`;
   }, [derivados, ultSust]);
 
+  const nDecomposicoes =
+    (data.decomposicao_dlsp?.anos?.length ? 1 : 0) + (fatoresDbgg?.anual?.length ? 1 : 0);
+
   const mesRef = derivados.dbgg
     ? fmtMesCurto(dataIso(derivados.dbgg.data))
     : data.mes_recente
@@ -196,7 +199,7 @@ export function PainelDividaV2({
       {/* ── Dinâmica da dívida ── */}
       <Divisor
         label="Dinâmica da dívida"
-        info="Quem empurra e quem segura a dívida: a decomposição anual da ΔDLSP (calculada pelo pipeline), a decomposição OFICIAL da ΔDBGG (fatores condicionantes do BCB) e a aritmética r − g — quando o custo implícito supera o crescimento nominal, só superávit primário estabiliza."
+        info="Quem empurra e quem segura a dívida: a decomposição anual da variação da DLSP (calculada pelo pipeline), a decomposição OFICIAL da variação da DBGG (fatores condicionantes do BCB) e a aritmética r − g — quando o custo implícito supera o crescimento nominal, só superávit primário estabiliza."
       />
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
         {data.decomposicao_dlsp?.anos?.length ? (
@@ -206,7 +209,14 @@ export function PainelDividaV2({
           <FatoresDbggCard fatores={fatoresDbgg} geradoEm={fatoresDbgg.gerado_em} />
         ) : null}
         {sust.length > 0 ? (
-          <RMenosGCard serie={sust} codaceMensal={codace?.mensal} geradoEm={data.gerado_em} />
+          <RMenosGCard
+            serie={sust}
+            codaceMensal={codace?.mensal}
+            geradoEm={data.gerado_em}
+            // Com as duas decomposições na linha de cima, o r − g ficava sozinho na coluna da
+            // esquerda e deixava a direita vazia (revisão 12/11/2026): ocupa a largura toda.
+            className={nDecomposicoes % 2 === 0 ? "xl:col-span-2" : undefined}
+          />
         ) : null}
       </div>
 

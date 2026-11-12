@@ -84,7 +84,7 @@ export function CagedDashboardV2({
 
   const kpis = useMemo(() => {
     const { anterior, deltaAbs, sa, mm3, ytdAtual, ytdAnterior } = derivados;
-    return [
+    const cards = [
       <KpiCard
         key="saldo"
         label={`Saldo de ${fmtMesCurto(mesRef)}`}
@@ -121,6 +121,13 @@ export function CagedDashboardV2({
         hint={`soma jan–${fmtMesCurto(mesRef)}`}
       />,
     ];
+    // Altura igual na fila: o primeiro KPI (valor maior + selo de variação) ficava mais alto que os
+    // vizinhos. A célula da grade estica; este invólucro e o cartão de dentro ocupam a célula toda.
+    return cards.map((card) => (
+      <div key={card.key} className="h-full [&>div]:h-full">
+        {card}
+      </div>
+    ));
   }, [derivados, mesRef, ult, anoCorrente]);
 
   const blocos = useMemo<DashboardBloco[]>(() => {
@@ -164,7 +171,7 @@ export function CagedDashboardV2({
         id: "sazonal",
         eyebrow: "Sazonalidade",
         titulo: "Padrão sazonal",
-        descricao: "Cada mês comparado com o histórico DELE mesmo, em desvios robustos — não com números crus.",
+        descricao: "Cada mês comparado com o histórico dele mesmo, em desvios robustos — não com números crus.",
         children: <HeatmapSazonalCard total={total} geradoEm={total.gerado_em} />,
       },
       {

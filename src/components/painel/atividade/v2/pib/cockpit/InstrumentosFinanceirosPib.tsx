@@ -307,11 +307,13 @@ export function InstrumentosFinanceirosPib({
         <details className="group">
           <summary className="cursor-pointer select-none list-none rounded-lg px-1 py-1 transition-colors hover:bg-zinc-50 [&::-webkit-details-marker]:hidden">
             <span className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-              <span
-                aria-hidden
-                className="inline-block w-3 text-center text-xs text-[#027DFC] transition-transform group-open:rotate-90"
-              >
-                ▸
+              {/* Botão com rótulo: a seta "▸" sozinha não dizia o que abria (revisão 12/11/2026). */}
+              <span className="inline-flex items-center gap-1 rounded-lg border border-[#132960]/20 bg-white px-2.5 py-1 text-xs font-semibold text-[#132960]">
+                <span className="group-open:hidden">Ver instrumentos</span>
+                <span className="hidden group-open:inline">Ocultar instrumentos</span>
+                <span aria-hidden className="inline-block text-[#027DFC] transition-transform group-open:rotate-90">
+                  ▸
+                </span>
               </span>
               {/* Linha-resumo (número dinâmico mora no chip, nunca no título): período · totais · selo. */}
               <span className="flex flex-wrap gap-1.5">

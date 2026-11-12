@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import {
   CartesianGrid,
   ComposedChart,
-  Legend,
   Line,
   ReferenceLine,
   ResponsiveContainer,
@@ -18,7 +17,9 @@ import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@
 import { AzPeriodSelector, resolvePeriodRange, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AZ_BRAND, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum } from "@/lib/format-br";
-import { pontosData } from "./shared";
+import { LegendaHtml, pontosData } from "./shared";
+
+const COR_PPC = "#7C3AED";
 
 /**
  * "Poder de compra" C2+C3 FUNDIDOS — salário mínimo em US$ pela PTAX × em
@@ -89,24 +90,13 @@ export function SmDolarCard({ poderCompra, geradoEm }: { poderCompra: FamiliasPo
             <XAxis {...azXAxisProps()} dataKey="mes" tickFormatter={fmtMesCurto} minTickGap={36} />
             <YAxis {...azYAxisProps()} width={48} tickFormatter={(v: number) => `$${fmtNum(v, 0)}`} />
             {media20 != null ? (
-              <ReferenceLine
-                y={media20}
-                stroke={AZ_BRAND.navy}
-                strokeDasharray="4 4"
-                strokeWidth={1.2}
-                label={{
-                  value: `média 20a (PTAX): US$ ${fmtNum(media20, 0)}`,
-                  position: "insideBottomRight",
-                  fontSize: 9,
-                  fill: AZ_BRAND.navy,
-                }}
-              />
+              // Valor da média na legenda abaixo: dentro do gráfico o rótulo ficava sobre as duas linhas.
+              <ReferenceLine y={media20} stroke={AZ_BRAND.navy} strokeDasharray="4 4" strokeWidth={1.2} />
             ) : null}
             <Tooltip
               content={<AzTooltip labelFmt={(l) => fmtMesCurto(String(l))} valueFmt={(v) => `US$ ${fmtNum(v, 0)}`} />}
               cursor={AZ_TOOLTIP_PROPS.cursor}
             />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
             <Line
               type="monotone"
               dataKey="ptax"
@@ -121,7 +111,7 @@ export function SmDolarCard({ poderCompra, geradoEm }: { poderCompra: FamiliasPo
               type="monotone"
               dataKey="ppc"
               name="SM em US$ (PPC)"
-              stroke="#7C3AED"
+              stroke={COR_PPC}
               strokeWidth={2}
               dot={false}
               connectNulls
@@ -130,6 +120,15 @@ export function SmDolarCard({ poderCompra, geradoEm }: { poderCompra: FamiliasPo
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+      <LegendaHtml
+        itens={[
+          { label: "SM em US$ (PTAX)", cor: AZ_BRAND.azure },
+          { label: "SM em US$ (PPC)", cor: COR_PPC },
+          ...(media20 != null
+            ? [{ label: `Média de 20 anos (PTAX): US$ ${fmtNum(media20, 0)}`, cor: AZ_BRAND.navy, tipo: "tracejada" as const }]
+            : []),
+        ]}
+      />
     </ChartCard>
   );
 }

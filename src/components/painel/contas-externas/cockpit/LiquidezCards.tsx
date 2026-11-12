@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 
 import type { ContasExternasData, PiiPonto } from "@/lib/painel-contas-externas";
-import { AzSegmented, ChartCard, CockpitChip, tomPorSinal } from "@/components/painel/core";
+import { ChartCard, CockpitChip, tomPorSinal } from "@/components/painel/core";
+import { SegmentedRolavel } from "@/components/painel/contas-externas/SegmentedRolavel";
 import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AzTimeSeriesChart } from "@/components/painel/charts/AzTimeSeriesChart";
 import { AZ_BRAND, AZ_CHART, AZ_SERIES } from "@/lib/az-chart-theme";
@@ -64,7 +65,7 @@ export function LiquidezExternaCard({ data }: { data: ContasExternasData }) {
       }
       toolbar={
         <>
-          <AzSegmented ariaLabel="Métrica" options={OPCOES_LIQ} value={lente} onChange={(id) => setLente(id as LenteLiq)} />
+          <SegmentedRolavel ariaLabel="Métrica" options={OPCOES_LIQ} value={lente} onChange={(id) => setLente(id as LenteLiq)} />
           <AzPeriodSelector value={period} onChange={setPeriod} min={pts[0]?.[0]} max={pts[pts.length - 1]?.[0]} periods={["1y", "5y", "10y", "max"]} />
         </>
       }
@@ -87,10 +88,13 @@ export function LiquidezExternaCard({ data }: { data: ContasExternasData }) {
       stampDado={lente === "reservas" ? data.ultima_referencia_diaria : lente === "meses" ? mesesU?.[0].slice(0, 7) : piiU?.trim}
     >
       <div className="mb-2 flex flex-wrap gap-1.5">
-        <CockpitChip tom={tomPorSinal(r12 && resU.valor != null ? resU.valor - r12[1] : null)}>
+        {/* Chips curtos: num só, o texto era cortado com reticências no celular (revisão 12/11/2026). */}
+        <CockpitChip tom="navy">
           reservas {fmtUsBi(resU.valor, 1)} {resU.data ? `em ${fmtDataBR(resU.data)}` : ""}
-          {r12 && resU.valor != null ? ` · ${fmtSinal(resU.valor - r12[1], 1)} bi em ~12m` : ""}
         </CockpitChip>
+        {r12 && resU.valor != null ? (
+          <CockpitChip tom={tomPorSinal(resU.valor - r12[1])}>{fmtSinal(resU.valor - r12[1], 1)} bi em cerca de 12 meses</CockpitChip>
+        ) : null}
         <CockpitChip tom="navy">{mesesU ? `${fmtNum(mesesU[1], 1)} meses de importação` : "—"}</CockpitChip>
         <CockpitChip tom={piiU?.guidotti != null && piiU.guidotti >= 1 ? "pos" : "neg"}>
           reservas ÷ dívida CP {piiU?.guidotti != null ? fmtNum(piiU.guidotti, 2) : "—"}× {piiU ? `(${fmtTrimPii(piiU.trim)})` : ""}
@@ -149,7 +153,7 @@ export function PiiCard({ pii, geradoEm }: { pii: PiiPonto[]; geradoEm: string }
       subtitle="BCB/SGS 24010 (líquida) · 24011 (ativos) · 24040 (passivos) · 24041 (IDP) · 24044 (carteira) · trimestral"
       toolbar={
         <>
-          <AzSegmented ariaLabel="Unidade" options={OPCOES_PII} value={lente} onChange={(id) => setLente(id as LentePii)} />
+          <SegmentedRolavel ariaLabel="Unidade" options={OPCOES_PII} value={lente} onChange={(id) => setLente(id as LentePii)} />
           <AzPeriodSelector
             value={period}
             onChange={setPeriod}
@@ -171,8 +175,11 @@ export function PiiCard({ pii, geradoEm }: { pii: PiiPonto[]; geradoEm: string }
       stampDado={u?.trim}
     >
       <div className="mb-2 flex flex-wrap gap-1.5">
+        <CockpitChip tom="navy">
+          {u ? fmtTrimPii(u.trim) : "—"} · PII líquida {fmtUsBiSigned(u?.liquida ?? null, 0)}
+        </CockpitChip>
         <CockpitChip tom={tomPorSinal(liqPib != null && liqPibA != null ? liqPib - liqPibA : null)}>
-          {u ? fmtTrimPii(u.trim) : "—"} · PII líquida {fmtUsBiSigned(u?.liquida ?? null, 0)} · {fmtSignedPct(liqPib, 1)} PIB
+          {fmtSignedPct(liqPib, 1)} do PIB
           {liqPib != null && liqPibA != null ? ` · ${fmtSinal(liqPib - liqPibA, 1)} p.p. em 4T` : ""}
         </CockpitChip>
         <CockpitChip tom="navy">

@@ -17,11 +17,11 @@ import {
 
 import type { FamiliasRendaData } from "@/lib/painel-familias";
 import type { CodaceFaixaAtividade } from "@/lib/painel-atividade";
-import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
+import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps, ticksRedondos } from "@/components/painel/core";
 import { AzPeriodSelector, resolvePeriodRange, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS, variationFill } from "@/lib/az-chart-theme";
-import { fmtBRL, fmtMesCurto, fmtPct, fmtSignedPct } from "@/lib/format-br";
-import { clipFaixas, codaceAreas, fmtTrimMovel, mesIso, num } from "./shared";
+import { fmtBRL, fmtMesCurto, fmtNum, fmtPct, fmtSignedPct } from "@/lib/format-br";
+import { LegendaHtml, clipFaixas, codaceAreas, fmtTrimMovel, mesIso, num } from "./shared";
 
 /**
  * ÂNCORA do Painel Famílias v2 — "quanto o trabalho rende, em termos reais?".
@@ -101,18 +101,21 @@ export function RendaRealCard({
     [codaceMensal, rows],
   );
 
-  // Domain Y manual do nível (só a linha REAL conta — o nominal está em eixo oculto).
-  const yDomain = useMemo<[number, number]>(() => {
-    if (rows.length === 0) return [0, 1];
+  // Domínio e marcas Y do nível (só a linha REAL conta — o nominal está em eixo oculto): marcas
+  // redondas (3.000, 3.250…) sem "R$" — a unidade vai no título do painel; com "R$" o rótulo
+  // quebrava em duas linhas e encavalava no celular (revisão 12/11/2026).
+  const yEixo = useMemo(() => {
+    if (rows.length === 0) return { ticks: [0, 1], domain: [0, 1] as [number, number] };
     let lo = Infinity;
     let hi = -Infinity;
     for (const r of rows) {
       if (r.real < lo) lo = r.real;
       if (r.real > hi) hi = r.real;
     }
-    const pad = Math.max((hi - lo) * 0.08, 20);
-    return [Math.floor(lo - pad), Math.ceil(hi + pad)];
+    const pad = Math.max((hi - lo) * 0.04, 10);
+    return ticksRedondos(lo - pad, hi + pad);
   }, [rows]);
+  const picoVisivel = pico != null && pico.real >= yEixo.domain[0] && pico.real <= yEixo.domain[1];
 
   const ult = todos[todos.length - 1];
   const ultVar = todosVar[todosVar.length - 1];
@@ -148,23 +151,19 @@ export function RendaRealCard({
           <ComposedChart data={rows} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
             <CartesianGrid {...azGridProps()} />
             <XAxis {...azXAxisProps()} dataKey="mes" tickFormatter={fmtMesCurto} minTickGap={36} />
-            <YAxis {...azYAxisProps()} width={52} domain={yDomain} tickFormatter={(v: number) => fmtBRL(v, 0)} />
+            <YAxis
+              {...azYAxisProps()}
+              width={48}
+              domain={yEixo.domain}
+              ticks={yEixo.ticks}
+              tickFormatter={(v: number) => fmtNum(v, 0)}
+            />
             {faixas.map((f, i) => (
               <ReferenceArea key={`codace-${i}`} x1={f.x1} x2={f.x2} fill={AZ_CHART.ticks} fillOpacity={0.07} stroke="none" />
             ))}
-            {pico ? (
-              <ReferenceLine
-                y={pico.real}
-                stroke={AZ_BRAND.navy}
-                strokeDasharray="4 4"
-                strokeWidth={1.2}
-                label={{
-                  value: `pico pré-recessão ${fmtMesCurto(pico.mes)}: ${fmtBRL(pico.real, 0)}`,
-                  position: "insideTopLeft",
-                  fontSize: 9,
-                  fill: AZ_BRAND.navy,
-                }}
-              />
+            {/* Rótulo do pico na legenda abaixo: dentro do gráfico ele ficava por cima da linha. */}
+            {picoVisivel && pico ? (
+              <ReferenceLine y={pico.real} stroke={AZ_BRAND.navy} strokeDasharray="4 4" strokeWidth={1.2} />
             ) : null}
             <Tooltip
               content={
@@ -201,6 +200,21 @@ export function RendaRealCard({
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+      <LegendaHtml
+        itens={[
+          { label: "Renda real", cor: AZ_BRAND.azure },
+          ...(picoVisivel && pico
+            ? [
+                {
+                  label: `Pico pré-recessão (${fmtMesCurto(pico.mes)}): ${fmtBRL(pico.real, 0)}`,
+                  cor: AZ_BRAND.navy,
+                  tipo: "tracejada" as const,
+                },
+              ]
+            : []),
+          ...(faixas.length > 0 ? [{ label: "Recessão (CODACE)", cor: AZ_CHART.ticks, tipo: "faixa" as const }] : []),
+        ]}
+      />
 
       <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Variação real em 12 meses</p>
       <div className="h-[160px] w-full">

@@ -128,17 +128,14 @@ export function RitmoQoqCard({
   const trimsVisiveis = useMemo(() => rows.map((r) => r.trim), [rows]);
   const faixas = useMemo(() => codaceTrims(codace?.trimestral, trimsVisiveis), [codace, trimsVisiveis]);
 
-  const chipTexto = ult
-    ? [
-        `${fmtTrimCurto(ult.trim)} · ${fmtSignedPct(ult.qoq, 1)} t/t`,
-        banda && posicao
-          ? `${posicao} da banda ${JANELA_BANDA}T (${fmtSignedNum(banda.p25, 1)} a ${fmtSignedNum(banda.p75, 1)})`
-          : null,
-        penult && delta != null ? `Δ vs ${fmtTrimCurto(penult.trim)} ${fmtSignedNum(delta, 1)} p.p.` : null,
-      ]
-        .filter((s): s is string => s != null)
-        .join(" · ")
-    : "—";
+  // Três chips curtos em vez de um longo: no celular o chip único era cortado com reticências
+  // (revisão 12/11/2026); a fila quebra linha entre chips.
+  const chipValor = ult ? `${fmtTrimCurto(ult.trim)} · ${fmtSignedPct(ult.qoq, 1)} t/t` : "—";
+  const chipBanda =
+    ult && banda && posicao
+      ? `${posicao} da banda ${JANELA_BANDA}T (${fmtSignedNum(banda.p25, 1)} a ${fmtSignedNum(banda.p75, 1)})`
+      : null;
+  const chipDelta = penult && delta != null ? `Δ vs ${fmtTrimCurto(penult.trim)} ${fmtSignedNum(delta, 1)} p.p.` : null;
 
   const extremosTexto = extremos
     ? `${fmtSignedPct(extremos.min.qoq, 1)} no ${fmtTrimCurto(extremos.min.trim)} e ${fmtSignedPct(extremos.max.qoq, 1)} no ${fmtTrimCurto(extremos.max.trim)}`
@@ -193,10 +190,16 @@ export function RitmoQoqCard({
       <div className="mb-2 flex flex-wrap gap-1.5">
         <CockpitChip
           tom={tomPorSinal(ult?.qoq)}
-          title="Último QoQ SA · posição na banda p25–p75 dos últimos 40 trimestres · variação do ritmo vs trimestre anterior"
+          title="Último QoQ SA"
         >
-          {chipTexto}
+          {chipValor}
         </CockpitChip>
+        {chipBanda ? (
+          <CockpitChip title="Posição na banda p25–p75 dos últimos 40 trimestres">{chipBanda}</CockpitChip>
+        ) : null}
+        {chipDelta ? (
+          <CockpitChip title="Variação do ritmo vs trimestre anterior">{chipDelta}</CockpitChip>
+        ) : null}
       </div>
 
       {rows.length === 0 ? (
@@ -242,12 +245,6 @@ export function RitmoQoqCard({
                   strokeDasharray="4 4"
                   strokeWidth={1.2}
                   ifOverflow="extendDomain"
-                  label={{
-                    value: `mediana ${JANELA_BANDA}T ${fmtSignedPct(banda.mediana, 1)}`,
-                    position: "insideTopRight",
-                    fontSize: 9,
-                    fill: AZ_BRAND.navy,
-                  }}
                 />
               ) : null}
 
@@ -265,6 +262,21 @@ export function RitmoQoqCard({
               </Bar>
             </ComposedChart>
           </ResponsiveContainer>
+          {banda ? (
+            // Mediana e banda na legenda: o rótulo dentro do gráfico caía em cima das barras recentes.
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-600">
+              <span className="inline-flex items-center gap-1.5">
+                <svg width="18" height="6" aria-hidden>
+                  <line x1="0" y1="3" x2="18" y2="3" stroke={AZ_BRAND.navy} strokeWidth="1.5" strokeDasharray="4 3" />
+                </svg>
+                mediana {JANELA_BANDA}T {fmtSignedPct(banda.mediana, 1)}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2.5 w-4 rounded-sm" style={{ background: AZ_CHART.ticks, opacity: 0.25 }} aria-hidden />
+                faixa p25–p75 ({fmtSignedPct(banda.p25, 1)} a {fmtSignedPct(banda.p75, 1)})
+              </span>
+            </div>
+          ) : null}
         </div>
       )}
     </ChartCard>

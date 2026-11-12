@@ -5,6 +5,7 @@ import {
   Area,
   CartesianGrid,
   ComposedChart,
+  Label,
   Legend,
   ReferenceLine,
   ResponsiveContainer,
@@ -18,7 +19,7 @@ import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@
 import { AzPeriodSelector, resolvePeriodRange, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AZ_CHART, AZ_SERIES_EXTRA, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum, fmtPct } from "@/lib/format-br";
-import { chaveMaisProxima, isoData, num } from "./shared";
+import { NotaAnotacoes, chaveMaisProxima, isoData, num } from "./shared";
 
 /**
  * "Onde mora a dívida" — composição do estoque de crédito PF (% do saldo
@@ -41,9 +42,9 @@ const FATIAS = [
 
 /** Marcos regulatórios — anotações EDITORIAIS discretas (declaradas no footer). */
 const MARCOS = [
-  { alvo: "2009-04-01", label: "MCMV" },
-  { alvo: "2024-01-01", label: "teto do rotativo" },
-  { alvo: "2025-03-01", label: "consignado CLT" },
+  { alvo: "2009-04-01", label: "MCMV", nota: "Minha Casa Minha Vida (abr/09)" },
+  { alvo: "2024-01-01", label: "teto do rotativo", nota: "teto do rotativo (jan/24)" },
+  { alvo: "2025-03-01", label: "consignado CLT", nota: "consignado CLT (mar/25)" },
 ] as const;
 
 type Row = Record<string, number | string> & { mes: string };
@@ -81,10 +82,10 @@ export function EstoqueCard({
 
   const keysVisiveis = useMemo(() => rows.map((r) => r.mes), [rows]);
   const marcosVisiveis = useMemo(() => {
-    const out: { label: string; x: string }[] = [];
+    const out: { label: string; nota: string; x: string; n: number }[] = [];
     for (const m of MARCOS) {
       const x = chaveMaisProxima(keysVisiveis, m.alvo);
-      if (x != null) out.push({ label: m.label, x });
+      if (x != null) out.push({ label: m.label, nota: m.nota, x, n: out.length + 1 });
     }
     return out;
   }, [keysVisiveis]);
@@ -148,12 +149,16 @@ export function EstoqueCard({
                 strokeOpacity={0.45}
                 strokeDasharray="3 3"
                 strokeWidth={1}
-                label={{ value: m.label, position: "insideTop", fontSize: 9, fill: "#334155" }}
-              />
+              >
+                {/* Por extenso a partir de 640 px; no celular só o número (os rótulos se sobrepunham) e a nota embaixo. */}
+                <Label value={m.label} position="insideTop" fontSize={10} fill="#334155" className="max-sm:hidden" />
+                <Label value={String(m.n)} position="insideTop" fontSize={11} fontWeight={700} fill="#132960" className="sm:hidden" />
+              </ReferenceLine>
             ))}
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+      <NotaAnotacoes itens={marcosVisiveis.map((m) => ({ n: m.n, texto: m.nota }))} />
     </ChartCard>
   );
 }

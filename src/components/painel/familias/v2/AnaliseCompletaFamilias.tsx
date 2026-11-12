@@ -228,11 +228,11 @@ export function AnaliseCompletaFamilias({ data, geradoEm }: { data: FamiliasData
   };
 
   const botoes = [
-    renda ? { label: "Renda — PNAD (CSV)", onClick: csvRenda } : null,
-    endividamento ? { label: "Endividamento — BCB (CSV)", onClick: csvEndividamento } : null,
-    poder_compra ? { label: "Poder de compra (CSV)", onClick: csvPoderCompra } : null,
-    estrutura_social ? { label: "Estrutura social — anual (CSV)", onClick: csvEstruturaAnual } : null,
-    estrutura_social ? { label: "Estrutura social — mensal (CSV)", onClick: csvEstruturaMensal } : null,
+    renda ? { label: "Baixar CSV — renda (PNAD)", onClick: csvRenda } : null,
+    endividamento ? { label: "Baixar CSV — endividamento (BCB)", onClick: csvEndividamento } : null,
+    poder_compra ? { label: "Baixar CSV — poder de compra", onClick: csvPoderCompra } : null,
+    estrutura_social ? { label: "Baixar CSV — estrutura social, anual", onClick: csvEstruturaAnual } : null,
+    estrutura_social ? { label: "Baixar CSV — estrutura social, mensal", onClick: csvEstruturaMensal } : null,
   ].filter((b): b is { label: string; onClick: () => void } => b != null);
 
   return (

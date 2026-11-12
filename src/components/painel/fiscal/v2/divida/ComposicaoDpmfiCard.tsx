@@ -1,12 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Area,
   CartesianGrid,
   ComposedChart,
-  ReferenceDot,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -16,9 +14,9 @@ import {
 import type { FiscalClassicosData, PontoMensal } from "@/lib/painel-fiscal";
 import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
 import { AzPeriodSelector, resolvePeriodRange, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
-import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
+import { AZ_BRAND, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtPct } from "@/lib/format-br";
-import { CockpitChip, dataIso } from "./shared";
+import { CockpitChip, LinkSecundario, ValoresPorCategoria, dataIso } from "./shared";
 
 /**
  * Composição da DPMFi por indexador — stacked area NORMALIZADA a 100% com as
@@ -31,7 +29,9 @@ import { CockpitChip, dataIso } from "./shared";
  * o papel — legenda seria dupla.
  *
  * A fatia Selic/LFT fica na BASE da pilha: o topo dela é a própria
- * participação, e o pico histórico (derivado da série) é anotado no gráfico.
+ * participação. O pico histórico (derivado da série) vai no chip e no (?), não
+ * no gráfico: o rótulo caía na borda esquerda, cortado sobre o eixo (revisão 12/11/2026).
+ * Fatias zeradas (TR, Outros) somem das pílulas e da pilha.
  */
 
 type FatiaKey = "selic" | "indices" | "prefixado" | "cambio" | "tr" | "outros";
@@ -130,7 +130,9 @@ export function ComposicaoDpmfiCard({
       ? `Selic indexa ${fmtPct(atual.selic, 0)} da dívida mobiliária — cada alta de juro repassa direto ao estoque.`
       : `${maiorAtual.label} é a maior fatia da DPMFi (${fmtPct(atual[maiorAtual.key], 0)}).`;
 
-  const picoVisivel = picoSelic != null && rows.some((r) => r.iso === picoSelic.iso);
+  // Fatias que não aparecem em nenhum mês visível (ex.: TR e Outros em 0,0%) ficam fora da pilha.
+  const fatiasNaPilha = FATIAS.filter((f) => rows.some((r) => r[f.key] >= 0.05));
+  const valoresAtuais = FATIAS.map((f) => ({ key: f.key, label: f.label, cor: f.cor, valor: atual[f.key] }));
 
   return (
     <ChartCard
@@ -138,7 +140,10 @@ export function ComposicaoDpmfiCard({
       subtitle="Dívida Pública Mobiliária Federal interna por indexador, normalizada a 100%. A base da pilha é a fatia Selic/LFT — quanto maior, mais o custo da dívida acompanha o juro básico em tempo real."
       toolbar={
         <>
-          <CockpitChip cor={AZ_BRAND.azure}>Selic {fmtPct(atual.selic, 1)} do estoque</CockpitChip>
+          <CockpitChip cor={AZ_BRAND.azure}>
+            Selic {fmtPct(atual.selic, 1)} do estoque
+            {picoSelic ? ` · pico ${fmtPct(picoSelic.v, 0)} em ${fmtMesCurto(picoSelic.iso)}` : ""}
+          </CockpitChip>
           <AzPeriodSelector
             value={period}
             onChange={setPeriod}
@@ -161,15 +166,7 @@ export function ComposicaoDpmfiCard({
       stampGiro={geradoEm}
       stampDado={maxIso || null}
     >
-      <div className="mb-3 flex flex-wrap gap-2">
-        {FATIAS.map((f) => (
-          <div key={f.key} className="flex items-center gap-1.5 rounded-lg bg-zinc-50 px-2.5 py-1.5">
-            <span className="inline-block h-2 w-2 rounded-full" style={{ background: f.cor }} aria-hidden />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{f.label}</span>
-            <span className="text-sm font-bold tabular-nums text-[#132960]">{fmtPct(atual[f.key], 1)}</span>
-          </div>
-        ))}
-      </div>
+      <ValoresPorCategoria itens={valoresAtuais} posicao="acima" />
 
       <div className="h-[340px] w-full">
         <ResponsiveContainer width="100%" height="100%">
@@ -189,7 +186,7 @@ export function ComposicaoDpmfiCard({
               cursor={AZ_TOOLTIP_PROPS.cursor}
             />
 
-            {FATIAS.map((f) => (
+            {fatiasNaPilha.map((f) => (
               <Area
                 key={f.key}
                 type="monotone"
@@ -203,35 +200,16 @@ export function ComposicaoDpmfiCard({
                 isAnimationActive={false}
               />
             ))}
-
-            {picoVisivel && picoSelic ? (
-              <ReferenceDot
-                x={picoSelic.iso}
-                y={picoSelic.v}
-                r={3}
-                fill={AZ_BRAND.navy}
-                stroke="#FFFFFF"
-                strokeWidth={1}
-                label={{
-                  value: `pico LFT ${fmtPct(picoSelic.v, 0)} · ${fmtMesCurto(picoSelic.iso)}`,
-                  position: "top",
-                  offset: 6,
-                  fontSize: 9,
-                  fill: AZ_CHART.labels,
-                }}
-              />
-            ) : null}
           </ComposedChart>
         </ResponsiveContainer>
       </div>
 
-      <p className="mt-2 text-[11px]">
-        <Link
-          href="/painel-economico/economia/brasil/fiscal/indicadores-de-risco-fiscal#semaforo"
-          className="font-semibold text-[#027DFC] hover:underline"
-        >
-          estado de risco por indexador →
-        </Link>
+      <ValoresPorCategoria itens={valoresAtuais} posicao="abaixo" />
+
+      <p className="mt-3">
+        <LinkSecundario href="/painel-economico/economia/brasil/fiscal/indicadores-de-risco-fiscal#semaforo">
+          Estado de risco por indexador →
+        </LinkSecundario>
       </p>
     </ChartCard>
   );

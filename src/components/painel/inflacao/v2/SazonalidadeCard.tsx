@@ -21,7 +21,7 @@ import {
 import type { IpcaData } from "@/lib/painel-ipca";
 import { AzTooltip, ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
 import { AZ_BRAND, AZ_CHART, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
-import { fmtMesCurto, fmtNum, fmtSignedNum, fmtSignedPct } from "@/lib/format-br";
+import { fmtMesCurto, fmtNum, fmtSignedPct } from "@/lib/format-br";
 import { leituraSazonal, num } from "./shared";
 
 /**
@@ -135,7 +135,10 @@ export function SazonalidadeCard({ data }: { data: IpcaData }) {
     return { realizado: linha.realizado, mediana: linha.mediana, dif, posicao };
   }, [rows]);
 
-  /** Rótulo do valor só no mês de referência — o resto polui. */
+  /**
+   * Rótulo do valor só no mês de referência — o resto polui. Com contorno branco: quando o
+   * mês vem abaixo do padrão, o rótulo cai dentro da barra cinza e ficava ilegível (revisão 12/11/2026).
+   */
   const renderRotuloRef = (props: unknown): ReactElement => {
     const { x, y, index } = props as { x?: number; y?: number; index?: number };
     if (index == null || rows[index]?.atual !== true) return <g />;
@@ -146,6 +149,10 @@ export function SazonalidadeCard({ data }: { data: IpcaData }) {
         x={Number(x)}
         y={Number(y) - 12}
         textAnchor="middle"
+        stroke="#FFFFFF"
+        strokeWidth={4}
+        strokeLinejoin="round"
+        paintOrder="stroke"
         style={{ fontSize: 11, fontWeight: 700, fill: AZ_BRAND.rust, fontVariantNumeric: "tabular-nums" }}
       >
         {fmtSignedPct(v, 2)}
@@ -273,11 +280,6 @@ export function SazonalidadeCard({ data }: { data: IpcaData }) {
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <p className="mt-2 text-[10.5px] leading-relaxed text-zinc-500">
-        Hastes: a grossa é ±1 desvio-padrão e a fina, ±2, calculados sobre os {saz.janela.replace("-", " a ")} de cada
-        mês civil. Diferença de até {fmtSignedNum(0.05, 2)} p.p. em relação à mediana conta como “em linha com o
-        padrão”.
-      </p>
     </ChartCard>
   );
 }

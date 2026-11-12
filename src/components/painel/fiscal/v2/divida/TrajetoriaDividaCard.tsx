@@ -31,22 +31,27 @@ const COR_DLSP = AZ_BRAND.navy;
 const COR_CENTRAL = "#0891B2"; // ciano AZ_SERIES
 const COR_WEDGE = "#7C3AED"; // violeta AZ_SERIES
 
-function ToggleChip({ ativo, cor, label, onClick }: { ativo: boolean; cor: string; label: string; onClick: () => void }) {
+/**
+ * Série opcional como caixa de marcar (revisão 12/11/2026): antes eram pílulas iguais ao chip de
+ * valor e ao seletor de período, e não dava para saber o que era filtro e o que era informação.
+ */
+function ToggleSerie({ ativo, cor, label, onClick }: { ativo: boolean; cor: string; label: string; onClick: () => void }) {
   return (
     <button
       type="button"
-      aria-pressed={ativo}
+      role="checkbox"
+      aria-checked={ativo}
       onClick={onClick}
-      className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors ${
-        ativo ? "border-transparent text-white" : "border-[#132960]/20 bg-white text-[#132960] hover:bg-zinc-50"
-      }`}
-      style={ativo ? { background: cor } : undefined}
+      className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs font-semibold text-[#132960] transition-colors hover:bg-zinc-50"
     >
       <span
-        className="inline-block h-2 w-2 rounded-full"
-        style={{ background: ativo ? "#fff" : cor }}
+        className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-[3px] border text-[10px] leading-none text-white"
+        style={ativo ? { background: cor, borderColor: cor } : { borderColor: "#94A3B8", background: "#fff" }}
         aria-hidden
-      />
+      >
+        {ativo ? "✓" : ""}
+      </span>
+      <span className="inline-block h-0.5 w-3 rounded" style={{ background: cor }} aria-hidden />
       {label}
     </button>
   );
@@ -131,18 +136,6 @@ export function TrajetoriaDividaCard({
               {dbggInfo.delta12m != null ? ` · ${fmtSignedNum(dbggInfo.delta12m, 1)} p.p. 12m` : ""}
             </CockpitChip>
           ) : null}
-          <ToggleChip
-            ativo={mostraCentral}
-            cor={COR_CENTRAL}
-            label="DLSP gov. central"
-            onClick={() => setMostraCentral((v) => !v)}
-          />
-          <ToggleChip
-            ativo={mostraWedge}
-            cor={COR_WEDGE}
-            label="DBGG − DLSP (ativos)"
-            onClick={() => setMostraWedge((v) => !v)}
-          />
           <AzPeriodSelector
             value={period}
             onChange={setPeriod}
@@ -176,6 +169,21 @@ export function TrajetoriaDividaCard({
       stampGiro={geradoEm}
       stampDado={dbggInfo ? dataIso(dbggInfo.data) : null}
     >
+      <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="text-xs text-zinc-500">Mostrar também:</span>
+        <ToggleSerie
+          ativo={mostraCentral}
+          cor={COR_CENTRAL}
+          label="DLSP do governo central"
+          onClick={() => setMostraCentral((v) => !v)}
+        />
+        <ToggleSerie
+          ativo={mostraWedge}
+          cor={COR_WEDGE}
+          label="DBGG − DLSP (ativos)"
+          onClick={() => setMostraWedge((v) => !v)}
+        />
+      </div>
       <AzTimeSeriesChart
         series={series}
         unit="%"

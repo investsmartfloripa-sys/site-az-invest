@@ -16,6 +16,7 @@ import type { CambioMacroData } from "@/lib/painel-contas-externas";
 import { ChartCard, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
 import { AZ_BRAND, AZ_CHART } from "@/lib/az-chart-theme";
 import { fmtMesCurto, fmtNum, fmtSignedPct } from "@/lib/format-br";
+import { LegendaRef } from "@/components/painel/contas-externas/LegendaRef";
 
 /**
  * Bloco 03 — "juro alto garante câmbio?" — a UIP na prática.
@@ -124,7 +125,8 @@ export function UipScatterCard({ data }: { data: CambioMacroData }) {
               domain={dominio.y}
               tickFormatter={(v) => `${fmtNum(Number(v), 0)}%`}
               label={{
-                value: "Variação cambial realizada 12m (%)",
+                // Rótulo curto: o longo era cortado na altura do gráfico (revisão 12/11/2026).
+                value: "Var. cambial 12m (%)",
                 angle: -90,
                 position: "insideLeft",
                 fontSize: 10,
@@ -142,12 +144,6 @@ export function UipScatterCard({ data }: { data: CambioMacroData }) {
                 stroke={AZ_BRAND.rust}
                 strokeDasharray="4 4"
                 strokeWidth={1.2}
-                label={{
-                  value: "se a UIP valesse (y = x)",
-                  position: "insideTopRight",
-                  fontSize: 10,
-                  fill: AZ_BRAND.rust,
-                }}
               />
             ) : null}
             <Tooltip content={<UipTooltip />} cursor={{ stroke: AZ_BRAND.navy, strokeOpacity: 0.2 }} />
@@ -164,8 +160,12 @@ export function UipScatterCard({ data }: { data: CambioMacroData }) {
           </ScatterChart>
         </ResponsiveContainer>
       </div>
+      {/* A reta e o ponto em destaque na legenda: o rótulo da reta caía sobre os pontos. */}
+      <LegendaRef
+        itens={[{ tipo: "tracejada", cor: AZ_BRAND.rust, texto: "se a paridade descoberta valesse (y = x)" }]}
+      />
       {ultimo ? (
-        <p className="mt-1 text-[11px] text-zinc-500">
+        <p className="mt-1 text-xs text-zinc-500">
           Ponto em destaque (laranja): janela mais recente, encerrada em {fmtMesCurto(ultimo.mes)} — diferencial
           de {fmtNum(ultimo.x, 1)} p.p. no início da janela, variação cambial realizada de{" "}
           {fmtSignedPct(ultimo.y, 1)}.

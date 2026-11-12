@@ -16,8 +16,23 @@ import type { CodaceFaixa, ProbitAzContribuicao, ProbitAzData, ProbitAzLabelPt }
 import { formatMes, resumoProbabilidade } from "@/lib/painel-visao-geral";
 import DataStamp from "@/components/painel/DataStamp";
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
+import { fmtNum, fmtSignedNum } from "@/lib/format-br";
 
 import { rotuloFaixaCodace } from "./codace-rotulos";
+import { rotuloAno, ticksAnuais, useTelaEstreita } from "./uteis-grafico";
+
+// Os grupos vêm do JSON do pipeline sem acento ("Confianca"); a tela mostra o nome certo.
+const GRUPO_ACENTUADO: Record<string, string> = {
+  confianca: "Confiança",
+  credito: "Crédito",
+  "credito e juros": "Crédito e juros",
+  servicos: "Serviços",
+  industria: "Indústria",
+  comercio: "Comércio",
+};
+function nomeGrupo(g: string): string {
+  return GRUPO_ACENTUADO[g.trim().toLowerCase()] ?? g;
+}
 
 type Modelo = {
   key: string;
@@ -40,25 +55,25 @@ function medianaEstatistica(vs: number[]): number | null {
 
 // Gauge semicircular SVG (speedometer) — thresholds 65/35 de Chauvet-Hamilton (2006)
 function GaugeSpeedometer({ valor, label }: { valor: number; label: string }) {
-  // valor 0-1, semicirculo de -90 (esquerda) a +90 (direita) - 180 total
+  // valor 0-1, semicírculo de cima: 0% à esquerda (9h), 50% no topo (12h), 100% à direita (3h).
+  // Revisão 12/11/2026: a conta antiga (ângulo − 90) desenhava a metade DIREITA do círculo, e o
+  // rótulo "65%" caía embaixo, colado na legenda ("nov/202665%").
   const v = Math.max(0, Math.min(1, valor));
   const corPonteiro = corPara(v);
 
   // Geometria - viewBox amplo o suficiente pra TUDO caber
-  const W = 280;
-  const H = 220;
-  const cx = W / 2; // 140
-  const cy = 150;   // base do semicirculo - deixa espaco em baixo pro texto
+  const W = 300;
+  const H = 212;
+  const cx = W / 2; // 150
+  const cy = 136;   // base do semicírculo; embaixo ficam o valor e a legenda
   const rOut = 110;
   const rIn = 78;
 
-  // Helper: arc path - startDeg/endDeg em graus desde topo (12h), sentido horario
+  // Helper: arc path - startDeg/endDeg no ângulo do gauge (0 = esquerda, 90 = topo, 180 = direita)
   function arcPath(startDeg: number, endDeg: number, radius: number, innerRadius: number) {
-    // semicirculo do topo: 0deg = 12h = (cx, cy-r); 90deg = 3h; -90deg = 9h
-    // Para gauge horizontal queremos -90 (esq) -> +90 (dir)
-    // Convertendo: gauge angle (0..180 da esq pra dir) - 90 = SVG angle
-    const sa = ((startDeg - 90) * Math.PI) / 180;
-    const ea = ((endDeg - 90) * Math.PI) / 180;
+    // Ângulo SVG = ângulo do gauge − 180 (−180° = 9h, −90° = 12h, 0° = 3h); sweep 1 passa pelo topo.
+    const sa = ((startDeg - 180) * Math.PI) / 180;
+    const ea = ((endDeg - 180) * Math.PI) / 180;
     const x1 = cx + radius * Math.cos(sa);
     const y1 = cy + radius * Math.sin(sa);
     const x2 = cx + radius * Math.cos(ea);
@@ -74,7 +89,7 @@ function GaugeSpeedometer({ valor, label }: { valor: number; label: string }) {
   // Mapeando gauge: 0% -> 0deg (esq), 100% -> 180deg (dir)
   // 35% -> 63deg, 65% -> 117deg
   const angDeg = v * 180; // 0..180
-  const angSvgRad = ((angDeg - 90) * Math.PI) / 180; // -90 (esq) a +90 (dir)
+  const angSvgRad = ((angDeg - 180) * Math.PI) / 180; // -180° (esq) a 0° (dir), passando pelo topo
 
   // Ponta do ponteiro a 90% do raio externo
   const pX = cx + (rOut - 8) * Math.cos(angSvgRad);
@@ -82,7 +97,7 @@ function GaugeSpeedometer({ valor, label }: { valor: number; label: string }) {
 
   // Helper pra posicionar texto em um angulo
   function posAt(deg: number, r: number) {
-    const a = ((deg - 90) * Math.PI) / 180;
+    const a = ((deg - 180) * Math.PI) / 180;
     return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
   }
   const lbl0 = posAt(0, rOut + 14);
@@ -118,11 +133,11 @@ function GaugeSpeedometer({ valor, label }: { valor: number; label: string }) {
         return <line key={pct} x1={t1.x} y1={t1.y} x2={t2.x} y2={t2.y} stroke="#ffffff" strokeWidth={1} opacity={0.6} />;
       })}
 
-      {/* Labels 0%, 35%, 65%, 100% */}
-      <text x={lbl0.x} y={lbl0.y + 3} fontSize={11} fontWeight={600} fill="#52525b" textAnchor="middle">0%</text>
-      <text x={lbl35.x} y={lbl35.y + 3} fontSize={11} fontWeight={600} fill="#10B981" textAnchor="middle">35%</text>
-      <text x={lbl65.x} y={lbl65.y + 3} fontSize={11} fontWeight={600} fill="#F59E0B" textAnchor="middle">65%</text>
-      <text x={lbl100.x} y={lbl100.y + 3} fontSize={11} fontWeight={600} fill="#52525b" textAnchor="middle">100%</text>
+      {/* Labels 0%, 35%, 65%, 100% (13 no viewBox ≈ 12 px na tela) */}
+      <text x={lbl0.x} y={lbl0.y + 4} fontSize={13} fontWeight={600} fill="#52525b" textAnchor="middle">0%</text>
+      <text x={lbl35.x} y={lbl35.y + 4} fontSize={13} fontWeight={600} fill="#047857" textAnchor="middle">35%</text>
+      <text x={lbl65.x} y={lbl65.y + 4} fontSize={13} fontWeight={600} fill="#B45309" textAnchor="middle">65%</text>
+      <text x={lbl100.x} y={lbl100.y + 4} fontSize={13} fontWeight={600} fill="#52525b" textAnchor="middle">100%</text>
 
       {/* Ponteiro */}
       <line x1={cx} y1={cy} x2={pX} y2={pY} stroke={corPonteiro} strokeWidth={4} strokeLinecap="round" />
@@ -130,9 +145,9 @@ function GaugeSpeedometer({ valor, label }: { valor: number; label: string }) {
       <circle cx={cx} cy={cy} r={3} fill={corPonteiro} />
 
       {/* Valor central GRANDE - bem abaixo do pivot pra nao colidir com ponteiro */}
-      <text x={cx} y={cy + 42} fontSize={32} fontWeight={800} fill={corPonteiro} textAnchor="middle">{Math.round(v * 100)}%</text>
-      {/* Label embaixo */}
-      <text x={cx} y={cy + 60} fontSize={11} fill="#71717a" textAnchor="middle" fontWeight={500}>{label}</text>
+      <text x={cx} y={cy + 44} fontSize={32} fontWeight={800} fill={corPonteiro} textAnchor="middle">{Math.round(v * 100)}%</text>
+      {/* Legenda embaixo, longe do arco */}
+      <text x={cx} y={cy + 68} fontSize={12} fill="#52525b" textAnchor="middle" fontWeight={500}>{label}</text>
     </svg>
   );
 }
@@ -153,10 +168,10 @@ function TabelaTecnicaContribuicoes({ contribs }: { contribs: ProbitAzContribuic
         {contribs.map((c, i) => (
           <tr key={i} className="border-b border-zinc-100">
             <td className="py-1 font-mono text-[9px]">{c.feature}</td>
-            <td className="text-right">{c.beta.toFixed(2)}</td>
-            <td className="text-right">{c.x_std.toFixed(2)}</td>
+            <td className="text-right">{fmtNum(c.beta, 2)}</td>
+            <td className="text-right">{fmtNum(c.x_std, 2)}</td>
             <td className="text-right font-semibold" style={{ color: c.contrib_z >= 0 ? "#DC2626" : "#10B981" }}>
-              {c.contrib_z >= 0 ? "+" : ""}{c.contrib_z.toFixed(2)}
+              {fmtSignedNum(c.contrib_z, 2)}
             </td>
           </tr>
         ))}
@@ -177,7 +192,7 @@ function ContribuicoesPorGrupo({
   const grupos = new Map<string, { rotulo: string; contrib: number }[]>();
   for (const c of contribs) {
     const lab = labels[c.feature];
-    const grupo = lab?.grupo ?? "Outros";
+    const grupo = nomeGrupo(lab?.grupo ?? "Outros");
     const rotulo = lab?.rotulo ?? c.feature;
     const arr = grupos.get(grupo) ?? [];
     arr.push({ rotulo, contrib: c.contrib_z });
@@ -187,33 +202,37 @@ function ContribuicoesPorGrupo({
     <div className="mt-2 space-y-3">
       {Array.from(grupos.entries()).map(([grupo, itens]) => (
         <div key={grupo}>
-          <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{grupo}</div>
-          <div className="mt-1 space-y-1">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">{grupo}</div>
+          <div className="mt-1 space-y-1.5 sm:space-y-1">
             {itens.map((item, i) => {
               const pct = Math.round((Math.abs(item.contrib) / maxAbs) * 100);
               const positivo = item.contrib >= 0;
+              // Celular: nome em cima, barra embaixo em largura total. Computador: coluna de nomes
+              // larga (22rem) sem cortar com reticências (revisão 12/11/2026).
               return (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="w-44 shrink-0 truncate text-[10px] text-zinc-700" title={item.rotulo}>{item.rotulo}</span>
-                  <div className="flex h-3 flex-1 items-center">
-                    <div className="flex w-1/2 justify-end">
-                      {!positivo && <div className="h-2 rounded-l bg-emerald-500/80" style={{ width: `${pct}%` }} />}
+                <div key={i} className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+                  <span className="text-xs leading-snug text-zinc-700 sm:w-[22rem] sm:shrink-0">{item.rotulo}</span>
+                  <div className="flex items-center gap-2 sm:flex-1">
+                    <div className="flex h-3 flex-1 items-center">
+                      <div className="flex w-1/2 justify-end">
+                        {!positivo && <div className="h-2 rounded-l bg-emerald-500/80" style={{ width: `${pct}%` }} />}
+                      </div>
+                      <div className="h-3 w-px bg-zinc-300" />
+                      <div className="w-1/2">
+                        {positivo && <div className="h-2 rounded-r bg-rose-500/80" style={{ width: `${pct}%` }} />}
+                      </div>
                     </div>
-                    <div className="h-3 w-px bg-zinc-300" />
-                    <div className="w-1/2">
-                      {positivo && <div className="h-2 rounded-r bg-rose-500/80" style={{ width: `${pct}%` }} />}
-                    </div>
+                    <span className="w-12 shrink-0 text-right text-xs font-semibold tabular-nums" style={{ color: positivo ? "#DC2626" : "#10B981" }}>
+                      {fmtSignedNum(item.contrib, 2)}
+                    </span>
                   </div>
-                  <span className="w-12 shrink-0 text-right text-[10px] font-semibold" style={{ color: positivo ? "#DC2626" : "#10B981" }}>
-                    {positivo ? "+" : ""}{item.contrib.toFixed(2)}
-                  </span>
                 </div>
               );
             })}
           </div>
         </div>
       ))}
-      <p className="text-[9px] text-zinc-500">
+      <p className="text-[11px] text-zinc-500">
         Barras para a direita (vermelho) elevam a probabilidade de recessão; para a esquerda (verde), reduzem.
       </p>
     </div>
@@ -227,6 +246,7 @@ export function CardProbitAz({
   data: ProbitAzData | null;
   codace?: CodaceFaixa[];
 }) {
+  const estreito = useTelaEstreita();
   if (!data || !data.serie || data.serie.length === 0) {
     return (
       <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
@@ -279,6 +299,7 @@ export function CardProbitAz({
   const primeiroMes = serieFinal[0]?.mes ?? "2003-01";
   const ultimoMes = serieFinal[serieFinal.length - 1]?.mes ?? "2026-12";
   const faixasVisiveis = codace.filter((f) => f.vale >= primeiroMes);
+  const ticksX = ticksAnuais(serieFinal.map((p) => p.mes), estreito ? 5 : 10);
 
   const gaugeLabel = resumo.usaFallback
     ? `Probit AZ · ${formatMes(resumo.mes ?? "")}`
@@ -296,7 +317,7 @@ export function CardProbitAz({
               Issler-Vahid 2006).
             </MethodInfo>
           </h3>
-          <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">
+          <p className="text-xs text-zinc-500 mt-0.5 leading-snug">
             {aucOos !== null ? (
               <>Backtest fora da amostra: AUC <strong>{aucOos.toFixed(2)}</strong>.</>
             ) : (
@@ -316,7 +337,7 @@ export function CardProbitAz({
 
       {/* Aviso de fallback: mediana indisponível (n<3) — exibe probit_az isolado, nunca apaga */}
       {resumo.usaFallback && (
-        <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] text-amber-800">
+        <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800">
           ⚠ <strong>{resumo.nModelos} de 4 modelos disponíveis</strong> — mediana indisponível nesta rodada; exibindo o Probit AZ isolado.
         </div>
       )}
@@ -333,12 +354,14 @@ export function CardProbitAz({
           <div className="mt-2 grid grid-cols-2 gap-1.5 w-full">
             {modelos.map((m) => (
               <div key={m.key} className="rounded border bg-white px-2 py-1 border-l-[3px]" style={{ borderLeftColor: m.color }}>
-                <div className="text-[8px] uppercase tracking-wider font-bold leading-none" style={{ color: m.color }}>
+                <div className="text-[10px] uppercase tracking-wider font-bold leading-tight" style={{ color: m.color }}>
                   {m.label}
                 </div>
-                <div className="text-sm font-bold text-zinc-900">
-                  {m.valor !== null && m.valor !== undefined ? `${Math.round(m.valor * 100)}%` : "—"}
-                </div>
+                {m.valor !== null && m.valor !== undefined ? (
+                  <div className="text-sm font-bold text-zinc-900">{Math.round(m.valor * 100)}%</div>
+                ) : (
+                  <div className="text-xs font-medium text-zinc-500">sem dado</div>
+                )}
               </div>
             ))}
           </div>
@@ -351,11 +374,13 @@ export function CardProbitAz({
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis
                 dataKey="mes"
-                tick={{ fontSize: 9 }}
-                tickFormatter={(v) => formatMes(String(v))}
-                minTickGap={36}
+                tick={{ fontSize: 10 }}
+                ticks={ticksX}
+                interval={ticksX ? 0 : undefined}
+                tickFormatter={(v) => (ticksX ? rotuloAno(v) : formatMes(String(v)))}
+                minTickGap={ticksX ? 0 : 36}
               />
-              <YAxis tick={{ fontSize: 9 }} domain={[0, 1]} tickFormatter={(v) => `${Math.round(v * 100)}%`} />
+              <YAxis tick={{ fontSize: 10 }} domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} tickFormatter={(v) => `${Math.round(v * 100)}%`} />
               <Tooltip
                 formatter={(v: unknown) => {
                   if (typeof v === "number") return `${Math.round(v * 100)}%`;
@@ -373,49 +398,60 @@ export function CardProbitAz({
                   x2={f.vale}
                   fill="#9CA3AF"
                   fillOpacity={0.22}
-                  label={{ value: rotuloFaixaCodace(f.pico), position: "insideTop", fontSize: 8, fill: "#6B7280" }}
+                  // Rótulo embaixo, dentro da faixa: em recessão a mediana corre no alto e cobria o
+                  // rótulo no topo. No celular os rótulos somem (1997/2001/2002 colavam).
+                  label={
+                    estreito
+                      ? undefined
+                      : { value: rotuloFaixaCodace(f.pico), position: "insideBottom", fontSize: 11, fill: "#132960" }
+                  }
                 />
               ))}
               <ReferenceArea x1={hachuraStart} x2={ultimoMes} fill="#9CA3AF" fillOpacity={0.06} strokeOpacity={0} />
-              <Area
-                type="monotone"
-                dataKey="banda"
-                stroke="none"
-                fill="#132960"
-                fillOpacity={0.14}
-                name="Faixa mín–máx dos modelos"
-                connectNulls
-                isAnimationActive={false}
-              />
-              <Line type="monotone" dataKey="diffusion" stroke="#F59E0B" strokeWidth={0.9} dot={false} connectNulls opacity={0.6} name="% de coincidentes em queda (janela 4m)" />
+              {/* No celular só a mediana: faixa + linha laranja viravam um borrão em 250 px. */}
+              {!estreito && (
+                <Area
+                  type="monotone"
+                  dataKey="banda"
+                  stroke="none"
+                  fill="#132960"
+                  fillOpacity={0.14}
+                  name="Faixa mín–máx dos modelos"
+                  connectNulls
+                  isAnimationActive={false}
+                />
+              )}
+              {!estreito && (
+                <Line type="monotone" dataKey="diffusion" stroke="#F59E0B" strokeWidth={0.9} dot={false} connectNulls opacity={0.6} name="% de coincidentes em queda (janela 4m)" />
+              )}
               <Line type="monotone" dataKey="mediana" stroke="#132960" strokeWidth={2.4} dot={false} connectNulls name="Mediana" />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="mt-3 flex items-center gap-2 text-[9px] text-zinc-500 flex-wrap">
+      <div className="mt-3 flex items-center gap-x-3 gap-y-1 text-xs text-zinc-600 flex-wrap">
         <span className="inline-flex items-center gap-1"><span className="w-3 h-[2px]" style={{ backgroundColor: "#132960" }}></span><strong className="text-zinc-700">Mediana</strong></span>
-        <span>·</span>
-        <span>sombra azul = faixa mín–máx dos modelos</span>
-        <span>·</span>
-        <span className="inline-flex items-center gap-1"><span className="w-3 h-[2px]" style={{ backgroundColor: "#F59E0B" }}></span>% de coincidentes em queda (janela 4m)</span>
-        <span>·</span>
-        <span>faixas cinza = recessões CODACE oficiais</span>
-        <span>·</span>
-        <span>hachura pós-jun/2020 = sem datação CODACE</span>
+        {!estreito && (
+          <span className="inline-flex items-center gap-1"><span className="h-2.5 w-3 rounded-sm" style={{ backgroundColor: "rgba(19,41,96,0.14)" }}></span>faixa mín–máx dos modelos</span>
+        )}
+        {!estreito && (
+          <span className="inline-flex items-center gap-1"><span className="w-3 h-[2px]" style={{ backgroundColor: "#F59E0B" }}></span>% de coincidentes em queda (janela 4m)</span>
+        )}
+        <span className="inline-flex items-center gap-1"><span className="h-2.5 w-3 rounded-sm" style={{ backgroundColor: "rgba(156,163,175,0.35)" }}></span>recessões oficiais (CODACE)</span>
+        <span>sem datação oficial depois de jun/2020</span>
       </div>
 
       {data.contribuicoes_top15 && data.contribuicoes_top15.length > 0 && (
         <div className="mt-3 border-t border-zinc-100 pt-3">
-          <h4 className="text-xs font-semibold text-zinc-800">
+          <h4 className="text-sm font-semibold text-zinc-800">
             O que puxa o Probit AZ em {formatMes(ultimaAz?.mes ?? "")}
           </h4>
           {data.labels_pt && Object.keys(data.labels_pt).length > 0 ? (
             <>
               <ContribuicoesPorGrupo contribs={data.contribuicoes_top15} labels={data.labels_pt} />
               <details className="mt-2">
-                <summary className="cursor-pointer text-[10px] text-[#132960] hover:underline">
+                <summary className="cursor-pointer text-xs text-[#132960] hover:underline">
                   Tabela técnica completa (códigos das séries e coeficientes)
                 </summary>
                 <TabelaTecnicaContribuicoes contribs={data.contribuicoes_top15} />
@@ -423,7 +459,7 @@ export function CardProbitAz({
             </>
           ) : (
             <details className="mt-1">
-              <summary className="cursor-pointer text-[10px] text-[#132960] hover:underline">
+              <summary className="cursor-pointer text-xs text-[#132960] hover:underline">
                 Detalhamento técnico das contribuições (códigos das séries)
               </summary>
               <p className="mt-1 text-[9px] text-zinc-500">
@@ -436,7 +472,7 @@ export function CardProbitAz({
       )}
 
       <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <p className="text-[9px] text-zinc-500 leading-tight">
+        <p className="text-[11px] text-zinc-500 leading-snug">
           <strong>Refs:</strong> Moore 1950 (Diffusion) · Hodrick-Prescott 1997 / Ravn-Uhlig 2002 + Hamilton 2018 (Gap) · Estrella-Mishkin 1998 + Wright 2006 + Mendonça-Galvão-Lima 2018 (Probit Fin) · Issler-Vahid 2006 (Probit AZ) · Bates-Granger 1969 (ensembles) · Chauvet-Hamilton 2006 (histerese 65/35).
         </p>
         <DataStamp giro={data.gerado_em} dado={serieFinal[serieFinal.length - 1]?.mes} />

@@ -197,3 +197,70 @@ export function Chip({ label, valor, hint }: { label: string; valor: string; hin
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Legenda em HTML — quando a legenda do Recharts não consegue mostrar a cor real
+// (barras com cor por sinal, faixas sombreadas, linhas de referência) ou quando
+// rótulos dentro do gráfico se sobrepõem. Revisão de 12/11/2026.
+// ---------------------------------------------------------------------------
+
+export type ItemLegenda = {
+  label: string;
+  cor: string;
+  /** linha cheia (default), tracejada, faixa sombreada ou quadrado sólido (barra). */
+  tipo?: "linha" | "tracejada" | "faixa" | "quadrado";
+};
+
+function MarcaLegenda({ cor, tipo }: { cor: string; tipo: NonNullable<ItemLegenda["tipo"]> }) {
+  return (
+    <svg width="18" height="10" viewBox="0 0 18 10" aria-hidden className="shrink-0">
+      {tipo === "faixa" ? (
+        <rect x="0" y="0" width="18" height="10" rx="2" fill={cor} fillOpacity={0.22} />
+      ) : tipo === "quadrado" ? (
+        <rect x="4" y="0" width="10" height="10" rx="2" fill={cor} />
+      ) : (
+        <line
+          x1="0"
+          y1="5"
+          x2="18"
+          y2="5"
+          stroke={cor}
+          strokeWidth={tipo === "tracejada" ? 1.6 : 2.4}
+          strokeDasharray={tipo === "tracejada" ? "4 3" : undefined}
+        />
+      )}
+    </svg>
+  );
+}
+
+export function LegendaHtml({ itens, className = "" }: { itens: ItemLegenda[]; className?: string }) {
+  if (itens.length === 0) return null;
+  return (
+    <ul className={`mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-zinc-600 ${className}`}>
+      {itens.map((it) => (
+        <li key={it.label} className="inline-flex items-center gap-1.5">
+          <MarcaLegenda cor={it.cor} tipo={it.tipo ?? "linha"} />
+          <span>{it.label}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * Nota das anotações numeradas: no celular os rótulos de evento viram números no
+ * gráfico (colidiam: "tetc do rotatigoado CLT") e o texto completo vem aqui embaixo.
+ * Some a partir de 640 px, onde os rótulos cabem por extenso.
+ */
+export function NotaAnotacoes({ itens }: { itens: { n: number; texto: string }[] }) {
+  if (itens.length === 0) return null;
+  return (
+    <ol className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-600 sm:hidden">
+      {itens.map((it) => (
+        <li key={it.n}>
+          <strong className="text-[#132960]">{it.n}</strong> {it.texto}
+        </li>
+      ))}
+    </ol>
+  );
+}

@@ -88,8 +88,8 @@ export function SalarioRealCard({ quebras, geradoEm }: { quebras: CagedQuebrasDa
       title={titulo}
       subtitle={
         modo === "real"
-          ? `Salário de quem foi ADMITIDO no mês, deflacionado pelo IPCA${baseMes ? ` — em R$ de ${fmtMesCurto(baseMes)}` : ""}. Mediana (navy) onde disponível; demissão tracejada para contraste.`
-          : "Salário NOMINAL de quem foi admitido no mês — sem descontar a inflação (use o modo Real para a leitura econômica)."
+          ? `Salário de quem foi admitido no mês, deflacionado pelo IPCA${baseMes ? ` — em R$ de ${fmtMesCurto(baseMes)}` : ""}. Mediana (navy) onde disponível; demissão tracejada para contraste.`
+          : "Salário nominal de quem foi admitido no mês — sem descontar a inflação (use o modo Real para a leitura econômica)."
       }
       toolbar={
         <>
@@ -133,7 +133,7 @@ export function SalarioRealCard({ quebras, geradoEm }: { quebras: CagedQuebrasDa
         />
 
         <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-          Variação interanual do salário REAL de admissão (%)
+          Variação interanual do salário real de admissão (%)
         </p>
         <div className="h-[170px] w-full">
           <ResponsiveContainer width="100%" height="100%">

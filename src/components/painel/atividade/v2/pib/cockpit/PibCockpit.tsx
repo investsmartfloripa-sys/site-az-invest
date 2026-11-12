@@ -7,7 +7,6 @@ import { DifusaoBar, Divisor, KpiCard } from "@/components/painel/core";
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { AZ_CHART } from "@/lib/az-chart-theme";
 import { fmtDataBR, fmtMesCurto, fmtNum, fmtPct, fmtSignedPct } from "@/lib/format-br";
-import { formatGiroDia } from "@/lib/data-stamp";
 import type { AtividadeCodaceData, AtividadeIbcBrData, AtividadePibData } from "@/lib/painel-atividade";
 import { fmtTrimCurto, mesIso, num } from "../../shared";
 import { difusao, lentePib, nowcastQtd, RECORTES_OFERTA, rebaseMedia, seriePib, ultimoPib } from "../cockpit-shared";
@@ -52,7 +51,8 @@ function ultimoValor(rows: ReadonlyArray<Record<string, unknown>> | undefined, c
 /** KPI compacto com âncora para a casa canônica do dado. */
 function KpiLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a href={href} className="block min-w-0 rounded-xl transition hover:ring-1 hover:ring-[#027DFC]/40">
+    // [&>div]:h-full: cartões da fila com a mesma altura quando um rótulo quebra linha.
+    <a href={href} className="block h-full min-w-0 rounded-xl transition hover:ring-1 hover:ring-[#027DFC]/40 [&>div]:h-full">
       {children}
     </a>
   );
@@ -165,10 +165,12 @@ export function PibCockpit({
               metodologia ficam atrás deste ícone em cada card e na ficha técnica, no fim da página.
             </MethodInfo>
           </h1>
-          <p className="mt-1 text-xs text-zinc-500">
-            Referência: {fmtTrimCurto(trimRef)} (IBGE CNT) · IBC-Br {ibcbr ? fmtMesCurto(mesIso(ibcbr.mes_recente)) : "—"}{" "}
-            · Focus {d.focusData ? fmtDataBR(d.focusData) : "—"} · giro do pipeline {formatGiroDia(geradoEm) ?? "—"} · SIDRA
-            5932 · 1620 · 1621 · 1846 · 2072 · 2205 · 6612 · 6613 · 6726 · 6727 · 6784 · BCB SGS · Olinda · CODACE
+          {/* Só a referência: os códigos das séries (SIDRA, SGS, Olinda) e o giro do pipeline ficam na
+              ficha técnica e no carimbo de cada card (revisão 12/11/2026). */}
+          <p className="mt-1 text-sm text-zinc-600">
+            Referência: {fmtTrimCurto(trimRef)} (IBGE)
+            {ibcbr ? ` · IBC-Br até ${fmtMesCurto(mesIso(ibcbr.mes_recente))}` : ""}
+            {d.focusData ? ` · Focus de ${fmtDataBR(d.focusData)}` : ""}
           </p>
         </div>
         <div className="mt-4">
@@ -188,7 +190,7 @@ export function PibCockpit({
           delta={d.dQoq}
           deltaUnit="p.p."
           deltaHint="vs trim. anterior"
-          hint={`${fmtTrimCurto(trimRef)} · vs trimestre anterior, com ajuste sazonal · SIDRA 5932`}
+          hint={`${fmtTrimCurto(trimRef)} · vs trimestre anterior, com ajuste sazonal`}
           size="lg"
         />
         <KpiCard
@@ -240,7 +242,7 @@ export function PibCockpit({
             size="sm"
             label="PIB SA vs média 2019"
             value={d.nivelVs2019 != null ? fmtSignedPct(d.nivelVs2019, 1) : "—"}
-            hint="índice de volume SA · SIDRA 1621"
+            hint="índice de volume com ajuste sazonal"
           />
         </KpiLink>
         <KpiLink href="#tabela-renda">
@@ -248,7 +250,7 @@ export function PibCockpit({
             size="sm"
             label="PIB nominal — 4 trim."
             value={d.pibNominal4T != null ? `R$ ${fmtNum(d.pibNominal4T, 2)} tri` : "—"}
-            hint={`até ${fmtTrimCurto(d.trimNominal)} · preços correntes · SIDRA 1846`}
+            hint={`até ${fmtTrimCurto(d.trimNominal)} · preços correntes`}
           />
         </KpiLink>
         <KpiLink href="#poupanca-investimento">
@@ -264,7 +266,7 @@ export function PibCockpit({
             size="sm"
             label="Poupança bruta"
             value={d.poup?.valor != null ? fmtPct(d.poup.valor, 1) : "—"}
-            hint={`% PIB · ${d.poup ? fmtTrimCurto(d.poup.trim) : "—"} · SIDRA 6726`}
+            hint={`% PIB · ${d.poup ? fmtTrimCurto(d.poup.trim) : "—"}`}
           />
         </KpiLink>
         <KpiLink href="#conta-financeira">
@@ -282,11 +284,11 @@ export function PibCockpit({
         label="Ritmo — PIB a preços de mercado"
         info="A variação trimestral com ajuste sazonal (QoQ SA) é o número-manchete da divulgação; a banda p25–p75 dos últimos 40 trimestres situa o ritmo sem juízo de valor. A série-mestra mostra a mesma grandeza nas outras transformações (YoY, acumulados e nível)."
       />
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
-        <div id="ritmo-qoq" className="scroll-mt-24">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <div id="ritmo-qoq" className="flex scroll-mt-24">
           <RitmoQoqCard pib={pib} codace={codace} geradoEm={geradoEm} />
         </div>
-        <div id="serie-mestra" className="scroll-mt-24">
+        <div id="serie-mestra" className="flex scroll-mt-24">
           <SerieMestraPibCard pib={pib} codace={codace} geradoEm={geradoEm} />
         </div>
       </div>
@@ -296,13 +298,13 @@ export function PibCockpit({
         label="Prévia do trimestre e expectativas"
         info="O IBC-Br (BCB) é a proxy mensal do PIB: com 1 ou 2 meses divulgados dá a prévia do trimestre corrente. O Focus registra o consenso de mercado para o ano — a trajetória da mediana ao longo das coletas é a série de acompanhamento; o carrego estatístico é a régua do que já está contratado."
       />
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {ibcbr ? (
-          <div id="ibcbr-nowcast" className="scroll-mt-24">
+          <div id="ibcbr-nowcast" className="flex scroll-mt-24">
             <IbcBrNowcastCard ibcbr={ibcbr} pib={pib} codace={codace} geradoEm={geradoEm} />
           </div>
         ) : null}
-        <div id="focus" className="scroll-mt-24">
+        <div id="focus" className="flex scroll-mt-24">
           <FocusPibCard pib={pib} geradoEm={geradoEm} />
         </div>
       </div>
@@ -312,11 +314,11 @@ export function PibCockpit({
         label="Composição do crescimento"
         info="Contribuições em pontos percentuais somam (≈) o PIB YoY — é o gráfico canônico do Relatório de Inflação. O índice de volume por recorte, rebasado na média de 2019, mostra quem recuperou o pré-pandemia e em que ritmo relativo ao PIB."
       />
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
-        <div id="contribuicoes" className="scroll-mt-24">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <div id="contribuicoes" className="flex scroll-mt-24">
           <ContribuicoesPibCard pib={pib} codace={codace} geradoEm={geradoEm} />
         </div>
-        <div id="indice-recortes" className="scroll-mt-24">
+        <div id="indice-recortes" className="flex scroll-mt-24">
           <IndiceVolumeRecortesCard pib={pib} codace={codace} geradoEm={geradoEm} />
         </div>
       </div>
@@ -338,11 +340,11 @@ export function PibCockpit({
       <div id="tabela-oferta" className="scroll-mt-24">
         <TabelaOfertaPib pib={pib} geradoEm={geradoEm} trimSel={trimTabela} onTrimSel={setTrimTabela} />
       </div>
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
-        <div id="tabela-demanda" className="scroll-mt-24">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <div id="tabela-demanda" className="flex scroll-mt-24">
           <TabelaDemandaPib pib={pib} geradoEm={geradoEm} trimSel={trimTabela} />
         </div>
-        <div id="tabela-renda" className="scroll-mt-24">
+        <div id="tabela-renda" className="flex scroll-mt-24">
           <TabelaRendaPib pib={pib} geradoEm={geradoEm} />
         </div>
       </div>
@@ -352,11 +354,11 @@ export function PibCockpit({
         label="Poupança, investimento e financiamento"
         info="Fecho do circuito macro: taxa de poupança bruta (6726) e taxa de investimento (6727) em % do PIB; a diferença poupança − formação bruta de capital é a capacidade (+) ou necessidade (−) líquida de financiamento (2072), o mesmo saldo B.9 que a conta financeira (2205) detalha por instrumento — e que o IDP cobre ou não."
       />
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
-        <div id="poupanca-investimento" className="scroll-mt-24">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <div id="poupanca-investimento" className="flex scroll-mt-24">
           <PoupancaInvestimentoCard pib={pib} codace={codace} geradoEm={geradoEm} />
         </div>
-        <div id="conta-financeira" className="scroll-mt-24">
+        <div id="conta-financeira" className="flex scroll-mt-24">
           <ContaFinanceiraCard pib={pib} geradoEm={geradoEm} />
         </div>
       </div>

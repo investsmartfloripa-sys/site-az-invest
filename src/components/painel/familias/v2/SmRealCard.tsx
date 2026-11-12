@@ -8,7 +8,19 @@ import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts
 import { AzTimeSeriesChart } from "@/components/painel/charts/AzTimeSeriesChart";
 import { AZ_BRAND } from "@/lib/az-chart-theme";
 import { fmtBRL, fmtMesCurto, fmtPct } from "@/lib/format-br";
-import { minMaxPontos, pontosData, REGIMES_SM } from "./shared";
+import { LegendaHtml, minMaxPontos, pontosData, REGIMES_SM } from "./shared";
+
+// Faixas SEM rótulo dentro do gráfico ("valorização real", "estagnação" e "retomada" se
+// sobrepunham no canto superior direito): os nomes dos regimes vão para a legenda abaixo.
+// Opacidade um pouco maior que a original (0,05–0,07): sem o rótulo, a faixa precisa se distinguir sozinha.
+const FAIXAS_SEM_ROTULO = REGIMES_SM.map((r) => ({ x1: r.x1, x2: r.x2, color: r.color, opacity: 0.1 }));
+const LEGENDA_REGIMES = REGIMES_SM.map((r) => ({
+  label: `${(r.label ?? "").charAt(0).toUpperCase()}${(r.label ?? "").slice(1)} (${r.x1.slice(0, 4)}${
+    r.x2 >= "2099" ? "+" : `–${r.x2.slice(0, 4)}`
+  })`,
+  cor: r.color ?? "#64748B",
+  tipo: "faixa" as const,
+}));
 
 /**
  * Salário mínimo REAL mensal — SÓ a linha real (nominal × real no mesmo eixo
@@ -52,9 +64,10 @@ export function SmRealCard({ renda, geradoEm }: { renda: FamiliasRendaData; gera
         unit="R$"
         period={period}
         height={300}
-        xRefAreas={REGIMES_SM}
+        xRefAreas={FAIXAS_SEM_ROTULO}
         showLegend={false}
       />
+      <LegendaHtml itens={LEGENDA_REGIMES} />
     </ChartCard>
   );
 }

@@ -157,12 +157,12 @@ export function SemaforoTempoGrid({
                     {temSerie ? (
                       <div className="mt-1.5">
                         <MiniRiskSpark serie={ind.serie!} faixas={ind} nivel={ind.nivel} height={44} />
-                        <div className="mt-1 text-[9px] uppercase tracking-wide text-zinc-500 transition-colors group-hover:text-[#027DFC]">
-                          {selecionado ? "fechar" : "ver série ↗"}
+                        <div className="mt-1 text-[11px] font-semibold text-[#027DFC]">
+                          {selecionado ? "Fechar" : "Ver série ↗"}
                         </div>
                       </div>
                     ) : (
-                      <p className="mt-1.5 text-[10px] leading-snug text-zinc-500">{ind.narrativa}</p>
+                      <p className="mt-1.5 text-xs leading-snug text-zinc-500">{ind.narrativa}</p>
                     )}
                   </button>
                 );

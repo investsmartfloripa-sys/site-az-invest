@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { Bar, CartesianGrid, ComposedChart, Legend, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import type { BpMestre, FluxoCambial, FocusExterno } from "@/lib/painel-contas-externas";
-import { AzSegmented, AzTooltip, ChartCard, CockpitChip, azGridProps, azXAxisProps, azYAxisProps, tomPorSinal } from "@/components/painel/core";
+import { AzTooltip, ChartCard, CockpitChip, azGridProps, azXAxisProps, azYAxisProps, tomPorSinal } from "@/components/painel/core";
+import { SegmentedRolavel } from "@/components/painel/contas-externas/SegmentedRolavel";
 import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AzTimeSeriesChart, type AzRefLine } from "@/components/painel/charts/AzTimeSeriesChart";
 import { AZ_CHART, AZ_SERIES, AZ_TOOLTIP_PROPS } from "@/lib/az-chart-theme";
@@ -48,7 +49,7 @@ export function FluxoCambialCard({ fluxo, geradoEm }: { fluxo: FluxoCambial; ger
       subtitle="BCB/SGS 13961 (total) · 13967 (comercial) · 13970 (financeiro) · diário agregado · US$ bi · + = entrada"
       toolbar={
         <>
-          <AzSegmented ariaLabel="Janela" options={OPCOES_FLUXO} value={lente} onChange={(id) => setLente(id as LenteFluxo)} />
+          <SegmentedRolavel ariaLabel="Janela" options={OPCOES_FLUXO} value={lente} onChange={(id) => setLente(id as LenteFluxo)} />
           {lente !== "diario" ? (
             <AzPeriodSelector
               value={period}
@@ -78,9 +79,12 @@ export function FluxoCambialCard({ fluxo, geradoEm }: { fluxo: FluxoCambial; ger
       stampDado={fluxo.ultimo_dia}
     >
       <div className="mb-2 flex flex-wrap gap-1.5">
+        {/* Dois chips curtos: num só, o texto era cortado com reticências no celular (revisão 12/11/2026). */}
         <CockpitChip tom={tomPorSinal(ano.total)}>
-          {ano.ano} até {fmtDataBR(fluxo.ultimo_dia)} · total {fmtUsBiSigned(ano.total, 1)} · comercial {fmtUsBiSigned(ano.comercial, 1)} ·
-          financeiro {fmtUsBiSigned(ano.financeiro, 1)}
+          {ano.ano} até {fmtDataBR(fluxo.ultimo_dia)} · total {fmtUsBiSigned(ano.total, 1)}
+        </CockpitChip>
+        <CockpitChip tom="navy">
+          comercial {fmtUsBiSigned(ano.comercial, 1)} · financeiro {fmtUsBiSigned(ano.financeiro, 1)}
         </CockpitChip>
         {ultMesFechado ? (
           <CockpitChip tom={tomPorSinal(ultMesFechado.total_12m)}>12m até {fmtMesCurto(isoMes(ultMesFechado.mes))} {fmtUsBiSigned(ultMesFechado.total_12m, 1)}</CockpitChip>
@@ -177,7 +181,7 @@ export function FocusExternoCard({
       id="focus-externo"
       title="Focus — expectativas anuais do setor externo"
       subtitle="BCB/Olinda ExpectativasMercadoAnuais · mediana por coleta (última da semana) · 3 anos de referência · linha = realizado"
-      toolbar={<AzSegmented ariaLabel="Indicador" options={OPCOES_FOCUS} value={ind} onChange={(id) => setInd(id as IndFocus)} />}
+      toolbar={<SegmentedRolavel ariaLabel="Indicador" options={OPCOES_FOCUS} value={ind} onChange={(id) => setInd(id as IndFocus)} />}
       footer={
         <p>
           Mediana das projeções do Focus para o ano-calendário, uma coleta por semana. Conta corrente, balança comercial

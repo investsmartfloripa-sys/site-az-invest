@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 
 import type { BpMestre, Renda12mPonto, Servicos12mPonto } from "@/lib/painel-contas-externas";
-import { AzSegmented, ChartCard, CockpitChip, tomPorSinal } from "@/components/painel/core";
+import { ChartCard, CockpitChip, tomPorSinal } from "@/components/painel/core";
+import { SegmentedRolavel } from "@/components/painel/contas-externas/SegmentedRolavel";
 import { AzPeriodSelector, type AzPeriodValue } from "@/components/painel/charts/AzPeriodSelector";
 import { AzTimeSeriesChart } from "@/components/painel/charts/AzTimeSeriesChart";
 import { AZ_CHART, AZ_SERIES } from "@/lib/az-chart-theme";
@@ -122,7 +123,7 @@ export function ServicosRendaCard({
       }
       toolbar={
         <>
-          <AzSegmented ariaLabel="Conta" options={OPCOES_RENDAS} value={lente} onChange={(id) => setLente(id as LenteRendas)} />
+          <SegmentedRolavel ariaLabel="Conta" options={OPCOES_RENDAS} value={lente} onChange={(id) => setLente(id as LenteRendas)} />
           <AzPeriodSelector
             value={period}
             onChange={setPeriod}
@@ -144,9 +145,10 @@ export function ServicosRendaCard({
       stampDado={ult?.mes.slice(0, 7)}
     >
       <div className="mb-2 flex flex-wrap gap-1.5">
-        <CockpitChip tom={tomPorSinal(dTot)}>
-          {ult ? fmtMesCurto(isoMes(ult.mes)) : "—"} · total {fmtUsBiSigned(tot, 1)} · {fmtSinal(dTot, 1)} bi em 12m
+        <CockpitChip tom="navy">
+          {ult ? fmtMesCurto(isoMes(ult.mes)) : "—"} · total {fmtUsBiSigned(tot, 1)}
         </CockpitChip>
+        <CockpitChip tom={tomPorSinal(dTot)}>{fmtSinal(dTot, 1)} bi em 12m</CockpitChip>
       </div>
       <StackedBpChart
         rows={rows as { mes: string }[]}

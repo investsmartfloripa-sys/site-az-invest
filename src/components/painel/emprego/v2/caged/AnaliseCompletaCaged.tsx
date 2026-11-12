@@ -126,7 +126,7 @@ export function AnaliseCompletaCaged({
           onClick={csvCompleto}
           className="rounded-lg border border-[#132960]/15 px-3 py-1.5 text-xs font-semibold text-[#132960] transition hover:bg-[#132960]/5"
         >
-          Baixar série completa (CSV)
+          Baixar CSV
         </button>
       </div>
     </ChartCard>

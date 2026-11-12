@@ -73,7 +73,9 @@ export function StackedBpChart<T extends { mes: string }>({
             content={<AzTooltip labelFmt={(l) => fmtMesCurto(isoMes(String(l)))} valueFmt={valueFmt} />}
             cursor={AZ_TOOLTIP_PROPS.cursor}
           />
-          <Legend wrapperStyle={{ fontSize: 11 }} />
+          {/* Legenda compacta (ícone 8 px, 10 px de texto): com 5 a 9 itens ela ocupava 3 a 5 linhas no
+              celular (revisão 12/11/2026). */}
+          <Legend iconSize={8} wrapperStyle={{ fontSize: 10, lineHeight: "16px" }} />
           {stacks.map((s) => (
             <Bar key={s.key} dataKey={s.key} name={s.label} stackId="bp" fill={s.color} isAnimationActive={false} maxBarSize={26} />
           ))}

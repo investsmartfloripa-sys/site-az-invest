@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import type { CambioMacroData } from "@/lib/painel-contas-externas";
 import { ChartCard } from "@/components/painel/core";
 import { AzTimeSeriesChart, type AzSeriesPoint } from "@/components/painel/charts/AzTimeSeriesChart";
+import { LegendaRef } from "@/components/painel/contas-externas/LegendaRef";
 import { AZ_BRAND, AZ_CHART } from "@/lib/az-chart-theme";
 import { fmtNum, fmtSignedNum } from "@/lib/format-br";
 import { mesIso } from "./shared";
@@ -76,13 +77,17 @@ export function ParidadeJurosCard({ data }: { data: CambioMacroData }) {
         ]}
         unit="%"
         height={320}
-        variant="hero"
-        refLines={
-          mediaDif != null
-            ? [{ y: mediaDif, label: `média 2000+: ${fmtNum(mediaDif, 1)} p.p.`, color: AZ_BRAND.rust }]
-            : []
-        }
+        // Variante padrão, sem os selos de máximo/mínimo/último valor do "hero": o selo do último valor
+        // cobria o rótulo da média e o do mínimo caía sobre a linha tracejada. O último valor está no
+        // título e a média, na legenda embaixo (revisão 12/11/2026).
+        variant="default"
+        refLines={mediaDif != null ? [{ y: mediaDif, color: AZ_BRAND.rust }] : []}
       />
+      {mediaDif != null ? (
+        <LegendaRef
+          itens={[{ tipo: "tracejada", cor: AZ_BRAND.rust, texto: `média do diferencial desde 2000: ${fmtNum(mediaDif, 1)} p.p.` }]}
+        />
+      ) : null}
     </ChartCard>
   );
 }
