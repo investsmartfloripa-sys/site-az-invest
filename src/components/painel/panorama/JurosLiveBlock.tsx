@@ -32,7 +32,7 @@ import {
   type PanelTabItem,
 } from "@/components/painel/panorama/PanelTabs";
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
-import { Atualizado, textoAtualizado } from "@/components/painel/panorama/Atualizado";
+import DataStamp from "@/components/painel/DataStamp";
 import { useIsNarrow } from "@/components/painel/panorama/useIsNarrow";
 import { GLOBAL_COUNTRIES, countryById, type CountryRatesPayload, type GlobalCountryId } from "@/lib/global-rates";
 import { GlobalCountryPane } from "@/components/painel/juros-globais/GlobalCountryPane";
@@ -157,7 +157,7 @@ function CountrySwitcher({ value, onChange }: { value: CountrySel; onChange: (v:
  *     PRETO solido quando e a ponta (feed fora do ar, ETTJ oficial).
  *   - D-30 e D-90: cortes historicos do pipeline R (paletas por grafico).
  */
-const LIVE_COLOR = "#027DFC";
+const LIVE_COLOR = "#000000";
 
 const PAL_PRE = { d30: "#00008B", d90: "#56B4E9" } as const;
 const PAL_IPCA = { d30: "#8B0000", d90: "#F8766D" } as const;
@@ -301,13 +301,6 @@ type ChartPoint = {
 function fmtRate(v: number | null | undefined): string {
   if (v == null || !Number.isFinite(v)) return "—";
   return `${v.toFixed(2).replace(".", ",")}%`;
-}
-
-function fmtQuotedAt(quotedAt: string | null): string {
-  if (!quotedAt) return "";
-  const [d, hm] = [quotedAt.slice(0, 10), quotedAt.slice(11, 16)];
-  const [y, m, day] = d.split("-");
-  return `${day}/${m}/${y} ${hm}`;
 }
 
 function tsLabel(t: number): string {
@@ -1148,10 +1141,7 @@ export function JurosLiveBlock({
       ? `Curvas DI e IPCA+ e Selic implícita no fechamento do pregão de ${refLabel} (D-1).`
       : COUNTRY_HEAD.br.subtitle;
   /** Carimbo do rodape (horario da cotacao da B3, ja em hora de Brasilia). */
-  const brStamp =
-    hasLive && di?.quotedAt
-      ? textoAtualizado(di.quotedAt.slice(11, 16), fmtQuotedAt(di.quotedAt).slice(0, 10))
-      : null;
+  const brStamp = hasLive && di?.quotedAt ? di.quotedAt : null;
 
   // Badge: sem intraday NAO existe ponto verde pulsante — anunciar "ao vivo"
   // sobre fechamento do dia anterior seria enganoso.
@@ -1250,7 +1240,7 @@ export function JurosLiveBlock({
       <div className="overflow-hidden rounded-2xl border border-[#132960]/15 bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 bg-[#132960] px-3 py-2.5 md:px-4">
           <CountrySwitcher value={country} onChange={setCountry} />
-          {/* O horário da cotação foi para o rodapé do cartão ("Atualizado às ..."),
+          {/* O horário da cotação foi para o carimbo no rodapé do cartão,
               como nos outros cartões — no celular eram duas linhas a mais antes do dado. */}
           {country === "br" ? statusBadge : null}
         </div>
@@ -1534,7 +1524,7 @@ export function JurosLiveBlock({
       </div>
       {brStamp ? (
         <p className="border-t border-zinc-100 px-4 py-2 text-right md:px-5">
-          <Atualizado texto={brStamp} />
+          <DataStamp giro={brStamp} dado={brStamp} />
         </p>
       ) : null}
       </>

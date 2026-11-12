@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { Globe, MapPin } from "lucide-react";
 import { fmtSignedPct } from "@/lib/format-br";
-import { Atualizado } from "@/components/painel/panorama/Atualizado";
+import DataStamp from "@/components/painel/DataStamp";
 import { AzSegmented } from "@/components/painel/panorama/AzSegmented";
 import { PanelTabs, type PanelTabItem } from "@/components/painel/panorama/PanelTabs";
 import type { SectorBrPayload } from "@/components/painel/DynamicSectorBr";
@@ -147,7 +147,7 @@ export function SectorsPanel({ sectorBr, sectorGlobal }: Props) {
       {updatedAt ? (
         <p className="mt-auto pt-2 text-right">
           {/* Fonte intradiária (cron 15min): generated_at carrega os minutos do dado. */}
-          <Atualizado em={updatedAt} />
+          <DataStamp giro={updatedAt} dado={updatedAt} />
         </p>
       ) : null}
     </section>

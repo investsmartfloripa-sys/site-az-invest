@@ -16,7 +16,7 @@ import {
 
 import { Coins, Globe, LineChart, Wheat, type LucideIcon } from "lucide-react";
 import { ticksRedondos } from "@/components/painel/core";
-import { Atualizado } from "@/components/painel/panorama/Atualizado";
+import DataStamp from "@/components/painel/DataStamp";
 import { AzSegmented } from "@/components/painel/panorama/AzSegmented";
 import { PanelTabs } from "@/components/painel/panorama/PanelTabs";
 import { useIsNarrow } from "@/components/painel/panorama/useIsNarrow";
@@ -353,7 +353,7 @@ export function MarketsPanel(props: Props) {
       {updatedAt ? (
         <p className="mt-auto pt-2 text-right">
           {/* Fonte intradiária (cron 15min): generated_at carrega os minutos do dado. */}
-          <Atualizado em={updatedAt} />
+          <DataStamp giro={updatedAt} dado={updatedAt} />
         </p>
       ) : null}
     </section>
