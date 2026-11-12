@@ -207,11 +207,13 @@ function CafeAnteriores({ briefings }: { briefings: Briefing[] }) {
 }
 
 function DossieCard({ dossie, preencher }: { dossie: Dossie; preencher: boolean }) {
+  // Edição gravada sem título (só a data, "2026-10-16"): usa o resumo, que diz do que se trata.
+  const titulo = /^\d{4}-\d{2}-\d{2}$/.test(dossie.title.trim()) ? dossie.description || dossie.title : dossie.title;
   return (
     <TextoCard
       href={dossie.href}
       kicker={kickerDossie(dossie)}
-      title={dossie.title}
+      title={titulo}
       linkLabel="Ler dossiê →"
       preencher={preencher}
     />

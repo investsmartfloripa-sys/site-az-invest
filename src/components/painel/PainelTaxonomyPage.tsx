@@ -49,7 +49,7 @@ export function PainelTrailLanding({ trail }: SectionPageProps) {
       </header>
       {escoposVisiveis(trail).map((scope) => (
         <div key={scope.slug} className="space-y-3">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#027DFC]">{scope.label}</h2>
+          <p className="text-xs font-bold uppercase tracking-wider text-[#027DFC]">{scope.label}</p>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {categoriasVisiveis(scope).map((category) => (
               <CategoriaCard
