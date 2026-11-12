@@ -15,6 +15,7 @@ import { PeriodicosChips } from "@/components/painel/panorama/PeriodicosChips";
 import { PainelPanoramaSection } from "@/components/painel/PainelPanoramaSection";
 import { BOLETIM_CATEGORY } from "@/data/blog-categories";
 import { fetchB3ReferenceCurve, refDateLabel } from "@/lib/b3-reference-rates";
+import { fmtMesCurto } from "@/lib/format-br";
 import { getPanoramaData, painelBlobConfigured, type PanoramaData } from "@/lib/painel-data";
 import { getRatesVolMult, type RatesVol } from "@/lib/painel-market-data";
 import { SELIC_TERM_PREMIUM, cdiSelicWedgeFrac, termPremiumLevel } from "@/lib/selic-forward";
@@ -249,7 +250,8 @@ async function fetchSelicAtual(): Promise<SelicNow> {
     }
     const bps = prevVal != null ? Math.round((lastVal - prevVal) * 100) : 0;
     const [, mm, yyyy] = changeDate.split("/");
-    return { value: lastVal, lastChangeBps: bps, lastChangeDate: `${mm}/${yyyy.slice(2)}` };
+    // Referência mensal em mmm/aa ("set/26"), como no resto do site.
+    return { value: lastVal, lastChangeBps: bps, lastChangeDate: fmtMesCurto(`${yyyy}-${mm}`) };
   } catch {
     return null;
   }
@@ -455,7 +457,8 @@ export async function PainelPanoramaPage() {
       value: selicAtual ? fmtPct(selicAtual.value) : "—",
       change: selicAtual && selicAtual.lastChangeBps !== 0 ? bpsChange(selicAtual.lastChangeBps) : null,
       direction: selicAtual ? bpsDirection(selicAtual.lastChangeBps) : null,
-      sub: selicAtual ? `última mudança ${selicAtual.lastChangeDate} · BCB` : "BCB SGS",
+      // Curto para caber no cartão ("última mudança 09/26 · B…" era cortado).
+      sub: selicAtual ? `desde ${selicAtual.lastChangeDate} · BCB` : "BCB",
     },
     {
       id: "tesouro32",
@@ -512,8 +515,10 @@ export async function PainelPanoramaPage() {
 
       <header>
         <h1 className="text-2xl font-semibold text-[#132960] md:text-3xl">Panorama</h1>
+        {/* Sem "ao vivo": a B3 cota com atraso de ~15 min e, sem o pregão, as curvas são do
+            fechamento anterior — o cartão de renda fixa diz qual dos dois está na tela. */}
         <p className="text-sm text-zinc-500">
-          Mercados, juros e setores em uma tela — com curvas DI e IPCA+ ao vivo da B3.
+          Mercados, juros e setores do Brasil e do mundo em uma tela.
         </p>
       </header>
 

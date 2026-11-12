@@ -1,7 +1,8 @@
 import Link from "next/link";
 
-import { formatDateBR, listBriefings } from "@/lib/cafe-com-mercado";
+import { listBriefings } from "@/lib/cafe-com-mercado";
 import { listDossies } from "@/lib/dossies";
+import { fmtDataBR } from "@/lib/format-br";
 
 /**
  * Dois botões-card finos lado a lado: Café com Mercado e Dossiê Mensal.
@@ -31,7 +32,8 @@ export async function PeriodicosChips() {
             <span className="shrink-0 text-xs font-bold uppercase tracking-wider text-[#027DFC]">
               Café com Mercado
             </span>
-            <span className="truncate text-sm text-[#33415C]">{formatDateBR(cafe.date)}</span>
+            {/* dd/mm/aaaa: "12 de novembro de 20…" era cortado no celular. */}
+            <span className="min-w-0 text-sm text-[#33415C]">{fmtDataBR(cafe.date)}</span>
           </span>
           <span aria-hidden className="shrink-0 text-[#027DFC] transition-transform group-hover:translate-x-0.5">
             →
@@ -44,7 +46,7 @@ export async function PeriodicosChips() {
             <span className="shrink-0 text-xs font-bold uppercase tracking-wider text-[#027DFC]">
               Dossiê Mensal
             </span>
-            <span className="truncate text-sm text-[#33415C]">{mensal.periodo}</span>
+            <span className="min-w-0 text-sm text-[#33415C]">{mensal.periodo}</span>
           </span>
           <span aria-hidden className="shrink-0 text-[#027DFC] transition-transform group-hover:translate-x-0.5">
             →
@@ -56,7 +58,7 @@ export async function PeriodicosChips() {
             <span className="shrink-0 text-xs font-bold uppercase tracking-wider text-zinc-500">
               Dossiê Mensal
             </span>
-            <span className="truncate text-sm text-zinc-500">em breve</span>
+            <span className="min-w-0 text-sm text-zinc-500">em breve</span>
           </span>
         </div>
       )}

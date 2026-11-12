@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { fmtMesCurto } from "@/lib/format-br";
 import { fetchIndexQuote, fetchLiveCurve } from "@/lib/painel-b3-live";
 
 export type KpiCard = {
@@ -47,7 +48,8 @@ function Card({ card }: { card: KpiCard }) {
           <span className={`text-[11px] font-semibold tabular-nums ${tone.text}`}>{card.change}</span>
         ) : null}
       </p>
-      {card.sub ? <p className="truncate text-[10px] text-zinc-500">{card.sub}</p> : null}
+      {/* Quebra em vez de cortar com reticências ("última mudança 09/26 · B…"). */}
+      {card.sub ? <p className="text-[10px] leading-snug text-zinc-500">{card.sub}</p> : null}
     </article>
   );
 }
@@ -135,7 +137,8 @@ export function KpiStrip({ base }: Props) {
               value: `${lastVal.toFixed(2).replace(".", ",")}%`,
               change: bps !== 0 ? `${bps > 0 ? "+" : "−"}${Math.abs(bps)} bps` : null,
               direction: bps === 0 ? "flat" : bps > 0 ? "up" : "down",
-              sub: `última mudança ${mm}/${yyyy.slice(2)} · BCB`,
+              // Mês da última decisão que mudou a meta, em mmm/aa ("set/26").
+              sub: `desde ${fmtMesCurto(`${yyyy}-${mm}`)} · BCB`,
             };
           }
         }

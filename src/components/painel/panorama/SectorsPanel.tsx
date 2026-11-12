@@ -3,7 +3,8 @@
 import { useState } from "react";
 
 import { Globe, MapPin } from "lucide-react";
-import DataStamp from "@/components/painel/DataStamp";
+import { fmtSignedPct } from "@/lib/format-br";
+import { Atualizado } from "@/components/painel/panorama/Atualizado";
 import { AzSegmented } from "@/components/painel/panorama/AzSegmented";
 import { PanelTabs, type PanelTabItem } from "@/components/painel/panorama/PanelTabs";
 import type { SectorBrPayload } from "@/components/painel/DynamicSectorBr";
@@ -34,7 +35,7 @@ const SCOPE_TABS: PanelTabItem<ScopeId>[] = [
 function RankCol({ title, dotColor, rows }: { title: string; dotColor: string; rows: BasketRow[] }) {
   const maxAbs = Math.max(0.0001, ...rows.map((r) => Math.abs(Number(r.return_pct ?? 0))));
   return (
-    <div className="rounded-xl border border-[#132960]/10 bg-zinc-50/50 p-3">
+    <div className="min-w-0 rounded-xl border border-[#132960]/10 bg-zinc-50/50 p-3">
       <h3 className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-zinc-500">
         <span aria-hidden className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: dotColor }} />
         {title}
@@ -52,14 +53,17 @@ function RankCol({ title, dotColor, rows }: { title: string; dotColor: string; r
                 className="absolute inset-y-0 left-0"
                 style={{ width: `${widthPct}%`, backgroundColor: neg ? NEG_BG : POS_BG }}
               />
+              {/* Nome quebra linha em vez de cortar ("Petróleo Integrado & Downstr…") e
+                  encolhe (min-w-0): no celular o valor vazava da borda do cartão. */}
               <span className="relative flex items-center justify-between gap-2 px-1.5 py-1.5 text-sm">
-                <span className="truncate text-[#132960]">{name}</span>
+                <span title={name} className="min-w-0 break-words leading-snug text-[#132960]">
+                  {name}
+                </span>
                 <span
                   className="shrink-0 font-semibold tabular-nums"
                   style={{ color: neg ? NEG_TEXT : POS_TEXT }}
                 >
-                  {pct > 0 ? "+" : ""}
-                  {pct.toFixed(2)}%
+                  {fmtSignedPct(pct, 2)}
                 </span>
               </span>
             </li>
@@ -102,9 +106,9 @@ export function SectorsPanel({ sectorBr, sectorGlobal }: Props) {
   }
 
   return (
-    <section className="flex w-full min-w-0 flex-col rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">
+    <section className="flex h-full w-full min-w-0 flex-col rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-bold text-[#132960] md:text-lg">Setores — top / bottom</h2>
+        <h2 className="text-base font-bold text-[#132960] md:text-lg">Setores</h2>
         <div className="flex flex-wrap items-center gap-2">
           {scope === "global" ? (
             <AzSegmented
@@ -134,7 +138,7 @@ export function SectorsPanel({ sectorBr, sectorGlobal }: Props) {
       {top.length === 0 && bottom.length === 0 ? (
         <p className="py-6 text-center text-sm text-zinc-500">Sem dados de setores.</p>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid min-w-0 gap-4 md:grid-cols-2">
           <RankCol title="Melhor desempenho" dotColor="#1E8A5C" rows={top} />
           <RankCol title="Pior desempenho" dotColor="#BE3B33" rows={bottom} />
         </div>
@@ -143,7 +147,7 @@ export function SectorsPanel({ sectorBr, sectorGlobal }: Props) {
       {updatedAt ? (
         <p className="mt-auto pt-2 text-right">
           {/* Fonte intradiária (cron 15min): generated_at carrega os minutos do dado. */}
-          <DataStamp giro={updatedAt} dado={updatedAt} />
+          <Atualizado em={updatedAt} />
         </p>
       ) : null}
     </section>

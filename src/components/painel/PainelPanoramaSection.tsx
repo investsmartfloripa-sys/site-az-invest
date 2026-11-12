@@ -22,7 +22,8 @@ type Props = {
 /**
  * Secao de mercados do Panorama (client wrapper — funcoes/estado nao
  * cruzam a fronteira RSC). Mercados e Setores lado a lado em telas
- * largas, cada um com tabs + seletores AzSegmented.
+ * largas, cada um com tabs + seletores AzSegmented. Os dois cartoes esticam
+ * ate a altura da linha (sem degrau entre eles); o carimbo fica no rodape.
  */
 export function PainelPanoramaSection({
   assetPanorama,
@@ -33,7 +34,7 @@ export function PainelPanoramaSection({
   sectorBr,
 }: Props) {
   return (
-    <section className="grid items-start gap-5 xl:grid-cols-2">
+    <section className="grid items-stretch gap-5 xl:grid-cols-2">
       <LazyMount minHeight={520}>
         <MarketsPanel
           assetPanorama={assetPanorama}

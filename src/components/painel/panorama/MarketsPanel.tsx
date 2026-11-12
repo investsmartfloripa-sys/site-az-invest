@@ -15,9 +15,12 @@ import {
 } from "recharts";
 
 import { Coins, Globe, LineChart, Wheat, type LucideIcon } from "lucide-react";
-import DataStamp from "@/components/painel/DataStamp";
+import { ticksRedondos } from "@/components/painel/core";
+import { Atualizado } from "@/components/painel/panorama/Atualizado";
 import { AzSegmented } from "@/components/painel/panorama/AzSegmented";
 import { PanelTabs } from "@/components/painel/panorama/PanelTabs";
+import { useIsNarrow } from "@/components/painel/panorama/useIsNarrow";
+import { fmtNum, fmtSignedPct } from "@/lib/format-br";
 import type { FxMoversPayload } from "@/components/painel/DynamicFxMoversBar";
 import type { ByPeriodBlock, Row } from "@/components/painel/DynamicReturnsBar";
 import { AZ_CHART } from "@/lib/az-chart-theme";
@@ -130,26 +133,31 @@ type YTickProps = {
   x?: number;
   y?: number;
   payload?: { value?: string };
+  /** Largura do eixo Y (px): o rótulo começa 10 px depois da borda esquerda. */
+  axisWidth?: number;
+  /** Máximo de caracteres do nome antes da reticência (o nome inteiro fica no tooltip). */
+  maxChars?: number;
 };
 
 /** Tick do eixo Y com bandeira (imagem flagcdn) + nome. */
-function FlagYTick({ x = 0, y = 0, payload }: YTickProps) {
+function FlagYTick({ x = 0, y = 0, payload, axisWidth = 158, maxChars = 17 }: YTickProps) {
   const { code, label } = splitFlagName(String(payload?.value ?? ""));
   const flagW = 15;
+  const left = -(axisWidth - 10);
   return (
     <g transform={`translate(${x},${y})`}>
       {code ? (
         <image
           href={`https://flagcdn.com/w20/${code}.png`}
-          x={-148}
+          x={left}
           y={-5.5}
           width={flagW}
           height={11}
           preserveAspectRatio="xMidYMid slice"
         />
       ) : null}
-      <text x={code ? -148 + flagW + 4 : -148} y={4} fontSize={11} fill={AZ_CHART.labels}>
-        {label.length > 17 ? `${label.slice(0, 16)}…` : label}
+      <text x={code ? left + flagW + 4 : left} y={4} fontSize={11} fill={AZ_CHART.labels}>
+        {label.length > maxChars ? `${label.slice(0, maxChars - 1)}…` : label}
       </text>
     </g>
   );
@@ -163,10 +171,6 @@ type Props = {
 };
 
 type ChartRow = { name: string; value: number };
-
-function truncateName(s: string, max = 20): string {
-  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
-}
 
 function rowsFor(
   cat: CategoryId,
@@ -182,7 +186,7 @@ function rowsFor(
         .map((r) => {
           const raw = String(r.ticker ?? "");
           const code = flagFor("moedas", raw);
-          return { name: `${code ? `${code}|` : ""}${truncateName(raw)}`, value: Number(r.change_pct) };
+          return { name: `${code ? `${code}|` : ""}${raw}`, value: Number(r.change_pct) };
         })
         .filter((r) => Number.isFinite(r.value)),
       updatedAt: props.fxData?.generated_at,
@@ -207,7 +211,7 @@ function rowsFor(
     if (!Number.isFinite(num)) continue;
     const rawName = String(row.name ?? "");
     const code = flagFor(cat, rawName);
-    rows.push({ name: `${code ? `${code}|` : ""}${truncateName(rawName)}`, value: num });
+    rows.push({ name: `${code ? `${code}|` : ""}${rawName}`, value: num });
   }
   return { rows, updatedAt: source?.generated_at };
 }
@@ -231,10 +235,26 @@ export function MarketsPanel(props: Props) {
   const sorted = useMemo(() => [...rows].sort((a, b) => b.value - a.value), [rows]);
   const height = Math.max(220, 26 * sorted.length + 52);
 
+  // No celular a coluna de nomes ocupava metade da largura (158 px) e o eixo perdia a
+  // ponta negativa: eixo de nomes mais estreito e domínio calculado aqui, com folga à
+  // esquerda para o rótulo das barras negativas não invadir os nomes.
+  const isNarrow = useIsNarrow();
+  const yAxisWidth = isNarrow ? 112 : 158;
+  const xAxis = useMemo(() => {
+    if (sorted.length === 0) return null;
+    const vals = sorted.map((r) => r.value);
+    const lo = Math.min(0, ...vals);
+    const hi = Math.max(0, ...vals);
+    const span = hi - lo || 1;
+    const folga = lo < 0 ? span * (isNarrow ? 0.3 : 0.14) : 0;
+    return ticksRedondos(lo - folga, hi, isNarrow ? 3 : 4);
+  }, [sorted, isNarrow]);
+
   return (
-    <section className="flex w-full min-w-0 flex-col rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">
+    <section className="flex h-full w-full min-w-0 flex-col rounded-2xl border border-[#132960]/10 bg-white p-4 shadow-sm">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-bold text-[#132960] md:text-lg">Mercados — retornos (%)</h2>
+        {/* Sem "(%)" no título: os valores já trazem o símbolo. */}
+        <h2 className="text-base font-bold text-[#132960] md:text-lg">Mercados — retornos</h2>
         <div className="flex flex-wrap items-center gap-2">
           {active.currencyToggle ? (
             <AzSegmented
@@ -270,7 +290,7 @@ export function MarketsPanel(props: Props) {
               data={sorted}
               layout="vertical"
               barCategoryGap="35%"
-              margin={{ left: 4, right: 48, top: 8, bottom: 4 }}
+              margin={{ left: 4, right: isNarrow ? 44 : 48, top: 8, bottom: 4 }}
             >
               <CartesianGrid stroke={AZ_CHART.grid} strokeWidth={1} />
               <XAxis
@@ -278,14 +298,15 @@ export function MarketsPanel(props: Props) {
                 tick={{ fontSize: 11, fill: AZ_CHART.ticks }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(v) => `${v}%`}
-                tickCount={5}
+                tickFormatter={(v) => `${fmtNum(Number(v))}%`}
+                domain={xAxis?.domain}
+                ticks={xAxis?.ticks}
               />
               <YAxis
                 type="category"
                 dataKey="name"
-                width={158}
-                tick={<FlagYTick />}
+                width={yAxisWidth}
+                tick={<FlagYTick axisWidth={yAxisWidth} maxChars={isNarrow ? 13 : 17} />}
                 axisLine={false}
                 tickLine={false}
                 interval={0}
@@ -306,7 +327,7 @@ export function MarketsPanel(props: Props) {
                 labelFormatter={(label) => splitFlagName(String(label)).label}
                 formatter={(value) => {
                   const v = typeof value === "number" ? value : Number(value);
-                  return [Number.isFinite(v) ? `${v > 0 ? "+" : ""}${v.toFixed(2)}%` : "—", "Retorno"];
+                  return [fmtSignedPct(v, 2), "Retorno"];
                 }}
               />
               <Bar dataKey="value" radius={[0, 3, 3, 0]} maxBarSize={16}>
@@ -319,7 +340,7 @@ export function MarketsPanel(props: Props) {
                   formatter={(v) => {
                     const n = typeof v === "number" ? v : Number(v);
                     if (!Number.isFinite(n)) return "";
-                    return `${n > 0 ? "+" : ""}${n.toFixed(1)}%`;
+                    return fmtSignedPct(n, 1);
                   }}
                   style={{ fontSize: 10.5, fill: "#475569", fontVariantNumeric: "tabular-nums" }}
                 />
@@ -332,7 +353,7 @@ export function MarketsPanel(props: Props) {
       {updatedAt ? (
         <p className="mt-auto pt-2 text-right">
           {/* Fonte intradiária (cron 15min): generated_at carrega os minutos do dado. */}
-          <DataStamp giro={updatedAt} dado={updatedAt} />
+          <Atualizado em={updatedAt} />
         </p>
       ) : null}
     </section>

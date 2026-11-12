@@ -32,6 +32,8 @@ import {
   type PanelTabItem,
 } from "@/components/painel/panorama/PanelTabs";
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
+import { Atualizado, textoAtualizado } from "@/components/painel/panorama/Atualizado";
+import { useIsNarrow } from "@/components/painel/panorama/useIsNarrow";
 import { GLOBAL_COUNTRIES, countryById, type CountryRatesPayload, type GlobalCountryId } from "@/lib/global-rates";
 import { GlobalCountryPane } from "@/components/painel/juros-globais/GlobalCountryPane";
 import { PolicyStepChart } from "@/components/painel/juros-globais/PolicyStepChart";
@@ -90,11 +92,25 @@ const COUNTRY_HEAD: Record<CountrySel, { title: string; subtitle: string }> = {
 
 /**
  * Botões de bandeira que alternam o país — fica DENTRO do header (navy) do card,
- * no lugar onde antes ficava o título do gráfico.
+ * no lugar onde antes ficava o título do gráfico. No celular os oito botões
+ * ocupavam três linhas antes do dado: lá vira uma lista de seleção.
  */
 function CountrySwitcher({ value, onChange }: { value: CountrySel; onChange: (v: CountrySel) => void }) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <>
+    <select
+      aria-label="País"
+      value={value}
+      onChange={(e) => onChange(e.target.value as CountrySel)}
+      className="rounded-lg border border-transparent bg-white px-2.5 py-1 text-sm font-semibold text-[#132960] shadow-sm sm:hidden"
+    >
+      {SWITCHER_COUNTRIES.map((c) => (
+        <option key={c.id} value={c.id}>
+          {c.name}
+        </option>
+      ))}
+    </select>
+    <div className="hidden flex-wrap items-center gap-1.5 sm:flex">
       {SWITCHER_COUNTRIES.map((c) => {
         const active = c.id === value;
         return (
@@ -123,6 +139,7 @@ function CountrySwitcher({ value, onChange }: { value: CountrySel; onChange: (v:
         );
       })}
     </div>
+    </>
   );
 }
 
@@ -131,13 +148,16 @@ function CountrySwitcher({ value, onChange }: { value: CountrySel; onChange: (v:
  * (build_yield_curves_svg.R, build_selic_implicita.R, build_treasury_us_svg.R,
  * build_fed_implicita.R).
  *
- * Series das curvas pre/IPCA+ (jun/2026):
- *   - "Agora" (live DI/DAP da B3) = PRETO solido + dots.
- *   - "Ajuste D-1" (ajuste do pregao anterior, B3) = PRETO tracejado.
- *   - "Recente" foi REMOVIDA (era redundante com o Ajuste D-1, ambos ~= ultimo
- *     pregao). Restam D-30 e D-90 como cortes historicos do pipeline R.
+ * Series das curvas pre/IPCA+ e da Selic implicita:
+ *   - "Agora" (live DI/DAP da B3, ~15 min) = AZUL AZ #027DFC solido + dots, como
+ *     manda o PADRAO-VISUAL-GRAFICOS §2 ("serie ao vivo ... #027DFC em todas as tabs").
+ *     Era preto desde jun/2026 e ficava igual ao D-1 preto (so o tracejado separava
+ *     as duas, e a legenda mostrava o mesmo icone) — revisao de 12/11/2026.
+ *   - "D-1" (ajuste do pregao anterior, B3) = PRETO tracejado quando ha "Agora";
+ *     PRETO solido quando e a ponta (feed fora do ar, ETTJ oficial).
+ *   - D-30 e D-90: cortes historicos do pipeline R (paletas por grafico).
  */
-const LIVE_COLOR = "#000000";
+const LIVE_COLOR = "#027DFC";
 
 const PAL_PRE = { d30: "#00008B", d90: "#56B4E9" } as const;
 const PAL_IPCA = { d30: "#8B0000", d90: "#F8766D" } as const;
@@ -353,15 +373,17 @@ function buildCurveChart(
     }
   };
 
-  if (show.agora) {
+  if (show.agora || show.d1) {
     for (const c of live) {
       if (c.rate == null) continue;
       const t = Date.parse(c.maturity);
       if (!Number.isFinite(t)) continue;
       if (bounds && (t < bounds.min - SLACK || t > bounds.max + SLACK)) continue;
       const p = at(t);
-      p.agora = c.rate;
-      see(c.rate);
+      if (show.agora) {
+        p.agora = c.rate;
+        see(c.rate);
+      }
       if (show.d1) {
         p.d1 = c.prevAdjust;
         see(c.prevAdjust);
@@ -402,6 +424,92 @@ function buildCurveChart(
   return { points, yDomain: [Math.floor((lo - pad) * 10) / 10, Math.ceil((hi + pad) * 10) / 10] };
 }
 
+/**
+ * Marcas do eixo X das curvas: UMA por ano, no vencimento de janeiro (jan/27, jan/28…).
+ * O Recharts escolhia sozinho e o eixo saía com 21 rótulos espremidos no computador e
+ * intervalos irregulares no celular (mai/27, fev/28, dez/28…). Se o ano não tem ponto em
+ * janeiro, marca o 1º de janeiro; com anos demais, pula de 2 em 2 (ou mais).
+ */
+function annualTicks(points: { t: number }[], maxTicks: number): number[] {
+  if (points.length === 0) return [];
+  const min = points[0].t;
+  const max = points[points.length - 1].t;
+  const out: number[] = [];
+  for (let y = new Date(min).getUTCFullYear(); y <= new Date(max).getUTCFullYear(); y++) {
+    const jan = points.find((p) => {
+      const d = new Date(p.t);
+      return d.getUTCFullYear() === y && d.getUTCMonth() === 0;
+    });
+    const t = jan ? jan.t : Date.UTC(y, 0, 1);
+    if (t >= min && t <= max) out.push(t);
+  }
+  const step = Math.max(1, Math.ceil(out.length / maxTicks));
+  return out.filter((_, i) => i % step === 0);
+}
+
+/** Amostra do traço da série (cor, tracejado, ponto) — a mesma do gráfico. */
+function LineSwatch({ color, dashed, dot }: { color: string; dashed?: boolean; dot?: boolean }) {
+  return (
+    <svg aria-hidden width="22" height="10" viewBox="0 0 22 10" className="shrink-0">
+      <line x1="1" y1="5" x2="21" y2="5" stroke={color} strokeWidth={2} strokeDasharray={dashed ? "4 3" : undefined} />
+      {dot ? <circle cx="11" cy="5" r="2.6" fill={color} /> : null}
+    </svg>
+  );
+}
+
+type SeriesKeyItem = {
+  key: string;
+  /** Nome da série com a data de referência — o MESMO do tooltip ("D-30 (13/10/2026)"). */
+  label: string;
+  color: string;
+  dashed?: boolean;
+  dot?: boolean;
+  /** Estado do botão (só quando a série pode ser ligada/desligada). */
+  active?: boolean;
+  onToggle?: () => void;
+};
+
+/**
+ * Legenda ÚNICA das curvas, acima do gráfico e alinhada à esquerda. Antes havia uma
+ * barra "Séries" (Agora, Ajuste D-1, D-30, D-90) e, embaixo do gráfico, a legenda do
+ * Recharts com outros nomes e outra ordem (Ajuste D-1 (B3)… DI futuro · agora), que no
+ * celular quebrava em duas linhas desalinhadas. Agora é uma lista só: cada item mostra o
+ * traço da série, o nome com a data, e (nas curvas) liga/desliga a série ao clicar.
+ */
+function SeriesKey({ items, ariaLabel }: { items: SeriesKeyItem[]; ariaLabel: string }) {
+  return (
+    <ul aria-label={ariaLabel} className="flex flex-wrap items-center gap-1.5">
+      {items.map((it) => (
+        <li key={it.key}>
+          {it.onToggle ? (
+            <button
+              type="button"
+              aria-pressed={it.active}
+              onClick={it.onToggle}
+              title={it.active ? "Esconder esta série" : "Mostrar esta série"}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-semibold transition ${
+                it.active
+                  ? "border-transparent bg-[#eef2f8] text-[#132960]"
+                  : "border-zinc-200 bg-white text-zinc-500 hover:text-[#132960]"
+              }`}
+            >
+              <span className={it.active ? "" : "opacity-30"}>
+                <LineSwatch color={it.color} dashed={it.dashed} dot={it.dot} />
+              </span>
+              {it.label}
+            </button>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-1 py-0.5 text-[11px] font-semibold text-[#132960]">
+              <LineSwatch color={it.color} dashed={it.dashed} dot={it.dot} />
+              {it.label}
+            </span>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 const tooltipStyle = {
   background: "#132960",
   border: "none",
@@ -413,19 +521,8 @@ const tooltipStyle = {
 
 const thClass = "py-2 pr-2 text-right font-semibold";
 const tdClass = "py-1.5 pr-2 text-right tabular-nums";
-
-/** True em telas estreitas (mobile) — p/ alternar labels das reunioes. */
-function useIsNarrow(): boolean {
-  const [narrow, setNarrow] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 640px)");
-    const update = () => setNarrow(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-  return narrow;
-}
+/** D-30/D-90 saem no celular: lá a tabela mostra só o vencimento, o agora e o D-1. */
+const histCol = "hidden sm:table-cell";
 
 type FedChartPoint = { t: number; d0: number | null; recent: number | null; d30: number | null; d90: number | null };
 
@@ -763,7 +860,7 @@ function UsRatesBlock({
                 {treasuryTenors.map((t) => (
                   <tr key={t.tenor}>
                     <td className="py-1.5 pr-2 font-semibold text-[#132960]">{t.tenor}a</td>
-                    <td className={`${tdClass} text-zinc-300`}>{fmtRate(t.d365)}</td>
+                    <td className={`${tdClass} text-zinc-500`}>{fmtRate(t.d365)}</td>
                     <td className={`${tdClass} text-zinc-500`}>{fmtRate(t.d90)}</td>
                     <td className={`${tdClass} text-zinc-500`}>{fmtRate(t.d30)}</td>
                     <td className={`${tdClass} ${hasTreasuryD0 ? "text-zinc-600" : "font-semibold text-[#132960]"}`}>{fmtRate(t.recent)}</td>
@@ -931,10 +1028,11 @@ export function JurosLiveBlock({
     [fedMeetings],
   );
 
-  // Tabela das tabs de curva: UNIAO dos vencimentos — linhas dos titulos
-  // (D-90/D-30) + vencimentos do live (Agora) sem titulo correspondente.
-  // Live casa com a linha do titulo quando os vencimentos distam <= 25 dias.
-  // "Recente" saiu: o ultimo pregao agora aparece como "Agora"/"Ajuste D-1".
+  // Tabela das tabs de curva: linhas dos titulos (D-90/D-30) + vencimentos do
+  // live (Agora) sem titulo correspondente. Live casa com a linha do titulo
+  // quando os vencimentos distam <= 25 dias. Por padrao a tabela mostra SO os
+  // vencimentos com historico (16 de 21 linhas eram "—" nas colunas D-90/D-30/D-1);
+  // "Todos os vencimentos" mostra o resto.
   const isCurve = tab === "pre" || tab === "ipca";
   const activeCuts = tab === "ipca" ? ipcaCuts : preCuts;
   const curveRows = useMemo(() => {
@@ -946,12 +1044,14 @@ export function JurosLiveBlock({
       d30: number | null;
       d1: number | null;
       agora: number | null;
+      /** Linha criada so pelo feed (sem titulo no historico). */
+      liveOnly: boolean;
     };
     const map = new Map<number, CurveRow>();
     const upsert = (t: number, maturity: string): CurveRow => {
       let r = map.get(t);
       if (!r) {
-        r = { t, maturity, d90: null, d30: null, d1: null, agora: null };
+        r = { t, maturity, d90: null, d30: null, d1: null, agora: null, liveOnly: false };
         map.set(t, r);
       }
       return r;
@@ -966,16 +1066,41 @@ export function JurosLiveBlock({
     put("d90", activeCuts.d90);
     put("d30", activeCuts.d30);
 
-    // D-1 vem da ETTJ, que tem vertice quase diario — colocar cada um como LINHA
-    // estouraria a tabela. Em vez disso, casa o vertice mais proximo do
-    // vencimento de cada titulo ja listado (tolerancia de 10 dias), sem criar
-    // linha nova.
+    // Com o feed no ar, Agora e D-1 vem do MESMO contrato (taxa e ajuste do
+    // pregao anterior) — igual as linhas do grafico.
+    const MAX_GAP = 25 * 86_400_000;
+    const liveArr = tab === "ipca" ? dapLiquid : diLiquid;
+    for (const lc of liveArr) {
+      if (lc.rate == null) continue;
+      const t = Date.parse(lc.maturity);
+      if (!Number.isFinite(t)) continue;
+      let best: CurveRow | null = null;
+      let bestGap = Infinity;
+      for (const r of map.values()) {
+        if (r.liveOnly) continue;
+        const gap = Math.abs(r.t - t);
+        if (gap < bestGap) {
+          bestGap = gap;
+          best = r;
+        }
+      }
+      const row = best && bestGap <= MAX_GAP ? best : upsert(t, lc.maturity);
+      if (row !== best) row.liveOnly = true;
+      row.agora = lc.rate;
+      row.d1 = lc.prevAdjust;
+    }
+
+    // Sem feed (ou contrato sem ajuste), o D-1 vem da ETTJ, que tem vertice quase
+    // diario — colocar cada um como LINHA estouraria a tabela. Em vez disso, casa
+    // o vertice mais proximo do vencimento de cada linha (tolerancia de 10 dias),
+    // sem criar linha nova.
     const d1Points = (activeCuts.recent ?? [])
       .map((c) => ({ t: Date.parse(c.maturity), rate: c.rate }))
       .filter((p) => Number.isFinite(p.t));
     if (d1Points.length > 0) {
       const D1_GAP = 10 * 86_400_000;
       for (const row of map.values()) {
+        if (row.d1 != null) continue;
         let best: number | null = null;
         let bestGap = Infinity;
         for (const p of d1Points) {
@@ -989,29 +1114,10 @@ export function JurosLiveBlock({
       }
     }
 
-    const MAX_GAP = 25 * 86_400_000;
-    const liveArr = tab === "ipca" ? dapLiquid : diLiquid;
-    for (const lc of liveArr) {
-      if (lc.rate == null) continue;
-      const t = Date.parse(lc.maturity);
-      if (!Number.isFinite(t)) continue;
-      let best: CurveRow | null = null;
-      let bestGap = Infinity;
-      for (const r of map.values()) {
-        const gap = Math.abs(r.t - t);
-        if (gap < bestGap) {
-          bestGap = gap;
-          best = r;
-        }
-      }
-      if (best && bestGap <= MAX_GAP) {
-        best.agora = lc.rate;
-      } else {
-        upsert(t, lc.maturity).agora = lc.rate;
-      }
-    }
-    return [...map.values()].sort((a, b) => a.t - b.t);
-  }, [isCurve, activeCuts, diLiquid, dapLiquid, tab]);
+    return [...map.values()]
+      .filter((r) => showAll || !r.liveOnly)
+      .sort((a, b) => a.t - b.t);
+  }, [isCurve, activeCuts, diLiquid, dapLiquid, tab, showAll]);
 
   // Com o intraday da B3 desligado, a ponta das curvas passa a ser o D-1 da ETTJ
   // oficial. O pane brasileiro so cai quando NAO ha absolutamente nada — a
@@ -1030,6 +1136,22 @@ export function JurosLiveBlock({
   const refLabel = labelDate(
     tab === "selic" ? selicLabels.recent : tab === "ipca" ? ipcaLabels.recent : preLabels.recent,
   );
+
+  // Subtitulo: diz o que a tela MOSTRA. Com o feed no ar a curva e a do pregao de
+  // hoje (atraso de ~15 min) e o D-1 vira referencia; antes o texto dizia "no
+  // fechamento do pregao anterior" ao lado da pastilha "Pregao de hoje".
+  const brSubtitle = hasLive
+    ? di!.isToday
+      ? "Curvas DI e IPCA+ e Selic implícita no pregão de hoje, com atraso de ~15 min. O fechamento do dia anterior (D-1) fica como referência."
+      : "Curvas DI e IPCA+ e Selic implícita no último pregão da B3. O fechamento do dia anterior (D-1) fica como referência."
+    : refLabel
+      ? `Curvas DI e IPCA+ e Selic implícita no fechamento do pregão de ${refLabel} (D-1).`
+      : COUNTRY_HEAD.br.subtitle;
+  /** Carimbo do rodape (horario da cotacao da B3, ja em hora de Brasilia). */
+  const brStamp =
+    hasLive && di?.quotedAt
+      ? textoAtualizado(di.quotedAt.slice(11, 16), fmtQuotedAt(di.quotedAt).slice(0, 10))
+      : null;
 
   // Badge: sem intraday NAO existe ponto verde pulsante — anunciar "ao vivo"
   // sobre fechamento do dia anterior seria enganoso.
@@ -1061,23 +1183,58 @@ export function JurosLiveBlock({
   const hasLiveForTab = (tab === "ipca" ? dapLiquid : diLiquid).length > 0;
   /** Ponta D-1 (ETTJ oficial) da aba ativa. */
   const hasD1ForTab = (cuts.recent?.length ?? 0) > 0;
-  /** Nome da serie D-1 na legenda: ja vem com a data ("D-1 (03/08/2026)"). */
-  const d1Name = labels.recent ?? "D-1";
+  /** Nome da serie D-1 na legenda: ja vem com a data ("D-1 (03/08/2026)"). Sem a ETTJ,
+   *  o rotulo cai na coluna do pipeline ("Recente (...)") — o nome continua "D-1". */
+  const d1Name = (labels.recent ?? "D-1").replace(/^(Recente|Hoje)/, "D-1");
 
-  // Com o intraday NO AR, a ponta e "Agora"/"Ajuste D-1" e a D-1 da ETTJ SOME
-  // (era o substituto durante o blackout; manter as duas = tres linhas pretas
-  // contando a mesma historia com ~5 bps de diferenca metodologica). Se o feed
-  // cair de novo, a ETTJ volta sozinha como linha principal.
-  const cutToggles: { key: keyof ShowState; label: string; color: string; available: boolean }[] = [
-    { key: "agora", label: "Agora", color: LIVE_COLOR, available: hasLiveForTab },
-    { key: "d1", label: "Ajuste D-1", color: "#000000", available: hasLiveForTab },
-    { key: "recent", label: "D-1", color: "#000000", available: !hasLiveForTab && hasD1ForTab },
-    { key: "d30", label: "D-30", color: pal.d30, available: (cuts.d30?.length ?? 0) > 0 },
-    { key: "d90", label: "D-90", color: pal.d90, available: (cuts.d90?.length ?? 0) > 0 },
+  // Com o intraday NO AR, a ponta e "Agora"/"D-1" (ajuste do contrato) e a D-1 da
+  // ETTJ SOME (era o substituto durante o blackout; manter as duas = duas linhas
+  // pretas contando a mesma historia com ~5 bps de diferenca metodologica). Se o
+  // feed cair de novo, a ETTJ volta sozinha como linha principal.
+  // ORDEM e NOMES valem para a legenda, o tooltip e a tabela: Agora, D-1, D-30, D-90.
+  const d30Name = labels.d30 ?? "D-30";
+  const d90Name = labels.d90 ?? "D-90";
+  const cutToggles: (Omit<SeriesKeyItem, "active" | "onToggle"> & { key: keyof ShowState; available: boolean })[] = [
+    { key: "agora", label: "Agora", color: LIVE_COLOR, dot: true, available: hasLiveForTab },
+    { key: "d1", label: d1Name, color: "#000000", dashed: true, available: hasLiveForTab },
+    { key: "recent", label: d1Name, color: "#000000", available: !hasLiveForTab && hasD1ForTab },
+    { key: "d30", label: d30Name, color: pal.d30, dot: true, available: (cuts.d30?.length ?? 0) > 0 },
+    { key: "d90", label: d90Name, color: pal.d90, dot: true, available: (cuts.d90?.length ?? 0) > 0 },
+  ];
+  const curveKey: SeriesKeyItem[] = cutToggles
+    .filter((c) => c.available)
+    .map(({ key, label, color, dashed, dot }) => ({
+      key,
+      label,
+      color,
+      dashed,
+      dot,
+      active: show[key],
+      onToggle: () => setShow((s) => ({ ...s, [key]: !s[key] })),
+    }));
+
+  const selicD1Name = selicLabels.recent ?? "D-1";
+  const selicKey: SeriesKeyItem[] = [
+    ...(hasSelicAgora ? [{ key: "agora", label: "Agora", color: LIVE_COLOR, dot: true }] : []),
+    { key: "recent", label: selicD1Name, color: PAL_SELIC.recent, dashed: hasSelicAgora, dot: !hasSelicAgora },
+    { key: "d30", label: selicLabels.d30 ?? "D-30", color: PAL_SELIC.d30, dot: true },
+    { key: "d90", label: selicLabels.d90 ?? "D-90", color: PAL_SELIC.d90, dot: true },
   ];
 
-  const liveName = tab === "ipca" ? "DAP · agora (B3 ~15 min)" : "DI futuro · agora (B3 ~15 min)";
   const chart = tab === "ipca" ? ipcaChart : preChart;
+  const curveTicks = annualTicks(chart.points, isNarrow ? 5 : 9);
+
+  /** Nota de leitura da aba ativa (vai para o "?" no cabecalho das abas). */
+  const brMethodNote =
+    tab === "selic"
+      ? hasSelicAgora
+        ? `Selic implícita por reunião COPOM — modelo forward sobre a curva PRE. “Agora” (azul): curva DI AO VIVO da B3 (~15 min, D+0), recalculada no navegador com o mesmo modelo do pipeline. “D-1” (preto tracejado): fechamento do pregão anterior. Cada forward soma o spread CDI→Selic (meta BCB − DI overnight, ~10 bps) antes do arredondamento a 0,25% — o DI precifica CDI, não a meta. A linha “Vigente” da coluna D-1 é a meta OFICIAL do BCB (SGS 432), não estimativa. Ajuste de prêmio de prazo (experimental, em todas as séries BR, linear a partir de 3m): base ${SELIC_TP_BASE_BPS} bps a 12m × ${selicTp.source === "irfm" ? `vol IRF-M 15d ${(selicTp.vol15d! * 100).toFixed(1).replace(".", ",")}% (percentil ${selicTp.pct!.toFixed(0)}% em 5a)` : "vol do dia (proxy)"} (×${selicTp.volMult.toFixed(2).replace(".", ",")}) → −${selicTp.bpsAt12m.toFixed(0)} bps na cauda. Um eventual sobe-e-desce no longo é o pico de juro terminal precificado pelo mercado (não erro): prêmio crescente sobre forward que aplaina implica leve alívio esperado.`
+        : `Selic implícita por reunião COPOM — modelo forward do pipeline AZ sobre a curva PRE da B3 no fechamento do pregão anterior (D-1${refLabel ? `, ${refLabel}` : ""}), mesmos valores da trilha de política monetária. Cada forward soma o spread CDI→Selic (meta BCB − DI overnight, ~10 bps) antes do arredondamento a 0,25% — o DI precifica CDI, não a meta. A linha “Vigente” da coluna D-1 é a meta OFICIAL do BCB (SGS 432), não estimativa. Não há série intraday: a B3 descontinuou o feed público de cotações em 04/08/2026.`
+      : !hasLiveForTab
+        ? `Ponta D-1 (preta): ETTJ oficial da B3 — “Taxas Referenciais”, curva ${tab === "ipca" ? "DI x IPCA" : "DI x pré"} no fechamento do pregão anterior${refLabel ? ` (${refLabel})` : ""}, base 252 dias úteis. D-30/D-90: ${tab === "ipca" ? "títulos IPCA+ (cupom limpo NTN-B, TaxaSwap B3)" : "títulos prefixados (TaxaSwap B3)"} em janelas anteriores — mesma família de dado, então a curva é homogênea. A série intraday (~15 min) saiu do ar em 04/08/2026, quando a B3 desligou o feed público de cotações (Comunicado Externo 001/2026-VTEC); volta a aparecer aqui se o acesso a dados D+0 for restabelecido.`
+        : tab === "ipca"
+          ? "D-30/D-90: títulos IPCA+ (cupom limpo NTN-B, TaxaSwap B3) em janelas anteriores. “Agora” (azul): futuros DAP da B3 (~15 min); “D-1” (preto tracejado): ajuste do pregão anterior. Na tabela, cada vencimento de título mostra o futuro de vencimento mais próximo."
+          : "D-30/D-90: títulos prefixados (TaxaSwap B3) em janelas anteriores. “Agora” (azul): futuros DI1 da B3 (~15 min); “D-1” (preto tracejado): ajuste do pregão anterior. Na tabela, cada vencimento de título mostra o futuro de vencimento mais próximo.";
 
   return (
     <div className="space-y-3" id="juros">
@@ -1085,9 +1242,7 @@ export function JurosLiveBlock({
       <header className="space-y-0.5">
         <h2 className="text-xl font-semibold text-[#132960] md:text-2xl">{COUNTRY_HEAD[country].title}</h2>
         <p className="text-sm text-zinc-500">
-          {country === "br" && !hasLive && refLabel
-            ? `Curvas DI e IPCA+ e Selic implícita, no fechamento do pregão de ${refLabel} (D-1).`
-            : COUNTRY_HEAD[country].subtitle}
+          {country === "br" ? brSubtitle : COUNTRY_HEAD[country].subtitle}
         </p>
       </header>
 
@@ -1095,16 +1250,9 @@ export function JurosLiveBlock({
       <div className="overflow-hidden rounded-2xl border border-[#132960]/15 bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 bg-[#132960] px-3 py-2.5 md:px-4">
           <CountrySwitcher value={country} onChange={setCountry} />
-          {country === "br" ? (
-            <div className="flex flex-wrap items-center gap-2">
-              {statusBadge}
-              <span className="text-[11px] text-[#9db8e8]">
-                {hasLive && di?.quotedAt
-                  ? `Cotado às ${fmtQuotedAt(di.quotedAt)}`
-                  : "Intraday público da B3 descontinuado"}
-              </span>
-            </div>
-          ) : null}
+          {/* O horário da cotação foi para o rodapé do cartão ("Atualizado às ..."),
+              como nos outros cartões — no celular eram duas linhas a mais antes do dado. */}
+          {country === "br" ? statusBadge : null}
         </div>
 
         {country === "br" && brBlackout ? (
@@ -1125,64 +1273,28 @@ export function JurosLiveBlock({
 
         {country === "br" && !brBlackout ? (
       <>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 px-4 pt-3 md:px-5">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 px-4 pb-2 pt-3 md:px-5">
         <PanelTabs
           ariaLabel="Curva de juros (Brasil)"
           tabs={TABS}
           value={tab}
           onChange={setTab}
           accent="#027DFC"
-          className="pb-2"
         />
-        <div className="flex flex-wrap items-center gap-3 pb-2">
-          {isCurveTab ? (
-            <>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-                  Séries:
-                </span>
-                {cutToggles.map((c) =>
-                  c.available ? (
-                    <button
-                      key={c.key}
-                      type="button"
-                      aria-pressed={show[c.key]}
-                      onClick={() => setShow((s) => ({ ...s, [c.key]: !s[c.key] }))}
-                      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold transition ${
-                        show[c.key]
-                          ? "border-transparent bg-[#eef2f8] text-[#132960]"
-                          : "border-zinc-200 bg-white text-zinc-500 hover:text-[#132960]"
-                      }`}
-                    >
-                      <span
-                        aria-hidden
-                        className="inline-block h-2 w-2 rounded-full transition-opacity duration-150"
-                        style={{ backgroundColor: c.color, opacity: show[c.key] ? 1 : 0.3 }}
-                      />
-                      {c.label}
-                    </button>
-                  ) : null,
-                )}
-              </div>
-              {/* So filtra CONTRATOS do feed intraday — sem ele, nao tem o que expandir. */}
-              {hasLiveForTab ? (
-                <label className="flex cursor-pointer items-center gap-1.5 text-xs text-zinc-600">
-                  <input
-                    type="checkbox"
-                    checked={showAll}
-                    onChange={(e) => setShowAll(e.target.checked)}
-                    className="h-3.5 w-3.5 accent-[#027DFC]"
-                  />
-                  Todos os vencimentos
-                </label>
-              ) : null}
-            </>
-          ) : null}
-        </div>
+        {/* "?" junto das abas, como no bloco dos EUA (antes ficava solto embaixo da legenda). */}
+        <MethodInfo align="right" label="Como ler este gráfico" className="align-middle">
+          {brMethodNote}
+        </MethodInfo>
       </div>
 
       <div className="grid gap-5 p-4 md:p-5 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
         <div className="min-w-0">
+          <div className="mb-2">
+            <SeriesKey
+              ariaLabel={isCurveTab ? "Séries do gráfico (clique para mostrar ou esconder)" : "Séries do gráfico"}
+              items={isCurveTab ? curveKey : selicKey}
+            />
+          </div>
           <div className="h-[300px] w-full md:h-[340px]">
             {/* O grafico NAO depende mais do feed intraday: desenha com o D-1 e
                 os cortes que vieram do servidor. So fica vazio se nao houver nada. */}
@@ -1248,7 +1360,7 @@ export function JurosLiveBlock({
                     itemStyle={{ color: "#fff" }}
                     labelStyle={{ color: "#94A3B8", fontWeight: 600 }}
                   />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  {/* Legenda: a SeriesKey acima do gráfico (mesmos nomes e ordem). */}
                   <Line type="stepAfter" dataKey="d90" name={selicLabels.d90 ?? "D-90"} stroke={PAL_SELIC.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   <Line type="stepAfter" dataKey="d30" name={selicLabels.d30 ?? "D-30"} stroke={PAL_SELIC.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   {/* D-1 (ajuste do pregão anterior, pipeline): preto SÓLIDO quando é a
@@ -1256,11 +1368,7 @@ export function JurosLiveBlock({
                   <Line
                     type="stepAfter"
                     dataKey="recent"
-                    name={
-                      hasSelicAgora
-                        ? (selicLabels.recent ?? "D-1").replace(/^Recente/i, "Ajuste D-1")
-                        : (selicLabels.recent ?? "D-1 (fechamento anterior)")
-                    }
+                    name={selicD1Name}
                     stroke={PAL_SELIC.recent}
                     strokeWidth={hasSelicAgora ? 1.5 : 2.2}
                     strokeDasharray={hasSelicAgora ? "6 4" : undefined}
@@ -1269,7 +1377,7 @@ export function JurosLiveBlock({
                     isAnimationActive={false}
                   />
                   {hasSelicAgora ? (
-                    <Line type="stepAfter" dataKey="agora" name="Agora (D+0 · ao vivo)" stroke={PAL_SELIC.recent} strokeWidth={2.4} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                    <Line type="stepAfter" dataKey="agora" name="Agora" stroke={LIVE_COLOR} strokeWidth={2.4} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
                   ) : null}
                 </LineChart>
               </ResponsiveContainer>
@@ -1282,6 +1390,8 @@ export function JurosLiveBlock({
                     type="number"
                     scale="time"
                     domain={["dataMin", "dataMax"]}
+                    ticks={curveTicks.length > 0 ? curveTicks : undefined}
+                    interval={0}
                     tickFormatter={(t) => tsLabel(Number(t))}
                     tick={{ fontSize: 10, fill: TICKS }}
                     axisLine={false}
@@ -1303,12 +1413,12 @@ export function JurosLiveBlock({
                     itemStyle={{ color: "#fff" }}
                     labelStyle={{ color: "#94A3B8", fontWeight: 600 }}
                   />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  {/* Legenda: a SeriesKey acima do gráfico (mesmos nomes e ordem). */}
                   {show.d90 ? (
-                    <Line type="monotone" dataKey="d90" name={labels.d90 ?? "D-90"} stroke={pal.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                    <Line type="monotone" dataKey="d90" name={d90Name} stroke={pal.d90} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   ) : null}
                   {show.d30 ? (
-                    <Line type="monotone" dataKey="d30" name={labels.d30 ?? "D-30"} stroke={pal.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
+                    <Line type="monotone" dataKey="d30" name={d30Name} stroke={pal.d30} strokeWidth={1.6} dot={{ r: 2 }} connectNulls isAnimationActive={false} />
                   ) : null}
                   {/* Ponta D-1 (ETTJ oficial da B3): linha PRINCIPAL apenas quando o
                       intraday esta fora do ar. Com o feed vivo ela NAO e desenhada —
@@ -1327,100 +1437,106 @@ export function JurosLiveBlock({
                       isAnimationActive={false}
                     />
                   ) : null}
-                  {hasLiveForTab && show.agora && show.d1 ? (
-                    <Line type="monotone" dataKey="d1" name="Ajuste D-1 (B3)" stroke="#000000" strokeWidth={1.6} strokeDasharray="6 4" dot={false} connectNulls isAnimationActive={false} />
+                  {hasLiveForTab && show.d1 ? (
+                    <Line type="monotone" dataKey="d1" name={d1Name} stroke="#000000" strokeWidth={1.6} strokeDasharray="6 4" dot={false} connectNulls isAnimationActive={false} />
                   ) : null}
                   {hasLiveForTab && show.agora ? (
-                    <Line type="monotone" dataKey="agora" name={liveName} stroke={LIVE_COLOR} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
+                    <Line type="monotone" dataKey="agora" name="Agora" stroke={LIVE_COLOR} strokeWidth={2.2} dot={{ r: 2.5 }} connectNulls isAnimationActive={false} />
                   ) : null}
                 </LineChart>
               </ResponsiveContainer>
             )}
           </div>
-          <div className="mt-2 flex justify-end">
-            <MethodInfo align="right">
-              {tab === "selic"
-                ? hasSelicAgora
-                  ? `Selic implícita por reunião COPOM — modelo forward sobre a curva PRE. “Agora” (preto): curva DI AO VIVO da B3 (~15 min, D+0), recalculada no navegador com o mesmo modelo do pipeline. “Ajuste D-1” (tracejado): fechamento do pregão anterior. Cada forward soma o spread CDI→Selic (meta BCB − DI overnight, ~10 bps) antes do arredondamento a 0,25% — o DI precifica CDI, não a meta. A linha “Vigente” da coluna D-1 é a meta OFICIAL do BCB (SGS 432), não estimativa. Ajuste de prêmio de prazo (experimental, em todas as séries BR, linear a partir de 3m): base ${SELIC_TP_BASE_BPS} bps a 12m × ${selicTp.source === "irfm" ? `vol IRF-M 15d ${(selicTp.vol15d! * 100).toFixed(1)}% (percentil ${selicTp.pct!.toFixed(0)}% em 5a)` : "vol do dia (proxy)"} (×${selicTp.volMult.toFixed(2)}) → −${selicTp.bpsAt12m.toFixed(0)} bps na cauda. Um eventual sobe-e-desce no longo é o pico de juro terminal precificado pelo mercado (não erro): prêmio crescente sobre forward que aplaina implica leve alívio esperado.`
-                  : `Selic implícita por reunião COPOM — modelo forward do pipeline AZ sobre a curva PRE da B3 no fechamento do pregão anterior (D-1${refLabel ? `, ${refLabel}` : ""}), mesmos valores da trilha de política monetária. Cada forward soma o spread CDI→Selic (meta BCB − DI overnight, ~10 bps) antes do arredondamento a 0,25% — o DI precifica CDI, não a meta. A linha “Vigente” da coluna D-1 é a meta OFICIAL do BCB (SGS 432), não estimativa. Não há série intraday: a B3 descontinuou o feed público de cotações em 04/08/2026.`
-                : !hasLiveForTab
-                  ? `Ponta D-1 (preta): ETTJ oficial da B3 — “Taxas Referenciais”, curva ${tab === "ipca" ? "DI x IPCA" : "DI x pré"} no fechamento do pregão anterior${refLabel ? ` (${refLabel})` : ""}, base 252 dias úteis. D-30/D-90: ${tab === "ipca" ? "títulos IPCA+ (cupom limpo NTN-B, TaxaSwap B3)" : "títulos prefixados (TaxaSwap B3)"} em janelas anteriores — mesma família de dado, então a curva é homogênea. A série intraday (~15 min) saiu do ar em 04/08/2026, quando a B3 desligou o feed público de cotações (Comunicado Externo 001/2026-VTEC); volta a aparecer aqui se o acesso a dados D+0 for restabelecido.`
-                  : tab === "ipca"
-                    ? "D-30/D-90: títulos IPCA+ (cupom limpo NTN-B, TaxaSwap B3) em janelas anteriores. “Agora” (preto): futuros DAP da B3 (~15 min); “Ajuste D-1” (preto tracejado): ajuste do pregão anterior."
-                    : "D-30/D-90: títulos prefixados (TaxaSwap B3) em janelas anteriores. “Agora” (preto): futuros DI1 da B3 (~15 min); “Ajuste D-1” (preto tracejado): ajuste do pregão anterior."}
-            </MethodInfo>
-          </div>
         </div>
 
-        <div className="min-w-0 overflow-x-auto">
+        <div className="min-w-0">
+          {/* A tabela não dita mais a altura do cartão: no computador rola por dentro
+              (antes, 21 vencimentos deixavam ~330 px de branco embaixo do gráfico). */}
+          <div className="overflow-x-auto lg:max-h-[300px] lg:overflow-y-auto">
           {tab === "selic" ? (
             <table className="min-w-full text-xs">
-              <thead>
-                <tr className="border-b border-zinc-200 text-[10px] uppercase tracking-wider text-zinc-500">
+              <thead className="sticky top-0 bg-white">
+                <tr className="border-b border-zinc-200 text-[11px] uppercase tracking-wider text-zinc-500">
                   <th className="py-2 pr-2 text-left font-semibold">Reunião</th>
-                  <th className={thClass}>D-90</th>
-                  <th className={thClass}>D-30</th>
+                  {hasSelicAgora ? <th className={thClass}>Agora</th> : null}
                   <th className={thClass}>D-1</th>
-                  {hasSelicAgora ? <th className={thClass}>Agora (D+0)</th> : null}
+                  <th className={`${thClass} ${histCol}`}>D-30</th>
+                  <th className={`${thClass} ${histCol}`}>D-90</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
                 {selicMeetings.map((m) => (
                   <tr key={m.date}>
                     <td className="py-1.5 pr-2 font-semibold text-[#132960]">{meetingLabel(m.date)}</td>
-                    <td className={`${tdClass} text-zinc-500`}>{fmtRate(m.d90)}</td>
-                    <td className={`${tdClass} text-zinc-500`}>{fmtRate(m.d30)}</td>
-                    <td className={`${tdClass} ${hasSelicAgora ? "text-zinc-500" : "font-semibold text-[#132960]"}`}>{fmtRate(m.recent)}</td>
                     {hasSelicAgora ? (
                       <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(selicLevelAt(selicAgora, m.date))}</td>
                     ) : null}
+                    <td className={`${tdClass} ${hasSelicAgora ? "text-zinc-600" : "font-semibold text-[#132960]"}`}>{fmtRate(m.recent)}</td>
+                    <td className={`${tdClass} ${histCol} text-zinc-500`}>{fmtRate(m.d30)}</td>
+                    <td className={`${tdClass} ${histCol} text-zinc-500`}>{fmtRate(m.d90)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           ) : (
-            <>
               <table className="min-w-full text-xs">
-                <thead>
-                  <tr className="border-b border-zinc-200 text-[10px] uppercase tracking-wider text-zinc-500">
+                <thead className="sticky top-0 bg-white">
+                  <tr className="border-b border-zinc-200 text-[11px] uppercase tracking-wider text-zinc-500">
                     <th className="py-2 pr-2 text-left font-semibold">Venc.</th>
-                    <th className={thClass}>D-90</th>
-                    <th className={thClass}>D-30</th>
-                    {hasD1ForTab ? <th className={thClass}>D-1</th> : null}
                     {hasLiveForTab ? <th className={thClass}>Agora</th> : null}
+                    {hasLiveForTab || hasD1ForTab ? <th className={thClass}>D-1</th> : null}
+                    <th className={`${thClass} ${histCol}`}>D-30</th>
+                    <th className={`${thClass} ${histCol}`}>D-90</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
                   {curveRows.map((r) => (
                     <tr key={r.maturity}>
                       <td className="py-1.5 pr-2 font-semibold text-[#132960]">{maturityLabel(r.maturity)}</td>
-                      <td className={`${tdClass} text-zinc-500`}>{fmtRate(r.d90)}</td>
-                      <td className={`${tdClass} text-zinc-500`}>{fmtRate(r.d30)}</td>
-                      {hasD1ForTab ? (
-                        <td className={`${tdClass} ${hasLiveForTab ? "text-zinc-600" : "font-semibold text-[#000000]"}`}>
+                      {hasLiveForTab ? (
+                        <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(r.agora)}</td>
+                      ) : null}
+                      {hasLiveForTab || hasD1ForTab ? (
+                        <td className={`${tdClass} ${hasLiveForTab ? "text-zinc-600" : "font-semibold text-[#132960]"}`}>
                           {fmtRate(r.d1)}
                         </td>
                       ) : null}
-                      {hasLiveForTab ? (
-                        <td className={`${tdClass} font-semibold text-[#000000]`}>{fmtRate(r.agora)}</td>
-                      ) : null}
+                      <td className={`${tdClass} ${histCol} text-zinc-500`}>{fmtRate(r.d30)}</td>
+                      <td className={`${tdClass} ${histCol} text-zinc-500`}>{fmtRate(r.d90)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <p className="mt-2 text-[11px] text-zinc-500">
-                D-90/D-30: títulos (TaxaSwap B3) em janelas anteriores.
-                {hasD1ForTab
-                  ? ` D-1: ETTJ oficial da B3${refLabel ? ` (${refLabel})` : ""}, vértice mais próximo de cada vencimento.`
-                  : ""}
-                {hasLiveForTab
-                  ? ` Agora: futuro ${tab === "ipca" ? "DAP" : "DI1"} de vencimento mais próximo (B3 ~15 min).`
-                  : ""}
+          )}
+          </div>
+          {isCurveTab ? (
+            <>
+              {/* Só os vencimentos com histórico por padrão; o resto (contratos do feed sem
+                  título correspondente) fica atrás desta caixa. */}
+              {hasLiveForTab ? (
+                <label className="mt-2 flex cursor-pointer items-center gap-1.5 text-xs text-zinc-600">
+                  <input
+                    type="checkbox"
+                    checked={showAll}
+                    onChange={(e) => setShowAll(e.target.checked)}
+                    className="h-3.5 w-3.5 accent-[#027DFC]"
+                  />
+                  Todos os vencimentos
+                </label>
+              ) : null}
+              <p className="mt-2 text-xs leading-snug text-zinc-500">
+                {hasLiveForTab ? "Agora: contrato futuro de vencimento mais próximo, com atraso de ~15 min. " : ""}
+                D-1: fechamento do pregão anterior na B3. D-30 e D-90: taxas dos títulos públicos há 30 e 90 dias.
               </p>
             </>
-          )}
+          ) : null}
         </div>
       </div>
+      {brStamp ? (
+        <p className="border-t border-zinc-100 px-4 py-2 text-right md:px-5">
+          <Atualizado texto={brStamp} />
+        </p>
+      ) : null}
       </>
       ) : null}
 

@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from "react";
 
+import { fmtNum } from "@/lib/format-br";
 import { fetchIndexQuote, fetchLiveCurve } from "@/lib/painel-b3-live";
 
 export type TapeItem = {
   label: string;
   /** Texto do valor (ja formatado) — ex.: "170.331" ou "5,06". */
   value?: string;
-  /** Variacao percentual no dia (define cor e seta); null = neutro. */
+  /** Variacao percentual no dia (define cor e seta); null = sem variacao exibida. */
   changePct?: number | null;
+  /** Variacao em bps (taxas de juros, como o DI): mostrada no lugar do %. */
+  changeBps?: number | null;
   /** Sufixo opcional do valor (ex.: "%"). */
   suffix?: string;
 };
@@ -19,17 +22,38 @@ type Props = {
   items: TapeItem[];
 };
 
-function TapeEntry({ item }: { item: TapeItem }) {
+/**
+ * Direcao da variacao. Variacao que arredonda a ~zero (|%| < 0,03 ou |bps| < 1, mesma
+ * faixa dos cartoes KPI) e neutra: azul, sem seta — "▲ 0,00%" em verde parecia alta.
+ */
+function tapeDirection(item: TapeItem): "up" | "down" | "flat" | null {
+  if (item.changeBps != null && Number.isFinite(item.changeBps)) {
+    if (Math.abs(item.changeBps) < 1) return "flat";
+    return item.changeBps > 0 ? "up" : "down";
+  }
   const ch = item.changePct;
-  const tone = ch == null ? "text-zinc-200" : ch >= 0 ? "text-[#39d98a]" : "text-[#ff7d7d]";
-  const arrow = ch == null ? "" : ch >= 0 ? "▲" : "▼";
+  if (ch == null || !Number.isFinite(ch)) return null;
+  if (Math.abs(ch) < 0.03) return "flat";
+  return ch > 0 ? "up" : "down";
+}
+
+const TAPE_TONE = { up: "text-[#39d98a]", down: "text-[#ff7d7d]", flat: "text-[#027DFC]" } as const;
+
+function TapeEntry({ item }: { item: TapeItem }) {
+  const dir = tapeDirection(item);
+  const arrow = dir === "up" ? "▲ " : dir === "down" ? "▼ " : "";
+  const amount =
+    item.changeBps != null && Number.isFinite(item.changeBps)
+      ? `${fmtNum(Math.abs(item.changeBps), 0)} bps`
+      : `${fmtNum(Math.abs(item.changePct ?? 0), 2)}%`;
   return (
     <span className="inline-flex shrink-0 items-baseline gap-1.5 px-4 font-mono text-xs">
       <span className="font-semibold tracking-wide text-zinc-500">{item.label}</span>
       {item.value ? <span className="text-zinc-100">{item.value}{item.suffix ?? ""}</span> : null}
-      {ch != null ? (
-        <span className={tone}>
-          {arrow} {Math.abs(ch).toFixed(2)}%
+      {dir ? (
+        <span className={TAPE_TONE[dir]}>
+          {arrow}
+          {amount}
         </span>
       ) : null}
     </span>
@@ -68,19 +92,19 @@ export function MarketTape({ items }: Props) {
         if (liquid.length > 0) {
           const short = liquid[0];
           const long = liquid.find((c) => c.maturity.startsWith("203")) ?? liquid[liquid.length - 1];
-          const fmt = (n: number) => n.toFixed(2).replace(".", ",");
+          // Taxa de juros varia em bps (como nos cartoes KPI), nao em "%".
           next.push(
             {
               label: `DI ${short.symbol.replace("DI1", "")}`,
-              value: fmt(short.rate as number),
+              value: fmtNum(short.rate as number, 2),
               suffix: "%",
-              changePct: short.changeBps != null ? short.changeBps / 100 : null,
+              changeBps: short.changeBps,
             },
             {
               label: `DI ${long.symbol.replace("DI1", "")}`,
-              value: fmt(long.rate as number),
+              value: fmtNum(long.rate as number, 2),
               suffix: "%",
-              changePct: long.changeBps != null ? long.changeBps / 100 : null,
+              changeBps: long.changeBps,
             },
           );
         }
