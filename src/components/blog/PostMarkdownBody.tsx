@@ -23,6 +23,26 @@ function textoDe(children: React.ReactNode): string {
   return "";
 }
 
+/**
+ * Conserta negrito aberto colado em pontuação, erro comum de quem escreve no editor:
+ * "silenciosos**. Eles se acumulam**" não abre negrito no Markdown (o ** que vem depois
+ * de letra e antes de pontuação só pode fechar), e os asteriscos apareciam no texto.
+ * Em cada parágrafo, os ** de posição ímpar são aberturas; se uma delas vier colada à
+ * palavra anterior e seguida de pontuação, ela passa para depois da pontuação.
+ */
+export function consertarNegrito(markdown: string): string {
+  return markdown
+    .split(/(\n\s*\n)/)
+    .map((paragrafo) => {
+      return paragrafo.replace(/(\p{L})\*\*([.,;:!?])(\s+)/gu, (todo, letra: string, pont: string, espaco: string, pos: number) => {
+        const antes = (paragrafo.slice(0, pos).match(/\*\*/g) ?? []).length;
+        // abertura (contagem par antes dela) colada à palavra: move para depois da pontuação
+        return antes % 2 === 0 ? `${letra}${pont}${espaco}**` : todo;
+      });
+    })
+    .join("");
+}
+
 type PostMarkdownBodyProps = {
   markdown: string;
   /** id do catálogo ("IPCA-08") -> gráfico pronto pra renderizar. */
@@ -77,7 +97,7 @@ export function PostMarkdownBody({ markdown, chartSlots }: PostMarkdownBodyProps
             ) : null,
         }}
       >
-        {markdown}
+        {consertarNegrito(markdown)}
       </ReactMarkdown>
     </div>
   );
