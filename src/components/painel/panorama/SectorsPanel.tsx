@@ -135,8 +135,8 @@ export function SectorsPanel({ sectorBr, sectorGlobal }: Props) {
         <p className="py-6 text-center text-sm text-zinc-500">Sem dados de setores.</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          <RankCol title="Top 10" dotColor="#1E8A5C" rows={top} />
-          <RankCol title="Bottom 10" dotColor="#BE3B33" rows={bottom} />
+          <RankCol title="Melhor desempenho" dotColor="#1E8A5C" rows={top} />
+          <RankCol title="Pior desempenho" dotColor="#BE3B33" rows={bottom} />
         </div>
       )}
 

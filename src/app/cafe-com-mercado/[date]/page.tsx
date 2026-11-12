@@ -53,6 +53,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+/** "10:40 BRT" → "10h40 (horário de Brasília)"; formato desconhecido passa como veio. */
+function horaLegivel(hora: string): string {
+  const m = /(\d{1,2}):(\d{2})/.exec(hora);
+  return m ? `${Number(m[1])}h${m[2]} (horário de Brasília)` : hora;
+}
+
 export default async function MorningCallPage({ params }: Props) {
   const { date } = await params;
   const briefing = await getBriefing(date);
@@ -69,7 +75,7 @@ export default async function MorningCallPage({ params }: Props) {
       <Header />
       <main className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
         <Link href="/cafe-com-mercado" className="text-sm text-[#027DFC] hover:underline">
-          {"<-"} Voltar para Café com Mercado
+          ← Voltar para Café com Mercado
         </Link>
 
         <article className="az-card mt-6 space-y-4 p-6 md:p-10">
@@ -85,23 +91,22 @@ export default async function MorningCallPage({ params }: Props) {
               />
             </div>
           ) : null}
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
-            {briefing.weekday ? `${briefing.weekday}, ` : ""}
-            {formatDateBR(briefing.date)}
-          </p>
-          <h1 className="text-4xl font-semibold text-[#132960] md:text-5xl">
+          {/* A data já está no título: o olho traz só a hora de publicação (antes a data aparecia quatro vezes). */}
+          {briefing.hora ? (
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
+              Publicado às {horaLegivel(briefing.hora)}
+            </p>
+          ) : null}
+          <h1 className="text-2xl font-semibold leading-tight text-[#132960] md:text-4xl">
             {briefing.title}
           </h1>
-          {briefing.hora ? (
-            <p className="text-sm text-zinc-600">{briefing.hora}</p>
-          ) : null}
           {briefing.description ? (
             <p className="border-y border-[#132960]/10 py-3 text-lg text-zinc-700">
               {briefing.description}
             </p>
           ) : null}
 
-          <div className="pt-2">
+          <div className="az-cafe-texto pt-2">
             <PostMarkdownBody markdown={briefing.body} />
           </div>
         </article>
@@ -110,9 +115,9 @@ export default async function MorningCallPage({ params }: Props) {
           {prev ? (
             <Link
               href={`/cafe-com-mercado/${prev}`}
-              className="text-[#027DFC] hover:underline"
+              className="rounded-full border border-[#132960]/20 px-4 py-2 font-semibold text-[#132960] transition hover:border-[#027DFC] hover:text-[#027DFC]"
             >
-              {"<-"} Briefing anterior ({formatDateBR(prev)})
+              ← Edição anterior ({formatDateBR(prev)})
             </Link>
           ) : (
             <span />
@@ -120,9 +125,9 @@ export default async function MorningCallPage({ params }: Props) {
           {next ? (
             <Link
               href={`/cafe-com-mercado/${next}`}
-              className="text-[#027DFC] hover:underline sm:text-right"
+              className="rounded-full border border-[#132960]/20 px-4 py-2 font-semibold text-[#132960] transition hover:border-[#027DFC] hover:text-[#027DFC] sm:text-right"
             >
-              Briefing seguinte ({formatDateBR(next)}) {"->"}
+              Próxima edição ({formatDateBR(next)}) →
             </Link>
           ) : (
             <span />

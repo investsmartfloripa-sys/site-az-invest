@@ -25,7 +25,7 @@ export function DifusaoBar({
   return (
     <div>
       {titulo ? (
-        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">{titulo}</p>
+        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{titulo}</p>
       ) : null}
       <div className="flex h-7 w-full overflow-hidden rounded-lg border border-zinc-200">
         {segmentos.map((s) => {
@@ -52,7 +52,7 @@ export function DifusaoBar({
               {s.label}: <strong>{s.count}</strong>
             </span>
           ))}
-        {nota ? <span className="text-zinc-400">{nota}</span> : null}
+        {nota ? <span className="text-zinc-500">{nota}</span> : null}
       </div>
     </div>
   );

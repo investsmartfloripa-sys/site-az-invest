@@ -53,7 +53,7 @@ export function RankingTable({
         {title}
       </h3>
       {rows.length === 0 ? (
-        <p className="py-4 text-center text-xs text-zinc-400">Sem dados.</p>
+        <p className="py-4 text-center text-xs text-zinc-500">Sem dados.</p>
       ) : (
         <ul className="space-y-1">
           {rows.map((r, i) => {
@@ -69,7 +69,7 @@ export function RankingTable({
                 <span className="relative flex items-center justify-between gap-2 px-1.5 py-1.5 text-sm">
                   <span className="min-w-0 truncate text-[#132960]">
                     {r.label}
-                    {r.hint ? <span className="ml-1 text-[10px] text-zinc-400">{r.hint}</span> : null}
+                    {r.hint ? <span className="ml-1 text-[10px] text-zinc-500">{r.hint}</span> : null}
                   </span>
                   <span
                     className="shrink-0 font-semibold tabular-nums"

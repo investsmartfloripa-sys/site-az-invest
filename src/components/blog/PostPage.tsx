@@ -194,7 +194,7 @@ export async function PostPage({ slug, kind }: { slug: string; kind: PostKind })
       <Header />
       <main className="mx-auto w-full max-w-[60rem] px-4 py-8 md:px-8">
         <Link href={section.listPath} className="text-sm text-[#027DFC] hover:underline">
-          {"<-"} Voltar para {section.label}
+          ← Voltar para {section.label}
         </Link>
 
         {post.coverImage ? (

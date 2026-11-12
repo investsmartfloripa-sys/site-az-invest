@@ -162,7 +162,7 @@ export function CagedDashboard({
       <footer className="text-xs text-zinc-500 border-t pt-3 space-y-1">
         <div>{total.metadata.fonte}</div>
         {quebras && <div>{quebras.metadata.fonte}</div>}
-        <div className="text-zinc-400">
+        <div className="text-zinc-500">
           Gerado em {total.gerado_em.slice(0, 19).replace("T", " ")} UTC
         </div>
       </footer>
@@ -328,7 +328,7 @@ function FaixaView({
               {ultima.diferencial?.toFixed(2)}
             </span>
           </p>
-          <p className="text-xs text-zinc-400">SM vigente: {fmtBRL(ultima.salario_minimo_aplicado)}</p>
+          <p className="text-xs text-zinc-500">SM vigente: {fmtBRL(ultima.salario_minimo_aplicado)}</p>
         </div>
         <div className="flex gap-2">
           <Toggle
@@ -707,7 +707,7 @@ function SerieCompletaView({
 // ============================================================
 function NotaCobertura() {
   return (
-    <p className="mt-3 flex items-center gap-1.5 text-xs italic text-zinc-400">
+    <p className="mt-3 flex items-center gap-1.5 text-xs italic text-zinc-500">
       <MethodInfo label="Nota de cobertura — fonte e metodologia">
         Distribuições por faixa salarial/setor e salário médio refletem APENAS declarações no prazo
         (~40-50% do saldo oficial). Saldo absoluto e admissões/demissões nos KPIs e na aba "Saldo total"

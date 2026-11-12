@@ -46,7 +46,7 @@ function BackLink() {
       href="/nosso-time"
       className="inline-flex w-fit items-center gap-1 rounded-full border border-[#132960]/15 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#132960]/80 transition hover:border-[#027DFC]/40 hover:text-[#027DFC]"
     >
-      {"<-"} Nosso time
+      ← Nosso time
     </Link>
   );
 }
@@ -148,7 +148,7 @@ export function AuthorHero({
             <h1 className="text-2xl font-semibold leading-tight text-[#132960] md:text-4xl">
               {author.name}
             </h1>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#FF5713] md:text-xs">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#027DFC]">
               {author.role}
             </p>
             {author.headline ? (
@@ -187,7 +187,7 @@ export function AuthorHero({
 
             {specialties.length > 0 ? (
               <div className="mt-3 w-full border-t border-[#132960]/10 pt-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#FF5713] md:text-[11px]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#027DFC]">
                   Especialidades
                 </p>
                 <div className="mt-2 flex flex-wrap justify-center gap-2 md:justify-start">

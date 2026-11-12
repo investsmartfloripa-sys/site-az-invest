@@ -34,7 +34,7 @@ function Ranking({ titulo, itens, total, cor }: { titulo: string; itens: Item[];
             </div>
             <div className="text-right tabular-nums">
               <span className="font-semibold text-[#132960]">{fmtNum(i.valor, 1)}</span>
-              <span className="ml-1 text-[10px] text-zinc-400">{total > 0 ? fmtPct((i.valor / total) * 100, 0) : ""}</span>
+              <span className="ml-1 text-[10px] text-zinc-500">{total > 0 ? fmtPct((i.valor / total) * 100, 0) : ""}</span>
             </div>
           </li>
         ))}

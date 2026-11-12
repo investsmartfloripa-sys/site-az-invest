@@ -128,8 +128,8 @@ function TabelaTransformacoes({
           </thead>
           <tbody className="bg-white">
             {linhas.map(({ t, regua }) => (
-              <tr key={t.id} className={`border-t border-zinc-50 ${regua ? "text-zinc-400" : ""}`}>
-                <td className={`whitespace-nowrap px-3 py-1.5 font-medium ${regua ? "text-zinc-400" : "text-zinc-800"}`}>
+              <tr key={t.id} className={`border-t border-zinc-50 ${regua ? "text-zinc-500" : ""}`}>
+                <td className={`whitespace-nowrap px-3 py-1.5 font-medium ${regua ? "text-zinc-500" : "text-zinc-800"}`}>
                   {t.nome}
                   {regua ? <span className="ml-1 text-[10px] font-normal">(régua)</span> : null}
                 </td>
@@ -430,7 +430,7 @@ function MiniRanking({
         <tbody className="bg-white">
           {rows.map((r, i) => (
             <tr key={r.mes} className="border-t border-zinc-50 hover:bg-zinc-50/60">
-              <td className="w-8 px-3 py-1.5 text-zinc-400 tabular-nums">{i + 1}.</td>
+              <td className="w-8 px-3 py-1.5 text-zinc-500 tabular-nums">{i + 1}.</td>
               <td className="whitespace-nowrap px-3 py-1.5 font-medium text-zinc-800">{fmtMesCurto(r.mes)}</td>
               <td className="whitespace-nowrap px-3 py-1.5 text-right font-semibold tabular-nums" style={{ color: cor }}>
                 {fmtSignedPct(r.valor, 2)}

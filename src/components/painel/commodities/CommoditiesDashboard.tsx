@@ -202,7 +202,7 @@ export function CommoditiesDashboard({ panorama, history }: Props) {
                   <div key={g.id}>
                     <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-zinc-500">
                       {g.label}
-                      {g.note ? <span className="ml-1.5 font-normal normal-case text-zinc-400">({g.note})</span> : null}
+                      {g.note ? <span className="ml-1.5 font-normal normal-case text-zinc-500">({g.note})</span> : null}
                     </h3>
                     <DivergingReturnBars rows={g.items} xDomain={grouped.xDomain} yAxisWidth={128} />
                   </div>

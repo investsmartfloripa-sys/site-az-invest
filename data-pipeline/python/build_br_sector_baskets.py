@@ -163,6 +163,17 @@ def compute_return(series: pd.Series, period_label: str = None) -> Optional[floa
     return ((end_val / start_val) - 1.0) * 100.0
 
 
+# Teto de retorno plausível por janela. Acima disso o preço veio sem ajuste de grupamento ou
+# desdobramento (o Yahoo às vezes demora a ajustar papéis da B3): em nov/2026 um componente de
+# "Petróleo Integrado & Downstream" levou o setor a +1150% em um mês no topo do Panorama.
+RETORNO_PLAUSIVEL_MAX = {"1d": 40.0, "5d": 60.0, "1wk": 60.0, "1mo": 150.0, "3mo": 250.0, "6mo": 400.0, "ytd": 400.0, "1y": 600.0}
+
+
+def retorno_plausivel(ret: float, period_label: str) -> bool:
+    teto = RETORNO_PLAUSIVEL_MAX.get(period_label)
+    return ret > -95.0 and (teto is None or ret <= teto)
+
+
 def compute_cluster_returns(df: pd.DataFrame, components_df: pd.DataFrame, period_label: str) -> Dict[str, List[Dict]]:
     """Compute weighted return by cluster_nome using component weights from CSV."""
 
@@ -173,6 +184,9 @@ def compute_cluster_returns(df: pd.DataFrame, components_df: pd.DataFrame, perio
         series = _extract_close_series(df, ticker)
         ret = compute_return(series, period_label)
         if ret is None:
+            continue
+        if not retorno_plausivel(ret, period_label):
+            logging.warning(f"{ticker}: retorno {ret:.1f}% em {period_label} descartado (provável preço sem ajuste)")
             continue
 
         cluster_name = str(row.get("cluster_nome", "")).strip() or str(row.get("cluster_key", "")).strip()

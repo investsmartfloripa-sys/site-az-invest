@@ -80,7 +80,7 @@ export function EstadoNoTempoBp({ bp, geradoEm }: { bp: BpMestre; geradoEm: stri
               <span className="truncate text-[11px] font-bold uppercase tracking-wide text-zinc-500" title={`SGS ${t.sgs}`}>
                 {t.label}
               </span>
-              {t.pct != null ? <span className="shrink-0 text-[10px] tabular-nums text-zinc-400">p{t.pct}</span> : null}
+              {t.pct != null ? <span className="shrink-0 text-[10px] tabular-nums text-zinc-500">p{t.pct}</span> : null}
             </div>
             <div className="mt-1 flex items-baseline gap-2 tabular-nums">
               <span className="text-lg font-bold text-[#132960]">{fmtUsBiSigned(t.v, 1)}</span>

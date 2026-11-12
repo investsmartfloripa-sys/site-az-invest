@@ -273,7 +273,7 @@ export function SazonalidadeCard({ data }: { data: IpcaData }) {
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <p className="mt-2 text-[10.5px] leading-relaxed text-zinc-400">
+      <p className="mt-2 text-[10.5px] leading-relaxed text-zinc-500">
         Hastes: a grossa é ±1 desvio-padrão e a fina, ±2, calculados sobre os {saz.janela.replace("-", " a ")} de cada
         mês civil. Diferença de até {fmtSignedNum(0.05, 2)} p.p. em relação à mediana conta como “em linha com o
         padrão”.

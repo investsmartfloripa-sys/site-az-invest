@@ -131,7 +131,7 @@ export function DespesaRubricasCard({ data }: { data: FiscalClassicosData }) {
   if (!dr) {
     return (
       <ChartCard title="Despesa primária por rubrica (% PIB, 12m)" stampGiro={data.gerado_em} stampDado={null}>
-        <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-64 items-center justify-center text-sm text-zinc-500">
           O pipeline ainda não publicou as rubricas v2 (residual + controle de fluxo). Rode o workflow fiscal-pipeline.yml.
         </p>
       </ChartCard>

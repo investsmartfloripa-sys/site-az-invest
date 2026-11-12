@@ -225,7 +225,7 @@ export function ContribuicoesPibCard({
       ) : null}
 
       {rows.length === 0 ? (
-        <p className="flex h-[260px] items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-[260px] items-center justify-center text-sm text-zinc-500">
           Contribuições indisponíveis nesta carga
         </p>
       ) : (

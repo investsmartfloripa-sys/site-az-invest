@@ -152,7 +152,7 @@ export function AberturaPmsCard({ pms, geradoEm }: { pms: AtividadePmsData; gera
       stampDado={prep ? mesIso(prep.mesRef) : null}
     >
       {!prep ? (
-        <p className="flex h-48 items-center justify-center text-sm text-zinc-400">Sem abertura disponível neste mês.</p>
+        <p className="flex h-48 items-center justify-center text-sm text-zinc-500">Sem abertura disponível neste mês.</p>
       ) : vista === "mapa" ? (
         <Heatmap
           rows={prep.rows}

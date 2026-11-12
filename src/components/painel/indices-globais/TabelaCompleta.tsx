@@ -45,7 +45,7 @@ function buildTable(payload: WorldIndicesReturnsPayload): { developed: TableRow[
 }
 
 function ReturnCell({ value }: { value: number | null | undefined }) {
-  if (value == null) return <td className="px-2 py-1.5 text-right text-zinc-400">—</td>;
+  if (value == null) return <td className="px-2 py-1.5 text-right text-zinc-500">—</td>;
   return (
     <td className="px-2 py-1.5 text-right font-semibold tabular-nums" style={{ color: variationText(value, 0) }}>
       {fmtSignedPct(value, 1)}

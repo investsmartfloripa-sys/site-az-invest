@@ -110,7 +110,7 @@ export function MetaYtdCard({ data }: { data: FiscalClassicosData }) {
   if (anoCorrente == null || anos.length === 0) {
     return (
       <ChartCard title="Primário acumulado no ano × meta LDO (R$ bi)" stampGiro={data.gerado_em} stampDado={null}>
-        <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-64 items-center justify-center text-sm text-zinc-500">
           O pipeline ainda não publicou o acumulado no ano (schema v2). Rode o workflow fiscal-pipeline.yml.
         </p>
       </ChartCard>

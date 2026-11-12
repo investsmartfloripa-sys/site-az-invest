@@ -73,7 +73,7 @@ export function Balanca12mCard({ balanca12m, geradoEm }: { balanca12m: Balanca12
       stampDado={ultSaldo ? mesIso(ultSaldo.row.mes) : null}
     >
       {rows.length === 0 ? (
-        <p className="flex h-72 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-72 items-center justify-center text-sm text-zinc-500">
           Sem dados para o período selecionado.
         </p>
       ) : (

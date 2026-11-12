@@ -169,7 +169,7 @@ export function GlobalCountryPane({ country }: { country: GlobalCountry }) {
       </div>
 
       {loading && !payload ? (
-        <div className="flex h-[340px] items-center justify-center text-sm text-zinc-400">Carregando curva ao vivo…</div>
+        <div className="flex h-[340px] items-center justify-center text-sm text-zinc-500">Carregando curva ao vivo…</div>
       ) : failed || !curve ? (
         <div className="flex h-[260px] items-center justify-center px-6 text-center text-sm text-zinc-500">
           Curva de {country.name} indisponível no momento — a fonte oficial ({country.source}) não respondeu. Atualiza
@@ -284,7 +284,7 @@ export function GlobalCountryPane({ country }: { country: GlobalCountry }) {
                 {curveRows.map((r) => (
                   <tr key={r.years}>
                     <td className="py-1.5 pr-2 font-semibold text-[#132960]">{tenorLabel(r.years)}</td>
-                    <td className={`${tdClass} text-zinc-400`}>{fmtRate(r.d90)}</td>
+                    <td className={`${tdClass} text-zinc-500`}>{fmtRate(r.d90)}</td>
                     <td className={`${tdClass} text-zinc-500`}>{fmtRate(r.d30)}</td>
                     <td className={`${tdClass} text-zinc-500`}>{fmtRate(r.d1)}</td>
                     <td className={`${tdClass} font-semibold text-[#000000]`}>{fmtRate(r.atual)}</td>

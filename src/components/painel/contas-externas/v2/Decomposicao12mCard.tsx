@@ -82,7 +82,7 @@ export function Decomposicao12mCard({
 
       {eco ? (
         <div className="mt-3 rounded-xl border border-[#132960]/10 bg-zinc-50/50 p-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Eco mensal</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Eco mensal</p>
           <p className="mt-1 text-xs text-zinc-700">
             Transações correntes de {fmtMesCurto(mesIso(eco.mes))}:{" "}
             <strong className="tabular-nums" style={{ color: variationText(eco.atual, 0) }}>

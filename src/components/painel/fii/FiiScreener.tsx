@@ -213,7 +213,7 @@ export function FiiScreener({
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={selectable ? 8 : 7} className="px-2 py-6 text-center text-zinc-400">
+                <td colSpan={selectable ? 8 : 7} className="px-2 py-6 text-center text-zinc-500">
                   Nenhum FII encontrado com esses filtros.
                 </td>
               </tr>
@@ -305,7 +305,7 @@ export function FiiScreener({
         </table>
       </div>
 
-      <p className="mt-3 text-[10px] text-zinc-400">
+      <p className="mt-3 text-[10px] text-zinc-500">
         Outliers de P/VP (escala não padronizada na CVM) ficam como “—”. <strong>*</strong>{" "}
         DY &gt; 18% pode incluir amortização — não é renda recorrente.
       </p>

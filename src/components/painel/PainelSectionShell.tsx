@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-import { getCategory, getScope, getTrail, painelTrails } from "@/lib/painel-taxonomy";
+import { categoriasVisiveis, escoposVisiveis, getCategory, getScope, getTrail, painelTrails } from "@/lib/painel-taxonomy";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 type Props = {
@@ -17,7 +17,7 @@ function buildBreadcrumb(pathname: string): NavItem[] {
   const cleanPath = pathname === "/painel-economico" ? "/painel-economico/panorama" : pathname;
   const segments = cleanPath.split("/").filter(Boolean).slice(1);
 
-  const breadcrumbs: NavItem[] = [{ href: "/painel-economico/panorama", label: "Panorama" }];
+  const breadcrumbs: NavItem[] = [{ href: "/painel-economico", label: "Painel econômico" }];
   if (segments.length === 0 || segments[0] === "panorama") return breadcrumbs;
 
   const [trailSlug, scopeSlug, categorySlug] = segments;
@@ -104,8 +104,6 @@ export function PainelSectionShell({ children }: Props) {
         style={{ top: "var(--az-header-h, 0px)" }}
       >
         <div className={`mx-auto flex w-full ${SITE_MAIN_MAX_WIDTH_CLASS} items-center gap-6 px-4 text-xs font-semibold uppercase tracking-wider md:px-8`}>
-          <span className="hidden whitespace-nowrap py-3 text-white/40 sm:block">Painel econômico</span>
-
           <Link
             href="/painel-economico/panorama"
             className={`whitespace-nowrap border-b-2 py-3 transition-colors duration-150 ${
@@ -160,7 +158,7 @@ export function PainelSectionShell({ children }: Props) {
                   }`}
                 >
                   <div className="grid gap-4 sm:grid-cols-2">
-                    {trail.scopes.map((scope) => (
+                    {escoposVisiveis(trail).map((scope) => (
                       <div key={scope.slug}>
                         <Link
                           href={`/painel-economico/${trail.slug}/${scope.slug}`}
@@ -169,7 +167,7 @@ export function PainelSectionShell({ children }: Props) {
                           {scope.label}
                         </Link>
                         <ul className="space-y-0.5">
-                          {scope.categories.map((category) => {
+                          {categoriasVisiveis(scope).map((category) => {
                             const href = `/painel-economico/${trail.slug}/${scope.slug}/${category.slug}`;
                             const active = pathname.startsWith(href);
                             return (
@@ -209,13 +207,15 @@ export function PainelSectionShell({ children }: Props) {
           <nav aria-label="Caminho" className="mb-4 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
             {breadcrumbs.map((crumb, idx) => (
               <span key={crumb.href} className="flex items-center gap-2">
-                {idx > 0 ? <span className="text-zinc-300">/</span> : null}
                 {idx === breadcrumbs.length - 1 ? (
                   <span className="font-semibold text-[#132960]">{crumb.label}</span>
                 ) : (
-                  <Link href={crumb.href} className="text-zinc-500 hover:text-[#027DFC]">
-                    {crumb.label}
-                  </Link>
+                  <>
+                    <Link href={crumb.href} className="text-zinc-500 hover:text-[#027DFC]">
+                      {crumb.label}
+                    </Link>
+                    <span className="text-zinc-500">/</span>
+                  </>
                 )}
               </span>
             ))}

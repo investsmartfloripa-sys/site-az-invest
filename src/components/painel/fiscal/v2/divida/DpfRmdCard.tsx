@@ -36,7 +36,7 @@ export function DpfRmdCard({ dpf, geradoEm }: { dpf: FiscalDpfRmdData; geradoEm:
   if (prazo[0].data.length === 0 && vincendo[0].data.length === 0) {
     return (
       <ChartCard title="DPF — prazo médio e rolagem" stampGiro={geradoEm}>
-        <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-64 items-center justify-center text-sm text-zinc-500">
           O pipeline ainda não publicou o RMD (build_dpf_rmd.py).
         </p>
       </ChartCard>

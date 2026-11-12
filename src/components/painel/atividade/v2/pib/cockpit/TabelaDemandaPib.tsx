@@ -74,7 +74,7 @@ function CelulaCalor({
 }) {
   if (valor == null) {
     return (
-      <td className={`${TD_BASE} text-zinc-400`} title={`${titulo}: ${memo ? "não se aplica" : "não publicado"}`}>
+      <td className={`${TD_BASE} text-zinc-500`} title={`${titulo}: ${memo ? "não se aplica" : "não publicado"}`}>
         —
       </td>
     );
@@ -316,13 +316,13 @@ export function TabelaDemandaPib({
                   >
                     {l.rotuloCurto}
                     {l.vazamento ? (
-                      <span className="ml-1 text-[10px] font-normal text-zinc-400" title="entra subtraindo na identidade C + G + FBCF + Δestoques + X − M">
+                      <span className="ml-1 text-[10px] font-normal text-zinc-500" title="entra subtraindo na identidade C + G + FBCF + Δestoques + X − M">
                         (−)
                       </span>
                     ) : null}
                   </th>
-                  <td className={`${TD_BASE} ${l.idxSa == null ? "text-zinc-400" : ""}`}>{fmtNum(l.idxSa, 1)}</td>
-                  <td className={`${TD_BASE} ${l.reaisBi == null ? "text-zinc-400" : ""}`}>
+                  <td className={`${TD_BASE} ${l.idxSa == null ? "text-zinc-500" : ""}`}>{fmtNum(l.idxSa, 1)}</td>
+                  <td className={`${TD_BASE} ${l.reaisBi == null ? "text-zinc-500" : ""}`}>
                     {l.reaisBi == null ? "—" : ehMemo ? fmtSignedNum(l.reaisBi, 1) : fmtNum(l.reaisBi, 1)}
                   </td>
                   <CelulaCalor valor={l.qoq} escala={escalaQoq} titulo={`${rotuloCol} · QoQ SA`} memo={ehMemo} />
@@ -331,7 +331,7 @@ export function TabelaDemandaPib({
                   <CelulaCalor valor={l.acumAno} escala={escalaOutras} titulo={`${rotuloCol} · acum. ano`} memo={ehMemo} />
                   <td className={`${TD_BASE} relative`}>
                     {l.peso == null ? (
-                      <span className="text-zinc-400" title={ehPib ? "régua: 100% por construção (a 1846 não publica a linha)" : undefined}>
+                      <span className="text-zinc-500" title={ehPib ? "régua: 100% por construção (a 1846 não publica a linha)" : undefined}>
                         —
                       </span>
                     ) : ehMemo ? (
@@ -351,7 +351,7 @@ export function TabelaDemandaPib({
                   </td>
                   <td className={`${TD_BASE} pr-1`}>
                     {l.dPeso == null ? (
-                      <span className="text-zinc-400">—</span>
+                      <span className="text-zinc-500">—</span>
                     ) : (
                       <span className="font-semibold" style={{ color: variationText(l.dPeso, 0.05) }}>
                         {fmtSignedNum(l.dPeso, 2)} p.p.

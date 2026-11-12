@@ -39,7 +39,7 @@ export async function PeriodicosChips() {
         </Link>
       ) : null}
       {mensal ? (
-        <Link href={mensal.href} className={cardClass}>
+        <Link href={mensal.href} prefetch={false} className={cardClass}>
           <span className="flex min-w-0 items-baseline gap-2">
             <span className="shrink-0 text-xs font-bold uppercase tracking-wider text-[#027DFC]">
               Dossiê Mensal
@@ -53,10 +53,10 @@ export async function PeriodicosChips() {
       ) : (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-[#132960]/15 bg-white/60 px-4 py-2.5">
           <span className="flex min-w-0 items-baseline gap-2">
-            <span className="shrink-0 text-xs font-bold uppercase tracking-wider text-zinc-400">
+            <span className="shrink-0 text-xs font-bold uppercase tracking-wider text-zinc-500">
               Dossiê Mensal
             </span>
-            <span className="truncate text-sm text-zinc-400">em breve</span>
+            <span className="truncate text-sm text-zinc-500">em breve</span>
           </span>
         </div>
       )}

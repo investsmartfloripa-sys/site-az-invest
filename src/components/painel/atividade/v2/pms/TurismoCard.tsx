@@ -21,9 +21,9 @@ import { codaceAreas, num, rebase100, toPointsMes } from "../shared";
 function Chip({ label, valor, hint }: { label: string; valor: string; hint?: string }) {
   return (
     <div className="rounded-lg bg-zinc-50 px-3 py-1.5">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">{label}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{label}</p>
       <p className="text-sm font-bold tabular-nums text-[#132960]">{valor}</p>
-      {hint ? <p className="text-[10px] text-zinc-400">{hint}</p> : null}
+      {hint ? <p className="text-[10px] text-zinc-500">{hint}</p> : null}
     </div>
   );
 }

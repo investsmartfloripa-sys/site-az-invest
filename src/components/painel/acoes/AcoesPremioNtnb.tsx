@@ -163,7 +163,7 @@ export function AcoesPremioNtnb({ data }: { data: AcoesValuationData }) {
 
       <div style={{ height: 240 }} className="w-full">
         {premClipped.length < 2 ? (
-          <div className="flex h-full items-center justify-center text-xs italic text-zinc-400">
+          <div className="flex h-full items-center justify-center text-xs italic text-zinc-500">
             sem dados na janela
           </div>
         ) : (
@@ -232,7 +232,7 @@ export function AcoesPremioNtnb({ data }: { data: AcoesValuationData }) {
           </ResponsiveContainer>
         )}
       </div>
-      <p className="mt-2 text-[10px] text-zinc-400">
+      <p className="mt-2 text-[10px] text-zinc-500">
         Acima de 0 = bolsa mais atrativa que o juro real; abaixo = mais cara. Não é recomendação.
       </p>
       <p className="mt-2 text-right">

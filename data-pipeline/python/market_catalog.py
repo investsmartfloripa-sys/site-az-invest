@@ -204,9 +204,6 @@ CATALOG: List[Dict[str, str]] = [
     {"ticker": "CXSE3.SA","name": "Caixa Seguridade",   "klass": "br_acoes", "sector": "Seguros",          "country": "BR", "currency": "BRL"},
     {"ticker": "PSSA3.SA","name": "Porto Seguro",       "klass": "br_acoes", "sector": "Seguros",          "country": "BR", "currency": "BRL"},
     {"ticker": "AURE3.SA","name": "Auren Energia",      "klass": "br_acoes", "sector": "Eletrica",         "country": "BR", "currency": "BRL"},
-    {"ticker": "AXIA3.SA","name": "Axia Energia ON",    "klass": "br_acoes", "sector": "Eletrica",         "country": "BR", "currency": "BRL"},
-    {"ticker": "AXIA6.SA","name": "Axia Energia PNB",   "klass": "br_acoes", "sector": "Eletrica",         "country": "BR", "currency": "BRL"},
-    {"ticker": "CPLE3.SA","name": "Copel ON",           "klass": "br_acoes", "sector": "Eletrica",         "country": "BR", "currency": "BRL"},
     {"ticker": "CPFE3.SA","name": "CPFL Energia",       "klass": "br_acoes", "sector": "Eletrica",         "country": "BR", "currency": "BRL"},
     {"ticker": "ENGI11.SA","name": "Energisa",          "klass": "br_acoes", "sector": "Eletrica",         "country": "BR", "currency": "BRL"},
     {"ticker": "ISAE4.SA","name": "ISA Energia",        "klass": "br_acoes", "sector": "Eletrica",         "country": "BR", "currency": "BRL"},
@@ -217,10 +214,7 @@ CATALOG: List[Dict[str, str]] = [
     {"ticker": "CMIN3.SA","name": "CSN Mineracao",      "klass": "br_acoes", "sector": "Mineracao",        "country": "BR", "currency": "BRL"},
     {"ticker": "RENT3.SA","name": "Localiza",           "klass": "br_acoes", "sector": "Locacao",          "country": "BR", "currency": "BRL"},
     {"ticker": "VAMO3.SA","name": "Vamos",              "klass": "br_acoes", "sector": "Locacao",          "country": "BR", "currency": "BRL"},
-    {"ticker": "MOTV3.SA","name": "Motiva",             "klass": "br_acoes", "sector": "Logistica",        "country": "BR", "currency": "BRL"},
     {"ticker": "POMO4.SA","name": "Marcopolo",          "klass": "br_acoes", "sector": "Industria",        "country": "BR", "currency": "BRL"},
-    {"ticker": "EMBJ3.SA","name": "Embraer",            "klass": "br_acoes", "sector": "Industria",        "country": "BR", "currency": "BRL"},
-    {"ticker": "MBRF3.SA","name": "MBRF Global",        "klass": "br_acoes", "sector": "Alimentos",        "country": "BR", "currency": "BRL"},
     {"ticker": "HYPE3.SA","name": "Hypera",             "klass": "br_acoes", "sector": "Saude",            "country": "BR", "currency": "BRL"},
     {"ticker": "COGN3.SA","name": "Cogna",              "klass": "br_acoes", "sector": "Educacao",         "country": "BR", "currency": "BRL"},
     {"ticker": "YDUQ3.SA","name": "Yduqs",              "klass": "br_acoes", "sector": "Educacao",         "country": "BR", "currency": "BRL"},
@@ -339,6 +333,21 @@ CLASS_LABELS: Dict[str, str] = {
     "commodity":  "Commodities",
     "cripto":     "Cripto",
 }
+
+
+def _sem_repetidos(itens: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """Mantém a primeira ocorrência de cada ticker (repetição duplicava linhas na tabela do Mercado)."""
+    vistos = set()
+    saida = []
+    for item in itens:
+        if item["ticker"] in vistos:
+            continue
+        vistos.add(item["ticker"])
+        saida.append(item)
+    return saida
+
+
+CATALOG = _sem_repetidos(CATALOG)
 
 
 def tickers_by_class(klass: str) -> List[str]:

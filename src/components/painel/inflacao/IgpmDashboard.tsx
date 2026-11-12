@@ -64,7 +64,7 @@ function Toggle<T extends string>({ value, options, onChange }: { value: T; opti
 function Chip({ label, color, ativo, onClick }: { label: string; color: string; ativo: boolean; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition ${ativo ? "border-[#132960] bg-white text-[#132960]" : "border-zinc-200 bg-zinc-50 text-zinc-400"}`}>
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition ${ativo ? "border-[#132960] bg-white text-[#132960]" : "border-zinc-200 bg-zinc-50 text-zinc-500"}`}>
       <span className="h-2.5 w-2.5 rounded-full" style={{ background: ativo ? color : "#d1d5db" }} />
       {label}
     </button>

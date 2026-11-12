@@ -8,7 +8,6 @@ import { fmtDataBR, fmtMesCurto, fmtNum, fmtPct, fmtSignedPct } from "@/lib/form
 import { CambioRealCard } from "./CambioRealCard";
 import { ParidadeJurosCard } from "./ParidadeJurosCard";
 import { UipScatterCard } from "./UipScatterCard";
-import { ModelosPrevisaoCard } from "./ModelosPrevisaoCard";
 import { TabelaMensalCard } from "./TabelaMensalCard";
 import { leituraDesvio } from "./shared";
 
@@ -16,8 +15,9 @@ import { leituraDesvio } from "./shared";
  * Sub-área CÂMBIO ECONÔMICO (Contas Externas → Câmbio).
  *
  * Duas camadas: leitura rápida (manchete em prosa + 4 KPIs) e esmiuçamento
- * (01 câmbio real · 02 paridade de juros · 03 UIP na prática · 04 modelos de
- * previsão em construção · 05 tabela mensal com CSV).
+ * (01 câmbio real · 02 paridade de juros · 03 UIP na prática · 04 tabela mensal com CSV).
+ * O bloco de modelos de previsão (ModelosPrevisaoCard) sai da página até existir modelo publicado:
+ * um cartão "em construção" no meio da leitura passava a impressão de site inacabado.
  *
  * Regras de ouro herdadas do plano 2026-06-11:
  * - convenção ÚNICA e explícita: ALTA do índice de câmbio real = DEPRECIAÇÃO
@@ -156,13 +156,6 @@ export function CambioMacroDashboard({ data }: { data: CambioMacroData }) {
       descricao:
         "A paridade descoberta de juros prevê que o diferencial antecipa a depreciação. A amostra brasileira mostra o contrário do que o senso comum espera.",
       children: <UipScatterCard data={data} />,
-    },
-    {
-      id: "previsao",
-      eyebrow: "O que vem pela frente",
-      titulo: "Modelos de previsão",
-      descricao: "Estrutura pronta para os modelos proprietários — sem números antes de modelo publicado.",
-      children: <ModelosPrevisaoCard data={data} />,
     },
     {
       id: "tabela",

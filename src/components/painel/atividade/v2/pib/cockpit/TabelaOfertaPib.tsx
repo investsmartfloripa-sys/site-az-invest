@@ -58,7 +58,7 @@ const TD_BASE = "py-1 px-2 text-right whitespace-nowrap";
 function CelulaNivel({ valor, dec }: { valor: number | null; dec: number }) {
   if (valor == null) {
     return (
-      <td className={`${TD_BASE} text-zinc-400`} title="não publicado">
+      <td className={`${TD_BASE} text-zinc-500`} title="não publicado">
         —
       </td>
     );
@@ -70,7 +70,7 @@ function CelulaNivel({ valor, dec }: { valor: number | null; dec: number }) {
 function CelulaCalor({ valor, escala, titulo }: { valor: number | null; escala: (v: number) => string; titulo: string }) {
   if (valor == null) {
     return (
-      <td className={`${TD_BASE} text-zinc-400`} title={`${titulo}: não publicado`}>
+      <td className={`${TD_BASE} text-zinc-500`} title={`${titulo}: não publicado`}>
         —
       </td>
     );
@@ -286,7 +286,7 @@ export function TabelaOfertaPib({
                 <CelulaCalor valor={l.acumAno} escala={escalaOutras} titulo={`${l.rotulo} · acum. ano ${fmtTrimCurto(trimSel)}`} />
                 <td className={`${TD_BASE} relative`}>
                   {l.peso == null ? (
-                    <span className="text-zinc-400">—</span>
+                    <span className="text-zinc-500">—</span>
                   ) : (
                     <>
                       {/* Mini-barra de fundo proporcional ao peso (0–100% da célula). */}
@@ -301,7 +301,7 @@ export function TabelaOfertaPib({
                 </td>
                 <td className={`${TD_BASE} pr-1`}>
                   {l.dPeso == null ? (
-                    <span className="text-zinc-400">—</span>
+                    <span className="text-zinc-500">—</span>
                   ) : (
                     <span className="font-semibold" style={{ color: variationText(l.dPeso, 0.05) }}>
                       {fmtSignedNum(l.dPeso, 2)} p.p.

@@ -12,7 +12,7 @@ import {
 } from "@/lib/painel-market-data";
 
 export const metadata = {
-  title: "Ativos de mercado — Painel econômico",
+  title: "Mercado — Painel econômico",
   description:
     "Visão completa dos ativos de mercado: retornos por classe, histórico comparativo, múltiplos fundamentalistas e páginas individuais por ativo.",
 };
@@ -90,7 +90,7 @@ export default async function MercadoOverviewPage() {
     <div className="space-y-6">
       <header className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">Painel econômico</p>
-        <h2 className="text-2xl font-semibold text-[#132960]">Ativos de mercado</h2>
+        <h1 className="text-2xl font-semibold text-[#132960]">Mercado</h1>
         <p className="max-w-3xl text-sm text-zinc-600">
           Visão completa de ações, ETFs, índices, câmbio, commodities e cripto. A tabela abaixo lista os
           retornos por classe em diferentes horizontes; abra cada ativo para múltiplos, peers e histórico

@@ -118,7 +118,7 @@ export function SalarioRealCard({ quebras, geradoEm }: { quebras: CagedQuebrasDa
       stampDado={serie.length > 0 ? mesIso(serie[serie.length - 1].mes) : null}
     >
       <div className="flex flex-col gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
           Nível — salário de admissão ({modo === "real" ? `R$ de ${baseMes ? fmtMesCurto(baseMes) : "hoje"}` : "R$ correntes"})
         </p>
         <AzTimeSeriesChart
@@ -132,7 +132,7 @@ export function SalarioRealCard({ quebras, geradoEm }: { quebras: CagedQuebrasDa
           height={240}
         />
 
-        <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+        <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
           Variação interanual do salário REAL de admissão (%)
         </p>
         <div className="h-[170px] w-full">

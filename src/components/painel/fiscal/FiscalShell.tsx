@@ -58,7 +58,7 @@ export function KPI({
         </span>
         {unit && <span className="text-sm text-zinc-500">{unit}</span>}
       </div>
-      {hint && <div className="mt-1 text-[11px] text-zinc-400">{hint}</div>}
+      {hint && <div className="mt-1 text-[11px] text-zinc-500">{hint}</div>}
     </div>
   );
 }
@@ -243,7 +243,7 @@ export function RankingTable({
             const cor = v >= 0 ? COR_POSITIVO : COR_NEGATIVO;
             return (
               <tr key={`${it.nome}-${i}`} className="border-b border-zinc-100 hover:bg-zinc-50">
-                <td className="py-1.5 pr-2 text-zinc-400 tabular-nums">{i + 1}</td>
+                <td className="py-1.5 pr-2 text-zinc-500 tabular-nums">{i + 1}</td>
                 <td className="py-1.5 pr-2 text-zinc-700">{it.nome}</td>
                 <td className="py-1.5 pr-2 text-right tabular-nums font-semibold" style={{ color: cor }}>
                   {v >= 0 ? "+" : ""}

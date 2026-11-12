@@ -215,7 +215,7 @@ export function AcoesScreener({
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={totalCols} className="px-2 py-6 text-center text-zinc-400">
+                <td colSpan={totalCols} className="px-2 py-6 text-center text-zinc-500">
                   Nenhuma ação encontrada com esses filtros.
                 </td>
               </tr>
@@ -317,7 +317,7 @@ export function AcoesScreener({
         </table>
       </div>
 
-      <p className="mt-3 text-[10px] text-zinc-400">
+      <p className="mt-3 text-[10px] text-zinc-500">
         Universo: carteira teórica do Ibovespa (B3 <code>GetPortfolioDay</code>). P/L, P/VP, DY, ROE e
         valor de mercado via yfinance (<code>.info</code>); preço via yfinance. Setor por catálogo
         curado. Logos via TradingView. <strong>*</strong> P/L de empresa com lucro negativo/atípico ou

@@ -107,12 +107,12 @@ export function MassaCard({
       stampDado={maxIso || null}
     >
       {nivelPoints.length === 0 ? (
-        <p className="flex h-60 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-60 items-center justify-center text-sm text-zinc-500">
           O pipeline ainda não publicou a massa de rendimento (schema v2). Rode o workflow emprego-pipeline.
         </p>
       ) : (
         <div className="flex flex-col gap-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Nível (R$ bilhões, valores reais)</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Nível (R$ bilhões, valores reais)</p>
           <AzTimeSeriesChart
             series={[{ id: "massa", label: "Massa real", color: AZ_BRAND.azure, data: nivelPoints }]}
             unit="none"
@@ -123,7 +123,7 @@ export function MassaCard({
             showLegend={false}
           />
 
-          <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Variação interanual (YoY)</p>
+          <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Variação interanual (YoY)</p>
           <div className="h-[170px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={rowsYoy} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>

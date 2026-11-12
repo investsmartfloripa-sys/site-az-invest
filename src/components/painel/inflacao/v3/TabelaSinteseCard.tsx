@@ -215,10 +215,10 @@ function FragmentoSecao({
             <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-1.5 font-medium text-zinc-800">
               {linha.nome}
               {linha.mes_proprio ? (
-                <span className="ml-1 text-[10px] font-normal text-zinc-400">({fmtMesCurto(linha.mes_proprio)})</span>
+                <span className="ml-1 text-[10px] font-normal text-zinc-500">({fmtMesCurto(linha.mes_proprio)})</span>
               ) : null}
               {semDessaz ? (
-                <span className="ml-1 text-[10px] font-normal text-zinc-400" title="Sem versão dessazonalizada">
+                <span className="ml-1 text-[10px] font-normal text-zinc-500" title="Sem versão dessazonalizada">
                   (só observado)
                 </span>
               ) : null}

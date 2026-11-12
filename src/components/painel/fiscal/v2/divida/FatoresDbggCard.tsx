@@ -64,8 +64,8 @@ export function FatoresDbggCard({ fatores, geradoEm }: { fatores: FiscalDbggFato
 
   if (rows.length === 0) {
     return (
-      <ChartCard title="Decomposição oficial da ΔDBGG (p.p. do PIB)" stampGiro={geradoEm}>
-        <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
+      <ChartCard title="Decomposição oficial da variação da DBGG (p.p. do PIB)" stampGiro={geradoEm}>
+        <p className="flex h-64 items-center justify-center text-sm text-zinc-500">
           O pipeline ainda não publicou os fatores condicionantes da DBGG (build_fiscal_dbgg_fatores.py).
         </p>
       </ChartCard>
@@ -76,7 +76,7 @@ export function FatoresDbggCard({ fatores, geradoEm }: { fatores: FiscalDbggFato
 
   return (
     <ChartCard
-      title="Decomposição oficial da ΔDBGG (p.p. do PIB)"
+      title="Decomposição oficial da variação da DBGG (p.p. do PIB)"
       subtitle="Fatores condicionantes da variação da dívida bruta (BCB): barra acima de zero empurra a dívida p/ cima, abaixo puxa p/ baixo. O losango é o Δ total do ano."
       toolbar={
         <CockpitChip cor={AZ_BRAND.navy}>

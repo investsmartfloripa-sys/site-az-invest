@@ -118,7 +118,7 @@ function TileButton({
       </div>
       <div className="mt-1.5">
         <MiniSpark data={tile.spark} height={44} zeroLine lastDotColor={corPonto} />
-        <div className="mt-1 text-[9px] uppercase tracking-wide text-zinc-400 transition-colors group-hover:text-[#027DFC]">
+        <div className="mt-1 text-[9px] uppercase tracking-wide text-zinc-500 transition-colors group-hover:text-[#027DFC]">
           {selecionado ? "fechar" : "ver série ↗"}
         </div>
       </div>

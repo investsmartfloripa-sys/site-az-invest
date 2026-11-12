@@ -17,7 +17,7 @@ function ret(row: FundoRow, j: FundoJanela): number | null {
 }
 
 function retClass(r: number | null, cdi: number | null): string {
-  if (r == null) return "text-zinc-400";
+  if (r == null) return "text-zinc-500";
   if (cdi != null) {
     if (r > cdi) return "text-[#16A34A]";
     if (r < cdi) return "text-[#DC2626]";
@@ -32,7 +32,7 @@ function Tile({ label, value, sub, valueClass }: { label: string; value: string;
     <div className="rounded-xl border border-[#132960]/12 bg-white p-3">
       <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{label}</p>
       <p className={`mt-1 text-lg font-semibold tabular-nums ${valueClass ?? "text-[#132960]"}`}>{value}</p>
-      {sub ? <p className="text-[10px] text-zinc-400">{sub}</p> : null}
+      {sub ? <p className="text-[10px] text-zinc-500">{sub}</p> : null}
     </div>
   );
 }
@@ -42,7 +42,7 @@ export function FundoKpis({ fund, cdi }: { fund: FundoRow; cdi?: FundoRetornos }
     <section className="space-y-3">
       <div>
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
-          Retorno acumulado <span className="font-normal normal-case text-zinc-400">(verde = acima do CDI)</span>
+          Retorno acumulado <span className="font-normal normal-case text-zinc-500">(verde = acima do CDI)</span>
         </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {JANELAS.map((j) => {

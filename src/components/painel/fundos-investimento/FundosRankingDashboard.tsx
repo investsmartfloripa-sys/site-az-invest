@@ -62,7 +62,7 @@ function compareRows(a: FundoRow, b: FundoRow, key: SortKey, dir: SortDir, janel
 
 /** Cor do retorno relativa ao CDI: verde supera, vermelho fica abaixo. */
 function retClass(ret: number | null, cdi: number | null): string {
-  if (ret == null) return "text-zinc-400";
+  if (ret == null) return "text-zinc-500";
   if (cdi != null) {
     if (ret > cdi) return "text-[#16A34A]";
     if (ret < cdi) return "text-[#DC2626]";
@@ -100,7 +100,7 @@ function HighlightCard({ tag, fund, value }: { tag: string; fund: FundoRow | nul
           <p className="mt-2 text-lg font-semibold tabular-nums text-[#132960]">{value}</p>
         </>
       ) : (
-        <p className="mt-2 text-sm text-zinc-400">Sem dados.</p>
+        <p className="mt-2 text-sm text-zinc-500">Sem dados.</p>
       )}
     </article>
   );
@@ -205,7 +205,7 @@ function CategoriaTabela({
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={cols.length} className="px-2 py-6 text-center text-zinc-400">
+                <td colSpan={cols.length} className="px-2 py-6 text-center text-zinc-500">
                   Sem fundos nesta categoria.
                 </td>
               </tr>
@@ -216,7 +216,7 @@ function CategoriaTabela({
                   <tr key={f.id} className="border-b border-zinc-100 transition hover:bg-zinc-50/60">
                     <td className="px-2 py-2">
                       <span className="flex items-baseline gap-2">
-                        <span className="w-4 shrink-0 text-[10px] tabular-nums text-zinc-400">{i + 1}</span>
+                        <span className="w-4 shrink-0 text-[10px] tabular-nums text-zinc-500">{i + 1}</span>
                         <span className="min-w-0">
                           <Link
                             href={`/painel-economico/mercado/brasil/fundos-investimento/${fundoSlug(f)}`}
@@ -297,7 +297,7 @@ export function FundosRankingDashboard({ data }: { data: FundosRanking }) {
           aria-label="Janela do retorno"
           className="ml-auto inline-flex flex-wrap items-center gap-1"
         >
-          <span className="mr-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Janela</span>
+          <span className="mr-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Janela</span>
           <MethodInfo align="right" className="order-last ml-1 align-middle">
             Universo acompanhado pela AZ Invest (curado, não é toda a base CVM). Retorno,
             volatilidade, Sharpe e drawdown via <strong>Mais Retorno</strong> (Data API), dados

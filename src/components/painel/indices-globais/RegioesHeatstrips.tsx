@@ -71,7 +71,7 @@ function CelulaHeat({ periodo, valor }: { periodo: PanoramaPeriodKey; valor: num
   if (valor == null) {
     return (
       <td className="px-0.5 py-0.5">
-        <div className="flex h-7 min-w-[52px] items-center justify-center rounded-md bg-zinc-100 text-[10px] text-zinc-400">
+        <div className="flex h-7 min-w-[52px] items-center justify-center rounded-md bg-zinc-100 text-[10px] text-zinc-500">
           —
         </div>
       </td>

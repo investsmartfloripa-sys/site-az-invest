@@ -121,7 +121,7 @@ export function MassaFamiliasCard({
         footer="O pipeline de Emprego ainda não publicou a massa de rendimento (schema v2)."
         stampGiro={geradoEm}
       >
-        <p className="flex h-40 items-center justify-center text-sm text-zinc-400">Sem dados de massa de rendimento.</p>
+        <p className="flex h-40 items-center justify-center text-sm text-zinc-500">Sem dados de massa de rendimento.</p>
       </ChartCard>
     );
   }
@@ -135,7 +135,7 @@ export function MassaFamiliasCard({
       stampGiro={geradoEm}
       stampDado={maxIso || null}
     >
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Nível real (R$ bilhões por mês)</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Nível real (R$ bilhões por mês)</p>
       <div className="h-[230px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={rows} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
@@ -167,7 +167,7 @@ export function MassaFamiliasCard({
         </ResponsiveContainer>
       </div>
 
-      <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Variação real em 12 meses</p>
+      <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Variação real em 12 meses</p>
       <div className="h-[150px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={rowsVar} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>

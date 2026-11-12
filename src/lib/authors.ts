@@ -100,12 +100,19 @@ export function parseSpecialties(json: string | null | undefined): AuthorSpecial
   try {
     const data = JSON.parse(json);
     if (!Array.isArray(data)) return [];
+    // Cadastro antigo juntava várias especialidades num título só, separadas por ";"
+    // ("Economia comportamental;Psicologia financeira"): cada uma vira um item.
     return data
       .slice(0, MAX_SPECIALTIES)
-      .map((item) => ({
-        title: String(item?.title ?? "").trim(),
-        description: String(item?.description ?? "").trim(),
-      }))
+      .flatMap((item) => {
+        const description = String(item?.description ?? "").trim();
+        const titles = String(item?.title ?? "")
+          .split(";")
+          .map((t) => t.trim())
+          .filter(Boolean);
+        if (titles.length <= 1) return [{ title: titles[0] ?? "", description }];
+        return titles.map((title, i) => ({ title, description: i === 0 ? description : "" }));
+      })
       .filter((item) => item.title || item.description);
   } catch {
     return [];

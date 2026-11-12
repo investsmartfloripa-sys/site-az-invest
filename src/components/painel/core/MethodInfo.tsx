@@ -70,7 +70,7 @@ export function MethodInfo({
             align === "right" ? "right-0" : "left-0"
           }`}
         >
-          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
             {label}
           </span>
           {children}

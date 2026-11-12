@@ -13,7 +13,7 @@ export default function NotFound() {
     <div className="min-h-screen text-[#132960]">
       <Header />
       <main className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-4 py-20 text-center md:px-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#FF5713]">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#027DFC]">
           Erro 404
         </p>
         <h1 className="text-5xl font-semibold leading-tight text-[#027DFC] md:text-6xl">

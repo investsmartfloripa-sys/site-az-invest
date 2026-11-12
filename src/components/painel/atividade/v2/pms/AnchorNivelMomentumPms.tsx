@@ -58,7 +58,7 @@ export function AnchorNivelMomentumPms({
       stampDado={maxIso || null}
     >
       <div className="flex flex-col gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Nível de volume SA (fev/2020 = 100)</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Nível de volume SA (fev/2020 = 100)</p>
         <AzTimeSeriesChart
           series={[{ id: "nivel", label: "Volume de serviços (SA)", color: AZ_BRAND.azure, data: nivelPts }]}
           unit="index"
@@ -69,7 +69,7 @@ export function AnchorNivelMomentumPms({
           showLegend={false}
         />
 
-        <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+        <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
           Momentum — variação mensal SA, média móvel de 3 meses
         </p>
         <AzTimeSeriesChart

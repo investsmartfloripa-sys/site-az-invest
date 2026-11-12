@@ -28,7 +28,6 @@ const STATIC_PATHS: { path: string; changeFrequency: MetadataRoute.Sitemap[numbe
 
 /** Folhas públicas estáticas do painel econômico (sem redirects nem rotas dinâmicas). */
 const PAINEL_PATHS: string[] = [
-  "/painel-economico/economia/brasil/visao-geral",
   "/painel-economico/economia/brasil/termometro-ciclo",
   "/painel-economico/economia/brasil/atividade",
   "/painel-economico/economia/brasil/atividade/pib",

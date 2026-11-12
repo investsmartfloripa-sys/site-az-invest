@@ -124,7 +124,7 @@ export function AcoesValuation({ data }: Props) {
             <strong className="tabular-nums" style={{ color: z.color }}>{z.text}</strong>
           </span>
           {s ? (
-            <span className="text-zinc-400">
+            <span className="text-zinc-500">
               média {fmtNum(s.mean, 1)} · σ {fmtNum(s.sd, 1)}
             </span>
           ) : null}
@@ -132,7 +132,7 @@ export function AcoesValuation({ data }: Props) {
 
         <div style={{ height: 240 }} className="w-full">
           {plClipped.length < 2 ? (
-            <div className="flex h-full items-center justify-center text-xs italic text-zinc-400">
+            <div className="flex h-full items-center justify-center text-xs italic text-zinc-500">
               sem dados na janela
             </div>
           ) : (

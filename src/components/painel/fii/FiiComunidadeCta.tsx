@@ -121,7 +121,7 @@ export function FiiComunidadeCta() {
               >
                 {submitting ? "Enviando…" : "Quero receber"}
               </button>
-              <p className="text-[10px] text-zinc-400">
+              <p className="text-[10px] text-zinc-500">
                 Ao inscrever-se, você concorda em receber comunicações da AZ Invest. Pode cancelar
                 quando quiser.
               </p>

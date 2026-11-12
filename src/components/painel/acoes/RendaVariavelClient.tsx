@@ -180,7 +180,7 @@ export function RendaVariavelClient({ ibov, valuation, modelo, fluxo, screener, 
             <section className="rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Ibovespa</p>
               <p className="mt-2 text-sm text-zinc-500">
-                Pipeline em construção — dados serão preenchidos no próximo deploy.
+                Dados temporariamente indisponíveis. Tente de novo em alguns minutos.
               </p>
             </section>
           )}
@@ -204,8 +204,7 @@ export function RendaVariavelClient({ ibov, valuation, modelo, fluxo, screener, 
             <section className="rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Screener</p>
               <p className="mt-2 text-sm text-zinc-500">
-                Em construção — universo Ibovespa com P/L, P/VP, DY, ROE, valor de mercado e peso no
-                índice.
+                Dados temporariamente indisponíveis. Tente de novo em alguns minutos.
               </p>
             </section>
           )}
@@ -219,7 +218,7 @@ export function RendaVariavelClient({ ibov, valuation, modelo, fluxo, screener, 
           ) : (
             <section className="rounded-2xl border border-[#132960]/15 bg-white p-6 shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Valuation</p>
-              <p className="mt-2 text-sm text-zinc-500">Em construção.</p>
+              <p className="mt-2 text-sm text-zinc-500">Dados temporariamente indisponíveis. Tente de novo em alguns minutos.</p>
             </section>
           )}
           {fluxo && fluxo.status === "ok" ? (

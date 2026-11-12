@@ -50,12 +50,12 @@ function corGap(v: number): string {
 function Chip({ label, valor, hint, cor }: { label: string; valor: string; hint?: string; cor?: string }) {
   return (
     <div className="rounded-lg bg-zinc-50 px-3 py-1.5">
-      <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+      <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
         {cor ? <span className="inline-block h-2 w-2 rounded-full" style={{ background: cor }} aria-hidden /> : null}
         {label}
       </p>
       <p className="text-sm font-bold tabular-nums text-[#132960]">{valor}</p>
-      {hint ? <p className="text-[10px] text-zinc-400">{hint}</p> : null}
+      {hint ? <p className="text-[10px] text-zinc-500">{hint}</p> : null}
     </div>
   );
 }
@@ -97,7 +97,7 @@ export function RMenosGCard({
   if (serie.length === 0) {
     return (
       <ChartCard title="r − g e primário estabilizador (SP)" stampGiro={geradoEm}>
-        <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-64 items-center justify-center text-sm text-zinc-500">
           O pipeline ainda não publicou a série de sustentabilidade (schema v2). Rode o workflow fiscal-pipeline.yml.
         </p>
       </ChartCard>

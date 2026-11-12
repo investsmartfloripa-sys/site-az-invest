@@ -90,7 +90,7 @@ export function DivergingReturnBars({
   className = "",
 }: DivergingReturnBarsProps) {
   if (rows.length === 0) {
-    return <p className="py-6 text-center text-sm text-zinc-400">Sem dados para este período.</p>;
+    return <p className="py-6 text-center text-sm text-zinc-500">Sem dados para este período.</p>;
   }
 
   const fmtLabel = valueFmt ?? ((v: number) => fmtSignedPct(v, labelDec));

@@ -186,7 +186,7 @@ export function PolicyStepChart({
                 <td className="py-1.5 pr-2 font-semibold text-[#132960]">
                   {r.date === anchorISO ? "Vigente" : dateLabelBR(r.date)}
                 </td>
-                {hasD90 ? <td className={`${tdClass} text-zinc-400`}>{fmtRate(r.d90)}</td> : null}
+                {hasD90 ? <td className={`${tdClass} text-zinc-500`}>{fmtRate(r.d90)}</td> : null}
                 {hasD30 ? <td className={`${tdClass} text-zinc-500`}>{fmtRate(r.d30)}</td> : null}
                 <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(r.d0)}</td>
               </tr>

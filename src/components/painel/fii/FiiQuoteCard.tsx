@@ -135,7 +135,7 @@ export function FiiQuoteCard({ entry, generatedAt }: Props) {
             {price != null ? `R$ ${fmtNum(price, 2)}` : "—"}
           </p>
           <p
-            className={`mt-1 text-sm font-semibold ${dayChange == null ? "text-zinc-400" : ""}`}
+            className={`mt-1 text-sm font-semibold ${dayChange == null ? "text-zinc-500" : ""}`}
             style={dayChange != null ? { color: variationText(dayChange) } : undefined}
           >
             {dayChange != null ? `${fmtSignedPct(dayChange, 2)} hoje` : "—"}

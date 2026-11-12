@@ -127,7 +127,7 @@ export function FluxoInvestidores({ data }: Props) {
           Fluxo de investidores
         </p>
         <p className="mt-2 text-sm text-zinc-500">
-          Pipeline em construção — dados serão preenchidos no próximo deploy.
+          Dados temporariamente indisponíveis. Tente de novo em alguns minutos.
         </p>
       </section>
     );
@@ -303,7 +303,7 @@ export function FluxoInvestidores({ data }: Props) {
                 ))}
               </tbody>
             </table>
-            <p className="mt-1 text-[10px] text-zinc-400">
+            <p className="mt-1 text-[10px] text-zinc-500">
               Fluxo líquido do mês = variação do acumulado entre os fins de mês. A soma dos meses
               reconstrói o acumulado no ano do gráfico.
             </p>

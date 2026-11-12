@@ -113,7 +113,7 @@ export function ReceitaFamiliasCard({ data }: { data: FiscalClassicosData }) {
   if (!rf) {
     return (
       <ChartCard title="Receita por família (% PIB, 12m)" stampGiro={data.gerado_em} stampDado={null}>
-        <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-64 items-center justify-center text-sm text-zinc-500">
           O pipeline ainda não publicou as famílias de receita (schema v2). Rode o workflow fiscal-pipeline.yml.
         </p>
       </ChartCard>

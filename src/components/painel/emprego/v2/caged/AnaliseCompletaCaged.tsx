@@ -91,7 +91,7 @@ export function AnaliseCompletaCaged({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] text-xs">
           <thead>
-            <tr className="border-b border-zinc-200 text-left text-[10px] uppercase tracking-wider text-zinc-400">
+            <tr className="border-b border-zinc-200 text-left text-[10px] uppercase tracking-wider text-zinc-500">
               <th className="py-1.5 pr-2 font-semibold">Mês</th>
               <th className="py-1.5 pr-2 text-right font-semibold">Saldo (mil)</th>
               <th className="py-1.5 pr-2 text-right font-semibold">SA (mil)</th>

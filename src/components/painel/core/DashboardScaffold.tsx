@@ -91,7 +91,7 @@ export function DashboardScaffold({
         return (
           <section key={bloco.id ?? bloco.titulo} id={bloco.id} className="border-l-4 border-[#132960]/15 pl-4">
             {bloco.eyebrow ? (
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">{bloco.eyebrow}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{bloco.eyebrow}</p>
             ) : null}
             <h2 className="mt-0.5 text-lg font-bold text-[#132960]">
               <span className="mr-1 tabular-nums text-[#027DFC]">{numero} ·</span>

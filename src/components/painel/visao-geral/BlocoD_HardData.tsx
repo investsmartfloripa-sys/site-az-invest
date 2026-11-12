@@ -252,7 +252,7 @@ export function BlocoDHardData({
               <p className="mt-1 text-xs text-zinc-500">Coincidente oficial via SIDRA (base 2022=100). Barras = m/m dessaz; linha grossa = ritmo trimestral (mm3/mm3 t-3, derivado do índice SA); linha fina = a/a (contexto).</p>
             </div>
             <div className="text-right">
-              <div className={`text-3xl font-bold ${pimRitmoUlt === null ? "text-zinc-400" : pimRitmoUlt >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{pimRitmoUlt !== null ? formatPct(pimRitmoUlt) : "—"}</div>
+              <div className={`text-3xl font-bold ${pimRitmoUlt === null ? "text-zinc-500" : pimRitmoUlt >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{pimRitmoUlt !== null ? formatPct(pimRitmoUlt) : "—"}</div>
               <div className="text-[10px] text-zinc-500">ritmo trimestral (3m/3m dessaz), {formatMes(pimUlt?.mes)}</div>
               {pimYoy !== null && pimYoy !== undefined && (
                 <div className="text-[10px] text-zinc-500">a/a: {formatPct(pimYoy)}</div>

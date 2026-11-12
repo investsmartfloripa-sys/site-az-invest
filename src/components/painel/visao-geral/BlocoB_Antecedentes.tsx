@@ -25,7 +25,7 @@ function CardOecdCli({ data, codace }: { data: OecdCliData | null; codace: Codac
     return (
       <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-center">
         <h3 className="text-base font-semibold text-zinc-500">B1 — OECD CLI Brasil</h3>
-        <p className="mt-2 text-xs text-zinc-400">Aguardando pipeline.</p>
+        <p className="mt-2 text-xs text-zinc-500">Aguardando pipeline.</p>
       </div>
     );
   }
@@ -466,13 +466,6 @@ export function BlocoBAntecedentes({
 
       {/* FGV antecedentes (quando o scraper voltar) */}
       <CardFgvAntecedentes data={fgvAntecedentes} />
-
-      <div className="rounded-2xl border-2 border-dashed border-zinc-300 bg-zinc-50 p-4 text-center">
-        <p className="text-sm font-semibold text-zinc-700">Mais antecedentes em construção</p>
-        <p className="mt-1 text-xs text-zinc-500">
-          Próximos (via APIs BCB SGS/Olinda + IBGE SIDRA + IPEADATA): IACE FGV oficial, slope DI 10a-2a, Ibov real 6m, EMBI+ Brasil, Focus PIB 12m-ahead, IIE-Br FGV, spread crédito PJ, CAGED saldo MoM dessaz, inadimplência PJ.
-        </p>
-      </div>
 
       {/* Condições financeiras (custo do dinheiro e alavancagem — funcionalmente leading) */}
       <div className="space-y-5 border-t border-zinc-200 pt-5">

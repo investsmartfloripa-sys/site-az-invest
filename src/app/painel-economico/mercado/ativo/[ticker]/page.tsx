@@ -1,6 +1,7 @@
 // ISR: dados vêm do Blob com loaders guardados (degradam para null); ver plano AVALIACAO-GERAL §6.
 export const revalidate = 3600;
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -154,6 +155,13 @@ const STAT_GROUPS: Array<{ label: string; rows: Array<[string, keyof Fundamental
   },
 ];
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { ticker: rawSlug } = await params;
+  const catalog = (await getMarketCatalog())?.assets ?? [];
+  const asset = findCatalogAsset(catalog, rawSlug);
+  return { title: asset ? `${asset.name} (${asset.ticker}) — Mercado` : "Ativo — Mercado" };
+}
+
 export default async function AtivoPage({ params }: Props) {
   const { ticker: rawSlug } = await params;
 
@@ -233,12 +241,12 @@ export default async function AtivoPage({ params }: Props) {
     <div className="space-y-6">
       <header className="space-y-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
-          Ativos de mercado · {classLabel(asset.klass)}
+          Mercado · {classLabel(asset.klass)}
         </p>
         <div className="flex items-center gap-3">
           <CompanyLogo ticker={tickerBare} name={asset.name} src={logoUrl} size={44} />
           <div className="flex flex-wrap items-baseline gap-2">
-            <h2 className="text-3xl font-semibold text-[#132960]">{asset.name}</h2>
+            <h1 className="text-3xl font-semibold text-[#132960]">{asset.name}</h1>
             <code className="rounded bg-zinc-100 px-2 py-0.5 text-sm text-zinc-700">{asset.ticker}</code>
             <span className="rounded-full bg-[#ebf4ff] px-2 py-0.5 text-xs font-semibold text-[#027DFC]">
               {asset.sector}
@@ -265,7 +273,7 @@ export default async function AtivoPage({ params }: Props) {
               {last != null ? `${asset.currency === "BRL" ? "R$ " : "US$ "}${last.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` : "—"}
             </p>
             <p
-              className={`mt-1 text-sm font-semibold ${dayChange == null ? "text-zinc-400" : ""}`}
+              className={`mt-1 text-sm font-semibold ${dayChange == null ? "text-zinc-500" : ""}`}
               style={dayChange != null ? { color: variationText(dayChange) } : undefined}
             >
               {dayChange != null ? `${fmtSignedPct(dayChange, 2)} hoje` : "—"}
@@ -277,7 +285,7 @@ export default async function AtivoPage({ params }: Props) {
                   <div key={p} className="flex items-center justify-between rounded-lg border border-[#132960]/10 px-2 py-1.5">
                     <span className="text-zinc-500 uppercase">{p}</span>
                     <span
-                      className={`tabular-nums font-semibold ${val == null ? "text-zinc-400" : ""}`}
+                      className={`tabular-nums font-semibold ${val == null ? "text-zinc-500" : ""}`}
                       style={val != null ? { color: variationText(val) } : undefined}
                     >
                       {fmtSignedPct(val, 2)}
@@ -391,7 +399,7 @@ export default async function AtivoPage({ params }: Props) {
                     <p className="text-sm font-semibold text-[#132960]">{p.name}</p>
                     <p className="text-[10px] uppercase text-zinc-500">{p.ticker}</p>
                     <p
-                      className={`mt-1 text-xs font-semibold tabular-nums ${r == null ? "text-zinc-400" : ""}`}
+                      className={`mt-1 text-xs font-semibold tabular-nums ${r == null ? "text-zinc-500" : ""}`}
                       style={r != null ? { color: variationText(r) } : undefined}
                     >
                       1A: {fmtSignedPct(r, 2)}
@@ -409,7 +417,7 @@ export default async function AtivoPage({ params }: Props) {
           href="/painel-economico/mercado"
           className="rounded-lg border border-[#132960]/20 px-3 py-1.5 font-semibold text-[#132960] hover:border-[#027DFC] hover:text-[#027DFC]"
         >
-          ← Voltar para Ativos de mercado
+          ← Voltar para Mercado
         </Link>
         <Link
           href="/painel-economico/mercado/historico"

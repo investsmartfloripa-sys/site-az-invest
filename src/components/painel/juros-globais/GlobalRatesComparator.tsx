@@ -229,7 +229,7 @@ export function GlobalRatesComparator() {
       </div>
 
       {loading && !resp ? (
-        <div className="flex h-[360px] items-center justify-center text-sm text-zinc-400">
+        <div className="flex h-[360px] items-center justify-center text-sm text-zinc-500">
           Carregando curvas soberanas…
         </div>
       ) : failed || availableCountries.length === 0 ? (
@@ -240,7 +240,7 @@ export function GlobalRatesComparator() {
         <div className="space-y-4 p-4 md:p-5">
           {/* Seleção de países (chips com bandeira) */}
           <div className="space-y-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Países</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Países</span>
             <div className="flex flex-wrap items-center gap-2">
               {availableCountries.map((c) => {
                 const active = selected.includes(c.id);
@@ -274,7 +274,7 @@ export function GlobalRatesComparator() {
 
           {/* Seleção de prazos — regra: vários países ⇒ 1 prazo; 1 país ⇒ vários prazos */}
           <div className="space-y-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
               {single ? "Prazos (vários — um país selecionado)" : "Prazo (um — vários países)"}
             </span>
             <div className="flex flex-wrap items-center gap-2">

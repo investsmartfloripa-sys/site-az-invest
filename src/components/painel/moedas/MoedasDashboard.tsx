@@ -297,8 +297,7 @@ export function MoedasDashboard({ movers, history }: Props) {
           {pending.length > 0 ? (
             <>
               {" "}
-              Histórico em construção (entram no próximo giro do market-data):{" "}
-              {pending.map((p) => p.def.name).join(", ")}.
+              Ainda sem histórico suficiente: {pending.map((p) => p.def.name).join(", ")}.
             </>
           ) : null}
         </>
@@ -512,8 +511,10 @@ export function MoedasDashboard({ movers, history }: Props) {
       </div>
       <p className="mt-3 text-[11px] text-zinc-500">
         Retornos da MOEDA contra o USD (positivo = moeda valorizou); a cotação segue a convenção do
-        par. Linhas com &quot;—&quot; em todas as janelas são pares recém-adicionados ao catálogo —
-        histórico em construção, série completa no próximo giro do market-data.
+        par.
+        {rows.some((r) => r.source == null)
+          ? " Linhas com “—” em todas as janelas são pares recém-adicionados, ainda sem histórico suficiente."
+          : null}
       </p>
     </details>
   );
@@ -606,14 +607,14 @@ function SectionRows({ group, rows }: { group: "majors" | "emergentes"; rows: Fx
           >
             <td className="py-1.5 pr-2 text-[#132960]">
               {r.def.name}
-              <span className="ml-1 text-[10px] font-normal text-zinc-400">{r.def.code}</span>
+              <span className="ml-1 text-[10px] font-normal text-zinc-500">{r.def.code}</span>
             </td>
             <td className="py-1.5 pr-2 text-xs text-zinc-500">{r.def.pair}</td>
             <td className="py-1.5 pr-2 text-right tabular-nums text-[#132960]">
               {fmtQuote(r.quote)}
               {r.source == null ? (
                 <span className="ml-1 rounded bg-amber-50 px-1 py-0.5 text-[9px] font-semibold text-amber-700">
-                  histórico em construção
+                  sem histórico
                 </span>
               ) : null}
             </td>

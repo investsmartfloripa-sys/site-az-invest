@@ -100,8 +100,8 @@ export function PorQueSubiuCard({ anos, geradoEm }: { anos: DecomposicaoDlspAno[
 
   if (rows.length === 0) {
     return (
-      <ChartCard title="Decomposição anual da ΔDLSP (p.p. do PIB)" stampGiro={geradoEm}>
-        <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
+      <ChartCard title="Decomposição anual da variação da DLSP (p.p. do PIB)" stampGiro={geradoEm}>
+        <p className="flex h-64 items-center justify-center text-sm text-zinc-500">
           O pipeline ainda não publicou a decomposição anual (schema v2). Rode o workflow fiscal-pipeline.yml.
         </p>
       </ChartCard>
@@ -112,7 +112,7 @@ export function PorQueSubiuCard({ anos, geradoEm }: { anos: DecomposicaoDlspAno[
 
   return (
     <ChartCard
-      title="Decomposição anual da ΔDLSP (p.p. do PIB)"
+      title="Decomposição anual da variação da DLSP (p.p. do PIB)"
       subtitle={`Variação anual da DLSP/PIB decomposta em pontos percentuais: barra acima de zero empurra a dívida p/ cima, abaixo puxa p/ baixo. O losango é o Δ total do ano (em ${ult.ano}: ${fmtSignedNum(ult.delta, 1)} p.p.).`}
       toolbar={
         fatorDominante ? (

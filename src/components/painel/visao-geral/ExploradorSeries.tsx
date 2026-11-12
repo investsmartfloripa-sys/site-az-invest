@@ -117,7 +117,7 @@ export function ExploradorSeries({
 
   if (!seriesFinal.length || !selecionada) {
     return (
-      <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-4 text-center text-xs text-zinc-400">
+      <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-4 text-center text-xs text-zinc-500">
         Nenhuma série disponível ainda.
       </div>
     );
@@ -256,7 +256,7 @@ export function ExploradorSeries({
               </div>
               <div className="mt-1 flex items-baseline justify-between gap-1">
                 <span className={`text-sm font-bold ${valorCor}`}>{valorTxt}</span>
-                {s.mesAtual && <span className="text-[9px] text-zinc-400">{formatMes(s.mesAtual)}</span>}
+                {s.mesAtual && <span className="text-[9px] text-zinc-500">{formatMes(s.mesAtual)}</span>}
               </div>
             </button>
           );

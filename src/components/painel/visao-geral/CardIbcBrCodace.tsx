@@ -54,7 +54,7 @@ export function CardIbcBrCodace({
     return (
       <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-center">
         <h3 className="text-base font-semibold text-zinc-500">IBC-Br com cronologia CODACE</h3>
-        <p className="mt-2 text-xs text-zinc-400">Pipeline rodando — dados aparecerão na próxima atualização.</p>
+        <p className="mt-2 text-xs text-zinc-500">Pipeline rodando — dados aparecerão na próxima atualização.</p>
       </div>
     );
   }
@@ -123,7 +123,7 @@ export function CardIbcBrCodace({
           <Line type="monotone" dataKey="indice_sa" stroke="#132960" dot={false} strokeWidth={2} name="IBC-Br SA" />
         </ComposedChart>
       </ResponsiveContainer>
-      <p className="mt-1 text-[10px] text-zinc-400">
+      <p className="mt-1 text-[10px] text-zinc-500">
         Hachura pós-jun/2020 = sem datação oficial CODACE; ausência de faixas após essa data não significa ausência de ciclo.
       </p>
       <p className="mt-2"><DataStamp giro={ibcbr?.gerado_em} dado={ultimoMes} /></p>

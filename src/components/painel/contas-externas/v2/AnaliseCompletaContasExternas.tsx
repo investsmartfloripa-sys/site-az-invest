@@ -109,14 +109,14 @@ export function AnaliseCompletaContasExternas({ data }: { data: ContasExternasDa
       stampDado={data.ultima_referencia_mensal}
     >
       {tabela.length === 0 ? (
-        <p className="flex h-40 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-40 items-center justify-center text-sm text-zinc-500">
           O pipeline ainda não publicou as séries 12m (schema v2).
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-xs">
             <thead>
-              <tr className="border-b border-zinc-200 text-left text-[10px] uppercase tracking-wider text-zinc-400">
+              <tr className="border-b border-zinc-200 text-left text-[10px] uppercase tracking-wider text-zinc-500">
                 <th className="py-1.5 pr-2 font-semibold">Mês</th>
                 <th className="py-1.5 pr-2 text-right font-semibold">TC 12m</th>
                 <th className="py-1.5 pr-2 text-right font-semibold">Bens</th>

@@ -161,7 +161,7 @@ export function PnadDashboard({ data }: { data: PnadData }) {
       <footer className="text-xs text-zinc-500 border-t pt-3">
         {data.metadata.fonte}
         <br />
-        <span className="text-zinc-400">Gerado em {data.gerado_em.slice(0, 19).replace("T", " ")} UTC</span>
+        <span className="text-zinc-500">Gerado em {data.gerado_em.slice(0, 19).replace("T", " ")} UTC</span>
       </footer>
     </div>
   );

@@ -7,6 +7,8 @@ export type CategoryDef = {
   description: string;
   frequency: "tempo-real" | "diario" | "semanal" | "mensal";
   sourceHint: string;
+  /** Aba ainda sem conteúdo: fora do menu, do índice e do mapa do site; o endereço redireciona. */
+  emConstrucao?: true;
 };
 
 export type ScopeDef = {
@@ -32,7 +34,7 @@ const mercadoBrasil: CategoryDef[] = [
   },
   {
     slug: "fundos-investimento",
-    label: "Fundos de Investimento",
+    label: "Fundos de investimento",
     description:
       "Rankings de fundos por categoria (multimercado, ações, renda fixa): retorno, Sharpe e volatilidade contra o CDI. Fonte: Mais Retorno (D-1).",
     frequency: "semanal",
@@ -47,7 +49,7 @@ const mercadoBrasil: CategoryDef[] = [
   },
   {
     slug: "fundos-imobiliarios",
-    label: "Fundos Imobiliários",
+    label: "Fundos imobiliários",
     description: "Panorama do IFIX, retornos vs benchmarks e screener completo dos FIIs listados.",
     frequency: "diario",
     sourceHint: "B3, CVM Dados Abertos, yfinance",
@@ -93,14 +95,15 @@ const mercadoGlobal: CategoryDef[] = [
 const economiaBrasil: CategoryDef[] = [
   {
     slug: "visao-geral",
-    label: "Visão Geral",
-    description: "Síntese executiva consolidada (em construção).",
+    label: "Visão geral",
+    description: "Síntese executiva consolidada.",
     frequency: "diario",
-    sourceHint: "Em construção",
+    sourceHint: "BCB, IBGE",
+    emConstrucao: true,
   },
   {
     slug: "termometro-ciclo",
-    label: "Termômetro de Ciclo",
+    label: "Termômetro de ciclo",
     description: "Termômetro do ciclo econômico brasileiro com antecedentes e probabilidade de recessão.",
     frequency: "diario",
     sourceHint: "BCB, IBGE, OECD, FGV-IBRE, ANFAVEA, EPE, ANP",
@@ -139,6 +142,7 @@ const economiaBrasil: CategoryDef[] = [
     description: "Selic corrente, Selic implícita e comunicação do BC.",
     frequency: "diario",
     sourceHint: "BCB, B3",
+    emConstrucao: true,
   },
   {
     slug: "contas-externas",
@@ -163,6 +167,7 @@ const economiaGlobal: CategoryDef[] = [
     description: "Crescimento global, PMIs e ciclo econômico.",
     frequency: "mensal",
     sourceHint: "FRED, OECD, bancos centrais",
+    emConstrucao: true,
   },
   {
     slug: "inflacao",
@@ -170,20 +175,22 @@ const economiaGlobal: CategoryDef[] = [
     description: "Inflação ao consumidor e pressão de custos internacional.",
     frequency: "mensal",
     sourceHint: "FRED, BLS, Eurostat",
+    emConstrucao: true,
   },
   {
     slug: "bancos-centrais",
     label: "Bancos centrais",
-    description: "Fed, BCE e principais guias de juros globais.",
+    description: "Fed, BCE e os principais juros do mundo.",
     frequency: "diario",
     sourceHint: "Fed, BCE, BoE, BoJ",
+    emConstrucao: true,
   },
 ];
 
 export const painelTrails: TrailDef[] = [
   {
     slug: "mercado",
-    label: "Ativos de mercado",
+    label: "Mercado",
     description: "Leitura de preços, retornos e risco em ativos domésticos e globais.",
     scopes: [
       { slug: "brasil", label: "Brasil", categories: mercadoBrasil },
@@ -192,7 +199,7 @@ export const painelTrails: TrailDef[] = [
   },
   {
     slug: "economia",
-    label: "Indicadores macroeconômicos",
+    label: "Economia",
     description: "Contexto de ciclo, inflação e política econômica para decisão.",
     scopes: [
       { slug: "brasil", label: "Brasil", categories: economiaBrasil },
@@ -200,6 +207,16 @@ export const painelTrails: TrailDef[] = [
     ],
   },
 ];
+
+/** Categorias que aparecem no menu e nos índices (as em construção ficam de fora). */
+export function categoriasVisiveis(scope: ScopeDef): CategoryDef[] {
+  return scope.categories.filter((category) => !category.emConstrucao);
+}
+
+/** Escopos com pelo menos uma categoria visível. */
+export function escoposVisiveis(trail: TrailDef): ScopeDef[] {
+  return trail.scopes.filter((scope) => categoriasVisiveis(scope).length > 0);
+}
 
 export function getTrail(slug: string): TrailDef | null {
   return painelTrails.find((trail) => trail.slug === slug) ?? null;

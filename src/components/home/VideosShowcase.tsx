@@ -106,7 +106,7 @@ export function VideosShowcase({ videos }: { videos: YoutubeVideo[] }) {
               <span className="min-w-0 flex-1">
                 {isActive ? (
                   <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-wider text-[#027DFC]">
-                    Assistindo
+                    {playing ? "Assistindo" : "Em destaque"}
                   </span>
                 ) : null}
                 <span className="line-clamp-2 block text-sm font-medium text-[#132960]">

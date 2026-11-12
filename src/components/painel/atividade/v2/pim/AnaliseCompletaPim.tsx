@@ -94,7 +94,7 @@ export function AnaliseCompletaPim({ pim, geradoEm }: { pim: AtividadePimData; g
       <div className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[560px] text-xs">
           <thead>
-            <tr className="border-b border-zinc-200 text-left text-[10px] uppercase tracking-wider text-zinc-400">
+            <tr className="border-b border-zinc-200 text-left text-[10px] uppercase tracking-wider text-zinc-500">
               <th className="py-1.5 pr-2 font-semibold">Mês</th>
               <th className="py-1.5 pr-2 text-right font-semibold">MoM SA</th>
               <th className="py-1.5 pr-2 text-right font-semibold">YoY</th>

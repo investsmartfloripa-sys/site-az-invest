@@ -47,7 +47,7 @@ export function ArcaboucoCard({ data }: { data: FiscalClassicosData }) {
   if (!arc) {
     return (
       <ChartCard title="Crescimento real da despesa × corredor LC 200" stampGiro={data.gerado_em} stampDado={null}>
-        <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-64 items-center justify-center text-sm text-zinc-500">
           O pipeline ainda não publicou as séries reais do arcabouço (schema v2). Rode o workflow fiscal-pipeline.yml.
         </p>
       </ChartCard>

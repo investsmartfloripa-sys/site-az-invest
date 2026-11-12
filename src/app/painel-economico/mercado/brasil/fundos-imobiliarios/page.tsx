@@ -16,7 +16,7 @@ import {
 } from "@/lib/painel-fii";
 
 export const metadata = {
-  title: "Fundos Imobiliários — Ativos de mercado",
+  title: "Fundos imobiliários — Mercado",
   description:
     "Panorama dos FIIs: IFIX vs índice de FIIs de tijolo, CDI, IBOV e IMA-B, comparador de FIIs em retorno total, simulador de carteira, screener com DY, P/VP, PL e liquidez e, na aba Analítico, o índice de tijolo contra o nível que os juros justificam.",
 };
@@ -36,9 +36,9 @@ export default async function FundosImobiliariosPage() {
     <div className="space-y-6">
       <header className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
-          Ativos de mercado · Brasil · Fundos Imobiliários
+          Mercado · Brasil · Fundos imobiliários
         </p>
-        <h2 className="text-2xl font-semibold text-[#132960]">Panorama FIIs</h2>
+        <h1 className="text-2xl font-semibold text-[#132960]">Panorama FIIs</h1>
         <p className="max-w-3xl text-sm text-zinc-600">
           Na <strong>Visão geral</strong>, o IFIX contra o nosso índice de FIIs de tijolo e o universo de
           FIIs listados na B3: clique nos FIIs do screener para compará-los no gráfico (retorno total, com

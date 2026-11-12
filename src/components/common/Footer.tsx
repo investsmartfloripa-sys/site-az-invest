@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { navItems } from "@/data/home";
+import { semPrefetch } from "@/lib/prefetch";
 import {
   InstagramIcon,
   YoutubeIcon,
@@ -53,8 +54,8 @@ export function Footer() {
   return (
     <footer className="bg-[#132960] text-[#E8E7E5]">
       <div className="mx-auto grid w-full max-w-[90rem] grid-cols-1 gap-8 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-3 lg:gap-10 lg:px-8 lg:py-14">
-        <div className="text-center sm:col-span-2 sm:text-left lg:col-span-1">
-          <div className="mx-auto w-full max-w-[16rem] sm:mx-0">
+        <div className="sm:col-span-2 lg:col-span-1">
+          <div className="w-full max-w-[16rem]">
             <Link href="/" className="block w-full">
               <Image
                 src="/logo-az-branco.png"
@@ -67,7 +68,7 @@ export function Footer() {
             <p className="mt-4 text-sm leading-relaxed text-[#E8E7E5]/70">
               Economia, mercado e educação financeira para investir com clareza.
             </p>
-            <div className="mt-4 flex justify-center gap-3 sm:justify-start">
+            <div className="mt-4 flex gap-3">
               {activeSocials.map(({ label, href, Icon }) => (
                 <a
                   key={label}
@@ -88,7 +89,7 @@ export function Footer() {
           <ul className="mt-4 space-y-2 text-sm text-[#E8E7E5]/70">
             {navItems.map((item) => (
               <li key={item.href}>
-                <Link href={item.href} className="transition-colors hover:text-[#027DFC]">
+                <Link href={item.href} prefetch={semPrefetch(item.href)} className="transition-colors hover:text-[#027DFC]">
                   {item.label}
                 </Link>
               </li>
@@ -98,7 +99,7 @@ export function Footer() {
         <div className="border-t border-white/10 pt-5 sm:border-0 sm:pt-0">
           <h2 className="text-xl text-white">Entre em contato</h2>
           <p className="mt-4 text-sm text-[#E8E7E5]/70">
-            <strong className="font-semibold text-white">Email:</strong>{" "}
+            <strong className="font-semibold text-white">E-mail:</strong>{" "}
             <a href="mailto:azinvest.equipe@gmail.com" className="hover:underline">
               azinvest.equipe@gmail.com
             </a>
@@ -124,11 +125,14 @@ export function Footer() {
           <p className="text-xs leading-relaxed text-[#E8E7E5]/60">
             A AZ Invest é uma plataforma de conteúdo sobre economia, mercado e educação financeira — análises, simuladores e um painel econômico atualizado para você investir com mais clareza.
           </p>
+          <p className="mt-2 text-xs leading-relaxed text-[#E8E7E5]/60">
+            O conteúdo é educativo e não constitui oferta nem recomendação de investimento. Rentabilidade passada não garante rentabilidade futura.
+          </p>
         </div>
       </div>
       {/* Copyright sobre o navy do próprio rodapé: #E8E7E5/70 dá ~7:1, o azure com branco reprovava no AA */}
       <div className="border-t border-white/10 px-3 py-2 text-center text-xs leading-relaxed text-[#E8E7E5]/70">
-        {new Date().getFullYear()} Todos os direitos reservados para INVESTIMENTOS DE A A Z
+        © {new Date().getFullYear()} Investimentos de A{" "}a{" "}Z. Todos os direitos reservados.
       </div>
     </footer>
   );

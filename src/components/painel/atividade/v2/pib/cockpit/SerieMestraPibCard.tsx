@@ -214,7 +214,7 @@ export function SerieMestraPibCard({
         <div className="mt-2 overflow-x-auto">
           <table className="w-full border-collapse text-xs tabular-nums">
             <thead>
-              <tr className="border-b border-zinc-200 text-left text-[10px] uppercase tracking-wider text-zinc-400">
+              <tr className="border-b border-zinc-200 text-left text-[10px] uppercase tracking-wider text-zinc-500">
                 <th className="py-1.5 pr-2 font-semibold">Trimestre</th>
                 {COLUNAS_TABELA.map((c) => (
                   <th key={c.key} className="py-1.5 pl-2 text-right font-semibold">

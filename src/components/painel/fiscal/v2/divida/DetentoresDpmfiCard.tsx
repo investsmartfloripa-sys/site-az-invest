@@ -87,7 +87,7 @@ export function DetentoresDpmfiCard({
   if (todasRows.length === 0) {
     return (
       <ChartCard title="Detentores da DPMFi (% do estoque em mercado)" stampGiro={geradoEm}>
-        <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-64 items-center justify-center text-sm text-zinc-500">
           O pipeline ainda não publicou os detentores da DPMFi (build_dpf_rmd.py).
         </p>
       </ChartCard>
@@ -128,7 +128,7 @@ export function DetentoresDpmfiCard({
         {DETENTORES.map((d) => (
           <div key={d.key} className="flex items-center gap-1.5 rounded-lg bg-zinc-50 px-2.5 py-1.5">
             <span className="inline-block h-2 w-2 rounded-full" style={{ background: d.cor }} aria-hidden />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">{d.label}</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{d.label}</span>
             <span className="text-sm font-bold tabular-nums text-[#132960]">{fmtPct(atual[d.key], 1)}</span>
           </div>
         ))}

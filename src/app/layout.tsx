@@ -3,6 +3,7 @@ import { Michroma, Raleway } from "next/font/google";
 import "./globals.css";
 import { getSiteUrl } from "@/lib/site-url";
 import { AnalyticsBeacon } from "@/components/analytics/AnalyticsBeacon";
+import { ScrollHints } from "@/components/common/ScrollHints";
 
 const headingFont = Michroma({
   variable: "--font-heading",
@@ -72,6 +73,7 @@ export default function RootLayout({
         </a>
         <AnalyticsBeacon />
         {children}
+        <ScrollHints />
       </body>
     </html>
   );

@@ -118,28 +118,28 @@ export function EsperadoRealizadoCard({
         <div className="rounded-lg border border-zinc-100 bg-[#f8fafc] px-3 py-2.5">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">O mercado esperava</p>
           <p className="mt-0.5 text-xl font-bold tabular-nums text-zinc-700">{fmtSignedPct(esperado, 2)}</p>
-          <p className="text-[10.5px] text-zinc-400">
+          <p className="text-[10.5px] text-zinc-500">
             mediana do Focus{vespera?.data_pesquisa ? ` de ${fmtDataBR(vespera.data_pesquisa)}` : ""}
           </p>
         </div>
         <div className="rounded-lg border border-[#132960]/15 bg-white px-3 py-2.5">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Deu</p>
           <p className="mt-0.5 text-xl font-bold tabular-nums text-[#132960]">{fmtSignedPct(realizadoMes, 2)}</p>
-          <p className="text-[10.5px] text-zinc-400">{indicador} de {fmtMesLongo(focusMensal.mes_referencia)} · IBGE</p>
+          <p className="text-[10.5px] text-zinc-500">{indicador} de {fmtMesLongo(focusMensal.mes_referencia)} · IBGE</p>
         </div>
         <div className="rounded-lg border border-zinc-100 bg-[#f8fafc] px-3 py-2.5">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Surpresa</p>
           <p className="mt-0.5 text-xl font-bold tabular-nums" style={{ color: veredito?.cor }}>
             {surpresa != null ? `${fmtSignedNum(surpresa, 2)} p.p.` : "—"}
           </p>
-          <p className="text-[10.5px] text-zinc-400">{veredito?.texto ?? "sem projeção da véspera"}</p>
+          <p className="text-[10.5px] text-zinc-500">{veredito?.texto ?? "sem projeção da véspera"}</p>
         </div>
       </div>
 
       {/* Histórico: acertou ou errou, mês a mês */}
       {rows.length > 0 ? (
         <>
-          <p className="mb-1 mt-4 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+          <p className="mb-1 mt-4 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
             Histórico da surpresa — quanto o consenso errou, mês a mês
           </p>
           <div className="h-[220px] w-full">
@@ -188,7 +188,7 @@ export function EsperadoRealizadoCard({
       {/* O que o mercado espera adiante */}
       {focusMensal.proximos.length > 0 ? (
         <>
-          <p className="mb-1 mt-4 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+          <p className="mb-1 mt-4 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
             O que o mercado espera dos próximos meses
           </p>
           <div className="overflow-x-auto rounded-lg border border-zinc-100">

@@ -94,7 +94,7 @@ export function TransferenciasReaisCard({
         footer="Ipeadata/MDS. As séries deflacionadas (v2) ainda não foram publicadas pelo builder — rode o workflow familias-pipeline.yml."
         stampGiro={geradoEm}
       >
-        <p className="flex h-40 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-40 items-center justify-center text-sm text-zinc-500">
           Sem valores reais (deflacionados) disponíveis neste JSON.
         </p>
       </ChartCard>
@@ -182,7 +182,7 @@ export function TransferenciasReaisCard({
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <p className="mt-1 text-[10px] text-zinc-400">Eixo Y em R$ bilhões/mês constantes.</p>
+      <p className="mt-1 text-[10px] text-zinc-500">Eixo Y em R$ bilhões/mês constantes.</p>
     </ChartCard>
   );
 }

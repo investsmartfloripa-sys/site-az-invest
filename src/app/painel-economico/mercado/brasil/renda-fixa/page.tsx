@@ -6,7 +6,7 @@ import { MethodInfo } from "@/components/painel/core/MethodInfo";
 import { getRendaFixaData } from "@/lib/painel-renda-fixa-data";
 
 export const metadata = {
-  title: "Renda Fixa — Ativos de mercado",
+  title: "Renda fixa — Mercado",
   description:
     "Curvas históricas de juros dos títulos públicos (Pré e IPCA+) por data de vencimento, e spreads de crédito privado via ANBIMA.",
 };
@@ -21,20 +21,20 @@ export default async function RendaFixaPage() {
     <div className="space-y-6">
       <header className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
-          Ativos de mercado · Brasil · Renda fixa
+          Mercado · Brasil · Renda fixa
         </p>
-        <h2 className="text-2xl font-semibold text-[#132960]">
+        <h1 className="text-2xl font-semibold text-[#132960]">
           Curva histórica e crédito privado
           <MethodInfo className="ml-1.5 align-middle">
             Fonte: <strong>ANBIMA mercado secundário</strong>, atualizada após o fechamento de
             cada pregão (D-1).
           </MethodInfo>
-        </h2>
+        </h1>
         <p className="max-w-3xl text-sm text-zinc-600">
           Acompanhe a evolução da taxa indicativa de cada vencimento dos títulos públicos federais
-          (Prefixados e IPCA+) e o spread médio de crédito privado nas debêntures. Ver também a{" "}
-          <Link href="/painel-economico/economia/brasil/politica-monetaria" className="underline hover:text-[#027DFC]">
-            trilha de política monetária
+          (Prefixados e IPCA+) e o spread médio de crédito privado nas debêntures. Ver também as{" "}
+          <Link href="/painel-economico/panorama" className="underline hover:text-[#027DFC]">
+            curvas DI e a Selic implícita no Panorama
           </Link>
           .
         </p>

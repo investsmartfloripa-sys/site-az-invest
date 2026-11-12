@@ -90,7 +90,7 @@ export function KPICard({
   const isGood = invertColor ? !positive : positive;
   const deltaColor =
     delta == null
-      ? "text-zinc-400"
+      ? "text-zinc-500"
       : isGood
         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
         : "bg-red-50 text-red-700 border-red-200";
@@ -377,13 +377,13 @@ export function RankingTable({
         return `${sign}${r.delta.toFixed(1)}%`;
       })();
       const deltaColor =
-        r.delta == null ? "text-zinc-400" : r.delta >= 0 ? "text-emerald-700" : "text-red-700";
+        r.delta == null ? "text-zinc-500" : r.delta >= 0 ? "text-emerald-700" : "text-red-700";
       return (
         <tr key={`${kind}-${i}-${r.label}`} className="border-b border-zinc-100 last:border-0">
           <td className="py-1 pr-2 text-zinc-700">
             {accent && <span className="mr-1.5 inline-block h-2 w-2 rounded-full" style={{ background: accent }} />}
             {r.label}
-            {r.extra && <span className="ml-1 text-[10px] text-zinc-400">{r.extra}</span>}
+            {r.extra && <span className="ml-1 text-[10px] text-zinc-500">{r.extra}</span>}
           </td>
           <td className="py-1 px-2 text-right font-medium tabular-nums text-zinc-900">{valueFmt(r.value)}</td>
           <td className={`py-1 pl-2 text-right tabular-nums ${deltaColor}`}>{deltaText ?? ""}</td>
@@ -407,7 +407,7 @@ export function RankingTable({
           {bottom.length > 0 && (
             <>
               <tr>
-                <td colSpan={3} className="pt-2 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                <td colSpan={3} className="pt-2 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
                   Piores
                 </td>
               </tr>
@@ -604,7 +604,7 @@ export function Chip({
     <button
       onClick={onClick}
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition ${
-        ativo ? "border-zinc-900 bg-white text-zinc-900" : "border-zinc-200 bg-zinc-50 text-zinc-400"
+        ativo ? "border-zinc-900 bg-white text-zinc-900" : "border-zinc-200 bg-zinc-50 text-zinc-500"
       }`}
     >
       <span className="h-2.5 w-2.5 rounded-full" style={{ background: ativo ? color : "#d1d5db" }} />

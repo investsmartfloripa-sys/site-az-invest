@@ -70,12 +70,12 @@ export function QualidadeCard({
       stampDado={carteiraSerie.length > 0 ? trimIsoCentral(carteiraSerie[carteiraSerie.length - 1].trim) : null}
     >
       {comPoints.length === 0 && semPoints.length === 0 ? (
-        <p className="flex h-60 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-60 items-center justify-center text-sm text-zinc-500">
           O pipeline ainda não publicou a abertura com/sem carteira (schema v2). Rode o workflow emprego-pipeline.
         </p>
       ) : (
         <div className="flex flex-col gap-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
             Ocupados no setor privado (mil pessoas)
           </p>
           <AzTimeSeriesChart
@@ -93,7 +93,7 @@ export function QualidadeCard({
 
           {contaPoints.length > 0 ? (
             <>
-              <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+              <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
                 Conta própria (% dos ocupados)
               </p>
               <AzTimeSeriesChart

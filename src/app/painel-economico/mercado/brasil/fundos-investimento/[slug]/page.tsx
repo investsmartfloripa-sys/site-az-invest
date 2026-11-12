@@ -18,7 +18,7 @@ export const revalidate = 3600;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const detail = await getFundoDetail(slug);
-  if (!detail) return { title: "Fundo — Ativos de mercado" };
+  if (!detail) return { title: "Fundo — Mercado" };
   return {
     title: `${detail.fund.nome} — Fundo de Investimento`,
     description: `Cota histórica vs CDI, retorno, Sharpe, volatilidade e drawdown do fundo ${detail.fund.nome} (${detail.fund.gestora ?? ""}). Fonte: Mais Retorno (D-1).`,
@@ -46,10 +46,10 @@ export default async function FundoDetailPage({ params }: Props) {
     <div className="space-y-6">
       <header className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
-          Ativos de mercado · Brasil · Fundos de Investimento · {categoria.label}
+          Mercado · Brasil · Fundos de investimento · {categoria.label}
         </p>
         <div className="flex flex-wrap items-baseline gap-3">
-          <h2 className="text-2xl font-semibold text-[#132960]">{fund.nome}</h2>
+          <h1 className="text-2xl font-semibold text-[#132960]">{fund.nome}</h1>
           <span className="text-sm text-zinc-500">{fund.gestora ?? ""}</span>
         </div>
         <Link
@@ -100,7 +100,7 @@ export default async function FundoDetailPage({ params }: Props) {
             atual o histórico vai até ~12 meses.
           </li>
         </ul>
-        <p className="mt-2 text-[10px] text-zinc-400">Conteúdo informativo. Não é recomendação de investimento.</p>
+        <p className="mt-2 text-[10px] text-zinc-500">Conteúdo informativo. Não é recomendação de investimento.</p>
       </section>
     </div>
   );

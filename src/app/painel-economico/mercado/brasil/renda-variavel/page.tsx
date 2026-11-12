@@ -12,7 +12,7 @@ import {
 } from "@/lib/painel-acoes";
 
 export const metadata = {
-  title: "Ações Brasil (Ibovespa) — Ativos de mercado",
+  title: "Ações Brasil (Ibovespa) — Mercado",
   description:
     "Panorama do Ibovespa: índice vs CDI/S&P 500/dólar, P/L do Ibovespa contra o P/L justificado pelos juros reais, prêmio de risco vs NTN-B e screener das ações do índice.",
 };
@@ -35,9 +35,9 @@ export default async function RendaVariavelPage() {
     <div className="space-y-6">
       <header className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
-          Ativos de mercado · Brasil · Renda variável
+          Mercado · Brasil · Renda variável
         </p>
-        <h2 className="text-2xl font-semibold text-[#132960]">Ações Brasil — Ibovespa</h2>
+        <h1 className="text-2xl font-semibold text-[#132960]">Ações Brasil — Ibovespa</h1>
         <p className="max-w-3xl text-sm text-zinc-600">
           Acompanhamento do Ibovespa e do valuation da bolsa brasileira. Na{" "}
           <strong>Visão geral</strong>, o índice comparado a CDI, S&amp;P 500 e dólar, e um screener

@@ -88,7 +88,7 @@ export function DistribuicaoBar({ indicadores }: { indicadores: Record<string, I
               {NIVEL_RISCO[n].label}: <strong>{counts[n]}</strong>
             </span>
           ))}
-        <span className="text-zinc-400">É contagem, não nota — {total} indicadores nas faixas AZ.</span>
+        <span className="text-zinc-500">É contagem, não nota — {total} indicadores nas faixas AZ.</span>
       </div>
     </div>
   );
@@ -157,7 +157,7 @@ export function SemaforoTempoGrid({
                     {temSerie ? (
                       <div className="mt-1.5">
                         <MiniRiskSpark serie={ind.serie!} faixas={ind} nivel={ind.nivel} height={44} />
-                        <div className="mt-1 text-[9px] uppercase tracking-wide text-zinc-400 transition-colors group-hover:text-[#027DFC]">
+                        <div className="mt-1 text-[9px] uppercase tracking-wide text-zinc-500 transition-colors group-hover:text-[#027DFC]">
                           {selecionado ? "fechar" : "ver série ↗"}
                         </div>
                       </div>

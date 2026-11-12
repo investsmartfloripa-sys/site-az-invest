@@ -119,7 +119,7 @@ function KPI({
         </span>
         {unit && <span className="text-xs text-zinc-500">{unit}</span>}
       </div>
-      {hint && <div className="mt-1 text-[11px] text-zinc-400">{hint}</div>}
+      {hint && <div className="mt-1 text-[11px] text-zinc-500">{hint}</div>}
     </div>
   );
 }
@@ -155,7 +155,7 @@ function ChartCard({
       </div>
       {(footer || stampGiro || stampDado) && (
         <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <div className="text-[11px] text-zinc-400">{footer}</div>
+          <div className="text-[11px] text-zinc-500">{footer}</div>
           <DataStamp giro={stampGiro} dado={stampDado} className="not-italic" />
         </div>
       )}

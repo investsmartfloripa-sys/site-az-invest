@@ -35,10 +35,15 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
 
   const rows = useMemo(() => {
     const tickers = latest?.tickers ?? {};
-    return catalog.map((a) => ({
-      asset: a,
-      latest: tickers[a.ticker] ?? null,
-    }));
+    // Ativo sem cotação nem retorno algum (ticker que a fonte não reconhece) fica fora:
+    // era uma linha inteira de "—" no fim da tabela.
+    return catalog
+      .map((a) => ({ asset: a, latest: tickers[a.ticker] ?? null }))
+      .filter(
+        (r) =>
+          r.latest != null &&
+          (r.latest.last_close != null || Object.values(r.latest.returns ?? {}).some((v) => v != null)),
+      );
   }, [catalog, latest]);
 
   const filtered = useMemo(() => {
@@ -207,7 +212,7 @@ export function MarketOverviewTable({ catalog, latest }: Props) {
                     return (
                       <td
                         key={p.key}
-                        className={`px-2 py-1.5 text-right font-semibold ${v == null ? "text-zinc-400" : ""}`}
+                        className={`px-2 py-1.5 text-right font-semibold ${v == null ? "text-zinc-500" : ""}`}
                         style={v != null ? { color: variationText(v) } : undefined}
                       >
                         {fmtSignedPct(v, 2)}

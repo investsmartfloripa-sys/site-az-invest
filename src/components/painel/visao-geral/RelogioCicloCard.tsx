@@ -87,7 +87,7 @@ export function RelogioCicloCard({ hiato }: { hiato: HiatoData | null }) {
     return (
       <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-center">
         <h3 className="text-base font-semibold text-zinc-500">Relógio do ciclo</h3>
-        <p className="mt-2 text-xs text-zinc-400">Pipeline rodando — dados aparecerão na próxima atualização.</p>
+        <p className="mt-2 text-xs text-zinc-500">Pipeline rodando — dados aparecerão na próxima atualização.</p>
       </div>
     );
   }
@@ -171,7 +171,7 @@ export function RelogioCicloCard({ hiato }: { hiato: HiatoData | null }) {
           <Scatter dataKey="y" shape={renderPonto} isAnimationActive={false} />
         </ComposedChart>
       </ResponsiveContainer>
-      <p className="mt-1 text-[10px] text-zinc-400">
+      <p className="mt-1 text-[10px] text-zinc-500">
         Ponto cheio com seta = {formatMes(atual.mes)}.
       </p>
       <p className="mt-2"><DataStamp giro={hiato?.gerado_em} dado={atual.mes} /></p>

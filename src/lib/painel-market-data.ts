@@ -167,7 +167,12 @@ async function fetchBlobJson<T>(path: string): Promise<T | null> {
 }
 
 export async function getMarketCatalog(): Promise<MarketCatalog | null> {
-  return fetchBlobJson<MarketCatalog>("data/market_catalog.json");
+  const catalog = await fetchBlobJson<MarketCatalog>("data/market_catalog.json");
+  if (!catalog?.assets) return catalog;
+  // Ticker repetido no catálogo (renomeações de empresa) duplicava linhas na tabela do Mercado.
+  const vistos = new Set<string>();
+  const assets = catalog.assets.filter((a) => (vistos.has(a.ticker) ? false : (vistos.add(a.ticker), true)));
+  return { ...catalog, assets };
 }
 
 export async function getMarketHistoryLatest(): Promise<MarketHistoryLatest | null> {

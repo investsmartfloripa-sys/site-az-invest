@@ -68,7 +68,8 @@ export default async function ConteudoHub({ searchParams }: ConteudoProps) {
   return (
     <div className="min-h-screen text-[#132960]">
       <Header />
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-12 px-4 py-8 md:px-8">
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-8 md:px-8">
+        <h1 className="sr-only">Conteúdo: artigos, vídeos e periódicos da AZ Invest</h1>
         {/* Artigos */}
         <section className="space-y-4">
           <div className="flex items-baseline justify-between gap-4">

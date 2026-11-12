@@ -5,7 +5,7 @@ import { CambioMacroDashboard } from "@/components/painel/contas-externas/cambio
 import { loadCambioMacro } from "@/lib/painel-contas-externas";
 
 export const metadata: Metadata = {
-  title: "Câmbio Econômico — Contas Externas",
+  title: "Câmbio econômico — Contas externas",
   description:
     "Câmbio real (REER do BCB e bilateral USD/BRL deflacionado), paridade de juros Selic−Fed Funds e o scorecard da UIP na prática. Dados BCB/SGS e FRED, atualização automática diária.",
 };
@@ -18,7 +18,7 @@ export default async function PainelCambioEconomicoPage() {
   if (!data) {
     return (
       <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-800">
-        Não foi possível carregar os dados de Câmbio Econômico agora. Tente recarregar em alguns minutos.
+        Não foi possível carregar os dados de câmbio econômico agora. Tente recarregar em alguns minutos.
       </div>
     );
   }

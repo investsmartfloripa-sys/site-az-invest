@@ -272,7 +272,7 @@ export function SimuladorCarteira({ assets, ibovSeries, cdiSeries, benchLabel = 
         {/* ── Controles: valor + pesos ── */}
         <div className="grid gap-4 md:grid-cols-[220px_1fr]">
           <label className="block">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
               Valor investido (R$)
             </span>
             <input
@@ -285,7 +285,7 @@ export function SimuladorCarteira({ assets, ibovSeries, cdiSeries, benchLabel = 
           </label>
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
                 Pesos da carteira
               </span>
               <span className="flex gap-2">
@@ -467,7 +467,7 @@ export function SimuladorCarteira({ assets, ibovSeries, cdiSeries, benchLabel = 
                     >
                       {sending ? "Enviando…" : "Ver análise completa"}
                     </button>
-                    <p className="mt-2 text-[10px] leading-snug text-zinc-400">
+                    <p className="mt-2 text-[10px] leading-snug text-zinc-500">
                       Ao enviar, você autoriza o contato da equipe AZ Invest sobre investimentos.
                       Simulação educacional — não é recomendação.
                     </p>
@@ -498,7 +498,7 @@ function KpiBox({
   const color = tone === "pos" ? "#1E8A5C" : tone === "neg" ? "#BE3B33" : "#132960";
   return (
     <div className="rounded-xl border border-[#132960]/10 bg-zinc-50/60 p-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">{label}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{label}</p>
       <p
         className={`mt-1 font-bold tabular-nums ${small ? "text-xs leading-snug" : "text-lg"}`}
         style={{ color }}
@@ -530,7 +530,7 @@ function FronteiraChart({
 
   return (
     <div className="mt-4">
-      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
         Fronteira eficiente — risco × retorno (anualizados, {""}
         <span className="normal-case">3 anos</span>)
       </p>

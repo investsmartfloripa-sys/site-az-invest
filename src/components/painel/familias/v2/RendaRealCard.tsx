@@ -142,7 +142,7 @@ export function RendaRealCard({
       stampGiro={geradoEm}
       stampDado={maxIso || null}
     >
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Nível real (R$ por mês)</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Nível real (R$ por mês)</p>
       <div className="h-[250px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={rows} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
@@ -202,7 +202,7 @@ export function RendaRealCard({
         </ResponsiveContainer>
       </div>
 
-      <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Variação real em 12 meses</p>
+      <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Variação real em 12 meses</p>
       <div className="h-[160px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={rowsVar} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>

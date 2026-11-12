@@ -200,7 +200,7 @@ export function RitmoQoqCard({
       </div>
 
       {rows.length === 0 ? (
-        <p className="flex h-[240px] items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-[240px] items-center justify-center text-sm text-zinc-500">
           — sem observações de QoQ SA do PIB na janela selecionada.
         </p>
       ) : (

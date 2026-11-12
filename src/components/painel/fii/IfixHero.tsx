@@ -209,7 +209,7 @@ export function IfixHero({
                     type="button"
                     onClick={() => onRemoveOverlay(o.ticker)}
                     aria-label={`Remover ${o.ticker}`}
-                    className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-100 hover:text-[#BE3B33]"
+                    className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-zinc-500 transition hover:bg-zinc-100 hover:text-[#BE3B33]"
                   >
                     ×
                   </button>
@@ -219,7 +219,7 @@ export function IfixHero({
             {loadingTickers.map((t) => (
               <span
                 key={t}
-                className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-[#132960]/20 bg-zinc-50 px-2 py-1 text-[11px] text-zinc-400"
+                className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-[#132960]/20 bg-zinc-50 px-2 py-1 text-[11px] text-zinc-500"
               >
                 {t} carregando…
               </span>

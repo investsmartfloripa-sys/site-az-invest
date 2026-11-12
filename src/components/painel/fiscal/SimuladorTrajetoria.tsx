@@ -147,7 +147,7 @@ function Slider({ label, value, onChange, min, max, step, unit, hint, defaultVal
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="mt-2 w-full accent-[#027DFC]"
       />
-      <div className="mt-0.5 flex justify-between text-[10px] text-zinc-400">
+      <div className="mt-0.5 flex justify-between text-[10px] text-zinc-500">
         <span>{min}{unit}</span>
         <span>{max}{unit}</span>
       </div>

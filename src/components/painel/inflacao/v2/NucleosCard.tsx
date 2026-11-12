@@ -81,7 +81,7 @@ export function NucleosCard({ nucleos, geradoEm }: { nucleos: NucleosBlock; gera
                 aria-pressed={on}
                 onClick={() => alternar(k)}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition ${
-                  on ? "border-[#132960] bg-white text-[#132960]" : "border-zinc-200 bg-zinc-50 text-zinc-400"
+                  on ? "border-[#132960] bg-white text-[#132960]" : "border-zinc-200 bg-zinc-50 text-zinc-500"
                 }`}
               >
                 <span
@@ -119,7 +119,7 @@ export function NucleosCard({ nucleos, geradoEm }: { nucleos: NucleosBlock; gera
       stampDado={typeof ultimo?.mes === "string" ? ultimo.mes : null}
     >
       {rows.length === 0 ? (
-        <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-64 items-center justify-center text-sm text-zinc-500">
           Série de núcleos em 12m ainda não disponível neste JSON.
         </p>
       ) : (
@@ -204,7 +204,7 @@ export function NucleosCard({ nucleos, geradoEm }: { nucleos: NucleosBlock; gera
               {NUCLEO_INFO[k].sigla}
             </dt>
             <dd className="text-zinc-600">
-              <span className="text-zinc-400">{NUCLEO_INFO[k].familia}</span> · {NUCLEO_INFO[k].curta}.
+              <span className="text-zinc-500">{NUCLEO_INFO[k].familia}</span> · {NUCLEO_INFO[k].curta}.
             </dd>
           </div>
         ))}

@@ -35,7 +35,7 @@ export function directionOf(changePct: number | null | undefined, flatBand = 0.0
 }
 
 function Card({ card }: { card: KpiCard }) {
-  const tone = card.direction ? TONE[card.direction] : { text: "text-zinc-400", border: "border-l-zinc-300" };
+  const tone = card.direction ? TONE[card.direction] : { text: "text-zinc-500", border: "border-l-zinc-300" };
   return (
     <article
       className={`min-w-0 rounded-r-xl border border-l-4 border-[#132960]/10 bg-white px-3 py-2.5 shadow-sm ${tone.border}`}
@@ -47,7 +47,7 @@ function Card({ card }: { card: KpiCard }) {
           <span className={`text-[11px] font-semibold tabular-nums ${tone.text}`}>{card.change}</span>
         ) : null}
       </p>
-      {card.sub ? <p className="truncate text-[10px] text-zinc-400">{card.sub}</p> : null}
+      {card.sub ? <p className="truncate text-[10px] text-zinc-500">{card.sub}</p> : null}
     </article>
   );
 }

@@ -54,7 +54,7 @@ export function CardHiatoLeque({ serie, codace = [] }: { serie: HiatoPonto[]; co
     return (
       <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-center">
         <h3 className="text-base font-semibold text-zinc-500">Hiato do produto — leque de métodos</h3>
-        <p className="mt-2 text-xs text-zinc-400">Pipeline rodando — dados aparecerão na próxima atualização.</p>
+        <p className="mt-2 text-xs text-zinc-500">Pipeline rodando — dados aparecerão na próxima atualização.</p>
       </div>
     );
   }

@@ -108,7 +108,7 @@ export function TesouraCard({ data, codace }: { data: FiscalClassicosData; codac
       stampDado={recUlt ? mesIso(recUlt.data) : null}
     >
       <div className="flex flex-col gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
           Receita líquida × despesa total (% PIB, 12m)
         </p>
         <div className="h-[280px] w-full">
@@ -159,7 +159,7 @@ export function TesouraCard({ data, codace }: { data: FiscalClassicosData; codac
           </ResponsiveContainer>
         </div>
 
-        <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+        <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
           Resultado primário (% PIB, 12m) — positivo = superávit
         </p>
         <div className="h-[120px] w-full">

@@ -73,15 +73,16 @@ const postCategoryVisual: Record<string, CategoryVisual> = {
     soft: "bg-[#ebf4ff] text-[#027DFC]",
     chipInactive: "border-[#027DFC]/40 text-[#027DFC] hover:bg-[#ebf4ff]",
   },
+  /* Laranja fica reservado ao botão de ação (Login): categorias só em tons de azul, marinho e cinza. */
   "Educacao Financeira": {
-    solid: "bg-[#a85b2f] text-white",
-    soft: "bg-[#a85b2f]/14 text-[#132960]",
-    chipInactive: "border-[#a85b2f]/45 text-[#a85b2f] hover:bg-[#a85b2f]/10",
+    solid: "bg-[#CFE4FF] text-[#132960]",
+    soft: "bg-[#DCEBFF] text-[#132960]",
+    chipInactive: "border-[#5B8FD9]/50 text-[#132960] hover:bg-[#DCEBFF]/60",
   },
   Politica: {
-    solid: "bg-[#FF5713] text-white",
-    soft: "bg-[#FF5713]/12 text-[#132960]",
-    chipInactive: "border-[#FF5713]/40 text-[#FF5713] hover:bg-[#FF5713]/10",
+    solid: "bg-[#3A5A9B] text-white",
+    soft: "bg-[#3A5A9B]/12 text-[#132960]",
+    chipInactive: "border-[#3A5A9B]/45 text-[#3A5A9B] hover:bg-[#3A5A9B]/10",
   },
   Geral: {
     solid: "bg-[#333333] text-white",
@@ -109,14 +110,14 @@ const postCategoryVisualFallback: CategoryVisual[] = [
     chipInactive: "border-[#132960]/35 text-[#132960] hover:bg-[#132960]/5",
   },
   {
-    solid: "bg-[#FF5713] text-white",
-    soft: "bg-[#FF5713]/12 text-[#132960]",
-    chipInactive: "border-[#FF5713]/40 text-[#FF5713] hover:bg-[#FF5713]/10",
+    solid: "bg-[#3A5A9B] text-white",
+    soft: "bg-[#3A5A9B]/12 text-[#132960]",
+    chipInactive: "border-[#3A5A9B]/45 text-[#3A5A9B] hover:bg-[#3A5A9B]/10",
   },
   {
-    solid: "bg-[#a85b2f] text-white",
-    soft: "bg-[#a85b2f]/14 text-[#132960]",
-    chipInactive: "border-[#a85b2f]/45 text-[#a85b2f] hover:bg-[#a85b2f]/10",
+    solid: "bg-[#CFE4FF] text-[#132960]",
+    soft: "bg-[#DCEBFF] text-[#132960]",
+    chipInactive: "border-[#5B8FD9]/50 text-[#132960] hover:bg-[#DCEBFF]/60",
   },
 ];
 

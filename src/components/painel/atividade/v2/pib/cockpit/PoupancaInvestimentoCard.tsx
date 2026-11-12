@@ -278,7 +278,7 @@ export function PoupancaInvestimentoCard({
       </div>
 
       {!temDado ? (
-        <p className="flex h-[200px] items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-[200px] items-center justify-center text-sm text-zinc-500">
           — as tabelas 6726/6727 não estão nesta geração do Blob.
         </p>
       ) : (
@@ -304,7 +304,7 @@ export function PoupancaInvestimentoCard({
         {modo === "mm4T" ? "média móvel 4T" : "trimestral"}
       </p>
       {brutos.b9.length === 0 ? (
-        <p className="flex h-[110px] items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-[110px] items-center justify-center text-sm text-zinc-500">
           — a 2072 em % do PIB não está nesta geração do Blob.
         </p>
       ) : (

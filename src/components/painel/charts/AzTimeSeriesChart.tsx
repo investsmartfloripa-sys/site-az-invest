@@ -540,7 +540,7 @@ export function AzTimeSeriesChart({
   if (!built) {
     return (
       <div className={`flex w-full items-center justify-center ${className}`} style={{ height }}>
-        <p className="text-sm text-zinc-400">Sem dados para o período selecionado.</p>
+        <p className="text-sm text-zinc-500">Sem dados para o período selecionado.</p>
       </div>
     );
   }

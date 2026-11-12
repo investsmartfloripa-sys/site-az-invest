@@ -9,7 +9,7 @@ import {
 } from "@/lib/painel-mercado-global";
 
 export const metadata: Metadata = {
-  title: "Commodities — Ativos de mercado",
+  title: "Commodities — Mercado",
   description:
     "Retornos de energia, metais e agro em USD e BRL por período, e histórico comparativo de 5 anos dos futuros (Brent, WTI, ouro, café, soja e mais).",
 };
@@ -42,9 +42,9 @@ export default async function CommoditiesPage() {
     <div className="space-y-6">
       <header className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
-          Ativos de mercado · Global · Commodities
+          Mercado · Global · Commodities
         </p>
-        <h2 className="text-2xl font-semibold text-[#132960]">Energia, metais e agro</h2>
+        <h1 className="text-2xl font-semibold text-[#132960]">Energia, metais e agro</h1>
         <p className="max-w-3xl text-sm text-zinc-600">
           Retornos dos 17 futuros acompanhados pelo pipeline em janelas de 1 dia a 1 ano, agrupados
           por setor e com leitura em <strong>dólar ou em real</strong> — a mesma commodity pode subir

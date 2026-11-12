@@ -50,7 +50,7 @@ export function StackedBpChart<T extends { mes: string }>({
   refY?: { y: number; label: string; color?: string }[];
 }) {
   if (rows.length === 0) {
-    return <p className="flex h-64 items-center justify-center text-sm text-zinc-400">Sem dados na janela.</p>;
+    return <p className="flex h-64 items-center justify-center text-sm text-zinc-500">Sem dados na janela.</p>;
   }
   return (
     <div className="w-full" style={{ height }}>

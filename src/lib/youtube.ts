@@ -90,6 +90,29 @@ function decode(str: string): string {
     .replace(/&gt;/g, ">");
 }
 
+/**
+ * Título como o leitor vê no site: sem hashtags nem emojis (o YouTube usa os dois para
+ * alcance, mas no cartão eles truncavam o título e destoavam da fonte).
+ */
+function limparTitulo(titulo: string): string {
+  const limpo = titulo
+    .replace(/#[\p{L}\p{N}_]+/gu, "")
+    .replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}\u{20E3}]/gu, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([?!.,:;])/g, "$1")
+    .replace(/[\s|\-–—:]+$/u, "")
+    .trim();
+  return limpo || titulo.trim();
+}
+
+/** Descrição que só repete o título não acrescenta nada no cartão: fica sem ela. */
+function limparDescricao(descricao: string, tituloOriginal: string): string {
+  const d = descricao.trim();
+  const t = tituloOriginal.trim();
+  if (t && d.startsWith(t)) return d.slice(t.length).replace(/^[\s|\-–—:.]+/u, "").trim();
+  return d;
+}
+
 function formatIsoDuration(iso?: string): string | undefined {
   if (!iso) return undefined;
   const match = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso);
@@ -247,8 +270,8 @@ async function fetchChannelVideosViaSearch(
       return {
         id: item.id.videoId,
         youtubeId: item.id.videoId,
-        title: decode(item.snippet.title),
-        description: decode(item.snippet.description),
+        title: limparTitulo(decode(item.snippet.title)),
+        description: limparDescricao(decode(item.snippet.description), decode(item.snippet.title)),
         thumbnail: d?.thumb || pickThumb(item),
         publishedAt: item.snippet.publishedAt,
         duration: d?.formatted,
@@ -364,8 +387,8 @@ export async function fetchPlaylistVideos(
       return {
         id: it.snippet.resourceId.videoId,
         youtubeId: it.snippet.resourceId.videoId,
-        title: decode(it.snippet.title),
-        description: decode(it.snippet.description),
+        title: limparTitulo(decode(it.snippet.title)),
+        description: limparDescricao(decode(it.snippet.description), decode(it.snippet.title)),
         thumbnail: d?.thumb || pickThumbFromMap(it.snippet.thumbnails),
         publishedAt: it.snippet.publishedAt,
         duration: d?.formatted,

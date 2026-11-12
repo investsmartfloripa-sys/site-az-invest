@@ -10,7 +10,7 @@ import {
 } from "@/lib/painel-mercado-global";
 
 export const metadata: Metadata = {
-  title: "Moedas — Ativos de mercado",
+  title: "Moedas — Mercado",
   description:
     "Moedas do mundo contra o dólar: ranking de majors e emergentes por janela, índice DXY, e o bloco do real (USD/BRL em 5 anos, cruzes EUR/BRL e GBP/BRL e o real entre os emergentes).",
 };
@@ -41,7 +41,7 @@ export default async function MoedasPage() {
   return (
     <div className="space-y-6">
       <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
-        Ativos de mercado · Global · Moedas
+        Mercado · Global · Moedas
       </p>
 
       {nothingLoaded ? (

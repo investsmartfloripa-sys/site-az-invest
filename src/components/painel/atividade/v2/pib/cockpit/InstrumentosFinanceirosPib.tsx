@@ -105,7 +105,7 @@ const TD = "py-1 px-2 text-right whitespace-nowrap";
 function CelulaBi({ valor, titulo }: { valor: number | null; titulo?: string }) {
   if (valor == null) {
     return (
-      <td className={`${TD} text-zinc-400`} title={titulo ?? "não publicado na 2205 (o builder grava null)"}>
+      <td className={`${TD} text-zinc-500`} title={titulo ?? "não publicado na 2205 (o builder grava null)"}>
         —
       </td>
     );
@@ -300,7 +300,7 @@ export function InstrumentosFinanceirosPib({
       stampDado={trimRef}
     >
       {semDado ? (
-        <p className="py-6 text-center text-sm text-zinc-400">
+        <p className="py-6 text-center text-sm text-zinc-500">
           Conta financeira (2205) ausente nesta carga — o builder não gravou o bloco <code>conta_financeira</code>.
         </p>
       ) : (
@@ -457,10 +457,10 @@ export function InstrumentosFinanceirosPib({
                               />
                             </>
                           ) : null}
-                          <span className={`relative ${l.liquido == null ? "text-zinc-400" : "font-semibold"}`}>
+                          <span className={`relative ${l.liquido == null ? "text-zinc-500" : "font-semibold"}`}>
                             {l.liquido == null ? "—" : fmtSignedNum(l.liquido, 1)}
                             {l.calculado && l.liquido != null ? (
-                              <span className="ml-0.5 text-[9px] font-normal text-zinc-400" aria-label="calculado">
+                              <span className="ml-0.5 text-[9px] font-normal text-zinc-500" aria-label="calculado">
                                 ‡
                               </span>
                             ) : null}
@@ -468,7 +468,7 @@ export function InstrumentosFinanceirosPib({
                         </td>
                         <td className={`${TD} pr-1`}>
                           {l.delta == null ? (
-                            <span className="text-zinc-400">—</span>
+                            <span className="text-zinc-500">—</span>
                           ) : (
                             <span className="font-semibold" style={{ color: variationText(l.delta) }}>
                               {fmtSignedNum(l.delta, 1)}
@@ -500,7 +500,7 @@ export function InstrumentosFinanceirosPib({
                     </td>
                     <td className={`${TD} pr-1`}>
                       {total.delta == null ? (
-                        <span className="text-zinc-400">—</span>
+                        <span className="text-zinc-500">—</span>
                       ) : (
                         <span style={{ color: variationText(total.delta) }}>{fmtSignedNum(total.delta, 1)}</span>
                       )}

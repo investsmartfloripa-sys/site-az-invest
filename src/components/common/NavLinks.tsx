@@ -4,12 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { navItems } from "@/data/home";
+import { semPrefetch } from "@/lib/prefetch";
 import { SITE_MAIN_MAX_WIDTH_CLASS } from "@/lib/site-layout";
 
 const MOBILE_MENU_ID = "menu-principal";
 
+/** Seções que vivem dentro do hub Conteúdo: o item do menu fica marcado nelas também. */
+const DENTRO_DE_CONTEUDO = ["/blog", "/boletins", "/videos", "/cafe-com-mercado"];
+
 function isActive(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(`${href}/`);
+  if (pathname === href || pathname.startsWith(`${href}/`)) return true;
+  return href === "/conteudo" && DENTRO_DE_CONTEUDO.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
 /** Desktop (lg+): links inline na barra do header, sublinhado azure no item ativo. */
@@ -27,6 +32,7 @@ export function DesktopNav() {
           <Link
             key={item.href}
             href={item.href}
+            prefetch={semPrefetch(item.href)}
             aria-current={active ? "page" : undefined}
             className={`relative whitespace-nowrap pb-1 transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-[#027DFC] after:transition-opacity ${
               active
@@ -121,6 +127,7 @@ export function MobileMenu() {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  prefetch={semPrefetch(item.href)}
                   aria-current={active ? "page" : undefined}
                   onClick={() => setOpen(false)}
                   className={`block rounded-md px-3 py-2.5 transition-colors ${

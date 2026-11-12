@@ -25,7 +25,7 @@ function TapeEntry({ item }: { item: TapeItem }) {
   const arrow = ch == null ? "" : ch >= 0 ? "▲" : "▼";
   return (
     <span className="inline-flex shrink-0 items-baseline gap-1.5 px-4 font-mono text-xs">
-      <span className="font-semibold tracking-wide text-zinc-400">{item.label}</span>
+      <span className="font-semibold tracking-wide text-zinc-500">{item.label}</span>
       {item.value ? <span className="text-zinc-100">{item.value}{item.suffix ?? ""}</span> : null}
       {ch != null ? (
         <span className={tone}>

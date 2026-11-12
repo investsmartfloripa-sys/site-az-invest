@@ -71,9 +71,9 @@ export default async function IndicesGlobaisPage() {
       <div className="space-y-6">
         <header className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
-            Ativos de mercado · Global · Índices globais
+            Mercado · Global · Índices globais
           </p>
-          <h2 className="text-2xl font-semibold text-[#132960]">O dia dos mercados globais</h2>
+          <h1 className="text-2xl font-semibold text-[#132960]">O dia dos mercados globais</h1>
         </header>
         <PipelinePendingCard
           blobPaths={["data/world_indices_returns_panorama.json", "data/market_history_full.json"]}
@@ -120,7 +120,7 @@ export default async function IndicesGlobaisPage() {
       children: valuation ? (
         <div className="space-y-3">
           {leituraValuation ? (
-            <p className="rounded-xl border-l-4 border-[#FF5713] bg-white p-3 pl-4 text-sm leading-relaxed text-zinc-800 shadow-sm">
+            <p className="rounded-xl border-l-4 border-[#027DFC] bg-white p-3 pl-4 text-sm leading-relaxed text-zinc-800 shadow-sm">
               {leituraValuation}
             </p>
           ) : null}
@@ -146,7 +146,7 @@ export default async function IndicesGlobaisPage() {
   return (
     <div className="space-y-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
-        Ativos de mercado · Global · Índices globais
+        Mercado · Global · Índices globais
       </p>
 
       <DashboardScaffold

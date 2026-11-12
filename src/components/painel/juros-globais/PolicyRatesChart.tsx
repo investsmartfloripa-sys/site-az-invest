@@ -339,7 +339,7 @@ export function PolicyRatesChart() {
       </div>
 
       {loading && !resp ? (
-        <div className="flex h-[420px] items-center justify-center text-sm text-zinc-400">
+        <div className="flex h-[420px] items-center justify-center text-sm text-zinc-500">
           Carregando taxas básicas…
         </div>
       ) : failed || !resp ? (
@@ -350,7 +350,7 @@ export function PolicyRatesChart() {
         <div className="space-y-4 p-4 md:p-5">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Países</span>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Países</span>
               {!isDefaultSelection ? (
                 <button
                   type="button"

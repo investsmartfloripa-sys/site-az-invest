@@ -188,7 +188,7 @@ export function RelogioMercados({ retornos1d, geradoEm, dataDado }: Props) {
                 </div>
                 <div className="mt-0.5 flex items-baseline justify-between gap-1">
                   <span className="truncate text-[10px] text-zinc-500">{praca.indice}</span>
-                  <span className="text-[10px] tabular-nums text-zinc-400">{hhmm ?? "--:--"}</span>
+                  <span className="text-[10px] tabular-nums text-zinc-500">{hhmm ?? "--:--"}</span>
                 </div>
                 <div className="mt-1.5 flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: rotulo?.cor ?? "#94A3B8" }}>
                   <span
@@ -204,7 +204,7 @@ export function RelogioMercados({ retornos1d, geradoEm, dataDado }: Props) {
                   style={{ color: retorno != null ? variationText(retorno) : "#A1A1AA" }}
                 >
                   {retorno != null ? fmtSignedPct(retorno, 1) : "—"}
-                  <span className="ml-1 text-[10px] font-normal text-zinc-400">1D</span>
+                  <span className="ml-1 text-[10px] font-normal text-zinc-500">1D</span>
                 </div>
               </div>
               {i < cards.length - 1 ? (

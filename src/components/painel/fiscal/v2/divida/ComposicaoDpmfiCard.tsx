@@ -114,7 +114,7 @@ export function ComposicaoDpmfiCard({
   if (todasRows.length === 0) {
     return (
       <ChartCard title="DPMFi por indexador (% do estoque)" stampGiro={geradoEm}>
-        <p className="flex h-64 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-64 items-center justify-center text-sm text-zinc-500">
           Sem meses em que as seis fatias fecham 97–103% — verifique a coleta da SGS 12001 no pipeline.
         </p>
       </ChartCard>
@@ -165,7 +165,7 @@ export function ComposicaoDpmfiCard({
         {FATIAS.map((f) => (
           <div key={f.key} className="flex items-center gap-1.5 rounded-lg bg-zinc-50 px-2.5 py-1.5">
             <span className="inline-block h-2 w-2 rounded-full" style={{ background: f.cor }} aria-hidden />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">{f.label}</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{f.label}</span>
             <span className="text-sm font-bold tabular-nums text-[#132960]">{fmtPct(atual[f.key], 1)}</span>
           </div>
         ))}

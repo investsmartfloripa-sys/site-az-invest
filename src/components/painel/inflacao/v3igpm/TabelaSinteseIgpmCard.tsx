@@ -136,7 +136,7 @@ function FragmentoSecao({
           >
             {linha.nome}
             {linha.mes_proprio ? (
-              <span className="ml-1 text-[10px] font-normal text-zinc-400">({fmtMesCurto(linha.mes_proprio)})</span>
+              <span className="ml-1 text-[10px] font-normal text-zinc-500">({fmtMesCurto(linha.mes_proprio)})</span>
             ) : null}
           </td>
           <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums">{celula(linha.m2)}</td>

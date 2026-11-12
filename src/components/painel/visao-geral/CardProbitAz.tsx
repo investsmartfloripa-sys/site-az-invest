@@ -213,7 +213,7 @@ function ContribuicoesPorGrupo({
           </div>
         </div>
       ))}
-      <p className="text-[9px] text-zinc-400">
+      <p className="text-[9px] text-zinc-500">
         Barras para a direita (vermelho) elevam a probabilidade de recessão; para a esquerda (verde), reduzem.
       </p>
     </div>
@@ -300,7 +300,7 @@ export function CardProbitAz({
             {aucOos !== null ? (
               <>Backtest fora da amostra: AUC <strong>{aucOos.toFixed(2)}</strong>.</>
             ) : (
-              <span title={aucNota ?? undefined}>Backtest formal em construção — sem credencial de acerto até validação fora da amostra.</span>
+              <span title={aucNota ?? undefined}>Ainda sem validação fora da amostra: leia como sinal, não como previsão calibrada.</span>
             )}
           </p>
         </div>
@@ -328,7 +328,7 @@ export function CardProbitAz({
           {resumo.valor !== null && resumo.valor !== undefined ? (
             <GaugeSpeedometer valor={resumo.valor} label={gaugeLabel} />
           ) : (
-            <p className="py-10 text-center text-xs text-zinc-400">Nenhum modelo disponível nesta rodada — aguardando pipeline.</p>
+            <p className="py-10 text-center text-xs text-zinc-500">Nenhum modelo disponível nesta rodada — aguardando pipeline.</p>
           )}
           <div className="mt-2 grid grid-cols-2 gap-1.5 w-full">
             {modelos.map((m) => (
@@ -426,7 +426,7 @@ export function CardProbitAz({
               <summary className="cursor-pointer text-[10px] text-[#132960] hover:underline">
                 Detalhamento técnico das contribuições (códigos das séries)
               </summary>
-              <p className="mt-1 text-[9px] text-zinc-400">
+              <p className="mt-1 text-[9px] text-zinc-500">
                 Rótulos em português em preparação no pipeline; abaixo, os códigos crus das séries.
               </p>
               <TabelaTecnicaContribuicoes contribs={data.contribuicoes_top15} />

@@ -82,10 +82,10 @@ export default async function FiiDetailPage({ params }: Props) {
     <div className="space-y-6">
       <header className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
-          Ativos de mercado · Brasil · Fundos Imobiliários
+          Mercado · Brasil · Fundos imobiliários
         </p>
         <div className="flex flex-wrap items-baseline gap-3">
-          <h2 className="text-2xl font-semibold text-[#132960]">{entry.ticker}</h2>
+          <h1 className="text-2xl font-semibold text-[#132960]">{entry.ticker}</h1>
           <span className="text-sm text-zinc-500">{entry.ficha.full_name || entry.name}</span>
         </div>
         <Link

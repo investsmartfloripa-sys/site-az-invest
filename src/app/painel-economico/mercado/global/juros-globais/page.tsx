@@ -4,7 +4,7 @@ import { GlobalRatesComparator } from "@/components/painel/juros-globais/GlobalR
 import { PolicyRatesChart } from "@/components/painel/juros-globais/PolicyRatesChart";
 
 export const metadata = {
-  title: "Juros globais — Ativos de mercado",
+  title: "Juros globais — Mercado",
   description:
     "Taxas básicas de juros dos bancos centrais em perspectiva (BIS) e curvas soberanas de Brasil, EUA, Japão, Alemanha, Reino Unido, Colômbia, Chile e China comparadas por prazo, com dados das fontes oficiais.",
 };
@@ -19,9 +19,9 @@ export default function JurosGlobaisPage() {
     <div className="space-y-6">
       <header className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
-          Ativos de mercado · Global · Juros globais
+          Mercado · Global · Juros globais
         </p>
-        <h2 className="text-2xl font-semibold text-[#132960]">Juros pelo mundo</h2>
+        <h1 className="text-2xl font-semibold text-[#132960]">Juros pelo mundo</h1>
         <p className="max-w-3xl text-sm text-zinc-600">
           Primeiro, a <strong>taxa básica de cada banco central</strong> em perspectiva: quem está subindo, quem
           está cortando e quem parou. Depois, compare a curva de juros soberana de cada país{" "}

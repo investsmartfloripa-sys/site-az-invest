@@ -279,7 +279,7 @@ export function AnualPibCard({ pib, geradoEm }: { pib: AtividadePibData; geradoE
 
       {rows.length === 0 ? (
         <p
-          className="flex items-center justify-center text-sm text-zinc-400"
+          className="flex items-center justify-center text-sm text-zinc-500"
           style={{ height: ALTURA_GRAFICO }}
         >
           — sem anos fechados de PIB na série gravada.

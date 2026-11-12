@@ -28,7 +28,7 @@ export function FiiDetailDividends({ dividends }: { dividends: FiiDividend[] }) 
     >
       <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Rendimentos</h3>
       {dividends.length === 0 ? (
-        <p className="mt-3 text-xs italic text-zinc-400">Sem histórico de rendimentos pago via yfinance.</p>
+        <p className="mt-3 text-xs italic text-zinc-500">Sem histórico de rendimentos pago via yfinance.</p>
       ) : (
         <>
           <div className="mt-3 overflow-x-auto">
@@ -62,7 +62,7 @@ export function FiiDetailDividends({ dividends }: { dividends: FiiDividend[] }) 
               {expanded ? "Mostrar menos ▲" : `Mostrar todos os ${dividends.length} pagamentos ▼`}
             </button>
           ) : null}
-          <p className="mt-2 text-[10px] text-zinc-400">
+          <p className="mt-2 text-[10px] text-zinc-500">
             Data de pagamento é estimativa (~14 dias após a data ex). Para pagamento exato, consulte o
             relatório gerencial da gestora.
           </p>

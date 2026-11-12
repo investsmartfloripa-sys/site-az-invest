@@ -26,7 +26,7 @@ export function TickerSparkline({ series, height = 60 }: Props) {
   );
 
   if (data.length < 2) {
-    return <div className="text-xs italic text-zinc-400">sem série</div>;
+    return <div className="text-xs italic text-zinc-500">sem série</div>;
   }
 
   return (

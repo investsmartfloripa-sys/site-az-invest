@@ -198,7 +198,7 @@ export function FiiMacroCharts({ data, premio }: Props) {
 
         <div style={{ height: 230 }} className="w-full">
           {pvpClipped.length < 2 ? (
-            <div className="flex h-full items-center justify-center text-xs italic text-zinc-400">
+            <div className="flex h-full items-center justify-center text-xs italic text-zinc-500">
               sem dados na janela
             </div>
           ) : (
@@ -287,7 +287,7 @@ export function FiiMacroCharts({ data, premio }: Props) {
             </ResponsiveContainer>
           )}
         </div>
-        <p className="mt-2 text-[10px] text-zinc-400">
+        <p className="mt-2 text-[10px] text-zinc-500">
           <strong>Tijolo</strong> = Logística, Lajes, Shoppings, Renda urbana, Residencial,
           Hospitalar, Hotelaria, Educacional, Agro, Varejo. <strong>Papel</strong> = CRI.
           Linhas = mediana; faixas sombreadas = quartis P25-P75 mensais. A linha navy marca a
@@ -342,7 +342,7 @@ export function FiiMacroCharts({ data, premio }: Props) {
               <strong className="text-[#132960] tabular-nums">{fmtPct(latestPremio.ntnb_yield_pct, 2)}</strong>
             ) : null}
             {latestPremio?.ntnb_venc ? (
-              <span className="text-[10px] text-zinc-400">(venc {latestPremio.ntnb_venc})</span>
+              <span className="text-[10px] text-zinc-500">(venc {latestPremio.ntnb_venc})</span>
             ) : null}
           </span>
           <span className="inline-flex items-center gap-1.5">
@@ -356,7 +356,7 @@ export function FiiMacroCharts({ data, premio }: Props) {
 
         <div style={{ height: 230 }} className="w-full">
           {premioClipped.length < 2 ? (
-            <div className="flex h-full items-center justify-center text-xs italic text-zinc-400">
+            <div className="flex h-full items-center justify-center text-xs italic text-zinc-500">
               sem dados na janela
             </div>
           ) : (
@@ -422,7 +422,7 @@ export function FiiMacroCharts({ data, premio }: Props) {
             </ResponsiveContainer>
           )}
         </div>
-        <p className="mt-2 text-[10px] text-zinc-400">
+        <p className="mt-2 text-[10px] text-zinc-500">
           Indicador histórico — <strong>não é recomendação</strong>. FII tem risco de cota,
           vacância e crédito que NTN-B não tem.
         </p>

@@ -739,7 +739,7 @@ function UsRatesBlock({
                 {fedMeetings.map((m) => (
                   <tr key={m.date}>
                     <td className="py-1.5 pr-2 font-semibold text-[#132960]">{meetingLabel(m.date)}</td>
-                    <td className={`${tdClass} text-zinc-400`}>{fmtRate(m.d90)}</td>
+                    <td className={`${tdClass} text-zinc-500`}>{fmtRate(m.d90)}</td>
                     <td className={`${tdClass} text-zinc-500`}>{fmtRate(m.d30)}</td>
                     <td className={`${tdClass} ${hasFedD0 ? "text-zinc-600" : "font-semibold text-[#132960]"}`}>{fmtRate(m.recent)}</td>
                     {hasFedD0 ? <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(m.d0)}</td> : null}
@@ -764,7 +764,7 @@ function UsRatesBlock({
                   <tr key={t.tenor}>
                     <td className="py-1.5 pr-2 font-semibold text-[#132960]">{t.tenor}a</td>
                     <td className={`${tdClass} text-zinc-300`}>{fmtRate(t.d365)}</td>
-                    <td className={`${tdClass} text-zinc-400`}>{fmtRate(t.d90)}</td>
+                    <td className={`${tdClass} text-zinc-500`}>{fmtRate(t.d90)}</td>
                     <td className={`${tdClass} text-zinc-500`}>{fmtRate(t.d30)}</td>
                     <td className={`${tdClass} ${hasTreasuryD0 ? "text-zinc-600" : "font-semibold text-[#132960]"}`}>{fmtRate(t.recent)}</td>
                     {hasTreasuryD0 ? <td className={`${tdClass} font-semibold text-[#132960]`}>{fmtRate(t.d0)}</td> : null}
@@ -1138,7 +1138,7 @@ export function JurosLiveBlock({
           {isCurveTab ? (
             <>
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
                   Séries:
                 </span>
                 {cutToggles.map((c) =>
@@ -1151,7 +1151,7 @@ export function JurosLiveBlock({
                       className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold transition ${
                         show[c.key]
                           ? "border-transparent bg-[#eef2f8] text-[#132960]"
-                          : "border-zinc-200 bg-white text-zinc-400 hover:text-[#132960]"
+                          : "border-zinc-200 bg-white text-zinc-500 hover:text-[#132960]"
                       }`}
                     >
                       <span
@@ -1187,7 +1187,7 @@ export function JurosLiveBlock({
             {/* O grafico NAO depende mais do feed intraday: desenha com o D-1 e
                 os cortes que vieram do servidor. So fica vazio se nao houver nada. */}
             {!hasLive && !hasD1ForTab && tab !== "selic" && (cuts.d30?.length ?? 0) === 0 && (cuts.d90?.length ?? 0) === 0 ? (
-              <div className="flex h-full items-center justify-center text-sm text-zinc-400">
+              <div className="flex h-full items-center justify-center text-sm text-zinc-500">
                 Sem dados para esta curva no momento.
               </div>
             ) : tab === "selic" ? (
@@ -1368,7 +1368,7 @@ export function JurosLiveBlock({
                 {selicMeetings.map((m) => (
                   <tr key={m.date}>
                     <td className="py-1.5 pr-2 font-semibold text-[#132960]">{meetingLabel(m.date)}</td>
-                    <td className={`${tdClass} text-zinc-400`}>{fmtRate(m.d90)}</td>
+                    <td className={`${tdClass} text-zinc-500`}>{fmtRate(m.d90)}</td>
                     <td className={`${tdClass} text-zinc-500`}>{fmtRate(m.d30)}</td>
                     <td className={`${tdClass} ${hasSelicAgora ? "text-zinc-500" : "font-semibold text-[#132960]"}`}>{fmtRate(m.recent)}</td>
                     {hasSelicAgora ? (
@@ -1394,7 +1394,7 @@ export function JurosLiveBlock({
                   {curveRows.map((r) => (
                     <tr key={r.maturity}>
                       <td className="py-1.5 pr-2 font-semibold text-[#132960]">{maturityLabel(r.maturity)}</td>
-                      <td className={`${tdClass} text-zinc-400`}>{fmtRate(r.d90)}</td>
+                      <td className={`${tdClass} text-zinc-500`}>{fmtRate(r.d90)}</td>
                       <td className={`${tdClass} text-zinc-500`}>{fmtRate(r.d30)}</td>
                       {hasD1ForTab ? (
                         <td className={`${tdClass} ${hasLiveForTab ? "text-zinc-600" : "font-semibold text-[#000000]"}`}>
@@ -1408,7 +1408,7 @@ export function JurosLiveBlock({
                   ))}
                 </tbody>
               </table>
-              <p className="mt-2 text-[11px] text-zinc-400">
+              <p className="mt-2 text-[11px] text-zinc-500">
                 D-90/D-30: títulos (TaxaSwap B3) em janelas anteriores.
                 {hasD1ForTab
                   ? ` D-1: ETTJ oficial da B3${refLabel ? ` (${refLabel})` : ""}, vértice mais próximo de cada vencimento.`

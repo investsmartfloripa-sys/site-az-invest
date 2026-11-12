@@ -90,7 +90,7 @@ export function superavitAreas(serie: ReadonlyArray<CoberturaIdpPonto>): AzXRefA
 /** Card-aviso de bloco v2 ainda não publicado pelo pipeline (degrade gracioso). */
 export function PipelinePendente({ oQue }: { oQue: string }) {
   return (
-    <div className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-[#132960]/20 bg-white p-6 text-center text-sm text-zinc-400">
+    <div className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-[#132960]/20 bg-white p-6 text-center text-sm text-zinc-500">
       O pipeline ainda não publicou {oQue} (schema v2). Rode o workflow contas-externas-pipeline.yml.
     </div>
   );

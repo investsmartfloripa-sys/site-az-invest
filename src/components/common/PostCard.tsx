@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { formatPostCategoryLabel, getPostCategorySolidPillClasses } from "@/data/blog-categories";
+import { BOLETIM_BASE_PATH, formatPostCategoryLabel, getPostCategorySolidPillClasses } from "@/data/blog-categories";
+import { rotuloBoletim } from "@/lib/boletim-rotulo";
 
 export type PostCardData = {
   id: number;
@@ -35,7 +36,28 @@ function initials(name: string) {
     .join("");
 }
 
+/**
+ * Boletim nas listas é cartão só de texto, como na home: as capas automáticas (tela
+ * recortada do Painel, calendário genérico) pareciam imagem quebrada, e a etiqueta
+ * "BOLETIM" não dizia o indicador (revisão de 12/11/2026).
+ */
+function BoletimTextoCard({ post }: { post: PostCardData }) {
+  return (
+    <article className="az-hover-lift relative flex flex-col gap-2 self-start rounded-2xl border border-[#132960]/15 bg-white p-4 shadow-sm hover:shadow-md md:p-5">
+      <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">{rotuloBoletim(post)}</p>
+      <h3 className="line-clamp-3 text-lg font-semibold leading-snug text-[#132960]">
+        <Link href={post.href} className="after:absolute after:inset-0 after:content-[''] hover:underline">
+          {post.title}
+        </Link>
+      </h3>
+      {post.excerpt ? <p className="line-clamp-3 text-sm leading-relaxed text-zinc-600">{post.excerpt}</p> : null}
+      <p className="mt-1 text-sm font-semibold text-[#027DFC]">Ler boletim →</p>
+    </article>
+  );
+}
+
 export function PostCard({ post }: { post: PostCardData }) {
+  if (post.href.startsWith(`${BOLETIM_BASE_PATH}/`)) return <BoletimTextoCard post={post} />;
   return (
     <article className="az-hover-lift flex flex-col self-start overflow-hidden rounded-2xl border border-[#132960]/15 bg-white shadow-sm hover:shadow-md">
       <Link href={post.href} className="block">

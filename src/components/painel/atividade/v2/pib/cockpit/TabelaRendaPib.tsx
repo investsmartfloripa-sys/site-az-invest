@@ -351,7 +351,7 @@ export function TabelaRendaPib({
       </div>
 
       {semDado ? (
-        <p className="flex h-40 items-center justify-center text-center text-sm text-zinc-400">
+        <p className="flex h-40 items-center justify-center text-center text-sm text-zinc-500">
           Sem contas econômicas integradas (2072) nesta carga.
         </p>
       ) : (
@@ -401,7 +401,7 @@ export function TabelaRendaPib({
                       <span className="flex items-baseline gap-1.5">
                         <span
                           aria-hidden
-                          className={`w-2.5 shrink-0 text-center font-mono text-[11px] ${saldo ? "text-[#132960]" : "text-zinc-400"}`}
+                          className={`w-2.5 shrink-0 text-center font-mono text-[11px] ${saldo ? "text-[#132960]" : "text-zinc-500"}`}
                         >
                           {GLIFO[l.tipo]}
                         </span>
@@ -410,14 +410,14 @@ export function TabelaRendaPib({
                     </th>
                     <td className={TD_NUM}>
                       {l.reaisBi == null ? (
-                        <span className="text-zinc-400">—</span>
+                        <span className="text-zinc-500">—</span>
                       ) : (
                         fmtNivel(l.reaisBi, 1, false)
                       )}
                     </td>
                     <td className={`${TD_NUM} relative`}>
                       {l.pctPib == null ? (
-                        <span className="text-zinc-400">—</span>
+                        <span className="text-zinc-500">—</span>
                       ) : (
                         <>
                           {/* Mini-barra de fundo: |% PIB| escalado pelo PIB = 100 (célula inteira). */}
@@ -441,7 +441,7 @@ export function TabelaRendaPib({
                     <td className={`${TD_NUM} pr-1`}>
                       {l.dPct4t == null ? (
                         <span
-                          className="text-zinc-400"
+                          className="text-zinc-500"
                           title={
                             l.tipo === "pib"
                               ? "PIB = 100 por construção"

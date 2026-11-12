@@ -100,7 +100,7 @@ export function FiiNoticias({ posts, showDummies = false }: Props) {
       </div>
 
       {showingDummies ? (
-        <p className="mt-3 text-[10px] italic text-zinc-400">
+        <p className="mt-3 text-[10px] italic text-zinc-500">
           Exibindo placeholders — nenhum post do blog ainda tem categoria contendo “fii”,
           “imobili” ou “fundos-imobiliarios”. Publique um post com essa categoria pra ele aparecer
           aqui automaticamente.

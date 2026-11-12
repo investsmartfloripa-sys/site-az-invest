@@ -104,7 +104,7 @@ export function AberturaCaged({ quebras, geradoEm }: { quebras: CagedQuebrasData
     >
       {temComparacao ? (
         <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-500">
-          <span className="font-semibold uppercase tracking-wider text-zinc-400">Δ vs 12m anteriores:</span>
+          <span className="font-semibold uppercase tracking-wider text-zinc-500">Δ vs 12m anteriores:</span>
           {rows.map((r) => (
             <span key={r.label} className="whitespace-nowrap tabular-nums">
               {r.label.split(" · ")[0]}{" "}

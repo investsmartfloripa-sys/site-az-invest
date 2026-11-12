@@ -95,7 +95,7 @@ export function SaldoAnualCard({
       stampDado={ultimaReferencia}
     >
       {saldoAnual.length === 0 ? (
-        <p className="flex h-72 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-72 items-center justify-center text-sm text-zinc-500">
           O pipeline ainda não publicou a série anual (saldo_anual).
         </p>
       ) : (

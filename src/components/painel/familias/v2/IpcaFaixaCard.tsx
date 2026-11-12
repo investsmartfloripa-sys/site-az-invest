@@ -101,7 +101,7 @@ export function IpcaFaixaCard({
         footer="IPEA (Ipeadata DIMAC_INF*). A série acumulada em 12 meses (v2) ainda não foi publicada pelo builder — rode o workflow familias-pipeline.yml."
         stampGiro={geradoEm}
       >
-        <p className="flex h-40 items-center justify-center text-sm text-zinc-400">
+        <p className="flex h-40 items-center justify-center text-sm text-zinc-500">
           Sem a série acumulada em 12 meses neste JSON.
         </p>
       </ChartCard>
@@ -117,7 +117,7 @@ export function IpcaFaixaCard({
       stampGiro={geradoEm}
       stampDado={maxIso || null}
     >
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Acumulado em 12 meses (%)</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Acumulado em 12 meses (%)</p>
       <div className="h-[230px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={rows} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
@@ -146,7 +146,7 @@ export function IpcaFaixaCard({
         </ResponsiveContainer>
       </div>
 
-      <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+      <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
         Spread: muito baixa − alta (p.p.)
       </p>
       <div className="h-[150px] w-full">

@@ -150,7 +150,7 @@ export function FundosImobiliariosClient({ ifix, screener, tijoloSerie }: Props)
         >
           <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">IFIX</p>
           <p className="mt-2 text-sm text-zinc-500">
-            Pipeline em construção — dados serão preenchidos no próximo deploy.
+            Dados temporariamente indisponíveis. Tente de novo em alguns minutos.
           </p>
         </section>
       )}
@@ -176,7 +176,7 @@ export function FundosImobiliariosClient({ ifix, screener, tijoloSerie }: Props)
         >
           <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Screener</p>
           <p className="mt-2 text-sm text-zinc-500">
-            Pipeline em construção — universo IFIX + métricas via CVM.
+            Dados temporariamente indisponíveis. Tente de novo em alguns minutos.
           </p>
         </section>
       )}

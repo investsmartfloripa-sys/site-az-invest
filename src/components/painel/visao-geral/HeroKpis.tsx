@@ -78,8 +78,8 @@ export function HeroKpis({ payload }: { payload: VisaoGeralPayload }) {
     probPct === null
       ? "Nenhum modelo disponível nesta rodada — aguardando pipeline."
       : prob.usaFallback
-        ? `${prob.nModelos} de 4 modelos disponíveis — mediana indisponível. Backtest formal em construção.`
-        : `${prob.nAcima50} de ${prob.nModelos} acima de 50% · backtest formal em construção`;
+        ? `${prob.nModelos} de 4 modelos disponíveis — mediana indisponível.`
+        : `${prob.nAcima50} de ${prob.nModelos} acima de 50%`;
 
   // KPI 2 - Atividade: ritmo trimestral do IBC-Br (3m/3m dessaz, convenção BCB RI)
   const ibc = ultimaObs(payload.ibcbr?.serie);

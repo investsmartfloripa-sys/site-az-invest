@@ -254,7 +254,7 @@ function Controle({
         <span className="font-semibold text-[#132960]">{rotulo}</span>
         <strong className="text-sm tabular-nums text-[#132960]">{fmtNum(valor, 2)}%</strong>
       </span>
-      <span className="block text-[10px] text-zinc-400">{ajuda}</span>
+      <span className="block text-[10px] text-zinc-500">{ajuda}</span>
       <input
         type="range"
         min={min}
@@ -265,7 +265,7 @@ function Controle({
         className="mt-1.5 w-full accent-[#027DFC]"
         aria-label={rotulo}
       />
-      <span className="flex justify-between text-[10px] tabular-nums text-zinc-400">
+      <span className="flex justify-between text-[10px] tabular-nums text-zinc-500">
         <span>{fmtNum(min, 0)}%</span>
         <span>{fmtNum(max, 0)}%</span>
       </span>
@@ -429,7 +429,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
 
   if (h.ibov == null || !hist.length) {
     return (
-      <article className="rounded-2xl border border-[#132960]/15 bg-white p-4 text-xs italic text-zinc-400 shadow-sm md:p-5">
+      <article className="rounded-2xl border border-[#132960]/15 bg-white p-4 text-xs italic text-zinc-500 shadow-sm md:p-5">
         Ibovespa em pontos indisponível no momento.
       </article>
     );
@@ -559,7 +559,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
           <div className="flex">
             <div style={{ height: ALT }} className="min-w-0 flex-1">
               {vis.length < 2 || !esc ? (
-                <div className="flex h-full items-center justify-center text-xs italic text-zinc-400">sem dados na janela</div>
+                <div className="flex h-full items-center justify-center text-xs italic text-zinc-500">sem dados na janela</div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={vis} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
@@ -798,7 +798,7 @@ function IbovValuationCard({ m }: { m: IbovPlModeloData }) {
         </aside>
       </div>
 
-      <p className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-400">
+      <p className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-500">
         <span>
           Modelo estimado com dados até {fmtMesCurto(m.estimado_ate)} · linhas interrompidas = meses sem P/L confiável
           {temProj && pj && pFim

@@ -102,7 +102,7 @@ export function TabelaMestraBp({ bp, geradoEm }: { bp: BpMestre; geradoEm: strin
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] border-collapse text-xs tabular-nums">
           <thead>
-            <tr className="border-b border-zinc-200 text-right text-[10px] uppercase tracking-wider text-zinc-400">
+            <tr className="border-b border-zinc-200 text-right text-[10px] uppercase tracking-wider text-zinc-500">
               <th className="py-1.5 pr-2 text-left font-semibold">Linha (SGS)</th>
               <th className="py-1.5 pl-2 font-semibold">{mes ? fmtMesCurto(isoMes(mes)) : "Mês"}</th>
               <th className="py-1.5 pl-2 font-semibold">{mAnt ? fmtMesCurto(isoMes(mAnt.mes)) : "a/a"}</th>
@@ -155,7 +155,7 @@ function Linha({
     <tr className={`border-b border-zinc-100 ${topo ? "bg-[#132960]/[0.03]" : ""}`}>
       <td className={`py-1.5 pr-2 ${topo ? "font-bold text-[#132960]" : "text-zinc-700"}`} style={{ paddingLeft: `${nivel * 14}px` }}>
         {label}
-        <span className="ml-1 text-[10px] font-normal text-zinc-400">{sgs ?? "calc."}</span>
+        <span className="ml-1 text-[10px] font-normal text-zinc-500">{sgs ?? "calc."}</span>
       </td>
       <td className={`py-1.5 pl-2 text-right ${topo ? "font-bold text-[#132960]" : ""}`}>{vm != null ? fmtSinal(vm / 1000, 2) : "—"}</td>
       <td className="py-1.5 pl-2 text-right text-zinc-500">{vma != null ? fmtSinal(vma / 1000, 2) : "—"}</td>

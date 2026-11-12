@@ -195,7 +195,7 @@ export function ContaFinanceiraCard({
         </CockpitChip>
       </div>
       {semDados ? (
-        <p className="flex items-center justify-center text-center text-sm text-zinc-400" style={{ height: 240 }}>
+        <p className="flex items-center justify-center text-center text-sm text-zinc-500" style={{ height: 240 }}>
           Conta financeira (SIDRA 2205) ausente nesta carga — o builder não gravou o bloco conta_financeira.
         </p>
       ) : (

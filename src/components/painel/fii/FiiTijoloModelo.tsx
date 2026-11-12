@@ -240,7 +240,7 @@ function Controle({
         <span className="font-semibold text-[#132960]">{rotulo}</span>
         <strong className="text-sm tabular-nums text-[#132960]">{fmtNum(valor, 2)}%</strong>
       </span>
-      <span className="block text-[10px] text-zinc-400">
+      <span className="block text-[10px] text-zinc-500">
         {ajuda} · hoje <span className="tabular-nums">{fmtNum(hoje, 2)}%</span>
       </span>
       <input
@@ -253,7 +253,7 @@ function Controle({
         className="mt-1.5 w-full accent-[#027DFC]"
         aria-label={rotulo}
       />
-      <span className="flex justify-between text-[10px] tabular-nums text-zinc-400">
+      <span className="flex justify-between text-[10px] tabular-nums text-zinc-500">
         <span>{fmtNum(min, 0)}%</span>
         <span>{fmtNum(max, 0)}%</span>
       </span>
@@ -509,7 +509,7 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
           <div className="flex">
             <div style={{ height: ALT }} className="min-w-0 flex-1">
               {vis.length < 2 || !esc ? (
-                <div className="flex h-full items-center justify-center text-xs italic text-zinc-400">sem dados na janela</div>
+                <div className="flex h-full items-center justify-center text-xs italic text-zinc-500">sem dados na janela</div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={vis} margin={{ top: 8, right: 0, bottom: 0, left: 0 }}>
@@ -758,7 +758,7 @@ function ValuationCard({ m }: { m: FiiTijoloModeloData }) {
         </aside>
       </div>
 
-      <p className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-400">
+      <p className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-500">
         <span>
           Modelo estimado com dados até {fmtMesCurto(m.modelo.fim)} · VP e rendimentos até{" "}
           {fmtMesCurto(m.cvm_ate)} (informe da CVM)
@@ -884,7 +884,7 @@ export function PremioNtnbCard({ modelo: m }: { modelo: FiiTijoloModeloData }) {
 
       <div style={{ height: 230 }} className="relative w-full">
         {vis.length < 2 || !eixo ? (
-          <div className="flex h-full items-center justify-center text-xs italic text-zinc-400">sem dados na janela</div>
+          <div className="flex h-full items-center justify-center text-xs italic text-zinc-500">sem dados na janela</div>
         ) : (
           <>
             <ResponsiveContainer width="100%" height="100%">
@@ -947,16 +947,16 @@ export function PremioNtnbCard({ modelo: m }: { modelo: FiiTijoloModeloData }) {
                 <Line type="linear" dataKey="razao" stroke={COR.just} strokeWidth={2.2} dot={false} isAnimationActive={false} />
               </ComposedChart>
             </ResponsiveContainer>
-            <span className="pointer-events-none absolute left-[52px] top-2 text-[10px] font-semibold text-zinc-400">
+            <span className="pointer-events-none absolute left-[52px] top-2 text-[10px] font-semibold text-zinc-500">
               ▲ prêmio alto
             </span>
-            <span className="pointer-events-none absolute bottom-9 left-[52px] text-[10px] font-semibold text-zinc-400">
+            <span className="pointer-events-none absolute bottom-9 left-[52px] text-[10px] font-semibold text-zinc-500">
               ▼ prêmio baixo
             </span>
           </>
         )}
       </div>
-      <p className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-400">
+      <p className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-500">
         <span>Mesmos dados do índice de tijolo acima · não é recomendação</span>
         <DataStamp giro={m.generated_at} dado={m.last_data_date} />
       </p>
@@ -997,7 +997,7 @@ function Composicao({ m }: { m: FiiTijoloModeloData }) {
           </table>
         ))}
       </div>
-      <p className="mt-2 text-[10px] text-zinc-400">
+      <p className="mt-2 text-[10px] text-zinc-500">
         Composição de {fmtMesCurto(m.hoje.date)} · P/VP com o VP do último informe da CVM ({fmtMesCurto(m.cvm_ate)})
       </p>
     </article>

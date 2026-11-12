@@ -178,33 +178,30 @@ export default async function AuthorPage({
         {author.bio ? (
           <section className="rounded-xl border border-[#132960]/15 bg-white p-4 shadow-sm md:p-5">
             <div className="space-y-0.5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#027DFC] md:text-[11px]">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#027DFC]">
                 Quem é
               </p>
               <h2 className="text-xl font-medium text-[#132960] md:text-2xl">
                 Sobre {firstName}
               </h2>
             </div>
-            <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-zinc-700 md:text-sm">
+            <p className="mt-2 max-w-3xl whitespace-pre-line text-sm leading-relaxed text-zinc-700 md:text-base">
               {author.bio}
             </p>
           </section>
         ) : null}
 
-        <section className="space-y-3">
-          <div className="space-y-0.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#FF5713] md:text-[11px]">
-              Conteúdo autoral
-            </p>
-            <h2 className="text-xl font-medium text-[#132960] md:text-2xl">
-              Artigos desta pessoa
-            </h2>
-          </div>
-          {mappedPosts.length === 0 ? (
-            <p className="rounded-xl border border-[#132960]/20 bg-white px-4 py-3 text-sm text-zinc-600">
-              {firstName} ainda não publicou nenhum artigo por aqui.
-            </p>
-          ) : (
+        {/* Sem artigos, a seção não aparece: "ainda não publicou" era estado vazio à mostra. */}
+        {mappedPosts.length > 0 ? (
+          <section className="space-y-3">
+            <div className="space-y-0.5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#027DFC]">
+                Conteúdo autoral
+              </p>
+              <h2 className="text-xl font-medium text-[#132960] md:text-2xl">
+                Artigos desta pessoa
+              </h2>
+            </div>
             <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {mappedPosts.map((post) => (
                 <li key={post.id}>
@@ -212,8 +209,8 @@ export default async function AuthorPage({
                 </li>
               ))}
             </ul>
-          )}
-        </section>
+          </section>
+        ) : null}
       </main>
       <Footer />
     </div>

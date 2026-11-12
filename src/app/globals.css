@@ -34,6 +34,17 @@ body {
   font-weight: 500;
 }
 
+/* A Michroma desenha "%" como um "º/o" que parece defeito ("0,14º/o"). Esta face cobre SÓ o
+   caractere "%" (unicode-range) com a Raleway e vem antes da Michroma nos títulos: o resto do
+   título continua em Michroma, e o arquivo só é baixado quando um título tem "%". */
+@font-face {
+  font-family: "AZ Porcento";
+  src: url("/fonts/raleway-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range: U+0025;
+}
+
 @layer base {
   a {
     color: inherit;
@@ -43,7 +54,7 @@ body {
   /* Michroma APENAS em h1/h2 (peso 400 — a fonte não tem bold; evita faux-bold). */
   h1,
   h2 {
-    font-family: var(--font-heading), Arial, Helvetica, sans-serif;
+    font-family: "AZ Porcento", var(--font-heading), Arial, Helvetica, sans-serif;
     font-weight: 400;
     letter-spacing: -0.02em;
     /* A Michroma só existe em 400: sem isto o navegador fabrica um negrito
@@ -57,6 +68,26 @@ body {
     font-family: var(--font-body), Arial, Helvetica, sans-serif;
     font-weight: 600;
     letter-spacing: -0.01em;
+  }
+
+  /* Café com Mercado: texto corrido justificado no computador, com hifenização (lang="pt-BR"
+     no <html>) para não abrir "rios"; no celular a coluna é estreita demais e fica alinhado à esquerda. */
+  @media (min-width: 768px) {
+    .az-cafe-texto p {
+      text-align: justify;
+      hyphens: auto;
+    }
+  }
+
+  /* Sinal de rolagem horizontal (ScrollHints marca o contêiner): esmaece a borda onde ainda há conteúdo. */
+  [data-rola="dir"] {
+    mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  }
+  [data-rola="esq"] {
+    mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent);
+  }
+  [data-rola="ambos"] {
+    mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
   }
 
   /* Foco visível consistente em todo o site (o radius é sobrescrito por

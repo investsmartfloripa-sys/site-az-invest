@@ -111,7 +111,7 @@ export function ReservasCard({ blocoC, geradoEm }: { blocoC: BlocoC; geradoEm: s
       <div className="flex flex-col gap-2">
         {mesesMain ? (
           <>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Meses de importação cobertos</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Meses de importação cobertos</p>
             <AzTimeSeriesChart
               series={[mesesMain]}
               benchmarks={mesesBench}
@@ -123,12 +123,12 @@ export function ReservasCard({ blocoC, geradoEm }: { blocoC: BlocoC; geradoEm: s
             />
           </>
         ) : (
-          <p className="flex h-24 items-center justify-center text-xs text-zinc-400">
+          <p className="flex h-24 items-center justify-center text-xs text-zinc-500">
             O pipeline ainda não publicou a série de meses de importação (meses_importacao_serie).
           </p>
         )}
 
-        <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Nível das reservas</p>
+        <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Nível das reservas</p>
         <AzTimeSeriesChart
           series={[{ id: "reservas", label: "Reservas (US$ bi)", color: AZ_BRAND.azure, data: reservasPoints }]}
           unit="none"

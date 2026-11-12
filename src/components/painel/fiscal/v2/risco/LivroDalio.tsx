@@ -195,7 +195,7 @@ export function LeverCard({
       <div className="flex items-start justify-between">
         <div>
           <h3 className="text-sm font-bold text-[#132960]">
-            <span className="mr-1 text-zinc-400">{numero}.</span>
+            <span className="mr-1 text-zinc-500">{numero}.</span>
             {titulo}
           </h3>
           <p className="mt-1 text-xs text-zinc-600">{descricao}</p>

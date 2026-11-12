@@ -41,7 +41,7 @@ type Vista = "leitura" | "ipa" | "ipc" | "incc" | "tendencia";
 function SubSecao({ rotulo }: { rotulo: string }) {
   return (
     <div className="flex items-center gap-3 pt-1">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">{rotulo}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">{rotulo}</span>
       <div className="h-px flex-1 bg-zinc-200" />
     </div>
   );

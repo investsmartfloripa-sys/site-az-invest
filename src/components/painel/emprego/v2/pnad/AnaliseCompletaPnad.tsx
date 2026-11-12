@@ -78,7 +78,7 @@ export function AnaliseCompletaPnad({ data, geradoEm }: { data: PnadData; gerado
       <div className="overflow-x-auto">
         <table className="w-full min-w-[620px] text-xs">
           <thead>
-            <tr className="border-b border-zinc-200 text-left text-[10px] uppercase tracking-wider text-zinc-400">
+            <tr className="border-b border-zinc-200 text-left text-[10px] uppercase tracking-wider text-zinc-500">
               <th className="py-1.5 pr-2 font-semibold">Trimestre</th>
               {COLUNAS.map((c) => (
                 <th key={c.key} className="py-1.5 pr-2 text-right font-semibold">

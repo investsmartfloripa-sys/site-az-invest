@@ -81,7 +81,7 @@ export function AluguelCard({ aluguel, geradoEm }: { aluguel: AluguelBlock; gera
                   <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-zinc-700">
                     {r.clausula_nao_reducao ? (
                       <span title="IGP-M negativo: cláusula de não-redução segura o reajuste em zero">
-                        0% <span className="text-[10px] text-zinc-400">(estável)</span>
+                        0% <span className="text-[10px] text-zinc-500">(estável)</span>
                       </span>
                     ) : (
                       fmtPct(r.aplicado_pct, 2)
