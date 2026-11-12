@@ -29,6 +29,30 @@ const COLUMNS = [
 
 type SortKey = (typeof COLUMNS)[number]["key"];
 
+/** Classes sem múltiplos de empresa (índice, câmbio, commodity, cripto): fora desta tabela. */
+const SEM_FUNDAMENTOS: ReadonlySet<AssetClass> = new Set<AssetClass>(["indice", "fx", "commodity", "cripto"]);
+
+/**
+ * Faixa plausível de cada múltiplo. Fora dela o número existe na fonte mas não tem leitura
+ * (P/VP −4.046 de um ETF de títulos, Div/PL de 13× com patrimônio quase zerado...): a célula
+ * mostra "n/s*" com o valor bruto no tooltip, e a ordenação o trata como vazio.
+ */
+const FAIXA: Partial<Record<SortKey, [number, number]>> = {
+  trailingPE: [0, 200],
+  forwardPE: [0, 200],
+  priceToBook: [0, 50],
+  evEbitda: [0, 100],
+  divYield: [0, 0.25],
+  roe: [-1, 1],
+  margin: [-1, 1],
+  debtEq: [0, 1000], // a fonte dá Div/PL em %: 1.000% = 10×
+};
+
+function atipico(key: SortKey, v: number | string | null): boolean {
+  const faixa = FAIXA[key];
+  return faixa != null && typeof v === "number" && (v < faixa[0] || v > faixa[1]);
+}
+
 type Filters = {
   klass: AssetClass | "all";
   query: string;
@@ -57,13 +81,22 @@ function getField(t: TickerRow, key: SortKey): number | string | null {
     case "divYield":   return info.dividendYield ?? info.trailingAnnualDividendYield ?? null;
     case "roe":        return info.returnOnEquity ?? null;
     case "margin":     return info.operatingMargins ?? null;
-    case "debtEq":     return info.debtToEquity ?? null;
+    case "debtEq":     return info.debtToEquity ?? null; // em % na fonte (150 = 1,5×)
     case "beta":       return info.beta ?? null;
   }
 }
 
 function renderCell(t: TickerRow, key: SortKey) {
   const info = t.info;
+  const bruto = getField(t, key);
+  if (atipico(key, bruto)) {
+    const txt = key === "debtEq" ? formatRatio((bruto as number) / 100) : FMT_PCT.has(key) ? formatPctFromRatio(bruto as number) : formatRatio(bruto as number);
+    return (
+      <span className="cursor-help text-zinc-500" title={`Valor atípico na fonte (${txt}): sem leitura útil, fica fora da ordenação.`}>
+        n/s*
+      </span>
+    );
+  }
   switch (key) {
     case "ticker":
       return (
@@ -93,11 +126,15 @@ function renderCell(t: TickerRow, key: SortKey) {
     case "margin":
       return formatPctFromRatio(info.operatingMargins);
     case "debtEq":
-      return formatRatio(info.debtToEquity);
+      // A fonte entrega Div/PL em %; a coluna mostra em vezes (1,5 = dívida de 1,5× o patrimônio).
+      return info.debtToEquity == null ? "—" : formatRatio(info.debtToEquity / 100);
     case "beta":
       return formatRatio(info.beta);
   }
 }
+
+const FMT_PCT: ReadonlySet<SortKey> = new Set<SortKey>(["divYield", "roe", "margin"]);
+const CAMPOS_MULTIPLO: SortKey[] = ["trailingPE", "forwardPE", "priceToBook", "evEbitda", "divYield", "roe", "margin", "debtEq"];
 
 export function FundamentalsTable({ data }: Props) {
   const [filters, setFilters] = useState<Filters>({
@@ -111,9 +148,15 @@ export function FundamentalsTable({ data }: Props) {
   const [sortBy, setSortBy] = useState<SortKey>("marketCap");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
-  const rows = useMemo<TickerRow[]>(() => {
-    if (!data) return [];
-    return Object.entries(data.tickers).map(([ticker, v]) => ({ ...v, ticker }));
+  // Só ativos com múltiplos: índices, câmbio, commodities e cripto (e ETFs sem nenhum número)
+  // eram ~70 linhas inteiras de "—" (revisão de 12/11/2026).
+  const { rows, semMultiplos } = useMemo(() => {
+    if (!data) return { rows: [] as TickerRow[], semMultiplos: 0 };
+    const todos = Object.entries(data.tickers).map(([ticker, v]) => ({ ...v, ticker }));
+    const com = todos.filter(
+      (r) => !SEM_FUNDAMENTOS.has(r.klass) && CAMPOS_MULTIPLO.some((k) => getField(r, k) != null),
+    );
+    return { rows: com, semMultiplos: todos.length - com.length };
   }, [data]);
 
   const filtered = useMemo(() => {
@@ -140,8 +183,10 @@ export function FundamentalsTable({ data }: Props) {
   const sorted = useMemo(() => {
     const arr = [...filtered];
     arr.sort((a, b) => {
-      const va = getField(a, sortBy);
-      const vb = getField(b, sortBy);
+      const ra = getField(a, sortBy);
+      const rb = getField(b, sortBy);
+      const va = atipico(sortBy, ra) ? null : ra;
+      const vb = atipico(sortBy, rb) ? null : rb;
       const aIsNull = va == null;
       const bIsNull = vb == null;
       if (aIsNull && bIsNull) return 0;
@@ -173,29 +218,26 @@ export function FundamentalsTable({ data }: Props) {
     { id: "br_fii", label: "FIIs" },
     { id: "us_acoes", label: "Ações EUA" },
     { id: "us_etf", label: "ETFs EUA" },
-    { id: "indice", label: "Índices" },
-    { id: "fx", label: "Câmbio" },
-    { id: "commodity", label: "Commodities" },
-    { id: "cripto", label: "Cripto" },
   ];
 
   return (
     <MarketCard
-      title="Fundamentos e múltiplos"
+      title="Screener"
       subtitle={
         data
-          ? `${sorted.length} de ${rows.length} ativos exibidos · ${
-              data.total_from_cache ? `${data.total_from_cache} usando cache` : "todos atuais"
+          ? `${sorted.length} de ${rows.length} ativos com múltiplos${
+              semMultiplos ? ` · ${semMultiplos} sem múltiplos (índices, câmbio, commodities, cripto) ficam de fora` : ""
             }`
-          : "Tabela de múltiplos via Yahoo Finance."
+          : "Múltiplos de ações e ETFs, segundo o Yahoo Finance."
       }
-      badge="Yahoo Finance .info"
+      badge="Yahoo Finance"
       bodyClassName="px-4 pb-4 pt-2"
       footer={
         <>
-          Fonte: Yahoo Finance (.info). Valores de múltiplos vêm do{" "}
-          <code className="rounded bg-zinc-100 px-1">.info</code> do Yahoo Finance. DY, ROE e
-          margens são exibidos como % (origem ratio).
+          Fonte: Yahoo Finance. Múltiplos atuais (últimos 12 meses). DY, ROE e margem operacional em
+          %; Div/PL em vezes. “—”: a fonte não informou o múltiplo. “n/s*”: valor atípico na fonte
+          (patrimônio negativo ou quase zero, por exemplo), sem leitura útil; o número bruto aparece
+          ao passar o mouse.
         </>
       }
       stampGiro={data?.generated_at ?? null}
@@ -203,7 +245,7 @@ export function FundamentalsTable({ data }: Props) {
     >
       {!data ? (
         <div className="py-10 text-center text-sm text-zinc-500">
-          Nenhum dado fundamentalista no Blob ainda. O workflow market-data publica 1x/dia.
+          Os múltiplos ainda não foram carregados. Volte em alguns minutos.
         </div>
       ) : (
         <div className="space-y-3">
@@ -301,8 +343,9 @@ export function FundamentalsTable({ data }: Props) {
             </table>
           </div>
 
-          <p className="text-xs italic text-zinc-500">
-            Campos vazios significam que o Yahoo não retornou o múltiplo para aquele ativo.
+          <p className="text-xs text-zinc-600">
+            “—”: a fonte não informou o múltiplo. <strong>n/s*</strong>: valor atípico na fonte (por
+            exemplo, patrimônio negativo), sem leitura útil — passe o mouse para ver o número bruto.
           </p>
         </div>
       )}

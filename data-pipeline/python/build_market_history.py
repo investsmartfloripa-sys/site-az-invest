@@ -77,6 +77,34 @@ def _series_pct_change(series: pd.Series, days_back: int) -> Optional[float]:
         return None
 
 
+def _series_pct_change_years(series: pd.Series, years: int, tolerance_days: int = 10) -> Optional[float]:
+    """Retorno % entre o ultimo close e o close de N anos-calendario atras.
+
+    Contar pregoes (252 * N) falhava no 5A: um ano da B3 tem ~248 pregoes, entao
+    os 5 anos baixados (period="5y") nunca tinham os 1.260 pontos pedidos e quase
+    toda acao saia sem retorno de 5 anos (so FX/cripto, que negociam mais dias,
+    passavam). Aqui o ponto de partida e o ultimo close ate a data-alvo; se a
+    serie comeca logo depois dela (poucos dias, inicio do download), usa o 1o.
+    """
+    if series is None or series.empty or len(series) < 2:
+        return None
+    try:
+        idx = pd.DatetimeIndex(series.index)
+        target = idx[-1] - pd.DateOffset(years=years)
+        pos = int(idx.searchsorted(target, side="right")) - 1
+        if pos < 0:
+            if (idx[0] - target).days > tolerance_days:
+                return None
+            pos = 0
+        last = float(series.iloc[-1])
+        prev = float(series.iloc[pos])
+        if prev <= 0:
+            return None
+        return round(((last - prev) / prev) * 100.0, 2)
+    except Exception:
+        return None
+
+
 def _series_ytd(series: pd.Series) -> Optional[float]:
     if series is None or series.empty or len(series) < 2:
         return None
@@ -196,7 +224,7 @@ def build_market_history(lookback_years: int = DEFAULT_LOOKBACK_YEARS,
                 "3m":  _series_pct_change(s, 66),
                 "ytd": _series_ytd(s),
                 "1y":  _series_pct_change(s, 252),
-                "5y":  _series_pct_change(s, 252 * 5),
+                "5y":  _series_pct_change_years(s, 5),
             },
         }
         series_payload[t] = _series_to_compact(s)

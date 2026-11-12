@@ -71,7 +71,7 @@ function CelulaHeat({ periodo, valor }: { periodo: PanoramaPeriodKey; valor: num
   if (valor == null) {
     return (
       <td className="px-0.5 py-0.5">
-        <div className="flex h-7 min-w-[52px] items-center justify-center rounded-md bg-zinc-100 text-[10px] text-zinc-500">
+        <div className="flex h-7 min-w-[46px] items-center justify-center rounded-md bg-zinc-100 text-[10px] text-zinc-500">
           —
         </div>
       </td>
@@ -82,7 +82,7 @@ function CelulaHeat({ periodo, valor }: { periodo: PanoramaPeriodKey; valor: num
   return (
     <td className="px-0.5 py-0.5">
       <div
-        className={`flex h-7 min-w-[52px] items-center justify-center rounded-md text-[10.5px] font-semibold tabular-nums ${
+        className={`flex h-7 min-w-[46px] items-center justify-center whitespace-nowrap rounded-md px-1 text-[10.5px] font-semibold tabular-nums ${
           dark ? "text-white" : "text-zinc-900"
         }`}
         style={{ background: bg }}
@@ -116,11 +116,12 @@ function BlocoRegiao({ titulo, descricao, linhas }: { titulo: string; descricao:
           </span>
         ) : null}
       </div>
+      {/* No celular a tabela rola para o lado (com o esmaecido na borda) e a coluna do índice fica fixa. */}
       <div className="mt-1.5 overflow-x-auto">
-        <table className="w-full min-w-[440px] border-collapse">
+        <table className="w-full min-w-[400px] border-collapse">
           <thead>
             <tr className="text-[10px] uppercase tracking-wide text-zinc-500">
-              <th className="px-1 py-1 text-left font-semibold">Índice</th>
+              <th className="sticky left-0 z-10 bg-white px-1 py-1 text-left font-semibold">Índice</th>
               {PANORAMA_PERIODS.map((p) => (
                 <th key={p.id} className="px-0.5 py-1 text-center font-semibold">
                   {p.label}
@@ -131,7 +132,7 @@ function BlocoRegiao({ titulo, descricao, linhas }: { titulo: string; descricao:
           <tbody>
             {linhas.map((l) => (
               <tr key={l.ticker} className="border-t border-zinc-100">
-                <td className="max-w-[180px] py-0.5 pr-2">
+                <td className="sticky left-0 z-10 max-w-[160px] bg-white py-0.5 pr-2">
                   <span className="flex items-center gap-1.5">
                     {/* Bandeira via flagcdn — padrão FlagYTick (emoji não renderiza no Chrome/Windows). */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -182,7 +183,8 @@ export function RegioesHeatstrips({ panorama }: Props) {
       stampGiro={panorama.generated_at}
       stampDado={panorama.generated_at}
     >
-      <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+      {/* Uma região por linha: em três colunas a coluna 1A era cortada na borda do cartão. */}
+      <div className="grid gap-5">
         {REGIOES.map((r) => (
           <BlocoRegiao key={r.id} titulo={r.label} descricao={r.descricao} linhas={porRegiao[r.id]} />
         ))}

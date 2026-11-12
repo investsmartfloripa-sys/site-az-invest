@@ -6,7 +6,9 @@ import { AzPeriodSelector, AzTimeSeriesChart, type AzPeriodValue, type AzTimeSer
 import { DivergingReturnBars } from "@/components/painel/charts/DivergingReturnBars";
 import { AzSegmented, ChartCard, KpiCard } from "@/components/painel/core";
 import { PipelinePendingCard } from "@/components/painel/PipelinePendingCard";
+import { AZ_SERIES } from "@/lib/az-chart-theme";
 import { fmtNum } from "@/lib/format-br";
+import { dominioBarras, fmtEixoBarras } from "@/lib/painel-eixo-barras";
 import {
   PANORAMA_PERIODS,
   type CommoditiesReturnsPayload,
@@ -51,6 +53,16 @@ const HISTORY_PRESETS: { id: string; label: string; tickers: string[] }[] = [
   { id: "metais", label: "Metais", tickers: ["GC=F", "SI=F", "HG=F"] },
   { id: "agro-br", label: "Agro BR", tickers: ["KC=F", "SB=F", "ZS=F", "ZC=F"] },
 ];
+
+/**
+ * Cor fixa por contrato no histórico. Brent e WTI andam quase juntos: azul e navy lado a lado
+ * ficavam indistinguíveis, então o WTI vai no cinza da paleta. Os demais seguem a ordem da paleta.
+ */
+const HISTORY_COLORS: Record<string, string> = {
+  "BZ=F": AZ_SERIES[0], // azul AZ
+  "CL=F": AZ_SERIES[7], // slate
+  "NG=F": AZ_SERIES[2], // rust (como antes)
+};
 
 /** Rótulos curtos de legenda (os nomes do catálogo trazem "(futuro)"). */
 const HISTORY_LABELS: Record<string, string> = {
@@ -105,10 +117,11 @@ export function CommoditiesDashboard({ panorama, history }: Props) {
       }
       return { ...g, items };
     });
-    // Domain compartilhado entre os três grupos (barras comparáveis) + 12% de folga.
+    // Domínio compartilhado entre os três grupos (barras comparáveis), com 12% de folga para o
+    // rótulo na ponta e arredondado: marcas redondas com o 0%, iguais em qualquer largura.
     const span = hi - lo;
     const pad = span > 0 ? span * 0.12 : 1;
-    const xDomain: [number, number] = [lo - pad, hi + pad];
+    const xDomain = dominioBarras(lo - (lo < 0 ? pad : 0), hi + (hi > 0 ? pad : 0));
     return { groups, xDomain };
   }, [panorama, period, currency]);
 
@@ -136,7 +149,12 @@ export function CommoditiesDashboard({ panorama, history }: Props) {
       activePreset.tickers
         .map((ticker) => history.series.find((s) => s.ticker === ticker))
         .filter((s): s is NonNullable<typeof s> => s != null)
-        .map((s) => ({ id: s.ticker, label: HISTORY_LABELS[s.ticker] ?? s.label, data: s.data })),
+        .map((s) => ({
+          id: s.ticker,
+          label: HISTORY_LABELS[s.ticker] ?? s.label,
+          color: HISTORY_COLORS[s.ticker],
+          data: s.data,
+        })),
     [activePreset, history.series],
   );
 
@@ -204,7 +222,7 @@ export function CommoditiesDashboard({ panorama, history }: Props) {
                       {g.label}
                       {g.note ? <span className="ml-1.5 font-normal normal-case text-zinc-500">({g.note})</span> : null}
                     </h3>
-                    <DivergingReturnBars rows={g.items} xDomain={grouped.xDomain} yAxisWidth={128} />
+                    <DivergingReturnBars rows={g.items} xDomain={grouped.xDomain} axisFmt={fmtEixoBarras(grouped.xDomain)} yAxisWidth={128} />
                   </div>
                 ),
               )}
@@ -240,7 +258,9 @@ export function CommoditiesDashboard({ panorama, history }: Props) {
           stampDado={history.lastDataDate}
         >
           <div className="space-y-3">
-            <AzPeriodSelector value={histPeriod} onChange={setHistPeriod} min={histMin} max={histMax} />
+            <div className="min-w-0 max-w-full overflow-x-auto">
+              <AzPeriodSelector className="w-max" value={histPeriod} onChange={setHistPeriod} min={histMin} max={histMax} />
+            </div>
             <AzTimeSeriesChart
               series={historySeries}
               mode="rebase100"

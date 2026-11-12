@@ -24,9 +24,9 @@ export default async function FundamentosPage() {
         </p>
         <h1 className="text-2xl font-semibold text-[#132960]">Fundamentos e múltiplos</h1>
         <p className="max-w-3xl text-sm text-zinc-600">
-          Screener com múltiplos atuais (trailing) de ações brasileiras e americanas, ETFs e principais
-          instrumentos. Use o heatmap setorial para identificar setores baratos ou caros vs mediana, e a
-          tabela para filtrar candidatos —{" "}
+          Múltiplos atuais (últimos 12 meses) de ações brasileiras e americanas e de ETFs. Use o mapa
+          setorial para ver setores baratos ou caros pela mediana, e o screener para filtrar
+          candidatos —{" "}
           <Link href="/painel-economico/mercado/historico" className="underline hover:text-[#027DFC]">
             voltar ao histórico comparativo
           </Link>

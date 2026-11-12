@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { CommoditiesDashboard } from "@/components/painel/commodities/CommoditiesDashboard";
+import { ComunidadeMercado } from "@/components/painel/market/ComunidadeMercado";
 import { PipelinePendingCard } from "@/components/painel/PipelinePendingCard";
 import {
   EMPTY_HISTORY_SLICE,
@@ -46,7 +47,7 @@ export default async function CommoditiesPage() {
         </p>
         <h1 className="text-2xl font-semibold text-[#132960]">Energia, metais e agro</h1>
         <p className="max-w-3xl text-sm text-zinc-600">
-          Retornos dos 17 futuros acompanhados pelo pipeline em janelas de 1 dia a 1 ano, agrupados
+          Retornos dos 17 futuros que acompanhamos, em janelas de 1 dia a 1 ano, agrupados
           por setor e com leitura em <strong>dólar ou em real</strong> — a mesma commodity pode subir
           em US$ e cair em R$ quando o câmbio anda mais que o preço. Abaixo, o histórico de 5 anos
           permite comparar a trajetória dos futuros dentro de cada grupo.
@@ -82,11 +83,13 @@ export default async function CommoditiesPage() {
             algodão) e Pecuária (boi gordo, suínos).
           </li>
           <li>
-            <strong>Histórico comparativo</strong>: fechamentos diários de 5 anos em US$
-            (market-data, 1x/dia útil), rebase 100 no início da janela selecionada.
+            <strong>Histórico comparativo</strong>: fechamentos diários de 5 anos em US$,
+            atualizados uma vez por dia útil, com base 100 no início da janela selecionada.
           </li>
         </ul>
       </section>
+
+      <ComunidadeMercado assunto="commodities" origem="PAINEL_COMMODITIES" />
     </div>
   );
 }

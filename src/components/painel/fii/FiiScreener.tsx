@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 
 import DataStamp from "@/components/painel/DataStamp";
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
+import { fmtNum } from "@/lib/format-br";
 import type { FiiScreenerData, FiiScreenerRow } from "@/lib/painel-fii";
 
 type SortKey = "name" | "segment" | "price" | "dy_12m_pct" | "pvp" | "pl" | "liquidity_avg_21d";
@@ -14,31 +15,41 @@ const COL_LABELS: Record<SortKey, string> = {
   name: "Nome",
   segment: "Setor",
   price: "Preço",
-  dy_12m_pct: "D.Y",
+  dy_12m_pct: "DY",
   pvp: "P/VP",
   pl: "PL",
   liquidity_avg_21d: "Liquidez",
 };
 
+// Tudo em pt-BR na mesma linha (antes: "R$ 54,97" ao lado de "19.77%", "0.569" e "R$ 6.04B").
 function formatBRL(value: number | null | undefined): string {
   if (value == null || Number.isNaN(value)) return "—";
-  return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return fmtNum(value, 2);
 }
 function formatPct(value: number | null | undefined): string {
   if (value == null || Number.isNaN(value)) return "—";
-  return `${value.toFixed(2)}%`;
+  return `${fmtNum(value, 2)}%`;
 }
 function formatBig(value: number | null | undefined): string {
   if (value == null || Number.isNaN(value)) return "—";
   const abs = Math.abs(value);
-  if (abs >= 1e9) return `R$ ${(value / 1e9).toFixed(2)}B`;
-  if (abs >= 1e6) return `R$ ${(value / 1e6).toFixed(2)}M`;
-  if (abs >= 1e3) return `R$ ${(value / 1e3).toFixed(0)}K`;
-  return `R$ ${value.toFixed(0)}`;
+  if (abs >= 1e9) return `R$ ${fmtNum(value / 1e9, 2)} bi`;
+  if (abs >= 1e6) return `R$ ${fmtNum(value / 1e6, 2)} mi`;
+  if (abs >= 1e3) return `R$ ${fmtNum(value / 1e3, 0)} mil`;
+  return `R$ ${fmtNum(value, 0)}`;
 }
 function formatRatio(value: number | null | undefined): string {
   if (value == null || Number.isNaN(value)) return "—";
-  return value.toFixed(3);
+  return fmtNum(value, 2);
+}
+
+/** "Sem dado" é diferente de zero: "n/d", com a explicação ao passar o mouse. */
+function SemDado({ title }: { title: string }) {
+  return (
+    <span title={title} className="cursor-help text-zinc-500">
+      n/d
+    </span>
+  );
 }
 
 function compareRow(a: FiiScreenerRow, b: FiiScreenerRow, key: SortKey, dir: SortDir): number {
@@ -98,6 +109,12 @@ export function FiiScreener({
     return arr;
   }, [filtered, sortKey, sortDir]);
 
+  const ultimoPregao = useMemo(() => {
+    let max: string | null = null;
+    for (const r of data.rows) if (r.price_date && (max == null || r.price_date > max)) max = r.price_date;
+    return max ? max.slice(0, 10) : null;
+  }, [data]);
+
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -155,9 +172,9 @@ export function FiiScreener({
         <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] text-zinc-500">
           {sorted.length} de {data.total_rows} FIIs
           <MethodInfo align="right" className="align-middle">
-            Universo: composição IFIX ({data.total_in_ifix} FIIs). Preço, dividendos e liquidez
-            via yfinance; PL e VP/cota via CVM Informe Mensal. Segmento por catálogo curado
-            (gestoras).
+            Universo: composição do IFIX ({data.total_in_ifix} FIIs). Preço, dividendos e liquidez
+            vêm do Yahoo Finance; patrimônio líquido e valor patrimonial por cota, do informe
+            mensal entregue à CVM. Segmento pela classificação da AZ Invest.
           </MethodInfo>
         </span>
       </div>
@@ -264,38 +281,52 @@ export function FiiScreener({
                     {r.price != null ? `R$ ${formatBRL(r.price)}` : "—"}
                   </td>
                   <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
-                    <span
-                      title={
-                        r.dy_atypical
-                          ? "DY > 18% pode incluir amortização de capital. Verifique o relatório gerencial do fundo."
-                          : undefined
-                      }
-                      className={r.dy_atypical ? "cursor-help text-amber-700" : undefined}
-                    >
-                      {formatPct(r.dy_12m_pct)}
-                      {r.dy_atypical ? "*" : ""}
-                    </span>
+                    {r.dy_12m_pct == null ? (
+                      <SemDado title="Sem dado: a fonte não informou os proventos dos últimos 12 meses." />
+                    ) : (
+                      <span
+                        title={
+                          r.dy_atypical
+                            ? "DY acima de 18% pode incluir amortização de capital. Verifique o relatório gerencial do fundo."
+                            : undefined
+                        }
+                        className={r.dy_atypical ? "cursor-help text-amber-700" : undefined}
+                      >
+                        {formatPct(r.dy_12m_pct)}
+                        {r.dy_atypical ? "*" : ""}
+                      </span>
+                    )}
                   </td>
                   <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
-                    <span
-                      title={
-                        r.pvp_warning
-                          ? "P/VP < 0,7 pode indicar distress (vacância alta, problema de crédito da carteira). Verifique relatório gerencial."
-                          : r.pvp == null
-                          ? "Escala de Valor Patrimonial reportada pela CVM inconsistente — fora."
-                          : undefined
-                      }
-                      className={r.pvp_warning ? "cursor-help text-amber-700" : r.pvp == null ? "cursor-help" : undefined}
-                    >
-                      {formatRatio(r.pvp)}
-                      {r.pvp_warning ? "*" : ""}
-                    </span>
+                    {r.pvp == null ? (
+                      <SemDado title="Sem dado: o fundo não entregou o valor patrimonial à CVM, ou o valor veio em escala inconsistente e foi descartado." />
+                    ) : (
+                      <span
+                        title={
+                          r.pvp_warning
+                            ? "P/VP abaixo de 0,7 pode indicar fundo em dificuldade (vacância alta, problema de crédito na carteira). Verifique o relatório gerencial."
+                            : undefined
+                        }
+                        className={r.pvp_warning ? "cursor-help text-amber-700" : undefined}
+                      >
+                        {formatRatio(r.pvp)}
+                        {r.pvp_warning ? "*" : ""}
+                      </span>
+                    )}
                   </td>
                   <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
-                    {formatBig(r.pl)}
+                    {r.pl == null ? (
+                      <SemDado title="Sem dado: o fundo não entregou o patrimônio líquido à CVM no último informe mensal." />
+                    ) : (
+                      formatBig(r.pl)
+                    )}
                   </td>
                   <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
-                    {formatBig(r.liquidity_avg_21d)}
+                    {r.liquidity_avg_21d == null ? (
+                      <SemDado title="Sem dado: a fonte não informou o volume negociado." />
+                    ) : (
+                      formatBig(r.liquidity_avg_21d)
+                    )}
                   </td>
                 </tr>
                 );
@@ -305,12 +336,16 @@ export function FiiScreener({
         </table>
       </div>
 
-      <p className="mt-3 text-[10px] text-zinc-500">
-        Outliers de P/VP (escala não padronizada na CVM) ficam como “—”. <strong>*</strong>{" "}
-        DY &gt; 18% pode incluir amortização — não é renda recorrente.
+      <p className="mt-3 text-xs leading-relaxed text-zinc-600">
+        <strong>n/d</strong>: sem dado. P/VP e PL vêm do informe mensal entregue à CVM; fundo que não
+        entregou, ou que reportou em escala inconsistente, fica sem o número. <strong>*</strong> DY
+        acima de 18% pode incluir amortização (não é renda recorrente); P/VP abaixo de 0,7 pede
+        atenção ao relatório gerencial.
       </p>
       <p className="mt-2 text-right">
-        <DataStamp giro={data.generated_at} dado={data.generated_at} />
+        {/* Data do dado = último pregão das cotações (precisão de dia): o carimbo com minutos do
+            gráfico acima e o desta tabela diferiam por um minuto e pareciam duas atualizações. */}
+        <DataStamp giro={data.generated_at} dado={ultimoPregao ?? null} />
       </p>
     </section>
   );

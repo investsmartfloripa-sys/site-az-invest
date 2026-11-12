@@ -70,16 +70,24 @@ def _num(v) -> Optional[float]:
         return None
 
 
-def _dy_pct(info: Dict) -> Optional[float]:
-    """Normaliza dividend yield para %. trailingAnnualDividendYield é fração; alguns
-    campos já vêm em %."""
+def _dy_pct(info: Dict, raw_yf: bool = False) -> Optional[float]:
+    """Dividend yield em %.
+
+    Prioridade ao dividendYield: o trailingAnnualDividendYield do Yahoo vem
+    quebrado para papeis da B3 (PETR3 saia com 0,26% ou 0,00% — revisao de
+    12/11/2026, "DY zero em dezenas de papeis"). Escala: no market_fundamentals.json
+    o dividendYield ja foi normalizado para RAZAO (0,0736); no .info cru do
+    yfinance (>= 0.2.54) ele vem em PORCENTAGEM (7,36). O trailing e sempre razao.
+    Zero so quando a fonte diz zero (empresa sem proventos em 12 meses); sem
+    campo nenhum -> None ("sem dado", nunca zero).
+    """
+    dy = _num(info.get("dividendYield"))
+    if dy is not None:
+        return round(dy if raw_yf else dy * 100.0, 2)
     tay = _num(info.get("trailingAnnualDividendYield"))
     if tay is not None:
         return round(tay * 100.0, 2)
-    dy = _num(info.get("dividendYield"))
-    if dy is None:
-        return None
-    return round((dy * 100.0) if dy < 1.0 else dy, 2)
+    return None
 
 
 def metrics_from_blob(cod: str, fund: Dict, hist: Dict) -> Optional[Dict]:
@@ -94,7 +102,7 @@ def metrics_from_blob(cod: str, fund: Dict, hist: Dict) -> Optional[Dict]:
         price = _num(series[-1][1]); price_date = series[-1][0]
     if len(series) >= 2:
         prev = _num(series[-2][1])
-    return _assemble(info or {}, price, prev, price_date)
+    return _assemble(info or {}, price, prev, price_date, raw_yf=False)
 
 
 def metrics_from_yf(cod: str) -> Optional[Dict]:
@@ -112,14 +120,20 @@ def metrics_from_yf(cod: str) -> Optional[Dict]:
                 price_date = h.index[-1].strftime("%Y-%m-%d")
             if len(closes) >= 2:
                 prev = float(closes[-2])
-        return _assemble(info, price, prev, price_date)
+        return _assemble(info, price, prev, price_date, raw_yf=True)
     except Exception as e:
         print(f"[acoes_scr] yf FAIL {cod}: {repr(e)[:100]}", file=sys.stderr)
         return None
 
 
-def _assemble(info: Dict, price, prev, price_date) -> Dict:
+def _assemble(info: Dict, price, prev, price_date, raw_yf: bool = False) -> Dict:
     pl = _num(info.get("trailingPE"))
+    # O Yahoo omite o trailingPE quando o lucro de 12 meses e negativo: o P/L
+    # sumia ("—") e parecia falta de dado. Com LPA negativo, P/L = preco / LPA
+    # (negativo), que o pl_warning abaixo ja marca como "prejuizo".
+    eps = _num(info.get("trailingEps"))
+    if pl is None and eps is not None and eps < 0 and price:
+        pl = price / eps
     pvp = _num(info.get("priceToBook"))
     roe = _num(info.get("returnOnEquity"))
     mktcap = _num(info.get("marketCap"))
@@ -134,7 +148,7 @@ def _assemble(info: Dict, price, prev, price_date) -> Dict:
         "pvp": round(pvp, 2) if pvp is not None else None,
         "roe_pct": round(roe * 100.0, 1) if roe is not None else None,
         "market_cap": mktcap,
-        "dy_12m_pct": _dy_pct(info),
+        "dy_12m_pct": _dy_pct(info, raw_yf=raw_yf),
     }
 
 

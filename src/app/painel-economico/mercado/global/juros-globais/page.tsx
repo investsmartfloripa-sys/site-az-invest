@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { GlobalRatesComparator } from "@/components/painel/juros-globais/GlobalRatesComparator";
 import { PolicyRatesChart } from "@/components/painel/juros-globais/PolicyRatesChart";
+import { ComunidadeMercado } from "@/components/painel/market/ComunidadeMercado";
 
 export const metadata = {
   title: "Juros globais — Mercado",
@@ -42,6 +43,8 @@ export default function JurosGlobaisPage() {
       <PolicyRatesChart />
 
       <GlobalRatesComparator />
+
+      <ComunidadeMercado assunto="juros e renda fixa pelo mundo" origem="PAINEL_JUROS" />
 
       {/* Notas metodológicas saíram do rodapé (poluição visual): vivem no
           ícone (?) do header de cada gráfico, fonte por fonte. */}

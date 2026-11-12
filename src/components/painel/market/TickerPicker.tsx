@@ -58,17 +58,19 @@ export function TickerPicker({ catalog, selected, onChange, max = 8 }: Props) {
           return (
             <span
               key={t}
-              className="inline-flex items-center gap-1 rounded-full bg-[#ebf4ff] px-2.5 py-1 text-xs font-medium text-[#027DFC]"
+              className="inline-flex items-center gap-1 rounded-full bg-[#ebf4ff] py-1 pl-2.5 pr-1 text-xs font-medium text-[#027DFC]"
             >
               <span className="font-semibold">{a?.name ?? t}</span>
               <span className="rounded bg-white/70 px-1 text-[10px] uppercase text-[#132960]">
                 {a ? classLabel(a.klass) : ""}
               </span>
+              {/* Alvo de toque de 44 px (o "×" sozinho tinha poucos px); as margens negativas
+                  mantêm o chip compacto. */}
               <button
                 type="button"
                 onClick={() => remove(t)}
                 aria-label={`Remover ${t}`}
-                className="ml-1 text-[#132960] hover:text-[#dc2626]"
+                className="-my-3 -mr-2 inline-flex h-11 w-11 items-center justify-center rounded-full text-base leading-none text-[#132960] hover:text-[#dc2626]"
               >
                 ×
               </button>

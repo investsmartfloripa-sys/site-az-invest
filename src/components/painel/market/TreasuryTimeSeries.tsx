@@ -12,7 +12,7 @@ import {
   type AzTimeSeries,
 } from "@/components/painel/charts";
 import { seriesColor } from "@/lib/az-chart-theme";
-import { fmtMesCurto } from "@/lib/format-br";
+import { fmtDataBR, fmtMesCurto, fmtNum } from "@/lib/format-br";
 
 type CategoryKey = "PRE" | "IPCA";
 
@@ -161,7 +161,7 @@ export function TreasuryTimeSeries({ data }: Props) {
     return (
       <MarketCard title="Curva histórica de juros — Títulos Públicos">
         <div className="py-10 text-center text-sm text-zinc-500">
-          Dados ANBIMA ainda não publicados pelo pipeline diário.
+          As taxas da ANBIMA ainda não foram carregadas. Volte em alguns minutos.
         </div>
       </MarketCard>
     );
@@ -176,7 +176,7 @@ export function TreasuryTimeSeries({ data }: Props) {
     <MarketCard
       title="Curva histórica de juros"
       subtitle="Evolução da taxa indicativa de cada vencimento ao longo do tempo. A taxa atual de cada título aparece marcada no fim da linha."
-      badge={`ANBIMA · ${data.last_data_date}`}
+      badge={`ANBIMA · ${fmtDataBR(data.last_data_date)}`}
       bodyClassName="px-4 pb-4 pt-2"
       footer={`Fonte: ${fonte}`}
       stampGiro={data.generated_at}
@@ -209,10 +209,10 @@ export function TreasuryTimeSeries({ data }: Props) {
       }
     >
       <div className="space-y-3">
-        {/* Periodos */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-zinc-500">Janela:</span>
+        {/* Periodos — fila rolável no celular (o "Personalizado" não cai sozinho na linha de baixo) */}
+        <div className="min-w-0 max-w-full overflow-x-auto">
           <AzPeriodSelector
+            className="w-max"
             value={period}
             onChange={setPeriod}
             min={seriesMin}
@@ -247,9 +247,15 @@ export function TreasuryTimeSeries({ data }: Props) {
           };
           return (
             <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-medium text-zinc-500">Em circulação:</span>
-                {alive.map((v) => renderChip(v, false))}
+              {/* Rótulo na própria linha e vencimentos numa fila rolável: no celular os chips
+                  quebravam em três linhas misturados com o rótulo. */}
+              <p className="text-xs font-medium text-zinc-500">Em circulação</p>
+              <div className="flex max-w-full flex-nowrap items-center gap-2 overflow-x-auto pb-1">
+                {alive.map((v) => (
+                  <span key={v} className="shrink-0">
+                    {renderChip(v, false)}
+                  </span>
+                ))}
               </div>
               {expired.length > 0 ? (
                 <details className="group">
@@ -273,7 +279,7 @@ export function TreasuryTimeSeries({ data }: Props) {
             lateral de estatisticas. No mobile empilha (painel em cima). */}
         <div className="flex flex-col gap-3 lg:flex-row-reverse lg:items-stretch">
           {/* Painel "Taxa atual (D+0)" — lado direito do grafico */}
-          <div className="flex shrink-0 flex-col gap-2 rounded-xl border border-[#132960]/10 bg-zinc-50/50 px-4 py-3 lg:w-44">
+          <div className="flex shrink-0 flex-col gap-2 rounded-xl border border-[#132960]/10 bg-zinc-50/50 px-4 py-3 lg:w-52">
             <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
               {liveTodayISO ? "Taxa atual (D+0)" : "Taxa atual"}
             </span>
@@ -283,7 +289,7 @@ export function TreasuryTimeSeries({ data }: Props) {
                 const atual = last ? last[1] : null;
                 const isLive = !!liveTodayISO && last?.[0] === liveTodayISO;
                 return (
-                  <span key={s.id} className="inline-flex items-center gap-1.5 text-sm">
+                  <span key={s.id} className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm">
                     <span
                       aria-hidden
                       className="inline-block h-2.5 w-2.5 rounded-full"
@@ -291,10 +297,10 @@ export function TreasuryTimeSeries({ data }: Props) {
                     />
                     <span className="font-medium text-[#132960]">{s.label}</span>
                     <span className="tabular-nums font-semibold text-[#132960]">
-                      {atual != null ? `${atual.toFixed(2).replace(".", ",")}%` : "—"}
+                      {atual != null ? `${fmtNum(atual, 2)}%` : "—"}
                     </span>
                     {isLive ? (
-                      <span className="rounded bg-[#1E8A5C]/10 px-1 text-[9px] font-semibold uppercase tracking-wide text-[#1E8A5C]">
+                      <span className="whitespace-nowrap rounded bg-[#1E8A5C]/10 px-1 text-[9px] font-semibold uppercase leading-4 tracking-wide text-[#1E8A5C]">
                         ao vivo
                       </span>
                     ) : null}

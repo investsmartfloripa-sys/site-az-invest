@@ -155,7 +155,7 @@ export function IbovHero({
             <MethodInfo className="ml-1.5 align-middle">
               {comparing
                 ? "Variação % acumulada desde o início da janela (todas as séries partem de 0%). Ações em retorno total (preço + dividendos reinvestidos); Ibovespa é índice de retorno total — comparação justa. "
-                : "Ibovespa (^BVSP) via yfinance. "}
+                : "Ibovespa em pontos, segundo o Yahoo Finance. "}
               Benchmarks na mesma base: CDI (BCB SGS 12), S&amp;P 500 (em USD) e USD/BRL. Não é
               recomendação.
             </MethodInfo>

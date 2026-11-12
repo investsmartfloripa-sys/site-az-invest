@@ -1,11 +1,11 @@
 import { Divisor } from "@/components/painel/core";
 import { FiiAbas } from "@/components/painel/fii/FiiAbas";
 import { FiiArtigosMaisLidos } from "@/components/painel/fii/FiiArtigosMaisLidos";
-import { FiiComunidadeCta } from "@/components/painel/fii/FiiComunidadeCta";
 import { FiiMacroCharts } from "@/components/painel/fii/FiiMacroCharts";
 import { FiiNoticias } from "@/components/painel/fii/FiiNoticias";
 import { FiiTijoloModelo, PremioNtnbCard } from "@/components/painel/fii/FiiTijoloModelo";
 import { FundosImobiliariosClient } from "@/components/painel/fii/FundosImobiliariosClient";
+import { ComunidadeMercado } from "@/components/painel/market/ComunidadeMercado";
 import {
   getFiiArtigosMaisLidos,
   getFiiIfix,
@@ -83,8 +83,8 @@ export default async function FundosImobiliariosPage() {
       <FiiNoticias posts={noticias} />
       <FiiArtigosMaisLidos posts={artigos} />
 
-      {/* CTA Comunidade + Form */}
-      <FiiComunidadeCta />
+      {/* Comunidade: o mesmo bloco em todas as abas de Mercado */}
+      <ComunidadeMercado assunto="FIIs" origem="PAINEL_FII" />
 
       {/* Notas metodológicas saíram do rodapé (poluição visual): cada uma vive
           no ícone (?) do card correspondente — hero (IFIX da B3/benchmarks),

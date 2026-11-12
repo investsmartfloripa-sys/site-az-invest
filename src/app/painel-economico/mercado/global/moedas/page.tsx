@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { ComunidadeMercado } from "@/components/painel/market/ComunidadeMercado";
 import { MoedasDashboard } from "@/components/painel/moedas/MoedasDashboard";
 import { PipelinePendingCard } from "@/components/painel/PipelinePendingCard";
 import {
@@ -40,20 +41,24 @@ export default async function MoedasPage() {
 
   return (
     <div className="space-y-6">
-      <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
-        Mercado · Global · Moedas
-      </p>
-
       {nothingLoaded ? (
-        <PipelinePendingCard
-          blobPaths={["data/fx_top_movers.json", "data/market_history_full.json"]}
-          workflow="data-pipeline.yml / market-data.yml"
-        />
+        <>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">
+            Mercado · Global · Moedas
+          </p>
+          <PipelinePendingCard
+            blobPaths={["data/fx_top_movers.json", "data/market_history_full.json"]}
+            workflow="data-pipeline.yml / market-data.yml"
+          />
+        </>
       ) : (
         // Sem <Suspense>: AzPeriodSelector não usa mais useSearchParams (sem CSR
         // bailout) e um boundary aqui quebraria a hidratação no Next 16.2.4.
+        // O cabeçalho da aba (kicker + título) mora dentro do dashboard.
         <MoedasDashboard movers={movers} history={history} />
       )}
+
+      <ComunidadeMercado assunto="câmbio e moedas" origem="PAINEL_MOEDAS" />
     </div>
   );
 }

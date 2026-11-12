@@ -22,7 +22,7 @@ function parseDate(value: string | Date | null | undefined): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-type Parts = { dia: string; mes: string; ano2: string; hora: string; min: string };
+type Parts = { dia: string; mes: string; ano: string; hora: string; min: string };
 
 function partsSP(d: Date): Parts {
   const fmt = new Intl.DateTimeFormat("pt-BR", {
@@ -39,18 +39,22 @@ function partsSP(d: Date): Parts {
   return {
     dia: map.day ?? "",
     mes: map.month ?? "",
-    ano2: (map.year ?? "").slice(2),
+    ano: map.year ?? "",
     hora: map.hour === "24" ? "00" : (map.hour ?? ""),
     min: map.minute ?? "",
   };
 }
 
-/** Giro com precisão de DIA: "04/06/26" (horário de Brasília). */
+/**
+ * Giro com precisão de DIA: "04/06/2026" (horário de Brasília). Data por extenso
+ * dd/mm/aaaa em todo carimbo — "04/06/26" ao lado de "04/06 14:32" misturava
+ * formatos no mesmo cartão (revisão de 12/11/2026).
+ */
 export function formatGiroDia(value: string | Date | null | undefined): string | null {
   const d = parseDate(value);
   if (!d) return null;
   const p = partsSP(d);
-  return `${p.dia}/${p.mes}/${p.ano2}`;
+  return `${p.dia}/${p.mes}/${p.ano}`;
 }
 
 /** Giro com precisão de minuto (dashboard): "04/06 09:12" (horário de Brasília). */
@@ -63,8 +67,8 @@ export function formatGiroMinuto(value: string | Date | null | undefined): strin
 
 /**
  * Data do DADO com a maior precisão disponível no rótulo cru:
- *  - ISO com hora ("2026-06-04T14:32:00Z") → "04/06 14:32"
- *  - data ("2026-06-04")                   → "04/06/26"
+ *  - ISO com hora ("2026-06-04T14:32:00Z") → "04/06/2026 14:32"
+ *  - data ("2026-06-04")                   → "04/06/2026"
  *  - mês ("2026-05")                       → "mai/26"
  *  - trimestre ("2026-T1" | "2026Q1")      → "1T26" (mesma grafia de fmtTrimCurto)
  *  - outro                                 → valor cru
@@ -86,7 +90,7 @@ export function formatDadoLabel(raw: string | Date | null | undefined): string |
   }
 
   const dia = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (dia) return `${dia[3]}/${dia[2]}/${dia[1].slice(2)}`;
+  if (dia) return `${dia[3]}/${dia[2]}/${dia[1]}`;
 
   if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(value)) {
     const d = parseDate(value);
@@ -96,12 +100,12 @@ export function formatDadoLabel(raw: string | Date | null | undefined): string |
   return value;
 }
 
-/** Dado intradiário com minutos: "04/06 14:32" (horário de Brasília). */
+/** Dado intradiário com minutos: "04/06/2026 14:32" (horário de Brasília). */
 export function formatDadoMinuto(value: string | Date | null | undefined): string | null {
   const d = parseDate(value);
   if (!d) return null;
   const p = partsSP(d);
-  return `${p.dia}/${p.mes} ${p.hora}:${p.min}`;
+  return `${p.dia}/${p.mes}/${p.ano} ${p.hora}:${p.min}`;
 }
 
 /** Idade relativa: "há 12 min" / "há 5 h" / "há 3 dias". */

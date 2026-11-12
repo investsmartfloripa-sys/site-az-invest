@@ -13,6 +13,7 @@ import {
   classLabel,
   formatBigNumber,
   formatPctFromRatio,
+  formatQuote,
   formatRatio,
   getMarketCatalog,
   getMarketFundamentals,
@@ -219,8 +220,8 @@ export default async function AtivoPage({ params }: Props) {
     last != null && low52 != null && high52 != null && high52 > low52
       ? Math.min(100, Math.max(0, ((last - low52) / (high52 - low52)) * 100))
       : null;
-  const fmtPrice = (v: number) =>
-    `${assetCurrency === "BRL" ? "R$ " : "US$ "}${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+  // Mesma regra da tabela do Mercado: índice em pontos, câmbio na moeda cotada, ações com 2 casas.
+  const fmtPrice = (v: number) => formatQuote(v, asset);
 
   // Peers do mesmo setor (mesma klass, mesmo sector)
   const peers = catalog
@@ -270,7 +271,7 @@ export default async function AtivoPage({ params }: Props) {
         >
           <div>
             <p className="text-4xl font-semibold tabular-nums text-[#132960]">
-              {last != null ? `${asset.currency === "BRL" ? "R$ " : "US$ "}${last.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` : "—"}
+              {last != null ? fmtPrice(last) : "—"}
             </p>
             <p
               className={`mt-1 text-sm font-semibold ${dayChange == null ? "text-zinc-500" : ""}`}

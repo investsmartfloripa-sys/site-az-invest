@@ -21,9 +21,19 @@ import {
   resolvePeriodRange,
   useAzPeriodQueryState,
 } from "@/components/painel/charts";
-import { AzTooltip, azGridProps, azXAxisProps, azYAxisProps } from "@/components/painel/core";
+import { AzTooltip, azGridProps, azXAxisProps, azYAxisProps, ticksRedondos } from "@/components/painel/core";
 import { AZ_BRAND, AZ_SERIES, AZ_TOOLTIP_PROPS, benchmarkColor } from "@/lib/az-chart-theme";
-import { diffDaysUTC, fmtDataBR, fmtNum, fmtSignedPct, formatAxisDate } from "@/lib/format-br";
+import {
+  buildTimeTicks,
+  diffDaysUTC,
+  fmtDataBR,
+  fmtNum,
+  fmtSignedPct,
+  formatAxisDate,
+  formatTimeTickLabel,
+  isoFromUTC,
+  parseIsoUTC,
+} from "@/lib/format-br";
 
 type ScaleMode = "rebase" | "pct" | "raw" | "log";
 
@@ -99,7 +109,8 @@ function buildChartData(
   // Track ultimo valor por ticker pra forward-fill em datas faltantes
   const lastSeen: Record<string, number | undefined> = {};
   for (const d of dates) {
-    const row: Record<string, number | string> = { date: d };
+    // `t` = eixo de tempo numérico: marcas ancoradas nas viradas de mês (sem "jan/26 jan/26").
+    const row: Record<string, number | string> = { date: d, t: parseIsoUTC(d) };
     for (const t of tickers) {
       const idx = indexedByTicker[t];
       if (!idx) continue;
@@ -192,7 +203,7 @@ export function HistoricoChart({ full, catalog, initial }: Props) {
     return (
       <MarketCard title="Histórico comparativo">
         <div className="py-10 text-center text-sm text-zinc-500">
-          Sem dados de mercado disponíveis no momento. O pipeline diário ainda não publicou os JSONs.
+          Sem dados de mercado disponíveis no momento. Volte em alguns minutos.
         </div>
       </MarketCard>
     );
@@ -207,6 +218,18 @@ export function HistoricoChart({ full, catalog, initial }: Props) {
       : 1;
   const showBrush = spanDays > 366;
 
+  const xTicks = buildTimeTicks(
+    chartData.map((r) => String(r.date)),
+    spanDays,
+  ).map((d) => parseIsoUTC(d));
+
+  // Eixo Y em marcas redondas (exceto na escala log, que tem as dela).
+  const valoresY: number[] = [];
+  for (const r of chartData) for (const t of selected) if (typeof r[t] === "number") valoresY.push(r[t] as number);
+  const yEixo = scale !== "log" && valoresY.length ? ticksRedondos(Math.min(...valoresY), Math.max(...valoresY)) : null;
+  const yPasso = yEixo && yEixo.ticks.length > 1 ? yEixo.ticks[1] - yEixo.ticks[0] : 1;
+  const yDec = yPasso >= 1 ? 0 : yPasso >= 0.1 ? 1 : 2;
+
   const fmtValue = (v: number): string => {
     if (scale === "rebase") return fmtNum(v, 2);
     if (scale === "pct") return fmtSignedPct(v, 2);
@@ -215,23 +238,26 @@ export function HistoricoChart({ full, catalog, initial }: Props) {
 
   return (
     <MarketCard
-      title="Histórico comparativo"
-      subtitle="Compare até 8 ativos em janelas de 1M a 5 anos."
-      badge="Yahoo Finance"
+      title="Comparador de ativos"
+      subtitle="Até 8 ativos lado a lado, em janelas de 1 mês a 5 anos."
       bodyClassName="px-4 pb-4 pt-2"
       footer="Fonte: Yahoo Finance"
       stampGiro={full.generated_at}
       stampDado={typeof lastPlottedDate === "string" ? lastPlottedDate : null}
-      toolbar={
-        <AzPeriodSelector
-          value={period}
-          onChange={setPeriod}
-          min={seriesRange?.min}
-          max={seriesRange?.max}
-        />
-      }
     >
       <div className="space-y-3">
+        {/* Período no corpo do cartão, numa fila rolável: no cabeçalho ele vazava para fora do
+            cartão no celular ("Person..." cortado). */}
+        <div className="min-w-0 max-w-full overflow-x-auto">
+          <AzPeriodSelector
+            className="w-max"
+            value={period}
+            onChange={setPeriod}
+            min={seriesRange?.min}
+            max={seriesRange?.max}
+          />
+        </div>
+
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="font-medium text-zinc-500">Escala:</span>
           {SCALE_MODES.map((m) => (
@@ -278,25 +304,30 @@ export function HistoricoChart({ full, catalog, initial }: Props) {
               <CartesianGrid {...azGridProps()} />
               <XAxis
                 {...azXAxisProps()}
-                dataKey="date"
-                tickFormatter={(d: string) => formatAxisDate(d, spanDays)}
+                dataKey="t"
+                type="number"
+                scale="time"
+                domain={["dataMin", "dataMax"]}
+                ticks={xTicks}
+                tickFormatter={(t: number) => formatTimeTickLabel(isoFromUTC(Number(t)), spanDays)}
                 minTickGap={28}
               />
               <YAxis
                 {...azYAxisProps()}
-                domain={["auto", "auto"]}
+                domain={yEixo ? yEixo.domain : ["auto", "auto"]}
+                ticks={yEixo?.ticks}
                 scale={scale === "log" ? "log" : "auto"}
                 tickFormatter={(v: number) => {
-                  if (scale === "rebase") return fmtNum(v, 0);
-                  if (scale === "pct") return `${fmtNum(v, 0)}%`;
-                  return fmtNum(v, 2);
+                  if (scale === "pct") return `${fmtNum(v, yDec)}%`;
+                  if (scale === "log") return fmtNum(v, Math.abs(v) < 10 ? 2 : 0);
+                  return fmtNum(v, yDec);
                 }}
                 width={56}
               />
               <Tooltip
                 content={
                   <AzTooltip
-                    labelFmt={(l) => fmtDataBR(String(l ?? ""))}
+                    labelFmt={(l) => fmtDataBR(isoFromUTC(Number(l)))}
                     valueFmt={(v) => fmtValue(v)}
                   />
                 }
@@ -318,12 +349,12 @@ export function HistoricoChart({ full, catalog, initial }: Props) {
               ))}
               {showBrush ? (
                 <Brush
-                  dataKey="date"
+                  dataKey="t"
                   height={26}
                   stroke={AZ_BRAND.azure}
                   fill="#eef2f8"
                   travellerWidth={8}
-                  tickFormatter={(d) => formatAxisDate(String(d), spanDays)}
+                  tickFormatter={(t) => formatAxisDate(isoFromUTC(Number(t)), spanDays)}
                 />
               ) : null}
             </LineChart>

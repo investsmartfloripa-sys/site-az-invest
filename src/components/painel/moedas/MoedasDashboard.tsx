@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 import { AzPeriodSelector, AzTimeSeriesChart, type AzPeriodValue, type AzTimeSeries } from "@/components/painel/charts";
 import { DivergingReturnBars } from "@/components/painel/charts/DivergingReturnBars";
-import { AzSegmented, ChartCard, DashboardScaffold, KpiCard, RankingTable, type DashboardBloco } from "@/components/painel/core";
+import { AzSegmented, ChartCard, KpiCard, RankingTable } from "@/components/painel/core";
 import { PipelinePendingCard } from "@/components/painel/PipelinePendingCard";
 import { variationText } from "@/lib/az-chart-theme";
 import { fmtBRL, fmtDataBR, fmtNum, fmtSignedPct } from "@/lib/format-br";
+import { dominioBarras, fmtEixoBarras } from "@/lib/painel-eixo-barras";
 import {
   FX_PAIRS,
   FX_PERIOD_BY_PANORAMA,
@@ -65,10 +66,13 @@ function lastAndDayChange(data: Array<[string, number]> | undefined): {
   return { last, dayChangePct: prev > 0 ? (last / prev - 1) * 100 : null };
 }
 
-/** Cotação com casas adaptativas: 1,0842 · 17,38 · 1.378 (IDR, COP...). */
+/**
+ * Cotação com casas adaptativas: 1,0842 · 17,38 · 1.544,00 (ARS, COP, IDR...). Acima de mil
+ * sempre com as duas casas: "1.544" sozinho se lia como 1,544 ao lado de "1,1078".
+ */
 function fmtQuote(v: number | null): string {
   if (v == null || !Number.isFinite(v)) return "—";
-  if (v >= 1000) return fmtNum(v, 0);
+  if (v >= 1000) return fmtNum(v, 2);
   if (v >= 100) return fmtNum(v, 2);
   if (v >= 10) return fmtNum(v, 3);
   return fmtNum(v, 4);
@@ -274,7 +278,12 @@ export function MoedasDashboard({ movers, history }: Props) {
         .filter((r) => r.def.group === group && r.returns[rankPeriod] != null)
         .map((r) => ({ label: r.def.name, value: r.returns[rankPeriod] as number }))
         .sort((a, b) => b.value - a.value);
-    return { majors: build("majors"), emergentes: build("emergentes") };
+    const majors = build("majors");
+    const emergentes = build("emergentes");
+    // Mesmo eixo nos dois quadros, com marcas redondas e o 0% (antes: "−2% −1% −1% −0,8%").
+    const valores = [...majors, ...emergentes].map((r) => r.value);
+    const xDomain = dominioBarras(Math.min(0, ...valores), Math.max(0, ...valores));
+    return { majors, emergentes, xDomain, axisFmt: fmtEixoBarras(xDomain) };
   }, [rows, rankPeriod]);
 
   const anchor = (
@@ -310,13 +319,13 @@ export function MoedasDashboard({ movers, history }: Props) {
           <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-zinc-500">
             Majors (G10 + nórdicas)
           </h3>
-          <DivergingReturnBars rows={rankRows.majors} yAxisWidth={132} />
+          <DivergingReturnBars rows={rankRows.majors} yAxisWidth={132} xDomain={rankRows.xDomain} axisFmt={rankRows.axisFmt} />
         </div>
         <div>
           <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-zinc-500">
             Emergentes (o real entre elas)
           </h3>
-          <DivergingReturnBars rows={rankRows.emergentes} yAxisWidth={132} />
+          <DivergingReturnBars rows={rankRows.emergentes} yAxisWidth={132} xDomain={rankRows.xDomain} axisFmt={rankRows.axisFmt} />
         </div>
       </div>
     </ChartCard>
@@ -361,7 +370,7 @@ export function MoedasDashboard({ movers, history }: Props) {
           subtitle="Fechamento diário dos últimos 5 anos"
           footer={
             <>
-              Cotação spot de fechamento (Yahoo Finance), 1x/dia útil. Alta do par = real mais
+              Cotação de fechamento (Yahoo Finance), uma vez por dia útil. Alta do par = real mais
               fraco — leitura em cotação, não na convenção moeda-vs-USD do ranking acima.
             </>
           }
@@ -369,7 +378,9 @@ export function MoedasDashboard({ movers, history }: Props) {
           stampDado={history.lastDataDate}
         >
           <div className="space-y-3">
-            <AzPeriodSelector value={heroPeriod} onChange={setHeroPeriod} min={histMin} max={histMax} />
+            <div className="min-w-0 max-w-full overflow-x-auto">
+              <AzPeriodSelector className="w-max" value={heroPeriod} onChange={setHeroPeriod} min={histMin} max={histMax} />
+            </div>
             <AzTimeSeriesChart series={heroSeries} unit="R$" period={heroPeriod} height={320} variant="hero" />
           </div>
         </ChartCard>
@@ -402,7 +413,9 @@ export function MoedasDashboard({ movers, history }: Props) {
           stampDado={history.lastDataDate}
         >
           <div className="space-y-3">
-            <AzPeriodSelector value={cruzesPeriod} onChange={setCruzesPeriod} min={histMin} max={histMax} />
+            <div className="min-w-0 max-w-full overflow-x-auto">
+              <AzPeriodSelector className="w-max" value={cruzesPeriod} onChange={setCruzesPeriod} min={histMin} max={histMax} />
+            </div>
             <AzTimeSeriesChart
               series={cruzesSeries}
               unit="R$"
@@ -519,71 +532,97 @@ export function MoedasDashboard({ movers, history }: Props) {
     </details>
   );
 
-  // ── Scaffold ──────────────────────────────────────────────────────────────
-  const blocos: DashboardBloco[] = [
+  // ── Seções ────────────────────────────────────────────────────────────────
+  const blocos: { id: string; titulo: string; descricao?: string; children: ReactNode }[] = [
     {
       id: "bloco-brl",
-      eyebrow: "Bloco BRL",
       titulo: "O real em foco",
       descricao: "O que era a página de câmbio: USD/BRL em 5 anos, cruzes do real e o real no peer group emergente.",
       children: blocoBrl,
     },
     {
       id: "dxy",
-      eyebrow: "Dólar global",
       titulo: "DXY — o termômetro do dólar",
       descricao: "O índice que arbitra a dúvida: o movimento é fraqueza do real ou força global do dólar?",
       children: blocoDxy,
     },
     {
       id: "esmiucamento",
-      eyebrow: "Esmiuçamento",
       titulo: "Todas as moedas",
       descricao: "Cotação e retornos vs USD em 5 janelas, por bloco — para quem quer a planilha inteira.",
       children: tabela,
     },
   ];
 
+  // Mesmo desenho das outras abas de Mercado (cabeçalho solto, seções com título simples e
+  // notas metodológicas no rodapé) no lugar do template narrativo de Economia, com blocos
+  // numerados "01 ·" (revisão de 12/11/2026, item 154).
   return (
-    <DashboardScaffold
-      header={{
-        titulo: "Moedas — o dólar contra o mundo",
-        subtitulo:
-          "Moedas desenvolvidas e emergentes contra o USD, com o bloco do real em destaque. Leitura rápida no topo, esmiuçamento abaixo.",
-        referencia: history.lastDataDate ? `Dado mais recente: ${fmtDataBR(history.lastDataDate)}` : undefined,
-      }}
-      manchete={manchete}
-      kpis={kpis}
-      anchor={anchor}
-      blocos={blocos}
-      fichaTecnica={
-        <div className="space-y-2">
+    <div className="space-y-6">
+      <header className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[#027DFC]">Mercado · Global · Moedas</p>
+        <h1 className="text-2xl font-semibold text-[#132960]">Moedas — o dólar contra o mundo</h1>
+        <p className="max-w-3xl text-sm text-zinc-600">
+          Moedas desenvolvidas e emergentes contra o dólar, com o real em destaque.
+        </p>
+        {history.lastDataDate ? (
+          <p className="text-xs text-zinc-500">Dado mais recente: {fmtDataBR(history.lastDataDate)}</p>
+        ) : null}
+      </header>
+
+      {manchete ? (
+        <p className="rounded-xl border-l-4 border-[#027DFC] bg-white p-3 pl-4 text-sm leading-relaxed text-zinc-800 shadow-sm">
+          {manchete}
+        </p>
+      ) : null}
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {kpis.map((kpi, i) => (
+          <div key={i} className="min-w-0">
+            {kpi}
+          </div>
+        ))}
+      </div>
+
+      {anchor}
+
+      {blocos.map((b) => (
+        <section key={b.id} id={b.id} className="space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold text-[#132960]">{b.titulo}</h2>
+            {b.descricao ? <p className="mt-0.5 text-sm text-zinc-600">{b.descricao}</p> : null}
+          </div>
+          <div className="min-w-0">{b.children}</div>
+        </section>
+      ))}
+
+      <section className="rounded-2xl border border-[#132960]/10 bg-zinc-50/50 p-4 text-xs leading-relaxed text-zinc-600">
+        <p className="font-semibold uppercase tracking-wide text-zinc-500">Notas metodológicas</p>
+        <div className="mt-2 space-y-2">
           <p>
-            <strong>Fontes.</strong> Séries diárias de 5 anos do Yahoo Finance via pipeline AZ
-            (market-data.yml, 1x/dia útil, <code>data/market_history_full.json</code>) e top movers
-            intradiários (<code>data/fx_top_movers.json</code>, giro de 15 min) usados como fallback
-            enquanto um par novo ainda não tem série histórica. Cotações spot de fechamento — não é
-            a PTAX do BCB, que fecha em horário próprio.
+            <strong>Fontes.</strong> Séries diárias de 5 anos do Yahoo Finance, atualizadas uma vez por
+            dia útil; para um par recém-incluído, ainda sem série longa, usamos as variações de
+            curto prazo que atualizamos a cada 15 minutos. Cotações de fechamento — não é a PTAX do
+            Banco Central, que fecha em horário próprio.
           </p>
           <p>
             <strong>Convenção de sinal.</strong> Todo retorno é o da moeda CONTRA o dólar: positivo
-            = a moeda se valorizou. Pares cotados com o USD na base (USD/JPY, USD/BRL...) têm o
-            retorno do par invertido (preço inicial/preço final − 1). Janelas em pregões: 1D=1,
-            1S=5, 1M=21, 3M=63, 1A=252 — os mesmos shifts do fx_top_movers, o que mantém as duas
-            fontes comparáveis.
+            = a moeda se valorizou. Pares cotados com o dólar na base (USD/JPY, USD/BRL...) têm o
+            retorno do par invertido (preço inicial ÷ preço final − 1). Janelas em pregões: 1D = 1,
+            1S = 5, 1M = 21, 3M = 63, 1A = 252.
           </p>
           <p>
-            <strong>Manchete.</strong> Gerada por regra: força do dólar pelo Δ1d do DXY (banda de
-            estabilidade ±{fmtNum(DXY_HEADLINE_BAND_PCT, 2)}%), melhor/pior moeda do dia no universo
-            coberto e posição do real no ranking 1d dos emergentes.
+            <strong>Manchete.</strong> Gerada por regra: força do dólar pela variação do dia do DXY
+            (estável dentro de ±{fmtNum(DXY_HEADLINE_BAND_PCT, 2)}%), melhor e pior moeda do dia e
+            posição do real no ranking do dia entre os emergentes.
           </p>
           <p>
             <strong>DXY.</strong> Índice ICE do dólar contra EUR, JPY, GBP, CAD, SEK e CHF — não
             inclui moedas emergentes.
           </p>
         </div>
-      }
-    />
+      </section>
+    </div>
   );
 }
 

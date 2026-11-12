@@ -6,6 +6,8 @@ import { useMemo, useState } from "react";
 import DataStamp from "@/components/painel/DataStamp";
 import { CompanyLogo } from "@/components/painel/acoes/CompanyLogo";
 import { MethodInfo } from "@/components/painel/core/MethodInfo";
+import { AZ_NEUTRAL_BAND, variationText } from "@/lib/az-chart-theme";
+import { fmtNum, fmtSignedPct } from "@/lib/format-br";
 import type { AcoesScreenerData, AcoesScreenerRow } from "@/lib/painel-acoes";
 
 type SortKey =
@@ -26,7 +28,7 @@ const COL_LABELS: Record<SortKey, string> = {
   price: "Preço",
   pl: "P/L",
   pvp: "P/VP",
-  dy_12m_pct: "D.Y",
+  dy_12m_pct: "DY",
   roe_pct: "ROE",
   market_cap: "Valor mcdo.",
   ibov_weight_pct: "Peso IBOV",
@@ -34,25 +36,35 @@ const COL_LABELS: Record<SortKey, string> = {
 
 const NUMERIC: SortKey[] = ["price", "pl", "pvp", "dy_12m_pct", "roe_pct", "market_cap", "ibov_weight_pct"];
 
+// Tudo em pt-BR (vírgula decimal): o "toFixed" antigo punha "1.98%" e "P/L 76.70" ao lado de "R$ 64,80".
 function fmtBRL(v: number | null | undefined): string {
   if (v == null || Number.isNaN(v)) return "—";
-  return "R$ " + v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return `R$ ${fmtNum(v, 2)}`;
 }
 function fmtRatio(v: number | null | undefined): string {
   if (v == null || Number.isNaN(v)) return "—";
-  return v.toFixed(2);
+  return fmtNum(v, 2);
 }
 function fmtPct(v: number | null | undefined): string {
   if (v == null || Number.isNaN(v)) return "—";
-  return `${v.toFixed(2)}%`;
+  return `${fmtNum(v, 2)}%`;
 }
 function fmtBig(v: number | null | undefined): string {
   if (v == null || Number.isNaN(v)) return "—";
   const abs = Math.abs(v);
-  if (abs >= 1e12) return `R$ ${(v / 1e12).toFixed(2)} tri`;
-  if (abs >= 1e9) return `R$ ${(v / 1e9).toFixed(1)} bi`;
-  if (abs >= 1e6) return `R$ ${(v / 1e6).toFixed(0)} mi`;
-  return `R$ ${v.toFixed(0)}`;
+  if (abs >= 1e12) return `R$ ${fmtNum(v / 1e12, 2)} tri`;
+  if (abs >= 1e9) return `R$ ${fmtNum(v / 1e9, 1)} bi`;
+  if (abs >= 1e6) return `R$ ${fmtNum(v / 1e6, 0)} mi`;
+  return `R$ ${fmtNum(v, 0)}`;
+}
+
+/** "Sem dado" é diferente de zero: a fonte não informou → "n/d", com a explicação ao passar o mouse. */
+function SemDado({ title }: { title: string }) {
+  return (
+    <span title={title} className="cursor-help text-zinc-500">
+      n/d
+    </span>
+  );
 }
 
 function compareRow(a: AcoesScreenerRow, b: AcoesScreenerRow, key: SortKey, dir: SortDir): number {
@@ -165,9 +177,9 @@ export function AcoesScreener({
         <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] text-zinc-500">
           {sorted.length} de {data.total_rows} ações
           <MethodInfo align="right">
-            Universo = carteira teórica do Ibovespa (B3, GetPortfolioDay). P/L, P/VP, DY, ROE e
-            valor de mercado via yfinance; setor por catálogo curado. Indicadores — não são
-            recomendação.
+            Universo: as ações da carteira teórica do Ibovespa, segundo a B3. P/L, P/VP, DY, ROE e
+            valor de mercado vêm do Yahoo Finance; o setor é classificação da AZ Invest. Indicadores,
+            não recomendação.
           </MethodInfo>
         </span>
       </div>
@@ -280,34 +292,53 @@ export function AcoesScreener({
                     <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
                       {fmtBRL(r.price)}
                       {r.change_pct_1d != null ? (
-                        <span className={`block text-[10px] ${r.change_pct_1d >= 0 ? "text-[#16A34A]" : "text-[#DC2626]"}`}>
-                          {r.change_pct_1d >= 0 ? "▲" : "▼"} {Math.abs(r.change_pct_1d).toFixed(2)}%
+                        <span className="block text-[10px]" style={{ color: variationText(r.change_pct_1d) }}>
+                          {Math.abs(r.change_pct_1d) < AZ_NEUTRAL_BAND ? "" : r.change_pct_1d > 0 ? "▲ " : "▼ "}
+                          {fmtSignedPct(r.change_pct_1d, 2)}
                         </span>
                       ) : null}
                     </td>
                     <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
-                      <span
-                        title={r.pl_warning ? "Lucro negativo ou múltiplo atípico — interpretar com cautela." : undefined}
-                        className={r.pl_warning ? "cursor-help text-amber-700" : undefined}
-                      >
-                        {fmtRatio(r.pl)}
-                        {r.pl_warning ? "*" : ""}
-                      </span>
+                      {r.pl == null ? (
+                        <SemDado title="A fonte não informou o P/L desta empresa." />
+                      ) : (
+                        <span
+                          title={r.pl_warning ? "Prejuízo nos últimos 12 meses ou múltiplo atípico — interpretar com cautela." : undefined}
+                          className={r.pl_warning ? "cursor-help text-amber-700" : undefined}
+                        >
+                          {fmtRatio(r.pl)}
+                          {r.pl_warning ? "*" : ""}
+                        </span>
+                      )}
                     </td>
-                    <td className="px-2 py-2 text-right tabular-nums text-[#132960]">{fmtRatio(r.pvp)}</td>
                     <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
-                      <span
-                        title={r.dy_atypical ? "DY > 15% — pode incluir proventos extraordinários." : undefined}
-                        className={r.dy_atypical ? "cursor-help text-amber-700" : undefined}
-                      >
-                        {fmtPct(r.dy_12m_pct)}
-                        {r.dy_atypical ? "*" : ""}
-                      </span>
+                      {r.pvp == null ? <SemDado title="A fonte não informou o P/VP desta empresa." /> : fmtRatio(r.pvp)}
                     </td>
-                    <td className="px-2 py-2 text-right tabular-nums text-[#132960]">{fmtPct(r.roe_pct)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
+                      {r.dy_12m_pct == null ? (
+                        <SemDado title="A fonte não informou o dividend yield desta empresa." />
+                      ) : (
+                        <span
+                          title={
+                            r.dy_atypical
+                              ? "DY acima de 15% — pode incluir proventos extraordinários."
+                              : r.dy_12m_pct === 0
+                                ? "Zero: sem proventos nos últimos 12 meses, segundo a fonte."
+                                : undefined
+                          }
+                          className={r.dy_atypical ? "cursor-help text-amber-700" : r.dy_12m_pct === 0 ? "cursor-help" : undefined}
+                        >
+                          {fmtPct(r.dy_12m_pct)}
+                          {r.dy_atypical || r.dy_12m_pct === 0 ? "*" : ""}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-2 py-2 text-right tabular-nums text-[#132960]">
+                      {r.roe_pct == null ? <SemDado title="A fonte não informou o ROE desta empresa." /> : fmtPct(r.roe_pct)}
+                    </td>
                     <td className="px-2 py-2 text-right tabular-nums text-[#132960]">{fmtBig(r.market_cap)}</td>
                     <td className="px-2 py-2 text-right tabular-nums text-zinc-600">
-                      {r.ibov_weight_pct != null ? `${r.ibov_weight_pct.toFixed(2)}%` : "—"}
+                      {r.ibov_weight_pct != null ? `${fmtNum(r.ibov_weight_pct, 2)}%` : "—"}
                     </td>
                   </tr>
                 );
@@ -317,11 +348,11 @@ export function AcoesScreener({
         </table>
       </div>
 
-      <p className="mt-3 text-[10px] text-zinc-500">
-        Universo: carteira teórica do Ibovespa (B3 <code>GetPortfolioDay</code>). P/L, P/VP, DY, ROE e
-        valor de mercado via yfinance (<code>.info</code>); preço via yfinance. Setor por catálogo
-        curado. Logos via TradingView. <strong>*</strong> P/L de empresa com lucro negativo/atípico ou
-        DY com proventos extraordinários. Não é recomendação.
+      <p className="mt-3 text-xs leading-relaxed text-zinc-600">
+        Fonte: B3 (carteira do Ibovespa) e Yahoo Finance (preços e indicadores). <strong>*</strong> P/L
+        de empresa com prejuízo em 12 meses ou múltiplo atípico; DY acima de 15% (pode ter provento
+        extraordinário) ou zero (sem proventos em 12 meses, segundo a fonte). <strong>n/d</strong>: a
+        fonte não informou o dado. Não é recomendação.
       </p>
       <p className="mt-2 text-right">
         <DataStamp giro={data.generated_at} dado={data.generated_at} />
