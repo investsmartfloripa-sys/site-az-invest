@@ -151,3 +151,20 @@ Desde 21/09/2026 as divulgações de IPCA/IGP-M não são artigos: categoria `Bo
 - **O coletor só grava visita do domínio do site** (`HOSTS_DO_SITE` em `src/app/api/analytics/collect/route.ts`): `next dev`/`next start` local, que usa o banco de produção, e os endereços `*.vercel.app` recebem 204 sem gravar. Antes disso, cada página Next aberta em teste local virava visita real (há ~93 linhas com referrer `localhost` no histórico). O `AnalyticsBeacon` das rotas Next ainda não exclui robô nem equipe.
 - Taxas preenchidas (Selic, CDI, IPCA, IGP-M, TR, poupança, dólar) ficam em `public/simuladores/assets/config.js`; as séries históricas em `assets/dados-*.js`. Não há pipeline automático: atualizar exige regenerar.
 - A lista de páginas do sitemap é `src/data/simuladores-estaticos.json` (regenerar junto com as páginas).
+
+## 15. Revisões visuais externas: confira contra as regras escritas antes de aplicar
+
+A revisão de 12/11/2026 (302 achados) acertou quase todos os diagnósticos, mas várias correções propostas contrariavam regras deste repositório. Antes de aplicar uma sugestão de revisão, confira:
+
+- **Cores de séries** vêm das paletas definidas pelo dono (`PADRAO-VISUAL-GRAFICOS.md` §2, scripts R). "Trocar por tons de azul da marca" não procede. Nas curvas do Panorama, "Agora" é preto sólido e "Ajuste D-1" preto tracejado por decisão de 11/06/2026; a legenda desenha o traço de cada série.
+- **Verde = subiu, vermelho = caiu; zero = azul #027DFC** (§3). Laranja (`#FF5713`) só em botão de ação; em rótulo, etiqueta e chip é defeito.
+- **Carimbo** é o `DataStamp` ("Giro · Dado") em todo cartão (§6). Não crie carimbo próprio por página.
+- **Seletor de categoria** (segmentado) e **de período** (pílulas com "Personalizado", obrigatório) são diferentes de propósito.
+- **"Tabela cortada no celular"**: quase todas rolavam dentro do quadro. O `ScrollHints` (raiz do layout) marca `data-rola` e o `globals.css` esmaece a borda; tabela nova precisa só de um contêiner `overflow-x-auto`.
+- **Eixos**: `AzTimeSeriesChart` usa marcas redondas por padrão (`niceYTicks`); gráfico Recharts feito à mão usa `ticksRedondos` de `@/components/painel/core`. Rótulo de linha de referência fica dentro da área (`insideTopRight`); com `position: "right"` ele sai cortado.
+- **"%" em título**: a Michroma desenha "%" como "º/o". O `globals.css` tem uma face só para esse caractere (Raleway) antes da Michroma em h1/h2; "Δ" não tem glifo em nenhuma das duas, escreva "variação".
+- **Aba em construção** não vai ao menu: marque `emConstrucao: true` em `painel-taxonomy.ts` (sai do menu, dos índices e redireciona). Texto de desenvolvedor ("Pipeline em construção", "deploy", nome de arquivo) nunca aparece para o leitor.
+
+**Fundos de investimento parados desde 16/06/2026:** o workflow `fundos-pipeline.yml` falha porque o secret `MAISRETORNO_API_KEY` não existe no repositório. A página mostra um aviso de data quando o dado tem mais de 10 dias. Religar exige uma chave nova da Data API do Mais Retorno (conta do dono) cadastrada como secret.
+
+**Preço sem ajuste no Yahoo:** grupamento ou desdobramento recente de papel da B3 pode chegar sem ajuste e gerar retorno de milhares de % (RAIZ4, +5853% em um mês, nov/2026). `build_br_sector_baskets.py` descarta retorno de componente acima de um teto por janela; aplique o mesmo cuidado em agregações novas.
