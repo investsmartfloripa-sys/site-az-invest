@@ -647,9 +647,9 @@
       e.ticks.forEach(function (t, k) { svg.appendChild(s('line', { x1: ml, x2: W - mr, y1: y(t), y2: y(t), stroke: t === 0 ? '#C3CAD8' : '#EEF1F6', 'stroke-width': 1 })); var tx = s('text', { x: ml - 8, y: y(t) + fs * 0.34, 'text-anchor': 'end' }); tx.textContent = rots[k]; svg.appendChild(tx); });
       var faixa = pw / n, x = barra ? function (k) { return ml + faixa * (k + 0.5); } : function (k) { return n === 1 ? ml + pw / 2 : ml + pw * k / (n - 1); };
       var lmax = 0; for (i = 0; i < n; i++) lmax = Math.max(lmax, String(rot[i] == null ? '' : rot[i]).length);
-      var maxR = Math.max(2, Math.floor(pw / Math.max(fs * 5, lmax * cw + fs * 1.5))), passoR = Math.max(1, Math.ceil((barra ? n : n - 1) / maxR));
+      var maxR = Math.max(2, Math.floor(pw / Math.max(fs * 5, lmax * cw + fs * 2.5))), passoR = Math.max(1, Math.ceil((barra ? n : n - 1) / maxR));
       var ultReg = Math.floor((n - 1) / passoR) * passoR, temFinal = !barra && (n - 1) % passoR !== 0;
-      for (i = 0; i < n; i += passoR) { if (temFinal && i !== 0 && x(n - 1) - x(i) < (String(rot[i]).length / 2 + String(rot[n - 1]).length) * cw + 12) continue; var tt = s('text', { x: x(i), y: H - 10, 'text-anchor': barra ? 'middle' : i === 0 ? 'start' : 'middle' }); tt.textContent = rot[i] == null ? '' : rot[i]; svg.appendChild(tt); }
+      for (i = 0; i < n; i += passoR) { if (temFinal && i !== 0 && x(n - 1) - x(i) < (String(rot[i]).length / 2 + String(rot[n - 1]).length) * cw * 1.1 + fs * 1.5) continue; var tt = s('text', { x: x(i), y: H - 10, 'text-anchor': barra ? 'middle' : i === 0 ? 'start' : 'middle' }); tt.textContent = rot[i] == null ? '' : rot[i]; svg.appendChild(tt); }
       if (temFinal) { var tf = s('text', { x: x(n - 1), y: H - 10, 'text-anchor': 'end' }); tf.textContent = rot[n - 1]; svg.appendChild(tf); }
       var guia = s(barra ? 'rect' : 'line', barra ? { y: mt, height: ph, width: faixa, fill: 'rgba(19,41,96,.06)', visibility: 'hidden' } : { y1: mt, y2: mt + ph, stroke: '#8A93A6', 'stroke-width': 1, visibility: 'hidden' });
       svg.appendChild(guia);
@@ -821,17 +821,33 @@
     c2.appendChild(ul); g.appendChild(c2);
     var c3 = el('div', 'az-rod-col'); c3.appendChild(el('h2', null, 'Entre em contato'));
     function linha(rot, txt, href) { var p = el('p'); p.appendChild(el('strong', null, rot)); p.appendChild(document.createTextNode(' ')); var a = el('a', null, txt); a.href = href; p.appendChild(a); c3.appendChild(p); }
-    if (S.email) linha('Email:', S.email, 'mailto:' + S.email);
+    if (S.email) linha('E-mail:', S.email, 'mailto:' + S.email);
     if (S.telefone) linha('Telefone:', S.telefone, 'tel:+' + S.telefone.replace(/\D/g, '').replace(/^(?!55)/, '55'));
     if (S.whatsapp) { var w = el('a', 'az-rod-wpp', 'WhatsApp'); w.href = S.whatsapp; w.target = '_blank'; w.rel = 'noopener noreferrer'; c3.appendChild(w); }
     g.appendChild(c3);
     var sobre = el('div', 'az-rod-sobre'), si = el('div');
     si.appendChild(el('p', null, S.sobre));
+    si.appendChild(el('p', null, 'O conteúdo é educativo e não constitui oferta nem recomendação de investimento. Rentabilidade passada não garante rentabilidade futura.'));
     if (S.regulatorio) si.appendChild(el('p', null, S.regulatorio));
     sobre.appendChild(si);
     rod.innerHTML = ''; rod.appendChild(g); rod.appendChild(sobre);
-    rod.appendChild(el('p', 'az-rod-copy', new Date().getFullYear() + ' Todos os direitos reservados para ' + (S.razaoSocial || S.empresa) + (S.cnpj ? ' · CNPJ ' + S.cnpj : '')));
+    rod.appendChild(el('p', 'az-rod-copy', '© ' + new Date().getFullYear() + ' ' + (S.razaoSocial || 'Investimentos de A a Z') + '. Todos os direitos reservados.' + (S.cnpj ? ' CNPJ ' + S.cnpj + '.' : '')));
   }
+  /* sinal de "tem mais para o lado" nas tabelas com rolagem: marca o contêiner com data-rola e o CSS esmaece
+     a borda onde ainda há colunas (o mesmo do site; na revisão de 12/11/2026 a tabela que rolava foi lida como cortada) */
+  function marcarRolagem() {
+    [].forEach.call(document.querySelectorAll('.az-rolo'), function (r) {
+      var sobra = r.scrollWidth - r.clientWidth, v = '';
+      if (sobra > 2) {
+        var esq = r.scrollLeft > 2, dir = r.scrollLeft < sobra - 2;
+        v = esq && dir ? 'ambos' : dir ? 'dir' : esq ? 'esq' : '';
+        if (!r.dataset.rolaOuve) { r.dataset.rolaOuve = '1'; r.addEventListener('scroll', marcarRolagem, { passive: true }); }
+      }
+      if ((r.dataset.rola || '') !== v) { if (v) r.dataset.rola = v; else delete r.dataset.rola; }
+    });
+  }
+  var rolagemEspera = 0;
+  function agendarRolagem() { clearTimeout(rolagemEspera); rolagemEspera = setTimeout(marcarRolagem, 120); }
   /* fórmulas do "Como funciona": expoentes sobrescritos e, quando longas, em linha própria */
   function formulas(raiz) {
     [].forEach.call((raiz || document).querySelectorAll(raiz ? 'code' : '.az-sobre code'), function (c) {
@@ -872,6 +888,9 @@
   document.addEventListener('DOMContentLoaded', function () {
     try { if (/[?&]embed=1/.test(location.search)) document.documentElement.classList.add('az-embed'); } catch (e) { }
     montarMenu(); montarTrilha(); montarAviso(); montarRodape(); contarVisita();
+    agendarRolagem(); window.addEventListener('resize', agendarRolagem);
+    var appRolagem = document.getElementById('az-app');
+    if (appRolagem && window.MutationObserver) new MutationObserver(agendarRolagem).observe(appRolagem, { childList: true, subtree: true });
     /* índice com duas vistas: principais OU outros. Com "Outros simuladores" aberto e sem busca, os principais ficam ocultos. */
     var outrosEl = document.getElementById('az-outros');
     function vista() { var b = document.getElementById('az-busca'), q = !!(b && b.value.trim()); document.documentElement.classList.toggle('az-so-outros', !!(outrosEl && outrosEl.open && !q)); document.documentElement.classList.toggle('az-buscando', q); }

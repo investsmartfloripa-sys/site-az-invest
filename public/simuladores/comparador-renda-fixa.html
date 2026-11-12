@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Comparador de renda fixa: CDB, LCI, Tesouro, poupança e fundo | AZ Invest</title>
+<title>Comparador de renda fixa | AZ Invest</title>
 <meta name="description" content="Compare CDB, LCI ou LCA, Tesouro Selic, poupança e fundo DI no mesmo prazo e veja a taxa que empata uma oferta com a outra.">
 <meta name="theme-color" content="#132960">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AZ Invest">
-<meta property="og:title" content="Comparador de renda fixa: CDB, LCI, Tesouro, poupança e fundo | AZ Invest">
+<meta property="og:title" content="Comparador de renda fixa | AZ Invest">
 <meta property="og:description" content="Compare CDB, LCI ou LCA, Tesouro Selic, poupança e fundo DI no mesmo prazo e veja a taxa que empata uma oferta com a outra.">
 <meta property="og:image" content="https://investimentosdeaz.com.br/simuladores/assets/compartilhar.png">
 <meta property="og:url" content="https://investimentosdeaz.com.br/simuladores/comparador-renda-fixa.html">
@@ -22,7 +22,7 @@
 <main>
 <section class="az-hero"><div class="az-larg">
 <p class="az-trilha"><a href="index.html">Simuladores</a> / <a href="index.html#renda-fixa">Renda fixa</a></p>
-<h1>Comparador de renda fixa: CDB, LCI, Tesouro, poupança e fundo</h1>
+<h1>Comparador de renda fixa</h1>
 <p class="az-intro">Compare CDB, LCI, LCA, Tesouro Selic, poupança e fundo DI no seu prazo e veja qual rende mais depois do imposto.</p>
 </div></section>
 <div class="az-larg">
@@ -928,7 +928,7 @@ AZ.registrar({
     'lci-lca-pre-x-cdb-pre': { taxas: 'pre' },
     'poupanca-percentual-cdi': { tesouro: false }
   },
-  titulo: 'Comparador de renda fixa: CDB, LCI, Tesouro, poupança e fundo',
+  titulo: 'Comparador de renda fixa',
   categoria: 'renda-fixa',
   subgrupo: 'geral',
   ordem: 2,
@@ -961,7 +961,7 @@ AZ.registrar({
       ajuda: 'Taxa de compra informada pelo Tesouro Direto, como em Selic + 0,05%.', mostrarSe: function (v) { return v.taxas !== 'pre' && v.tesouro; } },
     { id: 'taxaB3', rotulo: 'Custódia da B3 no Tesouro Selic', tipo: 'pct', padrao: 0.2, min: 0, max: 5, sufixo: '% ao ano', largura: 'meia',
       mostrarSe: function (v) { return v.taxas !== 'pre' && v.tesouro; } },
-    { id: 'isencao', rotulo: 'Isentar de custódia os primeiros R$ 10.000,00', tipo: 'check', padrao: true,
+    { id: 'isencao', rotulo: 'Isentar custódia até R$ 10 mil', tipo: 'check', padrao: true,
       ajuda: 'Desmarque se você já tem mais de R$ 10.000,00 nesse título.', mostrarSe: function (v) { return v.taxas !== 'pre' && v.tesouro; } },
     { id: 'poup', rotulo: 'Rendimento da poupança', tipo: 'pct', padrao: function (AZ) { return AZ.cfg.poupanca; }, min: 0, max: 10, sufixo: '% ao mês', largura: 'meia',
       ajuda: 'Rendimento mensal atual, já com a TR. A poupança só rende no aniversário de cada mês.', mostrarSe: function (v) { return v.taxas !== 'pre' && (v.poupanca || v.fundo); } },

@@ -155,6 +155,7 @@ h1,h2,h3{font-family:var(--texto);font-weight:700;line-height:1.25;margin:0;text
 .az-botao.az-lar{background:var(--laranja);border-color:var(--laranja)}
 .az-botao.az-lar:hover{background:var(--laranja-esc);border-color:var(--laranja-esc)}
 .az-acoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;padding-top:16px;border-top:1px solid var(--linha2)}
+.az-acoes .az-botao{flex:1 1 220px}
 .az-fonte{margin:14px 0 0;font-size:15px;line-height:1.5;color:var(--tinta3)}
 .az-lista-linha{position:relative}
 .az-x{border:0;background:transparent;color:var(--tinta3);font-size:22px;line-height:1;cursor:pointer;padding:4px 8px;border-radius:6px;justify-self:end}
@@ -241,6 +242,9 @@ h1,h2,h3{font-family:var(--texto);font-weight:700;line-height:1.25;margin:0;text
 .az-tab-cab h2{margin:0}
 .az-rolo{overflow-x:auto;background:linear-gradient(to right,#fff 30%,rgba(255,255,255,0)) left center/36px 100% no-repeat local,linear-gradient(to left,#fff 30%,rgba(255,255,255,0)) right center/36px 100% no-repeat local,linear-gradient(to right,rgba(19,41,96,.16),rgba(19,41,96,0)) left center/12px 100% no-repeat scroll,linear-gradient(to left,rgba(19,41,96,.16),rgba(19,41,96,0)) right center/12px 100% no-repeat scroll}
 .az-rolo.az-longa{max-height:560px;overflow-y:auto}
+.az-rolo[data-rola="dir"]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 40px),transparent)}
+.az-rolo[data-rola="esq"]{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 40px),transparent)}
+.az-rolo[data-rola="ambos"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 40px,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(to right,transparent,#000 40px,#000 calc(100% - 40px),transparent)}
 table.az-tab{border-collapse:collapse;width:100%;font-size:18px;font-variant-numeric:lining-nums tabular-nums}
 .az-tab th{position:sticky;top:0;background:#fff;text-align:right;font-weight:600;font-size:15px;color:var(--tinta3);padding:8px 12px;border-bottom:1px solid var(--borda);white-space:nowrap;vertical-align:bottom}
 .az-rolo:not(.az-longa) .az-tab th{background:transparent}
@@ -316,11 +320,11 @@ table.az-tab{border-collapse:collapse;width:100%;font-size:18px;font-variant-num
 .az-legal+.az-rodape{margin-top:24px}
 .az-rodape{margin-top:40px;background:var(--marinho);color:var(--cinza);font-size:16px;line-height:24px}
 .az-rod-grade{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:32px;padding:40px 16px}
-.az-rod-marca{text-align:center}
-.az-rod-marca-in{max-width:16rem;margin:0 auto}
+.az-rod-marca{text-align:left}
+.az-rod-marca-in{max-width:16rem;margin:0}
 .az-rod-marca img{display:block;width:100%;height:auto}
 .az-rod-tag{margin:16px 0 0;font-size:14px;line-height:1.625;color:#e8e7e5b3;color:lab(91.6807% .084579 1.10058/.7)}
-.az-rod-sociais{margin-top:16px;display:flex;justify-content:center;gap:12px}
+.az-rod-sociais{margin-top:16px;display:flex;justify-content:flex-start;gap:12px}
 .az-rodape .az-rod-sociais a{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:999px;border:1px solid #ffffff40;border-color:color-mix(in oklab,#fff 25%,transparent);color:#fff;transition:color .15s,border-color .15s}
 .az-rodape .az-rod-sociais a:hover{border-color:var(--azul);color:var(--azul)}
 .az-rod-sociais svg{width:18px;height:18px}
@@ -374,7 +378,7 @@ table.az-tab{border-collapse:collapse;width:100%;font-size:18px;font-variant-num
 .az-principais .az-item .az-ico{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#E6F1FF;color:var(--azul)}
 .az-principais .az-item .az-ico svg{width:20px;height:20px}
 .az-principais .az-item b{font-family:var(--titulo);font-weight:400;font-size:18px;line-height:1.35;color:var(--marinho);padding-right:18px}
-.az-principais .az-item::after{position:absolute;right:18px;bottom:16px}
+.az-principais .az-item::after{position:absolute;right:18px;top:30px}
 .az-principais .az-item .az-tag{position:absolute;right:16px;top:20px;background:var(--nota-f);color:var(--tinta2);border-radius:6px;padding:3px 9px;font-size:14px;font-weight:600}
 .az-principais .az-mais{background:var(--marinho);border-color:var(--marinho);justify-content:center;gap:6px}
 .az-principais .az-mais b{color:#fff;font-family:var(--texto);font-weight:700;font-size:20px}
@@ -561,6 +565,4 @@ details.az-dobra{padding-top:0;padding-bottom:0;margin-top:10px}
   .az-info{width:26px;height:26px;font-size:13px}
   .az-trilha .az-voltar{display:none}
   .az-trilha .az-pill::before{content:"\2190  ";color:inherit;margin-right:0}
-  .az-acoes{gap:6px 18px}
-  .az-acoes .az-botao{border:0;background:none;padding:4px 0;color:var(--azul);font-size:15px}
 }
