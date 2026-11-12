@@ -35,7 +35,7 @@ export function HeroRecentes({ posts }: { posts: PostCardData[] }) {
       <div className="flex items-baseline justify-between gap-4">
         <h1 className={SECTION_TITLE_CLASSES}>Artigos</h1>
         <Link href="/blog" className="whitespace-nowrap text-sm font-semibold text-[#027DFC] hover:underline">
-          Ver todas
+          Ver todos →
         </Link>
       </div>
       <div className="grid gap-3 md:grid-cols-3">

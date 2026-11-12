@@ -79,7 +79,7 @@ export default async function VideosPage({ searchParams }: VideosPageProps) {
             <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
               Conteúdo em vídeo
             </p>
-            <h1 className="text-4xl text-[#027DFC] md:text-5xl">{heading}</h1>
+            <h1 className="text-4xl text-[#132960] md:text-5xl">{heading}</h1>
             <p className="max-w-2xl text-sm text-zinc-600">
               Análises, tutoriais e bate-papos com especialistas do nosso time.
               Conteúdo puxado diretamente do nosso canal no YouTube.
@@ -136,17 +136,34 @@ export default async function VideosPage({ searchParams }: VideosPageProps) {
                 : "Nenhum vídeo encontrado nesta playlist."}
           </p>
         ) : (
-          <section
-            className={
-              activeType === "shorts"
-                ? "grid gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                : "grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-            }
-          >
-            {videos.map((video) => (
-              <YoutubeVideoCard key={video.id} video={video} vertical={activeType === "shorts"} />
-            ))}
-          </section>
+          (() => {
+            // Shorts são verticais: fora da aba "Shorts" eles vão para uma faixa própria em 9:16,
+            // em vez de entrar esticados na grade 16:9 dos vídeos longos.
+            const soShorts = activeType === "shorts";
+            const longos = soShorts ? [] : videos.filter((v) => !isShort(v));
+            const shorts = soShorts ? videos : videos.filter(isShort);
+            return (
+              <>
+                {longos.length > 0 ? (
+                  <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {longos.map((video) => (
+                      <YoutubeVideoCard key={video.id} video={video} />
+                    ))}
+                  </section>
+                ) : null}
+                {shorts.length > 0 ? (
+                  <section className="space-y-4">
+                    {soShorts ? null : <h2 className="text-2xl text-[#132960]">Shorts</h2>}
+                    <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
+                      {shorts.map((video) => (
+                        <YoutubeVideoCard key={video.id} video={video} vertical />
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+              </>
+            );
+          })()
         )}
 
         <CommunityCallout />

@@ -22,7 +22,7 @@ export async function VideosSection() {
           Vídeos
         </h2>
         <Link href="/conteudo#videos" className="whitespace-nowrap text-sm font-semibold text-[#027DFC] hover:underline">
-          Ver todos
+          Ver todos →
         </Link>
       </div>
 
@@ -36,7 +36,7 @@ export async function VideosSection() {
               href="/conteudo?vt=shorts#videos"
               className="whitespace-nowrap text-sm font-semibold text-[#027DFC] hover:underline"
             >
-              Ver todos
+              Ver todos →
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

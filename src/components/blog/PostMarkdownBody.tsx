@@ -61,6 +61,15 @@ export function PostMarkdownBody({ markdown, chartSlots }: PostMarkdownBodyProps
               </Link>
             );
           },
+          // Tabela larga rola dentro do próprio quadro (o ScrollHints marca a borda): antes a página
+          // inteira rolava para o lado no celular.
+          table: ({ children, ...props }) => (
+            <div className="my-4 overflow-x-auto">
+              <table className="w-full min-w-max border-collapse text-sm [&_td]:border-b [&_td]:border-zinc-100 [&_td]:px-3 [&_td]:py-2 [&_th]:border-b [&_th]:border-[#132960]/15 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold" {...props}>
+                {children}
+              </table>
+            </div>
+          ),
           img: ({ src, alt }) =>
             src ? (
               // eslint-disable-next-line @next/next/no-img-element -- user markdown; remote URLs vary

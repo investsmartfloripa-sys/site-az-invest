@@ -10,7 +10,9 @@ import { CATEGORIAS } from "@/data/simuladores";
 import { SIM, SIM_CHART } from "@/lib/simulador-theme";
 
 // Categoria do simulador (accent visual — não altera nenhum cálculo)
-const CAT = CATEGORIAS.credito;
+// Mesmo nome de tema do índice dos simuladores ("Crédito e compras") e azul no lugar do laranja,
+// que o padrão do site reserva ao botão de ação (revisão de 12/11/2026).
+const CAT = { ...CATEGORIAS.credito, nome: "Crédito e compras", cor: "#027DFC" };
 
 const fmt = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n || 0);
 const fmtCents = (n) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n || 0);
@@ -107,7 +109,7 @@ const TIPOS_BEM = {
     iconeKey: 'bike',
     desc: 'Motos novas ou seminovas',
     img: null,
-    gradient: 'linear-gradient(135deg, #FF5713 0%, #7c2d0e 100%)',
+    gradient: 'linear-gradient(135deg, #2F5DA8 0%, #132960 100%)',
     valorDefault: 25000, prazoDefault: 60,
     prazos: [48, 60, 72],
     minValor: 8000, maxValor: 150000, stepValor: 1000,
@@ -162,15 +164,29 @@ const ChartLegend = ({ items }) => (
   </div>
 );
 
-// Logo placeholder estilizado
-const AdmLogo = ({ adm }) => (
-  <div className="flex items-center justify-center px-4 py-2.5 rounded-lg shrink-0"
-    style={{ backgroundColor: '#ffffff', border: `1px solid ${SIM.border}`, minWidth: 100, minHeight: 44 }}>
-    <span className="text-sm font-extrabold tracking-tight" style={{
-      color: adm.cor,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      letterSpacing: '-0.02em',
-    }}>{adm.nome}</span>
+// Simuladores do mesmo tema + aviso legal, como no fim das páginas do gerador de simuladores.
+const MAIS_EM_CREDITO = [
+  ['Financiamento e empréstimo', '/simuladores/financiamento-unificado.html'],
+  ['À vista ou parcelado', '/simuladores/a-vista-ou-parcelado.html'],
+  ['Quanto custa de verdade uma compra', '/simuladores/custo-de-verdade.html'],
+];
+const MaisEmCredito = () => (
+  <div className="mt-10 space-y-4">
+    <p className="text-sm font-bold uppercase tracking-wider" style={{ color: SIM.textDim }}>Mais em crédito e compras</p>
+    <div className="grid gap-3 sm:grid-cols-3">
+      {MAIS_EM_CREDITO.map(([nome, href]) => (
+        <Link key={href} href={href} prefetch={false}
+          className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold transition hover:shadow-sm"
+          style={{ backgroundColor: '#ffffff', border: `1px solid ${SIM.border}`, color: SIM.navy }}>
+          {nome} <span aria-hidden style={{ color: SIM.textDim }}>→</span>
+        </Link>
+      ))}
+    </div>
+    <p className="text-sm leading-relaxed" style={{ color: SIM.textDim }}>
+      As simulações têm caráter exclusivamente educativo. Os resultados dependem das premissas informadas por você, são
+      estimativas e não constituem recomendação de investimento, oferta de produto ou garantia de rentabilidade. Antes de
+      decidir, confirme taxas, prazos e condições diretamente com a administradora ou o banco.
+    </p>
   </div>
 );
 
@@ -509,27 +525,28 @@ export default function Simulador() {
   if (step === 0) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: '#ffffff', color: SIM.dark, borderTop: `4px solid ${CAT.cor}` }}>
-        <div className="max-w-6xl mx-auto px-6 py-12 md:py-20">
-          <div className="mb-6">
-            <Link href="/simuladores" className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: SIM.textDim }}>
+        <div className="max-w-6xl mx-auto px-6 py-8 md:py-10">
+          {/* Trilha no padrão dos simuladores: volta ao índice + tema */}
+          <div className="mb-6 flex flex-wrap items-center gap-3 text-base font-semibold" style={{ color: SIM.textDim }}>
+            <Link href="/simuladores" prefetch={false} className="inline-flex items-center gap-1.5 hover:underline">
               <span aria-hidden>←</span> Todos os simuladores
             </Link>
-          </div>
-          <div className="mb-12 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-6"
+            <Link href="/simuladores/index.html#credito" prefetch={false}
+              className="rounded-full px-3 py-1 text-sm"
               style={{ backgroundColor: `${CAT.cor}14`, color: CAT.cor, border: `1px solid ${CAT.cor}33` }}>
-              <Sparkles className="w-3.5 h-3.5" />
               {CAT.nome}
-            </div>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.1]">
-              Consórcio ou financiamento? <span style={{ color: SIM.navy }}>Compare com números honestos</span>.
+            </Link>
+          </div>
+          <div className="mb-10">
+            <h1 className="text-3xl md:text-5xl tracking-tight mb-4 leading-[1.15]" style={{ color: SIM.navy }}>
+              Consórcio ou financiamento? Compare com números honestos
             </h1>
-            <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: SIM.textDim }}>
+            <p className="text-base md:text-lg max-w-2xl" style={{ color: SIM.textDim }}>
               Simule em segundos, compare com financiamento e descubra o caminho mais inteligente para o seu próximo bem.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-10">
             {Object.entries(TIPOS_BEM).map(([key, val]) => (
               <TipoBemCard key={key} tipoKey={key} info={val} onClick={() => {
                 setTipoBem(key);
@@ -547,13 +564,16 @@ export default function Simulador() {
             <div className="text-xs uppercase tracking-wider mb-4 text-center font-semibold" style={{ color: SIM.textDim }}>
               Trabalhamos com todas as principais administradoras
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-2.5">
-              {ADMS.map(a => <AdmLogo key={a.nome} adm={a} />)}
-            </div>
+            {/* Nomes em texto simples: os "logos" coloridos pareciam espaço reservado */}
+            <p className="text-center text-base font-semibold" style={{ color: SIM.navy }}>
+              {ADMS.map((a) => a.nome).join(", ")}
+            </p>
             <div className="text-center text-xs mt-4" style={{ color: SIM.textDim }}>
               Sem preferência comercial — comparamos e indicamos a melhor opção para o seu perfil.
             </div>
           </div>
+
+          <MaisEmCredito />
         </div>
       </div>
     );

@@ -57,7 +57,7 @@ export default async function BlogIndexPage({
           <p className="text-xs font-semibold uppercase tracking-wider text-[#027DFC]">
             Conteúdo
           </p>
-          <h1 className="text-4xl text-[#027DFC] md:text-5xl">Artigos</h1>
+          <h1 className="text-4xl text-[#132960] md:text-5xl">Artigos</h1>
           <p className="max-w-2xl text-sm text-zinc-600">
             Análises, guias e opiniões da equipe AZ Invest sobre economia, mercado financeiro e
             educação financeira.

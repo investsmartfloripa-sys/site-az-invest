@@ -52,13 +52,9 @@ export function VideosShowcase({ videos }: { videos: YoutubeVideo[] }) {
                   priority
                 />
               ) : null}
-              {/* Overlay navy com peso no topo (título) e no rodapé (play + "Assista no YouTube"). */}
-              <span className="absolute inset-0 bg-gradient-to-b from-[#132960]/80 via-[#132960]/15 to-[#132960]/70" />
-              <span className="absolute left-0 top-0 p-5">
-                <span className="line-clamp-2 block max-w-[85%] text-lg font-semibold text-white drop-shadow md:text-2xl">
-                  {active.title}
-                </span>
-              </span>
+              {/* Título fica fora da imagem (abaixo do player): a miniatura do YouTube já traz texto
+                  próprio e os dois títulos se sobrepunham. Aqui só o peso no rodapé para o play. */}
+              <span className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#132960]/70" />
               <span className="absolute bottom-4 left-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#132960]/85 text-white shadow-lg ring-2 ring-white/70 transition group-hover:bg-[#027DFC]">
                 <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7 translate-x-0.5" aria-hidden>
                   <path d="M8 5v14l11-7z" />
@@ -70,6 +66,7 @@ export function VideosShowcase({ videos }: { videos: YoutubeVideo[] }) {
             </button>
           )}
         </div>
+        <p className="mt-3 line-clamp-2 text-lg font-semibold text-[#132960] md:text-xl">{active.title}</p>
       </div>
 
       {/* Lista lateral sem scroll próprio: com cinco vídeos ela cabe inteira ao lado do player. */}

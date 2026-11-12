@@ -18,7 +18,6 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const CHANNEL_URL = "https://www.youtube.com/@azinvestoficial";
 
 /** Mesmo sistema de título de seção da home (HeroRecentes): navy com sublinhado curto azure. */
 const SECTION_TITLE_CLASSES =
@@ -96,13 +95,8 @@ export default async function ConteudoHub({ searchParams }: ConteudoProps) {
         <section id="videos" className="scroll-mt-24 space-y-4">
           <div className="flex items-baseline justify-between gap-4">
             <h2 className={SECTION_TITLE_CLASSES}>Vídeos</h2>
-            <Link
-              href={CHANNEL_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="whitespace-nowrap text-sm font-semibold text-[#027DFC] hover:underline"
-            >
-              Ver no canal ↗
+            <Link href="/videos" className="whitespace-nowrap text-sm font-semibold text-[#027DFC] hover:underline">
+              Ver todos →
             </Link>
           </div>
 

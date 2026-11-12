@@ -216,7 +216,7 @@ export async function PostPage({ slug, kind }: { slug: string; kind: PostKind })
           >
             {formatPostCategoryLabel(post.category)}
           </span>
-          <h1 className="text-4xl text-[#132960] md:text-5xl">{post.title}</h1>
+          <h1 className="text-2xl leading-tight text-[#132960] sm:text-4xl md:text-5xl">{post.title}</h1>
 
           <div className="flex items-center gap-3 border-y border-[#132960]/10 py-3">
             {post.author ? (
@@ -260,6 +260,10 @@ export async function PostPage({ slug, kind }: { slug: string; kind: PostKind })
           <h2 className="text-2xl text-[#132960]">
             Comentários{post.comments.length > 0 ? ` (${post.comments.length})` : ""}
           </h2>
+
+          {post.comments.length === 0 ? (
+            <p className="text-sm text-zinc-500">Ainda não há comentários. Seja o primeiro.</p>
+          ) : null}
 
           <form action={addCommentAction} className="space-y-3">
             <input type="hidden" name="postId" value={post.id} />
@@ -315,9 +319,11 @@ export async function PostPage({ slug, kind }: { slug: string; kind: PostKind })
             </button>
           </form>
 
-          {post.comments.length === 0 ? (
-            <p className="text-sm text-zinc-500">Seja o primeiro a comentar.</p>
-          ) : (
+          <p className="text-xs text-zinc-500">
+            O comentário aparece logo depois do envio. A equipe remove mensagens ofensivas ou com propaganda.
+          </p>
+
+          {post.comments.length === 0 ? null : (
             <ul className="space-y-4">
               {post.comments.map((comment) => (
                 <li key={comment.id} className="rounded-xl border border-[#132960]/10 bg-[#F7F9FC] p-4">
