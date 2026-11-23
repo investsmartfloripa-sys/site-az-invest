@@ -1,6 +1,6 @@
 # Snapshot do dia anterior — Café com Mercado
 
-**Rodada:** 2026-11-23 (segunda). Disparo ~10:57 BRT (agendado 10:00). `.md` (00f1672) + capa (9ec17fb) commitados; deploy run `45190367427` (push) success; página e capa 200. WhatsApp: ver abaixo.
+**Rodada:** 2026-11-23 (segunda). Disparo ~10:57 BRT (agendado 10:00). `.md` (00f1672) + capa (9ec17fb) commitados; deploy run `45190367427` (push) success; página e capa 200. ❌ WhatsApp NÃO postado (EXITCODE=2, sessão 'borbarox' em `disconnected` por 20 tentativas; OpenWA responde, então é a sessão do WhatsApp que caiu — provável novo pareamento/QR). Post pronto em `morning-call\_post_hoje.txt` para envio manual.
 
 ## 🔧 INFRAESTRUTURA
 - Nuvem segue sem GITHUB_PAT_COWORK e com GitHub 403 ("GitHub access to this repository is not enabled for this session"). GitHub todo via Desktop Commander + `Enviador de Noticias\_gh.py` (check/get/put/head/runs/run). Arquivos da nuvem levados com device_commit_files para `Enviador de Noticias\_hoje\`.
